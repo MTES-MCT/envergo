@@ -105,6 +105,11 @@ class Civilite(Enum):
     M = "M"
     Mme = "Mme"
 
+    def __str__(self):
+        if self is Civilite.M:
+            return "M."
+        return self.value
+
 
 class ConnectionUsager(Enum):
     deleted = "deleted"
@@ -1073,7 +1078,7 @@ class Dossier:
         Returns the name of the applicant based on the type of demandeur.
         """
         if isinstance(self.demandeur, PersonnePhysique):
-            applicant_name = f"{self.demandeur.civilite.value} {self.demandeur.prenom} {self.demandeur.nom}"
+            applicant_name = f"{self.demandeur.civilite} {self.demandeur.nom.upper()} {self.demandeur.prenom}"
         elif isinstance(self.demandeur, PersonneMorale):
             applicant_name = (
                 self.demandeur.entreprise.nomCommercial
