@@ -293,6 +293,7 @@ def test_bcae8_small_soumis_amenagement():
         "haies": MagicMock(),
         "lineaire_total": 5000,
         "amenagement_dup": "oui",
+        "batiment_exploitation": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
 
@@ -314,6 +315,7 @@ def test_bcae8_small_interdit_amenagement():
         "haies": MagicMock(),
         "lineaire_total": 5000,
         "amenagement_dup": "non",
+        "batiment_exploitation": "non",
     }
     data["haies"].lineaire_detruit_pac.return_value = 4
 
@@ -559,3 +561,65 @@ def test_bcae8_big_interdit_autre():
     assert moulinette.is_evaluation_available()
     assert moulinette.result == "interdit", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_autre", data
+
+
+def test_bcae8_batiment_exploitation():
+    # GIVEN a project of amenagement on PAC land
+    ConfigHaieFactory()
+    data = {
+        "motif": "amenagement",
+        "reimplantation": "replantation",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": MagicMock(),
+        "lineaire_total": 5000,
+        "motif_pac": "aucun",
+        "amenagement_dup": "non",
+    }
+    data["haies"].lineaire_detruit_pac.return_value = 4000
+
+    # WHEN the batiment exploitation params is missing
+    moulinette = MoulinetteHaie(data, data, False)
+
+    # THEN the moulinette is not valid
+    assert moulinette.is_evaluation_available()
+    assert moulinette.has_missing_data()
+
+    # WHEN the batiment exploitation params is non
+    data["batiment_exploitation"] = "non"
+    moulinette = MoulinetteHaie(data, data, False)
+
+    # THEN the result is interdit
+    assert moulinette.is_evaluation_available()
+    assert not moulinette.has_missing_data()
+    assert moulinette.result == "interdit", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
+    ), data
+
+    # WHEN the batiment exploitation params is oui
+    data["batiment_exploitation"] = "oui"
+    moulinette = MoulinetteHaie(data, data, False)
+
+    # THEN the result is soumis_amenagement
+    assert moulinette.is_evaluation_available()
+    assert not moulinette.has_missing_data()
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    ), data
+
+    # EVEN on small project or without replantation
+    data["reimplantation"] = "non"
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    ), data
+
+    data["haies"].lineaire_detruit_pac.return_value = 11
+    moulinette = MoulinetteHaie(data, data, False)
+    assert moulinette.result == "soumis", data
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    ), data
