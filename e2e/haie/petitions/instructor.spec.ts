@@ -9,7 +9,7 @@ test('Instructor can instruct a project', async ({ page }) => {
   await page.getByRole('link', { name: 'Dossier EGRAZY en détail' }).click();
 
   await expect(page.getByRole('heading', { name: 'Résumé du dossier' })).toBeVisible();
-  await expect(page.getByText('Éléments clés')).toBeVisible();
+  await expect(page.getByText('Informations saisies par le demandeur')).toBeVisible();
   await expect(page.getByText('Réponse du simulateur')).toBeVisible();
   await expect(page.getByText('La plantation envisagée est adéquate')).toBeVisible();
 
