@@ -45,6 +45,7 @@ from envergo.petitions.tests.factories import (
 pytestmark = pytest.mark.django_db
 
 
+@pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -117,6 +118,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert mock_post.call_count == 3
 
 
+@pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
@@ -142,6 +144,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     assert details == Dossier.from_dict(fake_dossier)
 
 
+@pytest.mark.urls("config.urls_haie")
 @patch("envergo.petitions.services.notify")
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
