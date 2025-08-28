@@ -1,3 +1,4 @@
+import json
 import logging
 from urllib.parse import quote_plus
 
@@ -6,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import storages
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import Prefetch
@@ -308,7 +310,7 @@ class WizardStepMixin:
             "erreur",
             "formulaire-ar",
             self.request,
-            data=form.data,
+            data=json.loads(json.dumps(form.cleaned_data, cls=DjangoJSONEncoder)),
             errors={
                 field: [
                     {"code": str(e.code), "message": str(e.message)} for e in errors
