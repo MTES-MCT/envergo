@@ -531,13 +531,20 @@ class BaseMoulinetteResult(FormView):
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
+            required_form_errors = moulinette.required_form_errors()
+            optional_form_errors = moulinette.optional_form_errors()
+
             if not (
                 moulinette.has_missing_data()
                 or is_request_from_a_bot(request)
                 or is_edit
             ):
                 self.log_moulinette_event(moulinette, context)
-            elif moulinette.has_missing_data() and context["additional_forms_bound"]:
+            elif (
+                bool(required_form_errors)
+                and context["additional_forms_bound"]
+                or bool(optional_form_errors)
+            ):
                 log_event(
                     "erreur",
                     "formulaire-simu",
@@ -548,7 +555,9 @@ class BaseMoulinetteResult(FormView):
                             {"code": str(e.code), "message": str(e.message)}
                             for e in errors.data
                         ]
-                        for field, errors in moulinette.form_errors().items()
+                        for field, errors in (
+                            required_form_errors | optional_form_errors
+                        ).items()
                     },
                 )
 
