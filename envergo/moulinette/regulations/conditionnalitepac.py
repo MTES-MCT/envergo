@@ -56,7 +56,7 @@ class Bcae8Form(forms.Form):
     amenagement_dup = forms.ChoiceField(
         label="""
         La destruction a-t-elle lieu à l’occasion d’une opération d’aménagement foncier déclarée d’utilité
-        publique et fait l’objet d’une consultation du public ?""",
+        publique et ayant fait l’objet d’une consultation du public ?""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
