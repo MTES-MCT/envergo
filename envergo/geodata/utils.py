@@ -149,8 +149,10 @@ def extract_map(archive):
         # Local files also get an url, but its just unreachable
         elif hasattr(archive, "url") and archive.url.startswith("http"):
             yield archive.url
-        else:
+        elif hasattr(archive, "path"):
             yield archive.path
+        else:
+            yield archive.name
 
     else:
         raise ValueError(_("Unsupported file format"))
@@ -162,9 +164,9 @@ def count_features(map_file):
     with extract_map(map_file) as file:
         ds = DataSource(file)
         layer = ds[0]
-        nb_zones = len(layer)
+        nb_features = len(layer)
 
-    return nb_zones
+    return nb_features
 
 
 def process_geographic_file(map, lm, task):
