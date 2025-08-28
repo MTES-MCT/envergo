@@ -33,7 +33,7 @@
           <div class="fr-mb-2w ds-message__metadata">
             <span class="ds-message__exp">{{ message.email }}</span> –
             {% with message_date=message.createdAt|to_datetime %}
-              <span class="ds-message__date">{{ message_date|date }} à {{ message_date|time:"H\hi" }}</span>
+              <span class="ds-message__date">{{ message_date|date:"D\. j F Y" }} {{ message_date|time:"H\hi" }}</span>
             {% endwith %}
           </div>
           <div class="ds-message__content">{{ message.body|safe|linebreaksbr }}</div>
