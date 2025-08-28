@@ -69,7 +69,10 @@ class CeleryDebugStream:
         if msg.startswith("Processed"):
             match = re.findall(r"\d+", msg)
             nb_saved = int(match[1])
-            progress = int(nb_saved / self.expected_zones * 100)
+            if self.expected_zones > 0:
+                progress = int(nb_saved / self.expected_zones * 100)
+            else:
+                progress = 0
 
             # update task state
             task_msg = (
@@ -192,7 +195,7 @@ def process_zones_file(map, map_file, task=None):
 
 def process_lines_file(map, map_file, task=None):
     logger.info("Instanciating custom LayerMapping")
-    mapping = {"geometry": "LINESTRING"}
+    mapping = {"geometry": "MULTILINESTRING"}
     extra = {"map": map}
     lm = CustomMapping(
         Line,

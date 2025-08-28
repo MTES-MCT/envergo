@@ -43,7 +43,7 @@ def process_map(task, map_id):
                 ds = DataSource(map_file)
                 layer = ds[0]
                 geom_type = layer.geom_type.name
-                if geom_type == "LineString":
+                if geom_type in ("LineString", "MultiLineString"):
                     process_lines_file(map, map_file, task)
                     map.geometry = simplify_lines(map)
                 else:
