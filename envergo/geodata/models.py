@@ -152,7 +152,7 @@ class Line(gis_models.Model):
     """Stores an annotated geographic Line(s)."""
 
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="lines")
-    geometry = gis_models.LineStringField(
+    geometry = gis_models.MultiLineStringField(
         geography=True,
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,
