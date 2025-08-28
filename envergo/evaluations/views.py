@@ -309,7 +309,12 @@ class WizardStepMixin:
             "formulaire-ar",
             self.request,
             data=form.data,
-            errors=form.errors,
+            errors={
+                field: [
+                    {"code": str(e.code), "message": str(e.message)} for e in errors
+                ]
+                for field, errors in form.errors.as_data().items()
+            },
         )
         return super().form_invalid(form)
 

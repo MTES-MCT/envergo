@@ -114,8 +114,12 @@ def test_eval_request_wizard_step_1_missing_department(client):
     assert "errors" in error_event.metadata
     assert error_event.metadata["errors"] == {
         "__all__": [
-            "Nous ne parvenons pas à situer votre projet. Merci de saisir "
-            "quelques caractères et de sélectionner une option dans la liste."
+            {
+                "code": "unknown_department",
+                "message": "Nous ne parvenons pas à situer votre projet. Merci "
+                "de saisir quelques caractères et de sélectionner une "
+                "option dans la liste.",
+            }
         ]
     }
     assert "data" in error_event.metadata
@@ -165,7 +169,9 @@ def test_eval_request_wizard_step_2_missing_petitioner_data(client):
     error_event = Event.objects.filter(category="erreur", event="formulaire-ar").get()
     assert "errors" in error_event.metadata
     assert error_event.metadata["errors"] == {
-        "project_owner_emails": ["Ce champ est obligatoire."]
+        "project_owner_emails": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ]
     }
     assert "data" in error_event.metadata
 

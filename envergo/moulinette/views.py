@@ -297,7 +297,12 @@ class MoulinetteHome(MoulinetteMixin, FormView):
             "formulaire-simu",
             self.request,
             data=form.data,
-            errors=form.errors,
+            errors={
+                field: [
+                    {"code": str(e.code), "message": str(e.message)} for e in errors
+                ]
+                for field, errors in form.errors.as_data().items()
+            },
         )
         return super().form_invalid(form)
 
@@ -538,7 +543,13 @@ class BaseMoulinetteResult(FormView):
                     "formulaire-simu",
                     self.request,
                     data=moulinette.raw_data,
-                    errors=moulinette.form_errors(),
+                    errors={
+                        field: [
+                            {"code": str(e.code), "message": str(e.message)}
+                            for e in errors.data
+                        ]
+                        for field, errors in moulinette.form_errors().items()
+                    },
                 )
 
             return res

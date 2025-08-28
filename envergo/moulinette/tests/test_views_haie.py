@@ -233,12 +233,20 @@ def test_moulinette_post_form_error(client):
     assert "errors" in error_event.metadata
     assert error_event.metadata["errors"] == {
         "haies": [
-            "Aucune haie n’a été saisie. Cliquez sur le bouton ci-dessus pour\n"
-            "            localiser les haies à détruire."
+            {
+                "code": "required",
+                "message": "Aucune haie n’a été saisie. Cliquez sur le bouton "
+                "ci-dessus pour\n"
+                "            localiser les haies à détruire.",
+            }
         ],
-        "localisation_pac": ["Ce champ est obligatoire."],
-        "motif": ["Ce champ est obligatoire."],
-        "reimplantation": ["Ce champ est obligatoire."],
+        "localisation_pac": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+        "motif": [{"code": "required", "message": "Ce champ est obligatoire."}],
+        "reimplantation": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
     }
     assert "data" in error_event.metadata
     assert error_event.metadata["data"] == data

@@ -3,6 +3,7 @@ from decimal import Decimal as D
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
@@ -134,16 +135,22 @@ class Bcae8Form(forms.Form):
         if meilleur_emplacement == "oui" and reimplantation == "remplacement":
             self.add_error(
                 "meilleur_emplacement",
-                """Le remplacement de la haie au même endroit est incompatible avec le
-                meilleur emplacement environnemental. Veuillez modifier l'une ou l'autre
-                des réponses du formulaire.""",
+                ValidationError(
+                    """Le remplacement de la haie au même endroit est incompatible avec le
+                    meilleur emplacement environnemental. Veuillez modifier l'une ou l'autre
+                    des réponses du formulaire.""",
+                    code="inconsistent_reimplantation",
+                ),
             )
         elif meilleur_emplacement == "oui" and reimplantation == "non":
             self.add_error(
                 "meilleur_emplacement",
-                """L’absence de réimplantation de la haie est incompatible avec le
-                meilleur emplacement environnemental. Veuillez modifier l'une ou l'autre
-                des réponses du formulaire.""",
+                ValidationError(
+                    """L’absence de réimplantation de la haie est incompatible avec le
+                    meilleur emplacement environnemental. Veuillez modifier l'une ou l'autre
+                    des réponses du formulaire.""",
+                    code="inconsistent_reimplantation",
+                ),
             )
 
 

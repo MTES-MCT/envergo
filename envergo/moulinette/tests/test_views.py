@@ -204,8 +204,10 @@ def test_moulinette_post_form_error(client):
     error_event = Event.objects.filter(category="erreur", event="formulaire-simu").get()
     assert "errors" in error_event.metadata
     assert error_event.metadata["errors"] == {
-        "created_surface": ["Ce champ est obligatoire."],
-        "final_surface": ["Ce champ est obligatoire"],
+        "created_surface": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+        "final_surface": [{"code": "required", "message": "Ce champ est obligatoire"}],
     }
     assert "data" in error_event.metadata
     assert error_event.metadata["data"] == data
@@ -258,8 +260,12 @@ def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
     error_event = Event.objects.filter(category="erreur", event="formulaire-simu").get()
     assert "errors" in error_event.metadata
     assert error_event.metadata["errors"] == {
-        "operation_amenagement": ["Ce champ est obligatoire."],
-        "terrain_assiette": ["Saisissez un nombre entier."],
+        "operation_amenagement": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+        "terrain_assiette": [
+            {"code": "invalid", "message": "Saisissez un nombre entier."}
+        ],
     }
     assert "data" in error_event.metadata
 
