@@ -9,7 +9,12 @@ from envergo.geodata.utils import count_features
 
 
 class Command(BaseCommand):
-    help = "Upload une série de cartes"
+    help = """Upload une série de cartes
+
+    The csv file must feature those columns:
+
+    file,name,display_name,source,map_type,data_type,description,departments
+    """
 
     def add_arguments(self, parser):
         parser.add_argument("csv_file", type=pathlib.Path, nargs=1)
