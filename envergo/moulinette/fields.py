@@ -12,6 +12,7 @@ from envergo.moulinette.regulations import (  # noqa
     loisurleau,
     natura2000,
     natura2000_haie,
+    reserves_naturelles,
     sage,
     urbanisme_haie,
 )
