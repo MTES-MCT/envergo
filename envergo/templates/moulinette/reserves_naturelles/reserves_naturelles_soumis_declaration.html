@@ -1,0 +1,38 @@
+<p>
+  Le projet est soumis à la réglementation sur les réserves naturelles, car la destruction des linéaires envisagée peut
+  porter atteinte à l'état ou à l’aspect de la réserve naturelle où il se situe.
+</p>
+
+<p>
+  Au vu des informations saisies, l’intervention est prévue par un document de gestion de la réserve où il se
+  situe.
+</p>
+
+<p>
+  <b>Attention ! Si l’intervention a déjà eu lieu pour des raisons d’urgence,</b>
+  le dépôt d’une demande est tout de même obligatoire. La décision de l’administration pourra être assortie de
+  prescriptions complémentaires pour la compensation.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>
+    Il est conseillé au porteur de projet de se rapprocher du gestionnaire de la réserve avant de déposer sa demande.
+    Les coordonnées du gestionnaire sont identifiables sur le site <a href="https://reserves-naturelles.org/reserves-naturelles/"
+    target="_blank"
+    rel="noopener external">reserves-naturelles.org</a>
+    (<a href="https://www.notion.so/Comment-identifier-le-gestionnaire-d-une-r-serve-naturelle-25bfe5fe4766803183e6f6d1fa1b44a7"
+   target="_blank"
+   rel="noopener">voir notre page d’aide</a>).
+  </p>
+
+  <p>Les pièces justificatives suivantes seront demandées :</p>
+  <ul>
+    <li>un extrait du plan de gestion contenant le projet prévu</li>
+    <li>
+      les éléments prouvant qu’il respecte les objectifs de protection du site et ne porte pas atteinte aux milieux ou
+      aux espèces ayant justifié le classement en réserve naturelle
+    </li>
+  </ul>
+</div>

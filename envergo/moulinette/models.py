@@ -88,6 +88,7 @@ REGULATIONS = Choices(
     ("ep", "Espèces protégées"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
+    ("reserves_naturelles", "Réserves naturelles"),
 )
 
 
@@ -1924,6 +1925,7 @@ class MoulinetteHaie(Moulinette):
         "natura2000_haie",
         "alignement_arbres",
         "urbanisme_haie",
+        "reserves_naturelles",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
