@@ -123,12 +123,7 @@ def test_eval_request_wizard_step_1_missing_department(client):
         ]
     }
     assert "data" in error_event.metadata
-    assert error_event.metadata["data"] == {
-        "address": "42 rue du Test, Testville",
-        "application_number": "",
-        "department": "",
-        "project_description": "",
-    }
+    assert error_event.metadata["data"] == data
 
 
 def test_eval_request_wizard_step_2(client):

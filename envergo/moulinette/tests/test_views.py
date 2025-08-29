@@ -210,12 +210,7 @@ def test_moulinette_post_form_error(client):
         "final_surface": [{"code": "required", "message": "Ce champ est obligatoire"}],
     }
     assert "data" in error_event.metadata
-    assert error_event.metadata["data"] == {
-        "address": "",
-        "existing_surface": None,
-        "lat": "47.21381",
-        "lng": "-1.54394",
-    }
+    assert error_event.metadata["data"] == data
 
 
 def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
