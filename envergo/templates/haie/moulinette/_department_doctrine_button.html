@@ -1,3 +1,13 @@
+{% if department and department.department == '14' %}
+  <div class="fr-alert fr-alert--info fr-mb-4w">
+    <p>
+      Pour transmettre un signalement, <a href="https://www.demarches-simplifiees.fr/commencer/gh14"
+    rel="noopener"
+    target="_blank">suivez ce lien</a>
+    </p>
+  </div>
+{% endif %}
+
 {% if config and config.department_doctrine_html %}
   <p class="department-doctrine-cta fr-mb-6w fr-icon-bookmark-line">
     <a href="#"
