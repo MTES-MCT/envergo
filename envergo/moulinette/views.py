@@ -2,7 +2,6 @@ import json
 from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.conf import settings
-from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseRedirect, QueryDict
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -297,7 +296,7 @@ class MoulinetteHome(MoulinetteMixin, FormView):
             "erreur",
             "formulaire-simu",
             self.request,
-            data=json.loads(json.dumps(form.cleaned_data, cls=DjangoJSONEncoder)),
+            data=form.data,
             errors={
                 field: [
                     {"code": str(e.code), "message": str(e.message)} for e in errors

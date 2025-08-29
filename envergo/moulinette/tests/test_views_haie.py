@@ -249,4 +249,4 @@ def test_moulinette_post_form_error(client):
         ],
     }
     assert "data" in error_event.metadata
-    assert error_event.metadata["data"] == {}
+    assert error_event.metadata["data"] == data
