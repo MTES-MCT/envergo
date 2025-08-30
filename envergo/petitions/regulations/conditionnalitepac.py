@@ -1,7 +1,6 @@
 from django.utils.module_loading import import_string
 
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
-from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 from envergo.petitions.services import HedgeList
@@ -15,7 +14,6 @@ def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -
     lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
     lineaire_to_plant_pac = hedge_data.length_to_plant_pac()
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
-    motif = moulinette.catalog.get("motif", "")
 
     hedge_to_plant_properties_form = import_string(
         moulinette.config.hedge_to_plant_properties_form
@@ -26,7 +24,6 @@ def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -
     )
 
     context = {
-        "motif": next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
         "lineaire_detruit_pac": lineaire_detruit_pac,
         "lineaire_to_plant_pac": lineaire_to_plant_pac,
         "ign_url": get_ign_centered_url(petition_project.hedge_data),
