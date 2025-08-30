@@ -63,7 +63,7 @@
                 le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
               Voici la réponse du simulateur qui lui a été affichée pour la réglementation « {{ regulation.title }} » :</em>
             </p>
-            {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
+            <div class="fr-ml-5w">{% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}</div>
 
             {% if regulation.has_instructor_result_details_template %}
               <h3 class="fr-h4">Détails du résultat de la simulation</h3>
