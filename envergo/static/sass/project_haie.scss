@@ -668,28 +668,26 @@ ul.instructor-view-list {
 
 /* Instructeur Messagerie */
 
-.instruction-messagerie {
-  .dj-messages {
-    padding-bottom: 1rem !important;
-    padding-top: 1rem !important;
+.dj-messages {
+  padding-bottom: 1rem !important;
+  padding-top: 1rem !important;
+}
+
+.ds-message {
+  background-color: var(--background-alt-grey);
+  border-left: 3px solid var(--grey-425-625);
+  padding: 2rem;
+
+  &__exp {
+    font-weight: bold;
   }
 
-  .ds-message {
-    background-color: var(--background-alt-grey);
-    border-left: 3px solid var(--grey-425-625);
-    padding: 2rem;
+  &--instructor {
+    border-color: var(--blue-france-main-525);
+  }
 
-    &__exp {
-      font-weight: bold;
-    }
-
-    &--instructor {
-      border-color: var(--blue-france-main-525);
-    }
-
-    &--petitioner {
-      border-color: var(--yellow-tournesol-850-200);
-    }
+  &--petitioner {
+    border-color: var(--yellow-tournesol-850-200);
   }
 }
 
@@ -702,12 +700,10 @@ ul.instructor-view-list {
     padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
   }
 
-  .instruction-messagerie {
-    .ds-message {
-      &--instructor,
-      &--automatic {
-        margin-left: 5rem;
-      }
+  .ds-message {
+    &--instructor,
+    &--automatic {
+      margin-left: 5rem;
     }
   }
 }
