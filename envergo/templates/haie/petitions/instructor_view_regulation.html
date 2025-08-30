@@ -31,6 +31,11 @@
             </section>
           {% endif %}
 
+          <section class="fr-mb-4w">
+            <h2 class="fr-mt-4w">Informations saisies par le demandeur</h2>
+            {% include "haie/petitions/_regulation_form.html" %}
+          </section>
+
           {% if regulation.has_key_elements_template %}
             <section id="section-plantation-evaluation">
               <h2 class="fr-h4">Éléments clés</h2>
@@ -39,7 +44,11 @@
           {% endif %}
 
           <section class="fr-mb-6w">
-            {% include "haie/petitions/_regulation_form.html" %}
+            <h2 class="fr-mt-3w fr-h4">Formulaire complet et pièces jointes</h2>
+
+            <a class="fr-btn fr-icon-arrow-right-line fr-btn--icon-right"
+               href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le dossier complet</a>
+
           </section>
 
           <section>
