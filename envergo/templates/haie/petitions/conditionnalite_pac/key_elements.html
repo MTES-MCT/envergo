@@ -5,7 +5,7 @@
 </p>
 
 <ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
+  {% include "haie/petitions/_item.html" with label="Motif" value=motif|display_motif %}
   {% if project_details.pacage %}
     {% include "haie/petitions/_item.html" with label="N° PACAGE" value=project_details.pacage %}
   {% endif %}

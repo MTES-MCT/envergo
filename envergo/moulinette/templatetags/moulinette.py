@@ -13,6 +13,7 @@ from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
+from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.regulations import HedgeDensityMixin
 
@@ -335,3 +336,8 @@ def display_remove_only_haies_field(field):
     value = floatformat(hedge_data.length_to_remove(), "0g")
     html = f"<strong>Linéaire de haies à détruire :</strong> {value} m"
     return mark_safe(html)
+
+
+@register.filter
+def display_motif(motif):
+    return dict(MOTIF_CHOICES).get(motif, "Motif non défini")

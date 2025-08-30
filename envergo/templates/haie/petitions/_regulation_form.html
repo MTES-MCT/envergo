@@ -1,7 +1,5 @@
 {% load moulinette %}
 
-<h2 class="fr-mt-4w">Informations saisies par le demandeur</h2>
-
 <h3 class="fr-h4">Informations saisies dans le simulateur</h3>
 
 {% for criterion in regulation.criteria.all %}
@@ -16,12 +14,7 @@
   {% endwith %}
 {% endfor %}
 
-<button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
+<button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-haie"
         type="button"
         data-fr-opened="false"
         aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
-
-<h3 class="fr-mt-3w fr-h4">Formulaire complet et pièces jointes</h3>
-
-<a class="fr-btn fr-icon-arrow-right-line fr-btn--icon-right"
-   href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le dossier complet</a>
