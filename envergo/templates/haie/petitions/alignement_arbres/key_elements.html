@@ -1,0 +1,14 @@
+{% load moulinette %}
+
+<ul class="instructor-view-list">
+  {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
+</ul>
+<h4 class="fr-mt-3w">Destruction</h4>
+<ul class="instructor-view-list">
+  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=lineaire_detruit|floatformat:"0g" unit="m" %}
+</ul>
+
+<h4 class="fr-mt-3w">Plantation</h4>
+<ul class="instructor-view-list">
+  {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=lineaire_to_plant|floatformat:"0g" unit="m" %}
+</ul>
