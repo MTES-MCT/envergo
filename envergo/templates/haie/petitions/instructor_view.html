@@ -24,9 +24,9 @@
         complet</a>
       </div>
 
-      <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Motif</h3>
-
-      {{ motif|display_motif }}
+      <p>
+        <span><b>Motif de la destruction :</b></span> <span>{{ motif|display_motif }}</span>
+      </p>
 
       <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
       <ul class="instructor-view-list">
@@ -99,10 +99,6 @@
         {% endfor %}
       </div>
     </section>
-    <p class="fr-mb-3w">
-      <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
-      Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
-    </p>
     <section id="section-plantation-evaluation" class="fr-my-4w fr-ml-5w">
       <h3 class="fr-h4 fr-mt-4w">Acceptabilité de la plantation</h3>
       <p class="fr-mb-3w">
