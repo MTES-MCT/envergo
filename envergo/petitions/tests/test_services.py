@@ -66,7 +66,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # AND the project details are correctly populated
     project_details = get_instructor_view_context(petition_project, moulinette)
 
-    assert project_details["applicant"] == "Mme Hedy Lamarr"
+    assert project_details["applicant"] == "Mme LAMARR Hedy"
     assert project_details["city"] == "Laon (02000)"
     assert project_details["pacage"] == "123456789"
 
