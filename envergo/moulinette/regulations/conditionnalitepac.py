@@ -44,8 +44,19 @@ class Bcae8Form(forms.Form):
         required=True,
     )
 
+    batiment_exploitation = forms.ChoiceField(
+        label="""
+        La destruction a-t-elle lieu dans le cadre de la construction ou l’agrandissement d’un bâtiment d’exploitation
+        autorisé par un permis de construire ?""",
+        widget=forms.RadioSelect,
+        choices=(("oui", "Oui"), ("non", "Non")),
+        required=True,
+    )
+
     amenagement_dup = forms.ChoiceField(
-        label="L’aménagement a-t-il été déclaré d’utilité publique et fait l’objet d’une consultation du public ?",
+        label="""
+        La destruction a-t-elle lieu à l’occasion d’une opération d’aménagement foncier déclarée d’utilité
+        publique et ayant fait l’objet d’une consultation du public ?""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
@@ -102,7 +113,8 @@ class Bcae8Form(forms.Form):
             )
         elif motif == "amenagement":
             self.fields = keep_fields(
-                self.fields, ("lineaire_total", "amenagement_dup")
+                self.fields,
+                ("lineaire_total", "batiment_exploitation", "amenagement_dup"),
             )
         elif motif == "amelioration_ecologique":
             self.fields = keep_fields(
@@ -225,6 +237,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
             self.catalog["localisation_pac"],
             # Additional vars
             self.catalog.get("transfert_parcelles"),
+            self.catalog.get("batiment_exploitation"),
             self.catalog.get("amenagement_dup"),
             self.catalog.get("meilleur_emplacement"),
             self.catalog.get("motif_pac"),
@@ -251,6 +264,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
             reimplantation,
             localisation_pac,
             transfert_parcelles,
+            batiment_exploitation,
             amenagement_dup,
             meilleur_emplacement,
             motif_pac,
@@ -287,7 +301,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                         else:
                             result_code = "interdit_securite"
                     elif motif == "amenagement":
-                        if amenagement_dup == "oui":
+                        if amenagement_dup == "oui" or batiment_exploitation == "oui":
                             result_code = "soumis_amenagement"
                         else:
                             result_code = "interdit_amenagement"
@@ -328,7 +342,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                         else:
                             result_code = "interdit_securite"
                     elif motif == "amenagement":
-                        if amenagement_dup == "oui":
+                        if amenagement_dup == "oui" or batiment_exploitation == "oui":
                             result_code = "soumis_amenagement"
                         else:
                             result_code = "interdit_amenagement"
@@ -358,7 +372,7 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
                         else:
                             result_code = "interdit_securite"
                     elif motif == "amenagement":
-                        if amenagement_dup == "oui":
+                        if amenagement_dup == "oui" or batiment_exploitation == "oui":
                             result_code = "soumis_amenagement"
                         else:
                             result_code = "interdit_amenagement"
