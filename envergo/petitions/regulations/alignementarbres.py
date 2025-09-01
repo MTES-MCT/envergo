@@ -17,12 +17,16 @@ def alignement_arbres_get_instructor_view_context(
     motif = moulinette.catalog.get("motif", "")
 
     length_to_remove_aa_bord_voie = hedge_data.length_to_remove_aa_bord_voie()
+    length_to_remove_aa_non_bord_voie = hedge_data.length_to_remove_aa_not_bord_voie()
+    length_to_remove_non_aa_bord_voie = hedge_data.length_to_remove_not_aa_bord_voie()
     length_to_plant_aa_bord_voie = hedge_data.length_to_plant_aa_bord_voie()
 
     context = {
         "motif": next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
         "replantation_coefficient": R,
         "length_to_remove_aa_bord_voie": length_to_remove_aa_bord_voie,
+        "length_to_remove_aa_non_bord_voie": length_to_remove_aa_non_bord_voie,  # TODO
+        "length_to_remove_non_aa_bord_voie": length_to_remove_non_aa_bord_voie,  # TODO
         "length_to_plant_aa_bord_voie": length_to_plant_aa_bord_voie,
         "ign_url": get_ign_centered_url(petition_project.hedge_data),
         "google_maps_url": get_google_maps_centered_url(petition_project.hedge_data),
@@ -48,12 +52,5 @@ def alignement_arbres_get_instructor_view_context(
         "minimum_length_to_plant_aa_bord_voie"
     ]
     context["missing_plantation_length"] = evaluator_context["aa_bord_voie_delta"]
-
-    context.update(
-        {
-            "length_to_remove_aa_non_bord_voie": 12,  # TODO
-            "length_to_remove_non_aa_bord_voie": 17,  # TODO
-        }
-    )
 
     return context
