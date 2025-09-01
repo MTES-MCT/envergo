@@ -272,6 +272,28 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type == "alignement"
         )
 
+    def hedges_to_remove_aa_bord_voie(self):
+        return [
+            h
+            for h in self.hedges_to_remove()
+            if h.hedge_type == "alignement" and h.prop("bord_voie")
+        ]
+
+    def length_to_remove_aa_bord_voie(self):
+        return sum(h.length for h in self.hedges_to_remove_aa_bord_voie())
+
+    def hedges_to_plant_aa_bord_voie(self):
+        return [
+            h
+            for h in self.hedges_to_plant()
+            if h.hedge_type == "alignement"
+            and h.prop("bord_voie")
+            and h.prop("mode_plantation") == "plantation"
+        ]
+
+    def length_to_plant_aa_bord_voie(self):
+        return sum(h.length for h in self.hedges_to_plant_aa_bord_voie())
+
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
         return any(h.proximite_mare for h in self.hedges_to_remove())
