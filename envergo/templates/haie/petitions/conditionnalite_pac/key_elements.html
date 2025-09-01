@@ -18,13 +18,7 @@
   {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur parcelle PAC" value=lineaire_detruit_pac|floatformat:"0g" unit="m" %}
 
   {% if lineaire_detruit_pac %}
-    <li>
-      <span><b>Détail : </b></span>
-      <span>
-        {{ pac_destruction_detail.length|floatformat:"0g" }} m
-        {% if pac_destruction_detail %}• {{ pac_destruction_detail.names }}{% endif %}
-      </span>
-    </li>
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=pac_destruction_detail %}
     {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
   {% endif %}
 </ul>
@@ -34,13 +28,7 @@
   {% include "haie/petitions/_item.html" with label="Total linéaire à planter sur parcelle PAC" value=lineaire_to_plant_pac|floatformat:"0g" unit="m" %}
 
   {% if lineaire_to_plant_pac %}
-    <li>
-      <span><b>Détail : </b></span>
-      <span>
-        {{ pac_plantation_detail.length|floatformat:"0g" }} m
-        {% if pac_plantation_detail %}• {{ pac_plantation_detail.names }}{% endif %}
-      </span>
-    </li>
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=pac_plantation_detail %}
     {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=replanting_ratio|floatformat:"2g" comment=replanting_ratio_comment %}
   {% endif %}
 </ul>
