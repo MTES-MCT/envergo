@@ -292,19 +292,29 @@ class MoulinetteHome(MoulinetteMixin, FormView):
         return HttpResponseRedirect(self.get_results_url(form))
 
     def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+
+        main_form_errors = {
+            field: [{"code": str(e.code), "message": str(e.message)} for e in errors]
+            for field, errors in form.errors.as_data().items()
+        }
+        optional_forms = context["optional_forms"]
+        optional_forms_errors = {
+            f"{optional_form.prefix}-{field}": [
+                {"code": str(e.code), "message": str(e.message)} for e in errors
+            ]
+            for optional_form in optional_forms
+            if optional_form.is_activated() and optional_form.errors
+            for field, errors in optional_form.errors.as_data().items()
+        }
         log_event(
             "erreur",
             "formulaire-simu",
             self.request,
             data=form.data,
-            errors={
-                field: [
-                    {"code": str(e.code), "message": str(e.message)} for e in errors
-                ]
-                for field, errors in form.errors.as_data().items()
-            },
+            errors=main_form_errors | optional_forms_errors,
         )
-        return super().form_invalid(form)
+        return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

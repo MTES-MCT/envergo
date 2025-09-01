@@ -1502,7 +1502,7 @@ class Moulinette(ABC):
                     form.full_clean()
                     if form.is_activated():
                         for k, v in form.errors.items():
-                            form_errors[k] = v
+                            form_errors[f"{form.prefix}-{k}"] = v
 
         return form_errors
 
