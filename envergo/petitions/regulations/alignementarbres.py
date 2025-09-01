@@ -47,7 +47,7 @@ def alignement_arbres_get_instructor_view_context(
     )
     context["length_to_remove_non_aa_bord_voie"] = length_to_remove_non_aa_bord_voie
     if length_to_remove_non_aa_bord_voie:
-        context["aa_non_bord_voie_destruction_detail"] = HedgeList(
+        context["non_aa_bord_voie_destruction_detail"] = HedgeList(
             hedge_data.hedges_to_remove_aa_bord_voie()
         )
 
