@@ -52,7 +52,7 @@ def alignement_arbres_get_instructor_view_context(
         )
 
     hedges_to_plant_aa_bord_voie = hedge_data.hedges_to_plant_aa_bord_voie()
-    length_to_plant_aa_bord_voie = hedges_to_plant_aa_bord_voie
+    length_to_plant_aa_bord_voie = sum(h.length for h in hedges_to_plant_aa_bord_voie)
     context["length_to_plant_aa_bord_voie"] = length_to_plant_aa_bord_voie
     if length_to_plant_aa_bord_voie:
         context["aa_bord_voie_plantation_detail"] = HedgeList(
