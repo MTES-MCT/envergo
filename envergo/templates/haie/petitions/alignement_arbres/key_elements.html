@@ -20,7 +20,7 @@
   {% include "haie/petitions/_item.html" with label="Haies (non alignements d'arbres) à détruire et marquées en bord de voie ouverte à la circulation du public" value=length_to_remove_non_aa_bord_voie|floatformat:"0g" unit="m" %}
 
   {% if length_to_remove_non_aa_bord_voie %}
-    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=aa_non_bord_voie_destruction_detail %}
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=non_aa_bord_voie_destruction_detail %}
   {% endif %}
 
 </ul>
