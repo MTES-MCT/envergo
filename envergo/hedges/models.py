@@ -272,13 +272,16 @@ class HedgeData(models.Model):
         return sum(h.length for h in self.hedges_to_remove_aa_bord_voie())
 
     def hedges_to_plant_aa_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_plant()
-            if h.hedge_type == "alignement"
-            and h.prop("bord_voie")
-            and h.prop("mode_plantation") == "plantation"
-        ]
+        """List hedges to plant type Alignement d'arbre and bord de voie"""
+
+        def aa_bord_voie_selection(h):
+            """Check if hedge must be taken into account"""
+            res = h.hedge_type == "alignement" and h.prop("bord_voie")
+            if h.has_property("mode_plantation"):
+                res = res and h.prop("mode_plantation") == "plantation"
+            return res
+
+        return [h for h in self.hedges_to_plant() if aa_bord_voie_selection(h)]
 
     def length_to_plant_aa_bord_voie(self):
         return sum(h.length for h in self.hedges_to_plant_aa_bord_voie())
