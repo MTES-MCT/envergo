@@ -8,11 +8,13 @@
   situe.
 </p>
 
-<p>
-  <b>Attention ! Si l’intervention a déjà eu lieu pour des raisons d’urgence,</b>
-  le dépôt d’une demande est tout de même obligatoire. La décision de l’administration pourra être assortie de
-  prescriptions complémentaires pour la compensation.
-</p>
+{% if motif == "securite" %}
+  <p>
+    <b>Attention ! Si l’intervention a déjà eu lieu pour des raisons d’urgence,</b>
+    le dépôt d’une demande est tout de même obligatoire. La décision de l’administration pourra être assortie de
+    prescriptions complémentaires pour la compensation.
+  </p>
+{% endif %}
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 
