@@ -31,7 +31,7 @@ def alignement_arbres_get_instructor_view_context(
             hedge_data.hedges_to_remove_aa_bord_voie()
         )
 
-    hedges_to_remove_aa_non_bord_voie = hedge_data.hedges_to_remove_aa_non_bord_voie()
+    hedges_to_remove_aa_non_bord_voie = hedge_data.hedges_to_remove_aa_not_bord_voie()
     length_to_remove_aa_non_bord_voie = sum(
         h.length for h in hedges_to_remove_aa_non_bord_voie
     )
@@ -41,7 +41,7 @@ def alignement_arbres_get_instructor_view_context(
             hedge_data.hedges_to_remove_aa_bord_voie()
         )
 
-    hedges_to_remove_non_aa_bord_voie = hedge_data.hedges_to_remove_non_aa_bord_voie()
+    hedges_to_remove_non_aa_bord_voie = hedge_data.hedges_to_remove_not_aa_bord_voie()
     length_to_remove_non_aa_bord_voie = sum(
         h.length for h in hedges_to_remove_non_aa_bord_voie
     )
