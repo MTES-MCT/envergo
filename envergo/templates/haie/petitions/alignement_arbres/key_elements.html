@@ -5,10 +5,49 @@
 </ul>
 <h4 class="fr-mt-3w">Destruction</h4>
 <ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=lineaire_detruit|floatformat:"0g" unit="m" %}
+  {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire marqués en bord de voie ouverte à la circulation du public" value=length_to_remove_aa_bord_voie|floatformat:"0g" unit="m" %}
+
+  {% if length_to_remove_aa_bord_voie %}
+    <li>
+      <span><b>Détail : </b></span>
+      <span>
+        {{ pac_destruction_detail.length|floatformat:"0g" }} m
+        {% if pac_destruction_detail %}• {{ pac_destruction_detail.names }}{% endif %}
+      </span>
+    </li>
+    {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
+  {% endif %}
+
+  {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire non marqués en bord de voie ouverte à la circulation du public" value=length_to_remove_aa_non_bord_voie|floatformat:"0g" unit="m" %}
+
+  {% if length_to_remove_aa_non_bord_voie %}
+    <li>
+      <span><b>Détail : </b></span>
+      <span>
+        {{ pac_destruction_detail.length|floatformat:"0g" }} m
+        {% if pac_destruction_detail %}• {{ pac_destruction_detail.names }}{% endif %}
+      </span>
+    </li>
+    {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
+  {% endif %}
+
+  {% include "haie/petitions/_item.html" with label="Haies (non alignements d'arbres) à détruire et marquées en bord de voie ouverte à la circulation du public" value=length_to_remove_non_aa_bord_voie|floatformat:"0g" unit="m" %}
+
 </ul>
 
 <h4 class="fr-mt-3w">Plantation</h4>
 <ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=lineaire_to_plant|floatformat:"0g" unit="m" %}
+  {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire marqués en bord de voie ouverte à la circulation du public" value=length_to_plant_aa_bord_voie|floatformat:"0g" unit="m" %}
+
+  {% if length_to_plant_aa_bord_voie %}
+    <li>
+      <span><b>Détail : </b></span>
+      <span>
+        {{ pac_destruction_detail.length|floatformat:"0g" }} m
+        {% if pac_destruction_detail %}• {{ pac_destruction_detail.names }}{% endif %}
+      </span>
+    </li>
+    {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
+  {% endif %}
+
 </ul>
