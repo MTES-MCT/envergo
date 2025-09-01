@@ -8,37 +8,19 @@
   {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire marqués en bord de voie ouverte à la circulation du public" value=length_to_remove_aa_bord_voie|floatformat:"0g" unit="m" %}
 
   {% if length_to_remove_aa_bord_voie %}
-    <li>
-      <span><b>Détail : </b></span>
-      <span>
-        {{ aa_bord_voie_destruction_detail.length|floatformat:"0g" }} m
-        {% if aa_bord_voie_destruction_detail %}• {{ aa_bord_voie_destruction_detail.names }}{% endif %}
-      </span>
-    </li>
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=aa_bord_voie_destruction_detail %}
   {% endif %}
 
   {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire non marqués en bord de voie ouverte à la circulation du public" value=length_to_remove_aa_non_bord_voie|floatformat:"0g" unit="m" %}
 
   {% if length_to_remove_aa_non_bord_voie %}
-    <li>
-      <span><b>Détail : </b></span>
-      <span>
-        {{ aa_non_bord_voie_destruction_detail.length|floatformat:"0g" }} m
-        {% if aa_non_bord_voie_destruction_detail %}• {{ aa_non_bord_voie_destruction_detail.names }}{% endif %}
-      </span>
-    </li>
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=aa_non_bord_voie_destruction_detail %}
   {% endif %}
 
   {% include "haie/petitions/_item.html" with label="Haies (non alignements d'arbres) à détruire et marquées en bord de voie ouverte à la circulation du public" value=length_to_remove_non_aa_bord_voie|floatformat:"0g" unit="m" %}
 
   {% if length_to_remove_non_aa_bord_voie %}
-    <li>
-      <span><b>Détail : </b></span>
-      <span>
-        {{ aa_non_bord_voie_destruction_detail.length|floatformat:"0g" }} m
-        {% if aa_non_bord_voie_destruction_detail %}• {{ aa_non_bord_voie_destruction_detail.names }}{% endif %}
-      </span>
-    </li>
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=aa_non_bord_voie_destruction_detail %}
   {% endif %}
 
 </ul>
@@ -48,13 +30,7 @@
   {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire marqués en bord de voie ouverte à la circulation du public" value=length_to_plant_aa_bord_voie|floatformat:"0g" unit="m" %}
 
   {% if length_to_plant_aa_bord_voie %}
-    <li>
-      <span><b>Détail : </b></span>
-      <span>
-        {{ aa_bord_voie_plantation_detail.length|floatformat:"0g" }} m
-        {% if aa_bord_voie_plantation_detail %}• {{ aa_bord_voie_plantation_detail.names }}{% endif %}
-      </span>
-    </li>
+    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=aa_bord_voie_plantation_detail %}
   {% endif %}
 
 </ul>
