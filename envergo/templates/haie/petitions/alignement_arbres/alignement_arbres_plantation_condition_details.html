@@ -1,0 +1,8 @@
+<ul class="instructor-view-list">
+
+  {% include 'haie/petitions/_item.html' with label="Coefficient compensation" value=replantation_coefficient|floatformat:"1g" %}
+  {% include 'haie/petitions/_item.html' with label="Linéaire attendu pour la plantation d'alignements d'arbres L350-3" value=minimum_length_to_plant_aa_bord_voie|floatformat:"1g" %}
+  {% include 'haie/petitions/_item.html' with label="Plantation proposée" value=length_to_plant_aa_bord_voie|floatformat:"1g" %}
+  {% include 'haie/petitions/_item.html' with label="Manque" value=missing_plantation_length|floatformat:"1g" %}
+
+</ul>
