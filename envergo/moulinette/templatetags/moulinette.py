@@ -338,6 +338,6 @@ def display_remove_only_haies_field(field):
     return mark_safe(html)
 
 
-@register.filter
-def display_motif(motif):
+@register.simple_tag
+def humanize_motif(motif):
     return dict(MOTIF_CHOICES).get(motif, "Motif non défini")
