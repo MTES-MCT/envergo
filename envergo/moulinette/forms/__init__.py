@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.template.defaultfilters import floatformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -111,13 +112,22 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         final_surface = data.get("final_surface")
 
         if final_surface is None:
-            self.add_error("final_surface", _("This field is required"))
+            self.add_error(
+                "final_surface",
+                ValidationError(_("This field is required"), code="required"),
+            )
         elif created_surface is None:
-            self.add_error("created_surface", _("This field is required"))
+            self.add_error(
+                "created_surface",
+                ValidationError(_("This field is required"), code="required"),
+            )
         elif final_surface < created_surface:
             self.add_error(
                 "final_surface",
-                _("The total surface must be greater than the created surface"),
+                ValidationError(
+                    _("The total surface must be greater than the created surface"),
+                    code="inconsistent_surface",
+                ),
             )
 
         return data
@@ -290,15 +300,21 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if motif == "chemin_acces" and reimplantation == "remplacement":
             self.add_error(
                 "reimplantation",
-                """Le remplacement de la haie au même endroit est incompatible avec la
-                raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                ValidationError(
+                    """Le remplacement de la haie au même endroit est incompatible avec la
+                    raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
             )
 
         elif motif == "amelioration_ecologique" and reimplantation == "non":
             self.add_error(
                 "reimplantation",
-                """La destruction de la haie sans réimplantation est incompatible avec la raison
-                « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                ValidationError(
+                    """La destruction de la haie sans réimplantation est incompatible avec la raison
+                    « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
             )
 
         if localisation_pac == "oui" and haies:
@@ -306,20 +322,26 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             if not any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
-                    """Il est indiqué que « oui, au moins une des haies » est située
-                    sur une parcelle PAC, mais aucune des haies saisies n’est marquée
-                    comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                    les haies.""",
+                    ValidationError(
+                        """Il est indiqué que « oui, au moins une des haies » est située
+                        sur une parcelle PAC, mais aucune des haies saisies n’est marquée
+                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
+                        les haies.""",
+                        code="inconsistent_hedges",
+                    ),
                 )
         elif localisation_pac == "non" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
-                    """Il est indiqué que « non, aucune des haies » n’est située sur
-                    une parcelle PAC, mais au moins une des haies saisies est marquée
-                    comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                    les haies ci-dessous.""",
+                    ValidationError(
+                        """Il est indiqué que « non, aucune des haies » n’est située sur
+                        une parcelle PAC, mais au moins une des haies saisies est marquée
+                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
+                        les haies ci-dessous.""",
+                        code="inconsistent_hedges",
+                    ),
                 )
 
         return data
@@ -329,7 +351,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if haies.length_to_remove() == 0:
             self.add_error(
                 "haies",
-                "Merci de saisir au moins une haie à détruire.",
+                ValidationError(
+                    "Merci de saisir au moins une haie à détruire.", code="required"
+                ),
             )
         return haies
 

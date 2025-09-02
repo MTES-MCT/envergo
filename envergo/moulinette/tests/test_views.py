@@ -2,7 +2,13 @@ import pytest
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
-from envergo.moulinette.tests.factories import ConfigAmenagementFactory
+from envergo.analytics.models import Event
+from envergo.geodata.conftest import france_map  # noqa: F401
+from envergo.moulinette.tests.factories import (
+    ConfigAmenagementFactory,
+    CriterionFactory,
+    RegulationFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -184,6 +190,84 @@ def test_moulinette_home_form_error(client):
     assert HOME_TITLE in res.content.decode()
     assert RESULT_TITLE not in res.content.decode()
     assert FORM_ERROR in res.content.decode()
+
+
+def test_moulinette_post_form_error(client):
+    url = reverse("moulinette_home")
+    data = {"lng": "-1.54394", "lat": "47.21381"}
+    res = client.post(url, data)
+
+    assert res.status_code == 200
+    assert HOME_TITLE in res.content.decode()
+    assert RESULT_TITLE not in res.content.decode()
+    assert FORM_ERROR in res.content.decode()
+    error_event = Event.objects.filter(category="erreur", event="formulaire-simu").get()
+    assert "errors" in error_event.metadata
+    assert error_event.metadata["errors"] == {
+        "created_surface": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+        "final_surface": [{"code": "required", "message": "Ce champ est obligatoire"}],
+    }
+    assert "data" in error_event.metadata
+    assert error_event.metadata["data"] == data
+
+
+def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
+    # GIVEN a moulinette configured with one criterion requiring complementary questions
+    ConfigAmenagementFactory(is_activated=True)
+    regulation = RegulationFactory(regulation="eval_env")
+    CriterionFactory(
+        title="Terrain d'assiette",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
+        activation_map=france_map,
+    )
+    url = reverse("moulinette_home")
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 45000,
+        "final_surface": 45000,
+    }
+
+    # WHEN I post a form without answering the complementary questions
+    res = client.post(url, data, follow=True)
+
+    # THEN I am redirect to the form with the complementary questions BUT there is no event created
+    assert res.status_code == 200
+    assert HOME_TITLE in res.content.decode()
+    assert RESULT_TITLE not in res.content.decode()
+    assert "Questions complémentaires" in res.content.decode()
+    assert Event.objects.filter(category="erreur", event="formulaire-simu").count() == 0
+
+    # WHEN I post a form with invalid value to the complementary questions
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 45000,
+        "final_surface": 45000,
+        "terrain_assiette": "azerty",
+    }
+    res = client.post(url, data, follow=True)
+
+    # THEN I get an error message and an event is created
+    assert res.status_code == 200
+    assert HOME_TITLE in res.content.decode()
+    assert RESULT_TITLE not in res.content.decode()
+    assert "↑\n      Saisissez un nombre entier.\n      ↑" in res.content.decode()
+
+    error_event = Event.objects.filter(category="erreur", event="formulaire-simu").get()
+    assert "errors" in error_event.metadata
+    assert error_event.metadata["errors"] == {
+        "operation_amenagement": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+        "terrain_assiette": [
+            {"code": "invalid", "message": "Saisissez un nombre entier."}
+        ],
+    }
+    assert "data" in error_event.metadata
 
 
 def test_moulinette_utm_param(client):
