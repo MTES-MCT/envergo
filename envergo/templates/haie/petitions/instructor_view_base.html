@@ -9,7 +9,7 @@
 {% block messages %}{# Move messages block between title and content #}{% endblock %}
 
 {% block container %}
-  <section>
+  <section class="{{ page_css_classname }}">
     <div class="fr-container">
       <div class="fr-grid-row">
         <div class="fr-col fr-col-12 fr-col-md-3">
@@ -70,7 +70,7 @@
                     </li>
                   {% endwith %}
                 </ul>
-                <ul class="fr-sidemenu__list fr-btns-group fr-btns-group--icon-left fr-mt-2w">
+                <ul class="fr-sidemenu__list fr-btns-group fr-btns-group--icon-left fr-px-2w fr-px-md-0 fr-mt-2w">
                   <li>
                     <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
                             type="button"
@@ -103,7 +103,8 @@
              class="fr-col fr-col-12 fr-col-md-9">
 
           {% include 'haie/petitions/_summary_dossier.html' %}
-          <div class="fr-pl-10w">
+
+          <div class="fr-pl-md-10w fr-py-4w fr-px-2w ">
             {% block project_view_title %}{% endblock %}
             {% include '_messages.html' %}
             {% block project_content %}{% endblock %}
