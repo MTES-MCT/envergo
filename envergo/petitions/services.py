@@ -283,8 +283,15 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
     )
 
 
-def get_messages_from_ds(petition_project):
-    """Get messages from DS"""
+def get_messages_and_senders_from_ds(
+    petition_project,
+) -> (List | None, List | None, str | None):
+    """Get messages and sender emails from DS
+
+    :param petition_project: PetitionProject object
+
+    :return: tuple (messages list, instructor emails list, petitioner email)
+    """
 
     # Get messages only from DS
     dossier_number = petition_project.demarches_simplifiees_dossier_number
@@ -292,13 +299,16 @@ def get_messages_from_ds(petition_project):
     dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
 
     if not dossier_with_messages_as_dict:
-        return None
+        return None, None, None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
+    petitioner_email = dossier.usager.email
+    instructor_emails = [i.email for i in dossier.instructeurs]
+
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
-    return messages
+    return messages, instructor_emails, petitioner_email
 
 
 def get_item_value_from_ds_champ(champ):

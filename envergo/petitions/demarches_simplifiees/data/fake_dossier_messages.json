@@ -9,6 +9,15 @@
       "state": "en_construction",
       "dateDerniereModification": "2025-03-31T15:50:12+02:00",
       "dateDepot": "2025-03-21T11:08:34+01:00",
+      "instructeurs": [
+        {
+          "email": "instructeur@guh.gouv.fr",
+          "id": "IDINSTRUCTEUR1234"
+        }
+      ],
+      "usager": {
+        "email": "hedy.lamarr@example.com"
+      },
       "messages": [
         {
           "id": "Q29tbWVudGFpcmUtNTQ1OTM5MzM=",

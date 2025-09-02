@@ -22,7 +22,11 @@ from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
 from shapely.ops import transform
 
-from envergo.analytics.utils import get_matomo_tags, log_event
+from envergo.analytics.utils import (
+    get_matomo_tags,
+    log_event,
+    update_url_with_matomo_params,
+)
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
@@ -38,7 +42,7 @@ from envergo.petitions.services import (
     compute_instructor_informations_ds,
     extract_data_from_fields,
     get_instructor_view_context,
-    get_messages_from_ds,
+    get_messages_and_senders_from_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -533,8 +537,8 @@ class PetitionProjectDetail(DetailView):
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
         )
-        context["matomo_custom_url"] = self.request.build_absolute_uri(
-            matomo_custom_path
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
         )
 
         return context
@@ -633,8 +637,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
         )
-        context["matomo_custom_url"] = self.request.build_absolute_uri(
-            matomo_custom_path
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
             moulinette.config.demarche_simplifiee_number
@@ -775,7 +779,17 @@ class PetitionProjectInstructorMessagerieView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["ds_messages"] = get_messages_from_ds(self.object)
+
+        ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
+            get_messages_and_senders_from_ds(self.object)
+        )
+
+        context["ds_messages"] = ds_messages
+        context["ds_sender_emails_categories"] = {
+            "petitioner": ds_petitioner_email,
+            "instructor": ds_instructeurs_emails,
+            "automatic": "contact@demarches-simplifiees.fr",
+        }
 
         # Send message if info from DS is not in project details
         if context["ds_messages"] is None:

@@ -1,6 +1,6 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
-{% load utils %}
+{% load utils petitions %}
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
@@ -8,7 +8,7 @@
 
 {% block project_content %}
 
-  <div class="fr-alert fr-alert--info">
+  <div class="dj-message fr-alert fr-alert--info">
     <h3 class="fr-alert__title">Cette page est en cours de construction.</h3>
     <p>
       En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
@@ -27,12 +27,13 @@
           {% endif %}
         {% endwith %}
       </p>
+
       {% for message in ds_messages|slice:":num_messages_displayed" %}
-        <div class="ds-message fr-mb-3w fr-p-3w">
+        <div class="ds-message ds-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
           <div class="fr-mb-2w ds-message__metadata">
             <span class="ds-message__exp">{{ message.email }}</span> –
             {% with message_date=message.createdAt|to_datetime %}
-              <span class="ds-message__date">{{ message_date|date }} à {{ message_date|time:"H:i" }}</span>
+              <span class="ds-message__date">{{ message_date|date:"D\. j F Y" }} {{ message_date|time:"H\hi" }}</span>
             {% endwith %}
           </div>
           <div class="ds-message__content">{{ message.body|safe|linebreaksbr }}</div>

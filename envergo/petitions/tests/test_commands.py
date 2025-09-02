@@ -110,7 +110,7 @@ def test_dossier_submission_admin_alert(
     call_command("dossier_submission_admin_alert")
 
     args, kwargs = mock_notify_model.call_args_list[0]
-    assert "Un dossier a été soumis sur Démarches Simplifiées" in args[0]
+    assert "### Nouveau dossier – Loire-Atlantique (44)" in args[0]
     assert "haie" in args[1]
 
     args, kwargs = mock_notify_command.call_args_list[0]
@@ -120,9 +120,6 @@ def test_dossier_submission_admin_alert(
     )
     assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
     assert "haie" in args[1]
-
-    args, kwargs = mock_notify_model.call_args_list[0]
-    assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
 
     assert mock_notify_command.call_count == 2
     assert mock_notify_model.call_count == 1
