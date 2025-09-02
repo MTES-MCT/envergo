@@ -10,6 +10,7 @@ from envergo.petitions.services import HedgeList
 def alignement_arbres_get_instructor_view_context(
     evaluator, petition_project, moulinette
 ) -> dict:
+    """Return context for alignement_arbres regulation instructor view"""
 
     hedge_data = petition_project.hedge_data
     R = evaluator.get_replantation_coefficient()
@@ -23,6 +24,7 @@ def alignement_arbres_get_instructor_view_context(
         "google_maps_url": get_google_maps_centered_url(petition_project.hedge_data),
     }
 
+    # Hedges to remove, alignement_arbres, en bord de voie
     hedges_to_remove_aa_bord_voie = hedge_data.hedges_to_remove_aa_bord_voie()
     length_to_remove_aa_bord_voie = sum(h.length for h in hedges_to_remove_aa_bord_voie)
     context["length_to_remove_aa_bord_voie"] = length_to_remove_aa_bord_voie
@@ -31,6 +33,7 @@ def alignement_arbres_get_instructor_view_context(
             hedge_data.hedges_to_remove_aa_bord_voie()
         )
 
+    # Hedges to remove, alignement_arbres, not bord de voie
     hedges_to_remove_aa_non_bord_voie = hedge_data.hedges_to_remove_aa_not_bord_voie()
     length_to_remove_aa_non_bord_voie = sum(
         h.length for h in hedges_to_remove_aa_non_bord_voie
@@ -38,9 +41,10 @@ def alignement_arbres_get_instructor_view_context(
     context["length_to_remove_aa_non_bord_voie"] = length_to_remove_aa_non_bord_voie
     if length_to_remove_aa_non_bord_voie:
         context["aa_non_bord_voie_destruction_detail"] = HedgeList(
-            hedge_data.hedges_to_remove_aa_bord_voie()
+            hedge_data.hedges_to_remove_aa_not_bord_voie()
         )
 
+    # Hedges to remove, non alignement_arbres, en bord de voie
     hedges_to_remove_non_aa_bord_voie = hedge_data.hedges_to_remove_not_aa_bord_voie()
     length_to_remove_non_aa_bord_voie = sum(
         h.length for h in hedges_to_remove_non_aa_bord_voie
@@ -48,9 +52,10 @@ def alignement_arbres_get_instructor_view_context(
     context["length_to_remove_non_aa_bord_voie"] = length_to_remove_non_aa_bord_voie
     if length_to_remove_non_aa_bord_voie:
         context["non_aa_bord_voie_destruction_detail"] = HedgeList(
-            hedge_data.hedges_to_remove_aa_bord_voie()
+            hedge_data.hedges_to_remove_not_aa_bord_voie()
         )
 
+    # Hedges to plant, alignement_arbres, en bord de voie
     hedges_to_plant_aa_bord_voie = hedge_data.hedges_to_plant_aa_bord_voie()
     length_to_plant_aa_bord_voie = sum(h.length for h in hedges_to_plant_aa_bord_voie)
     context["length_to_plant_aa_bord_voie"] = length_to_plant_aa_bord_voie
