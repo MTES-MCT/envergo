@@ -18,6 +18,9 @@ from envergo.moulinette.tests.factories import (
 )
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.petitions.models import SESSION_KEY
+from envergo.petitions.regulations.alignementarbres import (
+    alignement_arbres_get_instructor_view_context,
+)
 from envergo.petitions.regulations.conditionnalitepac import (
     bcae8_get_instructor_view_context,
 )
@@ -657,6 +660,169 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "parcelle PAC",
     }
     assert info == expected_result
+
+
+def test_aa_get_instructor_view_context(france_map):  # noqa
+    """Test alignement arbre get instructor view context"""
+
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "P1",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "bord_voie": True,
+                    "type_haie": "alignement",
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "connexion_boisement": False,
+                    "proximite_point_eau": False,
+                    "sous_ligne_electrique": False,
+                },
+            },
+            {
+                "id": "P2",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0695, "lng": 0.4423},
+                    {"lat": 43.0693, "lng": 0.4426},
+                ],
+                "additionalData": {
+                    "bord_voie": False,
+                    "type_haie": "alignement",
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "connexion_boisement": False,
+                    "proximite_point_eau": False,
+                    "sous_ligne_electrique": False,
+                },
+            },
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0698, "lng": 0.4423},
+                    {"lat": 43.0695, "lng": 0.4426},
+                ],
+                "additionalData": {
+                    "bord_voie": True,
+                    "type_haie": "alignement",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "mode_destruction": "arrachage",
+                    "sur_parcelle_pac": False,
+                    "connexion_boisement": False,
+                    "proximite_point_eau": False,
+                },
+            },
+            {
+                "id": "D2",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0698, "lng": 0.4426},
+                    {"lat": 43.0695, "lng": 0.443},
+                ],
+                "additionalData": {
+                    "bord_voie": False,
+                    "type_haie": "alignement",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "mode_destruction": "arrachage",
+                    "sur_parcelle_pac": False,
+                    "connexion_boisement": False,
+                    "proximite_point_eau": False,
+                },
+            },
+            {
+                "id": "D3",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0700, "lng": 0.4426},
+                    {"lat": 43.0698, "lng": 0.4428},
+                ],
+                "additionalData": {
+                    "bord_voie": True,
+                    "type_haie": "arbustive",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "mode_destruction": "arrachage",
+                    "sur_parcelle_pac": False,
+                    "connexion_boisement": False,
+                    "proximite_point_eau": False,
+                },
+            },
+        ]
+    )
+
+    moulinette_data = {
+        "motif": "amelioration",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "element": "haie",
+        "department": 44,
+    }
+
+    regulation = RegulationFactory(regulation="alignement_arbres")
+    CriterionFactory(
+        title="Alignements arbres L350-3",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+    ConfigHaieFactory()
+
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    context = alignement_arbres_get_instructor_view_context(
+        moulinette.alignement_arbres.alignement_arbres._evaluator,
+        petition_project,
+        moulinette,
+    )
+    assert context["motif"] == "amelioration"
+
+    aa_bord_voie_destruction_hedge = context["aa_bord_voie_destruction_detail"][0]
+    assert (
+        aa_bord_voie_destruction_hedge.length
+        == context["length_to_remove_aa_bord_voie"]
+    )
+    assert aa_bord_voie_destruction_hedge.type == "TO_REMOVE"
+    assert aa_bord_voie_destruction_hedge.hedge_type == "alignement"
+    assert aa_bord_voie_destruction_hedge.prop("bord_voie") is True
+
+    aa_non_bord_voie_destruction_hedge = context["aa_non_bord_voie_destruction_detail"][
+        0
+    ]
+    assert (
+        aa_non_bord_voie_destruction_hedge.length
+        == context["length_to_remove_aa_non_bord_voie"]
+    )
+    assert aa_non_bord_voie_destruction_hedge.type == "TO_REMOVE"
+    assert aa_non_bord_voie_destruction_hedge.hedge_type == "alignement"
+    assert aa_non_bord_voie_destruction_hedge.prop("bord_voie") is False
+
+    non_aa_bord_voie_destruction_hedge = context["non_aa_bord_voie_destruction_detail"][
+        0
+    ]
+    assert (
+        non_aa_bord_voie_destruction_hedge.length
+        == context["length_to_remove_non_aa_bord_voie"]
+    )
+    assert non_aa_bord_voie_destruction_hedge.type == "TO_REMOVE"
+    assert non_aa_bord_voie_destruction_hedge.hedge_type == "arbustive"
+    assert non_aa_bord_voie_destruction_hedge.prop("bord_voie") is True
+
+    aa_bord_voie_to_plant_hedge = context["aa_bord_voie_plantation_detail"][0]
+    assert aa_bord_voie_to_plant_hedge.length == context["length_to_plant_aa_bord_voie"]
+    assert aa_bord_voie_to_plant_hedge.type == "TO_PLANT"
+    assert aa_bord_voie_to_plant_hedge.hedge_type == "alignement"
+    assert aa_bord_voie_to_plant_hedge.prop("bord_voie") is True
 
 
 @pytest.mark.urls("config.urls_haie")
