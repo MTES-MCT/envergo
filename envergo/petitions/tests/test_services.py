@@ -682,6 +682,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     assert info == expected_result
 
 
+@pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
 def test_messagerie_via_demarches_simplifiees(mock_post, haie_user, site):
