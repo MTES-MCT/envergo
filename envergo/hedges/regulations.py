@@ -643,8 +643,18 @@ class TreeAlignmentsCondition(PlantationCondition):
         return self.criterion_evaluator.result_code != RESULTS.non_soumis
 
     def evaluate(self):
-        length_to_remove_aa_bord_voie = self.hedge_data.length_to_remove_aa_bord_voie()
-        length_to_plant_aa_bord_voie = self.hedge_data.length_to_plant_aa_bord_voie()
+        length_to_remove_aa_bord_voie = sum(
+            hedge.length
+            for hedge in self.hedge_data.hedges_to_remove()
+            if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
+        )
+        length_to_plant_aa_bord_voie = sum(
+            hedge.length
+            for hedge in self.hedge_data.hedges_to_plant()
+            if hedge.hedge_type == "alignement"
+            and hedge.prop("bord_voie")
+            and hedge.prop("mode_plantation") == "plantation"
+        )
 
         from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
 
