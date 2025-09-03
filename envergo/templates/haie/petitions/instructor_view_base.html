@@ -116,6 +116,9 @@
   </section>
 
 {% endblock %}
+
+{% block after-content %}{% endblock %}
+
 {% block extra_body %}
   {% include 'haie/petitions/_invitation_token_modal.html' %}
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
