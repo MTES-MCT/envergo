@@ -23,14 +23,6 @@ EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
 
 
-def length(line):
-    """Returns the geodesic length (in meters) of the line."""
-
-    geod = Geod(ellps="WGS84")
-    length = geod.geometry_length(line)
-    return length
-
-
 class Natura2000Haie(CriterionEvaluator):
     choice_label = "Natura 2000 > Haie"
     slug = "natura2000_haie"
