@@ -281,13 +281,12 @@ def test_compute_instructor_information(mock_get_dossier):
     )
 
     petition_project = PetitionProjectFactory()
-    moulinette = petition_project.get_moulinette()
 
     # When I compute instructor information for a given petition project
-    project_details = compute_instructor_informations_ds(petition_project, moulinette)
+    project_details = compute_instructor_informations_ds(petition_project)
 
     # Then I should have header sections from demarche champ descriptors
-    header_sections = project_details.ds_data.header_sections
+    header_sections = project_details.header_sections
     assert header_sections == [
         "Identité",
         "Description du projet",
@@ -299,7 +298,7 @@ def test_compute_instructor_information(mock_get_dossier):
     ]
 
     # Then I should have correct data for each field type
-    champs = project_details.ds_data.champs
+    champs = project_details.champs
     [yesno_champ_yes] = [
         c
         for c in champs
