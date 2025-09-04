@@ -263,37 +263,31 @@ class DemarchesSimplifieesClient:
             try:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
-                if any(
-                    error.get("extensions", {}).get("code") == "not_found"
-                    and any(path == "dossier" for path in error.get("path", []))
-                    for error in (
-                        e.__cause__.errors if hasattr(e.__cause__, "errors") else []
-                    )
-                ):
-                    logger.error(
-                        "Error when sending message to Demarches Simplifiees",
-                        extra={
-                            "dossier_number": dossier_number,
-                            "error": e.__cause__ if e.__cause__ else e.message,
-                            "query": e.query,
-                            "variables": e.variables,
-                        },
-                    )
-                else:
-                    message = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
-                        context={
-                            "dossier_number": dossier_number,
-                            "error": e.__cause__ if e.__cause__ else e.message,
-                            "query": e.query,
-                            "variables": e.variables,
-                        },
-                    )
-                    notify(dedent(message), "haie")
+                logger.error(
+                    "Error when sending message to Demarches Simplifiees",
+                    extra={
+                        "dossier_number": dossier_number,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                message = render_to_string(
+                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    context={
+                        "dossier_number": dossier_number,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                notify(dedent(message), "haie")
                 return None
 
         query_name = "dossierEnvoyerMessage"
-        if query_name not in data:
+
+        # If message has not been sent because errors
+        if query_name not in data or data[query_name]["errors"]:
             logger.error(
                 "Error when sending message to Demarches Simplifiees",
                 extra={
@@ -302,6 +296,16 @@ class DemarchesSimplifieesClient:
                     "variables": variables,
                 },
             )
+            message = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                context={
+                    "dossier_number": dossier_number,
+                    "error": data,
+                    "query": query,
+                    "variables": variables,
+                },
+            )
+            notify(dedent(message), "haie")
             return None
 
         # Return query response content
