@@ -652,7 +652,8 @@ def test_petition_project_invitation_token(
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
     event = Event.objects.get(category="projet", event="invitation")
-    assert event.metadata["project_reference"] == project.reference
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["department"] == "44"
 
 
 @pytest.mark.urls("config.urls_haie")
