@@ -1,0 +1,8 @@
+{% load moulinette %}
+
+<ul class="instructor-view-list">
+
+  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur site Natura 2000" value=l_n2000_hors_aa|floatformat:"0g" unit="m" comment="Hors linéaires déclarés comme « alignements d'arbres ».<br /> Uniquement sur les sites où l'arrachage de haies est soumis à EIN." %}
+
+  {% include "haie/petitions/_item.html" with label="Total linéaire d'alignements d'arbres à détruire sur site Natura 2000" value=l_n2000_aa|floatformat:"0g" unit="m" %}
+</ul>
