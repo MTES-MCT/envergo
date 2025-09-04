@@ -30,9 +30,9 @@
 
       <h4 class="fr-mt-3w">Destruction</h4>
       <ul class="instructor-view-list">
-        {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=project_details.length_to_remove|floatformat:"0g" unit="m" %}
+        {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=length_to_remove|floatformat:"0g" unit="m" %}
         {% include "haie/petitions/_item.html" with label="Mode de destruction" %}
-        {% for mode, hedges_by_mode in project_details.hedge_to_remove_by_destruction_mode.items %}
+        {% for mode, hedges_by_mode in hedge_to_remove_by_destruction_mode.items %}
           <li class="fr-pl-4w">
             <span>{{ hedges_by_mode.label }} :</span>
             <span>{{ hedges_by_mode.length|floatformat:"0g" }} m
@@ -43,10 +43,10 @@
       </ul>
 
       <h4 class="fr-mt-3w">Plantation</h4>
-      {% if project_details.hedge_to_plant_by_plantation_mode %}
+      {% if hedge_to_plant_by_plantation_mode %}
         <ul class="instructor-view-list">
-          {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
-          {% for mode, hedges_by_mode in project_details.hedge_to_plant_by_plantation_mode.items %}
+          {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=length_to_plant|floatformat:"0g" unit="m" %}
+          {% for mode, hedges_by_mode in hedge_to_plant_by_plantation_mode.items %}
             <li class="fr-pl-4w">
               <span>{{ hedges_by_mode.label }} :</span>
               <span>{{ hedges_by_mode.length|floatformat:"0g" }} m
@@ -54,14 +54,14 @@
               </span>
             </li>
           {% endfor %}
-          {% include "haie/petitions/_item.html" with label="Ratio de replantation, renforcement ou reconnexion" value=project_details.plantation_ratio|floatformat:"2g" comment="Linéaire total à planter, renforcer ou reconnecter / linéaire à détruire" %}
-          {% include "haie/petitions/_item.html" with label="Ratio de replantation uniquement" value=project_details.plantation_ratio|floatformat:"2g" comment="Linéaire plantation nouvelle ou remplacement / linéaire à détruire" %}
+          {% include "haie/petitions/_item.html" with label="Ratio de replantation, renforcement ou reconnexion" value=plantation_ratio|floatformat:"2g" comment="Linéaire total à planter, renforcer ou reconnecter / linéaire à détruire" %}
+          {% include "haie/petitions/_item.html" with label="Ratio de replantation uniquement" value=plantation_ratio|floatformat:"2g" comment="Linéaire plantation nouvelle ou remplacement / linéaire à détruire" %}
         </ul>
       {% else %}
         {{ hedge_to_plant_by_plantation_mode }}
         <ul class="instructor-view-list">
-          {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=project_details.length_to_plant|floatformat:"0g" unit="m" %}
-          {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=project_details.plantation_ratio|floatformat:"2g" %}
+          {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=length_to_plant|floatformat:"0g" unit="m" %}
+          {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=plantation_ratio|floatformat:"2g" %}
         </ul>
       {% endif %}
       <div class="fr-my-2w">
