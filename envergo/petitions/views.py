@@ -42,8 +42,9 @@ from envergo.petitions.services import (
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
     extract_data_from_fields,
-    get_instructor_view_context,
+    get_context_from_ds,
     get_messages_and_senders_from_ds,
+    get_project_context,
     send_message_dossier_ds,
 )
 from envergo.utils.mattermost import notify
@@ -593,20 +594,10 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
-        context["project_details"] = compute_instructor_informations_ds(
-            self.object,
-            moulinette,
-        )
-
-        # Send message if info from DS is not in project details
-        if not context["project_details"]:
-            messages.warning(
-                self.request,
-                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
-                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
-            )
-
         context["moulinette"] = moulinette
+
+        context.update(get_context_from_ds(self.object, moulinette))
+
         context.update(moulinette.catalog)
 
         context["plantation_evaluation"] = PlantationEvaluator(
@@ -711,9 +702,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project_details"] = get_instructor_view_context(
-            self.object, context["moulinette"]
-        )
+        context.update(get_project_context(self.object, context["moulinette"]))
         return context
 
     def get_success_url(self):
@@ -764,7 +753,18 @@ class PetitionProjectInstructorDossierDSView(
     event_action = ""
 
     def get_context_data(self, **kwargs):
+        project_details = compute_instructor_informations_ds(
+            self.object
+        )  # compute DS details first as it will force update the dossier cache
         context = super().get_context_data(**kwargs)
+        context["project_details"] = project_details
+        # Send message if info from DS is not in project details
+        if not context["project_details"]:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
 
         context["triage_form"] = self.object.get_triage_form()
 
