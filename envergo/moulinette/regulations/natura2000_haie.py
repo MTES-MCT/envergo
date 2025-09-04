@@ -45,11 +45,13 @@ class Natura2000Haie(CriterionEvaluator):
             [h.geos_geometry for h in hedges], srid=EPSG_WGS84
         )
 
+        # Find all the Zones for the current Perimeter and that intersects any of the hedges
         qs = (
             self.moulinette.natura2000_haie.natura2000_haie.activation_map.zones.all()
             .filter(geometry__intersects=hedges_geom)
             .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
         )
+        # Aggregate them into a single polygon
         geom = qs["geom"]
         geom = shapely.multipolygons(geom)
 
@@ -62,17 +64,20 @@ class Natura2000Haie(CriterionEvaluator):
         # Use the geodesic length
         geod = Geod(ellps="WGS84")
 
+        # Intersect every hedge.
         for h in hors_alignement:
             intersect = h.geometry.intersection(geom)
             length = geod.geometry_length(intersect)
-            n2000_hors_aa[h.id] = length
-            l_n2000_hors_aa += length
+            if length > 0.0:
+                n2000_hors_aa[h.id] = length
+                l_n2000_hors_aa += length
 
         for h in alignement:
             intersect = h.geometry.intersection(geom)
             length = geod.geometry_length(intersect)
-            n2000_aa[h.id] = length
-            l_n2000_aa += length
+            if length > 0.0:
+                n2000_aa[h.id] = length
+                l_n2000_aa += length
 
         data = {}
         data["n2000_hors_aa"] = n2000_hors_aa
