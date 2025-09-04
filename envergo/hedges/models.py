@@ -2,6 +2,7 @@ import operator
 import uuid
 from functools import reduce
 
+import shapely
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
@@ -9,7 +10,7 @@ from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
 from model_utils import Choices
-from pyproj import Geod
+from pyproj import Geod, Transformer
 from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Zone
@@ -62,6 +63,16 @@ class Hedge:
     def geos_geometry(self):
         geom = GEOSGeometry(self.geometry.wkt, srid=EPSG_WGS84)
         return geom
+
+    @property
+    def geometry_lamb93(self):
+        """Return a shapely geometry with a Lambert 93 projection."""
+
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+        lamb93 = shapely.transform(
+            self.geometry, transformer.transform, interleaved=False
+        )
+        return lamb93
 
     @property
     def length(self):
