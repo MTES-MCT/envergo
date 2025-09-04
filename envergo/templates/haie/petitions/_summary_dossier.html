@@ -12,15 +12,15 @@
     </li>
     <li>
       <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-      {% if project_details.city %}{{ project_details.city }} |{% endif %}
+      {% if city %}{{ city }} |{% endif %}
       Département de la demande : {{ moulinette.department }}
     </li>
-    {% if project_details.applicant or project_details.organization %}
+    {% if applicant or organization %}
       <li>
         <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
-        {% if project_details.applicant %}{{ project_details.applicant }}{% endif %}
-        {% if project_details.applicant and project_details.organization %}|{% endif %}
-        {% if project_details.organization %}{{ project_details.organization }}{% endif %}
+        {% if applicant %}{{ applicant }}{% endif %}
+        {% if applicant and organization %}|{% endif %}
+        {% if organization %}{{ organization }}{% endif %}
       </li>
     {% endif %}
     <li class="fr-hint-text">Référence interne : {{ petition_project.reference }}</li>

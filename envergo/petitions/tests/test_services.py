@@ -27,8 +27,8 @@ from envergo.petitions.regulations.ep import (
 )
 from envergo.petitions.services import (
     compute_instructor_informations_ds,
+    get_context_from_ds,
     get_demarches_simplifiees_dossier,
-    get_instructor_view_context,
     get_messages_and_senders_from_ds,
 )
 from envergo.petitions.tests.factories import (
@@ -67,7 +67,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
-    project_details = get_instructor_view_context(petition_project, moulinette)
+    project_details = get_context_from_ds(petition_project, moulinette)
 
     assert project_details["applicant"] == "Mme LAMARR Hedy"
     assert project_details["city"] == "Laon (02000)"
@@ -199,7 +199,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         "department": 44,
     }
     moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    get_instructor_view_context(petition_project, moulinette)
+    get_context_from_ds(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
     assert (
