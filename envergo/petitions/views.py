@@ -591,19 +591,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
-        context["project_details"] = compute_instructor_informations_ds(
-            self.object,
-            moulinette,
-        )
-
-        # Send message if info from DS is not in project details
-        if not context["project_details"]:
-            messages.warning(
-                self.request,
-                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
-                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
-            )
-
         context["moulinette"] = moulinette
         context.update(moulinette.catalog)
 
@@ -763,6 +750,18 @@ class PetitionProjectInstructorDossierDSView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["project_details"] = compute_instructor_informations_ds(
+            self.object,
+            context["moulinette"],
+        )
+
+        # Send message if info from DS is not in project details
+        if not context["project_details"]:
+            messages.warning(
+                self.request,
+                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
 
         context["triage_form"] = self.object.get_triage_form()
 
