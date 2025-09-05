@@ -59,6 +59,15 @@
 
   {% include 'haie/moulinette/_department_doctrine_button.html' %}
 
+  {% if has_hedges_outside_department %}
+    <div class="fr-alert fr-alert--warning fr-mb-4w">
+      <h3 class="fr-alert__title">Au moins une des haies est située hors du département</h3>
+      <p>
+        Au moins une des haies est située en dehors du département choisi pour cette simulation – {{ config.department }}. Vérifiez que vous avez choisi le bon département en début de simulation, ou <a href="{% url 'contact_us' %}" target="_blank" rel="noopener">contactez le guichet unique</a> si le projet est à cheval sur plusieurs départements.
+      </p>
+    </div>
+  {% endif %}
+
   {% block result_header %}{% endblock %}
 
   {% for result, regulations in moulinette.get_regulations_by_group.items %}

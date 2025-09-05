@@ -12,7 +12,7 @@ from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString, centroid, union_all
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
     compute_hedge_density_around_point,
     get_department_from_coords,
@@ -310,6 +310,22 @@ class HedgeData(models.Model):
             self.save()
 
         return self._density
+
+    def has_hedges_outside_department(self, department: Department):
+        """
+        Check if any hedge in the HedgeData instance is outside the given department geometry.
+
+        Args:
+            department: The department model with its geometry prefetched.
+
+        Returns:
+            bool: True if there are hedges outside the department geometry, False otherwise.
+        """
+        department_geom = GEOSGeometry(department.geometry.wkt)
+        for hedge in self.hedges():
+            if not department_geom.intersects(hedge.geos_geometry):
+                return True
+        return False
 
 
 HEDGE_TYPES = (
