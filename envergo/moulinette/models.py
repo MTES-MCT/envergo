@@ -1337,13 +1337,14 @@ class Moulinette(ABC):
             self.raw_data = raw_data.dict()
         else:
             self.raw_data = raw_data
+
         self.catalog = MoulinetteCatalog(**data)
+        self.department = self.get_department()
+
         self.catalog.update(self.get_catalog_data())
 
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
-
-        self.department = self.get_department()
 
         self.config = self.catalog["config"] = self.get_config()
         if self.config and self.config.id and hasattr(self.config, "templates"):
@@ -2062,12 +2063,23 @@ class MoulinetteHaie(Moulinette):
 
         return context
 
+    def get_catalog_data(self):
+        """Fetch / compute data required for further computations."""
+
+        catalog = super().get_catalog_data()
+
+        if "haies" in self.catalog:
+            hedges = self.catalog["haies"]
+            catalog["has_hedges_outside_department"] = (
+                hedges.has_hedges_outside_department(self.department)
+            )
+        return catalog
+
     def get_department(self):
         department_code = self.raw_data.get("department", None)
         department = (
             (
-                Department.objects.defer("geometry")
-                .select_related("confighaie")
+                Department.objects.select_related("confighaie")
                 .filter(department=department_code)
                 .annotate(centroid=Centroid("geometry"))
                 .first()

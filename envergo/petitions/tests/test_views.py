@@ -215,6 +215,42 @@ def test_petition_project_detail(mock_post, client, site):
     response = client.get(petition_project_url)
     assert response.status_code == 200
     assert "moulinette" in response.context
+    # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
+    assert response.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        in response.content.decode()
+    )
+
+    # Given hedges in department 44 and accross the department border
+    hedge_44 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
+        ]
+    )
+    hedge_44_85 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
+            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    project = PetitionProjectFactory(reference="DEF456", hedge_data=hedges)
+    petition_project_url = reverse(
+        "petition_project",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN I get the project detail page
+    response = client.get(petition_project_url)
+
+    # THEN I should see that there is no hedges to remove outside the department
+    assert not response.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        not in response.content.decode()
+    )
 
 
 @pytest.mark.urls("config.urls_haie")
