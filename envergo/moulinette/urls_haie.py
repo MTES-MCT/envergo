@@ -11,6 +11,12 @@ from envergo.moulinette.views import (
 from .urls import urlpatterns as common_urlpatterns
 
 urlpatterns = [
+    path("", RedirectView.as_view(pattern_name="triage", query_string=True)),
+    path(
+        "triage/",
+        Triage.as_view(),
+        name="triage",
+    ),
     path(
         _("form/"),
         include(
@@ -49,10 +55,5 @@ urlpatterns = [
                 ),
             ]
         ),
-    ),
-    path(
-        "",
-        Triage.as_view(),
-        name="triage",
     ),
 ] + common_urlpatterns
