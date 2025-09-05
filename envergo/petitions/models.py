@@ -67,6 +67,7 @@ class PetitionProject(models.Model):
         editable=False,
         blank=True,
         null=True,
+        verbose_name="Département",
     )
 
     hedge_data = models.ForeignKey(
