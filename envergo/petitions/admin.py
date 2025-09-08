@@ -39,11 +39,11 @@ class DepartmentFilter(admin.SimpleListFilter):
 class PetitionProjectAdmin(admin.ModelAdmin):
     list_display = (
         "reference",
+        "created_at",
+        "department",
+        "demarches_simplifiees_state",
         "length_to_remove",
         "length_to_plant",
-        "demarches_simplifiees_state",
-        "department",
-        "created_at",
     )
     inlines = [InvitationTokenInline]
     ordering = ("-created_at",)
