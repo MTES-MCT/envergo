@@ -250,7 +250,63 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
         return display_value
 
 
+ELEMENT_CHOICES = (
+    ("haie", "Haies ou alignements d’arbres"),
+    ("bosquet", "Bosquets"),
+    (
+        "autre",
+        "Autre",
+    ),
+)
+
+TRAVAUX_CHOICES = (
+    (
+        "destruction",
+        mark_safe(
+            """Destruction<br />
+<span class="fr-hint-text">
+Toute intervention supprimant définitivement la végétation :
+arrachage ; « déplacement » de haie ;
+coupe à blanc sur essences qui ne recèpent pas
+(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+target="_blank" rel="noopener">voir liste</a>) ;
+entretien sévère et récurrent ; etc.
+</span>
+                    """
+        ),
+    ),
+    (
+        "entretien",
+        mark_safe(
+            """Entretien<br />
+<span class="fr-hint-text">
+    Intervention qui permet la repousse durable de la végétation :
+    élagage, taille, coupe à blanc sur une essence capable de recéper
+    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+    target="_blank" rel="noopener">voir liste</a>), etc.
+</span>
+                    """
+        ),
+    ),
+    (
+        "autre",
+        "Autre",
+    ),
+)
+
+
 class MoulinetteFormHaie(BaseMoulinetteForm):
+    department = forms.ChoiceField(
+        choices=DEPARTMENT_CHOICES, required=True, widget=forms.HiddenInput
+    )
+    element = forms.ChoiceField(
+        choices=ELEMENT_CHOICES, required=True, widget=forms.HiddenInput
+    )
+    travaux = forms.ChoiceField(
+        choices=TRAVAUX_CHOICES,
+        required=True,
+        widget=forms.HiddenInput,
+    )
     motif = forms.ChoiceField(
         label="Pour quelle raison la destruction de haie a-t-elle lieu ?",
         widget=forms.RadioSelect,
@@ -367,14 +423,7 @@ class TriageFormHaie(forms.Form):
     element = DisplayChoiceField(
         label="Quel type de végétation est concerné ?",
         widget=forms.RadioSelect,
-        choices=(
-            ("haie", "Haies ou alignements d’arbres"),
-            ("bosquet", "Bosquets"),
-            (
-                "autre",
-                "Autre",
-            ),
-        ),
+        choices=ELEMENT_CHOICES,
         required=True,
         display_label="Type de végétation :",
     )
@@ -382,40 +431,7 @@ class TriageFormHaie(forms.Form):
     travaux = DisplayChoiceField(
         label="Quels sont les travaux envisagés ?",
         widget=forms.RadioSelect,
-        choices=(
-            (
-                "destruction",
-                mark_safe(
-                    """Destruction<br />
-<span class="fr-hint-text">
-Toute intervention supprimant définitivement la végétation :
-arrachage ; « déplacement » de haie ;
-coupe à blanc sur essences qui ne recèpent pas
-(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
-target="_blank" rel="noopener">voir liste</a>) ;
-entretien sévère et récurrent ; etc.
-</span>
-                    """
-                ),
-            ),
-            (
-                "entretien",
-                mark_safe(
-                    """Entretien<br />
-<span class="fr-hint-text">
-    Intervention qui permet la repousse durable de la végétation :
-    élagage, taille, coupe à blanc sur une essence capable de recéper
-    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
-    target="_blank" rel="noopener">voir liste</a>), etc.
-</span>
-                    """
-                ),
-            ),
-            (
-                "autre",
-                "Autre",
-            ),
-        ),
+        choices=TRAVAUX_CHOICES,
         required=True,
         display_label="Travaux envisagés :",
     )
