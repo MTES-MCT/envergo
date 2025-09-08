@@ -356,7 +356,7 @@ class MoulinetteResultMixin:
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.get_moulinette_form_data(),
+            "data": self.clean_request_get_parameters(),
         }
         return kwargs
 
