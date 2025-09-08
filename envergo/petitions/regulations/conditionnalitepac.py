@@ -1,6 +1,5 @@
 from django.utils.module_loading import import_string
 
-from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 from envergo.petitions.services import HedgeList
@@ -26,8 +25,6 @@ def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -
     context = {
         "lineaire_detruit_pac": lineaire_detruit_pac,
         "lineaire_to_plant_pac": lineaire_to_plant_pac,
-        "ign_url": get_ign_centered_url(petition_project.hedge_data),
-        "google_maps_url": get_google_maps_centered_url(petition_project.hedge_data),
     }
 
     if lineaire_detruit_pac:

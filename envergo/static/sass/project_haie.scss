@@ -757,3 +757,14 @@ div#alternative-notice {
 #faq-dropdown-btn {
   width: 20rem;
 }
+
+section#moulinette-regulation-result {
+  section.instruction-infos {
+    --text-spacing: 0 0 1rem;
+
+    h6 {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+}

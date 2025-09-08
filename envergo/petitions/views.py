@@ -27,6 +27,7 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
+from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
@@ -716,6 +717,11 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
         context = super().get_context_data(**kwargs)
+
+        hedge_data = context["petition_project"].hedge_data
+        context["ign_url"] = get_ign_centered_url(hedge_data)
+        context["google_maps_url"] = get_google_maps_centered_url(hedge_data)
+
         regulation_slug = self.kwargs.get("regulation")
         if regulation_slug:
             try:
