@@ -1,8 +1,8 @@
 <ul class="instructor-view-list">
 
-  {% include 'haie/petitions/_item.html' with label="Coefficient compensation" value=replantation_coefficient|floatformat:"1g" %}
-  {% include 'haie/petitions/_item.html' with label="Linéaire attendu pour la plantation d'alignements d'arbres L350-3" value=minimum_length_to_plant_aa_bord_voie|floatformat:"1g" %}
-  {% include 'haie/petitions/_item.html' with label="Plantation proposée" value=length_to_plant_aa_bord_voie|floatformat:"1g" %}
-  {% include 'haie/petitions/_item.html' with label="Manque" value=missing_plantation_length|floatformat:"1g" %}
+  {% include 'haie/petitions/_item.html' with label="Coefficient compensation pour les alignements d'arbre L350-3" value=replantation_coefficient|floatformat:"2g" comment="Ce coefficient dépend du motif déclaré pour le projet de destruction : 2 en cas d'autorisation, 1 en cas de déclaration (esthétique, sécurité ou sanitaire)." %}
+  {% include 'haie/petitions/_item.html' with label="Linéaire attendu pour la plantation d'alignements d'arbres L350-3" value=minimum_length_to_plant_aa_bord_voie|floatformat:"0g" unit="m" %}
+  {% include 'haie/petitions/_item.html' with label="Plantation proposée" value=length_to_plant_aa_bord_voie|floatformat:"0g" unit="m" %}
+  {% include 'haie/petitions/_item.html' with label="Manque" value=missing_plantation_length|floatformat:"0g" unit="m" %}
 
 </ul>
