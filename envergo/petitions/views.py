@@ -922,7 +922,8 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 "projet",
                 "invitation",
                 self.request,
-                **{"project_reference": project.reference},
+                reference=project.reference,
+                department=project.get_department_code(),
                 **get_matomo_tags(self.request),
             )
             return JsonResponse({"invitation_url": invitation_url})

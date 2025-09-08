@@ -1,3 +1,4 @@
+import factory
 import pytest
 from django.contrib.gis.geos import MultiPolygon
 
@@ -7,6 +8,7 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_poly
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.ep import get_hedge_compensation_details
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
     CriterionFactory,
@@ -552,3 +554,74 @@ def test_replantation_coefficient_normandie(
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.replantation_coefficient == r
+
+
+def test_get_hedge_compensation_details():
+    hedge_neb_rc_aa_cap = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData=factory.Dict(
+            {
+                "mode_destruction": "coupe_a_blanc",
+                "type_haie": "alignement",
+                "bord_voie": True,
+                "essences_non_bocageres": True,
+                "recemment_plantee": True,
+                "proximite_point_eau": False,
+                "connexion_boisement": False,
+            }
+        ),
+    )
+
+    details = get_hedge_compensation_details(hedge_neb_rc_aa_cap, 1.0)
+
+    assert (
+        details["properties"]
+        == "essences non bocagères, récemment plantée, coupe à blanc, L350-3"
+    )
+
+    hedge_aa_cap = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData=factory.Dict(
+            {
+                "mode_destruction": "coupe_a_blanc",
+                "type_haie": "alignement",
+                "bord_voie": True,
+                "essences_non_bocageres": False,
+                "recemment_plantee": False,
+                "proximite_point_eau": False,
+                "connexion_boisement": False,
+            }
+        ),
+    )
+
+    details = get_hedge_compensation_details(hedge_aa_cap, 1.0)
+
+    assert details["properties"] == "coupe à blanc, L350-3"
+
+    hedge_nothing = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData=factory.Dict(
+            {
+                "mode_destruction": "autre",
+                "type_haie": "alignement",
+                "bord_voie": False,
+                "essences_non_bocageres": False,
+                "recemment_plantee": False,
+                "proximite_point_eau": False,
+                "connexion_boisement": False,
+            }
+        ),
+    )
+
+    details = get_hedge_compensation_details(hedge_nothing, 1.0)
+
+    assert details["properties"] == "-"

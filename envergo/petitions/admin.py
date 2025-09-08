@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 
+from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.petitions.models import InvitationToken, PetitionProject
 
 
@@ -20,25 +21,51 @@ class InvitationTokenInline(admin.TabularInline):
     verbose_name_plural = "Comptes invités sur le projet"
 
 
+class DepartmentFilter(admin.SimpleListFilter):
+    title = "Département"
+    parameter_name = "department"
+
+    def lookups(self, request, model_admin):
+        return DEPARTMENT_CHOICES
+
+    def queryset(self, request, queryset):
+        # Filter the queryset based on the selected department
+        if self.value():
+            return queryset.filter(department__department=self.value())
+        return queryset
+
+
 @admin.register(PetitionProject)
 class PetitionProjectAdmin(admin.ModelAdmin):
     list_display = (
         "reference",
+        "created_at",
+        "department",
+        "demarches_simplifiees_state",
         "length_to_remove",
         "length_to_plant",
-        "demarches_simplifiees_state",
-        "created_at",
     )
     inlines = [InvitationTokenInline]
     ordering = ("-created_at",)
+    list_filter = [
+        "demarches_simplifiees_state",
+        DepartmentFilter,
+    ]
+
+    def get_queryset(self, request):
+        # Use select_related to optimize queries for foreign key fields
+        queryset = super().get_queryset(request)
+        return queryset.select_related("department", "hedge_data").defer(
+            "department__geometry"
+        )
 
     def length_to_plant(self, obj):
-        return obj.hedge_data.length_to_plant()
+        return round(obj.hedge_data.length_to_plant())
 
     length_to_plant.short_description = "Linéaire à planter"
 
     def length_to_remove(self, obj):
-        return obj.hedge_data.length_to_remove()
+        return round(obj.hedge_data.length_to_remove())
 
     length_to_remove.short_description = "Linéaire à détruire"
 

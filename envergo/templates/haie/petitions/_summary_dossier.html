@@ -1,8 +1,8 @@
 {% load petitions %}
 
 <div class="alt fr-py-4w fr-px-2w fr-pl-md-10w">
-  <h1>Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
-  <ul id="instruction-summary-list" class="fr-text--sm">
+  <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
+  <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
     <li>
       {% if petition_project.demarches_simplifiees_date_depot %}
         <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Déposé le {{ petition_project.demarches_simplifiees_date_depot|date:"DATE_FORMAT" }}
@@ -10,11 +10,12 @@
         <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Créé le {{ petition_project.created_at|date:"DATE_FORMAT" }}
       {% endif %}
     </li>
-    <li>
-      <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-      {% if city %}{{ city }} |{% endif %}
-      Département de la demande : {{ moulinette.department }}
-    </li>
+    {% if city %}
+      <li>
+        <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
+        {{ city }}
+      </li>
+    {% endif %}
     {% if applicant or organization %}
       <li>
         <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
@@ -23,6 +24,8 @@
         {% if organization %}{{ organization }}{% endif %}
       </li>
     {% endif %}
-    <li class="fr-hint-text">Référence interne : {{ petition_project.reference }}</li>
+    <li class="fr-hint-text">
+      Référence interne : {{ petition_project.reference }}  |  Département de la simulation : {{ moulinette.department }}
+    </li>
   </ul>
 </div>

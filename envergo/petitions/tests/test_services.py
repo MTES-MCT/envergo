@@ -659,13 +659,6 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     expected_result = {
         "lineaire_detruit_pac": 27.55060841703869,
         "lineaire_to_plant_pac": 27.55060841703869,
-        "motif": "\n"
-        "            Création d’un accès à la parcelle<br/>\n"
-        '            <span class="fr-hint-text">\n'
-        "                Brèche dans une haie pour créer un chemin, "
-        "permettre le passage d’engins…\n"
-        "            </span>\n"
-        "            ",
         "pac_destruction_detail": [ANY],
         "pac_plantation_detail": [ANY],
         "percentage_pac": "",

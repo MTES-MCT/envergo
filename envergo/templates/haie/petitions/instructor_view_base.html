@@ -23,7 +23,7 @@
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_view' %}aria-current="page"{% endif %}>
-                      Informations générales</a>
+                      Résumé du dossier</a>
                     </li>
                     <li class="fr-sidemenu__item">
                       <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
@@ -116,6 +116,9 @@
   </section>
 
 {% endblock %}
+
+{% block after-content %}{% endblock %}
+
 {% block extra_body %}
   {% include 'haie/petitions/_invitation_token_modal.html' %}
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
