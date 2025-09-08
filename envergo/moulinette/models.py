@@ -2185,7 +2185,6 @@ class MoulinetteHaie(Moulinette):
          * department_centroid : the criteria is activated if the department centroid is in the activation map
          * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
         """
-
         dept_centroid = self.department.centroid
         hedges_to_remove = (
             self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
