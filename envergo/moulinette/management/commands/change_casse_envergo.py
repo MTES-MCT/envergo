@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = "Post a message when a moulinette template has an obsolete key."
+    help = "Change casse 'EnvErgo' to 'Envergo' for every moulinette template"
 
     def handle(self, *args, **options):
 
@@ -16,11 +16,17 @@ class Command(BaseCommand):
             content__contains="EnvErgo"
         )
         count_templates = moulinette_templates_with_envergo.count()
-        logger.info(f"Starting replace EnvErgo by Envergo {count_templates}")
-        for moulinette_template in moulinette_templates_with_envergo:
-            moulinette_template_new_content = moulinette_template.content.replace(
-                "EnvErgo", "Envergo"
+        if count_templates == 0:
+            logger.info("No templates found with 'EnvErgo'")
+        else:
+            logger.info(
+                f"Starting replace 'EnvErgo' by 'Envergo' in {count_templates} templates"
             )
-            moulinette_templates_with_envergo.update(
-                content=moulinette_template_new_content
-            )
+
+            for moulinette_template in moulinette_templates_with_envergo:
+                moulinette_template_new_content = moulinette_template.content.replace(
+                    "EnvErgo", "Envergo"
+                )
+                moulinette_templates_with_envergo.update(
+                    content=moulinette_template_new_content
+                )
