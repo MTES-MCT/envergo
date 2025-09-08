@@ -13,7 +13,7 @@ def alignement_arbres_get_instructor_view_context(
     """Return context for alignement_arbres regulation instructor view"""
 
     hedge_data = petition_project.hedge_data
-    R = evaluator.get_replantation_coefficient()
+    R = evaluator.get_result_based_replantation_coefficient()
 
     motif = moulinette.catalog.get("motif", "")
 
