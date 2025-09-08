@@ -1,3 +1,5 @@
+from math import ceil
+
 import shapely
 from django import forms
 from django.contrib.gis.db.models import MultiPolygonField
@@ -69,21 +71,21 @@ class Natura2000Haie(CriterionEvaluator):
             intersect = h.geometry.intersection(geom)
             length = geod.geometry_length(intersect)
             if length > 0.0:
-                n2000_hors_aa[h.id] = length
+                n2000_hors_aa[h.id] = ceil(length)
                 l_n2000_hors_aa += length
 
         for h in alignement:
             intersect = h.geometry.intersection(geom)
             length = geod.geometry_length(intersect)
             if length > 0.0:
-                n2000_aa[h.id] = length
+                n2000_aa[h.id] = ceil(length)
                 l_n2000_aa += length
 
         data = {}
         data["n2000_hors_aa"] = n2000_hors_aa
-        data["l_n2000_hors_aa"] = l_n2000_hors_aa
+        data["l_n2000_hors_aa"] = ceil(l_n2000_hors_aa)
         data["n2000_aa"] = n2000_aa
-        data["l_n2000_aa"] = l_n2000_aa
+        data["l_n2000_aa"] = ceil(l_n2000_aa)
 
         return data
 
