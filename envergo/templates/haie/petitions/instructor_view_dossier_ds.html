@@ -15,7 +15,7 @@
     <section class="fr-py-3w">
       <div class="tab-title">
         <h4>Identité du demandeur</h4>
-        <div class="champ-content">{{ project_details.applicant }}</div>
+        <div class="champ-content">{{ applicant }}</div>
       </div>
     </section>
 
@@ -23,8 +23,8 @@
       <div class="tab-title">
         <h4>Sections du formulaire</h4>
       </div>
-      {% for item in project_details.ds_data.champs %}
-        {% if item.label in project_details.ds_data.header_sections %}
+      {% for item in project_details.champs %}
+        {% if item.label in project_details.header_sections %}
           <h5 id="section-{{ item.label|slugify }}">{{ item.label }}</h5>
 
         {% else %}

@@ -10,18 +10,18 @@
         <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Créé le {{ petition_project.created_at|date:"DATE_FORMAT" }}
       {% endif %}
     </li>
-    {% if project_details.city %}
+    {% if city %}
       <li>
         <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-        {{ project_details.city }}
+        {{ city }}
       </li>
     {% endif %}
-    {% if project_details.applicant or project_details.organization %}
+    {% if applicant or organization %}
       <li>
         <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
-        {% if project_details.applicant %}{{ project_details.applicant }}{% endif %}
-        {% if project_details.applicant and project_details.organization %}|{% endif %}
-        {% if project_details.organization %}{{ project_details.organization }}{% endif %}
+        {% if applicant %}{{ applicant }}{% endif %}
+        {% if applicant and organization %}|{% endif %}
+        {% if organization %}{{ organization }}{% endif %}
       </li>
     {% endif %}
     <li class="fr-hint-text">
