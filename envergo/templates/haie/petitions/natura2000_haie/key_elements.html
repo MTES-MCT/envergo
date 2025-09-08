@@ -8,9 +8,13 @@
     <li>
       <span><b>Détail :</b></span>
 
-      <ul>
-        {% for hedge_id, length in n2000_hors_aa.items %}<li>{{ hedge_id }} : {{ length|floatformat:"0g" }} m</li>{% endfor %}
-      </ul>
+      <span>
+        {# djlint:off #}
+        {% for hedge_id, length in n2000_hors_aa.items %}
+          {{ hedge_id }} ({{ length|floatformat:"0g" }} m){% if not forloop.last %},{% endif %}
+        {% endfor %}
+        {# djlint:on #}
+      </span>
     </li>
   {% endif %}
 
@@ -20,9 +24,13 @@
     <li>
       <span><b>Détail :</b></span>
 
-      <ul>
-        {% for hedge_id, length in n2000_aa.items %}<li>{{ hedge_id }} : {{ length|floatformat:"0g" }} m</li>{% endfor %}
-      </ul>
+      <span>
+        {# djlint:off #}
+        {% for hedge_id, length in n2000_aa.items %}
+          {{ hedge_id }} ({{ length|floatformat:"0g" }} m){% if not forloop.last %},{% endif %}
+        {% endfor %}
+        {# djlint:on #}
+      </span>
     </li>
 
   {% endif %}
