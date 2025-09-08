@@ -41,27 +41,31 @@ class MoulinetteMixin:
         form = super().get_form()
         return form
 
-    def get_moulinette_form_data(self):
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+        }
+
+        if self.request.method in ("POST", "PUT"):
+            kwargs["data"] = self.get_form_data()
+
+        return kwargs
+
+    def get_initial(self):
+        return self.request.GET.dict()
+
+    def get_form_data(self):
         """Get the data to pass to the moulinette forms.
 
-        We always want to submit data present in url, event if they don't belong
-        to an actual form.
-
-        This is because sometimes, when the form value change, we can add or remove
-        some additional questions, and we don't want the user to lose those values
-        in between submissions
+        Mainly the POSTed data, but we also compute the surface related fields.
         """
-        moulinette_data = self.clean_request_get_parameters()
-        if self.request.method in ("POST", "PUT"):
-            # We don't use update because POST is a MultiValueDict, so django
-            # extends the variables instead of overriding them
-            for k, v in self.request.POST.items():
-                moulinette_data[k] = v
 
+        moulinette_data = self.request.POST.dict()
         if moulinette_data:
             surfaces = compute_surfaces(moulinette_data)
-            for k, v in surfaces.items():
-                moulinette_data[k] = v
+            moulinette_data.update(surfaces)
 
         return moulinette_data
 
@@ -72,31 +76,13 @@ class MoulinetteMixin:
         because they are messing with the moulinette form processing.
         """
         ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_"]
-        GET = self.get_moulinette_raw_data()
+        GET = self.request.GET.copy().dict()
         keys = GET.keys()
         for key in list(keys):
             for prefix in ignore_prefixes:
                 if key.startswith(prefix):
                     GET.pop(key)
         return GET
-
-    def get_moulinette_raw_data(self):
-        return self.request.GET.copy()
-
-    def get_initial(self):
-        return self.get_moulinette_form_data()
-
-    def get_form_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        kwargs = {
-            "initial": self.get_initial(),
-            "prefix": self.get_prefix(),
-        }
-
-        if self.request.method in ("POST", "PUT"):
-            kwargs["data"] = self.get_moulinette_form_data()
-
-        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -723,6 +709,7 @@ class Triage(FormView):
 
     def get(self, request, *args, **kwargs):
         """This page should always have a department to be displayed."""
+
         context = self.get_context_data()
         if not context.get("department", None):
             return HttpResponseRedirect(reverse("home"))
