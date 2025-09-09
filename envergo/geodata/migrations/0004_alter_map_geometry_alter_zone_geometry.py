@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name="geometry",
             field=django.contrib.gis.db.models.fields.MultiPolygonField(
                 geography=True,
-                help_text="DO NOT EDIT! We cannot easily deactivate this edition widget,\n            but if you use it, you will break EnvErgo.\n            ",
+                help_text="DO NOT EDIT! We cannot easily deactivate this edition widget,\n            but if you use it, you will break Envergo.\n            ",
                 null=True,
                 srid=4326,
                 verbose_name="Simplified geometry",
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name="geometry",
             field=django.contrib.gis.db.models.fields.MultiPolygonField(
                 geography=True,
-                help_text="DO NOT EDIT! We cannot easily deactivate this edition widget,\n            but if you use it, you will break EnvErgo.\n            ",
+                help_text="DO NOT EDIT! We cannot easily deactivate this edition widget,\n            but if you use it, you will break Envergo.\n            ",
                 srid=4326,
             ),
         ),

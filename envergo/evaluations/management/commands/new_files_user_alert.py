@@ -56,7 +56,7 @@ class Command(BaseCommand):
             )
 
             email = EmailMultiAlternatives(
-                subject="[EnvErgo] Votre mise à jour de documents",
+                subject="[Envergo] Votre mise à jour de documents",
                 body=txt_body,
                 from_email=settings.FROM_EMAIL["amenagement"]["evaluations"],
                 to=emails,

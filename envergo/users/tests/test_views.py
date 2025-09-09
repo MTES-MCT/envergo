@@ -23,7 +23,7 @@ def test_password_reset_with_existing_email_does_send_an_email(
     assert len(mailoutbox) == 1
 
     mail = mailoutbox[0]
-    assert mail.subject == "Réinitialisation du mot de passe sur EnvErgo"
+    assert mail.subject == "Réinitialisation du mot de passe sur Envergo"
     assert mail.from_email == "comptes@amenagement.local"
 
 
