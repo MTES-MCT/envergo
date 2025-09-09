@@ -1470,23 +1470,40 @@ class Moulinette(ABC):
         return self.config and self.config.is_activated
 
     def form_errors(self):
+        return self.required_form_errors() | self.optional_form_errors()
+
+    def required_form_errors(self):
         form_errors = {}
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
+                if criterion.is_optional:
+                    continue
                 form = criterion.get_form()
-                # We check for each form for errors
                 if form:
                     form.full_clean()
 
-                    # For optional forms, we only check for errors if the form
-                    # was activated (the "activate" checkbox was selected)
-                    if (
-                        criterion.is_optional
-                        and self.activate_optional_criteria
-                        and form.is_activated()
-                    ) or not criterion.is_optional:
+                    for k, v in form.errors.items():
+                        form_errors[k] = v
+
+        return form_errors
+
+    def optional_form_errors(self):
+        form_errors = {}
+        if not self.activate_optional_criteria:
+            return form_errors
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if not criterion.is_optional:
+                    continue
+                form = criterion.get_form()
+                # For optional forms, we only check for errors if the form
+                # was activated (the "activate" checkbox was selected)
+                if form:
+                    form.full_clean()
+                    if form.is_activated():
                         for k, v in form.errors.items():
-                            form_errors[k] = v
+                            form_errors[f"{form.prefix}-{k}"] = v
 
         return form_errors
 

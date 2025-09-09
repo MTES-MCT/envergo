@@ -402,7 +402,7 @@ def test_petition_project_instructor_view_reglementation_pages(
     content = response.content.decode()
     assert "Acceptabilité de la plantation" in content
     assert "Maintien des haies PAC" in content
-    assert "Résultats de la simulation" in content
+    assert "Réponse du simulateur" in content
 
     # Test ep regulation url
     instructor_url = reverse(
@@ -462,7 +462,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     assert "Formulaire détaillé et pièces jointes" in content
     assert "Vous déposez cette demande en tant que :" in content
 
-    assert "Données saisies pour la simulation" in content
+    assert "Informations saisies par le demandeur" in content
     assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
 
 
@@ -652,7 +652,8 @@ def test_petition_project_invitation_token(
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
     event = Event.objects.get(category="projet", event="invitation")
-    assert event.metadata["project_reference"] == project.reference
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["department"] == "44"
 
 
 @pytest.mark.urls("config.urls_haie")

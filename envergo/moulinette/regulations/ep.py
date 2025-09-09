@@ -106,6 +106,10 @@ def get_hedge_compensation_details(hedge, r):
         hedge_properties.append("essences non bocagères")
     if hedge.prop("recemment_plantee"):
         hedge_properties.append("récemment plantée")
+    if hedge.mode_destruction == "coupe_a_blanc":
+        hedge_properties.append("coupe à blanc")
+    if hedge.hedge_type == "alignement" and hedge.prop("bord_voie"):
+        hedge_properties.append("L350-3")
 
     return {
         "id": hedge.id,
