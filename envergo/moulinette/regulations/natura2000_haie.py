@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-||||||| 45618c1b
-=======
 from math import ceil
 
->>>>>>> main
 import shapely
 from django import forms
 from django.contrib.gis.db.models import MultiPolygonField
