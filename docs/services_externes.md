@@ -2,59 +2,25 @@
 
 ## Démarches simplifiées
 
-TODO: Mettre à jour
+Un module démarches simplifiées est disponible dans le module petitions.
 
-### Fonctionnement actuel
+Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans Démarches Simplifiées.
 
-Voici les endroits où est exécutée une requête vers Démarches Simplifiées :
+Celui-ci permet d'envoyer des requêtes GraphQL pour :
 
+- créer un nouveau dossier et le pré-remplir
+- récupérer les dossiers d'une démarche
+- récupérer un dossier
+- lire et envoyer des messages
 
-- Une méthode `pre_fill_demarche_simplifiee` de la vue `PetitionProjectCreate` pour pré-remplir les données dans DS à la soumission d'un dossier
+### Dans le code
 
-    L'appel à DS est fait L165
+Ce client est appelé pour les méthodes
 
-    ```python
-    response = requests.post(
-        api_url, json=body, headers={"Content-Type": "application/json"}
-    )
-    ```
+- `envergo.petitions.services.get_demarches_simplifiees_dossier`
+- `envergo.petitions.services.get_messages_and_senders_from_ds`
+- `envergo.petitions.management.commands.dossier_submission_admin_alert`
 
-- Une méthode `synchronize_with_demarches_simplifiees` de `PetitionProject` pour récupérer les données depuis DS si le dossier existe est n'est pas soumis
+Une requête vers DS peut être aussi exécutées hors du client :
 
-    On dirait que contrairement à ce qu'indique son nom, elle ne fait qu'envoyer un message vers mattermost, je sais pas comment elle récupère les données depuis DS
-
-    Celle-ci est appelée depuis 2 endroits
-    - la commande `envergo/petitions/management/commands/dossier_submission_admin_alert.py`
-    - la méthode `fetch_project_details_from_demarches_simplifiees`
-
-- Une fonction `fetch_project_details_from_demarches_simplifiees` dans `envergo/petitions/services.py` qui permet de récupérer les données depuis DS.
-
-    Celle-ci est uniquement appelée depuis la fonction `compute_instructor_informations`, appelée dans la vue `PetitionProjectInstructorView`
-
-    ```python
-    response = requests.post(
-        api_url,
-        json=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-        },
-    )
-    ```
-
-- Une commande pour récupérer les dossier récemment déposés sur DS et alerter les admins `envergo/petitions/management/commands/dossier_submission_admin_alert.py`
-
-    Celle-ci si elle est déclenchée envoie une requête vers `DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]` qui est renseignée dans `base.py`.
-
-    L'appel à DS est fait L94
-
-    ```python
-    response = requests.post(
-        api_url,
-        json=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-        },
-    )
-    ```
+- `envergo.petitions.views.pre_fill_demarche_simplifiee`
