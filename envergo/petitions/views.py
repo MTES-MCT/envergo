@@ -35,6 +35,7 @@ from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorNotesForm,
+    ProcedureForm,
 )
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
@@ -824,7 +825,9 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
 
 
-class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
+class PetitionProjectInstructorAlternativeView(
+    PetitionProjectInstructorMixin, DetailView
+):
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternative.html"
@@ -843,6 +846,32 @@ class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
 
         context["alternative_form_url"] = alternative_form_url
         return context
+
+
+class PetitionProjectInstructorProcedureView(
+    PetitionProjectInstructorMixin, UpdateView
+):
+    """View for display and edit the petition project procedure by the instructor"""
+
+    form_class = ProcedureForm
+    template_name = "haie/petitions/instructor_view_procedure.html"
+    matomo_tag = ""
+
+    def post(self, request, *args, **kwargs):
+        """Authorize edition only for department instructors"""
+        result = super().post(request, *args, **kwargs)
+        user = request.user
+
+        # check if user is authorized, else returns 403 error
+        if self.object.has_user_as_department_instructor(user):
+            return result
+        else:
+            return TemplateResponse(
+                request, template="haie/petitions/403.html", status=403
+            )
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
 
 
 class PetitionProjectHedgeDataExport(DetailView):
