@@ -1,10 +1,11 @@
 from django import forms
+from django.contrib.gis.db.models.functions import Centroid
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import floatformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from envergo.geodata.models import DEPARTMENT_CHOICES
+from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms.fields import (
     DisplayCharField,
@@ -296,8 +297,10 @@ entretien sévère et récurrent ; etc.
 
 
 class MoulinetteFormHaie(BaseMoulinetteForm):
-    department = forms.ChoiceField(
-        choices=DEPARTMENT_CHOICES, required=True, widget=forms.HiddenInput
+    department = forms.ModelChoiceField(
+        queryset=Department.objects.all(),
+        required=True,
+        widget=forms.HiddenInput,
     )
     element = forms.ChoiceField(
         choices=ELEMENT_CHOICES, required=True, widget=forms.HiddenInput
@@ -338,6 +341,13 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # We override the queryset here because it prevents a "models are not ready" exception
+        self.fields["department"].queryset = (
+            Department.objects.defer("geometry")
+            .select_related("confighaie")
+            .annotate(centroid=Centroid("geometry"))
+        )
         submitted_params = set(self.data.keys())
         triage_fields = set(TriageFormHaie.base_fields.keys())
 
