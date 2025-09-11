@@ -11,6 +11,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorDossierDSView,
     PetitionProjectInstructorMessagerieView,
     PetitionProjectInstructorNotesView,
+    PetitionProjectInstructorProcedureView,
     PetitionProjectInstructorRegulationView,
     PetitionProjectInstructorView,
     PetitionProjectInvitationToken,
@@ -49,6 +50,11 @@ instruction_urlpatterns = [
         "alternative/",
         PetitionProjectInstructorAlternativeView.as_view(),
         name="petition_project_instructor_alternative_view",
+    ),
+    path(
+        "procedure/",
+        PetitionProjectInstructorProcedureView.as_view(),
+        name="petition_project_instructor_procedure_view",
     ),
     path(
         "<slug:regulation>/",

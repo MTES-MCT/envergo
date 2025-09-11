@@ -427,7 +427,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     # Test existing regulation url
     instructor_url = reverse(
-        "petition_project_instructor_regulation_view",
+        "petition_project_instructor_procedure_view",
         kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
     )
 
@@ -1001,3 +1001,88 @@ def test_instructor_view_with_hedges_to_remove_outside_department(
         "Au moins une des haies est située hors du département"
         not in res.content.decode()
     )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@patch("envergo.petitions.views.notify")
+def test_petition_project_procedure(
+    mock_notify, client, haie_user, instructor_haie_user_44, site
+):
+    """Test procedure flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the status page by no user is logged in
+    response = client.get(status_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN the page is displayed but the edition button is not there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Modifier</button>" not in content
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN the page is displayed and the edition button is there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Modifier</button>" in content
+
+    # WHEN the user edit the status
+    data = {
+        "stage": "clos",
+        "result": "sans_suite",
+        "stage_update_comment": "aucun retour depuis 15 ans",
+        "stage_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+
+    # THEN the state is up to date
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "clos"
+    assert project.result == "sans_suite"
+    event = Event.objects.get(category="projet", event="modification_etape")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["etape_finale"] == "clos"
+    assert event.metadata["resultat_arrivee"] == "sans_suite"
+    assert event.metadata["etape_initiale"] == "a_instruire"
+    assert event.metadata["resultat_depart"] == "unset"
+
+    assert mock_notify.call_count == 1
+    args, kwargs = mock_notify.call_args_list[0]
+    assert "### Mise à jour du statut d'un dossier GUH Loire-Atlantique (44)" in args[0]
+    assert "haie" in args[1]
+
+    # WHEN the user try to edit the status as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    res = client.post(status_url, data)
+
+    # THEN he should be redirected to a 403 error page
+    assert res.status_code == 403
