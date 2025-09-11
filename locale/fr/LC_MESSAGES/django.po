@@ -80,7 +80,7 @@ msgstr "enregistrement/"
 
 #: config/urls_haie.py:77 envergo/users/urls.py:13
 msgid "register-success/"
-msgstr "enregistrement-succès/"
+msgstr "enregistrement-succes/"
 
 #: config/urls_haie.py:84 envergo/users/urls.py:20
 msgid "register/<uidb64>/<token>/"
