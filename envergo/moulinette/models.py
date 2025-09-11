@@ -1421,7 +1421,7 @@ class Moulinette(ABC):
         return self.form_kwargs.get("data", {})
 
     @property
-    def all_cleaned_data(self):
+    def cleaned_data(self):
         cleaned_data = {}
         for form in self.all_forms:
             cleaned_data.update(form.cleaned_data)
