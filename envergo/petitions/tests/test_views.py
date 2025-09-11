@@ -894,8 +894,11 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_status(client, haie_user, instructor_haie_user_44, site):
-    """Test status edition flow for petition project"""
+@patch("envergo.petitions.views.notify")
+def test_petition_project_procedure(
+    mock_notify, client, haie_user, instructor_haie_user_44, site
+):
+    """Test procedure flow for petition project"""
     # GIVEN a petition project
     ConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -927,7 +930,7 @@ def test_petition_project_status(client, haie_user, instructor_haie_user_44, sit
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
-    assert "Modifier\n    </button>" not in content
+    assert "Modifier</button>" not in content
 
     # WHEN the user is a department instructor
     client.force_login(instructor_haie_user_44)
@@ -937,14 +940,14 @@ def test_petition_project_status(client, haie_user, instructor_haie_user_44, sit
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
-    assert "Modifier\n    </button>" in content
+    assert "Modifier</button>" in content
 
     # WHEN the user edit the status
     data = {
         "stage": "clos",
         "result": "sans_suite",
         "stage_update_comment": "aucun retour depuis 15 ans",
-        "stage_date": "10/09/2025 00:00:00",
+        "stage_date": "10/09/2025",
     }
     res = client.post(status_url, data, follow=True)
 
@@ -953,6 +956,17 @@ def test_petition_project_status(client, haie_user, instructor_haie_user_44, sit
     project.refresh_from_db()
     assert project.stage == "clos"
     assert project.result == "sans_suite"
+    event = Event.objects.get(category="projet", event="modification_etape")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["etape_finale"] == "clos"
+    assert event.metadata["resultat_arrivee"] == "sans_suite"
+    assert event.metadata["etape_initiale"] == "a_instruire"
+    assert event.metadata["resultat_depart"] == "unset"
+
+    assert mock_notify.call_count == 1
+    args, kwargs = mock_notify.call_args_list[0]
+    assert "### Mise à jour du statut d'un dossier GUH Loire-Atlantique (44)" in args[0]
+    assert "haie" in args[1]
 
     # WHEN the user try to edit the status as an invited instructor
     InvitationTokenFactory(user=haie_user, petition_project=project)

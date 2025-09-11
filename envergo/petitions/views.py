@@ -9,10 +9,12 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.sites.models import Site
 from django.db import transaction
 from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views import View
@@ -562,7 +564,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     event_category = "projet"
-    event_action = "consultation_i"
+    event_action = None
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -831,7 +833,6 @@ class PetitionProjectInstructorAlternativeView(
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternative.html"
-    matomo_tag = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -855,20 +856,55 @@ class PetitionProjectInstructorProcedureView(
 
     form_class = ProcedureForm
     template_name = "haie/petitions/instructor_view_procedure.html"
-    matomo_tag = ""
 
     def post(self, request, *args, **kwargs):
         """Authorize edition only for department instructors"""
-        result = super().post(request, *args, **kwargs)
-        user = request.user
-
         # check if user is authorized, else returns 403 error
-        if self.object.has_user_as_department_instructor(user):
-            return result
-        else:
+        project = self.get_object()
+        if not project.has_user_as_department_instructor(request.user):
             return TemplateResponse(
                 request, template="haie/petitions/403.html", status=403
             )
+
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        previous_stage = form.initial["stage"]
+        previous_result = form.initial["result"]
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "modification_etape",
+            self.request,
+            reference=self.object.reference,
+            etape_initiale=previous_stage,
+            etape_finale=self.object.stage,
+            resultat_depart=previous_result,
+            resultat_arrivee=self.object.result,
+            **get_matomo_tags(self.request),
+        )
+
+        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        admin_url = reverse(
+            "admin:petitions_petitionproject_change",
+            args=[self.object.pk],
+        )
+        procedure_url = reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": self.object.reference},
+        )
+        message = render_to_string(
+            "haie/petitions/mattermost_project_procedure_edition.txt",
+            context={
+                "department": self.object.department,
+                "reference": self.object.reference,
+                "admin_url": f"https://{haie_site.domain}{admin_url}",
+                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+            },
+        )
+        notify(message, "haie")
+
+        return res
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
