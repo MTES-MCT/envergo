@@ -1,5 +1,6 @@
 from django.urls import path
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 
 from envergo.users.views import ActivateAccount, Register, RegisterSuccess
 
@@ -15,6 +16,10 @@ urlpatterns = [
             template_name="amenagement/registration/register_success.html"
         ),
         name="register_success",
+    ),
+    path(
+        "enregistrement-succès/",
+        RedirectView.as_view(pattern_name="register_success", permanent=True),
     ),
     path(
         _("register/<uidb64>/<token>/"),
