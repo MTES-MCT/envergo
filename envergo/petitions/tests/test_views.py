@@ -390,7 +390,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     # Test existing regulation url
     instructor_url = reverse(
-        "petition_project_instructor_procedure_view",
+        "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
     )
 
