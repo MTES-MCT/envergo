@@ -945,7 +945,7 @@ def test_petition_project_procedure(
     # WHEN the user edit the status
     data = {
         "stage": "clos",
-        "result": "sans_suite",
+        "decision": "sans_suite",
         "stage_update_comment": "aucun retour depuis 15 ans",
         "stage_date": "10/09/2025",
     }
@@ -955,13 +955,13 @@ def test_petition_project_procedure(
     assert res.status_code == 200
     project.refresh_from_db()
     assert project.stage == "clos"
-    assert project.result == "sans_suite"
+    assert project.decision == "sans_suite"
     event = Event.objects.get(category="projet", event="modification_statut")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["etape_finale"] == "clos"
-    assert event.metadata["resultat_final"] == "sans_suite"
+    assert event.metadata["decision_finale"] == "sans_suite"
     assert event.metadata["etape_initiale"] == "a_instruire"
-    assert event.metadata["resultat_initial"] == "unset"
+    assert event.metadata["decision_initiale"] == "unset"
 
     assert mock_notify.call_count == 1
     args, kwargs = mock_notify.call_args_list[0]

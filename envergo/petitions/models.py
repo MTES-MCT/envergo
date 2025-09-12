@@ -47,8 +47,8 @@ STAGES = Choices(
     ("clos", "Dossier clos"),
 )
 
-DOSSIER_RESULTS = Choices(
-    ("unset", "---------"),
+DECISIONS = Choices(
+    ("unset", ""),
     ("accord", "Accord"),
     ("opposition", "Opposition"),
     ("sans_suite", "Classé sans suite"),
@@ -132,11 +132,11 @@ class PetitionProject(models.Model):
         default=STAGES.a_instruire,
     )
 
-    result = models.CharField(
-        "Résultat",
+    decision = models.CharField(
+        "Décision",
         max_length=30,
-        choices=DOSSIER_RESULTS,
-        default=DOSSIER_RESULTS.unset,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
     )
 
     stage_date = models.DateField(

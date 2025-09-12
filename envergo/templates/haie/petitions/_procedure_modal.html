@@ -1,7 +1,7 @@
 <dialog aria-labelledby="procedure-modal-title"
         role="dialog"
         id="procedure-modal"
-        class="fr-modal fr-modal-lg">
+        class="fr-modal fr-modal-lg {% if form.errors %}fr-modal--opened{% endif %}">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-8">
@@ -14,7 +14,7 @@
           <div class="fr-modal__content">
             <h2 id="procedure-modal-title" class="fr-modal__title">Mettre à jour le statut du dossier</h2>
             <p>
-              Modifiez l'étape, le résultat, renseignez la date effective du changement et ajoutez un commentaire pour ce dossier.
+              Modifiez l'étape, la décision, renseignez la date effective du changement et ajoutez un commentaire pour ce dossier.
             </p>
             <form method="post" action="" novalidate class="fr-mb-3w">
               {% csrf_token %}
