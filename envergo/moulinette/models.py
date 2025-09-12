@@ -1358,6 +1358,15 @@ class Moulinette(ABC):
     def main_form(self):
         return self.get_main_form()
 
+    def get_triage_form(self):
+        TriageForm = self.get_triage_form_class()
+        form = TriageForm(**self.form_kwargs) if TriageForm else None
+        return form
+
+    @cached_property
+    def triage_form(self):
+        return self.get_triage_form()
+
     def get_additional_forms(self):
         """Get a list of instanciated additional questions forms.
 
@@ -1391,12 +1400,10 @@ class Moulinette(ABC):
             form = form_class(**self.form_kwargs)
 
             # We skip optional forms that were not activated
-            if (
-                form.is_bound
-                and hasattr(form, "is_activated")
-                and not form.is_activated()
-            ):
-                continue
+            if form.is_bound and hasattr(form, "is_activated"):
+                form.full_clean()
+                if not form.is_activated():
+                    continue
 
             if form.fields:
                 forms.append(form)
@@ -1410,6 +1417,11 @@ class Moulinette(ABC):
         all_forms = [self.main_form]
         all_forms.extend(self.additional_forms)
         all_forms.extend(self.optional_forms)
+
+        triage_form = self.get_triage_form()
+        if triage_form:
+            all_forms.append(triage_form)
+
         return all_forms
 
     @property
@@ -1422,10 +1434,11 @@ class Moulinette(ABC):
 
     @property
     def cleaned_data(self):
-        cleaned_data = {}
+        data = {}
         for form in self.all_forms:
-            cleaned_data.update(form.cleaned_data)
-        return cleaned_data
+            if form.is_valid():
+                data.update(form.cleaned_data)
+        return data
 
     def form_errors(self):
         errors = {}
@@ -1471,6 +1484,7 @@ class Moulinette(ABC):
 
         return forms
 
+    @cached_property
     def additional_fields(self):
         """Get a {field_name: field} dict of all additional questions fields."""
 
@@ -1561,6 +1575,13 @@ class Moulinette(ABC):
         if not hasattr(self, "main_form_class"):
             raise AttributeError("No main form class found.")
         return self.main_form_class
+
+    def get_triage_form_class(self):
+        """Return the triage form.
+
+        Triage is optional, so we don't raise error if no form class is defined.
+        """
+        return getattr(self, "triage_form_class", None)
 
     def get_criteria(self):
         """Fetch relevant criteria for evaluation.
@@ -1654,7 +1675,7 @@ class Moulinette(ABC):
 
     def summary_fields(self):
         """Return the fields displayed in "Caractéristiques du projet" sidebar section."""
-        fields = self.additional_fields()
+        fields = self.additional_fields
         return fields
 
     @abstractmethod
@@ -1723,7 +1744,7 @@ class Moulinette(ABC):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
-    def is_triage_valid(self, triage_form):
+    def is_triage_valid(self):
         return True
 
     def get_extra_context(self, request):
@@ -1747,6 +1768,7 @@ class MoulinetteAmenagement(Moulinette):
     result_non_disponible = "amenagement/moulinette/result_non_disponible.html"
     form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
+    triage_form_class = None
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
@@ -1971,6 +1993,7 @@ class MoulinetteHaie(Moulinette):
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
+    triage_form_class = TriageFormHaie
 
     def get_config(self):
         return getattr(self.department, "confighaie", None)
@@ -2044,8 +2067,12 @@ class MoulinetteHaie(Moulinette):
     def get_triage_params(self):
         return set(TriageFormHaie.base_fields.keys())
 
-    def is_triage_valid(self, triage_form):
+    def is_triage_valid(self):
         """Should the triage params allow to go to next step?."""
+
+        triage_form = self.triage_form
+        if not triage_form.is_valid():
+            return False
 
         element = triage_form.cleaned_data.get("element")
         travaux = triage_form.cleaned_data.get("travaux")
@@ -2119,7 +2146,7 @@ class MoulinetteHaie(Moulinette):
             )
 
     def get_department(self):
-        return self.cleaned_data.get("department")
+        return self.main_form.cleaned_data.get("department")
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
