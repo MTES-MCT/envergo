@@ -468,10 +468,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         # Special case, hackish
         # The product is often used for demo purpose. In that case, we don't
         # want to send confirmation emails or any other notifications.
-        if (
-            request.submitted is False
-            and settings.TEST_EMAIL not in request.urbanism_department_emails
-        ):
+        if settings.TEST_EMAIL not in request.urbanism_department_emails:
             transaction.on_commit(confirm_request)
             mtm_keys = {
                 k: v for k, v in self.request.session.items() if k.startswith("mtm_")
