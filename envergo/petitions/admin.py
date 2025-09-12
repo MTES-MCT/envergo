@@ -42,7 +42,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         "created_at",
         "department",
         "stage",
-        "result",
+        "decision",
         "demarches_simplifiees_state",
         "length_to_remove",
         "length_to_plant",
@@ -51,7 +51,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     list_filter = [
         "stage",
-        "result",
+        "decision",
         "demarches_simplifiees_state",
         DepartmentFilter,
     ]

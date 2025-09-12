@@ -907,17 +907,17 @@ class PetitionProjectInstructorProcedureView(
 
     def form_valid(self, form):
         previous_stage = form.initial["stage"]
-        previous_result = form.initial["result"]
+        previous_decision = form.initial["decision"]
         res = super().form_valid(form)
         log_event(
             "projet",
-            "modification_etape",
+            "modification_statut",
             self.request,
             reference=self.object.reference,
             etape_initiale=previous_stage,
             etape_finale=self.object.stage,
-            resultat_depart=previous_result,
-            resultat_arrivee=self.object.result,
+            decision_initiale=previous_decision,
+            decision_finale=self.object.decision,
             **get_matomo_tags(self.request),
         )
 

@@ -98,7 +98,7 @@ class ProcedureForm(forms.ModelForm):
         model = PetitionProject
         fields = [
             "stage",
-            "result",
+            "decision",
             "stage_date",
             "stage_update_comment",
         ]

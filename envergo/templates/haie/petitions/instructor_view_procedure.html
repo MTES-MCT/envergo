@@ -24,9 +24,9 @@
       <p>
         <span><b>Étape :</b></span> <span>{{ petition_project.get_stage_display }}</span>
       </p>
-      {% if petition_project.result != "unset" %}
+      {% if petition_project.decision != "unset" %}
         <p>
-          <span><b>Résultat :</b></span> <span>{{ petition_project.get_result_display }}</span>
+          <span><b>Décision :</b></span> <span>{{ petition_project.get_decision_display }}</span>
         </p>
       {% endif %}
     </section>
