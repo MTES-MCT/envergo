@@ -38,12 +38,12 @@ PLANTATION_RESULT_MATRIX = {
         RESULTS.non_soumis,
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
-    # not used for now:
     (
         RESULTS.action_requise,
         PlantationResults.Inadequate.value,
-    ): RESULTS.non_disponible,
-    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.non_disponible,
+    ): PlantationResults.Inadequate.value,
+    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.action_requise,
+    # not used for now:
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,
@@ -55,6 +55,7 @@ DISPLAY_FOR_ALTERNATIVES_MATRIX = {
     RESULTS.interdit: True,
     RESULTS.soumis: False,
     RESULTS.non_soumis: False,
+    RESULTS.action_requise: False,
     PlantationResults.Inadequate.value: True,
     RESULTS.non_disponible: True,
 }
