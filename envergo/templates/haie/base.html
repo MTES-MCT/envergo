@@ -8,6 +8,43 @@
   — Guichet unique de la haie
 {% endblock %}
 
+{% block app_json_ld %}
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "GovernmentService",
+  "@id": "https://haie.beta.gouv.fr/",
+  "name": "Guichet unique de la haie",
+  "description": "Service public officiel, le point d'accès unique à la réglementation et aux démarches administratives sur les haies.",
+  "url": "https://haie.beta.gouv.fr/",
+  "serviceType": "Service public en ligne",
+  "keywords": ["haie", "déclaration", "réglementation"],
+  "provider": {
+    "@type": "GovernmentOrganization",
+    "name": "République française",
+    "url": "https://www.gouvernement.fr/"
+  },
+  "serviceOperator": {
+    "@type": "GovernmentOrganization",
+    "name": "République française"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "France"
+  },
+  "jurisdiction": {
+    "@type": "Country",
+    "name": "France"
+  },
+  "availableChannel": {
+    "@type": "ServiceChannel",
+    "serviceUrl": "https://haie.beta.gouv.fr/",
+    "name": "Accès en ligne"
+  }
+}
+  </script>
+{% endblock %}
+
 {% block description %}Guichet unique de la haie{% endblock %}
 
 {% block site_css %}
