@@ -874,13 +874,13 @@ class PetitionProjectInstructorProcedureView(
         res = super().form_valid(form)
         log_event(
             "projet",
-            "modification_etape",
+            "modification_statut",
             self.request,
             reference=self.object.reference,
             etape_initiale=previous_stage,
             etape_finale=self.object.stage,
-            resultat_depart=previous_result,
-            resultat_arrivee=self.object.result,
+            resultat_initial=previous_result,
+            resultat_final=self.object.result,
             **get_matomo_tags(self.request),
         )
 

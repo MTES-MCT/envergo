@@ -956,12 +956,12 @@ def test_petition_project_procedure(
     project.refresh_from_db()
     assert project.stage == "clos"
     assert project.result == "sans_suite"
-    event = Event.objects.get(category="projet", event="modification_etape")
+    event = Event.objects.get(category="projet", event="modification_statut")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["etape_finale"] == "clos"
-    assert event.metadata["resultat_arrivee"] == "sans_suite"
+    assert event.metadata["resultat_final"] == "sans_suite"
     assert event.metadata["etape_initiale"] == "a_instruire"
-    assert event.metadata["resultat_depart"] == "unset"
+    assert event.metadata["resultat_initial"] == "unset"
 
     assert mock_notify.call_count == 1
     args, kwargs = mock_notify.call_args_list[0]
