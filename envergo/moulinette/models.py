@@ -1397,7 +1397,14 @@ class Moulinette(ABC):
         form_classes = self.optional_form_classes()
         forms = []
         for form_class in form_classes:
-            form = form_class(**self.form_kwargs)
+            # Every optional form has a "activate" field
+            # If unchecked, the form validation must be ignored alltogether
+            activate_field = f"{form_class.prefix}-activate"
+            form_kwargs = self.form_kwargs.copy()
+            if "data" in form_kwargs and activate_field not in form_kwargs["data"]:
+                form_kwargs.pop("data")
+
+            form = form_class(**form_kwargs)
 
             # We skip optional forms that were not activated
             if form.is_bound and hasattr(form, "is_activated"):
@@ -1437,7 +1444,10 @@ class Moulinette(ABC):
         data = {}
         for form in self.all_forms:
             if form.is_valid():
-                data.update(form.cleaned_data)
+                if hasattr(form, "prefixed_cleaned_data"):
+                    data.update(form.prefixed_cleaned_data)
+                else:
+                    data.update(form.cleaned_data)
         return data
 
     def form_errors(self):
