@@ -2,19 +2,8 @@
 
 {% if moulinette.natura2000.ein_out_of_n2000_site %}
   <p>
-    Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un site Natura 2000</em> — parce qu'il est soumis
-    {% if moulinette.loi_sur_leau.result == 'soumis' %}
-      {% if moulinette.eval_env.result == 'cas_par_cas' or moulinette.eval_env.result == 'systematique' %}
-        à la Loi sur l'eau et
-      {% else %}
-        à la Loi sur l'eau.
-      {% endif %}
-    {% endif %}
-    {% if moulinette.eval_env.result == 'cas_par_cas' %}
-      à examen au cas par cas.
-    {% elif moulinette.eval_env.result == 'systematique' %}
-      à évaluation environnementale.
-    {% endif %}
+    Le projet est soumis à Natura 2000 — <em>bien qu'il soit hors d'un site Natura 2000</em> — parce qu'il est soumis 
+    à la Loi sur l'eau, à examen au cas par cas et/ou à évalution environnementale.
   </p>
 {% else %}
   <p>Le projet est soumis à Natura 2000.</p>
@@ -33,7 +22,9 @@
     d'instruction : 2 mois.
   </p>
 
-{% elif regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+{% elif regulation.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' 
+  or moulinette.loi_sur_leau.result == 'soumis_ou_pac'
+  or moulinette.loi_sur_leau.result == 'action_requise' %}
   <p>L'EIN doit être jointe :</p>
 
   <ul>
@@ -42,6 +33,8 @@
 
     {% if moulinette.loi_sur_leau.result == 'soumis' %}
       <li>au dossier Loi sur l'eau</li>
+    {% elif moulinette.loi_sur_leau.result == 'soumis_ou_pac' %}
+      <li>si un dossier Loi sur l'eau est réalisé, à celui-ci</li>
     {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
       <li>au dossier Loi sur l'eau si le projet y est soumis</li>
     {% endif %}
