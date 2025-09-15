@@ -8,28 +8,26 @@
 
 {% block title %}Instruction du dossier – Résumé du dossier{% endblock %}
 
-{% block project_view_title %}
-  {% if has_hedges_outside_department %}
-    <div class="fr-alert fr-alert--warning fr-mb-4w">
-      <h3 class="fr-alert__title">Au moins une des haies est située hors du département</h3>
-      <p>
-        Au moins une des haies est située en dehors du département choisi pour cette simulation – {{ config.department }}.
-      </p>
-      <p>Notez que le simulateur n’est pas paramétré pour gérer les règles combinées de plusieurs départements.</p>
-      <p>
-        L’instruction et l'élaboration de la décision unique peuvent nécessiter de se coordonner avec les services des préfectures concernées.
-      </p>
-    </div>
-  {% endif %}
-
-  <h1>Résumé du dossier</h1>
-{% endblock %}
+{% block project_view_title %}<h1>Résumé du dossier</h1>{% endblock %}
 
 {% block project_content %}
 
   <div class="project-inner-content">
 
     {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
+
+    {% if has_hedges_outside_department %}
+      <div class="fr-alert fr-alert--warning fr-mb-4w">
+        <h3 class="fr-alert__title">Au moins une des haies est située hors du département</h3>
+        <p>
+          Au moins une des haies est située en dehors du département choisi pour cette simulation – {{ config.department }}.
+        </p>
+        <p>Notez que le simulateur n’est pas paramétré pour gérer les règles combinées de plusieurs départements.</p>
+        <p>
+          L’instruction et l'élaboration de la décision unique peuvent nécessiter de se coordonner avec les services des préfectures concernées.
+        </p>
+      </div>
+    {% endif %}
 
     <section id="section-key-elements" class="fr-my-4w">
       <div class="title-with-link-container">
