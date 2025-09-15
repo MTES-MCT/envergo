@@ -557,7 +557,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     event_category = "projet"
-    event_action = "consultation_i"
+    event_action = ""
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -707,7 +707,6 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    event_action = ""
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -744,7 +743,6 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
-    event_action = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -792,6 +790,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         """Send message"""
         message_body = form.cleaned_data["message_body"]
         ds_response = send_message_dossier_ds(self.object, message_body)
+        self.event_action = "envoi"
 
         if ds_response is None or (
             "errors" in ds_response and ds_response["errors"] is not None
@@ -834,7 +833,6 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
-    event_action = ""
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
@@ -844,7 +842,6 @@ class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternative.html"
-    matomo_tag = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
