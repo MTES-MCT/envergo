@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
@@ -32,20 +33,30 @@ from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 class MoulinetteMixin:
     """Display the moulinette form and results."""
 
+    def setup(self, request, *args, **kwargs):
+        """Add a moulinette object to the view.
+
+        This method is called even before `dispatch` in django's class-based view
+        workflow.
+
+        This guarantees that a "moulinette" property is always available.
+        """
+        super().setup(request, *args, **kwargs)
+        MoulinetteClass = get_moulinette_class_from_site(request.site)
+        self.moulinette = MoulinetteClass(self.get_form_kwargs())
+
     def get_form_class(self):
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        FormClass = MoulinetteClass.get_main_form_class()
+        FormClass = self.moulinette.get_main_form_class()
         return FormClass
 
     def get_form(self):
-        form = super().get_form()
+        form = self.moulinette.main_form
         return form
 
     def get_form_kwargs(self):
         """Return the keyword arguments for instantiating the form."""
         kwargs = {
             "initial": self.get_initial(),
-            "prefix": self.get_prefix(),
         }
 
         if self.request.method in ("POST", "PUT"):
@@ -54,7 +65,8 @@ class MoulinetteMixin:
         return kwargs
 
     def get_initial(self):
-        return self.request.GET.dict()
+        moulinette_data = self.request.GET.dict()
+        return moulinette_data
 
     def get_form_data(self):
         """Get the data to pass to the moulinette forms.
