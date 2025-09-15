@@ -304,13 +304,6 @@ div#app {
             }
 
             button {
-              visibility: visible; // Styles for touch UIs
-
-              @media (hover: hover) {
-                /* Styles for mouse UIs */
-                visibility: hidden;
-              }
-
               margin-left: auto;
               font-size: 14px;
               padding: 0.5rem;
@@ -322,10 +315,6 @@ div#app {
             &:hover,
             &.hovered {
               background-color: #f5f5f5;
-
-              button {
-                visibility: visible;
-              }
             }
 
             &:active {
@@ -767,4 +756,15 @@ div#alternative-notice {
 
 #faq-dropdown-btn {
   width: 20rem;
+}
+
+section#moulinette-regulation-result {
+  section.instruction-infos {
+    --text-spacing: 0 0 1rem;
+
+    h6 {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
 }

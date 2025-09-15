@@ -292,6 +292,31 @@ class MoulinetteHome(MoulinetteMixin, FormView):
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+
+        main_form_errors = {
+            field: [{"code": str(e.code), "message": str(e.message)} for e in errors]
+            for field, errors in form.errors.as_data().items()
+        }
+        optional_forms = context["optional_forms"]
+        optional_forms_errors = {
+            f"{optional_form.prefix}-{field}": [
+                {"code": str(e.code), "message": str(e.message)} for e in errors
+            ]
+            for optional_form in optional_forms
+            if optional_form.is_activated() and optional_form.errors
+            for field, errors in optional_form.errors.as_data().items()
+        }
+        log_event(
+            "erreur",
+            "formulaire-simu",
+            self.request,
+            data=form.data,
+            errors=main_form_errors | optional_forms_errors,
+        )
+        return self.render_to_response(context)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
@@ -522,12 +547,35 @@ class BaseMoulinetteResult(FormView):
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
+            required_form_errors = moulinette.required_form_errors()
+            optional_form_errors = moulinette.optional_form_errors()
+
             if not (
                 moulinette.has_missing_data()
                 or is_request_from_a_bot(request)
                 or is_edit
             ):
                 self.log_moulinette_event(moulinette, context)
+            elif (
+                bool(required_form_errors)
+                and context["additional_forms_bound"]
+                or bool(optional_form_errors)
+            ):
+                log_event(
+                    "erreur",
+                    "formulaire-simu",
+                    self.request,
+                    data=moulinette.raw_data,
+                    errors={
+                        field: [
+                            {"code": str(e.code), "message": str(e.message)}
+                            for e in errors.data
+                        ]
+                        for field, errors in (
+                            required_form_errors | optional_form_errors
+                        ).items()
+                    },
+                )
 
             return res
 

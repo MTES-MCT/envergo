@@ -27,6 +27,7 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
+from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
@@ -41,8 +42,9 @@ from envergo.petitions.services import (
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
     extract_data_from_fields,
-    get_instructor_view_context,
+    get_context_from_ds,
     get_messages_and_senders_from_ds,
+    get_project_context,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -592,6 +594,9 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         moulinette = self.object.get_moulinette()
         context["petition_project"] = self.object
         context["moulinette"] = moulinette
+
+        context.update(get_context_from_ds(self.object, moulinette))
+
         context.update(moulinette.catalog)
 
         context["plantation_evaluation"] = PlantationEvaluator(
@@ -696,9 +701,7 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project_details"] = get_instructor_view_context(
-            self.object, context["moulinette"]
-        )
+        context.update(get_project_context(self.object, context["moulinette"]))
         return context
 
     def get_success_url(self):
@@ -714,6 +717,11 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
         context = super().get_context_data(**kwargs)
+
+        hedge_data = context["petition_project"].hedge_data
+        context["ign_url"] = get_ign_centered_url(hedge_data)
+        context["google_maps_url"] = get_google_maps_centered_url(hedge_data)
+
         regulation_slug = self.kwargs.get("regulation")
         if regulation_slug:
             try:
@@ -749,12 +757,11 @@ class PetitionProjectInstructorDossierDSView(
     event_action = ""
 
     def get_context_data(self, **kwargs):
+        project_details = compute_instructor_informations_ds(
+            self.object
+        )  # compute DS details first as it will force update the dossier cache
         context = super().get_context_data(**kwargs)
-        context["project_details"] = compute_instructor_informations_ds(
-            self.object,
-            context["moulinette"],
-        )
-
+        context["project_details"] = project_details
         # Send message if info from DS is not in project details
         if not context["project_details"]:
             messages.warning(
@@ -921,7 +928,8 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 "projet",
                 "invitation",
                 self.request,
-                **{"project_reference": project.reference},
+                reference=project.reference,
+                department=project.get_department_code(),
                 **get_matomo_tags(self.request),
             )
             return JsonResponse({"invitation_url": invitation_url})

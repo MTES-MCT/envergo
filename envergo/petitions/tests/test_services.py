@@ -27,8 +27,8 @@ from envergo.petitions.regulations.ep import (
 )
 from envergo.petitions.services import (
     compute_instructor_informations_ds,
+    get_context_from_ds,
     get_demarches_simplifiees_dossier,
-    get_instructor_view_context,
     get_messages_and_senders_from_ds,
 )
 from envergo.petitions.tests.factories import (
@@ -67,7 +67,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
-    project_details = get_instructor_view_context(petition_project, moulinette)
+    project_details = get_context_from_ds(petition_project, moulinette)
 
     assert project_details["applicant"] == "Mme LAMARR Hedy"
     assert project_details["city"] == "Laon (02000)"
@@ -199,7 +199,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         "department": 44,
     }
     moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    get_instructor_view_context(petition_project, moulinette)
+    get_context_from_ds(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
     assert (
@@ -281,13 +281,12 @@ def test_compute_instructor_information(mock_get_dossier):
     )
 
     petition_project = PetitionProjectFactory()
-    moulinette = petition_project.get_moulinette()
 
     # When I compute instructor information for a given petition project
-    project_details = compute_instructor_informations_ds(petition_project, moulinette)
+    project_details = compute_instructor_informations_ds(petition_project)
 
     # Then I should have header sections from demarche champ descriptors
-    header_sections = project_details.ds_data.header_sections
+    header_sections = project_details.header_sections
     assert header_sections == [
         "Identité",
         "Description du projet",
@@ -299,7 +298,7 @@ def test_compute_instructor_information(mock_get_dossier):
     ]
 
     # Then I should have correct data for each field type
-    champs = project_details.ds_data.champs
+    champs = project_details.champs
     [yesno_champ_yes] = [
         c
         for c in champs
@@ -428,11 +427,6 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             },
         },
         "replantation_coefficient": Decimal("1.5"),
-        "google_maps_url": "https://www.google.com/maps/@?api=1&map_action=map&"
-        "center=43.069199999999995,0.44220000000000004&zoom=16",
-        "ign_url": "https://www.geoportail.gouv.fr/carte?c=0.44220000000000004,43.069199999999995&z=16&"
-        "l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST"
-        "::GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes",
     }
     assert info == expected_result
 
@@ -580,11 +574,6 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "reduced_lpm": 31,
         },
         "replantation_coefficient": Decimal("1.40"),
-        "google_maps_url": "https://www.google.com/maps/@?api=1&map_action=map&"
-        "center=43.069199999999995,0.44220000000000004&zoom=16",
-        "ign_url": "https://www.geoportail.gouv.fr/carte?c=0.44220000000000004,43.069199999999995&z=16&"
-        "l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST::"
-        "GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes",
     }
     assert info == expected_result
 
@@ -660,24 +649,12 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     expected_result = {
         "lineaire_detruit_pac": 27.55060841703869,
         "lineaire_to_plant_pac": 27.55060841703869,
-        "motif": "\n"
-        "            Création d’un accès à la parcelle<br/>\n"
-        '            <span class="fr-hint-text">\n'
-        "                Brèche dans une haie pour créer un chemin, "
-        "permettre le passage d’engins…\n"
-        "            </span>\n"
-        "            ",
         "pac_destruction_detail": [ANY],
         "pac_plantation_detail": [ANY],
         "percentage_pac": "",
         "replanting_ratio": 1.0,
         "replanting_ratio_comment": "Linéaire à planter / linéaire à détruire, sur "
         "parcelle PAC",
-        "google_maps_url": "https://www.google.com/maps/@?api=1&map_action=map&"
-        "center=43.069199999999995,0.44220000000000004&zoom=16",
-        "ign_url": "https://www.geoportail.gouv.fr/carte?c=0.44220000000000004,43.069199999999995&z=16&"
-        "l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST::"
-        "GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes",
     }
     assert info == expected_result
 

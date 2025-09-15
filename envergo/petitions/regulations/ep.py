@@ -1,7 +1,6 @@
 from django.forms import ChoiceField
 from django.utils.module_loading import import_string
 
-from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.hedges.regulations import HEDGE_KEYS, NormandieQualityCondition
 from envergo.moulinette.forms.fields import DisplayFieldMixin
@@ -61,8 +60,6 @@ def ep_base_get_instructor_view_context(
 
     return {
         "hedges_properties": hedges_properties,
-        "ign_url": get_ign_centered_url(petition_project.hedge_data),
-        "google_maps_url": get_google_maps_centered_url(petition_project.hedge_data),
     }
 
 

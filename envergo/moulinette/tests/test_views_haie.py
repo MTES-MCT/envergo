@@ -5,6 +5,7 @@ import pytest
 from django.test import override_settings
 from django.urls import reverse
 
+from envergo.analytics.models import Event
 from envergo.geodata.conftest import loire_atlantique_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
@@ -14,6 +15,12 @@ from envergo.moulinette.tests.factories import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+HOME_TITLE = "Projet de destruction de haies ou alignements d'arbres"
+FORM_ERROR = (
+    "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
+)
 
 
 @pytest.fixture(autouse=False)
@@ -207,6 +214,42 @@ def test_result_p_view_non_soumis_with_r_gt_0(client):
     res = client.get(f"{url}?{query}")
 
     assert "Déposer une demande sans plantation" not in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_moulinette_post_form_error(client):
+    ConfigHaieFactory()
+    url = reverse("moulinette_home")
+    data = {"foo": "bar"}
+    res = client.post(f"{url}?department=44&element=haie&travaux=destruction", data)
+
+    assert res.status_code == 200
+    assert HOME_TITLE in res.content.decode()
+    assert FORM_ERROR in res.content.decode()
+    error_event = Event.objects.filter(category="erreur", event="formulaire-simu").get()
+    assert "errors" in error_event.metadata
+    assert error_event.metadata["errors"] == {
+        "haies": [
+            {
+                "code": "required",
+                "message": "Aucune haie n’a été saisie. Cliquez sur le bouton "
+                "ci-dessus pour\n"
+                "            localiser les haies à détruire.",
+            }
+        ],
+        "localisation_pac": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+        "motif": [{"code": "required", "message": "Ce champ est obligatoire."}],
+        "reimplantation": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ],
+    }
+    assert "data" in error_event.metadata
+    assert error_event.metadata["data"] == data
 
 
 @pytest.mark.urls("config.urls_haie")
