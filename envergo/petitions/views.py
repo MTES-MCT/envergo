@@ -847,6 +847,17 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
 
     template_name = "haie/petitions/instructor_view_notes.html"
 
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            reference=self.object.reference,
+            **get_matomo_tags(self.request),
+        )
+        return res
+
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
 
