@@ -1333,17 +1333,13 @@ class Moulinette(ABC):
 
     def __init__(self, form_kwargs):
 
-        self.department = None
-        self.config = None
         self.catalog = MoulinetteCatalog()
         self.form_kwargs = form_kwargs
 
         if self.main_form.is_valid():
             self.catalog = MoulinetteCatalog(**self.main_form.cleaned_data)
             self.catalog.update(self.get_catalog_data())
-            self.department = self.get_department()
-
-            self.config = self.catalog["config"] = self.get_config()
+            self.catalog["config"] = self.config
             if self.config and self.config.id and hasattr(self.config, "templates"):
                 self.templates = {t.key: t for t in self.config.templates.all()}
             else:
@@ -1352,6 +1348,8 @@ class Moulinette(ABC):
             self.evaluate()
 
     def get_main_form(self):
+        """Return the instanciated main moulinette form."""
+
         return self.get_main_form_class()(**self.form_kwargs)
 
     @cached_property
@@ -1359,6 +1357,8 @@ class Moulinette(ABC):
         return self.get_main_form()
 
     def get_triage_form(self):
+        """Return the instanciated triage form, or None if no triage is required."""
+
         TriageForm = self.get_triage_form_class()
         form = TriageForm(**self.form_kwargs) if TriageForm else None
         return form
@@ -1372,10 +1372,15 @@ class Moulinette(ABC):
 
         Additional forms are questions that conditionaly arrise depending on the data
         from the main form.
+
+        We can only build this list if the main form is filled and valid.
         """
+        forms = []
+
+        if not self.main_form.is_valid():
+            return forms
 
         form_classes = self.additional_form_classes()
-        forms = []
         for form_class in form_classes:
             form = form_class(**self.form_kwargs)
 
@@ -1385,6 +1390,24 @@ class Moulinette(ABC):
                 forms.append(form)
         return forms
 
+    def additional_form_classes(self):
+        """Return the list of forms for additional questions.
+
+        Some criteria need more data to return an answer. Here, we gather all
+        the forms to gather this data.
+        """
+
+        form_classes = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if not criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class and form_class not in form_classes:
+                        form_classes.append(form_class)
+
+        return form_classes
+
     @cached_property
     def additional_forms(self):
         return self.get_additional_forms()
@@ -1393,9 +1416,16 @@ class Moulinette(ABC):
         """Get a list of instanciated optional forms.
 
         Optional forms can be selectively activated during a simulation.
+
+        There are two cases:
+         - if the main form is valid, we can fetch the active criteria, and get the
+           specific list of associated optional forms.
+         - otherwise, we just find all optional criteria that are associated with
+           the moulinette regulations.
         """
-        form_classes = self.optional_form_classes()
         forms = []
+        form_classes = self.optional_form_classes()
+
         for form_class in form_classes:
             # Every optional form has a "activate" field
             # If unchecked, the form validation must be ignored alltogether
@@ -1416,11 +1446,38 @@ class Moulinette(ABC):
                 forms.append(form)
         return forms
 
+    def optional_form_classes(self):
+        """Return the list of forms for optional questions.
+
+        If the moulinette is bound, we can fetch the precise optional criterion list and
+        get their forms.
+
+        Otherwise, we have to fetch every single existing optional criterion.
+        """
+        form_classes = []
+
+        if self.main_form.is_valid():
+            for regulation in self.regulations:
+                for criterion in regulation.criteria.all():
+                    if criterion.is_optional:
+                        form_class = criterion.get_form_class()
+                        if form_class and form_class not in form_classes:
+                            form_classes.append(form_class)
+        else:
+            for criterion in self.get_optional_criteria():
+                form_class = criterion.evaluator.form_class
+                if form_class and form_class not in form_classes:
+                    form_classes.append(form_class)
+
+        return form_classes
+
     @cached_property
     def optional_forms(self):
         return self.get_optional_forms()
 
     def get_all_forms(self):
+        """Return all forms associated with the Moulinette."""
+
         all_forms = [self.main_form]
         all_forms.extend(self.additional_forms)
         all_forms.extend(self.optional_forms)
@@ -1437,10 +1494,14 @@ class Moulinette(ABC):
 
     @property
     def data(self):
+        """Return the moulinette raw form data."""
+
         return self.form_kwargs.get("data", {})
 
     @property
     def cleaned_data(self):
+        """Return the moulinette data as cleaned by all existing forms."""
+
         data = {}
         for form in self.all_forms:
             if form.is_valid():
@@ -1451,6 +1512,8 @@ class Moulinette(ABC):
         return data
 
     def form_errors(self):
+        """Return the list of all form validation errors."""
+
         errors = {}
         for form in self.get_all_forms():
             form.full_clean()
@@ -1459,7 +1522,12 @@ class Moulinette(ABC):
         return errors
 
     def is_valid(self):
-        return not bool(self.form_errors())
+        """The moulinette is valid if it can run the evaluation.
+        - the main form is valid
+        - all additional required forms are valid
+        - all activated optional forms are valid
+        """
+        return self.main_form.is_valid() and not bool(self.form_errors())
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
@@ -1476,24 +1544,6 @@ class Moulinette(ABC):
 
         return data
 
-    def additional_form_classes(self):
-        """Return the list of forms for additional questions.
-
-        Some criteria need more data to return an answer. Here, we gather all
-        the forms to gather this data.
-        """
-
-        forms = []
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if not criterion.is_optional:
-                    form_class = criterion.get_form_class()
-                    if form_class and form_class not in forms:
-                        forms.append(form_class)
-
-        return forms
-
     @cached_property
     def additional_fields(self):
         """Get a {field_name: field} dict of all additional questions fields."""
@@ -1504,19 +1554,6 @@ class Moulinette(ABC):
                 if field.name not in fields:
                     fields[field.name] = field
         return fields
-
-    def optional_form_classes(self):
-        """Return the list of forms for optional questions."""
-        forms = []
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if criterion.is_optional:
-                    form_class = criterion.get_form_class()
-                    if form_class and form_class not in forms:
-                        forms.append(form_class)
-
-        return forms
 
     @property
     def regulations(self):
@@ -1609,8 +1646,8 @@ class Moulinette(ABC):
 
         return criteria
 
-    def get_optionnal_criteria(self):
-        """Fetch optionnal criteria used by this moulinette regulations."""
+    def get_optional_criteria(self):
+        """Fetch optional criteria used by this moulinette regulations."""
         criteria = Criterion.objects.filter(
             is_optional=True, regulation__regulation__in=self.REGULATIONS
         ).order_by("weight")
@@ -1948,8 +1985,16 @@ class MoulinetteAmenagement(Moulinette):
         )
         return department
 
+    @cached_property
+    def department(self):
+        return self.get_department()
+
     def get_config(self):
         return getattr(self.department, "configamenagement", None)
+
+    @cached_property
+    def config(self):
+        return self.get_config()
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
