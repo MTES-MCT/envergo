@@ -21,11 +21,7 @@ from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import (
-    ConfigHaie,
-    MoulinetteHaie,
-    get_moulinette_class_from_site,
-)
+from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
@@ -66,6 +62,10 @@ class MoulinetteMixin:
 
     def get_initial(self):
         moulinette_data = self.request.GET.dict()
+        if moulinette_data:
+            surfaces = compute_surfaces(moulinette_data)
+            moulinette_data.update(surfaces)
+
         return moulinette_data
 
     def get_form_data(self):
@@ -101,8 +101,9 @@ class MoulinetteMixin:
         context["moulinette"] = self.moulinette
         context.update(self.moulinette.catalog)
 
-        if self.moulinette.main_form.is_valid():
+        if self.moulinette.is_evaluated():
 
+            context["has_errors"] = not self.moulinette.is_valid()
             context["additional_forms"] = self.moulinette.additional_forms
             context["additional_fields"] = self.moulinette.additional_fields
 
