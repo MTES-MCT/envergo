@@ -98,18 +98,13 @@ class MoulinetteMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
+        context["moulinette"] = self.moulinette
+        context.update(self.moulinette.catalog)
 
-        form = context["form"]
-        if form.is_valid():
-            moulinette = MoulinetteClass(
-                form.cleaned_data, form.data, self.should_activate_optional_criteria()
-            )
-            context["moulinette"] = moulinette
-            context.update(moulinette.catalog)
+        if self.moulinette.main_form.is_valid():
 
-            context["additional_forms"] = moulinette.additional_forms()
-            context["additional_fields"] = moulinette.additional_fields()
+            context["additional_forms"] = self.moulinette.additional_forms
+            context["additional_fields"] = self.moulinette.additional_fields
 
             # We need to display a different form style when the "additional forms"
             # first appears, but the way this feature is designed, said forms
@@ -120,7 +115,7 @@ class MoulinetteMixin:
             )
             context["additional_forms_bound"] = additional_forms_bound
 
-            moulinette_data = moulinette.summary()
+            moulinette_data = self.moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
             context["feedback_form_useful"] = FeedbackFormUseful(
                 prefix="useful",
@@ -133,8 +128,8 @@ class MoulinetteMixin:
 
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
-        if form.is_bound and "lng" in form.cleaned_data and "lat" in form.cleaned_data:
-            lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
+        if "lng" in context and "lat" in context:
+            lng, lat = context["lng"], context["lat"]
             context["display_marker"] = True
             context["center_map"] = [lng, lat]
             context["default_zoom"] = 16
@@ -149,127 +144,28 @@ class MoulinetteMixin:
             settings.VISITOR_COOKIE_NAME, ""
         )
 
-        context["optional_forms"] = self.get_optional_forms(
-            context.get("moulinette", None)
-        )
         context["expand_optional_forms"] = (
             self.request.user.is_staff
             and self.request.user.groups.filter(name="Staff ops").exists()
         )
+        context["optional_forms"] = self.moulinette.optional_forms
 
-        context = {**context, **MoulinetteClass.get_extra_context(self.request)}
+        context = {**context, **self.moulinette.get_extra_context(self.request)}
 
         return context
 
-    def render_to_response(self, context, **response_kwargs):
-        # We have to store the moulinette since there are no other way
-        # to give parameters to `get_template_names`
-        self.moulinette = context.get("moulinette", None)
-        self.triage_form = context.get("triage_form", None)
-        return super().render_to_response(context, **response_kwargs)
-
-    def get_optional_forms(self, moulinette=None):
-        """Get the form list for optional criteria.
-
-        If a moulinette object is available, it means the user submitted the form,
-        so we can fetch the optional criteria from the moulinette object.
-
-        But we also want to display optional forms on the initial moulinette form,
-        so we have no choice but to manually fetch all optional criteria and extracting
-        their forms.
-        """
-        if moulinette:
-            form_classes = moulinette.optional_form_classes()
-        else:
-            form_classes = self.get_all_optional_form_classes()
-
-        forms = []
-        for Form in form_classes:
-            form_kwargs = self.get_form_kwargs()
-
-            # Every optional form has a "activate" field
-            # If unchecked, the form validation must be ignored alltogether
-            activate_field = f"{Form.prefix}-activate"
-            if "data" in form_kwargs and activate_field not in form_kwargs["data"]:
-                form_kwargs.pop("data")
-
-            form = Form(**form_kwargs)
-            if form.fields:
-                form.is_valid()
-                forms.append(form)
-
-        return forms
-
-    def get_all_optional_form_classes(self):
-        form_classes = []
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        for criterion in MoulinetteClass.get_optionnal_criteria():
-            form_class = criterion.evaluator.form_class
-            if form_class and form_class not in form_classes:
-                form_classes.append(form_class)
-
-        return form_classes
-
     def get_results_url(self, form):
-        """Generates the GET url corresponding to the POST'ed moulinette query.
+        """Generates the full url to the moulinette result page."""
 
-        We submit the form via a POST method (TBH I don't remember why but there was a reason).
-        But since we want the moulinette result to have a distinct url, we immediately redirect
-        to the full url.
+        data = self.request.GET.copy().dict()
+        cleaned_data = self.moulinette.cleaned_data
+        data.update(cleaned_data)
 
-        We only want to keep useful parameters, i.e the ones that are actually used
-        by the moulinette forms.
-        """
-
-        get = self.request.GET.copy()
-        form_data = form.cleaned_data
-        get_data = form_data.copy()  # keep the computed values in the catalog
-        get_data.pop("address", None)
-        get_data.pop("existing_surface", None)
-        for k, v in get_data.items():
-            get[k] = v
-
-        if hasattr(self, "moulinette"):
-            moulinette = self.moulinette
-        else:
-            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-            moulinette = MoulinetteClass(
-                form_data, form.data, self.should_activate_optional_criteria()
-            )
-
-        additional_forms = moulinette.additional_forms()
-        for additional_form in additional_forms:
-            for field in additional_form:
-                value = additional_form.data.get(field.html_name, None)
-                if value:
-                    get[field.html_name] = value
-
-        optional_forms = self.get_optional_forms(moulinette)
-        for optional_form in optional_forms:
-            for field in optional_form:
-                value = optional_form.data.get(field.html_name, None)
-                if value:
-                    get[field.html_name] = value
-
-        triage_params = moulinette.get_triage_params()
-        for param in triage_params:
-            if param in form.data:
-                get[param] = form.data[param]
-
-        if "alternative" in self.request.GET:
-            get["alternative"] = self.request.GET["alternative"]
-
-        url_params = get.urlencode()
+        params = urlencode(data)
         url = reverse("moulinette_result")
 
-        # Scroll to the additional forms if there are missing data
-        url_fragment = "#additional-forms" if moulinette.has_missing_data() else ""
-
-        url_with_params = f"{url}?{url_params}{url_fragment}"
+        url_with_params = f"{url}?{params}"
         return url_with_params
-
-    def should_activate_optional_criteria(self):
-        return True
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         export = moulinette.summary()
@@ -295,8 +191,7 @@ class MoulinetteMixin:
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteForm(MoulinetteMixin, FormView):
     def get_template_names(self):
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-        return MoulinetteClass.get_home_template()
+        return self.moulinette.get_home_template()
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -308,16 +203,12 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             return res
 
     def post(self, request, *args, **kwargs):
-        form = self.get_form()
-        context = self.get_context_data(form=form)
-        moulinette = context.get("moulinette", None)
-
         # We don't want to redirect to the result url if the form is not
         # absolutely valid, i.e we can actually display the result
-        if moulinette and moulinette.is_valid():
-            return self.form_valid(form)
+        if self.moulinette.is_valid():
+            return self.form_valid(self.moulinette.main_form)
         else:
-            return self.form_invalid(form)
+            return self.form_invalid(self.moulinette.main_form)
 
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
@@ -382,8 +273,8 @@ class MoulinetteResultMixin:
         MoulinetteClass = get_moulinette_class_from_site(self.request.site)
 
         moulinette = self.moulinette
-        triage_form = self.triage_form
-        triage_is_valid = MoulinetteClass.is_triage_valid(triage_form)
+        triage_form = moulinette.triage_form
+        triage_is_valid = self.moulinette.is_triage_valid()
         is_debug = bool(self.request.GET.get("debug", False))
         is_admin = self.request.user.is_staff
 
@@ -414,7 +305,7 @@ class MoulinetteResultMixin:
         url in matomo, even though the real url is `/simulateur/resultat/?debug=true`.
         """
         data = {}
-        moulinette = context.get("moulinette", None)
+        moulinette = self.moulinette
         is_debug = bool(self.request.GET.get("debug", False))
         is_alternative = bool(self.request.GET.get("alternative", False))
         # Let's build custom uris for better matomo tracking
@@ -444,30 +335,27 @@ class MoulinetteResultMixin:
             bare_url, self.request
         )
 
-        if moulinette and is_debug:
-            data["matomo_custom_url"] = update_url_with_matomo_params(
-                debug_url, self.request
-            )
-
-        elif moulinette and moulinette.has_missing_data():
-            if context["additional_forms_bound"]:
-                data["matomo_custom_url"] = update_url_with_matomo_params(
-                    invalid_form_url, self.request
-                )
-            else:
-                data["matomo_custom_url"] = update_url_with_matomo_params(
-                    missing_data_url, self.request
-                )
-
-        elif not moulinette and context.get("triage_form", None):
-            data["matomo_custom_url"] = update_url_with_matomo_params(
-                out_of_scope_result_url, self.request
-            )
-
         if is_alternative:
             data["matomo_custom_url"] = update_qs(
                 data["matomo_custom_url"], {"alternative": "true"}
             )
+        elif not moulinette.is_triage_valid():
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                out_of_scope_result_url, self.request
+            )
+        elif not moulinette.is_valid():
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                invalid_form_url, self.request
+            )
+        elif context["additional_forms_bound"]:
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                missing_data_url, self.request
+            )
+        elif is_debug:
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                debug_url, self.request
+            )
+
         return data
 
     def get_urls_context_data(self, context):
@@ -535,29 +423,19 @@ class MoulinetteResultMixin:
 class BaseMoulinetteResult(FormView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        moulinette = context.get("moulinette", None)
-        triage_form = context.get("triage_form", None)
+        moulinette = self.moulinette
+        triage_form = moulinette.triage_form
         redirect_url = context.get("redirect_url", None)
+
+        # Triage is required and triage form is invalid
+        if triage_form and not triage_form.is_valid():
+            redirect_url = reverse("triage")
+            redirect_url = update_qs(redirect_url, request.GET)
 
         # Moulinette is invalid and there is no triage to do (amenagement)
         # so just redirect to the form
-        if moulinette is None and triage_form is None:
+        elif not moulinette.is_valid():
             redirect_url = reverse("moulinette_form")
-            redirect_url = update_qs(redirect_url, request.GET)
-
-        # Moulinette form is invalid
-        elif moulinette is not None and moulinette.has_missing_data():
-            redirect_url = reverse("moulinette_form")
-            redirect_url = update_qs(redirect_url, request.GET)
-
-        # Moulinette is invalid and a triage form exists (haie), redirects to the
-        # first step
-        elif (
-            moulinette is None
-            and triage_form is not None
-            and not triage_form.is_valid()
-        ):
-            redirect_url = reverse("triage")
             redirect_url = update_qs(redirect_url, request.GET)
 
         if redirect_url:
@@ -566,15 +444,10 @@ class BaseMoulinetteResult(FormView):
         res = self.render_to_response(context)
 
         if moulinette:
-            if "debug" not in self.request.GET and not self.validate_results_url(
-                request, context
-            ):
-                return HttpResponseRedirect(self.get_results_url(context["form"]))
-
             required_form_errors = moulinette.required_form_errors()
             optional_form_errors = moulinette.optional_form_errors()
 
-            if not (moulinette.has_missing_data() or is_request_from_a_bot(request)):
+            if not is_request_from_a_bot(request):
                 self.log_moulinette_event(moulinette, context)
             elif (
                 bool(required_form_errors)
@@ -719,7 +592,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
         super().log_moulinette_event(moulinette, context, **kwargs)
 
 
-class Triage(FormView):
+class Triage(MoulinetteMixin, FormView):
     form_class = TriageFormHaie
     template_name = "haie/moulinette/triage.html"
 
@@ -760,12 +633,11 @@ class Triage(FormView):
 
         return context
 
-    def get_initial(self):
-        """Populate the form with data from the query string."""
-        return self.request.GET.dict()
+    def get_form(self):
+        return self.moulinette.triage_form
 
     def form_valid(self, form):
-        if MoulinetteHaie.is_triage_valid(form):
+        if self.moulinette.is_triage_valid():
             url = reverse("moulinette_form")
         else:
             url = reverse("moulinette_result")
