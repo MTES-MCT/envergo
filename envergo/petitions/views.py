@@ -679,17 +679,6 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
 
         return super().post(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        res = super().form_valid(form)
-        log_event(
-            "projet",
-            "edition_notes",
-            self.request,
-            reference=self.object.reference,
-            **get_matomo_tags(self.request),
-        )
-        return res
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if not context["is_department_instructor"]:
