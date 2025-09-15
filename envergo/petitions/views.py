@@ -717,7 +717,6 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    event_action = ""
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -759,7 +758,6 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
-    event_action = ""
 
     def get_context_data(self, **kwargs):
         project_details = compute_instructor_informations_ds(
@@ -816,6 +814,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         """Send message"""
         message_body = form.cleaned_data["message_body"]
         ds_response = send_message_dossier_ds(self.object, message_body)
+        self.event_action = "envoi"
 
         if ds_response is None or (
             "errors" in ds_response and ds_response["errors"] is not None
@@ -858,7 +857,6 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
-    event_action = ""
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
