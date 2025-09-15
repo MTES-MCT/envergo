@@ -54,8 +54,10 @@ class Natura2000Haie(CriterionEvaluator):
             .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
         )
         # Aggregate them into a single polygon
-        geom = qs["geom"]
-        geom = shapely.multipolygons(geom)
+        multipolygon = qs["geom"]
+
+        # Other conversion options throw a cryptic numpy error, so…
+        geom = shapely.from_wkt(multipolygon.wkt)
 
         n2000_hors_aa = {}
         l_n2000_hors_aa = 0.0
