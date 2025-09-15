@@ -67,6 +67,7 @@ class PetitionProject(models.Model):
         editable=False,
         blank=True,
         null=True,
+        verbose_name="Département",
     )
 
     hedge_data = models.ForeignKey(
@@ -169,18 +170,11 @@ class PetitionProject(models.Model):
 
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
-
-            demarche_name = (
-                dossier["demarche"]["title"]
-                if "demarche" in dossier and "title" in dossier["demarche"]
-                else "Nom inconnu"
-            )
             demarche_number = (
                 dossier["demarche"]["number"]
                 if "demarche" in dossier and "number" in dossier["demarche"]
                 else "Numéro inconnu"
             )
-            demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
 
             ds_url = self.get_demarches_simplifiees_instructor_url(demarche_number)
 
@@ -188,6 +182,10 @@ class PetitionProject(models.Model):
             admin_url = reverse(
                 "admin:petitions_petitionproject_change",
                 args=[self.pk],
+            )
+
+            instructor_url = reverse(
+                "petition_project_instructor_view", kwargs={"reference": self.reference}
             )
 
             usager_email = (
@@ -202,7 +200,8 @@ class PetitionProject(models.Model):
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "demarche_label": demarche_label,
+                    "dossier_number": self.demarches_simplifiees_dossier_number,
+                    "instructor_url": f"https://{haie_site.domain}{instructor_url}",
                     "ds_url": ds_url,
                     "admin_url": f"https://{haie_site.domain}{admin_url}",
                     "usager_email": usager_email,
@@ -370,7 +369,7 @@ class InvitationToken(models.Model):
         null=True,
         blank=True,
         related_name="invitation_tokens",
-        verbose_name="Utilisateur invité",
+        verbose_name="Compte invité",
     )
 
     # Meta fields

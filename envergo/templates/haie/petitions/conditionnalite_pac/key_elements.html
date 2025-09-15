@@ -5,12 +5,15 @@
 </p>
 
 <ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Motif" value=motif %}
-  {% if project_details.pacage %}
-    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=project_details.pacage %}
+
+  <li>
+    <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
+  </li>
+  {% if pacage %}
+    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=pacage %}
   {% endif %}
 </ul>
-<h4 class="fr-mt-3w">Destruction</h4>
+<h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
 <ul class="instructor-view-list">
   {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur parcelle PAC" value=lineaire_detruit_pac|floatformat:"0g" unit="m" %}
 
@@ -26,7 +29,7 @@
   {% endif %}
 </ul>
 
-<h4 class="fr-mt-3w">Plantation</h4>
+<h3 class="fr-h6 fr-mt-3w fr-mb-2w">Plantation</h3>
 <ul class="instructor-view-list">
   {% include "haie/petitions/_item.html" with label="Total linéaire à planter sur parcelle PAC" value=lineaire_to_plant_pac|floatformat:"0g" unit="m" %}
 

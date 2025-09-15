@@ -1,3 +1,4 @@
+import factory
 import pytest
 from django.contrib.gis.geos import MultiPolygon
 
@@ -7,6 +8,7 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_poly
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.ep import get_hedge_compensation_details
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
     CriterionFactory,
@@ -105,6 +107,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -135,6 +138,7 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -179,6 +183,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -223,6 +228,7 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -257,6 +263,7 @@ def test_ep_normandie_dispense_coupe_a_blanc(
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -290,6 +297,7 @@ def test_ep_normandie_interdit_remplacement(
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -323,6 +331,7 @@ def test_ep_normandie_derogation_simplifiee(
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -357,6 +366,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -365,7 +375,20 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
     assert moulinette.ep.ep_normandie.result_code == "dispense"
 
 
-def test_ep_normandie_dispense_l350(ep_normandie_criterion, france_map):  # noqa
+@pytest.mark.parametrize(
+    "motif_result",
+    [
+        ("amelioration_culture", "a_verifier_L350"),
+        ("chemin_acces", "a_verifier_L350"),
+        ("securite", "dispense_L350"),
+        ("amenagement", "a_verifier_L350"),
+        ("amelioration_ecologique", "a_verifier_L350"),
+        ("embellissement", "a_verifier_L350"),
+        ("autre", "a_verifier_L350"),
+    ],
+)
+def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  # noqa
+    motif, result_code = motif_result
     regulation = RegulationFactory(regulation="alignement_arbres", weight=0)
     CriterionFactory(
         title="Alignement arbres > L350-3",
@@ -388,15 +411,16 @@ def test_ep_normandie_dispense_l350(ep_normandie_criterion, france_map):  # noqa
 
     data = {
         "profil": "autre",
-        "motif": "securite",
+        "motif": motif,
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
     moulinette = MoulinetteHaie(data, data, False)
     assert moulinette.is_evaluation_available()
-    assert moulinette.ep.ep_normandie.result_code == "dispense_L350"
+    assert moulinette.ep.ep_normandie.result_code == result_code
 
 
 def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
@@ -427,6 +451,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
         "motif": "securite",
         "reimplantation": "replantation",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
@@ -529,3 +554,74 @@ def test_replantation_coefficient_normandie(
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.replantation_coefficient == r
+
+
+def test_get_hedge_compensation_details():
+    hedge_neb_rc_aa_cap = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData=factory.Dict(
+            {
+                "mode_destruction": "coupe_a_blanc",
+                "type_haie": "alignement",
+                "bord_voie": True,
+                "essences_non_bocageres": True,
+                "recemment_plantee": True,
+                "proximite_point_eau": False,
+                "connexion_boisement": False,
+            }
+        ),
+    )
+
+    details = get_hedge_compensation_details(hedge_neb_rc_aa_cap, 1.0)
+
+    assert (
+        details["properties"]
+        == "essences non bocagères, récemment plantée, coupe à blanc, L350-3"
+    )
+
+    hedge_aa_cap = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData=factory.Dict(
+            {
+                "mode_destruction": "coupe_a_blanc",
+                "type_haie": "alignement",
+                "bord_voie": True,
+                "essences_non_bocageres": False,
+                "recemment_plantee": False,
+                "proximite_point_eau": False,
+                "connexion_boisement": False,
+            }
+        ),
+    )
+
+    details = get_hedge_compensation_details(hedge_aa_cap, 1.0)
+
+    assert details["properties"] == "coupe à blanc, L350-3"
+
+    hedge_nothing = HedgeFactory(
+        latLngs=[
+            {"lat": 49.1395362158265, "lng": -0.17191082239151004},
+            {"lat": 49.1394993660136, "lng": -0.17153665423393252},
+        ],
+        additionalData=factory.Dict(
+            {
+                "mode_destruction": "autre",
+                "type_haie": "alignement",
+                "bord_voie": False,
+                "essences_non_bocageres": False,
+                "recemment_plantee": False,
+                "proximite_point_eau": False,
+                "connexion_boisement": False,
+            }
+        ),
+    )
+
+    details = get_hedge_compensation_details(hedge_nothing, 1.0)
+
+    assert details["properties"] == "-"

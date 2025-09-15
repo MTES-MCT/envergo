@@ -304,13 +304,6 @@ div#app {
             }
 
             button {
-              visibility: visible; // Styles for touch UIs
-
-              @media (hover: hover) {
-                /* Styles for mouse UIs */
-                visibility: hidden;
-              }
-
               margin-left: auto;
               font-size: 14px;
               padding: 0.5rem;
@@ -322,10 +315,6 @@ div#app {
             &:hover,
             &.hovered {
               background-color: #f5f5f5;
-
-              button {
-                visibility: visible;
-              }
             }
 
             &:active {
@@ -439,6 +428,41 @@ dialog.hedge-data-dialog {
   #form-group-plantation-type_haie label span.label-content {
     display: flex;
     justify-content: space-between;
+  }
+
+  fieldset#id_removal-type_haie,
+  fieldset#id_plantation-type_haie {
+    div.fr-grid-row {
+      align-items: center;
+    }
+
+    div.fr-fieldset__element {
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+
+      .fr-radio-rich {
+        flex-grow: 1;
+      }
+
+      .fr-radio-rich__pictogram {
+        padding: 16px;
+        width: 0;
+        min-width: 0;
+
+        img {
+          width: 24px;
+        }
+      }
+
+      img.hedge-radio-img {
+        max-width: 100%;
+      }
+    }
+  }
+
+  &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
+    display: none !important;
   }
 }
 
@@ -592,7 +616,8 @@ div#project-specifications-instructor {
       --hover: var(--background-alt-grey-hover);
       --active: var(--background-alt-grey-active);
 
-      background-image: linear-gradient(
+      background-image:
+        linear-gradient(
           0deg,
           var(--border-contrast-grey),
           var(--border-contrast-grey)
@@ -630,34 +655,45 @@ ul.instructor-view-list {
   }
 }
 
+/* Instructeur Messagerie */
+
+.dj-messages {
+  padding-bottom: 1rem !important;
+  padding-top: 1rem !important;
+}
+
+.ds-message {
+  background-color: var(--background-alt-grey);
+  border-left: 3px solid var(--grey-425-625);
+  padding: 2rem;
+
+  &__exp {
+    font-weight: bold;
+  }
+
+  &--instructor {
+    border-color: var(--blue-france-main-525);
+  }
+
+  &--petitioner {
+    border-color: var(--yellow-tournesol-850-200);
+  }
+}
+
 @media (width >=48em) {
-  div#project-specifications-instructor {
-    border-left: 1px solid var(--border-default-grey);
+  .fr-sidemenu {
+    padding-right: 0;
   }
 
-  div#instructor-view-side-menu {
-    max-height: calc(
-      100vh - 9rem
-    ); // remove the header height from the sidemenu height
+  main.header-slim-displayed div#instructor-view-side-menu {
+    padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
   }
 
-  .fr-sidemenu--sticky {
-    top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
-    padding-right: 1.5rem;
-
-    .fr-collapse {
-      margin: 0;
+  .ds-message {
+    &--instructor,
+    &--automatic {
+      margin-left: 5rem;
     }
-  }
-
-  // Apply border grey on main instead of sidemenu to have it full height
-  // Don't use sticky-full-height because side menu scroll up at the end of the page but too early
-  .fr-sidemenu__inner {
-    padding: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 0;
-    box-shadow: none;
   }
 }
 
@@ -707,5 +743,28 @@ div.title-with-link-container {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+div#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  p {
+    margin: auto;
+  }
+}
+
+#faq-dropdown-btn {
+  width: 20rem;
+}
+
+section#moulinette-regulation-result {
+  section.instruction-infos {
+    --text-spacing: 0 0 1rem;
+
+    h6 {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
   }
 }

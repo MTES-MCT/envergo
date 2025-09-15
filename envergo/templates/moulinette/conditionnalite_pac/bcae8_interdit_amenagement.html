@@ -1,10 +1,16 @@
 <p>
-  Le projet est interdit car au titre de la conditionnalité PAC, la destruction de haie occasionnée par un aménagement n'est autorisable que si celui-ci a été déclaré d’utilité publique.
+  Le projet est interdit car au titre de la conditionnalité PAC, la destruction de haie occasionnée par une opération d'aménagement ou de construction
+  n'est autorisable que pour un bâtiment d'exploitation justifié par un permis de construire, ou des travaux déclarés d'intérêt public.
 </p>
 
 <p class="fr-mb-1w">Options pour rendre le projet autorisable :</p>
 
 <ul>
+  {% if not is_lte_2percent_pac %}
+    <li>
+      réduire la longueur de haie détruite pour passer sous le seuil de 2 % du linéaire total de l’exploitation, et réimplanter une haie de longueur au moins équivalente (répondre « oui, en plantant une haie à un autre endroit » dans le simulateur)
+    </li>
+  {% endif %}
   <li>
     pouvoir justifier d'une amélioration environnementale, en prévoyant la plantation d’une haie une haie de longueur au moins équivalente à la haie détruite, à un emplacement meilleur sur le plan environnemental. Ceci requiert la délivrance d'une attestation par un organisme habilité –
     <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre"

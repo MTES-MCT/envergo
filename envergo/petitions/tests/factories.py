@@ -22,17 +22,27 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
 
+DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
+    settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
+)
+
 with open(
-    Path(
-        settings.APPS_DIR
-        / "petitions"
-        / "demarches_simplifiees"
-        / "data"
-        / "fake_dossier.json"
-    ),
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json"),
     "r",
 ) as file:
     GET_DOSSIER_FAKE_RESPONSE = json.load(file)
+
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages.json"),
+    "r",
+) as file:
+    GET_DOSSIER_MESSAGES_FAKE_RESPONSE = json.load(file)
+
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_0.json"),
+    "r",
+) as file:
+    GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
 
 
 class PetitionProjectFactory(DjangoModelFactory):
@@ -40,9 +50,11 @@ class PetitionProjectFactory(DjangoModelFactory):
         model = PetitionProject
 
     reference = "ABC123"
-    moulinette_url = (
-        "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
-        "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=44&travaux=destruction&element=haie"
+    moulinette_url = factory.LazyAttribute(
+        lambda obj: (
+            "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
+            f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie"
+        )
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675

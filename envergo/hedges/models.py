@@ -2,14 +2,16 @@ import operator
 import uuid
 from functools import reduce
 
+import shapely
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
 from model_utils import Choices
-from pyproj import Geod
-from shapely import LineString, MultiLineString, centroid, union_all
+from pyproj import Geod, Transformer
+from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Zone
 from envergo.geodata.utils import (
@@ -61,6 +63,16 @@ class Hedge:
     def geos_geometry(self):
         geom = GEOSGeometry(self.geometry.wkt, srid=EPSG_WGS84)
         return geom
+
+    @property
+    def geometry_lamb93(self):
+        """Return a shapely geometry with a Lambert 93 projection."""
+
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+        lamb93 = shapely.transform(
+            self.geometry, transformer.transform, interleaved=False
+        )
+        return lamb93
 
     @property
     def length(self):
@@ -199,12 +211,6 @@ class HedgeData(models.Model):
             max_y = max(max_y, y1)
         box = Polygon.from_bbox([min_x, min_y, max_x, max_y])
         return box
-
-    def get_hedges_geometry(self, hedges):
-        """Return the MultiLine with the hedge geometry."""
-        lines = [hedge.geometry for hedge in hedges]
-        multiline = MultiLineString(lines)
-        return GEOSGeometry(multiline.wkb_hex)
 
     def hedges(self):
         return [Hedge(**h) for h in self.data]
@@ -462,3 +468,21 @@ class SpeciesMapFile(models.Model):
 
     def __str__(self):
         return self.file.name
+
+
+PACAGE_RE = r"[0-9]{9}"
+
+
+class Pacage(models.Model):
+    """Holds data related to pacage numbers."""
+
+    pacage_num = models.CharField(
+        "Numéro de PACAGE", validators=[RegexValidator(PACAGE_RE)], primary_key=True
+    )
+    exploitation_density = models.DecimalField(
+        "Densité de l'exploitation", max_digits=5, decimal_places=2
+    )
+
+    class Meta:
+        verbose_name = "Infos Pacage"
+        verbose_name_plural = "Infos Pacage"

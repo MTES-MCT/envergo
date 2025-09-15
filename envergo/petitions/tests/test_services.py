@@ -26,19 +26,23 @@ from envergo.petitions.regulations.ep import (
     ep_normandie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
+    compute_instructor_informations_ds,
+    get_context_from_ds,
     get_demarches_simplifiees_dossier,
-    get_instructor_view_context,
+    get_messages_and_senders_from_ds,
 )
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     GET_DOSSIER_FAKE_RESPONSE,
+    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 
 pytestmark = pytest.mark.django_db
 
 
+@pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -63,9 +67,9 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
-    project_details = get_instructor_view_context(petition_project, moulinette)
+    project_details = get_context_from_ds(petition_project, moulinette)
 
-    assert project_details["applicant"] == "Mme Hedy Lamarr"
+    assert project_details["applicant"] == "Mme LAMARR Hedy"
     assert project_details["city"] == "Laon (02000)"
     assert project_details["pacage"] == "123456789"
 
@@ -111,6 +115,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert mock_post.call_count == 3
 
 
+@pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
@@ -136,6 +141,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     assert details == Dossier.from_dict(fake_dossier)
 
 
+@pytest.mark.urls("config.urls_haie")
 @patch("envergo.petitions.services.notify")
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
@@ -193,7 +199,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         "department": 44,
     }
     moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    get_instructor_view_context(petition_project, moulinette)
+    get_context_from_ds(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
     assert (
@@ -260,6 +266,58 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     assert "haie" in args[1]
 
     mock_notify.assert_called_once()
+
+
+@patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
+def test_compute_instructor_information(mock_get_dossier):
+    """Test compute instructor information from démarche simplifiées dossier data"""
+    mock_get_dossier.return_value = Dossier.from_dict(
+        GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
+    )
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+
+    # When I compute instructor information for a given petition project
+    project_details = compute_instructor_informations_ds(petition_project)
+
+    # Then I should have header sections from demarche champ descriptors
+    header_sections = project_details.header_sections
+    assert header_sections == [
+        "Identité",
+        "Description du projet",
+        "Autorisation du propriétaire",
+        "Conditionnalité PAC – BCAE8",
+        "Réglementation «\xa0Espèces protégées\xa0»",
+        "Description des haies à détruire",
+        "Description de la plantation",
+    ]
+
+    # Then I should have correct data for each field type
+    champs = project_details.champs
+    [yesno_champ_yes] = [
+        c
+        for c in champs
+        if c.label
+        == "Êtes-vous propriétaire de tous les terrains sur lesquels se situent les haies à détruire ?"
+    ]
+    [yesno_champ_no] = [
+        c for c in champs if c.label == "Présence de vieux arbres fissurés ou à cavité"
+    ]
+    [checkbox_champ_checked] = [
+        c
+        for c in champs
+        if c.label
+        == "Je m'engage à ne démarrer mes travaux qu'en cas d'acceptation de ma demande"
+    ]
+
+    assert yesno_champ_yes.value == "oui"
+    assert yesno_champ_no.value == "non"
+    assert checkbox_champ_checked.value == "oui"
 
 
 def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
@@ -591,13 +649,6 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     expected_result = {
         "lineaire_detruit_pac": 27.55060841703869,
         "lineaire_to_plant_pac": 27.55060841703869,
-        "motif": "\n"
-        "            Création d’un accès à la parcelle<br/>\n"
-        '            <span class="fr-hint-text">\n'
-        "                Brèche dans une haie pour créer un chemin, "
-        "permettre le passage d’engins…\n"
-        "            </span>\n"
-        "            ",
         "pac_destruction_detail": [ANY],
         "pac_plantation_detail": [ANY],
         "percentage_pac": "",
@@ -606,3 +657,34 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "parcelle PAC",
     }
     assert info == expected_result
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("gql.Client.execute")
+def test_messagerie_via_demarches_simplifiees(mock_post, haie_user, site):
+    """Test send message for project via demarches simplifiées"""
+    # GIVEN a project with a valid dossier in Démarches Simplifiées
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+
+    # Fetch project from DS to create it
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
+
+    # WHEN I get messages for this dossier
+    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
+        petition_project
+    )
+
+    # THEN Messages are returned
+    assert len(messages) == 8
+    assert instructor_emails == ["instructeur@guh.gouv.fr"]
+    assert petitioner_email == "hedy.lamarr@example.com"

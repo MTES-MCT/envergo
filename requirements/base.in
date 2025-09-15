@@ -1,6 +1,6 @@
 django<4.3
 psycopg[binary]
-urllib3<2
+urllib3
 django-environ
 django-model-utils
 django-allauth
