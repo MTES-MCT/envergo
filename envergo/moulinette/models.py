@@ -1321,6 +1321,8 @@ class Moulinette(ABC):
     or other regulations.
     """
 
+    _is_evaluated = False
+
     REGULATIONS = [
         "loi_sur_leau",
         "natura2000",
@@ -1332,12 +1334,11 @@ class Moulinette(ABC):
     ]
 
     def __init__(self, form_kwargs):
-
         self.catalog = MoulinetteCatalog()
         self.form_kwargs = form_kwargs
 
-        if self.main_form.is_valid():
-            self.catalog = MoulinetteCatalog(**self.main_form.cleaned_data)
+        if self.bound_form.is_valid():
+            self.catalog = MoulinetteCatalog(**self.bound_form.cleaned_data)
             self.catalog.update(self.get_catalog_data())
             self.catalog["config"] = self.config
             if self.config and self.config.id and hasattr(self.config, "templates"):
@@ -1347,6 +1348,14 @@ class Moulinette(ABC):
 
             self.evaluate()
 
+    def evaluate(self):
+        for regulation in self.regulations:
+            regulation.evaluate(self)
+        self._is_evaluated = True
+
+    def is_evaluated(self):
+        return self._is_evaluated
+
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
 
@@ -1355,6 +1364,25 @@ class Moulinette(ABC):
     @cached_property
     def main_form(self):
         return self.get_main_form()
+
+    @cached_property
+    def bound_form(self):
+        """Get the main form with forced bound data.
+
+        When we display the moulinette form, we show the main form with
+        initial values. But if the initial data would we valid data, then we
+        want to also display the additional forms.
+
+        In that case, we force a form validation by creating a moulinette form
+        where we pass initial data as validation data.
+        """
+        if self.main_form.is_bound:
+            return self.main_form
+        else:
+            form_kwargs = self.form_kwargs.copy()
+            form_kwargs["data"] = form_kwargs.get("initial", {})
+            bound_form = self.get_main_form_class()(**form_kwargs)
+            return bound_form
 
     def get_triage_form(self):
         """Return the instanciated triage form, or None if no triage is required."""
@@ -1377,7 +1405,7 @@ class Moulinette(ABC):
         """
         forms = []
 
-        if not self.main_form.is_valid():
+        if not self.is_evaluated():
             return forms
 
         form_classes = self.additional_form_classes()
@@ -1456,7 +1484,7 @@ class Moulinette(ABC):
         """
         form_classes = []
 
-        if self.main_form.is_valid():
+        if self.is_evaluated():
             for regulation in self.regulations:
                 for criterion in regulation.criteria.all():
                     if criterion.is_optional:
@@ -1564,10 +1592,6 @@ class Moulinette(ABC):
     @regulations.setter
     def regulations(self, value):
         self._regulations = value
-
-    def evaluate(self):
-        for regulation in self.regulations:
-            regulation.evaluate(self)
 
     def has_config(self):
         return bool(self.config)
