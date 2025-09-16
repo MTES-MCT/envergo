@@ -373,7 +373,7 @@ Le workflow à suivre :
 4. Quand le déploiement est terminé, vérifier que le site est bien accessible
 5. Prévenir sur le canal de la finalisation de la mise en prod
 6. Fusionner la branche main dans staging et pousser la branche staging
-7. (facultatif) fusionner et tester les mises à jour de dépendance proposées par Snyk
+7. (facultatif) fusionner dans staging et tester les mises à jour de dépendance proposées par Snyk
 
 Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
