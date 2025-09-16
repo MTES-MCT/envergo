@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.forms import SetPasswordForm
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 
 from config.urls import handler500  # noqa
 from envergo.users.views import ActivateAccount, Register, RegisterSuccess
@@ -83,6 +84,10 @@ auth_patterns = [
             template_name="haie/registration/register_success.html"
         ),
         name="register_success",
+    ),
+    path(
+        "enregistrement-succès/",
+        RedirectView.as_view(pattern_name="register_success", permanent=True),
     ),
     path(
         _("register/<uidb64>/<token>/"),
