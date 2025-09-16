@@ -1466,9 +1466,19 @@ class Moulinette(ABC):
         return regulations
 
     def init_catalog(self, data):
+        """Initialize the catalog with the moulinette data.
+
+        This method can be overridden to customize the catalog initialization.
+        """
         return MoulinetteCatalog(**data)
 
     def populate_catalog(self):
+        """Populate the catalog with any needed data.
+
+        Unlike init_catalog this method is called at the end of __init__, when the department, config, etc have already
+        been fetched.
+        This method can be overridden to customize the catalog population.
+        """
         pass
 
     def is_evaluation_available(self):

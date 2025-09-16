@@ -257,6 +257,8 @@ def test_moulinette_post_form_error(client):
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
 def test_result_p_view_with_hedges_to_remove_outside_department(client):
+    """Test if a warning is displayed on result pages when hedges to remove are outside department"""
+
     # GIVEN a moulinette with at least an hedge to remove outside the department
     ConfigHaieFactory()
     hedge_14 = HedgeFactory(
