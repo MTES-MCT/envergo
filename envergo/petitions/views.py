@@ -877,10 +877,10 @@ class PetitionProjectInstructorProcedureView(
             "modification_statut",
             self.request,
             reference=self.object.reference,
-            etape_initiale=previous_stage,
-            etape_finale=self.object.stage,
-            decision_initiale=previous_decision,
-            decision_finale=self.object.decision,
+            etape_i=previous_stage,
+            etape_f=self.object.stage,
+            decision_i=previous_decision,
+            decision_f=self.object.decision,
             **get_matomo_tags(self.request),
         )
 

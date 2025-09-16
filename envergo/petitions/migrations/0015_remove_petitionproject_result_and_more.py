@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name="decision",
             field=models.CharField(
                 choices=[
-                    ("unset", ""),
+                    ("unset", "À déterminer"),
                     ("accord", "Accord"),
                     ("opposition", "Opposition"),
                     ("sans_suite", "Classé sans suite"),
