@@ -248,7 +248,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             self.moulinette.main_form.is_valid()
             and not self.moulinette.are_additional_forms_bound()
         ):
-            return HttpResponseRedirect(self.get_form_url())
+            return HttpResponseRedirect(f"{self.get_form_url()}#additional-forms")
 
         # In other cases, it means there are errors in one of the submitted forms,
         # so we just display back the page with the validation errors
