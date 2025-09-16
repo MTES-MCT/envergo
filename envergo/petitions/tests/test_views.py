@@ -932,9 +932,10 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
-def test_instructor_view_with_hedges_to_remove_outside_department(
+def test_instructor_view_with_hedges_outside_department(
     client, instructor_haie_user_44
 ):
+    """Test if a warning is displayed when some hedges are outside department"""
     # GIVEN a moulinette with at least an hedge to remove outside the department
 
     client.force_login(instructor_haie_user_44)
