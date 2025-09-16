@@ -9,10 +9,12 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.sites.models import Site
 from django.db import transaction
 from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views import View
@@ -35,6 +37,7 @@ from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorNotesForm,
+    ProcedureForm,
 )
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
 from envergo.petitions.services import (
@@ -561,7 +564,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     event_category = "projet"
-    event_action = "consultation_i"
+    event_action = None
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -582,7 +585,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         else:
             return TemplateResponse(
-                request, template="haie/petitions/403.html", status=403
+                request=request, template="haie/petitions/403.html", status=403
             )
 
     def get_log_event_data(self):
@@ -669,7 +672,7 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
         project = self.get_object()
         if not project.has_user_as_department_instructor(request.user):
             return TemplateResponse(
-                request, template="haie/petitions/403.html", status=403
+                request=request, template="haie/petitions/403.html", status=403
             )
 
         return super().post(request, *args, **kwargs)
@@ -824,11 +827,12 @@ class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
 
 
-class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
+class PetitionProjectInstructorAlternativeView(
+    PetitionProjectInstructorMixin, DetailView
+):
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternative.html"
-    matomo_tag = ""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -843,6 +847,67 @@ class PetitionProjectInstructorAlternativeView(PetitionProjectInstructorView):
 
         context["alternative_form_url"] = alternative_form_url
         return context
+
+
+class PetitionProjectInstructorProcedureView(
+    PetitionProjectInstructorMixin, UpdateView
+):
+    """View for display and edit the petition project procedure by the instructor"""
+
+    form_class = ProcedureForm
+    template_name = "haie/petitions/instructor_view_procedure.html"
+
+    def post(self, request, *args, **kwargs):
+        """Authorize edition only for department instructors"""
+        # check if user is authorized, else returns 403 error
+        project = self.get_object()
+        if not project.has_user_as_department_instructor(request.user):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        previous_stage = form.initial["stage"]
+        previous_decision = form.initial["decision"]
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "modification_statut",
+            self.request,
+            reference=self.object.reference,
+            etape_i=previous_stage,
+            etape_f=self.object.stage,
+            decision_i=previous_decision,
+            decision_f=self.object.decision,
+            **get_matomo_tags(self.request),
+        )
+
+        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        admin_url = reverse(
+            "admin:petitions_petitionproject_change",
+            args=[self.object.pk],
+        )
+        procedure_url = reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": self.object.reference},
+        )
+        message = render_to_string(
+            "haie/petitions/mattermost_project_procedure_edition.txt",
+            context={
+                "department": self.object.department,
+                "reference": self.object.reference,
+                "admin_url": f"https://{haie_site.domain}{admin_url}",
+                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+            },
+        )
+        notify(message, "haie")
+
+        return res
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
 
 
 class PetitionProjectHedgeDataExport(DetailView):
@@ -957,7 +1022,7 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
 
         if not self.request.invitation or not self.request.invitation.is_valid():
             return TemplateResponse(
-                request,
+                request=request,
                 template="haie/petitions/invalid_invitation_token.html",
                 status=403,
             )
