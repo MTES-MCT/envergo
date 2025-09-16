@@ -1572,6 +1572,12 @@ class Moulinette(ABC):
 
         return bool(self.form_errors())
 
+    def are_additional_forms_bound(self):
+        """Return true if some additional forms received any data."""
+
+        data = self.data
+        return any(key in data for key in self.additional_fields.keys())
+
     def cleaned_additional_data(self):
         """Return combined additional data from custom criterion forms."""
 
