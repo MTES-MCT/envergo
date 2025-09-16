@@ -1520,6 +1520,16 @@ class Moulinette(ABC):
     def all_forms(self):
         return self.get_all_forms()
 
+    def get_prefixed_fields(self):
+        """Return all known fields, with prefixed keys."""
+
+        forms = self.all_forms
+        fields = {}
+        for form in forms:
+            for k, v in form.fields.items():
+                fields[form.add_prefix(k)] = v
+        return fields
+
     @property
     def data(self):
         """Return the moulinette raw form data."""
