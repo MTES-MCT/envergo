@@ -2,6 +2,7 @@ import json
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.forms.widgets import CheckboxInput
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -156,7 +157,26 @@ class MoulinetteMixin:
     def get_results_url(self, form):
         """Generates the full url to the moulinette result page."""
 
-        data = self.request.GET.copy().dict()
+        # We might have some values in the url parameters
+        # and some values sent with the form submission.
+        # In the moulinette result view, all the moulinette values
+        # are passed by the url.
+        # To build a valid moulinette result url, we need to take the existing url parameters
+        # and update them with all the POST'ed moulinette form data.
+
+        # There is an hedge case though with checkbox inputs.
+        # When a checkbox is left empty, browsers don't send a "false" value, they
+        # send no value at all, meaning an existing value in the url will NOT
+        # be overriden.
+        url_data = self.request.GET.copy().dict()
+        data = {}
+        fields = self.moulinette.get_prefixed_fields()
+        for k, v in url_data.items():
+            field = fields.get(k)
+            if field and isinstance(field.widget, CheckboxInput):
+                continue
+            data[k] = v
+
         cleaned_data = self.moulinette.cleaned_data
         data.update(cleaned_data)
 
