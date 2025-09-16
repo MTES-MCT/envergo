@@ -250,3 +250,71 @@ def test_moulinette_post_form_error(client):
     }
     assert "data" in error_event.metadata
     assert error_event.metadata["data"] == data
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_result_p_view_with_hedges_to_remove_outside_department(client):
+    """Test if a warning is displayed on result pages when hedges to remove are outside department"""
+
+    # GIVEN a moulinette with at least an hedge to remove outside the department
+    ConfigHaieFactory()
+    hedge_14 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.37830760743562, "lng": 0.10241746902465822},
+            {"lat": 49.37828490574639, "lng": 0.10244965553283693},
+        ]
+    )  # this hedge is in department 14
+    hedges = HedgeDataFactory(hedges=[hedge_14])
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",  # department 44 is given
+        "haies": hedges.id,
+        "lineaire_total": 20000,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result")
+    query = urlencode(data)
+
+    # WHEN requesting the result plantation page
+    res = client.get(f"{url}?{query}")
+
+    # THEN the result page is displayed with a warning
+    assert res.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département" in res.content.decode()
+    )
+
+    # Given hedges in department 44 and accross the department border
+    hedge_44 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
+        ]
+    )
+    hedge_44_85 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
+            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    data["haies"] = hedges.id
+    query = urlencode(data)
+
+    # WHEN requesting the result plantation page
+    res = client.get(f"{url}?{query}")
+
+    # THEN the result page is displayed without warning
+    assert not res.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        not in res.content.decode()
+    )

@@ -80,7 +80,7 @@ msgstr "enregistrement/"
 
 #: config/urls_haie.py:77 envergo/users/urls.py:13
 msgid "register-success/"
-msgstr "enregistrement-succès/"
+msgstr "enregistrement-succes/"
 
 #: config/urls_haie.py:84 envergo/users/urls.py:20
 msgid "register/<uidb64>/<token>/"
@@ -257,8 +257,8 @@ msgstr ""
 "<a href=\"%(admin_url)s\">Le nouvel avis réglementaire a été créée.</a>"
 
 #: envergo/evaluations/forms.py:59
-msgid "EnvErgo reference"
-msgstr "Référence EnvErgo"
+msgid "Envergo reference"
+msgstr "Référence Envergo"
 
 #: envergo/evaluations/forms.py:60
 msgid "The value you received when you requested a regulatory notice."
@@ -307,7 +307,7 @@ msgstr "Téléphone du porteur de projet"
 #: envergo/evaluations/models.py:659
 msgid "Send evaluation to project sponsor"
 msgstr ""
-"Je souhaite qu'EnvErgo envoie aussi l'avis réglementaire au porteur de "
+"Je souhaite qu'Envergo envoie aussi l'avis réglementaire au porteur de "
 "projet (recommandé)"
 
 #: envergo/evaluations/forms.py:217 envergo/evaluations/forms.py:220
@@ -707,11 +707,11 @@ msgstr "Géométrie simplifiée"
 #: envergo/geodata/models.py:75 envergo/geodata/models.py:126
 msgid ""
 "DO NOT EDIT! We cannot easily deactivate this edition widget,\n"
-"            but if you use it, you will break EnvErgo.\n"
+"            but if you use it, you will break Envergo.\n"
 "            "
 msgstr ""
 "NE PAS MODIFIER ! Nous ne pouvons pas facilement désactiver ce widget,\n"
-"mais si vous modifiez ce polygone ici, vous casserez EnvErgo.\n"
+"mais si vous modifiez ce polygone ici, vous casserez Envergo.\n"
 " "
 
 #: envergo/geodata/models.py:84

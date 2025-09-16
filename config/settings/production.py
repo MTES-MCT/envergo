@@ -108,7 +108,7 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
-    default="[EnvErgo]",
+    default="[Envergo]",
 )
 
 # ADMIN
@@ -236,15 +236,15 @@ ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 # this would be the default value used by Django.
 # So it's best to make sure this value stays valid.
 DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
+    "DJANGO_DEFAULT_FROM_EMAIL", default="Envergo <contact@envergo.beta.gouv.fr>"
 )
 
 FROM_EMAIL = {
     "amenagement": {
-        "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
-        "admin": "Admin EnvErgo <admin@envergo.beta.gouv.fr>",
-        "accounts": "EnvErgo <comptes@envergo.beta.gouv.fr>",
-        "evaluations": "Avis EnvErgo <avis@envergo.beta.gouv.fr>",
+        "default": "Envergo <contact@envergo.beta.gouv.fr>",
+        "admin": "Admin Envergo <admin@envergo.beta.gouv.fr>",
+        "accounts": "Envergo <comptes@envergo.beta.gouv.fr>",
+        "evaluations": "Avis Envergo <avis@envergo.beta.gouv.fr>",
     },
     "haie": {
         "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",

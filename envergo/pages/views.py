@@ -95,17 +95,17 @@ class GeometriciansView(MoulinetteMixin, FormView):
         context["testimonials"] = [
             (
                 "Je ne savais pas que la Loi sur l'eau avait un seuil à 1000 m² en cas de présence de zone humide. "
-                "J'utilise EnvErgo à chaque fois désormais pour éviter les surprises.",
+                "J'utilise Envergo à chaque fois désormais pour éviter les surprises.",
                 "Un géomètre-expert en Loire-Atlantique",
             ),
             (
-                "Rien de pire que de devoir redéposer un dossier d'urbanisme. EnvErgo a évité à mon client de "
+                "Rien de pire que de devoir redéposer un dossier d'urbanisme. Envergo a évité à mon client de "
                 "découvrir une fois le permis d'aménager délivré qu'il y avait un dossier Loi sur l'eau à constituer "
                 "pour ce lotissement.",
                 "Un géomètre-expert en Vendée",
             ),
             (
-                "La simplicité d'utilisation du simulateur EnvErgo le rend très adapté en phases de faisabilité et "
+                "La simplicité d'utilisation du simulateur Envergo le rend très adapté en phases de faisabilité et "
                 "de planification réglementaire. En outre l'équipe est réactive en cas de questions.",
                 "Un géomètre-expert dans l'Aisne",
             ),
@@ -146,7 +146,7 @@ class GeometriciansView(MoulinetteMixin, FormView):
             ),
             (
                 reverse("faq_availability_info"),
-                "Dans quels départements est disponible EnvErgo ?",
+                "Dans quels départements est disponible Envergo ?",
             ),
         ]
 
@@ -232,7 +232,7 @@ class Outlinks(TemplateView):
 
 
 class AvailabilityInfo(TemplateView):
-    """List departments where EnvErgo is available."""
+    """List departments where Envergo is available."""
 
     template_name = "pages/faq/availability_info.html"
 
@@ -259,9 +259,9 @@ class NewsView(ListView):
 
 
 class NewsFeed(Feed):
-    title = "Les actualités d'EnvErgo"
+    title = "Les actualités d'Envergo"
     link = "/foire-aux-questions/envergo-news/feed/"
-    description = "Les nouveautés du projet EnvErgo"
+    description = "Les nouveautés du projet Envergo"
 
     def items(self):
         return NewsItem.objects.order_by("-created_at")[:10]

@@ -56,6 +56,12 @@
                          {% if url_name == 'petition_project_instructor_notes_view' %}aria-current="page"{% endif %}>
                       Notes libres pour l'instruction</a>
                     </li>
+                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_procedure_view' %} fr-sidemenu__item--active{% endif %}">
+                      <a class="fr-sidemenu__link"
+                         href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
+                         {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>
+                      Procédure</a>
+                    </li>
                     <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_alternative_view' %} fr-sidemenu__item--active{% endif %}">
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_alternative_view' petition_project.reference %}"

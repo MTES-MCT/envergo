@@ -215,6 +215,42 @@ def test_petition_project_detail(mock_post, client, site):
     response = client.get(petition_project_url)
     assert response.status_code == 200
     assert "moulinette" in response.context
+    # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
+    assert response.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        in response.content.decode()
+    )
+
+    # Given hedges in department 44 and accross the department border
+    hedge_44 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
+        ]
+    )
+    hedge_44_85 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
+            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    project = PetitionProjectFactory(reference="DEF456", hedge_data=hedges)
+    petition_project_url = reverse(
+        "petition_project",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN I get the project detail page
+    response = client.get(petition_project_url)
+
+    # THEN I should see that there is no hedges to remove outside the department
+    assert not response.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        not in response.content.decode()
+    )
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -890,3 +926,151 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
     assert "Partager cette page par email" not in content
     assert "La demande d'autorisation est prête à être complétée" not in content
     assert "Copier le lien de cette page" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_instructor_view_with_hedges_outside_department(
+    client, instructor_haie_user_44
+):
+    """Test if a warning is displayed when some hedges are outside department"""
+    # GIVEN a moulinette with at least an hedge to remove outside the department
+
+    client.force_login(instructor_haie_user_44)
+    ConfigHaieFactory()
+    hedge_14 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.37830760743562, "lng": 0.10241746902465822},
+            {"lat": 49.37828490574639, "lng": 0.10244965553283693},
+        ]
+    )  # this hedge is in department 14
+    hedges = HedgeDataFactory(hedges=[hedge_14])
+    project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
+
+    # WHEN requesting the result plantation page
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+
+    # THEN the result page is displayed with a warning
+    assert res.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située en dehors du département"
+        in res.content.decode()
+    )
+
+    # Given hedges in department 44 and accross the department border
+    hedge_44 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
+        ]
+    )
+    hedge_44_85 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
+            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    # WHEN requesting the result plantation page
+    res = client.get(project_url)
+
+    # THEN the result page is displayed without warning
+    assert not res.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        not in res.content.decode()
+    )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@patch("envergo.petitions.views.notify")
+def test_petition_project_procedure(
+    mock_notify, client, haie_user, instructor_haie_user_44, site
+):
+    """Test procedure flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the status page by no user is logged in
+    response = client.get(status_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN the page is displayed but the edition button is not there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Modifier</button>" not in content
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN the page is displayed and the edition button is there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Modifier</button>" in content
+
+    # WHEN the user edit the status
+    data = {
+        "stage": "clos",
+        "decision": "sans_suite",
+        "stage_update_comment": "aucun retour depuis 15 ans",
+        "stage_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+
+    # THEN the state is up to date
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "clos"
+    assert project.decision == "sans_suite"
+    event = Event.objects.get(category="projet", event="modification_statut")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["etape_f"] == "clos"
+    assert event.metadata["decision_f"] == "sans_suite"
+    assert event.metadata["etape_i"] == "a_instruire"
+    assert event.metadata["decision_i"] == "unset"
+
+    assert mock_notify.call_count == 1
+    args, kwargs = mock_notify.call_args_list[0]
+    assert "### Mise à jour du statut d'un dossier GUH Loire-Atlantique (44)" in args[0]
+    assert "haie" in args[1]
+
+    # WHEN the user try to edit the status as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    res = client.post(status_url, data)
+
+    # THEN he should be redirected to a 403 error page
+    assert res.status_code == 403

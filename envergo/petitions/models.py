@@ -39,6 +39,21 @@ DOSSIER_STATES = Choices(
     ("sans_suite", _("No follow-up")),
 )
 
+STAGES = Choices(
+    ("a_instruire", "À instruire"),
+    ("instruction", "Instruction"),
+    ("redaction_decision", "Rédaction décision"),
+    ("notification_publicite", "Notification & publicité"),
+    ("clos", "Dossier clos"),
+)
+
+DECISIONS = Choices(
+    ("unset", "À déterminer"),
+    ("accord", "Accord"),
+    ("opposition", "Opposition"),
+    ("sans_suite", "Classé sans suite"),
+)
+
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
 
@@ -108,6 +123,31 @@ class PetitionProject(models.Model):
 
     instructor_free_mention = models.TextField(
         "Mention libre de l'instructeur", blank=True
+    )
+
+    stage = models.CharField(
+        "Étape",
+        max_length=30,
+        choices=STAGES,
+        default=STAGES.a_instruire,
+    )
+
+    decision = models.CharField(
+        "Décision",
+        max_length=30,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
+    )
+
+    stage_date = models.DateField(
+        "Date effective du changement d'étape", null=True, blank=True
+    )
+    stage_updated_at = models.DateTimeField(
+        "Date de saisie du changement d'étape", null=True, blank=True
+    )
+
+    stage_update_comment = models.TextField(
+        "Motif du changement d'étape", null=True, blank=True
     )
 
     # Meta fields

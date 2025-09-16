@@ -56,7 +56,7 @@ class EvaluationSearchForm(forms.Form):
     """Search for a single evaluation."""
 
     reference = forms.CharField(
-        label=_("EnvErgo reference"),
+        label=_("Envergo reference"),
         help_text=_("The value you received when you requested a regulatory notice."),
         max_length=64,
         validators=[RegexValidator(REFERENCE_VALIDATOR)],
@@ -192,7 +192,7 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         required=False,
         help_text="""
         <span class="if-checked">
-            S’il est concerné par une réglementation environnementale, EnvErgo enverra l'avis réglementaire au porteur
+            S’il est concerné par une réglementation environnementale, Envergo enverra l'avis réglementaire au porteur
             de projet et l’accompagnera dans la compréhension de ses obligations. Vous serez en copie de l’avis.
         </span>
         <span class="if-unchecked">

@@ -63,7 +63,7 @@
       </h3>
       <div class="fr-collapse" id="accordion-savoir_si_mon_projet_est_soumis">
         <p>
-          S’il s’agit d’un projet d’aménagement ou de construction, le <a href="{% url 'moulinette_home' %}">simulateur EnvErgo</a> vous permet en quelques clics de vérifier si le projet est soumis à la Loi sur l'eau — ainsi qu’aux autres réglementations environnementales (Natura 2000, évaluation environnementale…).
+          S’il s’agit d’un projet d’aménagement ou de construction, le <a href="{% url 'moulinette_home' %}">simulateur Envergo</a> vous permet en quelques clics de vérifier si le projet est soumis à la Loi sur l'eau — ainsi qu’aux autres réglementations environnementales (Natura 2000, évaluation environnementale…).
           C'est un service public numérique gratuit, fourni par le Ministère de la Transition Écologique.
           Il fonctionne pour l'instant dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a>, et sera progressivement étendu à l'ensemble du territoire national.
         </p>
@@ -84,14 +84,14 @@
           </li>
           <li>
             <p>
-              <strong>De demander une évaluation Loi sur l'eau au service EnvErgo</strong>
+              <strong>De demander une évaluation Loi sur l'eau au service Envergo</strong>
             </p>
             <p>
-              Vous pouvez <a href="{% url 'request_evaluation' %}">demander une évaluation de votre projet</a>, qui sera réalisée manuellement par l'équipe d'EnvErgo
+              Vous pouvez <a href="{% url 'request_evaluation' %}">demander une évaluation de votre projet</a>, qui sera réalisée manuellement par l'équipe d'Envergo
               — disponible sur la totalité du territoire français.
             </p>
             <p>
-              Enfin, n'hésitez pas à <a href="{% url 'contact_us' %}">contacter l'équipe EnvErgo pour toute question complémentaire</a>.
+              Enfin, n'hésitez pas à <a href="{% url 'contact_us' %}">contacter l'équipe Envergo pour toute question complémentaire</a>.
             </p>
             <!-- this empty p tag is here for formatting reasons, allows for welcome vertical space-->
           </li>
@@ -265,6 +265,36 @@
           Toutefois, dans certains cas, le récepissé de déclaration mentionne explicitement la possibilité de démarrer
           les travaux.
         </p>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button id="title-travaux_avant_reponse"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-modification">
+          <span>Je modifie ou je réalise des travaux sur un projet existant ayant déjà fait l'objet d'un dossier Loi sur l'eau. Que déclarer ?</span>
+        </button>
+      </h3>
+      <div class="fr-collapse" id="accordion-modification">
+        <p>Toute modification apportée à un projet déjà déclaré, qui :</p>
+        <ul class="fr-mb-1w">
+          <li>entraîne un changement de la description du projet par rapport au dossier Loi sur l'eau initial,</li>
+          <li>ou est susceptible d'avoir à elle seule des impacts sur l’environnement,</li>
+        </ul>
+        <p>
+          constitue une <strong>« modification notable »</strong> du projet. Elle doit être notifiée à la DDT(M) au moyen d'une formalité appelée un <strong>porter-à-connaissance</strong>.
+        </p>
+        <p>
+          Le dossier de porter-à-connaissance doit indiquer de façon précise les modifications du projet par rapport à ce qui était prévu initialement, ainsi que les incidences de ces modifications sur l’environnement (en phase travaux et en phase exploitation).
+        </p>
+        <p>Après instruction du dossier par ses services, le préfet pourra si nécessaire :</p>
+        <ul>
+          <li>imposer des prescriptions complémentaires aux prescriptions existantes, ou modifier ces dernières ;</li>
+          <li>
+            considérer que la modification de l'existant est plus importante que présenté (on parle alors de « modification substantielle ») et demander alors le dépôt d'un nouveau dossier Loi sur l'eau, donnant lieu à une nouvelle procédure.
+          </li>
+        </ul>
       </div>
     </section>
     <section class="fr-accordion">

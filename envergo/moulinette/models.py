@@ -1337,8 +1337,8 @@ class Moulinette(ABC):
             self.raw_data = raw_data.dict()
         else:
             self.raw_data = raw_data
-        self.catalog = MoulinetteCatalog(**data)
-        self.catalog.update(self.get_catalog_data())
+
+        self.catalog = self.init_catalog(data)
 
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
@@ -1350,6 +1350,8 @@ class Moulinette(ABC):
             self.templates = {t.key: t for t in self.config.templates.all()}
         else:
             self.templates = {}
+
+        self.populate_catalog()
 
         self.evaluate()
 
@@ -1463,8 +1465,21 @@ class Moulinette(ABC):
         )
         return regulations
 
-    def get_catalog_data(self):
-        return {}
+    def init_catalog(self, data):
+        """Initialize the catalog with the moulinette data.
+
+        This method can be overridden to customize the catalog initialization.
+        """
+        return MoulinetteCatalog(**data)
+
+    def populate_catalog(self):
+        """Populate the catalog with any needed data.
+
+        Unlike init_catalog this method is called at the end of __init__, when the department, config, etc have already
+        been fetched.
+        This method can be overridden to customize the catalog population.
+        """
+        pass
 
     def is_evaluation_available(self):
         return self.config and self.config.is_activated
@@ -1779,13 +1794,13 @@ class MoulinetteAmenagement(Moulinette):
 
         return criteria
 
-    def get_catalog_data(self):
+    def init_catalog(self, data):
         """Fetch / compute data required for further computations."""
 
-        catalog = super().get_catalog_data()
+        catalog = super().init_catalog(data)
 
-        lng = self.catalog["lng"]
-        lat = self.catalog["lat"]
+        lng = catalog["lng"]
+        lat = catalog["lat"]
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
@@ -2079,12 +2094,21 @@ class MoulinetteHaie(Moulinette):
 
         return context
 
+    def populate_catalog(self):
+        """Fetch / compute data required for further computations."""
+        super().populate_catalog()
+
+        if "haies" in self.catalog:
+            hedges = self.catalog["haies"]
+            self.catalog["has_hedges_outside_department"] = (
+                hedges.has_hedges_outside_department(self.department)
+            )
+
     def get_department(self):
         department_code = self.raw_data.get("department", None)
         department = (
             (
-                Department.objects.defer("geometry")
-                .select_related("confighaie")
+                Department.objects.select_related("confighaie")
                 .filter(department=department_code)
                 .annotate(centroid=Centroid("geometry"))
                 .first()
