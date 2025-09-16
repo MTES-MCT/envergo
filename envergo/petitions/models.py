@@ -48,7 +48,7 @@ STAGES = Choices(
 )
 
 DECISIONS = Choices(
-    ("unset", ""),
+    ("unset", "À déterminer"),
     ("accord", "Accord"),
     ("opposition", "Opposition"),
     ("sans_suite", "Classé sans suite"),
