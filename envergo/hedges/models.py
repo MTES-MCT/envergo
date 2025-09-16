@@ -272,6 +272,56 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type == "alignement"
         )
 
+    def hedges_filter(self, hedge_to, hedge_type, *props) -> list:
+        """HedgeData filter
+
+        Args:
+            hedge_to: TO_PLANT or TO_REMOVE
+            hedge_type: hedge type from HEDGE_TYPES
+            props: other hedge properties
+
+        Returns:
+            list: hedges filtered
+
+        Raises:
+            ValueError: If hedge to or type argument has a wrong value
+        """
+
+        def hedge_selection(hedge):
+            """Select h in hedges to return"""
+            result = True
+
+            # Check type_haie
+            if "!" in hedge_type:
+                result = result and not hedge.hedge_type == hedge_type.replace("!", "")
+            else:
+                result = result and hedge.hedge_type == hedge_type
+
+            # Check for each prop if
+            for prop in props:
+                operator_not = False
+                if "!" in prop:
+                    operator_not = True
+                    prop = prop.replace("!", "")
+                if hedge.has_property(prop):
+                    if operator_not:
+                        result = result and not hedge.prop(prop)
+                    else:
+                        result = result and hedge.prop(prop)
+            return result
+
+        if hedge_to == TO_REMOVE:
+            hedges_filtered = self.hedges_to_remove()
+        elif hedge_to == TO_PLANT:
+            hedges_filtered = self.hedges_to_plant()
+        else:
+            raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
+
+        if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
+            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+
+        return [hedge for hedge in hedges_filtered if hedge_selection(hedge)]
+
     def hedges_to_remove_aa_bord_voie(self):
         return [
             h

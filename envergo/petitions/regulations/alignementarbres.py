@@ -1,3 +1,4 @@
+from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.hedges.regulations import TreeAlignmentsCondition
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
@@ -22,7 +23,9 @@ def alignement_arbres_get_instructor_view_context(
     }
 
     # Hedges to remove, alignement_arbres, en bord de voie
-    hedges_to_remove_aa_bord_voie = hedge_data.hedges_to_remove_aa_bord_voie()
+    hedges_to_remove_aa_bord_voie = hedge_data.hedges_filter(
+        TO_REMOVE, "alignement", "bord_voie"
+    )
     length_to_remove_aa_bord_voie = sum(h.length for h in hedges_to_remove_aa_bord_voie)
     context["length_to_remove_aa_bord_voie"] = length_to_remove_aa_bord_voie
     if length_to_remove_aa_bord_voie:
@@ -31,7 +34,9 @@ def alignement_arbres_get_instructor_view_context(
         )
 
     # Hedges to remove, alignement_arbres, not bord de voie
-    hedges_to_remove_aa_non_bord_voie = hedge_data.hedges_to_remove_aa_not_bord_voie()
+    hedges_to_remove_aa_non_bord_voie = hedge_data.hedges_filter(
+        TO_REMOVE, "alignement", "!bord_voie"
+    )
     length_to_remove_aa_non_bord_voie = sum(
         h.length for h in hedges_to_remove_aa_non_bord_voie
     )
@@ -42,7 +47,9 @@ def alignement_arbres_get_instructor_view_context(
         )
 
     # Hedges to remove, non alignement_arbres, en bord de voie
-    hedges_to_remove_non_aa_bord_voie = hedge_data.hedges_to_remove_not_aa_bord_voie()
+    hedges_to_remove_non_aa_bord_voie = hedge_data.hedges_filter(
+        TO_REMOVE, "!alignement", "bord_voie"
+    )
     length_to_remove_non_aa_bord_voie = sum(
         h.length for h in hedges_to_remove_non_aa_bord_voie
     )
@@ -53,7 +60,9 @@ def alignement_arbres_get_instructor_view_context(
         )
 
     # Hedges to plant, alignement_arbres, en bord de voie
-    hedges_to_plant_aa_bord_voie = hedge_data.hedges_to_plant_aa_bord_voie()
+    hedges_to_plant_aa_bord_voie = hedge_data.hedges_filter(
+        TO_PLANT, "alignement", "bord_voie"
+    )
     length_to_plant_aa_bord_voie = sum(h.length for h in hedges_to_plant_aa_bord_voie)
     context["length_to_plant_aa_bord_voie"] = length_to_plant_aa_bord_voie
     if length_to_plant_aa_bord_voie:
