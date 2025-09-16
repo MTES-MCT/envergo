@@ -5,6 +5,7 @@ from math import ceil, isclose
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import TO_PLANT, TO_REMOVE
 
 
 class PlantationCondition(ABC):
@@ -643,8 +644,18 @@ class TreeAlignmentsCondition(PlantationCondition):
         return self.criterion_evaluator.result_code != RESULTS.non_soumis
 
     def evaluate(self):
-        length_to_remove_aa_bord_voie = self.hedge_data.length_to_remove_aa_bord_voie()
-        length_to_plant_aa_bord_voie = self.hedge_data.length_to_plant_aa_bord_voie()
+        hedges_to_remove_aa_bord_voie = self.hedge_data.hedges_filter(
+            TO_REMOVE, "alignement", "bord_voie"
+        )
+        hedges_to_plant_aa_bord_voie = self.hedge_data.hedges_filter(
+            TO_PLANT, "alignement", "bord_voie"
+        )
+        length_to_remove_aa_bord_voie = sum(
+            h.length for h in hedges_to_remove_aa_bord_voie
+        )
+        length_to_plant_aa_bord_voie = sum(
+            h.length for h in hedges_to_plant_aa_bord_voie
+        )
 
         from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
 

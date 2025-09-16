@@ -322,51 +322,6 @@ class HedgeData(models.Model):
 
         return [hedge for hedge in hedges_filtered if hedge_selection(hedge)]
 
-    def hedges_to_remove_aa_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.hedge_type == "alignement" and h.prop("bord_voie")
-        ]
-
-    def length_to_remove_aa_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_remove_aa_bord_voie())
-
-    def hedges_to_remove_aa_not_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.hedge_type == "alignement" and not h.prop("bord_voie")
-        ]
-
-    def length_to_remove_aa_not_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_remove_aa_not_bord_voie())
-
-    def hedges_to_remove_not_aa_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.hedge_type != "alignement" and h.prop("bord_voie")
-        ]
-
-    def length_to_remove_not_aa_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_remove_not_aa_bord_voie())
-
-    def hedges_to_plant_aa_bord_voie(self):
-        """List hedges to plant type Alignement d'arbre and bord de voie"""
-
-        def aa_bord_voie_selection(h):
-            """Check if hedge must be taken into account"""
-            res = h.hedge_type == "alignement" and h.prop("bord_voie")
-            if h.has_property("mode_plantation"):
-                res = res and h.prop("mode_plantation") == "plantation"
-            return res
-
-        return [h for h in self.hedges_to_plant() if aa_bord_voie_selection(h)]
-
-    def length_to_plant_aa_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_plant_aa_bord_voie())
-
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
         return any(h.proximite_mare for h in self.hedges_to_remove())
