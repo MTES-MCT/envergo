@@ -11,6 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.models import Hedge
 from envergo.hedges.regulations import MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 from envergo.moulinette.regulations import Map, MapPolygon
@@ -18,6 +19,20 @@ from envergo.moulinette.regulations import Map, MapPolygon
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeData
     from envergo.moulinette.models import MoulinetteHaie
+
+
+class HedgeList(list[Hedge]):
+    def __init__(self, *args, label=None, **kwargs):
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    @property
+    def length(self):
+        return sum(h.length for h in self)
+
+    @property
+    def names(self):
+        return ", ".join(h.id for h in self)
 
 
 class PlantationResults(Enum):

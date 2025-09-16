@@ -3,6 +3,7 @@ from django.utils.module_loading import import_string
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.hedges.regulations import HEDGE_KEYS, NormandieQualityCondition
+from envergo.hedges.services import HedgeList
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
@@ -10,7 +11,6 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesSimple,
 )
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
-from envergo.petitions.services import HedgeList
 
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesNormandie)
