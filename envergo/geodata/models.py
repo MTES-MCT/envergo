@@ -73,7 +73,7 @@ class Map(models.Model):
         _("Simplified geometry"),
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,
-            but if you use it, you will break EnvErgo.
+            but if you use it, you will break Envergo.
             """
         ),
         geography=True,
@@ -119,7 +119,7 @@ class Zone(gis_models.Model):
         geography=True,
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,
-            but if you use it, you will break EnvErgo.
+            but if you use it, you will break Envergo.
             """
         ),
     )
@@ -156,7 +156,7 @@ class Line(gis_models.Model):
         geography=True,
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,
-            but if you use it, you will break EnvErgo.
+            but if you use it, you will break Envergo.
             """
         ),
     )

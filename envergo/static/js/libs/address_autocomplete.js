@@ -109,18 +109,18 @@
             coordinates: val.geometry.coordinates,
             department: val.properties.context?.split(",")[0],
           };
-          const event = new CustomEvent('EnvErgo:citycode_selected', { detail: eventData });
+          const event = new CustomEvent('Envergo:citycode_selected', { detail: eventData });
           window.dispatchEvent(event);
         }
       },
       source: function (query, populateResults) {
-        const event = new CustomEvent('EnvErgo:address_autocomplete_input', { detail: query });
+        const event = new CustomEvent('Envergo:address_autocomplete_input', { detail: query });
         window.dispatchEvent(event);
         return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?autocomplete=1&q=${query}`)
           .then((response) => response.json())
           .then(({ features }) => {
             populateResults(features);
-            const event = new CustomEvent('EnvErgo:address_autocomplete_populated', { detail: features });
+            const event = new CustomEvent('Envergo:address_autocomplete_populated', { detail: features });
             window.dispatchEvent(event);
           })
           .catch((error) => console.log(error));

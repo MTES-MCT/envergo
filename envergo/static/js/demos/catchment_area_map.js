@@ -242,7 +242,7 @@
     this.marker.setLatLng(latLng);
     this.map.setView(latLng, zoomLevel);
 
-    const event = new CustomEvent('EnvErgo:map_marker_moved', { detail: latLng });
+    const event = new CustomEvent('Envergo:map_marker_moved', { detail: latLng });
     window.dispatchEvent(event);
   };
 
@@ -265,7 +265,7 @@
       const latLng = event.latlng;
       this.setMarkerPosition(latLng);
 
-      const newEvent = new CustomEvent('EnvErgo:map_dbl_clicked', { detail: latLng });
+      const newEvent = new CustomEvent('Envergo:map_dbl_clicked', { detail: latLng });
       window.dispatchEvent(newEvent);
 
     }.bind(this));
