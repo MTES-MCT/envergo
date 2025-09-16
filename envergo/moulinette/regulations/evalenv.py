@@ -224,7 +224,7 @@ class OptionalFormMixin:
         """By default, Django doesn't take prefix into account for initial fields."""
 
         field_name = f"{self.prefix}-{field_name}"
-        super().get_initial_for_field(field, field_name)
+        return super().get_initial_for_field(field, field_name)
 
     def is_activated(self):
         """Did the user checked the "activate" checkbox?"""
