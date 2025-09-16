@@ -30,7 +30,7 @@ def alignement_arbres_get_instructor_view_context(
     context["length_to_remove_aa_bord_voie"] = length_to_remove_aa_bord_voie
     if length_to_remove_aa_bord_voie:
         context["aa_bord_voie_destruction_detail"] = HedgeList(
-            hedge_data.hedges_to_remove_aa_bord_voie()
+            hedges_to_remove_aa_bord_voie
         )
 
     # Hedges to remove, alignement_arbres, not bord de voie
@@ -43,7 +43,7 @@ def alignement_arbres_get_instructor_view_context(
     context["length_to_remove_aa_non_bord_voie"] = length_to_remove_aa_non_bord_voie
     if length_to_remove_aa_non_bord_voie:
         context["aa_non_bord_voie_destruction_detail"] = HedgeList(
-            hedge_data.hedges_to_remove_aa_not_bord_voie()
+            hedges_to_remove_aa_non_bord_voie
         )
 
     # Hedges to remove, non alignement_arbres, en bord de voie
@@ -56,7 +56,7 @@ def alignement_arbres_get_instructor_view_context(
     context["length_to_remove_non_aa_bord_voie"] = length_to_remove_non_aa_bord_voie
     if length_to_remove_non_aa_bord_voie:
         context["non_aa_bord_voie_destruction_detail"] = HedgeList(
-            hedge_data.hedges_to_remove_not_aa_bord_voie()
+            hedges_to_remove_non_aa_bord_voie
         )
 
     # Hedges to plant, alignement_arbres, en bord de voie
@@ -67,7 +67,7 @@ def alignement_arbres_get_instructor_view_context(
     context["length_to_plant_aa_bord_voie"] = length_to_plant_aa_bord_voie
     if length_to_plant_aa_bord_voie:
         context["aa_bord_voie_plantation_detail"] = HedgeList(
-            hedge_data.hedges_to_plant_aa_bord_voie()
+            hedges_to_plant_aa_bord_voie
         )
 
     evaluator_context = (
