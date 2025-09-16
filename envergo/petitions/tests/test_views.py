@@ -958,10 +958,10 @@ def test_petition_project_procedure(
     assert project.decision == "sans_suite"
     event = Event.objects.get(category="projet", event="modification_statut")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["etape_finale"] == "clos"
-    assert event.metadata["decision_finale"] == "sans_suite"
-    assert event.metadata["etape_initiale"] == "a_instruire"
-    assert event.metadata["decision_initiale"] == "unset"
+    assert event.metadata["etape_f"] == "clos"
+    assert event.metadata["decision_f"] == "sans_suite"
+    assert event.metadata["etape_i"] == "a_instruire"
+    assert event.metadata["decision_i"] == "unset"
 
     assert mock_notify.call_count == 1
     args, kwargs = mock_notify.call_args_list[0]
