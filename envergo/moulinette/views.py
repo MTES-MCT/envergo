@@ -103,7 +103,9 @@ class MoulinetteMixin:
 
         if self.moulinette.is_evaluated():
 
-            context["has_errors"] = not self.moulinette.is_valid()
+            context["has_errors"] = (
+                self.request.method == "POST" and not self.moulinette.is_valid()
+            )
             context["additional_forms"] = self.moulinette.additional_forms
             context["additional_fields"] = self.moulinette.additional_fields
 
