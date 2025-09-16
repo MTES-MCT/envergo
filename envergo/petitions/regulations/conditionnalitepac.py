@@ -1,8 +1,8 @@
 from django.utils.module_loading import import_string
 
+from envergo.hedges.services import HedgeList
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
-from envergo.petitions.services import HedgeList
 
 
 @evaluator_instructor_view_context_getter(Bcae8)
