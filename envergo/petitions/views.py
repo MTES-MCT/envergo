@@ -767,7 +767,9 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateView):
+class PetitionProjectInstructorMessagerieView(
+    PetitionProjectInstructorMixin, DetailView, FormView
+):
     """View for petition project instructor page with demarche simplifiées messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
@@ -802,6 +804,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
     def form_valid(self, form):
         """Send message"""
         message_body = form.cleaned_data["message_body"]
+        self.object = self.get_object()
         ds_response = send_message_dossier_ds(self.object, message_body)
         self.event_action = "envoi"
 
