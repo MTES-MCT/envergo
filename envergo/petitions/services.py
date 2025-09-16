@@ -258,11 +258,6 @@ def get_messages_and_senders_from_ds(
     petitioner_email = dossier.usager.email
     instructor_emails = [i.email for i in dossier.instructeurs]
 
-    # Save dossier.id in object
-    if dossier.id and not petition_project.demarches_simplifiees_dossier_id:
-        petition_project.demarches_simplifiees_dossier_id = dossier.id
-        petition_project.save()
-
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
