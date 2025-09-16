@@ -114,10 +114,9 @@ class MoulinetteMixin:
             # first appears, but the way this feature is designed, said forms
             # are always "bound" when they appear. So we have to check for the
             # presence of field keys in the GET parameters.
-            additional_forms_bound = any(
-                key in self.request.GET for key in context["additional_fields"].keys()
+            context["additional_forms_bound"] = (
+                self.moulinette.are_additional_forms_bound()
             )
-            context["additional_forms_bound"] = additional_forms_bound
 
             moulinette_data = self.moulinette.summary()
             context["moulinette_summary"] = json.dumps(moulinette_data)
@@ -158,8 +157,8 @@ class MoulinetteMixin:
 
         return context
 
-    def get_results_url(self, form):
-        """Generates the full url to the moulinette result page."""
+    def get_results_params(self):
+        """Return the list of parameters that must go in the url."""
 
         # We might have some values in the url parameters
         # and some values sent with the form submission.
@@ -183,7 +182,22 @@ class MoulinetteMixin:
 
         cleaned_data = self.moulinette.cleaned_data
         data.update(cleaned_data)
+        return data
 
+    def get_form_url(self):
+        """Return the moulinette form url, with the correct url params."""
+
+        data = self.get_results_params()
+        params = urlencode(data)
+        url = reverse("moulinette_form")
+
+        url_with_params = f"{url}?{params}"
+        return url_with_params
+
+    def get_result_url(self):
+        """Generates the full url to the moulinette result page."""
+
+        data = self.get_results_params()
         params = urlencode(data)
         url = reverse("moulinette_result")
 
@@ -226,15 +240,24 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             return res
 
     def post(self, request, *args, **kwargs):
-        # We don't want to redirect to the result url if the form is not
-        # absolutely valid, i.e we can actually display the result
+        # If the moulinette is valid, i.e it can run the eveluation and provide
+        # a result, then we redirect to the result page
         if self.moulinette.is_valid():
-            return self.form_valid(self.moulinette.main_form)
+            return HttpResponseRedirect(self.get_result_url())
+
+        # If the main form is valid and all the errors are missing data, it means
+        # that filling the main form triggered new additional questions. We then
+        # redirect to the current form with the submitted values in the url.
+        elif (
+            self.moulinette.main_form.is_valid()
+            and not self.moulinette.are_additional_forms_bound()
+        ):
+            return HttpResponseRedirect(self.get_form_url())
+
+        # In other cases, it means there are errors in one of the submitted forms,
+        # so we just display back the page with the validation errors
         else:
             return self.form_invalid(self.moulinette.main_form)
-
-    def form_valid(self, form):
-        return HttpResponseRedirect(self.get_results_url(form))
 
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
