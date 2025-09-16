@@ -585,7 +585,7 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
 
         else:
             return TemplateResponse(
-                request, template="haie/petitions/403.html", status=403
+                request=request, template="haie/petitions/403.html", status=403
             )
 
     def get_log_event_data(self):
@@ -672,7 +672,7 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
         project = self.get_object()
         if not project.has_user_as_department_instructor(request.user):
             return TemplateResponse(
-                request, template="haie/petitions/403.html", status=403
+                request=request, template="haie/petitions/403.html", status=403
             )
 
         return super().post(request, *args, **kwargs)
@@ -863,7 +863,7 @@ class PetitionProjectInstructorProcedureView(
         project = self.get_object()
         if not project.has_user_as_department_instructor(request.user):
             return TemplateResponse(
-                request, template="haie/petitions/403.html", status=403
+                request=request, template="haie/petitions/403.html", status=403
             )
 
         return super().post(request, *args, **kwargs)
@@ -1022,7 +1022,7 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
 
         if not self.request.invitation or not self.request.invitation.is_valid():
             return TemplateResponse(
-                request,
+                request=request,
                 template="haie/petitions/invalid_invitation_token.html",
                 status=403,
             )
