@@ -37,6 +37,7 @@ from envergo.petitions.services import (
     update_demarches_simplifiees_status,
 )
 from envergo.petitions.tests.factories import (
+    CREATEUPLOAD_FAKE_RESPONSE,
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
@@ -868,7 +869,34 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
         "clientMutationId": "1234",
         "errors": None,
         "message": {"body": "Bonjour ! Un nouveau message"},
-        "attachments": [{"filename": "Coriandrum_sativum.jpg"}],
+    }
+
+    # WHEN I send message for this dossier with attachment
+    mock_post.side_effect = [
+        CREATEUPLOAD_FAKE_RESPONSE["data"],
+        DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"],
+    ]
+    message_body = "Bonjour ! Un nouveau message"
+    result = send_message_dossier_ds(
+        petition_project, message_body, attachments="Coriandrum_sativum.jpg"
+    )
+
+    # THEN messages has this new message
+    assert result == {
+        "clientMutationId": "1234",
+        "errors": None,
+        "message": {"body": "Bonjour ! Un nouveau message"},
+        "attachments": [
+            {
+                "__typename": "File",
+                "filename": "Coriandrum_sativum.jpg",
+                "contentType": "image/jpeg",
+                "checksum": "N7HE6+uqUm+8o+K+XXFiTA==",
+                "byteSize": "165286",
+                "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",  # noqa: 501
+                "createdAt": "2025-07-17T17:25:13+02:00",
+            }
+        ],
     }
 
     # WHEN I send malformated

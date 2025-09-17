@@ -420,7 +420,7 @@ mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
 }
 """
 
-FICHIER_CREER_DIRECT_UPLOAD = """
+DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION = """
 mutation dossierPreparePiecejointe($input: CreateDirectUploadInput!) {
   createDirectUpload(input: $input) {
     clientMutationId
