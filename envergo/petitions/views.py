@@ -67,7 +67,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
         .select_related("hedge_data", "department__confighaie")
-        .order_by("-created_at")
+        .order_by("-demarches_simplifiees_date_depot", "-created_at")
     )
     paginate_by = 30
 
