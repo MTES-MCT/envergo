@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.hedges.models import Hedge
+from envergo.hedges.services import HedgeList
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
 from envergo.petitions.demarches_simplifiees.models import (
     CheckboxChamp,
@@ -51,20 +51,6 @@ class Item:
 class DemarchesSimplifieesDetails:
     header_sections: list | None
     champs: list | None
-
-
-class HedgeList(list[Hedge]):
-    def __init__(self, *args, label=None, **kwargs):
-        self.label = label
-        super().__init__(*args, **kwargs)
-
-    @property
-    def length(self):
-        return sum(h.length for h in self)
-
-    @property
-    def names(self):
-        return ", ".join(h.id for h in self)
 
 
 def get_project_context(petition_project, moulinette) -> dict:
