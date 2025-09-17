@@ -55,6 +55,12 @@ with open(
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
 
+with open(
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_createupload_response.json"),
+    "r",
+) as file:
+    CREATEUPLOAD_FAKE_RESPONSE = json.load(file)
+
 FILE_TEST_PATH = Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
 
 
