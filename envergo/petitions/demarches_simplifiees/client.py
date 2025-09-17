@@ -14,6 +14,7 @@ from graphql import GraphQLError
 
 from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
 from envergo.petitions.demarches_simplifiees.queries import (
+    DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION,
     DOSSIER_ENVOYER_MESSAGE_MUTATION,
     GET_DOSSIER_MESSAGES_QUERY,
     GET_DOSSIER_QUERY,
@@ -224,7 +225,12 @@ class DemarchesSimplifieesClient:
         }
 
     def dossier_send_message(
-        self, dossier_number, dossier_id, message_body, instructeur_id=None
+        self,
+        dossier_number,
+        dossier_id,
+        message_body,
+        attachments=None,
+        instructeur_id=None,
     ) -> dict:
         """Dossier send message query"""
 
@@ -236,6 +242,61 @@ class DemarchesSimplifieesClient:
             logger.warning("Missing instructeur id.")
             return None
 
+        # If attachments, upload files TODO:
+        if attachments:
+            variables = {
+                "input": {
+                    "byteSize": 56006,
+                    "checksum": "d60fdf3c98abc35643c068c3da4f1ce2",
+                    "clientMutationId": "clientMutationId",
+                    "contentType": "image/jpeg",
+                    "dossierId": "RG9zc2llci0yMzE3ODQ0Mw==",
+                    "filename": "/home/embg/Images/coriandre.jpeg",
+                }
+            }
+
+            query = DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION
+
+            if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+                logger.warning(
+                    f"Demarches Simplifiees is not enabled. Doing nothing."
+                    f"Use fake dossier if dossier is not draft."
+                    f"\nquery: {query}"
+                    f"\nvariables: {variables}"
+                )
+                with open(
+                    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH
+                    / "fake_createupload_response.json",
+                    "r",
+                ) as file:
+                    response = json.load(file)
+                    data = copy.deepcopy(response["data"])
+            else:
+                try:
+                    data = self.execute(query, variables)
+                except DemarchesSimplifieesError as e:
+                    logger.error(
+                        "Error when sending attachments to Demarches Simplifiees",
+                        extra={
+                            "dossier_number": dossier_number,
+                            "error": e.__cause__ if e.__cause__ else e.message,
+                            "query": e.query,
+                            "variables": e.variables,
+                        },
+                    )
+                    message = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                        context={
+                            "dossier_number": dossier_number,
+                            "error": e.__cause__ if e.__cause__ else e.message,
+                            "query": e.query,
+                            "variables": e.variables,
+                        },
+                    )
+                    notify(dedent(message), "haie")
+                    return None
+
+        # Send message
         variables = {
             "input": {
                 "dossierId": dossier_id,
