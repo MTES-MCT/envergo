@@ -151,7 +151,47 @@ class MoulinetteMixin:
 
         context = {**context, **self.moulinette.get_extra_context(self.request)}
 
+        urls_data = self.get_urls_context_data(context)
+        context.update(urls_data)
+
         return context
+
+    def get_urls_context_data(self, context):
+        """Custom context data related to urls.
+
+        We need to build different urls to make linking easier.
+        For example, we dislpay a "share" button that links to the current page
+        with additional mtm params, a "debug" button that links to the
+        debug page, etc.
+        """
+        data = {}
+        moulinette = self.moulinette
+
+        current_url = self.request.build_absolute_uri()
+        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
+        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
+        result_url = remove_from_qs(current_url, "debug")
+        debug_result_url = update_qs(current_url, {"debug": "true"})
+        form_url = reverse("moulinette_form")
+        form_url = copy_qs(form_url, current_url)
+        triage_url = reverse("moulinette_home")
+        triage_url = copy_qs(triage_url, current_url)
+
+        if moulinette.triage_form and not moulinette.is_triage_valid():
+            edit_url = triage_url
+        else:
+            edit_url = form_url
+
+        data["triage_url"] = triage_url
+        data["edit_url"] = edit_url
+        data["result_url"] = result_url
+        data["current_url"] = current_url
+        data["share_btn_url"] = share_btn_url
+        data["share_print_url"] = share_print_url
+        data["envergo_url"] = self.request.build_absolute_uri("/")
+        data["debug_url"] = debug_result_url
+
+        return data
 
     def get_results_params(self):
         """Return the list of parameters that must go in the url."""
@@ -390,42 +430,6 @@ class MoulinetteResultMixin:
 
         return data
 
-    def get_urls_context_data(self, context):
-        """Custom context data related to urls.
-
-        We need to build different urls to make linking easier.
-        For example, we dislpay a "share" button that links to the current page
-        with additional mtm params, a "debug" button that links to the
-        debug page, etc.
-        """
-        data = {}
-        moulinette = self.moulinette
-
-        current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
-        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
-        result_url = remove_from_qs(current_url, "debug")
-        debug_result_url = update_qs(current_url, {"debug": "true"})
-        form_url = reverse("moulinette_form")
-        form_url = copy_qs(form_url, current_url)
-        triage_url = reverse("moulinette_home")
-        triage_url = copy_qs(triage_url, current_url)
-
-        if moulinette.triage_form and not moulinette.is_triage_valid():
-            edit_url = triage_url
-        else:
-            edit_url = form_url
-
-        data["edit_url"] = edit_url
-        data["result_url"] = result_url
-        data["current_url"] = current_url
-        data["share_btn_url"] = share_btn_url
-        data["share_print_url"] = share_print_url
-        data["envergo_url"] = self.request.build_absolute_uri("/")
-        data["debug_url"] = debug_result_url
-
-        return data
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         moulinette = context.get("moulinette", None)
@@ -452,9 +456,6 @@ class MoulinetteResultMixin:
 
         analytics_data = self.get_analytics_context_data(context)
         context.update(analytics_data)
-
-        urls_data = self.get_urls_context_data(context)
-        context.update(urls_data)
 
         return context
 
