@@ -309,11 +309,8 @@ class PetitionProject(models.Model):
         """Recreate moulinette from moulinette url and hedge data"""
         moulinette_data = self._parse_moulinette_data()
         moulinette_data["haies"] = self.hedge_data
-        moulinette = MoulinetteHaie(
-            moulinette_data,
-            moulinette_data,
-            False,
-        )
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
         return moulinette
 
     def get_triage_form(self):
