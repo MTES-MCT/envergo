@@ -247,7 +247,8 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
