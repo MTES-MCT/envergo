@@ -478,49 +478,28 @@ class BaseMoulinetteResult(FormView):
         context = self.get_context_data(**kwargs)
         res = self.render_to_response(context)
 
-        if moulinette:
-            required_form_errors = moulinette.required_form_errors()
-            optional_form_errors = moulinette.optional_form_errors()
-
-            if not is_request_from_a_bot(request):
+        # Logging moulinette event
+        if is_request_from_a_bot(request):
+            # When we detect that the request comes from a robot
+            # (e.g a search engine crawler), we don't log any event to try to keep
+            # some clean analytiscs
+            pass
+        else:
+            if moulinette.is_triage_valid():
                 self.log_moulinette_event(moulinette, context)
-            elif (
-                bool(required_form_errors)
-                and context["additional_forms_bound"]
-                or bool(optional_form_errors)
-            ):
+            else:
+                # Matomo parameters are stored in session, but some might remain in the url.
+                # We need to prevent duplicate values
+                params = get_matomo_tags(self.request)
+                params.update(self.request.GET.dict())
                 log_event(
-                    "erreur",
-                    "formulaire-simu",
+                    "simulateur",
+                    "soumission_autre",
                     self.request,
-                    data=moulinette.raw_data,
-                    errors={
-                        field: [
-                            {"code": str(e.code), "message": str(e.message)}
-                            for e in errors.data
-                        ]
-                        for field, errors in (
-                            required_form_errors | optional_form_errors
-                        ).items()
-                    },
+                    **params,
                 )
 
-            return res
-
-        elif triage_form is not None:
-            # Matomo parameters are stored in session, but some might remain in the url.
-            # We need to prevent duplicate values
-            params = get_matomo_tags(self.request)
-            params.update(self.request.GET.dict())
-            log_event(
-                "simulateur",
-                "soumission_autre",
-                self.request,
-                **params,
-            )
-            return res
-        else:
-            return HttpResponseRedirect(reverse("moulinette_form"))
+        return res
 
 
 class MoulinetteAmenagementResult(
