@@ -224,17 +224,9 @@ class MoulinetteMixin:
 
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteForm(MoulinetteMixin, FormView):
+
     def get_template_names(self):
         return self.moulinette.get_home_template()
-
-    def get(self, request, *args, **kwargs):
-        context = self.get_context_data()
-        res = self.render_to_response(context)
-
-        if "redirect_url" in context:
-            return HttpResponseRedirect(context["redirect_url"])
-        else:
-            return res
 
     def post(self, request, *args, **kwargs):
         # If the moulinette is valid, i.e it can run the eveluation and provide
@@ -465,10 +457,9 @@ class MoulinetteResultMixin:
 
 class BaseMoulinetteResult(FormView):
     def get(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
         moulinette = self.moulinette
         triage_form = moulinette.triage_form
-        redirect_url = context.get("redirect_url", None)
+        redirect_url = None
 
         # Triage is required and triage form is invalid
         if triage_form and not triage_form.is_valid():
@@ -484,6 +475,7 @@ class BaseMoulinetteResult(FormView):
         if redirect_url:
             return HttpResponseRedirect(redirect_url)
 
+        context = self.get_context_data(**kwargs)
         res = self.render_to_response(context)
 
         if moulinette:
