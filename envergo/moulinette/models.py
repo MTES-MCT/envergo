@@ -1356,6 +1356,14 @@ class Moulinette(ABC):
     def is_evaluated(self):
         return self._is_evaluated
 
+    @cached_property
+    def department(self):
+        return self.get_department()
+
+    @cached_property
+    def config(self):
+        return self.get_config()
+
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
 
@@ -2025,16 +2033,8 @@ class MoulinetteAmenagement(Moulinette):
         )
         return department
 
-    @cached_property
-    def department(self):
-        return self.get_department()
-
     def get_config(self):
         return getattr(self.department, "configamenagement", None)
-
-    @cached_property
-    def config(self):
-        return self.get_config()
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
@@ -2241,7 +2241,18 @@ class MoulinetteHaie(Moulinette):
             )
 
     def get_department(self):
-        return self.main_form.cleaned_data.get("department")
+        try:
+            dept = self.form_kwargs["initial"]["department"]
+        except KeyError:
+            return None
+
+        qs = (
+            Department.objects.defer("geometry")
+            .select_related("confighaie")
+            .annotate(centroid=Centroid("geometry"))
+            .filter(department=dept)
+        )
+        return qs.first()
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
