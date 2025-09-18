@@ -18,11 +18,10 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
-from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
+from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
@@ -305,8 +304,6 @@ class MoulinetteResultMixin:
     def get_template_names(self):
         """Check which template to use depending on the moulinette result."""
 
-        MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-
         moulinette = self.moulinette
         triage_form = moulinette.triage_form
         triage_is_valid = self.moulinette.is_triage_valid()
@@ -316,7 +313,7 @@ class MoulinetteResultMixin:
         # We want to display the moulinette result template, but must check all
         # previous cases where we cannot do it
         if triage_form and not triage_is_valid:
-            template_name = MoulinetteClass.get_triage_result_template(triage_form)
+            template_name = moulinette.get_triage_result_template()
         elif is_debug:
             template_name = moulinette.get_debug_result_template()
         elif not moulinette.has_config():
@@ -402,7 +399,7 @@ class MoulinetteResultMixin:
         debug page, etc.
         """
         data = {}
-        moulinette = context.get("moulinette", None)
+        moulinette = self.moulinette
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
@@ -411,7 +408,9 @@ class MoulinetteResultMixin:
         debug_result_url = update_qs(current_url, {"debug": "true"})
         form_url = reverse("moulinette_form")
         form_url = copy_qs(form_url, current_url)
-        edit_url = form_url if moulinette else context.get("triage_url", None)
+        edit_url = (
+            form_url if moulinette.is_valid() else context.get("triage_url", None)
+        )
         data["result_url"] = result_url
         data["edit_url"] = edit_url
         data["current_url"] = current_url
@@ -468,7 +467,7 @@ class BaseMoulinetteResult(FormView):
 
         # Moulinette is invalid and there is no triage to do (amenagement)
         # so just redirect to the form
-        elif not moulinette.is_valid():
+        elif not moulinette.is_valid() and not (triage_form and triage_form.is_valid()):
             redirect_url = reverse("moulinette_form")
             redirect_url = update_qs(redirect_url, request.GET)
 
@@ -617,15 +616,15 @@ class Triage(MoulinetteMixin, FormView):
     def get(self, request, *args, **kwargs):
         """This page should always have a department to be displayed."""
 
-        context = self.get_context_data()
-        if not context.get("department", None):
+        if not self.moulinette.department:
             return HttpResponseRedirect(reverse("home"))
+
         log_event(
             "simulateur",
             "localisation",
             self.request,
             **{
-                "department": context["department"].department,
+                "department": self.moulinette.department,
             },
             **get_matomo_tags(self.request),
         )
@@ -633,20 +632,6 @@ class Triage(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        department_code = self.request.GET.get("department", None)
-        department = (
-            (
-                Department.objects.defer("geometry")
-                .filter(department=department_code)
-                .first()
-            )
-            if department_code
-            else None
-        )
-        config = ConfigHaie.objects.filter(department=department).first()
-
-        context["department"] = department
-        context["config"] = config
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         return context
