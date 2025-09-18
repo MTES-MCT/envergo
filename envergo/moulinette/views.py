@@ -485,21 +485,25 @@ class BaseMoulinetteResult(FormView):
             # some clean analytiscs
             pass
         else:
-            if moulinette.is_triage_valid():
-                self.log_moulinette_event(moulinette, context)
-            else:
-                # Matomo parameters are stored in session, but some might remain in the url.
-                # We need to prevent duplicate values
-                params = get_matomo_tags(self.request)
-                params.update(self.request.GET.dict())
-                log_event(
-                    "simulateur",
-                    "soumission_autre",
-                    self.request,
-                    **params,
-                )
+            self.log_moulinette_event(moulinette, context)
 
         return res
+
+    def log_moulinette_event(self, moulinette, context):
+        if moulinette.is_triage_valid():
+            super().log_moulinette_event(moulinette, context)
+        else:
+            # TODO Why is matomo param cleanup only happens here?
+            # Matomo parameters are stored in session, but some might remain in the url.
+            # We need to prevent duplicate values
+            params = get_matomo_tags(self.request)
+            params.update(self.request.GET.dict())
+            log_event(
+                "simulateur",
+                "soumission_autre",
+                self.request,
+                **params,
+            )
 
 
 class MoulinetteAmenagementResult(
