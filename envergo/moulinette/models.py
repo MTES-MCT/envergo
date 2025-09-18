@@ -1717,7 +1717,7 @@ class Moulinette(ABC):
         return {}
 
     def is_evaluation_available(self):
-        return self.config and self.config.is_activated
+        return self.config and self.config.is_activated and self.is_valid()
 
     def __getattr__(self, attr):
         """Returns the corresponding regulation.
@@ -2160,11 +2160,11 @@ class MoulinetteHaie(Moulinette):
         travaux = triage_form.cleaned_data.get("travaux")
         return element == "haie" and travaux == "destruction"
 
-    def get_triage_result_template(self, triage_form):
+    def get_triage_result_template(self):
         """Return the template to display the triage out of scope result."""
         if (
-            triage_form["element"].value() == "haie"
-            and triage_form["travaux"].value() != "destruction"
+            self.triage_form["element"].value() == "haie"
+            and self.triage_form["travaux"].value() != "destruction"
         ):
             return "haie/moulinette/entretien_haies_result.html"
 
