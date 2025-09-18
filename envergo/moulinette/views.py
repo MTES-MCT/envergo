@@ -408,11 +408,16 @@ class MoulinetteResultMixin:
         debug_result_url = update_qs(current_url, {"debug": "true"})
         form_url = reverse("moulinette_form")
         form_url = copy_qs(form_url, current_url)
-        edit_url = (
-            form_url if moulinette.is_valid() else context.get("triage_url", None)
-        )
-        data["result_url"] = result_url
+        triage_url = reverse("moulinette_home")
+        triage_url = copy_qs(triage_url, current_url)
+
+        if moulinette.triage_form and not moulinette.is_triage_valid():
+            edit_url = triage_url
+        else:
+            edit_url = form_url
+
         data["edit_url"] = edit_url
+        data["result_url"] = result_url
         data["current_url"] = current_url
         data["share_btn_url"] = share_btn_url
         data["share_print_url"] = share_print_url
