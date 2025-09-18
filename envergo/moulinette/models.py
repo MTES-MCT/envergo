@@ -1728,7 +1728,7 @@ class Moulinette(ABC):
         if attr in self.REGULATIONS:
             return self.get_regulation(attr)
         else:
-            return super().__getattr__(attr)
+            return getattr(super(), attr)
 
     def get_regulation(self, regulation_slug):
         """Return the regulation with the given slug."""
