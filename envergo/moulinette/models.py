@@ -29,7 +29,6 @@ from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -51,7 +50,6 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
-from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -1713,21 +1711,10 @@ class Moulinette(ABC):
         )
         return regulations
 
-    def init_catalog(self, data):
-        """Initialize the catalog with the moulinette data.
+    def get_catalog_data(self):
+        """Populate the catalog with any needed data."""
 
-        This method can be overridden to customize the catalog initialization.
-        """
-        return MoulinetteCatalog(**data)
-
-    def populate_catalog(self):
-        """Populate the catalog with any needed data.
-
-        Unlike init_catalog this method is called at the end of __init__, when the department, config, etc have already
-        been fetched.
-        This method can be overridden to customize the catalog population.
-        """
-        pass
+        return {}
 
     def is_evaluation_available(self):
         return self.config and self.config.is_activated
@@ -1917,11 +1904,10 @@ class MoulinetteAmenagement(Moulinette):
 
         return criteria
 
-    def init_catalog(self, data):
+    def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
-        catalog = super().init_catalog(data)
-
+        catalog = super().get_catalog_data()
         lng = catalog["lng"]
         lat = catalog["lat"]
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
@@ -2202,15 +2188,19 @@ class MoulinetteHaie(Moulinette):
 
         return context
 
-    def populate_catalog(self):
+    def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
-        super().populate_catalog()
 
-        if "haies" in self.catalog:
-            hedges = self.catalog["haies"]
-            self.catalog["has_hedges_outside_department"] = (
+        data = super().get_catalog_data()
+
+        # TODO check if this goes in extra context
+        if "haies" in data:
+            hedges = data["haies"]
+            data["has_hedges_outside_department"] = (
                 hedges.has_hedges_outside_department(self.department)
             )
+
+        return data
 
     def get_department(self):
         try:
