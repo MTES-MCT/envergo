@@ -1907,9 +1907,10 @@ class MoulinetteAmenagement(Moulinette):
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
+        lng = self.catalog["lng"]
+        lat = self.catalog["lat"]
+
         catalog = super().get_catalog_data()
-        lng = catalog["lng"]
-        lat = catalog["lat"]
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
