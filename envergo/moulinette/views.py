@@ -630,7 +630,7 @@ class Triage(MoulinetteMixin, FormView):
             "localisation",
             self.request,
             **{
-                "department": self.moulinette.department,
+                "department": self.moulinette.department.department,
             },
             **get_matomo_tags(self.request),
         )
