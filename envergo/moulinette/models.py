@@ -2187,39 +2187,11 @@ class MoulinetteHaie(Moulinette):
         """return extra context data for the moulinette views.
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
-        context = {}
-        form_data = (
-            request.moulinette_data
-            if hasattr(request, "moulinette_data")
-            else request.GET
-        )
-        context["triage_url"] = update_qs(reverse("triage"), {**form_data.dict()})
-        triage_form = TriageFormHaie(data=form_data)
-        if triage_form.is_valid():
-            context["triage_form"] = triage_form
-        else:
-            context["redirect_url"] = context["triage_url"]
-
-        department_code = request.GET.get("department", None)
-        department = (
-            (
-                Department.objects.defer("geometry")
-                .filter(department=department_code)
-                .select_related("confighaie")
-                .first()
-            )
-            if department_code
-            else None
-        )
-        context["department"] = department
-
-        if hasattr(department, "confighaie") and department.confighaie:
-            context["config"] = department.confighaie
-            context["hedge_maintenance_html"] = (
-                department.confighaie.hedge_maintenance_html
-            )
-
+        context = super().get_extra_context(request)
         context["is_alternative"] = bool(request.GET.get("alternative", False))
+
+        if self.config:
+            context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
 
         if "haies" in request.GET:
             try:
