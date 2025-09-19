@@ -100,13 +100,14 @@ class Bcae8Form(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        localisation_pac = self.data.get("localisation_pac")
+        data = self.data if self.data else self.initial
+        localisation_pac = data.get("localisation_pac")
         if localisation_pac == "non":
             # We know the result will be "non soumis"
             self.fields = {}
             return
 
-        motif = self.data.get("motif")
+        motif = data.get("motif")
         if motif == "amelioration_culture":
             self.fields = keep_fields(
                 self.fields,
