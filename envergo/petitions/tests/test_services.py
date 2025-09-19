@@ -908,7 +908,7 @@ def test_send_message_project_via_demarches_simplifiees(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("requests.put")
+@patch("requests.sessions.Session.request")
 @patch("gql.Client.execute")
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
@@ -948,8 +948,8 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
             {
                 "filename": "Coriandrum_sativum.jpg",
                 "contentType": "image/jpeg",
-                "checksum": "0f739ce388ecfa37598efcca0fa70b5f",
-                "byteSize": "40552",
+                "checksum": "46236cb118cc7056884ef40c2e4eb337",
+                "byteSize": "21053",
                 "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",  # noqa: 501
                 "createdAt": "2025-07-17T17:25:13+02:00",
             }

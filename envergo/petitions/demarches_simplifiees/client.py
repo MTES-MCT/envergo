@@ -2,7 +2,6 @@ import copy
 import hashlib
 import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
@@ -247,15 +246,14 @@ class DemarchesSimplifieesClient:
 
         # Prepare input
         attachment_checksum = hashlib.md5(open(attachment, "rb").read()).hexdigest()
-        attachment_size = os.path.getsize(attachment)
         variables = {
             "input": {
-                "byteSize": attachment_size,
+                "byteSize": attachment.stat().st_size,
                 "checksum": attachment_checksum,
                 "clientMutationId": "Envergo1234",
                 "contentType": "image/jpeg",
                 "dossierId": dossier_id,
-                "filename": attachment,
+                "filename": attachment.name,
             }
         }
 
@@ -302,7 +300,7 @@ class DemarchesSimplifieesClient:
                 and "directUpload" in data["createDirectUpload"]
             ):
                 credentials = data["createDirectUpload"]["directUpload"]
-                credentials_headers = credentials["headers"]
+                credentials_headers = json.loads(credentials["headers"])
 
                 try:
                     with open(attachment, "rb") as payload:
@@ -327,8 +325,19 @@ class DemarchesSimplifieesClient:
                     notify(dedent(message), "haie")
                     return None
 
-                if response:
+                if response.status_code == 201:
                     return data["createDirectUpload"]["directUpload"]
+                else:
+                    logger.error(
+                        "Error on uploading {attachment.name}",
+                        extra={
+                            "dossier_number": dossier_number,
+                            "query": query,
+                            "variables": variables,
+                        },
+                    )
+                    return None
+
             else:
                 logger.error(
                     "Error with credentials for direct upload to Demarches Simplifiees",
