@@ -46,10 +46,9 @@ class EmpriseForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
 
-        final_surface = int(
-            self.data.get("final_surface", self.initial.get("final_surface", "0"))
-        )
+        final_surface = int(data.get("final_surface"))
         if final_surface < ZONE_U_THRESHOLD:
             del self.fields["zone_u"]
 
@@ -106,10 +105,9 @@ class SurfacePlancherForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
 
-        final_surface = int(
-            self.data.get("final_surface", self.initial.get("final_surface", "0"))
-        )
+        final_surface = int(data.get("final_surface"))
         if final_surface < SURFACE_PLANCHER_THRESHOLD:
             del self.fields["surface_plancher_sup_thld"]
 
@@ -161,10 +159,9 @@ class TerrainAssietteForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
 
-        final_surface = int(
-            self.data.get("final_surface", self.initial.get("final_surface", "0"))
-        )
+        final_surface = int(data.get("final_surface"))
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
             del self.fields["operation_amenagement"]
