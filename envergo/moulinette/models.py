@@ -27,10 +27,9 @@ from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
-from django.http import QueryDict
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
-from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -40,7 +39,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
 from envergo.moulinette.forms import (
     DisplayIntegerField,
@@ -51,7 +50,6 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
-from envergo.utils.urls import update_qs
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -219,8 +217,8 @@ _check_results_groups_matrices()
 
 def get_map_factory_class_names():
     return [
-        (f"{cls.__module__}.{cls.__name__}", cls.human_readable_name())
-        for cls in get_subclasses(MapFactory)
+        (f"{self.__module__}.{self.__name__}", self.human_readable_name())
+        for self in get_subclasses(MapFactory)
     ]
 
 
@@ -985,13 +983,13 @@ def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
     """Get hedge properties form
     TODO: move this in hedges/forms.py
     """
-    cls = (
+    self = (
         HedgeToPlantPropertiesForm if type == TO_PLANT else HedgeToRemovePropertiesForm
     )
 
     return [
-        (f"{cls.__module__}.{cls.__name__}", cls.human_readable_name())
-        for cls in [cls] + list(get_subclasses(cls))
+        (f"{self.__module__}.{self.__name__}", self.human_readable_name())
+        for self in [self] + list(get_subclasses(self))
     ]
 
 
@@ -1124,8 +1122,7 @@ class ConfigHaie(ConfigBase):
                         }
                     )
 
-    @classmethod
-    def get_demarche_simplifiee_value_sources(cls):
+    def get_demarche_simplifiee_value_sources(self):
         """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
 
         This method aggregates :
@@ -1322,6 +1319,8 @@ class Moulinette(ABC):
     or other regulations.
     """
 
+    _is_evaluated = False
+
     REGULATIONS = [
         "loi_sur_leau",
         "natura2000",
@@ -1332,28 +1331,279 @@ class Moulinette(ABC):
         "alignement_arbres",
     ]
 
-    def __init__(self, data, raw_data, activate_optional_criteria=True):
-        if isinstance(raw_data, QueryDict):
-            self.raw_data = raw_data.dict()
+    def __init__(self, form_kwargs):
+        self.catalog = MoulinetteCatalog()
+        self.form_kwargs = form_kwargs
+
+        if self.bound_form.is_valid():
+            self.catalog = MoulinetteCatalog(**self.bound_form.cleaned_data)
+            self.catalog.update(self.get_catalog_data())
+            self.catalog["config"] = self.config
+            if self.config and self.config.id and hasattr(self.config, "templates"):
+                self.templates = {t.key: t for t in self.config.templates.all()}
+            else:
+                self.templates = {}
+
+            self.evaluate()
+
+    def evaluate(self):
+        for regulation in self.regulations:
+            regulation.evaluate(self)
+        self._is_evaluated = True
+
+    def is_evaluated(self):
+        return self._is_evaluated
+
+    @cached_property
+    def department(self):
+        return self.get_department()
+
+    @cached_property
+    def config(self):
+        return self.get_config()
+
+    def get_main_form(self):
+        """Return the instanciated main moulinette form."""
+
+        return self.get_main_form_class()(**self.form_kwargs)
+
+    @cached_property
+    def main_form(self):
+        return self.get_main_form()
+
+    @cached_property
+    def bound_form(self):
+        """Get the main form with forced bound data.
+
+        When we display the moulinette form, we show the main form with
+        initial values. But if the initial data would we valid data, then we
+        want to also display the additional forms.
+
+        In that case, we force a form validation by creating a moulinette form
+        where we pass initial data as validation data.
+        """
+        if self.main_form.is_bound:
+            return self.main_form
         else:
-            self.raw_data = raw_data
+            form_kwargs = self.form_kwargs.copy()
+            form_kwargs["data"] = form_kwargs.get("initial", {})
+            bound_form = self.get_main_form_class()(**form_kwargs)
+            return bound_form
 
-        self.catalog = self.init_catalog(data)
+    def get_triage_form(self):
+        """Return the instanciated triage form, or None if no triage is required."""
 
-        # Some criteria must be hidden to normal users in the
-        self.activate_optional_criteria = activate_optional_criteria
+        TriageForm = self.get_triage_form_class()
+        form = TriageForm(**self.form_kwargs) if TriageForm else None
+        return form
 
-        self.department = self.get_department()
+    @cached_property
+    def triage_form(self):
+        return self.get_triage_form()
 
-        self.config = self.catalog["config"] = self.get_config()
-        if self.config and self.config.id and hasattr(self.config, "templates"):
-            self.templates = {t.key: t for t in self.config.templates.all()}
+    def get_additional_forms(self):
+        """Get a list of instanciated additional questions forms.
+
+        Additional forms are questions that conditionaly arrise depending on the data
+        from the main form.
+
+        We can only build this list if the main form is filled and valid.
+        """
+        forms = []
+
+        if not self.is_evaluated():
+            return forms
+
+        form_classes = self.additional_form_classes()
+        for form_class in form_classes:
+            form = form_class(**self.form_kwargs)
+
+            # Some forms end up with no fields, depending on the project data
+            # so we just skip them
+            if form.fields:
+                forms.append(form)
+        return forms
+
+    def additional_form_classes(self):
+        """Return the list of forms for additional questions.
+
+        Some criteria need more data to return an answer. Here, we gather all
+        the forms to gather this data.
+        """
+
+        form_classes = []
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if not criterion.is_optional:
+                    form_class = criterion.get_form_class()
+                    if form_class and form_class not in form_classes:
+                        form_classes.append(form_class)
+
+        return form_classes
+
+    @cached_property
+    def additional_forms(self):
+        return self.get_additional_forms()
+
+    def get_optional_forms(self):
+        """Get a list of instanciated optional forms.
+
+        Optional forms can be selectively activated during a simulation.
+
+        There are two cases:
+         - if the main form is valid, we can fetch the active criteria, and get the
+           specific list of associated optional forms.
+         - otherwise, we just find all optional criteria that are associated with
+           the moulinette regulations.
+        """
+        forms = []
+        form_classes = self.optional_form_classes()
+
+        for form_class in form_classes:
+            # Every optional form has a "activate" field
+            # If unchecked, the form validation must be ignored alltogether
+            activate_field = f"{form_class.prefix}-activate"
+            form_kwargs = self.form_kwargs.copy()
+            if "data" in form_kwargs and activate_field not in form_kwargs["data"]:
+                form_kwargs.pop("data")
+
+            form = form_class(**form_kwargs)
+
+            # We skip optional forms that were not activated
+            if form.is_bound and hasattr(form, "is_activated"):
+                form.full_clean()
+                if not form.is_activated():
+                    continue
+
+            if form.fields:
+                forms.append(form)
+        return forms
+
+    def optional_form_classes(self):
+        """Return the list of forms for optional questions.
+
+        If the moulinette is bound, we can fetch the precise optional criterion list and
+        get their forms.
+
+        Otherwise, we have to fetch every single existing optional criterion.
+        """
+        form_classes = []
+
+        if self.is_evaluated():
+            for regulation in self.regulations:
+                for criterion in regulation.criteria.all():
+                    if criterion.is_optional:
+                        form_class = criterion.get_form_class()
+                        if form_class and form_class not in form_classes:
+                            form_classes.append(form_class)
         else:
-            self.templates = {}
+            for criterion in self.get_optional_criteria():
+                form_class = criterion.evaluator.form_class
+                if form_class and form_class not in form_classes:
+                    form_classes.append(form_class)
 
-        self.populate_catalog()
+        return form_classes
 
-        self.evaluate()
+    @cached_property
+    def optional_forms(self):
+        return self.get_optional_forms()
+
+    def get_all_forms(self):
+        """Return all forms associated with the Moulinette."""
+
+        all_forms = [self.main_form]
+        all_forms.extend(self.additional_forms)
+        all_forms.extend(self.optional_forms)
+
+        triage_form = self.get_triage_form()
+        if triage_form:
+            all_forms.append(triage_form)
+
+        return all_forms
+
+    @property
+    def all_forms(self):
+        return self.get_all_forms()
+
+    def get_prefixed_fields(self):
+        """Return all known fields, with prefixed keys."""
+
+        forms = self.all_forms
+        fields = {}
+        for form in forms:
+            for k, v in form.fields.items():
+                fields[form.add_prefix(k)] = v
+        return fields
+
+    @property
+    def data(self):
+        """Return the moulinette raw form data."""
+
+        return self.form_kwargs.get("data", {})
+
+    @property
+    def cleaned_data(self):
+        """Return the moulinette data as cleaned by all existing forms."""
+
+        data = {}
+        for form in self.all_forms:
+            if form.is_valid():
+                if hasattr(form, "prefixed_cleaned_data"):
+                    data.update(form.prefixed_cleaned_data)
+                else:
+                    data.update(form.cleaned_data)
+        return data
+
+    def form_errors(self):
+        """Return the list of all form validation errors."""
+
+        errors = {}
+        for form in self.get_all_forms():
+            form.full_clean()
+            for k, v in form.errors.items():
+                errors[k] = v
+        return errors
+
+    def is_valid(self):
+        """The moulinette is valid if it can run the evaluation.
+        - the main form is valid
+        - all additional required forms are valid
+        - all activated optional forms are valid
+        """
+        return self.main_form.is_valid() and not bool(self.form_errors())
+
+    def has_missing_data(self):
+        """Make sure all the data required to compute the result is provided."""
+
+        return bool(self.form_errors())
+
+    def are_additional_forms_bound(self):
+        """Return true if some additional forms received any data."""
+
+        data = self.data
+        return any(key in data for key in self.additional_fields.keys())
+
+    def cleaned_additional_data(self):
+        """Return combined additional data from custom criterion forms."""
+
+        data = {}
+        for form in self.additional_forms:
+            if form.is_valid():
+                data.update(form.cleaned_data)
+
+        return data
+
+    @cached_property
+    def additional_fields(self):
+        """Get a {field_name: field} dict of all additional questions fields."""
+
+        fields = OrderedDict()
+        for form in self.additional_forms:
+            for field in form:
+                if field.name not in fields:
+                    fields[field.name] = field
+        return fields
 
     @property
     def regulations(self):
@@ -1364,10 +1614,6 @@ class Moulinette(ABC):
     @regulations.setter
     def regulations(self, value):
         self._regulations = value
-
-    def evaluate(self):
-        for regulation in self.regulations:
-            regulation.evaluate(self)
 
     def has_config(self):
         return bool(self.config)
@@ -1381,13 +1627,12 @@ class Moulinette(ABC):
 
         return self.templates.get(template_key, None)
 
-    @classmethod
-    def get_home_template(cls):
+    def get_home_template(self):
         """Return the template to display the result page."""
 
-        if not hasattr(cls, "home_template"):
+        if not hasattr(self, "home_template"):
             raise AttributeError("No result template found.")
-        return cls.home_template
+        return self.home_template
 
     def get_result_template(self):
         """Return the template to display the result page."""
@@ -1417,13 +1662,19 @@ class Moulinette(ABC):
             raise AttributeError("No result_available_soon template found.")
         return self.result_available_soon
 
-    @classmethod
-    def get_main_form_class(cls):
+    def get_main_form_class(self):
         """Return the form class for the main questions."""
 
-        if not hasattr(cls, "main_form_class"):
+        if not hasattr(self, "main_form_class"):
             raise AttributeError("No main form class found.")
-        return cls.main_form_class
+        return self.main_form_class
+
+    def get_triage_form_class(self):
+        """Return the triage form.
+
+        Triage is optional, so we don't raise error if no form class is defined.
+        """
+        return getattr(self, "triage_form_class", None)
 
     def get_criteria(self):
         """Fetch relevant criteria for evaluation.
@@ -1439,15 +1690,10 @@ class Moulinette(ABC):
             .order_by("weight", "id", "distance")
         )
 
-        # We might have to filter out optional criteria
-        if not self.activate_optional_criteria:
-            criteria = criteria.exclude(is_optional=True)
-
         return criteria
 
-    @classmethod
-    def get_optionnal_criteria(self):
-        """Fetch optionnal criteria used by this moulinette regulations."""
+    def get_optional_criteria(self):
+        """Fetch optional criteria used by this moulinette regulations."""
         criteria = Criterion.objects.filter(
             is_optional=True, regulation__regulation__in=self.REGULATIONS
         ).order_by("weight")
@@ -1465,79 +1711,13 @@ class Moulinette(ABC):
         )
         return regulations
 
-    def init_catalog(self, data):
-        """Initialize the catalog with the moulinette data.
+    def get_catalog_data(self):
+        """Populate the catalog with any needed data."""
 
-        This method can be overridden to customize the catalog initialization.
-        """
-        return MoulinetteCatalog(**data)
-
-    def populate_catalog(self):
-        """Populate the catalog with any needed data.
-
-        Unlike init_catalog this method is called at the end of __init__, when the department, config, etc have already
-        been fetched.
-        This method can be overridden to customize the catalog population.
-        """
-        pass
+        return {}
 
     def is_evaluation_available(self):
-        return self.config and self.config.is_activated
-
-    def form_errors(self):
-        return self.required_form_errors() | self.optional_form_errors()
-
-    def required_form_errors(self):
-        form_errors = {}
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if criterion.is_optional:
-                    continue
-                form = criterion.get_form()
-                if form:
-                    form.full_clean()
-
-                    for k, v in form.errors.items():
-                        form_errors[k] = v
-
-        return form_errors
-
-    def optional_form_errors(self):
-        form_errors = {}
-        if not self.activate_optional_criteria:
-            return form_errors
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if not criterion.is_optional:
-                    continue
-                form = criterion.get_form()
-                # For optional forms, we only check for errors if the form
-                # was activated (the "activate" checkbox was selected)
-                if form:
-                    form.full_clean()
-                    if form.is_activated():
-                        for k, v in form.errors.items():
-                            form_errors[f"{form.prefix}-{k}"] = v
-
-        return form_errors
-
-    def has_missing_data(self):
-        """Make sure all the data required to compute the result is provided."""
-
-        return bool(self.form_errors())
-
-    def cleaned_additional_data(self):
-        """Return combined additional data from custom criterion forms."""
-
-        data = {}
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                form = criterion.get_form()
-                if form and form.is_valid():
-                    data.update(form.cleaned_data)
-
-        return data
+        return self.config and self.config.is_activated and self.is_valid()
 
     def __getattr__(self, attr):
         """Returns the corresponding regulation.
@@ -1548,7 +1728,7 @@ class Moulinette(ABC):
         if attr in self.REGULATIONS:
             return self.get_regulation(attr)
         else:
-            return super().__getattr__(attr)
+            return getattr(super(), attr)
 
     def get_regulation(self, regulation_slug):
         """Return the regulation with the given slug."""
@@ -1575,81 +1755,10 @@ class Moulinette(ABC):
 
         return result
 
-    def additional_form_classes(self):
-        """Return the list of forms for additional questions.
-
-        Some criteria need more data to return an answer. Here, we gather all
-        the forms to gather this data.
-        """
-
-        forms = []
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if not criterion.is_optional:
-                    form_class = criterion.get_form_class()
-                    if form_class and form_class not in forms:
-                        forms.append(form_class)
-
-        return forms
-
-    def main_form(self):
-        """Get the instanciated main form questions."""
-
-        form_class = self.get_main_form_class()
-        return form_class(self.raw_data)
-
-    def additional_forms(self):
-        """Get a list of instanciated additional questions forms."""
-
-        form_classes = self.additional_form_classes()
-        forms = []
-        for form_class in form_classes:
-            form = form_class(self.raw_data)
-
-            # Some forms end up with no fields, depending on the project data
-            # so we just skip them
-            if form.fields:
-                forms.append(form)
-        return forms
-
-    def additional_fields(self):
-        """Get a {field_name: field} dict of all additional questions fields."""
-
-        forms = self.additional_forms()
-        fields = OrderedDict()
-        for form in forms:
-            for field in form:
-                if field.name not in fields:
-                    fields[field.name] = field
-        return fields
-
     def summary_fields(self):
         """Return the fields displayed in "Caractéristiques du projet" sidebar section."""
-        fields = self.additional_fields()
+        fields = self.additional_fields
         return fields
-
-    def optional_form_classes(self):
-        """Return the list of forms for optional questions."""
-        forms = []
-
-        for regulation in self.regulations:
-            for criterion in regulation.criteria.all():
-                if criterion.is_optional:
-                    form_class = criterion.get_form_class()
-                    if form_class and form_class not in forms:
-                        forms.append(form_class)
-
-        return forms
-
-    def optional_forms(self):
-        form_classes = self.optional_form_classes()
-        forms = []
-        for form_class in form_classes:
-            form = form_class(self.raw_data)
-            if form.fields:
-                forms.append(form)
-        return forms
 
     @abstractmethod
     def summary(self):
@@ -1700,27 +1809,27 @@ class Moulinette(ABC):
             for required_action in regulation.required_actions_interdit():
                 yield required_action
 
-    @classmethod
-    def get_form_template(cls):
+    def get_form_template(self):
         """Return the template name for the moulinette."""
 
-        if not hasattr(cls, "form_template"):
+        if not hasattr(self, "form_template"):
             raise AttributeError("No form template name found.")
-        return cls.form_template
+        return self.form_template
 
     @abstractmethod
     def get_debug_context(self):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
-    @classmethod
     @abstractmethod
-    def get_triage_params(cls):
+    def get_triage_params(self):
         """Add some data to display on the debug page"""
         raise NotImplementedError
 
-    @classmethod
-    def get_extra_context(cls, request):
+    def is_triage_valid(self):
+        return True
+
+    def get_extra_context(self, request):
         """return extra context data for the moulinette views.
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
@@ -1741,6 +1850,7 @@ class MoulinetteAmenagement(Moulinette):
     result_non_disponible = "amenagement/moulinette/result_non_disponible.html"
     form_template = "amenagement/moulinette/form.html"
     main_form_class = MoulinetteFormAmenagement
+    triage_form_class = None
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
@@ -1794,20 +1904,20 @@ class MoulinetteAmenagement(Moulinette):
 
         return criteria
 
-    def init_catalog(self, data):
+    def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
-        catalog = super().init_catalog(data)
+        lng = self.catalog["lng"]
+        lat = self.catalog["lat"]
 
-        lng = catalog["lng"]
-        lat = catalog["lat"]
+        catalog = super().get_catalog_data()
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
         catalog["circle_25"] = catalog["coords"].buffer(25)
         catalog["circle_100"] = catalog["coords"].buffer(100)
 
-        fetching_radius = int(self.raw_data.get("radius", "200"))
+        fetching_radius = int(self.data.get("radius", "200"))
         zones = self.get_zones(catalog["lng_lat"], fetching_radius)
         catalog["all_zones"] = zones
 
@@ -1941,8 +2051,7 @@ class MoulinetteAmenagement(Moulinette):
             ),
         }
 
-    @classmethod
-    def get_triage_params(cls):
+    def get_triage_params(self):
         return set()
 
     def get_map_center(self):
@@ -1966,13 +2075,14 @@ class MoulinetteHaie(Moulinette):
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
+    triage_form_class = TriageFormHaie
 
     def get_config(self):
         return getattr(self.department, "confighaie", None)
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
-        summary = self.raw_data.copy()
+        summary = self.data.copy()
         summary.update(self.cleaned_additional_data())
 
         if self.is_evaluation_available():
@@ -2036,88 +2146,76 @@ class MoulinetteHaie(Moulinette):
 
         return context
 
-    @classmethod
-    def get_triage_params(cls):
+    def get_triage_params(self):
         return set(TriageFormHaie.base_fields.keys())
 
-    @classmethod
-    def get_triage_template(cls, triage_form):
+    def is_triage_valid(self):
+        """Should the triage params allow to go to next step?."""
+
+        triage_form = self.triage_form
+        if not triage_form.is_valid():
+            return False
+
+        element = triage_form.cleaned_data.get("element")
+        travaux = triage_form.cleaned_data.get("travaux")
+        return element == "haie" and travaux == "destruction"
+
+    def get_triage_result_template(self):
         """Return the template to display the triage out of scope result."""
         if (
-            triage_form["element"].value() == "haie"
-            and triage_form["travaux"].value() != "destruction"
+            self.triage_form["element"].value() == "haie"
+            and self.triage_form["travaux"].value() != "destruction"
         ):
             return "haie/moulinette/entretien_haies_result.html"
 
         return "haie/moulinette/triage_result.html"
 
-    @classmethod
-    def get_extra_context(cls, request):
+    def get_extra_context(self, request):
         """return extra context data for the moulinette views.
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
-        context = {}
-        form_data = (
-            request.moulinette_data
-            if hasattr(request, "moulinette_data")
-            else request.GET
-        )
-        context["triage_url"] = update_qs(
-            reverse("triage"), {**form_data.dict(), "edit": "true"}
-        )
-        triage_form = TriageFormHaie(data=form_data)
-        if triage_form.is_valid():
-            context["triage_form"] = triage_form
-        else:
-            context["redirect_url"] = context["triage_url"]
-
-        department_code = request.GET.get("department", None)
-        department = (
-            (
-                Department.objects.defer("geometry")
-                .filter(department=department_code)
-                .select_related("confighaie")
-                .first()
-            )
-            if department_code
-            else None
-        )
-        context["department"] = department
-
-        if hasattr(department, "confighaie") and department.confighaie:
-            context["config"] = department.confighaie
-            context["hedge_maintenance_html"] = (
-                department.confighaie.hedge_maintenance_html
-            )
-
+        context = super().get_extra_context(request)
         context["is_alternative"] = bool(request.GET.get("alternative", False))
+
+        if self.config:
+            context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
+
+        if "haies" in request.GET:
+            try:
+                hedge_data = HedgeData.objects.get(id=request.GET["haies"])
+            except Exception:
+                hedge_data = None
+            context["hedge_data"] = hedge_data
 
         return context
 
-    def populate_catalog(self):
+    def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
-        super().populate_catalog()
 
-        if "haies" in self.catalog:
-            hedges = self.catalog["haies"]
-            self.catalog["has_hedges_outside_department"] = (
+        data = super().get_catalog_data()
+
+        # TODO check if this goes in extra context
+        if "haies" in data:
+            hedges = data["haies"]
+            data["has_hedges_outside_department"] = (
                 hedges.has_hedges_outside_department(self.department)
             )
 
-    def get_department(self):
-        department_code = self.raw_data.get("department", None)
-        department = (
-            (
-                Department.objects.select_related("confighaie")
-                .filter(department=department_code)
-                .annotate(centroid=Centroid("geometry"))
-                .first()
-            )
-            if department_code
-            else None
-        )
+        return data
 
-        return department
+    def get_department(self):
+        try:
+            dept = self.form_kwargs["initial"]["department"]
+        except KeyError:
+            return None
+
+        qs = (
+            Department.objects.defer("geometry")
+            .select_related("confighaie")
+            .annotate(centroid=Centroid("geometry"))
+            .filter(department=dept)
+        )
+        return qs.first()
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
@@ -2165,7 +2263,6 @@ class MoulinetteHaie(Moulinette):
          * department_centroid : the criteria is activated if the department centroid is in the activation map
          * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
         """
-
         dept_centroid = self.department.centroid
         hedges_to_remove = (
             self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
@@ -2271,19 +2368,19 @@ def get_moulinette_class_from_site(site):
         settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
         settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
     }
-    cls = domain_class.get(site.domain, None)
-    if cls is None:
+    self = domain_class.get(site.domain, None)
+    if self is None:
         raise RuntimeError(f"Unknown site for domain {site.domain}")
-    return cls
+    return self
 
 
 def get_moulinette_class_from_url(url):
     """Return the correct Moulinette class depending on the current site."""
 
     if "envergo" in url:
-        cls = MoulinetteAmenagement
+        self = MoulinetteAmenagement
     elif "haie" in url:
-        cls = MoulinetteHaie
+        self = MoulinetteHaie
     else:
         raise RuntimeError("Cannot find the moulinette to use")
-    return cls
+    return self
