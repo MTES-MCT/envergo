@@ -376,7 +376,6 @@ query getDossiersForDemarche(
 }
 """
 )
-
 GET_DOSSIER_MESSAGES_QUERY = (
     FILE_FRAGMENT
     + MESSAGE_FRAGMENT
@@ -406,3 +405,17 @@ query getDossier($dossierNumber: Int!)
 }
 """
 )
+
+DOSSIER_ENVOYER_MESSAGE_MUTATION = """
+mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
+  dossierEnvoyerMessage(input: $input) {
+    message {
+      body
+    }
+    errors {
+      message
+    }
+    clientMutationId
+  }
+}
+"""

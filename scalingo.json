@@ -50,6 +50,9 @@
     "DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED": {
       "value": "True"
     },
+    "DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID": {
+      "value": ""
+    },
     "DJANGO_NOTION_SECRET": {
       "value": ""
     },
