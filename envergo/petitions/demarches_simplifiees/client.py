@@ -377,11 +377,14 @@ class DemarchesSimplifieesClient:
 
         # If attachments, upload files TODO:
         if attachments:
-            attachment_uploaded = self._create_direct_upload(
-                dossier_number, dossier_id, attachments
-            )
-            if attachment_uploaded is not None:
-                variables.update({"attachment": attachment_uploaded["signedBlobId"]})
+            for attachment in attachments:
+                attachment_uploaded = self._create_direct_upload(
+                    dossier_number, dossier_id, attachment
+                )
+                if attachment_uploaded is not None:
+                    variables.update(
+                        {"attachment": attachment_uploaded["signedBlobId"]}
+                    )
 
         # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
