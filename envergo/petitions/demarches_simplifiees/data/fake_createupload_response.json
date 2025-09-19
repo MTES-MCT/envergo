@@ -6,7 +6,7 @@
         "blobId": "123456789",
         "headers": "{\"Content-Type\":\"image/jpeg\",\"ETag\":\"12ab34cde1f0cec72d2d069096c1dcb28c7542ab\"}",
         "signedBlobId": "eyABcd1234--12abc34def55c6b8a5f013a8bccb6a95c3e9958dd",
-        "url": "https://static.demarches-simplifiees.fr:443/v1/AUTH_blablabla/ds_activestorage_backup/2025/09/17/xX/ABdc1234?temp_url_sig=ef56gh7849c34e3c155c6bcd&temp_url_expires=1758106416"
+        "url": "https://example.com/url/to/upload"
       }
     }
   }
