@@ -1,7 +1,6 @@
 from django import forms
-from django.utils import timezone
 
-from envergo.petitions.models import PetitionProject
+from envergo.petitions.models import PetitionProject, StatusLog
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -60,36 +59,11 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # force initial value (overrides instance)
-        self.initial["stage_date"] = timezone.now()
-        self.initial["stage_update_comment"] = ""
-
-        self.fields["stage_date"].required = True
-        self.fields["stage_update_comment"].required = True
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.stage_updated_at = timezone.now()
-        if commit:
-            instance.save()
-        return instance
-
     class Meta:
-        model = PetitionProject
+        model = StatusLog
         fields = [
             "stage",
             "decision",
-            "stage_date",
-            "stage_update_comment",
+            "status_date",
+            "update_comment",
         ]
-        labels = {
-            "stage_date": "Date effective du changement",
-            "stage_update_comment": "Commentaire",
-        }
-        help_texts = {
-            "stage_date": "Vous pouvez choisir une date rétroactive si nécessaire.",
-            "stage_update_comment": "Ajouter un commentaire expliquant le contexte du changement.",
-        }

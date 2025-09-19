@@ -41,8 +41,6 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "department",
-        "stage",
-        "decision",
         "demarches_simplifiees_state",
         "length_to_remove",
         "length_to_plant",
@@ -50,8 +48,6 @@ class PetitionProjectAdmin(admin.ModelAdmin):
     inlines = [InvitationTokenInline]
     ordering = ("-created_at",)
     list_filter = [
-        "stage",
-        "decision",
         "demarches_simplifiees_state",
         DepartmentFilter,
     ]

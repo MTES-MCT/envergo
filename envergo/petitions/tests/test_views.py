@@ -1045,16 +1045,17 @@ def test_petition_project_procedure(
     data = {
         "stage": "clos",
         "decision": "sans_suite",
-        "stage_update_comment": "aucun retour depuis 15 ans",
-        "stage_date": "10/09/2025",
+        "update_comment": "aucun retour depuis 15 ans",
+        "status_date": "10/09/2025",
     }
     res = client.post(status_url, data, follow=True)
 
     # THEN the state is up to date
     assert res.status_code == 200
     project.refresh_from_db()
-    assert project.stage == "clos"
-    assert project.decision == "sans_suite"
+    last_status = project.status_history.all().order_by("-created_at").first()
+    assert last_status.stage == "clos"
+    assert last_status.decision == "sans_suite"
     event = Event.objects.get(category="projet", event="modification_statut")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["etape_f"] == "clos"
