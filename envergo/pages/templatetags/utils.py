@@ -161,3 +161,10 @@ def get_choice_label(choices, value):
 def to_datetime(value):
     """Parse ISO string and return datetime.datetime or datetime.timezone"""
     return parse_datetime(value)
+
+
+@register.filter
+def choice_default_label(model, field_name):
+    field = model._meta.get_field(field_name)
+    default = field.default
+    return dict(field.choices).get(default, default)
