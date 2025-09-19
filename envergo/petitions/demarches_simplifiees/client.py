@@ -1,10 +1,13 @@
 import copy
+import hashlib
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
+import requests
 from django.conf import settings
 from django.template.loader import render_to_string
 from gql import Client, gql
@@ -242,14 +245,17 @@ class DemarchesSimplifieesClient:
     def _create_direct_upload(self, dossier_number, dossier_id, attachment):
         """Create direct upload related to a dossier"""
 
+        # Prepare input
+        attachment_checksum = hashlib.md5(open(attachment, "rb").read()).hexdigest()
+        attachment_size = os.path.getsize(attachment)
         variables = {
             "input": {
-                "byteSize": 56006,
-                "checksum": "d60fdf3c98abc35643c068c3da4f1ce2",
-                "clientMutationId": "clientMutationId",
+                "byteSize": attachment_size,
+                "checksum": attachment_checksum,
+                "clientMutationId": "Envergo1234",
                 "contentType": "image/jpeg",
-                "dossierId": "RG9zc2llci0yMzE3ODQ0Mw==",
-                "filename": "/home/embg/Images/coriandre.jpeg",
+                "dossierId": dossier_id,
+                "filename": attachment,
             }
         }
 
@@ -265,11 +271,12 @@ class DemarchesSimplifieesClient:
                 fake_dossier_filename="fake_dossier_send_message_attachment.json"
             )
         else:
+            # Send query to create direct upload
             try:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
                 logger.error(
-                    "Error when sending attachments to Demarches Simplifiees",
+                    "Error when getting credentials to direct upload attachments to Demarches Simplifiees",
                     extra={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -289,12 +296,48 @@ class DemarchesSimplifieesClient:
                 notify(dedent(message), "haie")
                 return None
 
+            # On query success, send put file to url
             if (
                 "createDirectUpload" in data
                 and "directUpload" in data["createDirectUpload"]
             ):
-                return data["createDirectUpload"]["directUpload"]
+                credentials = data["createDirectUpload"]["directUpload"]
+                credentials_headers = credentials["headers"]
+
+                try:
+                    with open(attachment, "rb") as payload:
+                        response = requests.put(
+                            credentials["url"],
+                            data=payload,
+                            headers=credentials_headers,
+                        )
+                except Exception as e:
+                    logger.error(
+                        f"Error when sending attachments to Demarches Simplifiees : {e}",
+                        extra={
+                            "dossier_number": dossier_number,
+                        },
+                    )
+                    message = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                        context={
+                            "dossier_number": dossier_number,
+                        },
+                    )
+                    notify(dedent(message), "haie")
+                    return None
+
+                if response:
+                    return data["createDirectUpload"]["directUpload"]
             else:
+                logger.error(
+                    "Error with credentials for direct upload to Demarches Simplifiees",
+                    extra={
+                        "dossier_number": dossier_number,
+                        "query": query,
+                        "variables": variables,
+                    },
+                )
                 return None
 
     def dossier_send_message(
