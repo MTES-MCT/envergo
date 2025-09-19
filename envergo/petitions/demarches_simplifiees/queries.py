@@ -419,3 +419,17 @@ mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
   }
 }
 """
+
+DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION = """
+mutation dossierPreparePiecejointe($input: CreateDirectUploadInput!) {
+  createDirectUpload(input: $input) {
+    clientMutationId
+    directUpload {
+      blobId
+      headers
+      signedBlobId
+      url
+    }
+  }
+}
+"""
