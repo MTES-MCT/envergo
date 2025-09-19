@@ -38,6 +38,8 @@ DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
     settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
 )
 
+DS_DISABLED_BASE_MESSAGE = "Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
+
 
 class DemarchesSimplifieesClient:
     def __init__(self):
@@ -51,9 +53,18 @@ class DemarchesSimplifieesClient:
             transport=self.transport, fetch_schema_from_transport=False
         )
 
+    def _fake_execute(self, fake_dossier_filename):
+        """Mock response when Demarches Simplifiees is not enabled"""
+        with open(
+            DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
+            "r",
+        ) as file:
+            response = json.load(file)
+            return copy.deepcopy(response["data"])
+
     def execute(self, query_str: str, variables: dict = None):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            raise NotImplementedError("Démaches simplifiées is not enabled")
+            raise NotImplementedError("Démarches simplifiées is not enabled")
 
         query = gql(query_str)
         try:
@@ -96,17 +107,12 @@ class DemarchesSimplifieesClient:
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"Use fake dossier if dossier is not draft."
+                f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
             )
-            with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
-                "r",
-            ) as file:
-                response = json.load(file)
-                data = copy.deepcopy(response["data"])
+            data = self._fake_execute(fake_dossier_filename)
+
         else:
             try:
                 data = self.execute(query, variables)
@@ -268,18 +274,13 @@ class DemarchesSimplifieesClient:
 
             if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
                 logger.warning(
-                    f"Demarches Simplifiees is not enabled. Doing nothing."
-                    f"Use fake dossier if dossier is not draft."
+                    f"{DS_DISABLED_BASE_MESSAGE}"
                     f"\nquery: {query}"
                     f"\nvariables: {variables}"
                 )
-                with open(
-                    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH
-                    / "fake_createupload_response.json",
-                    "r",
-                ) as file:
-                    response = json.load(file)
-                    data = copy.deepcopy(response["data"])
+                data = self._fake_execute(
+                    fake_dossier_filename="fake_dossier_send_message_attachment.json"
+                )
             else:
                 try:
                     data = self.execute(query, variables)
@@ -318,17 +319,13 @@ class DemarchesSimplifieesClient:
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"Use fake dossier if dossier is not draft."
+                f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
             )
-            with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json",
-                "r",
-            ) as file:
-                response = json.load(file)
-                data = copy.deepcopy(response["data"])
+            data = self._fake_execute(
+                fake_dossier_filename="fake_dossier_send_message.json"
+            )
         else:
             try:
                 data = self.execute(query, variables)

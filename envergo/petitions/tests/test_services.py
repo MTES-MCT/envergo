@@ -40,6 +40,7 @@ from envergo.petitions.tests.factories import (
     CREATEUPLOAD_FAKE_RESPONSE,
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
     GET_DOSSIER_FAKE_RESPONSE,
@@ -874,7 +875,7 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     # WHEN I send message for this dossier with attachment
     mock_post.side_effect = [
         CREATEUPLOAD_FAKE_RESPONSE["data"],
-        DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"],
+        DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE["data"],
     ]
     message_body = "Bonjour ! Un nouveau message"
     result = send_message_dossier_ds(
@@ -888,7 +889,6 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
         "message": {"body": "Bonjour ! Un nouveau message"},
         "attachments": [
             {
-                "__typename": "File",
                 "filename": "Coriandrum_sativum.jpg",
                 "contentType": "image/jpeg",
                 "checksum": "N7HE6+uqUm+8o+K+XXFiTA==",
