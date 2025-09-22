@@ -776,7 +776,9 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
-class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateView):
+class PetitionProjectInstructorMessagerieView(
+    PetitionProjectInstructorMixin, DetailView, FormView
+):
     """View for petition project instructor page with demarche simplifiées messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
@@ -787,6 +789,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        self.object = self.get_object()
         ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
             get_messages_and_senders_from_ds(self.object)
         )
@@ -811,6 +814,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
     def form_valid(self, form):
         """Send message"""
         message_body = form.cleaned_data["message_body"]
+        self.object = self.get_object()
         ds_response = send_message_dossier_ds(self.object, message_body)
         self.event_action = "envoi"
 
@@ -819,7 +823,7 @@ class PetitionProjectInstructorMessagerieView(PetitionProjectInstructorUpdateVie
         ):
             messages.warning(
                 self.request,
-                """Le message n'a pas pu être envoyé, réessayer dans quelques minutes.
+                """Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
 

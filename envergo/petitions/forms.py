@@ -56,7 +56,7 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         }
 
 
-class PetitionProjectInstructorMessageForm(forms.ModelForm):
+class PetitionProjectInstructorMessageForm(forms.Form):
     """Form to send a message through demarches simplifiées API."""
 
     message_body = forms.CharField(
@@ -67,7 +67,6 @@ class PetitionProjectInstructorMessageForm(forms.ModelForm):
     )
 
     class Meta:
-        model = PetitionProject
         fields = [
             "message_body",
         ]
