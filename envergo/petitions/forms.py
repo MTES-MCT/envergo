@@ -59,6 +59,30 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         }
 
 
+class PetitionProjectInstructorMessageForm(forms.Form):
+    """Form to send a message through demarches simplifiées API."""
+
+    message_body = forms.CharField(
+        label="Votre message",
+        widget=forms.Textarea(
+            attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
+        ),
+    )
+
+    additional_files = MultipleFileField(
+        label="Fichiers joints",
+        required=False,
+        help_text=f"""
+            Formats autorisés : images (png, jpg), pdf, zip. <br>
+            Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
+            Maximum 20 Mo par fichier. <br>
+        """,
+    )
+
+    class Meta:
+        fields = ["message_body", "additional_files"]
+
+
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
 
@@ -95,27 +119,3 @@ class ProcedureForm(forms.ModelForm):
             "stage_date": "Vous pouvez choisir une date rétroactive si nécessaire.",
             "stage_update_comment": "Ajouter un commentaire expliquant le contexte du changement.",
         }
-
-
-class PetitionProjectInstructorMessageForm(forms.Form):
-    """Form to send a message through demarches simplifiées API."""
-
-    message_body = forms.CharField(
-        label="Votre message",
-        widget=forms.Textarea(
-            attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
-        ),
-    )
-
-    additional_files = MultipleFileField(
-        label="Fichiers joints",
-        required=False,
-        help_text=f"""
-            Formats autorisés : images (png, jpg), pdf, zip. <br>
-            Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
-            Maximum 20 Mo par fichier. <br>
-        """,
-    )
-
-    class Meta:
-        fields = ["message_body", "additional_files"]
