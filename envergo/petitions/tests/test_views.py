@@ -1,5 +1,6 @@
 import html
 import re
+from datetime import date, timedelta
 from unittest.mock import ANY, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
@@ -566,11 +567,15 @@ def test_petition_project_list(
     ConfigHaieFactory()
     ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # Create two projects non draft, one in 34 and one in 44
+    today = date.today()
+    last_month = today - timedelta(days=30)
     project_34 = PetitionProject34Factory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
     )
     project_44 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
     )
     response = client.get(reverse("petition_project_list"))
 
@@ -603,6 +608,8 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference in content
+    # ensure ordering is correct (most recent first)
+    assert content.index(project_34.reference) < content.index(project_44.reference)
 
     # GIVEN a user with access to haie, no departments but an invitation token
     InvitationTokenFactory(user=haie_user, petition_project=project_34)
