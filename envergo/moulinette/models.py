@@ -1780,6 +1780,10 @@ class Moulinette(ABC):
         if hasattr(self, "_result"):
             return self._result
 
+        if not self.is_evaluated():
+            self._result = RESULTS.non_disponible
+            return self._result
+
         results = [regulation.result for regulation in self.regulations]
 
         result = None
