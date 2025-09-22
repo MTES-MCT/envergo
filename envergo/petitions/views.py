@@ -780,6 +780,7 @@ class PetitionProjectInstructorMessagerieView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        self.object = self.get_object()
         ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
             get_messages_and_senders_from_ds(self.object)
         )
