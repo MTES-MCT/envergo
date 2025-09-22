@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.hedges.services import HedgeList
+from envergo.hedges.models import HedgeList
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
 from envergo.petitions.demarches_simplifiees.models import (
     CheckboxChamp,

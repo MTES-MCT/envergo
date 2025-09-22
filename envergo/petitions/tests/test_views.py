@@ -452,6 +452,20 @@ def test_petition_project_instructor_view_reglementation_pages(
     project.refresh_from_db()
     assert project.onagre_number == "1234567"
 
+    # When I go to a regulation page
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
+    )
+    response = client.get(instructor_url)
+    # I should get ign_url and googlemap_url
+    assert "ign_url" in response.context
+    assert response.context["ign_url"].startswith("https://www.geoportail.gouv.fr/")
+    assert "google_maps_url" in response.context
+    assert response.context["google_maps_url"].startswith(
+        "https://www.google.com/maps/"
+    )
+
     # WHEN I post some instructor data as an invited instructor
     InvitationTokenFactory(user=haie_user, petition_project=project)
     client.force_login(haie_user)
