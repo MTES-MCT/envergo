@@ -946,9 +946,10 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
         "message": {"body": "Bonjour ! Un nouveau message"},
         "attachments": [
             {
+                "__typename": "File",
                 "filename": "Coriandrum_sativum.jpg",
                 "contentType": "image/jpeg",
-                "checksum": "46236cb118cc7056884ef40c2e4eb337",
+                "checksum": "RiNssRjMcFaITvQMLk6zNw==",
                 "byteSize": "21053",
                 "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",  # noqa: 501
                 "createdAt": "2025-07-17T17:25:13+02:00",

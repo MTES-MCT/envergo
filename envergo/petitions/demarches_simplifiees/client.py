@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import logging
+from base64 import b64encode
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
@@ -245,11 +246,13 @@ class DemarchesSimplifieesClient:
         """Create direct upload related to a dossier"""
 
         # Prepare input
-        attachment_checksum = hashlib.md5(open(attachment, "rb").read()).hexdigest()
+        with open(attachment, "rb") as file:
+            attachment_checksum = hashlib.file_digest(file, "md5").digest()
+        attachment_checksum_b64 = b64encode(attachment_checksum).decode()
         variables = {
             "input": {
                 "byteSize": attachment.stat().st_size,
-                "checksum": attachment_checksum,
+                "checksum": attachment_checksum_b64,
                 "clientMutationId": "Envergo1234",
                 "contentType": "image/jpeg",
                 "dossierId": dossier_id,
@@ -375,16 +378,21 @@ class DemarchesSimplifieesClient:
             }
         }
 
-        # If attachments, upload files TODO:
+        # If attachments, upload files
+        # TODO: send message with several files
         if attachments:
-            for attachment in attachments:
-                attachment_uploaded = self._create_direct_upload(
-                    dossier_number, dossier_id, attachment
-                )
-                if attachment_uploaded is not None:
-                    variables.update(
-                        {"attachment": attachment_uploaded["signedBlobId"]}
-                    )
+            if isinstance(attachments, list):
+                if len(attachments) > 1:
+                    logger.warning("Can't send multiple files. Use first")
+                attachment = attachments[0]
+            else:
+                attachment = attachments
+
+            attachment_uploaded = self._create_direct_upload(
+                dossier_number, dossier_id, attachment
+            )
+            if attachment_uploaded is not None:
+                variables.update({"attachment": attachment_uploaded["signedBlobId"]})
 
         # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
