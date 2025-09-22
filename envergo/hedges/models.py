@@ -180,6 +180,20 @@ class Hedge:
         return zones
 
 
+class HedgeList(list[Hedge]):
+    def __init__(self, *args, label=None, **kwargs):
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    @property
+    def length(self):
+        return sum(h.length for h in self)
+
+    @property
+    def names(self):
+        return ", ".join(h.id for h in self)
+
+
 class HedgeData(models.Model):
     """Hedge data model.
     Field data is a json listing hedges"""
@@ -272,50 +286,55 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type == "alignement"
         )
 
-    def hedges_to_remove_aa_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.hedge_type == "alignement" and h.prop("bord_voie")
-        ]
+    def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
+        """HedgeData filter
 
-    def length_to_remove_aa_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_remove_aa_bord_voie())
+        Args:
+            hedge_to: TO_PLANT or TO_REMOVE
+            hedge_type: hedge type from HEDGE_TYPES
+            props: other hedge properties
 
-    def hedges_to_remove_aa_not_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.hedge_type == "alignement" and not h.prop("bord_voie")
-        ]
+        Returns:
+            HedgeList: hedges list filtered
 
-    def length_to_remove_aa_not_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_remove_aa_not_bord_voie())
+        Raises:
+            ValueError: If hedge to or type argument has a wrong value
+        """
 
-    def hedges_to_remove_not_aa_bord_voie(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.hedge_type != "alignement" and h.prop("bord_voie")
-        ]
+        def hedge_selection(hedge):
+            """Select h in hedges to return"""
+            result = True
 
-    def length_to_remove_not_aa_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_remove_not_aa_bord_voie())
+            # Check type_haie
+            if "!" in hedge_type:
+                result = result and not hedge.hedge_type == hedge_type.replace("!", "")
+            else:
+                result = result and hedge.hedge_type == hedge_type
 
-    def hedges_to_plant_aa_bord_voie(self):
-        """List hedges to plant type Alignement d'arbre and bord de voie"""
+            # Check for each prop if
+            for prop in props:
+                operator_not = False
+                if "!" in prop:
+                    operator_not = True
+                    prop = prop.replace("!", "")
+                if hedge.has_property(prop):
+                    if operator_not:
+                        result = result and not hedge.prop(prop)
+                    else:
+                        result = result and hedge.prop(prop)
+            return result
 
-        def aa_bord_voie_selection(h):
-            """Check if hedge must be taken into account"""
-            res = h.hedge_type == "alignement" and h.prop("bord_voie")
-            if h.has_property("mode_plantation"):
-                res = res and h.prop("mode_plantation") == "plantation"
-            return res
+        if hedge_to == TO_REMOVE:
+            hedges_filtered = self.hedges_to_remove()
+        elif hedge_to == TO_PLANT:
+            hedges_filtered = self.hedges_to_plant()
+        else:
+            raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
 
-        return [h for h in self.hedges_to_plant() if aa_bord_voie_selection(h)]
+        if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
+            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
 
-    def length_to_plant_aa_bord_voie(self):
-        return sum(h.length for h in self.hedges_to_plant_aa_bord_voie())
+        return HedgeList([hedge for hedge in hedges_filtered if hedge_selection(hedge)])
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
