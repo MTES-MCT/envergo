@@ -813,7 +813,7 @@ class PetitionProjectInstructorMessagerieView(
         ):
             messages.warning(
                 self.request,
-                """Le message n'a pas pu être envoyé, réessayer dans quelques minutes.
+                """Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
 
