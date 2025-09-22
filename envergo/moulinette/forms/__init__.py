@@ -300,6 +300,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     department = forms.ModelChoiceField(
         queryset=Department.objects.all(),
         required=True,
+        to_field_name="department",
         widget=forms.HiddenInput,
     )
     element = forms.ChoiceField(
