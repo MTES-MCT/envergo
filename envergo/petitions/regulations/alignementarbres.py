@@ -1,4 +1,4 @@
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList
+from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.hedges.regulations import TreeAlignmentsCondition
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
@@ -25,23 +25,19 @@ def alignement_arbres_get_instructor_view_context(
     hedges_to_remove_aa_bord_voie = hedge_data.hedges_filter(
         TO_REMOVE, "alignement", "bord_voie"
     )
-    length_to_remove_aa_bord_voie = sum(h.length for h in hedges_to_remove_aa_bord_voie)
+    length_to_remove_aa_bord_voie = hedges_to_remove_aa_bord_voie.length
     context["length_to_remove_aa_bord_voie"] = length_to_remove_aa_bord_voie
     if length_to_remove_aa_bord_voie:
-        context["aa_bord_voie_destruction_detail"] = HedgeList(
-            hedges_to_remove_aa_bord_voie
-        )
+        context["aa_bord_voie_destruction_detail"] = hedges_to_remove_aa_bord_voie
 
     # Hedges to remove, alignement_arbres, not bord de voie
     hedges_to_remove_aa_non_bord_voie = hedge_data.hedges_filter(
         TO_REMOVE, "alignement", "!bord_voie"
     )
-    length_to_remove_aa_non_bord_voie = sum(
-        h.length for h in hedges_to_remove_aa_non_bord_voie
-    )
+    length_to_remove_aa_non_bord_voie = hedges_to_remove_aa_non_bord_voie.length
     context["length_to_remove_aa_non_bord_voie"] = length_to_remove_aa_non_bord_voie
     if length_to_remove_aa_non_bord_voie:
-        context["aa_non_bord_voie_destruction_detail"] = HedgeList(
+        context["aa_non_bord_voie_destruction_detail"] = (
             hedges_to_remove_aa_non_bord_voie
         )
 
@@ -49,12 +45,10 @@ def alignement_arbres_get_instructor_view_context(
     hedges_to_remove_non_aa_bord_voie = hedge_data.hedges_filter(
         TO_REMOVE, "!alignement", "bord_voie"
     )
-    length_to_remove_non_aa_bord_voie = sum(
-        h.length for h in hedges_to_remove_non_aa_bord_voie
-    )
+    length_to_remove_non_aa_bord_voie = hedges_to_remove_non_aa_bord_voie.length
     context["length_to_remove_non_aa_bord_voie"] = length_to_remove_non_aa_bord_voie
     if length_to_remove_non_aa_bord_voie:
-        context["non_aa_bord_voie_destruction_detail"] = HedgeList(
+        context["non_aa_bord_voie_destruction_detail"] = (
             hedges_to_remove_non_aa_bord_voie
         )
 
@@ -62,12 +56,10 @@ def alignement_arbres_get_instructor_view_context(
     hedges_to_plant_aa_bord_voie = hedge_data.hedges_filter(
         TO_PLANT, "alignement", "bord_voie"
     )
-    length_to_plant_aa_bord_voie = sum(h.length for h in hedges_to_plant_aa_bord_voie)
+    length_to_plant_aa_bord_voie = hedges_to_plant_aa_bord_voie.length
     context["length_to_plant_aa_bord_voie"] = length_to_plant_aa_bord_voie
     if length_to_plant_aa_bord_voie:
-        context["aa_bord_voie_plantation_detail"] = HedgeList(
-            hedges_to_plant_aa_bord_voie
-        )
+        context["aa_bord_voie_plantation_detail"] = hedges_to_plant_aa_bord_voie
 
     evaluator_context = (
         TreeAlignmentsCondition(hedge_data, R, evaluator, catalog=moulinette.catalog)
