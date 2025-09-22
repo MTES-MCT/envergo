@@ -36,6 +36,7 @@ from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
+    PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
 )
@@ -48,6 +49,7 @@ from envergo.petitions.services import (
     get_context_from_ds,
     get_messages_and_senders_from_ds,
     get_project_context,
+    send_message_dossier_ds,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -677,17 +679,6 @@ class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, Update
 
         return super().post(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        res = super().form_valid(form)
-        log_event(
-            "projet",
-            "edition_notes",
-            self.request,
-            reference=self.object.reference,
-            **get_matomo_tags(self.request),
-        )
-        return res
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if not context["is_department_instructor"]:
@@ -715,7 +706,6 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
-    event_action = ""
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -757,7 +747,6 @@ class PetitionProjectInstructorDossierDSView(
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
-    event_action = ""
 
     def get_context_data(self, **kwargs):
         project_details = compute_instructor_informations_ds(
@@ -779,17 +768,19 @@ class PetitionProjectInstructorDossierDSView(
 
 
 class PetitionProjectInstructorMessagerieView(
-    PetitionProjectInstructorMixin, DetailView
+    PetitionProjectInstructorMixin, DetailView, FormView
 ):
-    """View for petition project instructor page"""
+    """View for petition project instructor page with demarche simplifiées messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
     event_action = "lecture"
+    form_class = PetitionProjectInstructorMessageForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        self.object = self.get_object()
         ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
             get_messages_and_senders_from_ds(self.object)
         )
@@ -811,17 +802,65 @@ class PetitionProjectInstructorMessagerieView(
 
         return context
 
+    def form_valid(self, form):
+        """Send message"""
+        message_body = form.cleaned_data["message_body"]
+        self.object = self.get_object()
+        ds_response = send_message_dossier_ds(self.object, message_body)
+        self.event_action = "envoi"
+
+        if ds_response is None or (
+            "errors" in ds_response and ds_response["errors"] is not None
+        ):
+            messages.warning(
+                self.request,
+                """Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
+                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+            )
+
+        elif "message" in ds_response and ds_response["message"] is not None:
+            messages.success(
+                self.request,
+                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+            )
+
+            # Log matomo event
+            log_event(
+                self.event_category,
+                "envoi",
+                self.request,
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
+        return super().form_valid(form)
+
     def get_log_event_data(self):
         return {
             "reference": self.object.reference,
         }
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_messagerie_view", kwargs=self.kwargs
+        )
 
 
 class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_notes.html"
-    event_action = ""
+
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            reference=self.object.reference,
+            **get_matomo_tags(self.request),
+        )
+        return res
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)

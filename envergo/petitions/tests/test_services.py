@@ -33,10 +33,13 @@ from envergo.petitions.services import (
     get_context_from_ds,
     get_demarches_simplifiees_dossier,
     get_messages_and_senders_from_ds,
+    send_message_dossier_ds,
 )
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
@@ -828,7 +831,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 @pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
-def test_messagerie_via_demarches_simplifiees(mock_post, haie_user, site):
+def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, site):
     """Test send message for project via demarches simplifiées"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -849,8 +852,27 @@ def test_messagerie_via_demarches_simplifiees(mock_post, haie_user, site):
     messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
         petition_project
     )
-
     # THEN Messages are returned
     assert len(messages) == 8
     assert instructor_emails == ["instructeur@guh.gouv.fr"]
     assert petitioner_email == "hedy.lamarr@example.com"
+
+    # WHEN I send message for this dossier
+    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    message_body = "Bonjour ! Un nouveau message"
+    result = send_message_dossier_ds(petition_project, message_body)
+
+    # THEN messages has this new message
+    assert result == {
+        "clientMutationId": "1234",
+        "errors": None,
+        "message": {"body": "Bonjour ! Un nouveau message"},
+    }
+
+    # WHEN I send malformated
+    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
+    message_body = "Bonjour ! Un nouveau message"
+    result = send_message_dossier_ds(petition_project, message_body)
+
+    # THEN I receive an error
+    assert result is None

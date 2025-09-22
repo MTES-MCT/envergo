@@ -54,6 +54,7 @@ def test_dossier_submission_admin_alert(
                 "nodes": [
                     {
                         "number": 21059675,
+                        "id": "RG9zc2llci0yMzE3ODQ0Mw==",
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
                         "demarche": {
@@ -63,6 +64,7 @@ def test_dossier_submission_admin_alert(
                     },
                     {
                         "number": 123,
+                        "id": "UW9zc2llci0yRiO3ODQ0Mw==",
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
                         "champs": [
@@ -92,6 +94,7 @@ def test_dossier_submission_admin_alert(
                 "nodes": [
                     {
                         "number": 21059676,
+                        "id": "SH9zc2llci0yMzE3OATrSw==",
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
                         "demarche": {

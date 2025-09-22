@@ -16,6 +16,23 @@
     </p>
   </div>
 
+  <section class="ds-messages fr-my-4w">
+    <h4>Envoyer un message</h4>
+    <form method="post"
+          action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+      {% csrf_token %}
+
+      <div id="field-message_body" class="fr-my-2w">
+        {% include '_field_snippet.html' with field=form.message_body %}
+        <button type="submit"
+                class="fr-btn fr-btn--primary"
+                formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+          Envoyer le message
+        </button>
+      </div>
+    </form>
+  </section>
+
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
       <p class="fr-mb-1w">
@@ -41,7 +58,7 @@
           <div class="fr-mt-2w">
             {% for pj in message.attachments %}
               <div class="fr-download">
-                <a class="fr-link" target="_blank" href="{{ pj.url }}">
+                <a class="fr-link ds-message__pj" target="_blank" href="{{ pj.url }}">
                   <span class="fr-sr-only">Télécharger le fichier</span>
                   {{ pj.filename }}
                   <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
