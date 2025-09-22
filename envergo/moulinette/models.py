@@ -1537,6 +1537,12 @@ class Moulinette(ABC):
         return fields
 
     @property
+    def initial(self):
+        """Return the moulinette initial data."""
+
+        return self.form_kwargs.get("initial", {})
+
+    @property
     def data(self):
         """Return the moulinette raw form data."""
 
@@ -2176,6 +2182,7 @@ class MoulinetteHaie(Moulinette):
         """
         context = super().get_extra_context(request)
         context["is_alternative"] = bool(request.GET.get("alternative", False))
+        context["department"] = self.department
 
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
@@ -2204,9 +2211,9 @@ class MoulinetteHaie(Moulinette):
         return data
 
     def get_department(self):
-        try:
-            dept = self.form_kwargs["initial"]["department"]
-        except KeyError:
+
+        dept = self.data.get("department", self.initial.get("department", None))
+        if dept is None:
             return None
 
         qs = (
