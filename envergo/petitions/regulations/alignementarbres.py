@@ -1,9 +1,8 @@
-from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList
 from envergo.hedges.regulations import TreeAlignmentsCondition
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
-from envergo.petitions.services import HedgeList
 
 
 @evaluator_instructor_view_context_getter(AlignementsArbres)

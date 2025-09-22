@@ -180,6 +180,20 @@ class Hedge:
         return zones
 
 
+class HedgeList(list[Hedge]):
+    def __init__(self, *args, label=None, **kwargs):
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    @property
+    def length(self):
+        return sum(h.length for h in self)
+
+    @property
+    def names(self):
+        return ", ".join(h.id for h in self)
+
+
 class HedgeData(models.Model):
     """Hedge data model.
     Field data is a json listing hedges"""
@@ -272,7 +286,7 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type == "alignement"
         )
 
-    def hedges_filter(self, hedge_to, hedge_type, *props) -> list:
+    def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
         """HedgeData filter
 
         Args:
@@ -281,7 +295,7 @@ class HedgeData(models.Model):
             props: other hedge properties
 
         Returns:
-            list: hedges filtered
+            HedgeList: hedges list filtered
 
         Raises:
             ValueError: If hedge to or type argument has a wrong value
@@ -320,7 +334,7 @@ class HedgeData(models.Model):
         if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
             raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
 
-        return [hedge for hedge in hedges_filtered if hedge_selection(hedge)]
+        return HedgeList([hedge for hedge in hedges_filtered if hedge_selection(hedge)])
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""

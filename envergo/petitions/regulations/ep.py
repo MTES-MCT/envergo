@@ -1,9 +1,8 @@
 from django.forms import ChoiceField
 from django.utils.module_loading import import_string
 
-from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList
 from envergo.hedges.regulations import HEDGE_KEYS, NormandieQualityCondition
-from envergo.hedges.services import HedgeList
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
