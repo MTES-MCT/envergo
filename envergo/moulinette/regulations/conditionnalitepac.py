@@ -408,4 +408,4 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
         minimum_length_to_plant = D(haies.lineaire_detruit_pac()) * R
         if haies.length_to_remove() > 0:
             R = minimum_length_to_plant / D(haies.length_to_remove())
-        return R
+        return round(R, 2)
