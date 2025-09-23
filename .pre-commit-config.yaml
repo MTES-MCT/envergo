@@ -49,6 +49,12 @@ repos:
         name: "prettier [(s)css only]"
         files: '\.(css|scss)$' # Only run on CSS and SCSS files
 
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
   autoupdate_schedule: weekly
