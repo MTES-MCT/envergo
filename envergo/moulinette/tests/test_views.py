@@ -37,13 +37,15 @@ def test_moulinette_home(client):
     assert FORM_ERROR not in res.content.decode()
 
 
-def test_moulinette_home_with_params_redirects_to_results_page(client):
+def test_moulinette_form_with_params_displays_the_form(client):
     url = reverse("moulinette_form")
     params = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
-    assert res.status_code == 302
-    assert res.url.startswith("/simulateur/resultat/")
+    assert res.status_code == 200
+    assert (
+        '<input type="text" name="created_surface" value="500"' in res.content.decode()
+    )
 
 
 def test_moulinette_result_without_config(client):
@@ -132,20 +134,8 @@ def test_moulinette_result_debug_page(client):
     assertTemplateUsed(res, "amenagement/moulinette/result_debug.html")
 
 
-def test_moulinette_home_form_error(client):
-    url = reverse("moulinette_form")
-    params = "bad_param=true"
-    full_url = f"{url}?{params}"
-    res = client.get(full_url)
-
-    assert res.status_code == 200
-    assert HOME_TITLE in res.content.decode()
-    assert RESULT_TITLE not in res.content.decode()
-    assert FORM_ERROR in res.content.decode()
-
-
 def test_moulinette_post_form_error(client):
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     data = {"lng": "-1.54394", "lat": "47.21381"}
     res = client.post(url, data)
 
@@ -175,7 +165,7 @@ def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
         evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
         activation_map=france_map,
     )
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     data = {
         "lng": "-1.54394",
         "lat": "47.21381",
