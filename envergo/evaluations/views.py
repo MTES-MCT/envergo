@@ -49,6 +49,7 @@ from envergo.evaluations.tasks import (
 )
 from envergo.evaluations.utils import extract_department_from_address_or_city_string
 from envergo.geodata.models import Department
+from envergo.moulinette.utils import compute_surfaces
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.utils.urls import update_qs
 
@@ -133,8 +134,23 @@ class EvaluationDetail(
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
-    def get_moulinette_raw_data(self):
-        return self.object.moulinette_params
+    def get_initial(self):
+        return self.get_form_data()
+
+    def get_form_data(self):
+        """Get the data to pass to the moulinette forms."""
+
+        try:
+            eval = self.get_object()
+            moulinette_data = eval.moulinette_params
+        except (Evaluation.DoesNotExist, Http404):
+            moulinette_data = {}
+
+        if moulinette_data:
+            surfaces = compute_surfaces(moulinette_data)
+            moulinette_data.update(surfaces)
+
+        return moulinette_data
 
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
@@ -234,9 +250,6 @@ class EvaluationDetail(
                 )
 
         return res
-
-    def should_activate_optional_criteria(self):
-        return True
 
 
 class Dashboard(LoginRequiredMixin, TemplateView):
