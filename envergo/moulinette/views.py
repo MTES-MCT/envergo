@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -290,25 +291,18 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
 
-        main_form_errors = {
-            field: [{"code": str(e.code), "message": str(e.message)} for e in errors]
-            for field, errors in form.errors.as_data().items()
-        }
-        optional_forms = context["optional_forms"]
-        optional_forms_errors = {
-            f"{optional_form.prefix}-{field}": [
-                {"code": str(e.code), "message": str(e.message)} for e in errors
-            ]
-            for optional_form in optional_forms
-            if optional_form.is_activated() and optional_form.errors
-            for field, errors in optional_form.errors.as_data().items()
-        }
+        form_errors = defaultdict(list)
+        for field, errors in self.moulinette.form_errors().items():
+            for error in errors.as_data():
+                form_errors[field].append(
+                    {"code": str(error.code), "message": str(error.message)}
+                )
         log_event(
             "erreur",
             "formulaire-simu",
             self.request,
             data=form.data,
-            errors=main_form_errors | optional_forms_errors,
+            errors=form_errors,
         )
         return self.render_to_response(context)
 
