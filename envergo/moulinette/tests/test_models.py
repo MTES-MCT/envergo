@@ -81,7 +81,7 @@ def test_result_without_contact_data(moulinette_data):
     """When dept. contact info is not set, we cannot run the eval."""
 
     moulinette = MoulinetteAmenagement(moulinette_data)
-    assert not moulinette.is_valid()
+    assert not moulinette.is_evaluation_available()
 
 
 @pytest.mark.parametrize("footprint", [50])
