@@ -257,7 +257,7 @@ def test_moulinette_form_surface_field(client):
     ConfigAmenagementFactory()
 
     # WHEN I post a form with inconsistent surfaces
-    url = reverse("moulinette_home")
+    url = reverse("moulinette_form")
     data = {
         "created_surface": 1500,
         "final_surface": 500,
@@ -286,5 +286,5 @@ def test_moulinette_form_surface_field(client):
     assert res.status_code == 302
     assert (
         res.url
-        == "/simulateur/resultat/?created_surface=1500&final_surface=1500&lng=-1.54394&lat=47.21381"
+        == "/simulateur/resultat/?created_surface=1500&existing_surface=0&final_surface=1500&address=&lng=-1.54394&lat=47.21381"
     )
