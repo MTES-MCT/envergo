@@ -126,7 +126,7 @@ def test_perimeter_map_display(moulinette_data, client):
     ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
-    params = urlencode(moulinette_data)
+    params = urlencode(moulinette_data["data"])
     full_url = f"{url}?{params}"
     res = client.get(full_url)
     assert res.status_code == 200
@@ -152,7 +152,7 @@ def test_several_perimeter_maps_display(
     )
 
     url = reverse("moulinette_result")
-    params = urlencode(moulinette_data)
+    params = urlencode(moulinette_data["data"])
     full_url = f"{url}?{params}"
     res = client.get(full_url)
     assert res.status_code == 200
