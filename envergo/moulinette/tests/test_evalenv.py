@@ -60,10 +60,10 @@ def evalenv_criteria(france_map):  # noqa
 
 @pytest.fixture
 def moulinette_data(footprint):
-    return {
+    data = {
         # Bizou coordinates
-        "lat": 48.4961953,
-        "lng": 0.7504093,
+        "lat": 48.496195,
+        "lng": 0.750409,
         "existing_surface": 0,
         "created_surface": footprint,
         "final_surface": footprint,
@@ -74,184 +74,167 @@ def moulinette_data(footprint):
         "terrain_assiette": 150000,
         "operation_amenagement": "non",
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize("footprint", [9500])
 def test_evalenv_small_footprint(moulinette_data):
-    del moulinette_data["zone_u"]
-    del moulinette_data["emprise"]
+    del moulinette_data["data"]["zone_u"]
+    del moulinette_data["data"]["emprise"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [10500])
 def test_evalenv_medium(moulinette_data):
-    del moulinette_data["zone_u"]
-    del moulinette_data["emprise"]
+    del moulinette_data["data"]["zone_u"]
+    del moulinette_data["data"]["emprise"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.has_missing_data()
 
-    moulinette_data["emprise"] = 42
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette_data["data"]["emprise"] = 42
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [40500])
 def test_evalenv_wide_footprint(moulinette_data):
-    moulinette_data["emprise"] = 42
-    del moulinette_data["zone_u"]
+    moulinette_data["data"]["emprise"] = 42
+    del moulinette_data["data"]["zone_u"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.has_missing_data()
 
-    moulinette_data["zone_u"] = "oui"
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette_data["data"]["zone_u"] = "oui"
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_missing_data()
 
 
 @pytest.mark.parametrize("footprint", [9500])
 def test_evalenv_emprise_non_soumis(moulinette_data):
-    del moulinette_data["zone_u"]
-    del moulinette_data["emprise"]
+    del moulinette_data["data"]["zone_u"]
+    del moulinette_data["data"]["emprise"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.emprise.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_emprise_non_soumis_2(moulinette_data):
-    del moulinette_data["emprise"]
-    moulinette_data["emprise"] = 5000
+    del moulinette_data["data"]["emprise"]
+    moulinette_data["data"]["emprise"] = 5000
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.emprise.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_emprise_cas_par_cas(moulinette_data):
-    del moulinette_data["zone_u"]
-    moulinette_data["emprise"] = 10000
+    del moulinette_data["data"]["zone_u"]
+    moulinette_data["data"]["emprise"] = 10000
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.emprise.result == "cas_par_cas"
 
 
 @pytest.mark.parametrize("footprint", [40000])
 def test_evalenv_zone_u_cas_par_cas(moulinette_data):
-    moulinette_data["emprise"] = 40000
-    moulinette_data["zone_u"] = "oui"
+    moulinette_data["data"]["emprise"] = 40000
+    moulinette_data["data"]["zone_u"] = "oui"
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.emprise.result == "cas_par_cas"
 
 
 @pytest.mark.parametrize("footprint", [40000])
 def test_evalenv_zone_u_systematique(moulinette_data):
-    moulinette_data["emprise"] = 40000
-    moulinette_data["zone_u"] = "non"
+    moulinette_data["data"]["emprise"] = 40000
+    moulinette_data["data"]["zone_u"] = "non"
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.emprise.result == "systematique"
 
 
 @pytest.mark.parametrize("footprint", [2000])
 def test_evalenv_surface_plancher_non_soumis(moulinette_data):
-    del moulinette_data["surface_plancher_sup_thld"]
+    del moulinette_data["data"]["surface_plancher_sup_thld"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_missing_data()
     assert moulinette.eval_env.surface_plancher.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [3000])
 def test_evalenv_surface_plancher_non_soumis_2(moulinette_data):
-    del moulinette_data["surface_plancher_sup_thld"]
+    del moulinette_data["data"]["surface_plancher_sup_thld"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.has_missing_data()
 
-    moulinette_data["surface_plancher_sup_thld"] = "non"
-    moulinette.evaluate()
+    moulinette_data["data"]["surface_plancher_sup_thld"] = "non"
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.surface_plancher.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [3000])
 def test_evalenv_surface_plancher_cas_par_cas(moulinette_data):
-    moulinette_data["surface_plancher_sup_thld"] = "oui"
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette_data["data"]["surface_plancher_sup_thld"] = "oui"
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.surface_plancher.result == "cas_par_cas"
 
 
 @pytest.mark.parametrize("footprint", [5000])
 def test_evalenv_terrain_assiette_non_soumis(moulinette_data):
-    del moulinette_data["terrain_assiette"]
-    del moulinette_data["operation_amenagement"]
+    del moulinette_data["data"]["terrain_assiette"]
+    del moulinette_data["data"]["operation_amenagement"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_missing_data()
     assert moulinette.eval_env.terrain_assiette.result == "non_concerne"
 
 
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_non_concerne(moulinette_data):
-    del moulinette_data["terrain_assiette"]
-    del moulinette_data["operation_amenagement"]
+    del moulinette_data["data"]["terrain_assiette"]
+    del moulinette_data["data"]["operation_amenagement"]
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.has_missing_data()
 
-    moulinette_data["terrain_assiette"] = 150000
-    moulinette_data["operation_amenagement"] = "non"
+    moulinette_data["data"]["terrain_assiette"] = 150000
+    moulinette_data["data"]["operation_amenagement"] = "non"
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.terrain_assiette.result == "non_concerne"
 
 
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_non_soumis_2(moulinette_data):
-    moulinette_data["terrain_assiette"] = 45000
-    moulinette_data["operation_amenagement"] = "oui"
+    moulinette_data["data"]["terrain_assiette"] = 45000
+    moulinette_data["data"]["operation_amenagement"] = "oui"
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.terrain_assiette.result == "non_soumis"
 
 
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_cas_par_cas(moulinette_data):
-    moulinette_data["terrain_assiette"] = 95000
-    moulinette_data["operation_amenagement"] = "oui"
+    moulinette_data["data"]["terrain_assiette"] = 95000
+    moulinette_data["data"]["operation_amenagement"] = "oui"
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.terrain_assiette.result == "cas_par_cas"
 
 
 @pytest.mark.parametrize("footprint", [10000])
 def test_evalenv_terrain_assiette_systematique(moulinette_data):
-    moulinette_data["terrain_assiette"] = 150000
-    moulinette_data["operation_amenagement"] = "oui"
+    moulinette_data["data"]["terrain_assiette"] = 150000
+    moulinette_data["data"]["operation_amenagement"] = "oui"
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.eval_env.terrain_assiette.result == "systematique"
 
 
