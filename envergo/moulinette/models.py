@@ -2021,6 +2021,9 @@ class MoulinetteAmenagement(Moulinette):
         return summary
 
     def get_department(self):
+        if "lng_lat" not in self.catalog:
+            return None
+
         lng_lat = self.catalog["lng_lat"]
         department = (
             Department.objects.filter(geometry__contains=lng_lat)
