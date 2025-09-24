@@ -37,58 +37,79 @@
             aria-controls="procedure-modal">Modifier</button>
   {% endif %}
 
-  <div class="fr-table--lg fr-table project-list__table">
-    <div class="fr-table__wrapper">
-      <div class="fr-table__container">
-        <div class="fr-table__content">
-          <table id="table-dossier-list">
-            <caption class="fr-mt-1w fr-mb-0">
-              {{ paginator.count }}
-              changement{{ paginator.count|pluralize }}
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Date/heure de la saisie</th>
-                <th scope="col">Date effective</th>
-                <th scope="col">Auteur</th>
-                <th scope="col">Étape / Résultat départ</th>
-                <th scope="col">Étape / Résultat arrivée</th>
-                <th scope="col">Commentaire</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for log in object_list %}
-                <tr class="project">
-                  <td>{{ log.created_at }}</td>
-                  <td>{{ log.status_date }}</td>
-                  <td>{{ log.created_by.email }}</td>
-                  <td>
-                    {% if log.previous_log %}
-                      {{ log.previous_log.get_stage_display }}
-                      {% if log.previous_log.decision != "unset" %}/ {{ log.previous_log.get_decision_display }}{% endif %}
-                    {% else %}
-                      {{ log|choice_default_label:"stage" }}
-                    {% endif %}
-                  </td>
-                  <td>
-                    {{ log.get_stage_display }}
-                    {% if log.decision != "unset" %}/ {{ log.get_decision_display }}{% endif %}
-                  </td>
-                  <td>{{ log.update_comment }}</td>
+  {% if paginator.count %}
+    <h3 class="fr-mt-4w">Historique des changements</h3>
+    <div class="fr-table  procedure-history__table">
+      <div class="fr-table__wrapper">
+        <div class="fr-table__container">
+          <div class="fr-table__content">
+            <table>
+              <caption class="fr-mt-1w fr-mb-0">
+                {{ paginator.count }}
+                changement{{ paginator.count|pluralize }}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Date/heure de la saisie</th>
+                  <th scope="col">Date effective</th>
+                  <th scope="col">Auteur</th>
+                  <th scope="col">Étape / Décision départ</th>
+                  <th scope="col">Étape / Décision arrivée</th>
+                  <th scope="col">Commentaire</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {% for log in object_list %}
+                  <tr class="project">
+                    <td>{{ log.created_at|date:"Y/m/d - H:i" }}</td>
+                    <td>{{ log.status_date|date:"Y/m/d" }}</td>
+                    <td>
+                      <span class="described-by-tooltip"
+                            aria-describedby="email-tooltip-{{ forloop.counter }}">{{ log.created_by.email }}</span>
+                      <span class="fr-tooltip fr-placement"
+                            role="tooltip"
+                            id="email-tooltip-{{ forloop.counter }}">{{ log.created_by.email }}</span>
+                    </td>
+                    <td>
+                      {% if log.previous_log %}
+                        {{ log.previous_log.get_stage_display }}
+                        {% if log.previous_log.decision != "unset" %}
+                          <br />
+                          {{ log.previous_log.get_decision_display }}
+                        {% endif %}
+                      {% else %}
+                        {{ log|choice_default_label:"stage" }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {{ log.get_stage_display }}
+                      {% if log.decision != "unset" %}
+                        <br />
+                        {{ log.get_decision_display }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="described-by-tooltip"
+                            aria-describedby="comment-tooltip-{{ forloop.counter }}">{{ log.update_comment }}</span>
+                      <span class="fr-tooltip fr-placement"
+                            role="tooltip"
+                            id="comment-tooltip-{{ forloop.counter }}">{{ log.update_comment }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
 
+        </div>
       </div>
+      {% if page_obj.paginator.num_pages > 1 %}
+        <div class="fr-table__footer">
+          <div class="fr-table__footer--middle fr-mt-0">{% include "_pagination.html" with page_obj=page_obj %}</div>
+        </div>
+      {% endif %}
     </div>
-    {% if page_obj.paginator.num_pages > 1 %}
-      <div class="fr-table__footer">
-        <div class="fr-table__footer--middle fr-mt-0">{% include "_pagination.html" with page_obj=page_obj %}</div>
-      </div>
-    {% endif %}
-  </div>
+  {% endif %}
 {% endblock %}
 
 {% block extra_body %}
