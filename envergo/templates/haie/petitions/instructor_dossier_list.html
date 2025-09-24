@@ -54,6 +54,7 @@
                     à planter
                   </th>
                   <th scope="col">Commune</th>
+                  <th scope="col">Suivi</th>
                   <th></th>
                 </tr>
               </thead>
@@ -77,6 +78,21 @@
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{{ project.hedge_data.length_to_plant|floatformat:"0g" }}&nbsp;m</td>
                     <td>{{ project.city }}</td>
+                    <td>
+                      <form method="post"
+                            action="{% url 'petition_project_toggle_follow' project.reference %}">
+                        {% csrf_token %}
+                        {% if project.followed_up %}
+                          <input type="hidden" name="follow" value="false">
+                          <button class="fr-btn fr-btn--secondary fr-icon-star-fill fr-btn--icon-left"
+                                  type="submit">Ne plus suivre</button>
+                        {% else %}
+                          <input type="hidden" name="follow" value="true">
+                          <button class="fr-btn fr-btn--secondary fr-icon-star-line fr-btn--icon-left"
+                                  type="submit">Suivre</button>
+                        {% endif %}
+                      </form>
+                    </td>
                     <td>
                       <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right link-project-detail"
                          href="{% url 'petition_project_instructor_view' project.reference %}">

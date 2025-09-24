@@ -16,6 +16,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorView,
     PetitionProjectInvitationToken,
     PetitionProjectList,
+    toggle_follow_project,
 )
 
 instruction_urlpatterns = [
@@ -114,5 +115,10 @@ urlpatterns = [
         "<slug:reference>/invitations/<slug:token>/",
         PetitionProjectAcceptInvitation.as_view(),
         name="petition_project_accept_invitation",
+    ),
+    path(
+        "<slug:reference>/toggle_follow/",
+        toggle_follow_project,
+        name="petition_project_toggle_follow",
     ),
 ]
