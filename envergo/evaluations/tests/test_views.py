@@ -292,7 +292,7 @@ def test_eval_wizard_all_steps(
         res = client.post(url, data=data)
     assert res.status_code == 302
 
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to == ["urbanism@example.org"]
@@ -338,7 +338,7 @@ def test_eval_wizard_request_confirmation_recipient(
         res = client.post(url, data=data)
     assert res.status_code == 302
 
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to == ["sponsor1@example.org", "sponsor2@example.org"]
 
@@ -381,11 +381,11 @@ def test_eval_is_only_submitted_once(
     url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2  # first time both on_commit are called
 
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
-    assert len(callbacks) == 0
+    assert len(callbacks) == 1  # second time we call only the "post to automation" task
 
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
