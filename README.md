@@ -145,6 +145,7 @@ De nombreux outils sont mis en place pour garantir la qualité et l'homogénéit
  - [black pour l'auto-formattage du code python](https://github.com/psf/black)
  - [isort pour l'ordonnancement des imports python](https://github.com/PyCQA/isort)
  - [Djhtml pour l'indentation des templates](https://github.com/rtts/djhtml)
+ - [detect-secrets pour éviter d'introduire des secrets dans la code base](https://github.com/Yelp/detect-secrets)
 
 Pour activer tout ça :
 
