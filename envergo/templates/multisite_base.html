@@ -30,6 +30,7 @@
           href="{% static '@gouvfr/dsfr/dist/favicon/favicon.ico' %}"
           type="image/x-icon">
     {% block app_json_ld %}{% endblock %}
+    {% block open_graph %}{% endblock %}
     {% block css %}
       {% compress css %}
         <link href="{% static '@gouvfr/dsfr/dist/dsfr.css' %}" rel="stylesheet">
