@@ -44,7 +44,6 @@ def confirm_request_to_admin(request_id, host):
         HTTPError,
         SMTPException,
     ),
-    max_retries=5,
     retry_backoff=True,
 )
 def confirm_request_to_requester(request_id, host):
@@ -101,7 +100,6 @@ class BetterJsonSerializer(JSONSerializer):
 
 @app.task(
     autoretry_for=(HTTPError,),
-    max_retries=5,
     retry_backoff=True,
 )
 def post_evalreq_to_automation(request_id, host):
