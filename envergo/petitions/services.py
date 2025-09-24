@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.hedges.models import Hedge
+from envergo.hedges.models import HedgeList
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
 from envergo.petitions.demarches_simplifiees.models import (
     CheckboxChamp,
@@ -51,20 +51,6 @@ class Item:
 class DemarchesSimplifieesDetails:
     header_sections: list | None
     champs: list | None
-
-
-class HedgeList(list[Hedge]):
-    def __init__(self, *args, label=None, **kwargs):
-        self.label = label
-        super().__init__(*args, **kwargs)
-
-    @property
-    def length(self):
-        return sum(h.length for h in self)
-
-    @property
-    def names(self):
-        return ", ".join(h.id for h in self)
 
 
 def get_project_context(petition_project, moulinette) -> dict:
@@ -263,6 +249,9 @@ def get_messages_and_senders_from_ds(
     dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
 
     if not dossier_with_messages_as_dict:
+        logger.error(
+            f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
+        )
         return None, None, None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
@@ -273,6 +262,22 @@ def get_messages_and_senders_from_ds(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
     return messages, instructor_emails, petitioner_email
+
+
+def send_message_dossier_ds(petition_project, message_body):
+    """Send message via DS API for a given dossier"""
+
+    # Get dossier ID
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    dossier_id = petition_project.demarches_simplifiees_dossier_id
+    if not dossier_id or not dossier_number:
+        return None
+
+    # Send message
+    ds_client = DemarchesSimplifieesClient()
+    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+
+    return response
 
 
 def get_item_value_from_ds_champ(champ):

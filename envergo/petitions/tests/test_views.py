@@ -1,5 +1,6 @@
 import html
 import re
+from datetime import date, timedelta
 from unittest.mock import ANY, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
@@ -25,6 +26,7 @@ from envergo.petitions.models import DOSSIER_STATES, InvitationToken
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
@@ -451,6 +453,20 @@ def test_petition_project_instructor_view_reglementation_pages(
     project.refresh_from_db()
     assert project.onagre_number == "1234567"
 
+    # When I go to a regulation page
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
+    )
+    response = client.get(instructor_url)
+    # I should get ign_url and googlemap_url
+    assert "ign_url" in response.context
+    assert response.context["ign_url"].startswith("https://www.geoportail.gouv.fr/")
+    assert "google_maps_url" in response.context
+    assert response.context["google_maps_url"].startswith(
+        "https://www.google.com/maps/"
+    )
+
     # WHEN I post some instructor data as an invited instructor
     InvitationTokenFactory(user=haie_user, petition_project=project)
     client.force_login(haie_user)
@@ -509,10 +525,9 @@ def test_petition_project_instructor_display_dossier_ds_info(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_messagerie_ds(
-    mock_post, instructor_haie_user_44, client, site
+    mock_ds_query_execute, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
-    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -526,6 +541,10 @@ def test_petition_project_instructor_messagerie_ds(
     )
 
     client.force_login(instructor_haie_user_44)
+
+    # Test dossier get messages
+    assert not Event.objects.filter(category="message", event="lecture").exists()
+    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -536,9 +555,10 @@ def test_petition_project_instructor_messagerie_ds(
     assert "8 messages" in content
     assert "Coriandrum_sativum" in content
 
+    assert Event.objects.filter(category="message", event="lecture").exists()
+
     # Test if dossier has zero messages
-    mock_post.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
-    client.force_login(instructor_haie_user_44)
+    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
@@ -546,15 +566,23 @@ def test_petition_project_instructor_messagerie_ds(
     assert "<h2>Messagerie</h2>" in content
     assert "0 message" in content
 
-    # Test if dossier is empty
-    mock_post.return_value = "null"
-    client.force_login(instructor_haie_user_44)
+    # Test if dossier is empty : mock_response3_get_dossier_none
+    mock_ds_query_execute.return_value = "null"
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
     content = response.content.decode()
     assert "<h2>Messagerie</h2>" in content
     assert "Impossible de récupérer les informations du dossier" in content
+
+    # Test send message
+    assert not Event.objects.filter(category="message", event="envoi").exists()
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    message_data = {"message_body": "test"}
+    response = client.post(instructor_messagerie_url, message_data, follow=True)
+    content = response.content.decode()
+    assert "Le message a bien été envoyé sur Démarches Simplifiées." in content
+    assert Event.objects.filter(category="message", event="envoi").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -566,11 +594,15 @@ def test_petition_project_list(
     ConfigHaieFactory()
     ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # Create two projects non draft, one in 34 and one in 44
+    today = date.today()
+    last_month = today - timedelta(days=30)
     project_34 = PetitionProject34Factory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
     )
     project_44 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
     )
     response = client.get(reverse("petition_project_list"))
 
@@ -603,6 +635,8 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference in content
+    # ensure ordering is correct (most recent first)
+    assert content.index(project_34.reference) < content.index(project_44.reference)
 
     # GIVEN a user with access to haie, no departments but an invitation token
     InvitationTokenFactory(user=haie_user, petition_project=project_34)

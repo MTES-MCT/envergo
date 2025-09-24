@@ -56,6 +56,22 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         }
 
 
+class PetitionProjectInstructorMessageForm(forms.Form):
+    """Form to send a message through demarches simplifiées API."""
+
+    message_body = forms.CharField(
+        label="Votre message",
+        widget=forms.Textarea(
+            attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
+        ),
+    )
+
+    class Meta:
+        fields = [
+            "message_body",
+        ]
+
+
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
 
