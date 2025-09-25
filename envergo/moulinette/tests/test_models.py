@@ -7,7 +7,7 @@ from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import ZoneFactory
-from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigHaie,
     MoulinetteAmenagement,
