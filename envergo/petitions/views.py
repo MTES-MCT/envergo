@@ -1119,11 +1119,27 @@ def toggle_follow_project(request, reference):
 
     if request.POST.get("follow") == "true":
         project.followed_by.add(request.user)
+        switch = "on"
     else:
         project.followed_by.remove(request.user)
+        switch = "off"
 
     # Get the next URL from POST or referrer
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
+
+    log_event(
+        "projet",
+        "suivi",
+        request,
+        reference=project.reference,
+        switch=switch,
+        view=(
+            "liste"
+            if "liste" in next_url
+            else "detail" if "instruction" in next_url else next_url
+        ),
+        **get_matomo_tags(request),
+    )
 
     # Ensure the URL is safe (avoid open redirects)
     if not url_has_allowed_host_and_scheme(
