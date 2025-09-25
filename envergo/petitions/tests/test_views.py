@@ -1109,3 +1109,110 @@ def test_petition_project_procedure(
 
     # THEN he should be redirected to a 403 error page
     assert res.status_code == 403
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, site):
+    """Test follow up flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    toggle_follow_url = reverse(
+        "petition_project_toggle_follow",
+        kwargs={"reference": project.reference},
+    )
+    data = {
+        "next": reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": project.reference},
+        ),
+        "follow": "true",
+    }
+
+    # WHEN We try to follow the status page but no user is logged in
+    response = client.post(toggle_follow_url, data)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.post(toggle_follow_url, data)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(toggle_follow_url, data, follow=True)
+
+    # THEN the project is followed
+    assert response.status_code == 200
+    haie_user.refresh_from_db()
+    assert haie_user.followed_petition_projects.get(id=project.id)
+    event = Event.objects.get(category="projet", event="suivi")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["switch"] == "on"
+    assert event.metadata["view"] == "detail"
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.post(toggle_follow_url, data, follow=True)
+
+    # THEN the project is followed
+    assert response.status_code == 200
+    instructor_haie_user_44.refresh_from_db()
+    assert instructor_haie_user_44.followed_petition_projects.get(id=project.id)
+    assert Event.objects.filter(category="projet", event="suivi").count() == 2
+
+    # WHEN I switch off the follow up
+    data = {
+        "next": reverse("petition_project_list"),
+        "follow": "false",
+    }
+    response = client.post(toggle_follow_url, data, follow=True)
+
+    # THEN the project is followed
+    assert response.status_code == 200
+    instructor_haie_user_44.refresh_from_db()
+    assert not instructor_haie_user_44.followed_petition_projects.filter(
+        id=project.id
+    ).exists()
+
+    assert Event.objects.filter(category="projet", event="suivi").count() == 3
+    event = Event.objects.filter(category="projet", event="suivi").last()
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["switch"] == "off"
+    assert event.metadata["view"] == "liste"
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
+    """Test the buttons to toggle follow up are on the pages"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN the user is a department instructor that is not following the project
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN there is a "Suivre" button to follow up the project
+    assert response.status_code == 200
+    assert 'type="submit">Suivre</button>' in response.content.decode()
+
+    # WHEN the user is following the project
+    project.followed_by.add(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN there is a "Ne plus suivre" button to stop following up the project
+    assert response.status_code == 200
+    assert 'type="submit">Ne plus suivre</button>' in response.content.decode()
