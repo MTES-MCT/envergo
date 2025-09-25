@@ -354,7 +354,7 @@ class MoulinetteResultMixin:
             template_name = moulinette.get_result_non_disponible_template()
         elif not (moulinette.is_evaluation_available() or is_admin):
             template_name = moulinette.get_result_available_soon_template()
-        elif moulinette.has_missing_data():
+        elif not moulinette.is_valid():
             # This case should not happen, because we redirect to the form view
             # earlier
             template_name = moulinette.get_home_template()
@@ -465,9 +465,9 @@ class BaseMoulinetteResult(FormView):
             redirect_url = reverse("triage")
             redirect_url = update_qs(redirect_url, request.GET)
 
-        # Moulinette is invalid and there is no triage to do (amenagement)
+        # Moulinette is invalid and there is no triage to do (amenagement) or the triage is valid (haie)
         # so just redirect to the form
-        elif not moulinette.is_valid() and not (triage_form and triage_form.is_valid()):
+        elif moulinette.is_triage_valid() and not moulinette.is_valid():
             redirect_url = reverse("moulinette_form")
             redirect_url = update_qs(redirect_url, request.GET)
 
