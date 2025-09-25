@@ -955,7 +955,7 @@ class PetitionProjectInstructorAlternativeView(
         flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
         flat_qs["alternative"] = "true"
         alternative_form_url = (
-            f"{reverse("moulinette_home")}?{urlencode(flat_qs, doseq=True)}"
+            f"{reverse("moulinette_form")}?{urlencode(flat_qs, doseq=True)}"
         )
 
         context["alternative_form_url"] = alternative_form_url

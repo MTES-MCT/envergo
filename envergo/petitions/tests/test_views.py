@@ -922,7 +922,7 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
         assert False, "No href with alternative=true found"
 
     # WHEN the user create an alternative
-    res = client.get(alternative_url)
+    res = client.get(alternative_url, follow=True)
 
     # THEN the alternative form is displayed
     assert res.status_code == 200
