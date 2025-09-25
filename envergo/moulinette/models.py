@@ -2191,8 +2191,6 @@ class MoulinetteHaie(Moulinette):
         """
         context = super().get_extra_context(request)
         context["is_alternative"] = bool(request.GET.get("alternative", False))
-        context["department"] = self.department
-        context["config"] = self.config
 
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
