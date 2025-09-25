@@ -286,5 +286,5 @@ def test_moulinette_form_surface_field(client):
     assert res.status_code == 302
     assert (
         res.url
-        == "/simulateur/resultat/?created_surface=1500&existing_surface=0&final_surface=1500&address=&lng=-1.54394&lat=47.21381"
+        == "/simulateur/resultat/?created_surface=1500&existing_surface=0&final_surface=1500&address=&lng=-1.54394&lat=47.21381"  # noqa
     )
