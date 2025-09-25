@@ -810,7 +810,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         petition_project,
         moulinette,
     )
-    assert context["motif"] == "amelioration_culture"
+    assert "Amélioration des conditions d’exploitation agricole" in context["motif"]
 
     aa_bord_voie_destruction_hedge = context["aa_bord_voie_destruction_detail"][0]
     assert (
