@@ -61,9 +61,12 @@
 
   {% if has_hedges_outside_department %}
     <div class="fr-alert fr-alert--warning fr-mb-4w">
-      <h3 class="fr-alert__title">Au moins une des haies est située hors du département</h3>
+      <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
       <p>
-        Au moins une des haies est située en dehors du département choisi pour cette simulation – {{ config.department }}. Vérifiez que vous avez choisi le bon département en début de simulation, ou <a href="{% url 'contact_us' %}" target="_blank" rel="noopener">contactez le guichet unique</a> si le projet est à cheval sur plusieurs départements.
+        Au moins un des linéaires saisi est situé hors du département choisi pour cette simulation – {{ config.department }}.
+      </p>
+      <p>
+         Vous pouvez poursuivre la simulation si le projet est en majorité situé dans ce département, mais la décision de l'administration pourra différer du résultat du simulateur. <a href="{% url 'contact_us' %}">Contactez-nous</a> pour toute question.
       </p>
     </div>
   {% endif %}
