@@ -94,19 +94,22 @@ def test_triage_result(client):
     full_url = f"{url}?{params}"
     res = client.get(full_url)
 
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<h2>Doctrine du département</h2>" in content
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_debug_result(client):
     """WIP: Test for debug page.
     Missing fixtures criteria ep and pac for MoulinetteHaie"""
 
     ConfigHaieFactory()
-    haies = HedgeDataFactory()
+    haies = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+    )
 
     data = {
         "profil": "autre",
@@ -222,8 +225,13 @@ def test_result_p_view_non_soumis_with_r_gt_0(client):
 )
 def test_moulinette_post_form_error(client):
     ConfigHaieFactory()
-    url = reverse("moulinette_home")
-    data = {"foo": "bar"}
+    url = reverse("moulinette_form")
+    data = {
+        "foo": "bar",
+        "department": "44",
+        "element": "haie",
+        "travaux": "destruction",
+    }
     res = client.post(f"{url}?department=44&element=haie&travaux=destruction", data)
 
     assert res.status_code == 200
