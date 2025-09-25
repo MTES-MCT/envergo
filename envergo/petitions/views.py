@@ -1116,6 +1116,10 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
 @require_POST
 def toggle_follow_project(request, reference):
     project = get_object_or_404(PetitionProject, reference=reference)
+    if not project.has_user_as_instructor(request.user):
+        return TemplateResponse(
+            request=request, template="haie/petitions/403.html", status=403
+        )
 
     if request.POST.get("follow") == "true":
         project.followed_by.add(request.user)
