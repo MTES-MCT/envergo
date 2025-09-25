@@ -787,3 +787,12 @@ section#moulinette-regulation-result {
     }
   }
 }
+
+div#project-header-container {
+  display: flex;
+  align-items: start;
+
+  form {
+    margin-left: 2em;
+  }
+}

@@ -77,19 +77,7 @@
                     <td>{{ project.city }}</td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>
-                      <form method="post"
-                            action="{% url 'petition_project_toggle_follow' project.reference %}">
-                        {% csrf_token %}
-                        {% if project.followed_up %}
-                          <input type="hidden" name="follow" value="false">
-                          <button class="fr-btn fr-btn--secondary fr-icon-star-fill fr-btn--icon-left"
-                                  type="submit">Ne plus suivre</button>
-                        {% else %}
-                          <input type="hidden" name="follow" value="true">
-                          <button class="fr-btn fr-btn--secondary fr-icon-star-line fr-btn--icon-left"
-                                  type="submit">Suivre</button>
-                        {% endif %}
-                      </form>
+                      {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>
                   </tr>
                 {% endfor %}

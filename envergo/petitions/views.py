@@ -580,6 +580,20 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     event_category = "projet"
     event_action = None
 
+    def get_queryset(self):
+        current_user = self.request.user
+        queryset = super().get_queryset()
+
+        queryset = queryset.annotate(
+            followed_up=Exists(
+                PetitionProject.followed_by.through.objects.filter(
+                    petitionproject_id=OuterRef("pk"),
+                    user_id=current_user.pk,
+                )
+            )
+        )
+        return queryset
+
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
