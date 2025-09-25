@@ -1122,6 +1122,7 @@ class ConfigHaie(ConfigBase):
                         }
                     )
 
+    @classmethod
     def get_demarche_simplifiee_value_sources(self):
         """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
 
@@ -1336,9 +1337,7 @@ class Moulinette(ABC):
         self.form_kwargs = form_kwargs
 
         if self.bound_form.is_valid():
-            self.catalog = MoulinetteCatalog(**self.bound_form.cleaned_data)
-            self.catalog.update(self.get_catalog_data())
-            self.catalog["config"] = self.config
+            self.catalog = self.get_catalog_data()
             if self.config and self.config.id and hasattr(self.config, "templates"):
                 self.templates = {t.key: t for t in self.config.templates.all()}
             else:
@@ -1720,7 +1719,14 @@ class Moulinette(ABC):
     def get_catalog_data(self):
         """Populate the catalog with any needed data."""
 
-        return {}
+        catalog = MoulinetteCatalog(**self.bound_form.cleaned_data)
+        catalog.update(
+            {
+                "config": self.config,
+                "department": self.department,
+            }
+        )
+        return catalog
 
     def is_evaluation_available(self):
         return self.config and self.config.is_activated and self.is_valid()
@@ -2190,6 +2196,7 @@ class MoulinetteHaie(Moulinette):
         context = super().get_extra_context(request)
         context["is_alternative"] = bool(request.GET.get("alternative", False))
         context["department"] = self.department
+        context["config"] = self.config
 
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
@@ -2207,7 +2214,6 @@ class MoulinetteHaie(Moulinette):
         """Fetch / compute data required for further computations."""
 
         data = super().get_catalog_data()
-
         # TODO check if this goes in extra context
         if "haies" in data:
             hedges = data["haies"]
