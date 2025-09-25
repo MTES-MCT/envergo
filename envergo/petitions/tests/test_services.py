@@ -195,7 +195,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         ]
     )
     ConfigHaieFactory()
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "localisation_pac": "non",
@@ -204,7 +204,8 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         "element": "haie",
         "department": 44,
     }
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
     get_context_from_ds(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
@@ -368,15 +369,16 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             },
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
-        "localisation_pac": "non",
+        "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="ep")
     CriterionFactory(
@@ -392,7 +394,8 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesAisneForm",
     )
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_aisne_get_instructor_view_context(
         moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
     )
@@ -479,15 +482,17 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             },
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
-        "localisation_pac": "non",
+        "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
+        "numero_pacage": "123456789",
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="ep")
     CriterionFactory(
@@ -503,7 +508,8 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
     )
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_normandie_get_instructor_view_context(
         moulinette.ep.ep_normandie._evaluator, petition_project, moulinette
     )
@@ -626,15 +632,17 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
             },
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
-        "localisation_pac": "non",
+        "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
+        "lineaire_total": 5000,
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="conditionnalite_pac")
     CriterionFactory(
@@ -647,7 +655,8 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     petition_project = PetitionProjectFactory(hedge_data=hedges)
     ConfigHaieFactory()
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     info = bcae8_get_instructor_view_context(
         moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
     )
@@ -657,7 +666,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "lineaire_to_plant_pac": 27.55060841703869,
         "pac_destruction_detail": [ANY],
         "pac_plantation_detail": [ANY],
-        "percentage_pac": "",
+        "percentage_pac": ANY,
         "replanting_ratio": 1.0,
         "replanting_ratio_comment": "Linéaire à planter / linéaire à détruire, sur "
         "parcelle PAC",
@@ -761,8 +770,8 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         ]
     )
 
-    moulinette_data = {
-        "motif": "amelioration",
+    data = {
+        "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "non",
         "haies": hedges,
@@ -770,6 +779,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         "element": "haie",
         "department": 44,
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="alignement_arbres")
     CriterionFactory(
@@ -782,13 +792,14 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     petition_project = PetitionProjectFactory(hedge_data=hedges)
     ConfigHaieFactory()
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     context = alignement_arbres_get_instructor_view_context(
         moulinette.alignement_arbres.alignement_arbres._evaluator,
         petition_project,
         moulinette,
     )
-    assert context["motif"] == "amelioration"
+    assert context["motif"] == "amelioration_culture"
 
     aa_bord_voie_destruction_hedge = context["aa_bord_voie_destruction_detail"][0]
     assert (
