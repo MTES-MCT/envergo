@@ -316,11 +316,11 @@ class Evaluation(models.Model):
         from envergo.moulinette.utils import compute_surfaces
 
         if not hasattr(self, "_moulinette"):
-            raw_params = self.moulinette_params
-            surfaces = compute_surfaces(raw_params)
+            data = self.moulinette_params
+            surfaces = compute_surfaces(data)
             for k, v in surfaces.items():
-                raw_params[k] = v
-            moulinette_data = {"initial": raw_params, "data": raw_params}
+                data[k] = v
+            moulinette_data = {"initial": data, "data": data}
             self._moulinette = (
                 MoulinetteAmenagement(  # there is only Amenagement evaluations
                     moulinette_data

@@ -1720,12 +1720,6 @@ class Moulinette(ABC):
         """Populate the catalog with any needed data."""
 
         catalog = MoulinetteCatalog(**self.bound_form.cleaned_data)
-        catalog.update(
-            {
-                "config": self.config,
-                "department": self.department,
-            }
-        )
         return catalog
 
     def is_evaluation_available(self):
@@ -1850,7 +1844,10 @@ class Moulinette(ABC):
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
 
-        return {}
+        return {
+            "department": self.department,
+            "config": self.config,
+        }
 
     def get_map_center(self):
         """Returns at what coordinates the perimeter."""
@@ -1923,10 +1920,9 @@ class MoulinetteAmenagement(Moulinette):
     def get_catalog_data(self):
         """Fetch / compute data required for further computations."""
 
-        lng = self.catalog["lng"]
-        lat = self.catalog["lat"]
-
         catalog = super().get_catalog_data()
+        lng = catalog["lng"]
+        lat = catalog["lat"]
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)

@@ -155,7 +155,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "champ_789": "http://haie.local:3000/projet/ABC123",
         "champ_abc": "true",
         "champ_def": "false",
-        "champ_ghi": "true",
+        "champ_ghi": "false",
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
