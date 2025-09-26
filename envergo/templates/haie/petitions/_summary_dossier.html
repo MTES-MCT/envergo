@@ -1,7 +1,10 @@
 {% load petitions %}
 
 <div class="alt fr-py-4w fr-px-2w fr-pl-md-10w">
-  <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
+  <div id="project-header-container">
+    <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
+    {% include 'haie/petitions/_follow_form.html' with reference=petition_project.reference followed_up=petition_project.followed_up %}
+  </div>
   <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
     <li>
       {% if petition_project.demarches_simplifiees_date_depot %}

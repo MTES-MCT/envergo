@@ -154,6 +154,13 @@ class PetitionProject(models.Model):
         "Motif du changement d'étape", null=True, blank=True
     )
 
+    followed_by = models.ManyToManyField(
+        "users.User",
+        related_name="followed_petition_projects",
+        blank=True,
+        verbose_name="Instructeurs suivant le projet",
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 

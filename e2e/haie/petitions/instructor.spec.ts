@@ -6,7 +6,7 @@ test('Instructor can instruct a project', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Email address' }).fill('user@test.fr');
   await page.getByRole('textbox', { name: 'Password' }).fill('Sésame');
   await page.getByRole('textbox', { name: 'Password' }).press('Enter');
-  await page.getByRole('link', { name: 'Dossier EGRAZY en détail' }).click();
+  await page.getByRole('link', { name: '123456' }).click();
 
   await expect(page.getByRole('heading', { name: 'Résumé du dossier' })).toBeVisible();
   await expect(page.getByText('Informations saisies par le demandeur')).toBeVisible();
