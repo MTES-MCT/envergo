@@ -7,7 +7,11 @@ from django.views.generic import RedirectView
 
 from config.urls import handler500  # noqa
 from envergo.evaluations.views import ShortUrlAdminRedirectView
-from envergo.users.views import NewsletterDoubleOptInConfirmation, NewsletterOptIn
+from envergo.users.views import (
+    LoginView,
+    NewsletterDoubleOptInConfirmation,
+    NewsletterOptIn,
+)
 
 from .urls import urlpatterns as common_urlpatterns
 
@@ -15,9 +19,7 @@ from .urls import urlpatterns as common_urlpatterns
 auth_patterns = [
     path(
         _("login/"),
-        auth_views.LoginView.as_view(
-            template_name="amenagement/registration/login.html"
-        ),
+        LoginView.as_view(template_name="amenagement/registration/login.html"),
         name="login",
     ),
     path(
