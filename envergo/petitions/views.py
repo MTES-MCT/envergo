@@ -1115,6 +1115,7 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
 @login_required
 @require_POST
 def toggle_follow_project(request, reference):
+    """Toggle follow/unfollow a petition project"""
     project = get_object_or_404(PetitionProject, reference=reference)
     if not project.has_user_as_instructor(request.user):
         return TemplateResponse(

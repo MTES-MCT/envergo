@@ -97,20 +97,21 @@
 
 {% endblock %}
 {% block extra_js %}
+  <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
   <script>
-  window.addEventListener('load', function() {
-    document.querySelectorAll("#table-dossier-list tbody tr").forEach(row => {
-    const link = row.querySelector("td:first-child a");
-    if (!link) return;
+    window.addEventListener('load', function () {
+      document.querySelectorAll("#table-dossier-list tbody tr").forEach(row => {
+        const link = row.querySelector("td:first-child a");
+        if (!link) return;
 
-    row.addEventListener("click", (e) => {
-      // Prevent row click if user clicked another link or a button
-      if (e.target.closest("a, button, input, textarea, select")) return;
-      window.location.href = link.href;
+        row.addEventListener("click", (e) => {
+          // Prevent row click if user clicked another link or a button
+          if (e.target.closest("a, button, input, textarea, select")) return;
+          window.location.href = link.href;
+        });
+
+        row.style.cursor = "pointer";
+      });
     });
-
-    row.style.cursor = "pointer";
-  });
-  });
   </script>
 {% endblock %}
