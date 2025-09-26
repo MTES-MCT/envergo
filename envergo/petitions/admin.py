@@ -1,8 +1,11 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.petitions.models import InvitationToken, PetitionProject
+from envergo.users.models import User
 
 
 class InvitationTokenInlineForm(forms.ModelForm):
@@ -35,8 +38,31 @@ class DepartmentFilter(admin.SimpleListFilter):
         return queryset
 
 
+class UserMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return obj.email
+
+
+class PetitionProjectAdminForm(forms.ModelForm):
+    followed_by = UserMultipleChoiceField(
+        label="Instructeurs suivant le projet",
+        queryset=User.objects.all(),
+        widget=FilteredSelectMultiple(_("Users"), is_stacked=False),
+        required=False,
+    )
+
+    class Meta:
+        model = PetitionProject
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["followed_by"].widget.can_add_related = False
+
+
 @admin.register(PetitionProject)
 class PetitionProjectAdmin(admin.ModelAdmin):
+    form = PetitionProjectAdminForm
     list_display = (
         "reference",
         "created_at",

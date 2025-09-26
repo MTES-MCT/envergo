@@ -1,14 +1,15 @@
-<form method="post"
+<form class="follow-up-form"
+      method="post"
       action="{% url 'petition_project_toggle_follow' reference %}">
   {% csrf_token %}
   <input type="hidden" name="next" value="{{ request.get_full_path }}">
   {% if followed_up %}
     <input type="hidden" name="follow" value="false">
-    <button class="fr-btn fr-btn--secondary fr-icon-star-fill fr-btn--icon-left"
+    <button class="fr-btn fr-btn--sm fr-btn--secondary fr-icon-star-fill fr-btn--icon-left"
             type="submit">Ne plus suivre</button>
   {% else %}
     <input type="hidden" name="follow" value="true">
-    <button class="fr-btn fr-btn--secondary fr-icon-star-line fr-btn--icon-left"
+    <button class="fr-btn fr-btn--sm fr-btn--secondary fr-icon-star-line fr-btn--icon-left"
             type="submit">Suivre</button>
   {% endif %}
 </form>
