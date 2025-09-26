@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from config.urls import handler500  # noqa
-from envergo.users.views import ActivateAccount, Register, RegisterSuccess
+from envergo.users.views import ActivateAccount, LoginView, Register, RegisterSuccess
 
 from .urls import urlpatterns as common_urlpatterns
 
@@ -14,7 +14,7 @@ from .urls import urlpatterns as common_urlpatterns
 auth_patterns = [
     path(
         _("login/"),
-        auth_views.LoginView.as_view(
+        LoginView.as_view(
             template_name="haie/registration/login.html", next_page="/projet/liste"
         ),
         name="login",
