@@ -450,7 +450,7 @@ TYPE_STATIONNEMENT_CHOICES = (
         {
             "label": "Entièrement privé",
             "help_text": """Emplacements attachés à des logements ou réservés aux employés
-            d’une entreprise ; en sous-sol ou en extérieur.""",
+            d’une entreprise ; en sous-sol ou en extérieur.""",
         },
         "Entièrement privé",
     ),
