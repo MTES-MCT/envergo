@@ -376,7 +376,7 @@ class Evaluation(models.Model):
         moulinette = self.get_moulinette()
         template = "evaluations/_content.html"
 
-        # Evaluations exist only for EnvErgo Amenagement:
+        # Evaluations exist only for Envergo Amenagement:
         evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
         share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
 

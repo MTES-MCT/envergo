@@ -7,9 +7,11 @@
 {% block body-classes %}moulinette-result-body{% endblock %}
 
 {% block container %}
-
   <div id="project-result" class="fr-col">
-    <section class="fr-py-4w fr-px-2w">
+    <section id="project-result-top-bar">
+      {% block project-result-top-bar %}{% endblock %}
+    </section>
+    <section id="project-result-content" class="fr-py-4w fr-px-2w">
       {% block messages_in_result %}
         {% include '_messages.html' %}
       {% endblock %}
@@ -34,10 +36,10 @@
       {% endif %}
       <p class="fr-text print-only">
         Simulation réalisée sur
-        <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
+        <a title="Envergo : la réglementation environnementale pour les projets de construction et d'aménagement"
            href="{{ envergo_url }}"
            target="_blank"
-           rel="noopener external">EnvErgo</a>
+           rel="noopener external">Envergo</a>
       </p>
       <p class="fr-text print-only">
         Cette simulation est

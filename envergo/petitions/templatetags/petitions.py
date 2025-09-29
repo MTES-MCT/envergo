@@ -25,21 +25,37 @@ def criterion_instructor_side_nav(regulation, criterion):
 
 
 @register.simple_tag(takes_context=True)
-def criterion_instructor_view_part(
+def instructor_view_part(
     context,
-    part_name: Literal["instructor_result_details", "plantation_condition_details"],
+    part_name: Literal[
+        "instructor_result_details",
+        "plantation_condition_details",
+        "key_elements",
+        "instruction_guidelines",
+    ],
     regulation,
-    criterion,
     project,
     moulinette,
+    criterion=None,
 ):
     """Render a specific part of the instructor view for a criterion."""
 
-    template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
     context_dict = context.flatten()
-    context_dict.update(
-        get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
-    )
+
+    if criterion is None:
+        template = f"haie/petitions/{regulation.slug}/{part_name}.html"
+        for regulation_criterion in regulation.criteria.all():
+            context_dict.update(
+                get_instructor_view_context(
+                    regulation_criterion.get_evaluator(), project, moulinette
+                )
+            )
+    else:
+        template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
+        context_dict.update(
+            get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
+        )
+
     try:
         return render_to_string(
             template,
@@ -82,6 +98,21 @@ def regulation_has_condition_to_display(plantation_evaluation, regulation):
             ):
                 return True
     return False
+
+
+@register.simple_tag
+def ds_sender_category(message_sender_email, sender_emails_categories):
+    """Return appropriate class according to the sender"""
+
+    for key, item in sender_emails_categories.items():
+        if isinstance(item, list):
+            if message_sender_email in item:
+                return key
+        else:
+            if message_sender_email == item:
+                return key
+
+    return "instructor"
 
 
 @register.filter

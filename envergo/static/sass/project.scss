@@ -1266,10 +1266,13 @@ $content-max-width: 40rem;
     }
 
     #project-result {
-      margin-left: $result-margin-left;
+      & > section#project-result-top-bar {
+        margin-left: $main-column-margin-left;
+        max-width: inherit;
+      }
 
-      & > section {
-        margin: 0;
+      & > section#project-result-content {
+        margin: 0 0 0 $result-margin-left;
       }
     }
 
@@ -1558,6 +1561,12 @@ footer {
   }
 
   &.header-slim {
+    .fr-nav__btn {
+      // slimify nav buttons
+      min-height: 1rem;
+      padding: 0 1rem;
+    }
+
     @media (width >= 62em) {
       .fr-header__body-row {
         padding: 0.75rem 0;
@@ -1994,11 +2003,13 @@ main.demos {
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {
-  background-image: url("/static/images/marker-icon.png"),
+  background-image:
+    url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png");
 
   /* normal[, Retina] */
-  cursor: url("/static/images/marker-icon.png"),
+  cursor:
+    url("/static/images/marker-icon.png"),
     url("/static/images/marker-icon-2x.png"), auto;
 
   /* normal[, Retina], auto for compliance with cursor syntax */

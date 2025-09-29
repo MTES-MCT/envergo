@@ -88,6 +88,7 @@ REGULATIONS = Choices(
     ("ep", "Espèces protégées"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
+    ("reserves_naturelles", "Réserves naturelles"),
 )
 
 
@@ -101,10 +102,10 @@ RESULT_CASCADE = [
     RESULTS.soumis_autorisation,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
+    RESULTS.dispense_sous_condition,
     RESULTS.action_requise,
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
-    RESULTS.dispense_sous_condition,
     RESULTS.non_soumis,
     RESULTS.dispense,
     RESULTS.non_concerne,
@@ -588,10 +589,8 @@ class Regulation(models.Model):
         return RESULTS_GROUP_MAPPING[self.result]
 
     def has_instructor_result_details_template(self) -> bool:
-        """Check if the regulation has a template for instructor result details for at least one criterion."""
-        return self.has_criterion_template(
-            "haie/petitions/{}/{}_instructor_result_details.html"
-        )
+        """Check if the regulation has a template for instructor result details."""
+        return self.has_template("haie/petitions/{}/instructor_result_details.html")
 
     def has_plantation_condition_details_template(self) -> bool:
         """Check if the regulation has a template for plantation condition details for at least one criterion."""
@@ -600,8 +599,12 @@ class Regulation(models.Model):
         )
 
     def has_key_elements_template(self) -> bool:
-        """Check if the regulation has a template for key elements for at least one criterion."""
-        return self.has_criterion_template("haie/petitions/{}/{}_key_elements.html")
+        """Check if the regulation has a template for key elements."""
+        return self.has_template("haie/petitions/{}/key_elements.html")
+
+    def has_instruction_guidelines_template(self) -> bool:
+        """Check if the regulation has a template for guidelines for instruction."""
+        return self.has_template("haie/petitions/{}/instruction_guidelines.html")
 
     def has_criterion_template(self, template_path) -> bool:
         """Check if the regulation has a template of the given path for at least one criterion."""
@@ -612,6 +615,14 @@ class Regulation(models.Model):
             except TemplateDoesNotExist:
                 pass
         return False
+
+    def has_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path."""
+        try:
+            get_template(template_path.format(self.slug))
+            return True
+        except TemplateDoesNotExist:
+            return False
 
 
 class Criterion(models.Model):
@@ -1326,8 +1337,8 @@ class Moulinette(ABC):
             self.raw_data = raw_data.dict()
         else:
             self.raw_data = raw_data
-        self.catalog = MoulinetteCatalog(**data)
-        self.catalog.update(self.get_catalog_data())
+
+        self.catalog = self.init_catalog(data)
 
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
@@ -1339,6 +1350,8 @@ class Moulinette(ABC):
             self.templates = {t.key: t for t in self.config.templates.all()}
         else:
             self.templates = {}
+
+        self.populate_catalog()
 
         self.evaluate()
 
@@ -1452,30 +1465,60 @@ class Moulinette(ABC):
         )
         return regulations
 
-    def get_catalog_data(self):
-        return {}
+    def init_catalog(self, data):
+        """Initialize the catalog with the moulinette data.
+
+        This method can be overridden to customize the catalog initialization.
+        """
+        return MoulinetteCatalog(**data)
+
+    def populate_catalog(self):
+        """Populate the catalog with any needed data.
+
+        Unlike init_catalog this method is called at the end of __init__, when the department, config, etc have already
+        been fetched.
+        This method can be overridden to customize the catalog population.
+        """
+        pass
 
     def is_evaluation_available(self):
         return self.config and self.config.is_activated
 
     def form_errors(self):
+        return self.required_form_errors() | self.optional_form_errors()
+
+    def required_form_errors(self):
         form_errors = {}
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
+                if criterion.is_optional:
+                    continue
                 form = criterion.get_form()
-                # We check for each form for errors
                 if form:
                     form.full_clean()
 
-                    # For optional forms, we only check for errors if the form
-                    # was activated (the "activate" checkbox was selected)
-                    if (
-                        criterion.is_optional
-                        and self.activate_optional_criteria
-                        and form.is_activated()
-                    ) or not criterion.is_optional:
+                    for k, v in form.errors.items():
+                        form_errors[k] = v
+
+        return form_errors
+
+    def optional_form_errors(self):
+        form_errors = {}
+        if not self.activate_optional_criteria:
+            return form_errors
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if not criterion.is_optional:
+                    continue
+                form = criterion.get_form()
+                # For optional forms, we only check for errors if the form
+                # was activated (the "activate" checkbox was selected)
+                if form:
+                    form.full_clean()
+                    if form.is_activated():
                         for k, v in form.errors.items():
-                            form_errors[k] = v
+                            form_errors[f"{form.prefix}-{k}"] = v
 
         return form_errors
 
@@ -1751,13 +1794,13 @@ class MoulinetteAmenagement(Moulinette):
 
         return criteria
 
-    def get_catalog_data(self):
+    def init_catalog(self, data):
         """Fetch / compute data required for further computations."""
 
-        catalog = super().get_catalog_data()
+        catalog = super().init_catalog(data)
 
-        lng = self.catalog["lng"]
-        lat = self.catalog["lat"]
+        lng = catalog["lng"]
+        lat = catalog["lat"]
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
@@ -1914,6 +1957,7 @@ class MoulinetteHaie(Moulinette):
         "natura2000_haie",
         "alignement_arbres",
         "urbanisme_haie",
+        "reserves_naturelles",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
@@ -2031,7 +2075,7 @@ class MoulinetteHaie(Moulinette):
         department = (
             (
                 Department.objects.defer("geometry")
-                .filter(confighaie__is_activated=True, department=department_code)
+                .filter(department=department_code)
                 .select_related("confighaie")
                 .first()
             )
@@ -2046,14 +2090,25 @@ class MoulinetteHaie(Moulinette):
                 department.confighaie.hedge_maintenance_html
             )
 
+        context["is_alternative"] = bool(request.GET.get("alternative", False))
+
         return context
+
+    def populate_catalog(self):
+        """Fetch / compute data required for further computations."""
+        super().populate_catalog()
+
+        if "haies" in self.catalog:
+            hedges = self.catalog["haies"]
+            self.catalog["has_hedges_outside_department"] = (
+                hedges.has_hedges_outside_department(self.department)
+            )
 
     def get_department(self):
         department_code = self.raw_data.get("department", None)
         department = (
             (
-                Department.objects.defer("geometry")
-                .select_related("confighaie")
+                Department.objects.select_related("confighaie")
                 .filter(department=department_code)
                 .annotate(centroid=Centroid("geometry"))
                 .first()

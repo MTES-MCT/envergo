@@ -80,7 +80,13 @@ auth_patterns = [
 urlpatterns = [
     path("", include("envergo.pages.urls_amenagement")),
     path(_("accounts/"), include(auth_patterns)),
-    path(_("users/"), include("envergo.users.urls")),
+    path(
+        _("accounts/"), include("envergo.users.urls")
+    ),  # /!\ accounts prefix is loading sub routes from two sources
+    path(
+        f"{_('users/')}<path:subpath>",
+        RedirectView.as_view(url=f"/{_('accounts/')}%(subpath)s", permanent=True),
+    ),
     path(
         "a/<slug:reference>/",
         ShortUrlAdminRedirectView.as_view(),

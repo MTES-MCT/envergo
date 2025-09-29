@@ -417,6 +417,7 @@ DEMARCHES_SIMPLIFIEES = {
     "DOSSIER_DOMAIN_BLACK_LIST": env.list(
         "DJANGO_DOSSIER_DOMAIN_BLACK_LIST", default=[]
     ),
+    "INSTRUCTEUR_ID": env("DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID", default=None),
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
@@ -439,7 +440,15 @@ BREVO = {
     ),
 }
 
-HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
+HAIE_FAQ_URL = (
+    "https://www.notion.so/"
+    "Guichet-unique-de-la-haie-Ressources-pour-les-usagers-17efe5fe47668058a991eb26153a70b0"
+)
+HAIE_INSTRUCTORS_FAQ_URL = (
+    "https://www.notion.so/"
+    "Guichet-unique-de-la-haie-Ressources-pour-les-services-coordonnateurs-"
+    "et-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718"
+)
 
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
     "static/gpkg/hedge_data_export_template.gpkg"

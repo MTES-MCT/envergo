@@ -1,12 +1,12 @@
 {% extends 'emails/_base.html' %}
 
-{% block email_title %}Activation compte EnvErgo{% endblock %}
+{% block email_title %}Activation compte Envergo{% endblock %}
 
 {% block content %}
 
   <p>Bonjour,</p>
 
-  <p>Vous venez de faire la demande d'une création d'espace personnalisé sur EnvErgo.</p>
+  <p>Vous venez de faire la demande d'un compte Envergo.</p>
 
   <p>
     Il reste une étape pour l'activer.
@@ -14,7 +14,13 @@
   </p>
 
   <p>
-    <a href="{{ full_activate_url }}">Activez votre compte EnvErgo.</a>
+    <a href="{{ full_activate_url }}">Activez votre compte Envergo.</a>
+  </p>
+
+  <p>
+    Vous pouvez également copier cette adresse dans votre navigateur :
+    <br />
+    {{ full_activate_url }}
   </p>
 
   <p>Si vous n'êtes pas à l'initiative de cette demande, merci de ne pas prendre cet e-mail en compte.</p>

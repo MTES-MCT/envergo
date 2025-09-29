@@ -29,7 +29,7 @@ def nav_link(url, label, *event_data, aria_current=False, data_testid=None):
         test_attribute = f'data-testid="{data_testid}"'
 
     return mark_safe(
-        f"""<a class="fr-nav__link" href="{url}" {aria_current} {data_attrs} {test_attribute}">
+        f"""<a class="fr-nav__link" href="{url}" {aria_current} {data_attrs} {test_attribute}>
             {label}
         </a>"""
     )
@@ -184,7 +184,7 @@ def collapsible_menu(
 
 @register.simple_tag()
 def nb_available_depts(site: Literal["haie", "amenagement"] = "amenagement"):
-    """Return nb of depts where EnvErgo is available."""
+    """Return nb of depts where Envergo is available."""
     Config = {"haie": ConfigHaie, "amenagement": ConfigAmenagement}.get(site)
     return Config.objects.filter(is_activated=True).count()
 

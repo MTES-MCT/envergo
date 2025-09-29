@@ -1,12 +1,12 @@
-# EnvErgo
+# Envergo
 
 Améliorer la prise en compte de l'environnement dans les projets d'urbanisme.
 
 
 ## À propos
 
-Cette page concerne le code source du projet EnvErgo. Pour en savoir plus sur le
-projet lui-même, se référer au site [EnvErgo.beta.gouv.fr](https://envergo.beta.gouv.fr).
+Cette page concerne le code source du projet Envergo. Pour en savoir plus sur le
+projet lui-même, se référer au site [Envergo.beta.gouv.fr](https://envergo.beta.gouv.fr).
 
 ## Solution technique
 
@@ -77,7 +77,7 @@ $ docker compose run --rm django python manage.py collectstatic
 
 ```
 
-Ajouter dans `/etc/hosts` les domaines utilisés pour EnvErgo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
+Ajouter dans `/etc/hosts` les domaines utilisés pour Envergo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
 
 ```
 <url du conteneur envergo_django> envergo.local haie.local
@@ -145,6 +145,7 @@ De nombreux outils sont mis en place pour garantir la qualité et l'homogénéit
  - [black pour l'auto-formattage du code python](https://github.com/psf/black)
  - [isort pour l'ordonnancement des imports python](https://github.com/PyCQA/isort)
  - [Djhtml pour l'indentation des templates](https://github.com/rtts/djhtml)
+ - [detect-secrets pour éviter d'introduire des secrets dans la code base](https://github.com/Yelp/detect-secrets)
 
 Pour activer tout ça :
 
@@ -365,10 +366,22 @@ Le point d'entrée se trouve dans le fichier `Procfile`.
 
 Les scripts utilisés sont dans le répertoire `bin`.
 
+Le workflow à suivre :
+
+1. Envoyer un message sur le canal #startup-envergo-produit pour prévenir de la mise en production imminente
+2. S'assurer du bon fonctionnement de main en local (notamment les nouvelles fonctionnalités)
+3. Si la CI est ok sur la branche main, fusionner main dans prod et pousser la branche prod
+4. Quand le déploiement est terminé, vérifier que le site est bien accessible
+5. Prévenir sur le canal de la finalisation de la mise en prod
+6. Fusionner la branche main dans staging et pousser la branche staging
+7. (facultatif) fusionner et tester les mises à jour de dépendance proposées par Snyk
+
+Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
+
 
 ### Installation des dépendances Géo sur Scalingo
 
-EnvErgo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
+Envergo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
 externes pour les fonctions géographiques (gdal, geos, proj…).
 
 Pour installer ces dépendances, [Scalingo proposait un buildpack

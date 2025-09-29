@@ -5,6 +5,7 @@ from math import ceil, isclose
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import TO_PLANT, TO_REMOVE
 
 
 class PlantationCondition(ABC):
@@ -127,7 +128,7 @@ class MinLengthPacCondition(PlantationCondition):
 class QualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
-    valid_text = "La qualité écologique du linéaire planté est suffisante."
+    valid_text = "Le type de haie plantée convient."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
@@ -314,7 +315,7 @@ HEDGE_KEYS = OrderedDict(
 class NormandieQualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
-    valid_text = "La qualité écologique du linéaire planté est suffisante."
+    valid_text = "Le type de haie plantée convient."
     invalid_text = """
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
@@ -329,7 +330,7 @@ class NormandieQualityCondition(PlantationCondition):
     }
 
     def evaluate(self):
-        LC = self.catalog["LC"]  # linéaire à compenser
+        LC = self.catalog["LC"].copy()  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
 
         LPm = LC.copy()
@@ -366,8 +367,11 @@ class NormandieQualityCondition(PlantationCondition):
         remaining_lc = sum(LC.values())
         self.result = remaining_lc == 0
 
-        if self.criterion_evaluator.result_code == "dispense_L350":
-            # If the EP Normandie result code is "dispense_L350",
+        if (
+            self.criterion_evaluator.result_code == "dispense_L350"
+            or self.criterion_evaluator.result_code == "a_verifier_L350"
+        ):
+            # If the EP Normandie result code is "dispense_L350" or "a_verifier_L350,
             # we consider that the condition is always valid.
             self.result = True
 
@@ -583,6 +587,26 @@ class LineaireSurTalusCondition(PlantationCondition):
         return self
 
 
+class EssencesBocageresCondition(PlantationCondition):
+    label = "Essences bocagères"
+    order = 5
+    valid_text = "Toutes les haies à planter sont composées d'essences bocagères."
+    invalid_text = """
+        Au moins une haie à planter est composée d’essences non bocagères.
+        Elles ne sont pas acceptées en guise de compensation.
+    """
+
+    def evaluate(self):
+
+        def non_bocageres_filter(h):
+            return h.prop("essences_non_bocageres")
+
+        non_bocageres = filter(non_bocageres_filter, self.hedge_data.hedges_to_plant())
+        self.result = len(list(non_bocageres)) == 0
+        self.context = {}
+        return self
+
+
 class PlantationConditionMixin:
     """A mixin for a criterion evaluator with hedge replantation conditions.
 
@@ -620,17 +644,17 @@ class TreeAlignmentsCondition(PlantationCondition):
         return self.criterion_evaluator.result_code != RESULTS.non_soumis
 
     def evaluate(self):
+        hedges_to_remove_aa_bord_voie = self.hedge_data.hedges_filter(
+            TO_REMOVE, "alignement", "bord_voie"
+        )
+        hedges_to_plant_aa_bord_voie = self.hedge_data.hedges_filter(
+            TO_PLANT, "alignement", "bord_voie"
+        )
         length_to_remove_aa_bord_voie = sum(
-            hedge.length
-            for hedge in self.hedge_data.hedges_to_remove()
-            if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
+            h.length for h in hedges_to_remove_aa_bord_voie
         )
         length_to_plant_aa_bord_voie = sum(
-            hedge.length
-            for hedge in self.hedge_data.hedges_to_plant()
-            if hedge.hedge_type == "alignement"
-            and hedge.prop("bord_voie")
-            and hedge.prop("mode_plantation") == "plantation"
+            h.length for h in hedges_to_plant_aa_bord_voie
         )
 
         from envergo.moulinette.regulations.alignementarbres import AlignementsArbres

@@ -6,6 +6,7 @@ from envergo.moulinette.models import (
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
+    MoulinetteTemplate,
     Perimeter,
     Regulation,
 )
@@ -18,6 +19,14 @@ class ConfigAmenagementFactory(DjangoModelFactory):
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
     regulations_available = ["loi_sur_leau", "sage", "natura2000", "eval_env"]
+
+
+class MoulinetteTemplateFactory(DjangoModelFactory):
+    class Meta:
+        model = MoulinetteTemplate
+
+    config = factory.SubFactory(ConfigAmenagementFactory)
+    content = factory.Faker("text")
 
 
 class RegulationFactory(DjangoModelFactory):
@@ -67,6 +76,7 @@ class ConfigHaieFactory(DjangoModelFactory):
         "ep",
         "natura2000_haie",
         "alignement_arbres",
+        "reserves_naturelles",
     ]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [

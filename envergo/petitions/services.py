@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
-from envergo.hedges.models import Hedge
+from envergo.hedges.models import HedgeList
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
 from envergo.petitions.demarches_simplifiees.models import (
     CheckboxChamp,
@@ -53,35 +53,8 @@ class DemarchesSimplifieesDetails:
     champs: list | None
 
 
-@dataclass
-class ProjectDetails:
-    """Project details class formatted to be displayed in templates"""
-
-    demarches_simplifiees_dossier_number: int
-    demarche_simplifiee_number: int
-    usager: str
-    applicant: str
-    city: str
-    organization: str
-    ds_data: DemarchesSimplifieesDetails | None
-
-
-class HedgeList(list[Hedge]):
-    def __init__(self, *args, label=None, **kwargs):
-        self.label = label
-        super().__init__(*args, **kwargs)
-
-    @property
-    def length(self):
-        return sum(h.length for h in self)
-
-    @property
-    def names(self):
-        return ", ".join(h.id for h in self)
-
-
 def get_project_context(petition_project, moulinette) -> dict:
-    """Build context for petition project instructor page view"""
+    """Get parts of context for instructor pages from the PetitionProject"""
 
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
@@ -130,12 +103,8 @@ def get_project_context(petition_project, moulinette) -> dict:
     return context
 
 
-def get_instructor_view_context(petition_project, moulinette) -> dict:
-    """Build context for ProjectDetails instructor page view"""
-
-    # Build project details
-    project_summary = get_project_context(petition_project, moulinette)
-
+def get_context_from_ds(petition_project, moulinette) -> dict:
+    """Get parts of context for instructor pages from Demarches Simplifiées"""
     # Get ds details
     config = moulinette.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
@@ -186,7 +155,6 @@ def get_instructor_view_context(petition_project, moulinette) -> dict:
         "organization": organization,
         "applicant": applicant,
     }
-    context.update(project_summary)
 
     return context
 
@@ -228,23 +196,15 @@ def extract_data_from_fields(config, dossier):
     return city, organization, pacage
 
 
-def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectDetails:
+def compute_instructor_informations_ds(
+    petition_project,
+) -> DemarchesSimplifieesDetails | None:
     """Compute ProjectDetails with instructor informations"""
     # Get ds details
-    config = moulinette.config
-
     dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
 
     if not dossier:
-        return ProjectDetails(
-            demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-            demarche_simplifiee_number=config.demarche_simplifiee_number,
-            usager="",
-            applicant="",
-            city="",
-            organization="",
-            ds_data=None,
-        )
+        return None
 
     demarche = dossier.demarche
     champs = dossier.champs
@@ -270,21 +230,18 @@ def compute_instructor_informations_ds(petition_project, moulinette) -> ProjectD
         champs_display,
     )
 
-    city, organization, _ = extract_data_from_fields(config, dossier)
-
-    return ProjectDetails(
-        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-        demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=dossier.usager.email or "",
-        applicant=dossier.applicant_name or "",
-        city=city,
-        organization=organization,
-        ds_data=ds_details,
-    )
+    return ds_details
 
 
-def get_messages_from_ds(petition_project):
-    """Get messages from DS"""
+def get_messages_and_senders_from_ds(
+    petition_project,
+) -> (List | None, List | None, str | None):
+    """Get messages and sender emails from DS
+
+    :param petition_project: PetitionProject object
+
+    :return: tuple (messages list, instructor emails list, petitioner email)
+    """
 
     # Get messages only from DS
     dossier_number = petition_project.demarches_simplifiees_dossier_number
@@ -292,13 +249,35 @@ def get_messages_from_ds(petition_project):
     dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
 
     if not dossier_with_messages_as_dict:
-        return None
+        logger.error(
+            f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
+        )
+        return None, None, None
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
+    petitioner_email = dossier.usager.email
+    instructor_emails = [i.email for i in dossier.instructeurs]
+
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
-    return messages
+    return messages, instructor_emails, petitioner_email
+
+
+def send_message_dossier_ds(petition_project, message_body):
+    """Send message via DS API for a given dossier"""
+
+    # Get dossier ID
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    dossier_id = petition_project.demarches_simplifiees_dossier_id
+    if not dossier_id or not dossier_number:
+        return None
+
+    # Send message
+    ds_client = DemarchesSimplifieesClient()
+    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+
+    return response
 
 
 def get_item_value_from_ds_champ(champ):
@@ -309,12 +288,12 @@ def get_item_value_from_ds_champ(champ):
     value = champ.stringValue or ""
 
     if isinstance(champ, CheckboxChamp):
-        if champ.value:
+        if champ.stringValue == "true":
             value = "oui"
         else:
             value = "non"
     elif isinstance(champ, YesNoChamp):
-        if champ.value:
+        if champ.stringValue == "true":
             value = "oui"
         else:
             value = "non"

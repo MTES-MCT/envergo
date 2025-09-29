@@ -6,7 +6,7 @@ class SetUrlConfBasedOnSite:
     """Depending on the served site, the urlconf will vary.
     We are not overriding settings.ROOT_URLCONF because settings should not be changed at runtime,
     it implies erratic behavior.
-    By default, we use the EnvErgo Amenagement urlconf.
+    By default, we use the Envergo Amenagement urlconf.
     If the site is the Haie site, we use the Envergo Haie urlconf.
     """
 

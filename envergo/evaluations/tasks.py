@@ -64,7 +64,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Votre demande d'avis réglementaire",
+        subject="[Envergo] Votre demande d'avis réglementaire",
         body=txt_body,
         from_email=settings.FROM_EMAIL["amenagement"]["evaluations"],
         to=user_emails,
@@ -116,6 +116,12 @@ def post_evalreq_to_automation(request_id, host):
                     request_history[email] += 1
         extra_data["request_history"] = dict(request_history)
 
+    # Extract the additional file urls
+    # In local environment, this will return file paths
+    # But in production, the S3 storage will return full urls
+    files = request.additional_files.all()
+    extra_data["files"] = [f.file.storage.url(f.file.name) for f in files]
+
     post_a_model_to_automation(request, webhook_url, **extra_data)
 
 
@@ -130,7 +136,7 @@ def warn_admin_of_email_error(recipient_status_id):
     evalreq = evaluation.request
     base_url = get_base_url(
         settings.ENVERGO_AMENAGEMENT_DOMAIN
-    )  # Evaluations exist only for EnvErgo Amenagement.
+    )  # Evaluations exist only for Envergo Amenagement.
     eval_url = reverse(
         "admin:evaluations_evaluation_change",
         args=[evaluation.reference],

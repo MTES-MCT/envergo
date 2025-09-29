@@ -54,11 +54,17 @@ def test_dossier_submission_admin_alert(
                 "nodes": [
                     {
                         "number": 21059675,
+                        "id": "RG9zc2llci0yMzE3ODQ0Mw==",
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
                     },
                     {
                         "number": 123,
+                        "id": "UW9zc2llci0yRiO3ODQ0Mw==",
                         "state": "en_construction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
                         "champs": [
@@ -68,6 +74,10 @@ def test_dossier_submission_admin_alert(
                                 "stringValue": "",
                             },
                         ],
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
                     },
                 ],
             },
@@ -81,7 +91,18 @@ def test_dossier_submission_admin_alert(
             "number": 103363,
             "dossiers": {
                 "pageInfo": {"hasNextPage": False, "endCursor": None},
-                "nodes": [],
+                "nodes": [
+                    {
+                        "number": 21059676,
+                        "id": "SH9zc2llci0yMzE3OATrSw==",
+                        "state": "en_construction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
+                    },
+                ],
             },
         }
     }
@@ -92,7 +113,7 @@ def test_dossier_submission_admin_alert(
     call_command("dossier_submission_admin_alert")
 
     args, kwargs = mock_notify_model.call_args_list[0]
-    assert "Un dossier a été soumis sur Démarches Simplifiées" in args[0]
+    assert "### Nouveau dossier – Loire-Atlantique (44)" in args[0]
     assert "haie" in args[1]
 
     args, kwargs = mock_notify_command.call_args_list[0]
@@ -100,9 +121,10 @@ def test_dossier_submission_admin_alert(
         "Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH."
         in args[0]
     )
+    assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
     assert "haie" in args[1]
 
-    assert mock_notify_command.call_count == 1
+    assert mock_notify_command.call_count == 2
     assert mock_notify_model.call_count == 1
     project.refresh_from_db()
     assert project.demarches_simplifiees_date_depot == datetime.datetime(
