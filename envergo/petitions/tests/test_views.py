@@ -1,4 +1,8 @@
-from unittest.mock import Mock, patch
+import html
+import re
+from datetime import date, timedelta
+from unittest.mock import ANY, Mock, patch
+from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
@@ -8,6 +12,7 @@ from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.models import TO_PLANT
@@ -21,7 +26,10 @@ from envergo.petitions.models import DOSSIER_STATES, InvitationToken
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     GET_DOSSIER_FAKE_RESPONSE,
+    GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
+    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
@@ -140,12 +148,10 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 
     # Assert the body of the requests.post call
     expected_body = {
-        "champ_123": "Autre (collectivité, aménageur, gestionnaire de réseau, "
-        "particulier, etc.)",
+        "champ_123": None,
         "champ_321": "ABC123",
         "champ_456": None,  # improve this test by configuring a result for bcae8
-        "champ_654": "http://haie.local:3000/simulateur/resultat/?profil=autre&motif=autre&reimplantation=non"
-        "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=44&travaux=destruction&element=haie",
+        "champ_654": ANY,
         "champ_789": "http://haie.local:3000/projet/ABC123",
         "champ_abc": "true",
         "champ_def": "false",
@@ -211,6 +217,42 @@ def test_petition_project_detail(mock_post, client, site):
     response = client.get(petition_project_url)
     assert response.status_code == 200
     assert "moulinette" in response.context
+    # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
+    assert response.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        in response.content.decode()
+    )
+
+    # Given hedges in department 44 and accross the department border
+    hedge_44 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
+        ]
+    )
+    hedge_44_85 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
+            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    project = PetitionProjectFactory(reference="DEF456", hedge_data=hedges)
+    petition_project_url = reverse(
+        "petition_project",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN I get the project detail page
+    response = client.get(petition_project_url)
+
+    # THEN I should see that there is no hedges to remove outside the department
+    assert not response.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        not in response.content.decode()
+    )
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -337,10 +379,13 @@ def test_petition_project_instructor_notes_view(
     assert response.status_code == 200
 
     # Submit notes
+    assert not Event.objects.filter(category="projet", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
+
+    assert Event.objects.filter(category="projet", event="edition_notes").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -395,7 +440,7 @@ def test_petition_project_instructor_view_reglementation_pages(
     content = response.content.decode()
     assert "Acceptabilité de la plantation" in content
     assert "Maintien des haies PAC" in content
-    assert "Résultats de la simulation" in content
+    assert "Réponse du simulateur" in content
 
     # Test ep regulation url
     instructor_url = reverse(
@@ -407,6 +452,20 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert response.url == instructor_url
     project.refresh_from_db()
     assert project.onagre_number == "1234567"
+
+    # When I go to a regulation page
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
+    )
+    response = client.get(instructor_url)
+    # I should get ign_url and googlemap_url
+    assert "ign_url" in response.context
+    assert response.context["ign_url"].startswith("https://www.geoportail.gouv.fr/")
+    assert "google_maps_url" in response.context
+    assert response.context["google_maps_url"].startswith(
+        "https://www.google.com/maps/"
+    )
 
     # WHEN I post some instructor data as an invited instructor
     InvitationTokenFactory(user=haie_user, petition_project=project)
@@ -455,7 +514,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     assert "Formulaire détaillé et pièces jointes" in content
     assert "Vous déposez cette demande en tant que :" in content
 
-    assert "Données saisies pour la simulation" in content
+    assert "Informations saisies par le demandeur" in content
     assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
 
 
@@ -466,10 +525,9 @@ def test_petition_project_instructor_display_dossier_ds_info(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_messagerie_ds(
-    mock_post, instructor_haie_user_44, client, site
+    mock_ds_query_execute, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
-    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -483,11 +541,48 @@ def test_petition_project_instructor_messagerie_ds(
     )
 
     client.force_login(instructor_haie_user_44)
+
+    # Test dossier get messages
+    assert not Event.objects.filter(category="message", event="lecture").exists()
+    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     assert response.status_code == 200
 
     content = response.content.decode()
     assert "<h2>Messagerie</h2>" in content
+    assert "Il manque les infos de la PAC" in content
+    assert "mer. 2 avril 2025 11h01" in content
+    assert "8 messages" in content
+    assert "Coriandrum_sativum" in content
+
+    assert Event.objects.filter(category="message", event="lecture").exists()
+
+    # Test if dossier has zero messages
+    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+    assert "0 message" in content
+
+    # Test if dossier is empty : mock_response3_get_dossier_none
+    mock_ds_query_execute.return_value = "null"
+    response = client.get(instructor_messagerie_url)
+    assert response.status_code == 200
+
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+    assert "Impossible de récupérer les informations du dossier" in content
+
+    # Test send message
+    assert not Event.objects.filter(category="message", event="envoi").exists()
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    message_data = {"message_body": "test"}
+    response = client.post(instructor_messagerie_url, message_data, follow=True)
+    content = response.content.decode()
+    assert "Le message a bien été envoyé sur Démarches Simplifiées." in content
+    assert Event.objects.filter(category="message", event="envoi").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -499,11 +594,15 @@ def test_petition_project_list(
     ConfigHaieFactory()
     ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # Create two projects non draft, one in 34 and one in 44
+    today = date.today()
+    last_month = today - timedelta(days=30)
     project_34 = PetitionProject34Factory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
     )
     project_44 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
     )
     response = client.get(reverse("petition_project_list"))
 
@@ -536,6 +635,8 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference in content
+    # ensure ordering is correct (most recent first)
+    assert content.index(project_34.reference) < content.index(project_44.reference)
 
     # GIVEN a user with access to haie, no departments but an invitation token
     InvitationTokenFactory(user=haie_user, petition_project=project_34)
@@ -620,6 +721,9 @@ def test_petition_project_invitation_token(
     assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
+    event = Event.objects.get(category="projet", event="invitation")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["department"] == "44"
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -696,22 +800,22 @@ def test_petition_project_accept_invitation(client, haie_user, site):
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-def test_petition_project_instructor_form(
+def test_petition_project_instructor_notes_form(
     client, haie_user, instructor_haie_user_44, site
 ):
-    """Post onagre and instruction note"""
+    """Post instruction note as different users"""
 
     # GIVEN a petition project
     ConfigHaieFactory()
     project = PetitionProjectFactory()
-    instructor_form_url = reverse(
-        "petition_project_instructor_view",
+    instructor_notes_form_url = reverse(
+        "petition_project_instructor_notes_view",
         kwargs={"reference": project.reference},
     )
 
     # WHEN I post some instructor data without being logged in
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
@@ -723,7 +827,7 @@ def test_petition_project_instructor_form(
     # WHEN I post some instructor data without being authorized
     client.force_login(haie_user)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
@@ -736,7 +840,7 @@ def test_petition_project_instructor_form(
     InvitationTokenFactory(user=haie_user, petition_project=project)
     client.force_login(haie_user)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
@@ -750,16 +854,257 @@ def test_petition_project_instructor_form(
     # WHEN I post some instructor data with a department instructor
     client.force_login(instructor_haie_user_44)
     response = client.post(
-        instructor_form_url,
+        instructor_notes_form_url,
         {
             "instructor_free_mention": "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place",
         },
     )
     # THEN it should update the project
     assert response.status_code == 302
-    assert "/projet/ABC123/instruction/" in response.url
+    assert response.url == instructor_notes_form_url
     project.refresh_from_db()
     assert (
         project.instructor_free_mention
         == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
     )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+def test_petition_project_alternative(client, haie_user, instructor_haie_user_44, site):
+    """Test alternative flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the alternative page by no user is logged in
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(alternative_url)
+
+    # THEN the page is displayed
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulation alternative</h2>" in content
+
+    # Find all href attributes in the HTML
+    hrefs = re.findall(r'href="([^"]+)"', content)
+
+    alternative_url = None
+    for raw_href in hrefs:
+        href = html.unescape(raw_href)
+        parsed_url = urlparse(href)
+        qs = parse_qs(parsed_url.query)
+        if qs.get("alternative") == ["true"]:
+            # Found the first matching href
+            assert href.startswith("/")
+            alternative_url = href
+            break
+    else:
+        assert False, "No href with alternative=true found"
+
+    # WHEN the user create an alternative
+    res = client.get(alternative_url)
+
+    # THEN the alternative form is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/?alternative=true";'
+        in content
+    )
+
+    # WHEN the user visit the result page of an alternative
+    result_url = alternative_url.replace("/formulaire", "/resultat")
+    res = client.get(result_url, follow=True)
+    # THEN the result page is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat/?alternative=true";'
+        in content
+    )
+    assert "Partager cette page par email" not in content
+
+    # WHEN the user visit the result plantation page of an alternative
+    result_url = alternative_url.replace("/formulaire", "/resultat-plantation")
+    res = client.get(result_url, follow=True)
+    # THEN the result page is displayed
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "<b>Simulation alternative</b> à la simulation initiale" in content
+    assert (
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat-plantation/?alternative=true";'
+        in content
+    )
+    assert "Partager cette page par email" not in content
+    assert "La demande d'autorisation est prête à être complétée" not in content
+    assert "Copier le lien de cette page" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_instructor_view_with_hedges_outside_department(
+    client, instructor_haie_user_44
+):
+    """Test if a warning is displayed when some hedges are outside department"""
+    # GIVEN a moulinette with at least an hedge to remove outside the department
+
+    client.force_login(instructor_haie_user_44)
+    ConfigHaieFactory()
+    hedge_14 = HedgeFactory(
+        latLngs=[
+            {"lat": 49.37830760743562, "lng": 0.10241746902465822},
+            {"lat": 49.37828490574639, "lng": 0.10244965553283693},
+        ]
+    )  # this hedge is in department 14
+    hedges = HedgeDataFactory(hedges=[hedge_14])
+    project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
+
+    # WHEN requesting the result plantation page
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+
+    # THEN the result page is displayed with a warning
+    assert res.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située en dehors du département"
+        in res.content.decode()
+    )
+
+    # Given hedges in department 44 and accross the department border
+    hedge_44 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
+        ]
+    )
+    hedge_44_85 = HedgeFactory(
+        latLngs=[
+            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
+            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+        ]
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    # WHEN requesting the result plantation page
+    res = client.get(project_url)
+
+    # THEN the result page is displayed without warning
+    assert not res.context["has_hedges_outside_department"]
+    assert (
+        "Au moins une des haies est située hors du département"
+        not in res.content.decode()
+    )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@patch("envergo.petitions.views.notify")
+def test_petition_project_procedure(
+    mock_notify, client, haie_user, instructor_haie_user_44, site
+):
+    """Test procedure flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the status page by no user is logged in
+    response = client.get(status_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN the page is displayed but the edition button is not there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Modifier</button>" not in content
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN the page is displayed and the edition button is there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Modifier</button>" in content
+
+    # WHEN the user edit the status
+    data = {
+        "stage": "clos",
+        "decision": "sans_suite",
+        "stage_update_comment": "aucun retour depuis 15 ans",
+        "stage_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+
+    # THEN the state is up to date
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "clos"
+    assert project.decision == "sans_suite"
+    event = Event.objects.get(category="projet", event="modification_statut")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["etape_f"] == "clos"
+    assert event.metadata["decision_f"] == "sans_suite"
+    assert event.metadata["etape_i"] == "a_instruire"
+    assert event.metadata["decision_i"] == "unset"
+
+    assert mock_notify.call_count == 1
+    args, kwargs = mock_notify.call_args_list[0]
+    assert "### Mise à jour du statut d'un dossier GUH Loire-Atlantique (44)" in args[0]
+    assert "haie" in args[1]
+
+    # WHEN the user try to edit the status as an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    res = client.post(status_url, data)
+
+    # THEN he should be redirected to a 403 error page
+    assert res.status_code == 403

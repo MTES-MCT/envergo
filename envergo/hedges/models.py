@@ -2,16 +2,18 @@ import operator
 import uuid
 from functools import reduce
 
+import shapely
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models import Exists, F, OuterRef, Q
 from django.utils import timezone
 from model_utils import Choices
-from pyproj import Geod
+from pyproj import Geod, Transformer
 from shapely import LineString, centroid, union_all
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
     compute_hedge_density_around_point,
     get_department_from_coords,
@@ -61,6 +63,16 @@ class Hedge:
     def geos_geometry(self):
         geom = GEOSGeometry(self.geometry.wkt, srid=EPSG_WGS84)
         return geom
+
+    @property
+    def geometry_lamb93(self):
+        """Return a shapely geometry with a Lambert 93 projection."""
+
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+        lamb93 = shapely.transform(
+            self.geometry, transformer.transform, interleaved=False
+        )
+        return lamb93
 
     @property
     def length(self):
@@ -168,6 +180,20 @@ class Hedge:
         return zones
 
 
+class HedgeList(list[Hedge]):
+    def __init__(self, *args, label=None, **kwargs):
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    @property
+    def length(self):
+        return sum(h.length for h in self)
+
+    @property
+    def names(self):
+        return ", ".join(h.id for h in self)
+
+
 class HedgeData(models.Model):
     """Hedge data model.
     Field data is a json listing hedges"""
@@ -260,6 +286,56 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type == "alignement"
         )
 
+    def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
+        """HedgeData filter
+
+        Args:
+            hedge_to: TO_PLANT or TO_REMOVE
+            hedge_type: hedge type from HEDGE_TYPES
+            props: other hedge properties
+
+        Returns:
+            HedgeList: hedges list filtered
+
+        Raises:
+            ValueError: If hedge to or type argument has a wrong value
+        """
+
+        def hedge_selection(hedge):
+            """Select h in hedges to return"""
+            result = True
+
+            # Check type_haie
+            if "!" in hedge_type:
+                result = result and not hedge.hedge_type == hedge_type.replace("!", "")
+            else:
+                result = result and hedge.hedge_type == hedge_type
+
+            # Check for each prop if
+            for prop in props:
+                operator_not = False
+                if "!" in prop:
+                    operator_not = True
+                    prop = prop.replace("!", "")
+                if hedge.has_property(prop):
+                    if operator_not:
+                        result = result and not hedge.prop(prop)
+                    else:
+                        result = result and hedge.prop(prop)
+            return result
+
+        if hedge_to == TO_REMOVE:
+            hedges_filtered = self.hedges_to_remove()
+        elif hedge_to == TO_PLANT:
+            hedges_filtered = self.hedges_to_plant()
+        else:
+            raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
+
+        if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
+            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+
+        return HedgeList([hedge for hedge in hedges_filtered if hedge_selection(hedge)])
+
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
         return any(h.proximite_mare for h in self.hedges_to_remove())
@@ -309,6 +385,22 @@ class HedgeData(models.Model):
             self.save()
 
         return self._density
+
+    def has_hedges_outside_department(self, department: Department):
+        """
+        Check if any hedge in the HedgeData instance is outside the given department geometry.
+
+        Args:
+            department: The department model with its geometry prefetched.
+
+        Returns:
+            bool: True if there are hedges outside the department geometry, False otherwise.
+        """
+        department_geom = GEOSGeometry(department.geometry.wkt)
+        for hedge in self.hedges():
+            if not department_geom.intersects(hedge.geos_geometry):
+                return True
+        return False
 
 
 HEDGE_TYPES = (
@@ -456,3 +548,21 @@ class SpeciesMapFile(models.Model):
 
     def __str__(self):
         return self.file.name
+
+
+PACAGE_RE = r"[0-9]{9}"
+
+
+class Pacage(models.Model):
+    """Holds data related to pacage numbers."""
+
+    pacage_num = models.CharField(
+        "Numéro de PACAGE", validators=[RegexValidator(PACAGE_RE)], primary_key=True
+    )
+    exploitation_density = models.DecimalField(
+        "Densité de l'exploitation", max_digits=5, decimal_places=2
+    )
+
+    class Meta:
+        verbose_name = "Infos Pacage"
+        verbose_name_plural = "Infos Pacage"

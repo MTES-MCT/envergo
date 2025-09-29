@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
+from django.forms.widgets import NumberInput
 from django.template import Context, Template
 from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
@@ -12,6 +13,7 @@ from django.template.loader import get_template, render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
+from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.regulations import HedgeDensityMixin
 
@@ -162,10 +164,25 @@ def field_summary(field):
     if value is None:
         value = ""
 
-    # try to add thousands separator
+    # Try to add thousands separator
     if isinstance(value, (int, float, Decimal)):
         value = floatformat(value, "g")
-    elif isinstance(value, str) and value.isdigit():
+
+    # Some values are str, from fields with NumberInput,
+    # or from TextInput widget but numeric mode
+    # or from fields with TextInput but should not be displayed as an integer
+    # exemple :
+    # - lineaire_total in moulinette/regulation/conditionnalitepac.py : numeric mode
+    # - numero_pacage in moulinette/regulation/ep.py : not integer
+    # TODO : use NumberInput for fields waiting for digits ?
+    elif (
+        isinstance(value, str)
+        and value.isdigit()
+        and (
+            field.field.widget is NumberInput
+            or field.field.widget.attrs.get("inputmode") == "numeric"
+        )
+    ):
         try:
             value = intcomma(value)
         except (TypeError, ValueError):
@@ -221,19 +238,26 @@ def show_plantation_result(context, plantation_evaluation):
     template_name = (
         f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
     )
-    try:
-        content = render_to_string((template_name,), context_data)
-    except TemplateDoesNotExist:
-        logger.error(
-            "Template for GUH global plantation result is missing.",
-            extra={
-                "result": plantation_evaluation.global_result,
-                "template_name": template_name,
-            },
-        )
-        content = ""
 
-    return content
+    if (
+        context.get("is_alternative", False)
+        and not plantation_evaluation.display_for_alternatives
+    ):
+        html = ""
+    else:
+        try:
+            content = render_to_string((template_name,), context_data)
+            html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
+        except TemplateDoesNotExist:
+            logger.error(
+                "Template for GUH global plantation result is missing.",
+                extra={
+                    "result": plantation_evaluation.global_result,
+                    "template_name": template_name,
+                },
+            )
+            html = ""
+    return mark_safe(html)
 
 
 @register.simple_tag(takes_context=True)
@@ -312,3 +336,8 @@ def display_remove_only_haies_field(field):
     value = floatformat(hedge_data.length_to_remove(), "0g")
     html = f"<strong>Linéaire de haies à détruire :</strong> {value} m"
     return mark_safe(html)
+
+
+@register.simple_tag
+def humanize_motif(motif):
+    return dict(MOTIF_CHOICES).get(motif, "Motif non défini")

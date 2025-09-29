@@ -39,6 +39,21 @@ DOSSIER_STATES = Choices(
     ("sans_suite", _("No follow-up")),
 )
 
+STAGES = Choices(
+    ("a_instruire", "À instruire"),
+    ("instruction", "Instruction"),
+    ("redaction_decision", "Rédaction décision"),
+    ("notification_publicite", "Notification & publicité"),
+    ("clos", "Dossier clos"),
+)
+
+DECISIONS = Choices(
+    ("unset", "À déterminer"),
+    ("accord", "Accord"),
+    ("opposition", "Opposition"),
+    ("sans_suite", "Classé sans suite"),
+)
+
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
 
@@ -67,6 +82,7 @@ class PetitionProject(models.Model):
         editable=False,
         blank=True,
         null=True,
+        verbose_name="Département",
     )
 
     hedge_data = models.ForeignKey(
@@ -76,6 +92,10 @@ class PetitionProject(models.Model):
 
     demarches_simplifiees_dossier_number = models.IntegerField(
         help_text=_("Dossier number on demarches-simplifiees.fr"), blank=True, null=True
+    )
+
+    demarches_simplifiees_dossier_id = models.CharField(
+        help_text=_("Dossier ID on demarches-simplifiees.fr"), blank=True, null=True
     )
 
     demarches_simplifiees_state = models.CharField(
@@ -107,6 +127,31 @@ class PetitionProject(models.Model):
 
     instructor_free_mention = models.TextField(
         "Mention libre de l'instructeur", blank=True
+    )
+
+    stage = models.CharField(
+        "Étape",
+        max_length=30,
+        choices=STAGES,
+        default=STAGES.a_instruire,
+    )
+
+    decision = models.CharField(
+        "Décision",
+        max_length=30,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
+    )
+
+    stage_date = models.DateField(
+        "Date effective du changement d'étape", null=True, blank=True
+    )
+    stage_updated_at = models.DateTimeField(
+        "Date de saisie du changement d'étape", null=True, blank=True
+    )
+
+    stage_update_comment = models.TextField(
+        "Motif du changement d'étape", null=True, blank=True
     )
 
     # Meta fields
@@ -169,18 +214,11 @@ class PetitionProject(models.Model):
 
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
-
-            demarche_name = (
-                dossier["demarche"]["title"]
-                if "demarche" in dossier and "title" in dossier["demarche"]
-                else "Nom inconnu"
-            )
             demarche_number = (
                 dossier["demarche"]["number"]
                 if "demarche" in dossier and "number" in dossier["demarche"]
                 else "Numéro inconnu"
             )
-            demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
 
             ds_url = self.get_demarches_simplifiees_instructor_url(demarche_number)
 
@@ -188,6 +226,10 @@ class PetitionProject(models.Model):
             admin_url = reverse(
                 "admin:petitions_petitionproject_change",
                 args=[self.pk],
+            )
+
+            instructor_url = reverse(
+                "petition_project_instructor_view", kwargs={"reference": self.reference}
             )
 
             usager_email = (
@@ -202,7 +244,8 @@ class PetitionProject(models.Model):
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "demarche_label": demarche_label,
+                    "dossier_number": self.demarches_simplifiees_dossier_number,
+                    "instructor_url": f"https://{haie_site.domain}{instructor_url}",
                     "ds_url": ds_url,
                     "admin_url": f"https://{haie_site.domain}{admin_url}",
                     "usager_email": usager_email,
@@ -243,6 +286,7 @@ class PetitionProject(models.Model):
                 **self.get_log_event_data(),
             )
 
+        self.demarches_simplifiees_dossier_id = dossier["id"]
         self.demarches_simplifiees_state = dossier["state"]
         if "dateDepot" in dossier and dossier["dateDepot"]:
             self.demarches_simplifiees_date_depot = parser.isoparse(

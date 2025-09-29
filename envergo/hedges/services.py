@@ -38,17 +38,26 @@ PLANTATION_RESULT_MATRIX = {
         RESULTS.non_soumis,
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
-    # not used for now:
     (
         RESULTS.action_requise,
         PlantationResults.Inadequate.value,
-    ): RESULTS.non_disponible,
-    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.non_disponible,
+    ): PlantationResults.Inadequate.value,
+    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.action_requise,
+    # not used for now:
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,
     ): RESULTS.non_disponible,
     (RESULTS.non_disponible, PlantationResults.Adequate.value): RESULTS.non_disponible,
+}
+
+DISPLAY_FOR_ALTERNATIVES_MATRIX = {
+    RESULTS.interdit: True,
+    RESULTS.soumis: False,
+    RESULTS.non_soumis: False,
+    RESULTS.action_requise: False,
+    PlantationResults.Inadequate.value: True,
+    RESULTS.non_disponible: True,
 }
 
 
@@ -75,6 +84,16 @@ def _check_plantation_result_matrix():
 
 
 _check_plantation_result_matrix()
+
+_missing_results = set(
+    key
+    for key in PLANTATION_RESULT_MATRIX.values()
+    if key not in DISPLAY_FOR_ALTERNATIVES_MATRIX
+)
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in DISPLAY_FOR_ALTERNATIVES_MATRIX: {_missing_results}"
+    )
 
 
 # This method is outside the PlantationEvaluator class because it makes it
@@ -199,6 +218,11 @@ class PlantationEvaluator:
         return PLANTATION_RESULT_MATRIX.get(
             (self.moulinette.result, self.result), RESULTS.interdit
         )
+
+    @property
+    def display_for_alternatives(self):
+        """Should this evaluation global result be displayed for project alternatives?"""
+        return DISPLAY_FOR_ALTERNATIVES_MATRIX[self.global_result]
 
     @property
     def result_code(self):

@@ -1,14 +1,17 @@
 from collections import defaultdict
 from decimal import Decimal as D
 
+from django import forms
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.validators import RegexValidator
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HEDGE_TYPES
+from envergo.hedges.models import HEDGE_TYPES, PACAGE_RE, Pacage
 from envergo.hedges.regulations import (
     HEDGE_KEYS,
+    EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
     MinLengthCondition,
@@ -103,6 +106,10 @@ def get_hedge_compensation_details(hedge, r):
         hedge_properties.append("essences non bocagères")
     if hedge.prop("recemment_plantee"):
         hedge_properties.append("récemment plantée")
+    if hedge.mode_destruction == "coupe_a_blanc":
+        hedge_properties.append("coupe à blanc")
+    if hedge.hedge_type == "alignement" and hedge.prop("bord_voie"):
+        hedge_properties.append("L350-3")
 
     return {
         "id": hedge.id,
@@ -111,6 +118,27 @@ def get_hedge_compensation_details(hedge, r):
         "length": hedge.length,
         "r": r,
     }
+
+
+class EPNormandieForm(forms.Form):
+    numero_pacage = forms.CharField(
+        label="Quel est le numéro PACAGE de l'exploitation ?",
+        required=True,
+        validators=[
+            RegexValidator(
+                PACAGE_RE,
+                message="Saisissez une valeur composée de 9 chiffres, sans espace.",
+            )
+        ],
+        widget=forms.TextInput(attrs={"placeholder": "012345678"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        localisation_pac = self.data.get("localisation_pac")
+        if localisation_pac == "non":
+            self.fields = {}
+            return
 
 
 class EspecesProtegeesNormandie(
@@ -127,7 +155,9 @@ class EspecesProtegeesNormandie(
         LineaireSurTalusCondition,
         LineaireInterchamp,
         NormandieQualityCondition,
+        EssencesBocageresCondition,
     ]
+    form_class = EPNormandieForm
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
@@ -136,8 +166,9 @@ class EspecesProtegeesNormandie(
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
         "dispense_10m": RESULTS.dispense,
-        "dispense_L350": RESULTS.dispense,
+        "dispense_L350": RESULTS.dispense_sous_condition,
         "dispense": RESULTS.dispense_sous_condition,
+        "a_verifier_L350": RESULTS.a_verifier,
     }
 
     CODE_MATRIX = {
@@ -332,6 +363,18 @@ class EspecesProtegeesNormandie(
         ("mixte", "lt_0.5", "normandie_groupe_absent"): D("2.6"),
     }
 
+    def get_exploitation_density(self, numero_pacage):
+        if not numero_pacage:
+            return None
+
+        pacage = Pacage.objects.filter(pacage_num=numero_pacage).first()
+        if pacage is None:
+            densite = None
+        else:
+            densite = float(pacage.exploitation_density)
+
+        return densite
+
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
 
@@ -345,8 +388,18 @@ class EspecesProtegeesNormandie(
         minimum_length_to_plant = D(0.0)
         aggregated_r = 0.0
 
-        density_200 = haies.density.get("density_200")
+        density_exploitation = self.get_exploitation_density(
+            catalog.get("numero_pacage")
+        )
         density_5000 = haies.density.get("density_5000")
+        if density_exploitation:
+            # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
+            # We then pick a coefficient corresponding to the Normandie average : 1
+            density_ratio = (
+                density_exploitation / density_5000 if density_5000 != 0 else 1.0
+            )
+        else:
+            density_ratio = 1.0
 
         centroid_shapely = haies.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
@@ -368,10 +421,6 @@ class EspecesProtegeesNormandie(
             if zonage
             else "normandie_groupe_absent"
         )
-
-        # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
-        # We then pick a coefficient corresponding to the Normandie average : 1
-        density_ratio = density_200 / density_5000 if density_5000 != 0 else 1
 
         # Determine the density ratio range for coefficient lookup
         if density_ratio > 1.6:
@@ -401,17 +450,20 @@ class EspecesProtegeesNormandie(
 
             if hedge.length <= 10:
                 r = D(0)
-            elif hedge.length <= 20:
-                r = D(1)
-            elif (
-                reimplantation == "remplacement"
-                and hedge.mode_destruction == "coupe_a_blanc"
-            ):
+            elif hedge.prop("essences_non_bocageres"):
                 r = D(1)
             else:
-                r = self.COEFFICIENT_MATRIX[
-                    (hedge.hedge_type, density_ratio_range, zone_id)
-                ]
+                if hedge.length <= 20:
+                    r = D(1)
+                elif (
+                    reimplantation == "remplacement"
+                    and hedge.mode_destruction == "coupe_a_blanc"
+                ):
+                    r = D(1)
+                else:
+                    r = self.COEFFICIENT_MATRIX[
+                        (hedge.hedge_type, density_ratio_range, zone_id)
+                    ]
 
             all_r.append(r)
             minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
@@ -457,8 +509,8 @@ class EspecesProtegeesNormandie(
         catalog["lte_20m_every_hedge"] = lte_20m_every_hedge
         catalog["aggregated_r"] = aggregated_r
         catalog["density_ratio"] = density_ratio
-        catalog["density_200"] = density_200
         catalog["density_5000"] = density_5000
+        catalog["density_exploitation"] = density_exploitation
         catalog["density_zone"] = zone_id
         catalog["hedges_compensation_details"] = hedges_details
         return catalog
@@ -486,18 +538,32 @@ class EspecesProtegeesNormandie(
             and hasattr(self.moulinette, "alignement_arbres")
             and self.moulinette.alignement_arbres.is_activated
             and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
-            and self.moulinette.alignement_arbres.alignement_arbres.result_code
-            == "soumis_securite"
         ):
-            result = "dispense_L350"
+            if (
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                == "soumis_securite"
+            ):
+                result = "dispense_L350"
+            elif (
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                == "soumis_esthetique"
+            ):
+                result = "a_verifier_L350"
+            elif (
+                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                == "soumis_autorisation"
+            ):
+                result = "a_verifier_L350"
+            else:  # non soumis
+                result = super().get_result_code(result_data)
         else:
             result = super().get_result_code(result_data)
 
         return result
 
     def get_replantation_coefficient(self):
-        if self.result_code == "dispense_L350":
-            # If the result is "dispense_L350", the replantation coefficient is 1.0
+        if self.result_code == "dispense_L350" or self.result_code == "a_verifier_L350":
+            # If the result is "dispense_L350" or "a_verifier_L350", the replantation coefficient is 1.0
             return 1.0
 
         return self.catalog.get("aggregated_r")

@@ -4,6 +4,7 @@ import logging
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
+from django.urls import set_urlconf
 
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
@@ -25,6 +26,7 @@ class Command(BaseCommand):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning("Demarches Simplifiees is not enabled. Doing nothing.")
             return None
+        set_urlconf("config.urls_haie")
 
         now_utc = datetime.datetime.now(datetime.UTC)
         # NB: if you change this timedelta, you should also change the cron job frequency
@@ -74,6 +76,8 @@ class Command(BaseCommand):
                 project.synchronize_with_demarches_simplifiees(dossier_as_dict)
 
             handled_demarches.append(demarche_number)
+
+        set_urlconf(None)
 
     def handle_unlinked_dossier(self, dossier, demarche, config):
         """Handle a dossier that is not linked to any project in the database
