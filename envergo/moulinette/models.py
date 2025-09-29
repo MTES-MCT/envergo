@@ -1123,7 +1123,7 @@ class ConfigHaie(ConfigBase):
                     )
 
     @classmethod
-    def get_demarche_simplifiee_value_sources(self):
+    def get_demarche_simplifiee_value_sources(cls):
         """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
 
         This method aggregates :
