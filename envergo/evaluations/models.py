@@ -313,13 +313,9 @@ class Evaluation(models.Model):
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.models import MoulinetteAmenagement
-        from envergo.moulinette.utils import compute_surfaces
 
         if not hasattr(self, "_moulinette"):
             data = self.moulinette_params
-            surfaces = compute_surfaces(data)
-            for k, v in surfaces.items():
-                data[k] = v
             moulinette_data = {"initial": data, "data": data}
             self._moulinette = (
                 MoulinetteAmenagement(  # there is only Amenagement evaluations

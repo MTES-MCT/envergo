@@ -23,7 +23,6 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import get_moulinette_class_from_site
-from envergo.moulinette.utils import compute_surfaces
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
 
@@ -63,23 +62,12 @@ class MoulinetteMixin:
 
     def get_initial(self):
         moulinette_data = self.request.GET.dict()
-        if moulinette_data:
-            surfaces = compute_surfaces(moulinette_data)
-            moulinette_data.update(surfaces)
-
         return moulinette_data
 
     def get_form_data(self):
-        """Get the data to pass to the moulinette forms.
-
-        Mainly the POSTed data, but we also compute the surface related fields.
-        """
+        """Get the data to pass to the moulinette forms."""
 
         moulinette_data = self.request.POST.dict()
-        if moulinette_data:
-            surfaces = compute_surfaces(moulinette_data)
-            moulinette_data.update(surfaces)
-
         return moulinette_data
 
     def clean_request_get_parameters(self):

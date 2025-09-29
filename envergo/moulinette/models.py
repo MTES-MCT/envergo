@@ -48,7 +48,7 @@ from envergo.moulinette.forms import (
     TriageFormHaie,
 )
 from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
-from envergo.moulinette.utils import list_moulinette_templates
+from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
 
 # WGS84, geodetic coordinates, units in degrees
@@ -1334,6 +1334,11 @@ class Moulinette(ABC):
 
     def __init__(self, form_kwargs):
         self.catalog = MoulinetteCatalog()
+
+        if "initial" in form_kwargs:
+            form_kwargs["initial"].update(compute_surfaces(form_kwargs["initial"]))
+        if "data" in form_kwargs:
+            form_kwargs["data"].update(compute_surfaces(form_kwargs["data"]))
         self.form_kwargs = form_kwargs
 
         if self.bound_main_form.is_valid():
