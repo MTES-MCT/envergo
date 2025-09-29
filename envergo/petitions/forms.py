@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from envergo.petitions.models import PetitionProject, StatusLog
 
@@ -75,6 +76,23 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
 
+    def clean(self):
+        cleaned_data = super().clean()
+        stage = cleaned_data.get("stage")
+        decision = cleaned_data.get("decision")
+
+        if stage == "closed" and decision == "unset":
+            self.add_error(
+                "decision",
+                ValidationError(
+                    "Pour clore le dossier, le champ « Décision » doit être renseigné avec une valeur "
+                    "définitive (autre que « À déterminer »).",
+                    code="closed_without_decision",
+                ),
+            )
+
+        return cleaned_data
+
     class Meta:
         model = StatusLog
         fields = [
@@ -83,3 +101,6 @@ class ProcedureForm(forms.ModelForm):
             "status_date",
             "update_comment",
         ]
+        help_texts = {
+            "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
+        }

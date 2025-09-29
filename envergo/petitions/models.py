@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -40,18 +41,21 @@ DOSSIER_STATES = Choices(
 )
 
 STAGES = Choices(
-    ("a_instruire", "À instruire"),
-    ("instruction", "Instruction"),
-    ("redaction_decision", "Rédaction décision"),
-    ("notification_publicite", "Notification & publicité"),
-    ("clos", "Dossier clos"),
+    ("to_be_processed", "À instruire"),
+    ("instruction_d", "Instruction déclaration"),
+    ("instruction_a", "Instruction autorisation"),
+    ("instruction_h", "Instruction hors régime unique"),
+    ("preparing_decision", "Rédaction décision"),
+    ("notification", "Notification / Publicité"),
+    ("closed", "Dossier clos"),
 )
 
 DECISIONS = Choices(
     ("unset", "À déterminer"),
-    ("accord", "Accord"),
-    ("opposition", "Opposition"),
-    ("sans_suite", "Classé sans suite"),
+    ("express_agreement", "Accord exprés"),
+    ("tacit_agreement", "Accord tacite"),
+    ("objection", "Opposition"),
+    ("dropped", "Classé sans suite"),
 )
 
 # This session key is used when we are not able to find the real user session key.
@@ -430,7 +434,7 @@ class StatusLog(models.Model):
         "Étape",
         max_length=30,
         choices=STAGES,
-        default=STAGES.a_instruire,
+        default=STAGES.to_be_processed,
     )
     decision = models.CharField(
         "Décision",
@@ -456,3 +460,9 @@ class StatusLog(models.Model):
     class Meta:
         verbose_name = "Log de changement de statut de projet"
         verbose_name_plural = "Historique des changements de statut de projet"
+        constraints = [
+            models.CheckConstraint(
+                check=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
+                name="forbid_closed_with_unset_decision",
+            )
+        ]
