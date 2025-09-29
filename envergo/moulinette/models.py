@@ -2198,7 +2198,7 @@ class MoulinetteHaie(Moulinette):
         if "haies" in request.GET:
             try:
                 hedge_data = HedgeData.objects.get(id=request.GET["haies"])
-            except Exception:
+            except HedgeData.DoesNotExist:
                 hedge_data = None
             context["hedge_data"] = hedge_data
 
