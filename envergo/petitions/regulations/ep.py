@@ -63,6 +63,10 @@ def ep_base_get_instructor_view_context(
 
 
 def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
+    """Reduce heges properties grouped by property
+    Without properties black listed
+    Ordered by forms fieldset
+    """
 
     hedges_properties = {}
     black_list = [
@@ -83,10 +87,19 @@ def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
             if hedge.type == TO_PLANT
             else hedge_to_remove_properties_form
         )
-        for key, field in form.base_fields.items():
-            if key in black_list:
-                continue
 
+        # Order keys according to fieldsets order in form without black listed keys
+        ordered_fields_keys = []
+        for values in form.fieldsets.values():
+            for value in values:
+                if value in black_list:
+                    continue
+                ordered_fields_keys.append(value)
+
+        # Create list of hedges properties
+        for key in ordered_fields_keys:
+
+            field = form.base_fields[key]
             is_choice = False
 
             if isinstance(field, ChoiceField):
