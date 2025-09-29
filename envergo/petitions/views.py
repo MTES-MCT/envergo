@@ -917,7 +917,7 @@ class PetitionProjectInstructorProcedureView(
         return queryset.annotate(
             current_stage=Coalesce(
                 Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
-                Value(STAGES.a_instruire, output_field=CharField()),
+                Value(STAGES.to_be_processed, output_field=CharField()),
             ),
             current_decision=Coalesce(
                 Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
