@@ -2382,19 +2382,19 @@ def get_moulinette_class_from_site(site):
         settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
         settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
     }
-    self = domain_class.get(site.domain, None)
-    if self is None:
+    cls = domain_class.get(site.domain, None)
+    if cls is None:
         raise RuntimeError(f"Unknown site for domain {site.domain}")
-    return self
+    return cls
 
 
 def get_moulinette_class_from_url(url):
     """Return the correct Moulinette class depending on the current site."""
 
     if "envergo" in url:
-        self = MoulinetteAmenagement
+        cls = MoulinetteAmenagement
     elif "haie" in url:
-        self = MoulinetteHaie
+        cls = MoulinetteHaie
     else:
         raise RuntimeError("Cannot find the moulinette to use")
-    return self
+    return cls
