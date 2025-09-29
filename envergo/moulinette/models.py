@@ -1341,8 +1341,8 @@ class Moulinette(ABC):
             form_kwargs["data"].update(compute_surfaces(form_kwargs["data"]))
         self.form_kwargs = form_kwargs
 
+        self.catalog = self.get_catalog_data()
         if self.bound_main_form.is_valid():
-            self.catalog = self.get_catalog_data()
             if self.config and self.config.id and hasattr(self.config, "templates"):
                 self.templates = {t.key: t for t in self.config.templates.all()}
             else:
@@ -1724,6 +1724,7 @@ class Moulinette(ABC):
     def get_catalog_data(self):
         """Populate the catalog with any needed data."""
 
+        self.bound_main_form.full_clean()
         catalog = MoulinetteCatalog(**self.bound_main_form.cleaned_data)
         return catalog
 
@@ -1926,69 +1927,75 @@ class MoulinetteAmenagement(Moulinette):
         """Fetch / compute data required for further computations."""
 
         catalog = super().get_catalog_data()
-        lng = catalog["lng"]
-        lat = catalog["lat"]
-        catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
-        catalog["circle_12"] = catalog["coords"].buffer(12)
-        catalog["circle_25"] = catalog["coords"].buffer(25)
-        catalog["circle_100"] = catalog["coords"].buffer(100)
+        if "lat" in catalog and "lng" in catalog:
 
-        fetching_radius = int(self.data.get("radius", "200"))
-        zones = self.get_zones(catalog["lng_lat"], fetching_radius)
-        catalog["all_zones"] = zones
+            lng = catalog["lng"]
+            lat = catalog["lat"]
+            catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
+            catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
+            catalog["circle_12"] = catalog["coords"].buffer(12)
+            catalog["circle_25"] = catalog["coords"].buffer(25)
+            catalog["circle_100"] = catalog["coords"].buffer(100)
 
-        def wetlands_filter(zone):
-            return all(
-                (
-                    zone.map.map_type == "zone_humide",
-                    zone.map.data_type in ("certain", "forbidden"),
+            fetching_radius = int(self.data.get("radius", "200"))
+            zones = self.get_zones(catalog["lng_lat"], fetching_radius)
+            catalog["all_zones"] = zones
+
+            def wetlands_filter(zone):
+                return all(
+                    (
+                        zone.map.map_type == "zone_humide",
+                        zone.map.data_type in ("certain", "forbidden"),
+                    )
                 )
+
+            catalog["wetlands"] = list(filter(wetlands_filter, zones))
+
+            def potential_wetlands_filter(zone):
+                return all(
+                    (
+                        zone.map.map_type == "zone_humide",
+                        zone.map.data_type == "uncertain",
+                    )
+                )
+
+            catalog["potential_wetlands"] = list(
+                filter(potential_wetlands_filter, zones)
             )
 
-        catalog["wetlands"] = list(filter(wetlands_filter, zones))
-
-        def potential_wetlands_filter(zone):
-            return all(
-                (
-                    zone.map.map_type == "zone_humide",
-                    zone.map.data_type == "uncertain",
+            def forbidden_wetlands_filter(zone):
+                return all(
+                    (
+                        zone.map.map_type == "zone_humide",
+                        zone.map.data_type == "forbidden",
+                    )
                 )
+
+            catalog["forbidden_wetlands"] = list(
+                filter(forbidden_wetlands_filter, zones)
             )
 
-        catalog["potential_wetlands"] = list(filter(potential_wetlands_filter, zones))
-
-        def forbidden_wetlands_filter(zone):
-            return all(
-                (
-                    zone.map.map_type == "zone_humide",
-                    zone.map.data_type == "forbidden",
+            def flood_zones_filter(zone):
+                return all(
+                    (
+                        zone.map.map_type == "zone_inondable",
+                        zone.map.data_type == "certain",
+                    )
                 )
-            )
 
-        catalog["forbidden_wetlands"] = list(filter(forbidden_wetlands_filter, zones))
+            catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
 
-        def flood_zones_filter(zone):
-            return all(
-                (
-                    zone.map.map_type == "zone_inondable",
-                    zone.map.data_type == "certain",
+            def potential_flood_zones_filter(zone):
+                return all(
+                    (
+                        zone.map.map_type == "zone_inondable",
+                        zone.map.data_type == "uncertain",
+                    )
                 )
+
+            catalog["potential_flood_zones"] = list(
+                filter(potential_flood_zones_filter, zones)
             )
-
-        catalog["flood_zones"] = list(filter(flood_zones_filter, zones))
-
-        def potential_flood_zones_filter(zone):
-            return all(
-                (
-                    zone.map.map_type == "zone_inondable",
-                    zone.map.data_type == "uncertain",
-                )
-            )
-
-        catalog["potential_flood_zones"] = list(
-            filter(potential_flood_zones_filter, zones)
-        )
 
         return catalog
 
