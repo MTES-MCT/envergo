@@ -739,6 +739,10 @@ div.title-with-link-container {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    a {
+      font-size: 0.875rem;
+    }
   }
 
   tbody tr {
