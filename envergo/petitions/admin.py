@@ -46,7 +46,7 @@ class UserMultipleChoiceField(forms.ModelMultipleChoiceField):
 class PetitionProjectAdminForm(forms.ModelForm):
     followed_by = UserMultipleChoiceField(
         label="Instructeurs suivant le projet",
-        queryset=User.objects.all(),
+        queryset=User.objects.all().order_by("email"),
         widget=FilteredSelectMultiple(_("Users"), is_stacked=False),
         required=False,
     )

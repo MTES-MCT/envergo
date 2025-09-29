@@ -747,17 +747,6 @@ div.title-with-link-container {
     }
 
     td {
-      & > a {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        text-decoration: none;
-        color: inherit;
-        box-sizing: border-box;
-        background-image: none;
-      }
-
       .fr-btn--secondary:not(:hover) {
         background-color: var(--background-default-grey);
       }

@@ -23,7 +23,7 @@ class NoIdnUserCreationForm(UserCreationForm):
 class UserForm(forms.ModelForm):
     followed_petition_projects = forms.ModelMultipleChoiceField(
         label="Projets suivis",
-        queryset=PetitionProject.objects.all(),
+        queryset=PetitionProject.objects.all().order_by("reference"),
         widget=FilteredSelectMultiple("Projets", is_stacked=False),
         required=False,
     )
