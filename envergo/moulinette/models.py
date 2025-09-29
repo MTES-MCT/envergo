@@ -1336,7 +1336,7 @@ class Moulinette(ABC):
         self.catalog = MoulinetteCatalog()
         self.form_kwargs = form_kwargs
 
-        if self.bound_form.is_valid():
+        if self.bound_main_form.is_valid():
             self.catalog = self.get_catalog_data()
             if self.config and self.config.id and hasattr(self.config, "templates"):
                 self.templates = {t.key: t for t in self.config.templates.all()}
@@ -1371,7 +1371,7 @@ class Moulinette(ABC):
         return self.get_main_form()
 
     @cached_property
-    def bound_form(self):
+    def bound_main_form(self):
         """Get the main form with forced bound data.
 
         When we display the moulinette form, we show the main form with
@@ -1719,7 +1719,7 @@ class Moulinette(ABC):
     def get_catalog_data(self):
         """Populate the catalog with any needed data."""
 
-        catalog = MoulinetteCatalog(**self.bound_form.cleaned_data)
+        catalog = MoulinetteCatalog(**self.bound_main_form.cleaned_data)
         return catalog
 
     def is_evaluation_available(self):
