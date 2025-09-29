@@ -49,7 +49,6 @@ from envergo.evaluations.tasks import (
 )
 from envergo.evaluations.utils import extract_department_from_address_or_city_string
 from envergo.geodata.models import Department
-from envergo.moulinette.utils import compute_surfaces
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.utils.urls import update_qs
 
@@ -145,10 +144,6 @@ class EvaluationDetail(
             moulinette_data = eval.moulinette_params
         except (Evaluation.DoesNotExist, Http404):
             moulinette_data = {}
-
-        if moulinette_data:
-            surfaces = compute_surfaces(moulinette_data)
-            moulinette_data.update(surfaces)
 
         return moulinette_data
 
