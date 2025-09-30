@@ -1,4 +1,12 @@
+from math import ceil
+
+import shapely
 from django import forms
+from django.contrib.gis.db.models import MultiPolygonField
+from django.contrib.gis.db.models.aggregates import Union
+from django.contrib.gis.geos import MultiLineString
+from django.db.models.functions import Cast
+from pyproj import Geod
 
 from envergo.moulinette.regulations import CriterionEvaluator
 
@@ -13,6 +21,10 @@ class ReservesNaturellesForm(forms.Form):
     )
 
 
+EPSG_WGS84 = 4326
+EPSG_LAMB93 = 2154
+
+
 class ReservesNaturelles(CriterionEvaluator):
     choice_label = "Réserves naturelles > Réserves naturelles"
     slug = "reserves_naturelles"
@@ -22,6 +34,45 @@ class ReservesNaturelles(CriterionEvaluator):
         "oui": "soumis_declaration",
         "non": "soumis_autorisation",
     }
+
+    def get_catalog_data(self):
+        """Compute the length of hedges to remove in reserve naturelle"""
+
+        hedges = self.catalog["haies"].hedges_to_remove()
+        hedges_geom = MultiLineString(
+            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
+        )
+
+        # Find all the Zones for the current Perimeter and that intersects any of the hedges
+        qs = (
+            self.moulinette.reserves_naturelles.reserves_naturelles.activation_map.zones.all()
+            .filter(geometry__intersects=hedges_geom)
+            .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+        )
+        # Aggregate them into a single polygon
+        multipolygon = qs["geom"]
+
+        # Other conversion options throw a cryptic numpy error, so…
+        geom = shapely.from_wkt(multipolygon.wkt)
+
+        resnat = {}
+        l_resnat = 0.0
+
+        # Use the geodesic length
+        geod = Geod(ellps="WGS84")
+
+        for h in hedges:
+            intersect = h.geometry.intersection(geom)
+            length = geod.geometry_length(intersect)
+            if length > 0.0:
+                resnat[h.id] = ceil(length)
+                l_resnat += length
+
+        data = {}
+        data["resnat"] = resnat
+        data["l_resnat"] = ceil(l_resnat)
+
+        return data
 
     def get_result_data(self):
         plan_gestion = self.catalog["plan_gestion"]
