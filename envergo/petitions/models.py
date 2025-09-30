@@ -133,6 +133,13 @@ class PetitionProject(models.Model):
         "Mention libre de l'instructeur", blank=True
     )
 
+    followed_by = models.ManyToManyField(
+        "users.User",
+        related_name="followed_petition_projects",
+        blank=True,
+        verbose_name="Instructeurs suivant le projet",
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -419,8 +426,9 @@ class StatusLog(models.Model):
     )
     created_by = models.ForeignKey(
         "users.User",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_("Created by"),
+        null=True,
     )
     stage = models.CharField(
         "Étape",

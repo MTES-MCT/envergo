@@ -1,10 +1,11 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
-from envergo.petitions.models import InvitationToken
+from envergo.petitions.models import InvitationToken, PetitionProject
 from envergo.users.forms import UserCreationForm
 from envergo.utils.fields import NoIdnEmailField
 
@@ -20,9 +21,19 @@ class NoIdnUserCreationForm(UserCreationForm):
 
 
 class UserForm(forms.ModelForm):
+    followed_petition_projects = forms.ModelMultipleChoiceField(
+        label="Projets suivis",
+        queryset=PetitionProject.objects.all().order_by("reference"),
+        widget=FilteredSelectMultiple("Projets", is_stacked=False),
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields["followed_petition_projects"].initial = (
+                self.instance.followed_petition_projects.all()
+            )
 
         # Let's not fetch the department geometries when displaying the
         # department select widget
@@ -30,6 +41,17 @@ class UserForm(forms.ModelForm):
             self.fields["departments"].queryset = self.fields[
                 "departments"
             ].queryset.defer("geometry")
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+        # save the many-to-many relation
+        user.followed_petition_projects.set(
+            self.cleaned_data["followed_petition_projects"]
+        )
+        self.save_m2m()
+        return user
 
 
 class InvitationTokenInline(admin.TabularInline):
@@ -60,6 +82,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "is_superuser",
                     "groups",
                     "departments",
+                    "followed_petition_projects",
                 ),
             },
         ),

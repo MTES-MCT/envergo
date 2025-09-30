@@ -8,18 +8,21 @@ import fiona
 import requests
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import CharField, OuterRef, Q, Subquery, Value
+from django.db.models import CharField, Exists, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
@@ -103,6 +106,15 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             ).distinct()
         else:
             queryset = self.queryset.none()
+
+        queryset = queryset.annotate(
+            followed_up=Exists(
+                PetitionProject.followed_by.through.objects.filter(
+                    petitionproject_id=OuterRef("pk"),
+                    user_id=current_user.pk,
+                )
+            )
+        )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -578,6 +590,20 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     slug_url_kwarg = "reference"
     event_category = "projet"
     event_action = None
+
+    def get_queryset(self):
+        current_user = self.request.user
+        queryset = super().get_queryset()
+
+        queryset = queryset.annotate(
+            followed_up=Exists(
+                PetitionProject.followed_by.through.objects.filter(
+                    petitionproject_id=OuterRef("pk"),
+                    user_id=current_user.pk,
+                )
+            )
+        )
+        return queryset
 
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
@@ -1180,3 +1206,46 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
                 },
             )
         )
+
+
+@login_required
+@require_POST
+def toggle_follow_project(request, reference):
+    """Toggle follow/unfollow a petition project"""
+    project = get_object_or_404(PetitionProject, reference=reference)
+    if not project.has_user_as_instructor(request.user):
+        return TemplateResponse(
+            request=request, template="haie/petitions/403.html", status=403
+        )
+
+    if request.POST.get("follow") == "true":
+        project.followed_by.add(request.user)
+        switch = "on"
+    else:
+        project.followed_by.remove(request.user)
+        switch = "off"
+
+    # Get the next URL from POST or referrer
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
+
+    log_event(
+        "projet",
+        "suivi",
+        request,
+        reference=project.reference,
+        switch=switch,
+        view=(
+            "liste"
+            if "liste" in next_url
+            else "detail" if "instruction" in next_url else next_url
+        ),
+        **get_matomo_tags(request),
+    )
+
+    # Ensure the URL is safe (avoid open redirects)
+    if not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        next_url = settings.LOGIN_REDIRECT_URL  # or "/" as a safe fallback
+
+    return redirect(next_url)

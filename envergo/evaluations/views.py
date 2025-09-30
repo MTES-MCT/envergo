@@ -459,36 +459,42 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
         # Send notifications, once data is commited
         def confirm_request():
-            request.submitted = True
-            request.save()
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
+            request.submitted = True
+            request.save()
+
+        # Send data to after sales third party services, once data is commited
+        def post_to_automation():
             post_evalreq_to_automation.delay(request.id, self.request.get_host())
 
         # Special case, hackish
         # The product is often used for demo purpose. In that case, we don't
         # want to send confirmation emails or any other notifications.
-        if (
-            request.submitted is False
-            and settings.TEST_EMAIL not in request.urbanism_department_emails
-        ):
-            transaction.on_commit(confirm_request)
-            mtm_keys = {
-                k: v for k, v in self.request.session.items() if k.startswith("mtm_")
-            }
-            log_event(
-                "evaluation",
-                "request",
-                self.request,
-                request_reference=request.reference,
-                request_url=reverse(
-                    "admin:evaluations_request_change", args=[request.id]
-                ),
-                department=extract_department_from_address_or_city_string(
-                    request.address
-                ),
-                **mtm_keys,
-            )
+        if settings.TEST_EMAIL not in request.urbanism_department_emails:
+            if request.submitted is False:
+                transaction.on_commit(confirm_request)
+                mtm_keys = {
+                    k: v
+                    for k, v in self.request.session.items()
+                    if k.startswith("mtm_")
+                }
+                log_event(
+                    "evaluation",
+                    "request",
+                    self.request,
+                    request_reference=request.reference,
+                    request_url=reverse(
+                        "admin:evaluations_request_change", args=[request.id]
+                    ),
+                    department=extract_department_from_address_or_city_string(
+                        request.address
+                    ),
+                    **mtm_keys,
+                )
+
+            # Post to automation systems even is the request was already submitted, duplicates will be filtered later
+            transaction.on_commit(post_to_automation)
 
         return super().form_valid(form)
 
