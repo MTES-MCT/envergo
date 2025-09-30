@@ -415,8 +415,9 @@ class StatusLog(models.Model):
     )
     created_by = models.ForeignKey(
         "users.User",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name=_("Created by"),
+        null=True,
     )
     stage = models.CharField(
         "Étape",
