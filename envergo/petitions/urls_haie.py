@@ -117,7 +117,7 @@ urlpatterns = [
         name="petition_project_accept_invitation",
     ),
     path(
-        "<slug:reference>/toggle_follow/",
+        "<slug:reference>/suivi/",
         toggle_follow_project,
         name="petition_project_toggle_follow",
     ),
