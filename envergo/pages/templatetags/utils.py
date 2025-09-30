@@ -1,4 +1,5 @@
 from django import template
+from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
     CheckboxInput,
     CheckboxSelectMultiple,
@@ -161,3 +162,14 @@ def get_choice_label(choices, value):
 def to_datetime(value):
     """Parse ISO string and return datetime.datetime or datetime.timezone"""
     return parse_datetime(value)
+
+
+@register.filter
+def choice_default_label(model, field_name):
+    """Return the label of the default choice for a model choice field."""
+    field = model._meta.get_field(field_name)
+    if field.default is NOT_PROVIDED:
+        default = ""
+    else:
+        default = field.default
+    return dict(field.choices).get(default, default)
