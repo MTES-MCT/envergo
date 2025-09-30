@@ -4,6 +4,7 @@ import requests
 from braces.views import AnonymousRequiredMixin, MessageMixin
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.tokens import default_token_generator
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
@@ -11,6 +12,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.views import View
 from django.views.generic import CreateView, FormView, TemplateView
 
+from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.users.forms import NewsletterOptInForm, RegisterForm
 from envergo.users.models import User
 from envergo.users.tasks import (
@@ -106,6 +108,25 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
                     send_new_account_notification.delay(user.id)
 
         return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        matomo_custom_path = self.request.path.replace(kwargs["uidb64"], "+token+")
+        matomo_custom_path = matomo_custom_path.removesuffix(f"/{kwargs["token"]}/")
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
+        )
+        return context
+
+
+class LoginView(auth_views.LoginView):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(reverse("login")), self.request
+        )  # remove the next param which can contain secrets or PII
+        return context
 
 
 class NewsletterOptIn(FormView):

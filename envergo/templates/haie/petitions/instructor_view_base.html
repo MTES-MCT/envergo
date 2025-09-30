@@ -91,9 +91,6 @@
                   {% if is_department_instructor %}
                     <li>
                       <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
-                              data-event-category="projet"
-                              data-event-action="invitation"
-                              data-event-name="{{ petition_project.reference }}"
                               data-fr-opened="false"
                               aria-controls="invitation-token-modal">
                         Inviter une personne à consulter le dossier
@@ -133,8 +130,8 @@
 {% block extra_js %}
   <script>const INVITATION_TOKEN_URL = '{{ invitation_token_url }}';</script>
   <script defer src="{% static 'js/libs/invitation_token_modal.js' %}"></script>
-  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     window.addEventListener("load", function() {

@@ -569,7 +569,8 @@ div#project-specifications-instructor {
   text-align: center;
 }
 
-.project-list__table {
+.project-list__table,
+.procedure-history__table {
   caption {
     font-weight: lighter;
     font-size: 0.75rem;
@@ -579,10 +580,6 @@ div#project-specifications-instructor {
   .fr-table__footer {
     justify-content: center;
   }
-}
-
-.fr-link--icon-right.link-project-detail::after {
-  margin: 0;
 }
 
 /**
@@ -724,7 +721,8 @@ div.title-with-link-container {
   justify-content: space-between;
 }
 
-#table-dossier-list {
+#table-dossier-list,
+.procedure-history__table {
   td,
   th {
     padding-left: 0.5rem;
@@ -743,6 +741,22 @@ div.title-with-link-container {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    a {
+      font-size: 0.875rem;
+    }
+  }
+
+  tbody tr {
+    &:hover td {
+      background-color: var(--background-default-grey-hover);
+    }
+
+    td {
+      .fr-btn--secondary:not(:hover) {
+        background-color: var(--background-default-grey);
+      }
+    }
   }
 }
 
@@ -766,5 +780,22 @@ section#moulinette-regulation-result {
       font-size: 1rem;
       line-height: 1.5rem;
     }
+  }
+}
+
+.procedure-history__table td span.described-by-tooltip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+div#project-header-container {
+  display: flex;
+  align-items: start;
+
+  form {
+    margin-left: 2em;
   }
 }
