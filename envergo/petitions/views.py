@@ -51,6 +51,7 @@ from envergo.petitions.models import (
     StatusLog,
 )
 from envergo.petitions.services import (
+    DEMARCHES_SIMPLIFIEES_STATUS_MAPPING,
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
@@ -59,6 +60,7 @@ from envergo.petitions.services import (
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
+    update_demarches_simplifiees_status,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -995,6 +997,15 @@ class PetitionProjectInstructorProcedureView(
         log.save()
         previous_stage = self.object.current_stage
         previous_decision = self.object.current_decision
+
+        previous_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[
+            (previous_stage, previous_decision)
+        ]
+        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
+
+        if previous_ds_status != new_ds_status:
+            update_demarches_simplifiees_status(self.object, new_ds_status)
+
         res = HttpResponseRedirect(self.get_success_url())
         log_event(
             "projet",

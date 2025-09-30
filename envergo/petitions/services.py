@@ -27,6 +27,44 @@ from envergo.utils.tools import display_form_details
 logger = logging.getLogger(__name__)
 
 
+DEMARCHES_SIMPLIFIEES_STATUS_MAPPING = {
+    ("to_be_processed", "unset"): "en_construction",
+    ("to_be_processed", "express_agreement"): "en_construction",
+    ("to_be_processed", "tacit_agreement"): "en_construction",
+    ("to_be_processed", "objection"): "en_construction",
+    ("to_be_processed", "dropped"): "en_construction",
+    ("instruction_d", "unset"): "en_instruction",
+    ("instruction_d", "express_agreement"): "en_instruction",
+    ("instruction_d", "tacit_agreement"): "en_instruction",
+    ("instruction_d", "objection"): "en_instruction",
+    ("instruction_d", "dropped"): "en_instruction",
+    ("instruction_a", "unset"): "en_instruction",
+    ("instruction_a", "express_agreement"): "en_instruction",
+    ("instruction_a", "tacit_agreement"): "en_instruction",
+    ("instruction_a", "objection"): "en_instruction",
+    ("instruction_a", "dropped"): "en_instruction",
+    ("instruction_h", "unset"): "en_instruction",
+    ("instruction_h", "express_agreement"): "en_instruction",
+    ("instruction_h", "tacit_agreement"): "en_instruction",
+    ("instruction_h", "objection"): "en_instruction",
+    ("instruction_h", "dropped"): "en_instruction",
+    ("preparing_decision", "unset"): "en_instruction",
+    ("preparing_decision", "express_agreement"): "en_instruction",
+    ("preparing_decision", "tacit_agreement"): "en_instruction",
+    ("preparing_decision", "objection"): "en_instruction",
+    ("preparing_decision", "dropped"): "en_instruction",
+    ("notification", "unset"): "en_instruction",
+    ("notification", "express_agreement"): "en_instruction",
+    ("notification", "tacit_agreement"): "en_instruction",
+    ("notification", "objection"): "en_instruction",
+    ("notification", "dropped"): "en_instruction",
+    ("closed", "express_agreement"): "accepte",
+    ("closed", "tacit_agreement"): "accepte",
+    ("closed", "objection"): "refuse",
+    ("closed", "dropped"): "sans_suite",
+}
+
+
 @dataclass
 class FileInfo:
     filename: str
@@ -370,6 +408,10 @@ def get_demarches_simplifiees_dossier(
 
     dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
+
+
+def update_demarches_simplifiees_status(petition_project, new_status):
+    pass
 
 
 class PetitionProjectCreationProblem:
