@@ -129,31 +129,6 @@ class PetitionProject(models.Model):
         "Mention libre de l'instructeur", blank=True
     )
 
-    stage = models.CharField(
-        "Étape",
-        max_length=30,
-        choices=STAGES,
-        default=STAGES.a_instruire,
-    )
-
-    decision = models.CharField(
-        "Décision",
-        max_length=30,
-        choices=DECISIONS,
-        default=DECISIONS.unset,
-    )
-
-    stage_date = models.DateField(
-        "Date effective du changement d'étape", null=True, blank=True
-    )
-    stage_updated_at = models.DateTimeField(
-        "Date de saisie du changement d'étape", null=True, blank=True
-    )
-
-    stage_update_comment = models.TextField(
-        "Motif du changement d'étape", null=True, blank=True
-    )
-
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -427,3 +402,50 @@ class InvitationToken(models.Model):
     def is_valid(self):
         """Check if the token is still valid."""
         return self.user_id is None and self.valid_until >= timezone.now()
+
+
+class StatusLog(models.Model):
+    """A petition project status (stage + decision) change log entry."""
+
+    petition_project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        related_name="status_history",
+        verbose_name="Projet",
+    )
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        verbose_name=_("Created by"),
+        null=True,
+    )
+    stage = models.CharField(
+        "Étape",
+        max_length=30,
+        choices=STAGES,
+        default=STAGES.a_instruire,
+    )
+    decision = models.CharField(
+        "Décision",
+        max_length=30,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
+    )
+    update_comment = models.TextField(
+        "Commentaire",
+        help_text="Ajouter un commentaire expliquant le contexte du changement.",
+    )
+    status_date = models.DateField(
+        "Date effective du changement",
+        help_text="Vous pouvez choisir une date rétroactive si nécessaire.",
+        default=timezone.now,
+    )
+
+    # Meta fields
+    created_at = models.DateTimeField(
+        "Date de saisie du changement de statut", default=timezone.now
+    )
+
+    class Meta:
+        verbose_name = "Log de changement de statut de projet"
+        verbose_name_plural = "Historique des changements de statut de projet"

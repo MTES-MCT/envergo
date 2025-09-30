@@ -10,9 +10,11 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Q
-from django.http import Http404, HttpResponse, JsonResponse
+from django.db.models import CharField, OuterRef, Q, Subquery, Value
+from django.db.models.functions import Coalesce
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -40,7 +42,14 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
 )
-from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
+from envergo.petitions.models import (
+    DECISIONS,
+    DOSSIER_STATES,
+    STAGES,
+    InvitationToken,
+    PetitionProject,
+    StatusLog,
+)
 from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
@@ -895,31 +904,107 @@ class PetitionProjectInstructorProcedureView(
 
     form_class = ProcedureForm
     template_name = "haie/petitions/instructor_view_procedure.html"
+    paginate_by = 10
+    context_object_name = "petition_project"
+
+    def get_queryset(
+        self,
+    ):
+        latest_logs = StatusLog.objects.filter(
+            petition_project=OuterRef("pk")
+        ).order_by("-created_at")
+        queryset = super().get_queryset()
+        return queryset.annotate(
+            current_stage=Coalesce(
+                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
+                Value(STAGES.a_instruire, output_field=CharField()),
+            ),
+            current_decision=Coalesce(
+                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
+                Value(DECISIONS.unset, output_field=CharField()),
+            ),
+        )
+
+    def get_initial(self):
+        initial = super().get_initial()
+        obj = self.get_object()
+        initial["stage"] = obj.current_stage
+        initial["decision"] = obj.current_decision
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        obj = self.get_object()
+        history_qs = obj.status_history.select_related("created_by").order_by(
+            "-created_at"
+        )
+        paginator = Paginator(history_qs, self.paginate_by)
+
+        page_number = self.request.GET.get("page")
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        # Prefetch previous log in the current page
+        start = max(
+            page_obj.start_index() - 2, 0
+        )  # -1 for 0 index, -1 to get previous log
+        end = page_obj.end_index()
+        logs = list(history_qs[start:end])
+        for i, log in enumerate(logs):
+            log.previous_log = logs[i + 1] if i + 1 < len(logs) else None
+
+        # Drop the extra item (first one) if it's not part of this page
+        if page_obj.number > 1:
+            logs = logs[1:]
+
+        context = {
+            "object_list": logs,
+            "paginator": paginator,
+            "page_obj": page_obj,
+            "is_paginated": paginator.num_pages > 1,
+            "STAGES": STAGES,
+            "DECISIONS": DECISIONS,
+        }
+
+        context.update(super().get_context_data(**kwargs))
+        return context
 
     def post(self, request, *args, **kwargs):
         """Authorize edition only for department instructors"""
         # check if user is authorized, else returns 403 error
-        project = self.get_object()
-        if not project.has_user_as_department_instructor(request.user):
+        self.object = self.get_object()
+        if not self.object.has_user_as_department_instructor(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        return super().post(request, *args, **kwargs)
+        form = ProcedureForm(request.POST)
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
     def form_valid(self, form):
-        previous_stage = form.initial["stage"]
-        previous_decision = form.initial["decision"]
-        res = super().form_valid(form)
+        log = form.save(commit=False)
+        log.petition_project = self.object
+        log.created_by = self.request.user
+        log.save()
+        previous_stage = self.object.current_stage
+        previous_decision = self.object.current_decision
+        res = HttpResponseRedirect(self.get_success_url())
         log_event(
             "projet",
             "modification_statut",
             self.request,
             reference=self.object.reference,
             etape_i=previous_stage,
-            etape_f=self.object.stage,
+            etape_f=log.stage,
             decision_i=previous_decision,
-            decision_f=self.object.decision,
+            decision_f=log.decision,
             **get_matomo_tags(self.request),
         )
 
