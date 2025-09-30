@@ -272,6 +272,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         elif (
             self.moulinette.main_form.is_valid()
             and not self.moulinette.are_additional_forms_bound()
+            and not self.moulinette.are_optional_forms_bound()
         ):
             return HttpResponseRedirect(f"{self.get_form_url()}#additional-forms")
 
