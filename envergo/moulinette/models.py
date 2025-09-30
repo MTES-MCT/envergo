@@ -1588,12 +1588,6 @@ class Moulinette(ABC):
 
         return bool(self.form_errors())
 
-    def are_additional_forms_bound(self):
-        """Return true if some additional forms received any data."""
-
-        data = self.data
-        return any(key in data for key in self.additional_fields.keys())
-
     def cleaned_additional_data(self):
         """Return combined additional data from custom criterion forms."""
 
@@ -1614,6 +1608,30 @@ class Moulinette(ABC):
                 if field.name not in fields:
                     fields[field.name] = field
         return fields
+
+    def are_additional_forms_bound(self):
+        """Return true if some additional forms received any data."""
+
+        data = self.data
+        return any(key in data for key in self.additional_fields.keys())
+
+    @cached_property
+    def optional_fields(self):
+        """Get a {field_name: field} dict of all optional questions fields."""
+
+        fields = OrderedDict()
+        for form in self.optional_forms:
+            for field in form:
+                field_name = form.add_prefix(field.name)
+                if field_name not in fields:
+                    fields[field_name] = field
+        return fields
+
+    def are_optional_forms_bound(self):
+        """Return true if some optional forms received any data."""
+
+        data = self.data
+        return any(key in data for key in self.optional_fields.keys())
 
     @property
     def regulations(self):
