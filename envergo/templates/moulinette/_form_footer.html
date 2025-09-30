@@ -57,11 +57,9 @@
       <strong>Questions complémentaires</strong>
     </h4>
 
-    {% if not request.GET.edit %}
-      <p>
-        Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
-      </p>
-    {% endif %}
+    <p>
+      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
+    </p>
 
     {% for field_name, field in additional_fields.items %}
       {% if field|is_checkbox %}
