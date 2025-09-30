@@ -1558,11 +1558,11 @@ class Moulinette(ABC):
 
         data = {}
         for form in self.all_forms:
-            if form.is_valid():
-                if hasattr(form, "prefixed_cleaned_data"):
-                    data.update(form.prefixed_cleaned_data)
-                else:
-                    data.update(form.cleaned_data)
+            form.full_clean()
+            if hasattr(form, "prefixed_cleaned_data"):
+                data.update(form.prefixed_cleaned_data)
+            elif hasattr(form, "cleaned_data"):
+                data.update(form.cleaned_data)
         return data
 
     def form_errors(self):
