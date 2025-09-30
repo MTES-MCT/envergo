@@ -100,7 +100,8 @@ class Migration(migrations.Migration):
                 (
                     "created_by",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
                         to=settings.AUTH_USER_MODEL,
                         verbose_name="Created by",
                     ),
