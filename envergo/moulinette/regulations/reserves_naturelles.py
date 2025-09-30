@@ -38,41 +38,43 @@ class ReservesNaturelles(CriterionEvaluator):
     def get_catalog_data(self):
         """Compute the length of hedges to remove in reserve naturelle"""
 
-        hedges = self.catalog["haies"].hedges_to_remove()
-        hedges_geom = MultiLineString(
-            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
-        )
+        catalog = super().get_catalog_data()
+        hedges_to_remove = self.catalog["haies"].hedges_to_remove()
 
-        # Find all the Zones for the current Perimeter and that intersects any of the hedges
-        qs = (
-            self.moulinette.reserves_naturelles.reserves_naturelles.activation_map.zones.all()
-            .filter(geometry__intersects=hedges_geom)
-            .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
-        )
-        # Aggregate them into a single polygon
-        multipolygon = qs["geom"]
+        if hedges_to_remove:
+            hedges_geom = MultiLineString(
+                [h.geos_geometry for h in hedges_to_remove], srid=EPSG_WGS84
+            )
 
-        # Other conversion options throw a cryptic numpy error, so…
-        geom = shapely.from_wkt(multipolygon.wkt)
+            # Find all the Zones for the current Perimeter and that intersects any of the hedges
+            qs = (
+                self.moulinette.reserves_naturelles.reserves_naturelles.activation_map.zones.all()
+                .filter(geometry__intersects=hedges_geom)
+                .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+            )
+            # Aggregate them into a single polygon
+            multipolygon = qs["geom"]
 
-        resnat = {}
-        l_resnat = 0.0
+            # Other conversion options throw a cryptic numpy error, so…
+            geom = shapely.from_wkt(multipolygon.wkt)
 
-        # Use the geodesic length
-        geod = Geod(ellps="WGS84")
+            resnat = {}
+            l_resnat = 0.0
 
-        for h in hedges:
-            intersect = h.geometry.intersection(geom)
-            length = geod.geometry_length(intersect)
-            if length > 0.0:
-                resnat[h.id] = ceil(length)
-                l_resnat += length
+            # Use the geodesic length
+            geod = Geod(ellps="WGS84")
 
-        data = {}
-        data["resnat"] = resnat
-        data["l_resnat"] = ceil(l_resnat)
+            for h in hedges_to_remove:
+                intersect = h.geometry.intersection(geom)
+                length = geod.geometry_length(intersect)
+                if length > 0.0:
+                    resnat[h.id] = ceil(length)
+                    l_resnat += length
 
-        return data
+            catalog["resnat"] = resnat
+            catalog["l_resnat"] = ceil(l_resnat)
+
+        return catalog
 
     def get_result_data(self):
         plan_gestion = self.catalog["plan_gestion"]
