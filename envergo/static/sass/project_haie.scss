@@ -582,10 +582,6 @@ div#project-specifications-instructor {
   }
 }
 
-.fr-link--icon-right.link-project-detail::after {
-  margin: 0;
-}
-
 /**
  * Page instructor
  */
@@ -745,6 +741,22 @@ div.title-with-link-container {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    a {
+      font-size: 0.875rem;
+    }
+  }
+
+  tbody tr {
+    &:hover td {
+      background-color: var(--background-default-grey-hover);
+    }
+
+    td {
+      .fr-btn--secondary:not(:hover) {
+        background-color: var(--background-default-grey);
+      }
+    }
   }
 }
 
@@ -777,4 +789,13 @@ section#moulinette-regulation-result {
   text-overflow: ellipsis;
   display: inline-block;
   vertical-align: bottom;
+}
+
+div#project-header-container {
+  display: flex;
+  align-items: start;
+
+  form {
+    margin-left: 2em;
+  }
 }
