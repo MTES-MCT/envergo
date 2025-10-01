@@ -1,0 +1,11 @@
+### Un changement de statut a eu lieu depuis DS :warning: à vérifier
+
+Les changements de statut doivent normalement avoir lieu depuis la page Procédure du guichet unique.
+Il faut vérifier pourquoi ce changement a eu lieu depuis DS.
+
+
+[Consulter le dossier]({{ instructor_url }})({{ department }})
+
+[Voir le dossier en admin]({{ admin_url }})
+
+[Voir le dossier sur DS]({{ ds_url }})
