@@ -16,7 +16,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
-from envergo.petitions.demarches_simplifiees.models import Dossier
+from envergo.petitions.demarches_simplifiees.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
@@ -34,6 +34,7 @@ from envergo.petitions.services import (
     get_demarches_simplifiees_dossier,
     get_messages_and_senders_from_ds,
     send_message_dossier_ds,
+    update_demarches_simplifiees_status,
 )
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
@@ -876,3 +877,54 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
 
     # THEN I receive an error
     assert result is None
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+def test_update_demarches_simplifiees_state():
+    # GIVEN a petition project in "en construction" state
+    petition_project = PetitionProjectFactory(
+        demarches_simplifiees_state="en_construction"
+    )
+
+    # WHEN I update its status to "en instruction"
+    update_demarches_simplifiees_status(
+        petition_project, DossierState.en_instruction, "go to instuction"
+    )
+
+    # THEN the status is updated
+    petition_project.refresh_from_db()
+    assert (
+        petition_project.demarches_simplifiees_state
+        == DossierState.en_instruction.value
+    )
+    assert petition_project.prefetched_dossier.state == DossierState.en_instruction
+
+    # WHEN I update its status to "Accepté"
+    update_demarches_simplifiees_status(
+        petition_project, DossierState.accepte, "go to accepted"
+    )
+
+    # THEN the status is updated
+    petition_project.refresh_from_db()
+    assert petition_project.demarches_simplifiees_state == DossierState.accepte.value
+    assert petition_project.prefetched_dossier.state == DossierState.accepte
+
+    # WHEN I update its status to "Refusé"
+    update_demarches_simplifiees_status(
+        petition_project, DossierState.refuse, "go to refused"
+    )
+
+    # THEN the status is updated
+    petition_project.refresh_from_db()
+    assert petition_project.demarches_simplifiees_state == DossierState.refuse.value
+    assert petition_project.prefetched_dossier.state == DossierState.refuse
+
+    # WHEN I update its status to "Classé sans suite"
+    update_demarches_simplifiees_status(
+        petition_project, DossierState.sans_suite, "go to sans suite"
+    )
+
+    # THEN the status is updated
+    petition_project.refresh_from_db()
+    assert petition_project.demarches_simplifiees_state == DossierState.sans_suite.value
+    assert petition_project.prefetched_dossier.state == DossierState.sans_suite

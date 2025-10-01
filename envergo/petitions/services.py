@@ -12,10 +12,14 @@ from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
+from envergo.petitions.demarches_simplifiees.client import (
+    DemarchesSimplifieesClient,
+    DemarchesSimplifieesError,
+)
 from envergo.petitions.demarches_simplifiees.models import (
     CheckboxChamp,
     Dossier,
+    DossierState,
     ExplicationChampDescriptor,
     HeaderSectionChampDescriptor,
     PieceJustificativeChamp,
@@ -410,8 +414,66 @@ def get_demarches_simplifiees_dossier(
     return dossier
 
 
-def update_demarches_simplifiees_status(petition_project, new_status):
-    pass
+def update_demarches_simplifiees_status(petition_project, new_status, message):
+    client = DemarchesSimplifieesClient()
+
+    if petition_project.demarches_simplifiees_dossier_id is None:
+        # ensure that we have the dossier first because we need its id
+        get_demarches_simplifiees_dossier(petition_project, force_update=True)
+
+        if petition_project.demarches_simplifiees_dossier_id is None:
+            # this dossier cannot be fetched on DS, maybe it is in draft. We cannot update its status.
+            raise ValueError("Cannot update status of a dossier without DS id")
+
+    if new_status == DossierState.en_construction.value:
+        response = client.pass_back_dossier_under_construction(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+        )
+    elif new_status == DossierState.en_instruction.value:
+        if petition_project.demarches_simplifiees_state in [
+            DossierState.accepte.value,
+            DossierState.refuse.value,
+            DossierState.sans_suite.value,
+        ]:
+            response = client.pass_back_dossier_to_instruction(
+                petition_project.reference,
+                petition_project.demarches_simplifiees_dossier_id,
+            )
+        else:
+            response = client.pass_dossier_to_instruction(
+                petition_project.reference,
+                petition_project.demarches_simplifiees_dossier_id,
+            )
+    elif new_status == DossierState.accepte.value:
+        response = client.accept_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            message,
+        )
+    elif new_status == DossierState.refuse.value:
+        response = client.refuse_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            message,
+        )
+    elif new_status == DossierState.sans_suite.value:
+        response = client.close_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            message,
+        )
+    else:
+        raise ValueError(f"Unknown status {new_status}")
+
+    if response:
+        # the status change was successful, we update the petition project
+        petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
+    else:
+        # update failed, notification should have been sent by the DS client
+        raise DemarchesSimplifieesError(
+            "Unable to update status on Démarches Simplifiées"
+        )
 
 
 class PetitionProjectCreationProblem:

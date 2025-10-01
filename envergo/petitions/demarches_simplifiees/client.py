@@ -12,9 +12,18 @@ from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
+from envergo.petitions.demarches_simplifiees.models import (
+    DemarcheWithRawDossiers,
+    DossierState,
+)
 from envergo.petitions.demarches_simplifiees.queries import (
+    DOSSIER_ACCEPTER_MUTATION,
+    DOSSIER_CLASSER_SANS_SUITE_MUTATION,
     DOSSIER_ENVOYER_MESSAGE_MUTATION,
+    DOSSIER_PASSER_EN_INSTRUCTION_MUTATION,
+    DOSSIER_REFUSER_MUTATION,
+    DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION,
+    DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION,
     GET_DOSSIER_MESSAGES_QUERY,
     GET_DOSSIER_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
@@ -233,7 +242,7 @@ class DemarchesSimplifieesClient:
             logger.warning("Missing instructeur id.")
             return None
         if not dossier_id:
-            logger.warning("Missing instructeur id.")
+            logger.warning("Missing dossier id.")
             return None
 
         variables = {
@@ -311,12 +320,250 @@ class DemarchesSimplifieesClient:
         # Return query response content
         return data["dossierEnvoyerMessage"]
 
+    def _change_dossier_state(
+        self,
+        project_reference,
+        dossier_id,
+        state,
+        motivation: str,
+        disable_notification: bool,
+    ) -> dict | None:
+        """Change dossier state. Use different query depending on target state
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+
+        mapping = {
+            DossierState.accepte: (DOSSIER_ACCEPTER_MUTATION, "dossierAccepter"),
+            DossierState.en_construction: (
+                DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION,
+                "dossierRepasserEnConstruction",
+            ),
+            DossierState.en_instruction: (
+                DOSSIER_PASSER_EN_INSTRUCTION_MUTATION,
+                "dossierPasserEnInstruction",
+            ),
+            "back_to_instruction": (
+                DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION,
+                "dossierRepasserEnInstruction",
+            ),
+            DossierState.refuse: (DOSSIER_REFUSER_MUTATION, "dossierRefuser"),
+            DossierState.sans_suite: (
+                DOSSIER_CLASSER_SANS_SUITE_MUTATION,
+                "dossierClasserSansSuite",
+            ),
+        }
+
+        query, result_key = mapping[state]
+        variables = {
+            "input": {
+                "disableNotification": disable_notification,
+                "dossierId": dossier_id,
+            }
+        }
+        if motivation:
+            variables["input"]["motivation"] = motivation
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"Use fake dossier if dossier is not draft."
+                f"\nquery: {query}"
+                f"\nvariables: {variables}"
+            )
+            with open(
+                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json",
+                "r",
+            ) as file:
+                response = json.load(file)
+                data = copy.deepcopy(response["data"])
+                data["dossier"]["state"] = (
+                    state.value
+                    if state != "back_to_instruction"
+                    else DossierState.en_instruction.value
+                )
+                data = {result_key: data, "errors": []}
+        else:
+            instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+            if not instructeur_id:
+                raise DemarchesSimplifieesError(
+                    query,
+                    {},
+                    "INSTRUCTEUR_ID is not set, please check the configuration.",
+                )
+
+            variables["input"]["instructeurId"] = instructeur_id
+
+            try:
+                data = self.execute(query, variables)
+            except DemarchesSimplifieesError as e:
+                logger.error(
+                    "Error when changing dossier state via Demarches Simplifiees API",
+                    extra={
+                        "dossier_id": dossier_id,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                message = render_to_string(
+                    "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                    context={
+                        "dossier_number": project_reference,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                notify(dedent(message), "haie")
+                return None
+
+        # State change failed
+        if (
+            data.get("errors")
+            or result_key not in data
+            or data[result_key].get("errors")
+        ):
+            logger.error(
+                "Error when changing dossier state via Demarches Simplifiees API",
+                extra={
+                    "response": data,
+                    "query": query,
+                    "variables": variables,
+                },
+            )
+            message = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                context={
+                    "dossier_number": project_reference,
+                    "error": data,
+                    "query": query,
+                    "variables": variables,
+                },
+            )
+            notify(dedent(message), "haie")
+            return None
+
+        # Return query response content containing the whole dossier that can be cached in the project reference
+        return data[result_key]
+
+    def accept_dossier(
+        self,
+        project_reference,
+        dossier_id,
+        motivation: str,
+        disable_notification=True,
+    ) -> dict | None:
+        """Accept dossier
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.accepte,
+            motivation,
+            disable_notification,
+        )
+
+    def pass_back_dossier_under_construction(
+        self,
+        project_reference,
+        dossier_id,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass back the dossier under construction
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.en_construction,
+            "",
+            disable_notification,
+        )
+
+    def pass_dossier_to_instruction(
+        self,
+        project_reference,
+        dossier_id,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass the dossier to instruction
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.en_instruction,
+            "",
+            disable_notification,
+        )
+
+    def pass_back_dossier_to_instruction(
+        self,
+        project_reference,
+        dossier_id,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass back the dossier to instruction
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            "back_to_instruction",
+            "",
+            disable_notification,
+        )
+
+    def refuse_dossier(
+        self,
+        project_reference,
+        dossier_id,
+        motivation: str,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass the dossier to "refusé"
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.refuse,
+            motivation,
+            disable_notification,
+        )
+
+    def close_dossier(
+        self,
+        project_reference,
+        dossier_id,
+        motivation: str,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass the dossier to "classé sans suite"
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.sans_suite,
+            motivation,
+            disable_notification,
+        )
+
 
 class DemarchesSimplifieesError(Exception):
     """Démarches Simplifiées client Exception"""
 
     def __init__(self, query: str, variables: dict, message: str = None):
-        super().__init__()
+        super().__init__(message)
         self.message = message
         self.query = query
         self.variables = variables

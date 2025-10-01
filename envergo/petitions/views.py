@@ -21,6 +21,7 @@ from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, UpdateView
@@ -38,6 +39,7 @@ from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
@@ -1020,17 +1022,28 @@ class PetitionProjectInstructorProcedureView(
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
-        log.save()
         previous_stage = self.object.current_stage
         previous_decision = self.object.current_decision
 
-        previous_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[
-            (previous_stage, previous_decision)
-        ]
+        previous_ds_status = self.object.demarches_simplifiees_state
         new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
-
         if previous_ds_status != new_ds_status:
-            update_demarches_simplifiees_status(self.object, new_ds_status)
+            try:
+                update_demarches_simplifiees_status(
+                    self.object, new_ds_status, log.update_comment
+                )
+            except DemarchesSimplifieesError:
+                form.add_error(
+                    None,
+                    mark_safe(
+                        f"Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste, "
+                        f"<a href='{reverse("contact_us")}'>contactez l'équipe du Guichet Unique de la Haie</a> en "
+                        f"indiquant l'identifiant du dossier."
+                    ),
+                )
+                return self.form_invalid(form)
+
+        log.save()
 
         res = HttpResponseRedirect(self.get_success_url())
         log_event(
