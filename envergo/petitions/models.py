@@ -274,7 +274,6 @@ class PetitionProject(models.Model):
                 haie_site,
                 **self.get_log_event_data(),
             )
-
         elif (
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
