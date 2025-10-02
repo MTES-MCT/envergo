@@ -22,7 +22,7 @@ COMMON_URLS = [
     "accessibility",
     "stats",
     "legal_mentions",
-    "moulinette_home",
+    "moulinette_form",
     "moulinette_result",
     "demo_catchment_area",
     "demo_density",
