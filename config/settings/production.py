@@ -256,12 +256,17 @@ FROM_EMAIL = {
 
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=FROM_EMAIL["amenagement"]["admin"])
 
+# Whenever we are confident the csp policy is ok, move the rules from the "report only"
+# settings to this setting.
+SECURE_CSP = {}
+
 SECURE_CSP_REPORT_ONLY = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "img-src": [
         CSP.SELF,
+        "https://data.geopf.fr",  # Leaflet geoportail images
         "https://*.s3.fr-par.scw.cloud",
         "data:",
         "https://*.crisp.chat",
@@ -270,6 +275,11 @@ SECURE_CSP_REPORT_ONLY = {
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
     "frame-src": [CSP.SELF, "https://*.crisp.chat"],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
-    "connect-src": [CSP.SELF, "https://*.crisp.chat", "wss://*.relay.crisp.chat"],
+    "connect-src": [
+        CSP.SELF,
+        "https://*.data.gouv.fr",  # Address autocomplete api
+        "https://*.crisp.chat",
+        "wss://*.relay.crisp.chat",
+    ],
     "report-uri": "/csp/reports/",
 }

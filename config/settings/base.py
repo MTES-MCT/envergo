@@ -477,3 +477,7 @@ HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = (
 FILE_UPLOAD_HANDLERS = [
     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
 ]
+
+SECURE_CSP = {}
+
+SECURE_CSP_REPORT_ONLY = {}
