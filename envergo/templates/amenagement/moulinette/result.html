@@ -16,7 +16,7 @@
         class="spinner-form"
         novalidate
         autocomplete="off"
-        action="{% url "moulinette_form" %}"
+        action="{% url 'moulinette_form' %}?{{ request.GET.urlencode|safe }}"
         id="moulinette-form">
     {% csrf_token %}
     {% for field in form %}{{ field|as_hidden }}{% endfor %}
