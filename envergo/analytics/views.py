@@ -1,5 +1,7 @@
+import json
 from urllib.parse import parse_qs, urlencode, urlparse
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import (
@@ -11,11 +13,13 @@ from django.http import (
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.views.generic import FormView, RedirectView
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import FormView, RedirectView, View
 from django.views.generic.edit import BaseFormView
 from django_ratelimit.decorators import ratelimit
 
 from envergo.analytics.forms import EventForm, FeedbackForm, FeedbackRespondForm
+from envergo.analytics.models import CSPReport
 from envergo.analytics.utils import log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
@@ -191,3 +195,18 @@ class Events(FormView):
 
     def form_invalid(self, form):
         return JsonResponse({"status": "error", "errors": form.errors})
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(ratelimit(key="ip", rate="50/m", method="POST"), name="post")
+class CSPReportView(View):
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        content = json.loads(request.body)
+        visitor_id = request.COOKIES.get(settings.VISITOR_COOKIE_NAME, "")
+        CSPReport.objects.create(
+            content=content, site=request.site, session_key=visitor_id
+        )
+
+        return HttpResponse()
