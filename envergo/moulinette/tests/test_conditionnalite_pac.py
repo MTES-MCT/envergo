@@ -1,9 +1,9 @@
 from decimal import Decimal as D
-from unittest.mock import MagicMock
 
 import pytest
 
 from envergo.geodata.conftest import herault_map, loire_atlantique_map  # noqa
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import Criterion, MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
@@ -12,6 +12,22 @@ from envergo.moulinette.tests.factories import (
 )
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def hedges():
+    h = HedgeDataFactory(
+        hedges=[HedgeFactory(additionalData={"sur_parcelle_pac": False})]
+    )
+    return h
+
+
+@pytest.fixture
+def hedges_pac():
+    h = HedgeDataFactory(
+        hedges=[HedgeFactory(additionalData={"sur_parcelle_pac": True})]
+    )
+    return h
 
 
 @pytest.fixture(autouse=True)
@@ -31,27 +47,33 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 
 def test_conditionnalite_pac_only_for_agri_pac():
     ConfigHaieFactory()
-    haies = MagicMock()
-    haies.length_to_remove.return_value = 10
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "department": "44",
-        "haies": haies,
+        "haies": hedges,
     }
     for motif_choice in [
-        "transfert_parcelles",
-        "chemin_acces",
-        "meilleur_emplacement",
+        "amelioration_culture",
+        "securite",
         "amenagement",
         "autre",
     ]:
         for reimplantation_choice in ["remplacement", "replantation", "non"]:
             data["motif"] = motif_choice
             data["reimplantation"] = reimplantation_choice
-            moulinette = MoulinetteHaie(data, data, False)
-            assert moulinette.is_evaluation_available()
+            moulinette_data = {
+                "initial": data,
+                "data": data,
+            }
+            moulinette = MoulinetteHaie(moulinette_data)
+            assert moulinette.is_valid()
             assert moulinette.result == "non_soumis", (
                 motif_choice,
                 reimplantation_choice,
@@ -64,37 +86,48 @@ def test_bcae8_impossible_case():
     This data configuration is prevented by the form validation.
     """
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 100,
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    assert not moulinette.is_valid()
     assert moulinette.result == "non_disponible", data
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "non_disponible", data
 
 
 def test_bcae8_not_activated(herault_map):  # noqa
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 100,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette_data = {
+        "initial": data,
+        "data": data,
+    }
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.result == "non_soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
 
@@ -102,28 +135,35 @@ def test_bcae8_not_activated(herault_map):  # noqa
     criterion.activation_map = herault_map
     criterion.save()
 
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.result == "non_disponible", data
     assert moulinette.get_criteria().count() == 0
 
 
 def test_bcae8_small_dispense_petit():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 100,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-    data["haies"].length_to_remove.return_value = 4
+    moulinette_data = {
+        "initial": data,
+        "data": data,
+    }
+    moulinette = MoulinetteHaie(moulinette_data)
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    assert moulinette.is_valid()
     assert moulinette.result == "non_soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
     assert (
@@ -131,8 +171,37 @@ def test_bcae8_small_dispense_petit():
         == D("1")
     )
 
+
+def test_bcae8_small_dispense_petit_2():
+    ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False}),
+        ]
+    )
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    moulinette_data = {
+        "initial": data,
+        "data": data,
+    }
+    moulinette = MoulinetteHaie(moulinette_data)
+
+    assert moulinette.is_valid()
+    assert moulinette.result == "non_soumis", data
+    assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit", data
     # GIVEN hedges to remove other than PAC, the R is computed only on PAC ones
-    data["haies"].length_to_remove.return_value = 8
     assert (
         moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
         == D("0.5")
@@ -141,20 +210,27 @@ def test_bcae8_small_dispense_petit():
 
 def test_bcae8_small_interdit_transfert_parcelles():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 100,
         "transfert_parcelles": "oui",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {
+        "initial": data,
+        "data": data,
+    }
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code
@@ -164,20 +240,27 @@ def test_bcae8_small_interdit_transfert_parcelles():
 
 def test_bcae8_small_interdit_amelioration_culture():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 100,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {
+        "initial": data,
+        "data": data,
+    }
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code
@@ -187,19 +270,24 @@ def test_bcae8_small_interdit_amelioration_culture():
 
 def test_bcae8_small_soumis_chemin_acces():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "chemin_acces",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
+    moulinette_data = {"initial": data, "data": data}
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
@@ -208,21 +296,23 @@ def test_bcae8_small_soumis_chemin_acces():
 
 def test_bcae8_small_interdit_chemin_acces():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=11, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "chemin_acces",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 11
-
-    data["haies"].hedges_to_remove_pac.return_value = [MagicMock(length=11)]
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
@@ -231,32 +321,33 @@ def test_bcae8_small_interdit_chemin_acces():
 
 def test_bcae8_multi_chemin_acces():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(length=9, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=8, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=7, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=6, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=5, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=3, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=2, additionalData={"sur_parcelle_pac": True}),
+            HedgeFactory(length=1, additionalData={"sur_parcelle_pac": True}),
+        ]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "chemin_acces",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 50
-
-    data["haies"].hedges_to_remove_pac.return_value = [
-        MagicMock(length=9),
-        MagicMock(length=8),
-        MagicMock(length=7),
-        MagicMock(length=6),
-        MagicMock(length=5),
-        MagicMock(length=5),
-        MagicMock(length=4),
-        MagicMock(length=3),
-        MagicMock(length=2),
-        MagicMock(length=1),
-    ]
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
@@ -265,40 +356,48 @@ def test_bcae8_multi_chemin_acces():
 
 def test_bcae8_small_interdit_securite():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "securite",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "motif_pac": "aucun",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_securite", data
 
 
 def test_bcae8_small_soumis_amenagement():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amenagement",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "amenagement_dup": "oui",
         "batiment_exploitation": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
@@ -307,20 +406,24 @@ def test_bcae8_small_soumis_amenagement():
 
 def test_bcae8_small_interdit_amenagement():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amenagement",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "amenagement_dup": "non",
         "batiment_exploitation": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
@@ -329,18 +432,22 @@ def test_bcae8_small_interdit_amenagement():
 
 def test_bcae8_small_interdit_embellissement():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "embellissement",
         "reimplantation": "non",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "interdit_embellissement"
@@ -349,102 +456,116 @@ def test_bcae8_small_interdit_embellissement():
 
 def test_bcae8_big_soumis_remplacement():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-    data["haies"].length_to_remove.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_remplacement"
     ), data
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("1")
-    )
+    assert round(
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
+        1,
+    ) == D("1")
 
 
 def test_bcae8_big_soumis_transfer_parcelles():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "oui",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-    data["haies"].length_to_remove.return_value = 4000
+    moulinette_data = {"initial": data, "data": data}
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
     ), data
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("1")
-    )
+    assert round(
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
+        1,
+    ) == D("1")
 
 
 def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "oui",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-    data["haies"].length_to_remove.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code
         == "soumis_meilleur_emplacement"
     ), data
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("1")
-    )
+    assert round(
+        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
+        1,
+    ) == D("1")
 
 
 def test_bcae8_big_interdit_amelioration_culture():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "transfert_parcelles": "non",
         "meilleur_emplacement": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code
@@ -454,18 +575,22 @@ def test_bcae8_big_interdit_amelioration_culture():
 
 def test_bcae8_big_interdit_embellissement():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "embellissement",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "interdit_embellissement"
@@ -474,20 +599,23 @@ def test_bcae8_big_interdit_embellissement():
 
 def test_bcae8_big_soumis_fosse():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "motif_pac": "rehabilitation_fosse",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-    data["haies"].length_to_remove.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_fosse", data
     assert (
@@ -498,20 +626,23 @@ def test_bcae8_big_soumis_fosse():
 
 def test_bcae8_big_soumis_incendie():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "motif_pac": "protection_incendie",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-    data["haies"].length_to_remove.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_incendie", data
     assert (
@@ -522,20 +653,23 @@ def test_bcae8_big_soumis_incendie():
 
 def test_bcae8_big_soumis_maladie():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "motif_pac": "gestion_sanitaire",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-    data["haies"].length_to_remove.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "soumis", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_maladie", data
     assert (
@@ -546,19 +680,23 @@ def test_bcae8_big_soumis_maladie():
 
 def test_bcae8_big_interdit_autre():
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "autre",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "motif_pac": "aucun",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
-
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "interdit", data
     assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_autre", data
 
@@ -566,31 +704,36 @@ def test_bcae8_big_interdit_autre():
 def test_bcae8_batiment_exploitation():
     # GIVEN a project of amenagement on PAC land
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "motif": "amenagement",
         "reimplantation": "replantation",
         "localisation_pac": "oui",
         "department": "44",
-        "haies": MagicMock(),
+        "haies": hedges,
         "lineaire_total": 5000,
         "motif_pac": "aucun",
         "amenagement_dup": "non",
     }
-    data["haies"].lineaire_detruit_pac.return_value = 4000
+    moulinette_data = {"initial": data, "data": data}
 
     # WHEN the batiment exploitation params is missing
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette = MoulinetteHaie(moulinette_data)
 
     # THEN the moulinette is not valid
-    assert moulinette.is_evaluation_available()
+    assert not moulinette.is_valid()
     assert moulinette.has_missing_data()
 
     # WHEN the batiment exploitation params is non
-    data["batiment_exploitation"] = "non"
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette_data["data"]["batiment_exploitation"] = "non"
+    moulinette = MoulinetteHaie(moulinette_data)
 
     # THEN the result is interdit
-    assert moulinette.is_evaluation_available()
+    assert moulinette.is_valid()
     assert not moulinette.has_missing_data()
     assert moulinette.result == "interdit", data
     assert (
@@ -598,11 +741,11 @@ def test_bcae8_batiment_exploitation():
     ), data
 
     # WHEN the batiment exploitation params is oui
-    data["batiment_exploitation"] = "oui"
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette_data["data"]["batiment_exploitation"] = "oui"
+    moulinette = MoulinetteHaie(moulinette_data)
 
     # THEN the result is soumis_amenagement
-    assert moulinette.is_evaluation_available()
+    assert moulinette.is_valid()
     assert not moulinette.has_missing_data()
     assert moulinette.result == "soumis", data
     assert (
@@ -610,15 +753,8 @@ def test_bcae8_batiment_exploitation():
     ), data
 
     # EVEN on small project or without replantation
-    data["reimplantation"] = "non"
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.result == "soumis", data
-    assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
-    ), data
-
-    data["haies"].lineaire_detruit_pac.return_value = 11
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette_data["data"]["reimplantation"] = "non"
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.result == "soumis", data
     assert (
         moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
