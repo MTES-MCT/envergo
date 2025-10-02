@@ -468,11 +468,12 @@ def update_demarches_simplifiees_status(petition_project, new_status, message):
 
     if response:
         # the status change was successful, we update the petition project
+        petition_project.demarches_simplifiees_state = response["dossier"]["state"]
         petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
     else:
         # update failed, notification should have been sent by the DS client
         raise DemarchesSimplifieesError(
-            "Unable to update status on Démarches Simplifiées"
+            "", {}, "Unable to update status on Démarches Simplifiées"
         )
 
 

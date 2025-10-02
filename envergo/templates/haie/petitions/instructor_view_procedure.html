@@ -33,8 +33,12 @@
   </div>
   {% if is_department_instructor %}
     <button class="fr-btn"
+            {% if petition_project.demarches_simplifiees_state == "draft" %}disabled{% endif %}
             data-fr-opened="{% if form.errors %}true{% else %}false{% endif %}"
             aria-controls="procedure-modal">Modifier</button>
+    {% if petition_project.demarches_simplifiees_state == "draft" %}
+      <span class="fr-hint-text">Ce dossier n'a pas encore été finalisé par le pétitionnaire</span>
+    {% endif %}
   {% endif %}
 
   {% if paginator.count %}
