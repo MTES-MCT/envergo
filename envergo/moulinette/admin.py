@@ -2,6 +2,7 @@ import json
 
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -50,6 +51,24 @@ class RegulationAdminForm(forms.ModelForm):
                 }
             )
         return data
+
+    def clean_actions_to_take_map(self):
+        value = self.cleaned_data["actions_to_take_map"]
+
+        if not isinstance(value, dict):
+            raise ValidationError("La valeur doit être un objet JSON (clé/valeur).")
+
+        for k, v in value.items():
+            if not isinstance(k, str):
+                raise ValidationError(
+                    f"La clé '{k}' n’est pas une chaîne de caractères."
+                )
+            if not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+                raise ValidationError(
+                    f"La valeur associée à '{k}' doit être une liste de chaînes de caractères."
+                )
+
+        return value
 
 
 @admin.register(Regulation)
@@ -113,6 +132,24 @@ class CriterionAdminForm(forms.ModelForm):
         """Ensure an empty value can be converted to an empty json dict."""
         value = self.cleaned_data["evaluator_settings"]
         value = {} if value is None else value
+        return value
+
+    def clean_actions_to_take_map(self):
+        value = self.cleaned_data["actions_to_take_map"]
+        value = {} if value is None else value
+        if not isinstance(value, dict):
+            raise ValidationError("La valeur doit être un objet JSON (clé/valeur).")
+
+        for k, v in value.items():
+            if not isinstance(k, str):
+                raise ValidationError(
+                    f"La clé '{k}' n’est pas une chaîne de caractères."
+                )
+            if not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+                raise ValidationError(
+                    f"La valeur associée à '{k}' doit être une liste de chaînes de caractères."
+                )
+
         return value
 
     def clean(self):
