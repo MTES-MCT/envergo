@@ -878,7 +878,7 @@ class PetitionProjectInstructorMessagerieView(
     def form_valid(self, form):
         """Send message"""
         message_body = form.cleaned_data["message_body"]
-        attachments = form.cleaned_data["additional_files"]
+        attachments = form.cleaned_data["additional_file"]
 
         self.object = self.get_object()
         ds_response = send_message_dossier_ds(self.object, message_body, attachments)

@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import ANY, patch
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from gql.transport.exceptions import TransportQueryError
 
@@ -933,10 +934,11 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
         DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE["data"],
     ]
     mock_request_put.result = "lala"
+
     message_body = "Bonjour ! Un nouveau message"
-    attachment = FILE_TEST_PATH
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
     result = send_message_dossier_ds(
-        petition_project, message_body, attachments=attachment
+        petition_project, message_body, attachment_file=attachment
     )
 
     # THEN messages has this new message

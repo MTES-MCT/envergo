@@ -1,9 +1,8 @@
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.forms.fields import FileField
 
 from envergo.petitions.models import PetitionProject, StatusLog
-from envergo.utils.fields import MultipleFileField
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -69,18 +68,17 @@ class PetitionProjectInstructorMessageForm(forms.Form):
         ),
     )
 
-    additional_files = MultipleFileField(
-        label="Fichiers joints",
+    additional_file = FileField(
+        label="Fichier joint",
         required=False,
-        help_text=f"""
+        help_text="""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
-            Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
-            Maximum 20 Mo par fichier. <br>
+            Maximum 20 Mo.
         """,
     )
 
     class Meta:
-        fields = ["message_body", "additional_files"]
+        fields = ["message_body", "additional_file"]
 
 
 class ProcedureForm(forms.ModelForm):

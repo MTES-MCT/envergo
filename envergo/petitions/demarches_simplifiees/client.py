@@ -9,6 +9,7 @@ from textwrap import dedent
 
 import requests
 from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
 from django.template.loader import render_to_string
 from gql import Client, gql
 from gql.transport.exceptions import TransportError
@@ -242,21 +243,24 @@ class DemarchesSimplifieesClient:
             "endCursor": cursor,
         }
 
-    def _create_direct_upload(self, dossier_number, dossier_id, attachment):
+    def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
         """Create direct upload related to a dossier"""
 
         # Prepare input
-        with open(attachment, "rb") as file:
-            attachment_checksum = hashlib.file_digest(file, "md5").digest()
+        if not isinstance(attachment_file, UploadedFile):
+            logger.error("File will not be sent, format not allowed")
+            return None
+        attachment_checksum = hashlib.file_digest(attachment_file, "md5").digest()
         attachment_checksum_b64 = b64encode(attachment_checksum).decode()
+
         variables = {
             "input": {
-                "byteSize": attachment.stat().st_size,
+                "byteSize": attachment_file.size,
                 "checksum": attachment_checksum_b64,
                 "clientMutationId": "Envergo1234",
                 "contentType": "image/jpeg",
                 "dossierId": dossier_id,
-                "filename": attachment.name,
+                "filename": attachment_file.name,
             }
         }
 
@@ -306,7 +310,7 @@ class DemarchesSimplifieesClient:
                 credentials_headers = json.loads(credentials["headers"])
 
                 try:
-                    with open(attachment, "rb") as payload:
+                    with open(attachment_file, "rb") as payload:
                         response = requests.put(
                             credentials["url"],
                             data=payload,
@@ -357,7 +361,7 @@ class DemarchesSimplifieesClient:
         dossier_number,
         dossier_id,
         message_body,
-        attachments=None,
+        attachment_file=None,
         instructeur_id=None,
     ) -> dict:
         """Dossier send message query"""
@@ -380,16 +384,16 @@ class DemarchesSimplifieesClient:
 
         # If attachments, upload files
         # TODO: send message with several files
-        if attachments:
-            if isinstance(attachments, list):
-                if len(attachments) > 1:
+        if attachment_file:
+            if isinstance(attachment_file, list):
+                if len(attachment_file) > 1:
                     logger.warning("Can't send multiple files. Use first")
-                attachment = attachments[0]
+                attachment_file = attachment_file[0]
             else:
-                attachment = attachments
+                attachment_file = attachment_file
 
             attachment_uploaded = self._create_direct_upload(
-                dossier_number, dossier_id, attachment
+                dossier_number, dossier_id, attachment_file
             )
             if attachment_uploaded is not None:
                 variables.update({"attachment": attachment_uploaded["signedBlobId"]})
