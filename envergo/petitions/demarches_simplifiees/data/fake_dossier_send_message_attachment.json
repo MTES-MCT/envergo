@@ -1,0 +1,22 @@
+{
+  "data": {
+    "dossierEnvoyerMessage": {
+      "message": {
+        "body": "Bonjour ! Un nouveau message"
+      },
+      "errors": null,
+      "clientMutationId": "1234",
+      "attachments": [
+        {
+          "__typename": "File",
+          "filename": "Coriandrum_sativum.jpg",
+          "contentType": "image/jpeg",
+          "checksum": "RiNssRjMcFaITvQMLk6zNw==",
+          "byteSize": "21053",
+          "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",
+          "createdAt": "2025-07-17T17:25:13+02:00"
+        }
+      ]
+    }
+  }
+}

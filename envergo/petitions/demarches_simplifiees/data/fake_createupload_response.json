@@ -1,0 +1,13 @@
+{
+  "data": {
+    "createDirectUpload": {
+      "clientMutationId": "clientMutationId",
+      "directUpload": {
+        "blobId": "123456789",
+        "headers": "{\"Content-Type\":\"image/jpeg\",\"ETag\":\"12ab34cde1f0cec72d2d069096c1dcb28c7542ab\"}",
+        "signedBlobId": "eyABcd1234--12abc34def55c6b8a5f013a8bccb6a95c3e9958dd",
+        "url": "https://example.com/url/to/upload"
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import ANY, patch
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from gql.transport.exceptions import TransportQueryError
 
@@ -36,10 +37,13 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
 )
 from envergo.petitions.tests.factories import (
+    CREATEUPLOAD_FAKE_RESPONSE,
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
+    FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
@@ -831,10 +835,12 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 @pytest.mark.urls("config.urls_haie")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, site):
+def test_get_message_project_via_demarches_simplifiees(
+    mock_gql_execute, haie_user, site
+):
     """Test send message for project via demarches simplifiées"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
-    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -848,7 +854,7 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I get messages for this dossier
-    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
     messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
         petition_project
     )
@@ -857,8 +863,29 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     assert instructor_emails == ["instructeur@guh.gouv.fr"]
     assert petitioner_email == "hedy.lamarr@example.com"
 
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("gql.Client.execute")
+def test_send_message_project_via_demarches_simplifiees(
+    mock_gql_execute, haie_user, site
+):
+    """Test send message for project via demarches simplifiées"""
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+
+    # Fetch project from DS to create it
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
+
     # WHEN I send message for this dossier
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
     message_body = "Bonjour ! Un nouveau message"
     result = send_message_dossier_ds(petition_project, message_body)
 
@@ -870,9 +897,63 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     }
 
     # WHEN I send malformated
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
+    mock_gql_execute.side_effect = None
+    mock_gql_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
     message_body = "Bonjour ! Un nouveau message"
     result = send_message_dossier_ds(petition_project, message_body)
 
     # THEN I receive an error
     assert result is None
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.sessions.Session.request")
+@patch("gql.Client.execute")
+def test_send_message_project_via_demarches_simplifiees_with_attachments(
+    mock_gql_execute, mock_request_put, haie_user, site
+):
+    """Test send message for project via demarches simplifiées"""
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+
+    # Fetch project from DS to create it
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
+
+    # WHEN I send message for this dossier with attachment
+    mock_gql_execute.side_effect = [
+        CREATEUPLOAD_FAKE_RESPONSE["data"],
+        DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE["data"],
+    ]
+    mock_request_put.result = "lala"
+
+    message_body = "Bonjour ! Un nouveau message"
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    result = send_message_dossier_ds(
+        petition_project, message_body, attachment_file=attachment
+    )
+
+    # THEN messages has this new message
+    assert result == {
+        "clientMutationId": "1234",
+        "errors": None,
+        "message": {"body": "Bonjour ! Un nouveau message"},
+        "attachments": [
+            {
+                "__typename": "File",
+                "filename": "Coriandrum_sativum.jpg",
+                "contentType": "image/jpeg",
+                "checksum": "RiNssRjMcFaITvQMLk6zNw==",
+                "byteSize": "21053",
+                "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",  # noqa: 501
+                "createdAt": "2025-07-17T17:25:13+02:00",
+            }
+        ],
+    }
