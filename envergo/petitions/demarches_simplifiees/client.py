@@ -4,6 +4,7 @@ import json
 import logging
 from base64 import b64encode
 from datetime import datetime
+from mimetypes import guess_type
 from pathlib import Path
 from textwrap import dedent
 
@@ -246,19 +247,21 @@ class DemarchesSimplifieesClient:
     def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
         """Create direct upload related to a dossier"""
 
-        # Prepare input
+        # Only uploaded file in django allowed
         if not isinstance(attachment_file, UploadedFile):
             logger.error("File will not be sent, format not allowed")
             return None
+
+        # Prepare input
         attachment_checksum = hashlib.file_digest(attachment_file, "md5").digest()
         attachment_checksum_b64 = b64encode(attachment_checksum).decode()
-
+        content_type = guess_type(attachment_file.name)[0]
         variables = {
             "input": {
                 "byteSize": attachment_file.size,
                 "checksum": attachment_checksum_b64,
                 "clientMutationId": "Envergo1234",
-                "contentType": "image/jpeg",
+                "contentType": content_type,
                 "dossierId": dossier_id,
                 "filename": attachment_file.name,
             }
