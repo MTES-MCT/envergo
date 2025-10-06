@@ -406,11 +406,14 @@ query getDossier($dossierNumber: Int!)
 """
 )
 
-DOSSIER_ENVOYER_MESSAGE_MUTATION = """
+DOSSIER_ENVOYER_MESSAGE_MUTATION = (
+    FILE_FRAGMENT
+    + MESSAGE_FRAGMENT
+    + """
 mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
   dossierEnvoyerMessage(input: $input) {
     message {
-      body
+      ...MessageFragment
     }
     errors {
       message
@@ -419,6 +422,7 @@ mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
   }
 }
 """
+)
 
 DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION = """
 mutation dossierPreparePiecejointe($input: CreateDirectUploadInput!) {

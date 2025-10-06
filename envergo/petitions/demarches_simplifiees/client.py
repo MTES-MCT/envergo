@@ -284,7 +284,7 @@ class DemarchesSimplifieesClient:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
                 logger.error(
-                    "Error when getting credentials to direct upload attachments to Demarches Simplifiees",
+                    "Error when getting credentials to direct upload file to Demarches Simplifiees",
                     extra={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -304,7 +304,7 @@ class DemarchesSimplifieesClient:
                 notify(dedent(message), "haie")
                 return None
 
-            # On query success, send put file to url
+            # On query success, put file to url
             if (
                 "createDirectUpload" in data
                 and "directUpload" in data["createDirectUpload"]
@@ -313,7 +313,7 @@ class DemarchesSimplifieesClient:
                 credentials_headers = json.loads(credentials["headers"])
 
                 try:
-                    with open(attachment_file, "rb") as payload:
+                    with attachment_file.open("rb") as payload:
                         response = requests.put(
                             credentials["url"],
                             data=payload,
@@ -321,7 +321,7 @@ class DemarchesSimplifieesClient:
                         )
                 except Exception as e:
                     logger.error(
-                        f"Error when sending attachments to Demarches Simplifiees : {e}",
+                        f"Error when sending attachment file Demarches Simplifiees direct upload : {e}",
                         extra={
                             "dossier_number": dossier_number,
                         },
@@ -336,10 +336,13 @@ class DemarchesSimplifieesClient:
                     return None
 
                 if response.status_code == 201:
+                    logger.info(
+                        f"File successfully put to direct upload {attachment_file.name}"
+                    )
                     return data["createDirectUpload"]["directUpload"]
                 else:
                     logger.error(
-                        "Error on uploading {attachment.name}",
+                        f"Error on uploading {attachment_file.name}",
                         extra={
                             "dossier_number": dossier_number,
                             "query": query,
@@ -399,7 +402,9 @@ class DemarchesSimplifieesClient:
                 dossier_number, dossier_id, attachment_file
             )
             if attachment_uploaded is not None:
-                variables.update({"attachment": attachment_uploaded["signedBlobId"]})
+                variables["input"].update(
+                    {"attachment": attachment_uploaded["signedBlobId"]}
+                )
 
         # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
