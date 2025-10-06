@@ -1,11 +1,16 @@
 import copy
+import hashlib
 import json
 import logging
+from base64 import b64encode
 from datetime import datetime
+from mimetypes import guess_type
 from pathlib import Path
 from textwrap import dedent
 
+import requests
 from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
 from django.template.loader import render_to_string
 from gql import Client, gql
 from gql.transport.exceptions import TransportError
@@ -19,6 +24,7 @@ from envergo.petitions.demarches_simplifiees.models import (
 from envergo.petitions.demarches_simplifiees.queries import (
     DOSSIER_ACCEPTER_MUTATION,
     DOSSIER_CLASSER_SANS_SUITE_MUTATION,
+    DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION,
     DOSSIER_ENVOYER_MESSAGE_MUTATION,
     DOSSIER_PASSER_EN_INSTRUCTION_MUTATION,
     DOSSIER_REFUSER_MUTATION,
@@ -37,6 +43,8 @@ DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
     settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
 )
 
+DS_DISABLED_BASE_MESSAGE = "Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
+
 
 class DemarchesSimplifieesClient:
     def __init__(self):
@@ -50,9 +58,18 @@ class DemarchesSimplifieesClient:
             transport=self.transport, fetch_schema_from_transport=False
         )
 
+    def _fake_execute(self, fake_dossier_filename):
+        """Mock response when Demarches Simplifiees is not enabled"""
+        with open(
+            DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
+            "r",
+        ) as file:
+            response = json.load(file)
+            return copy.deepcopy(response["data"])
+
     def execute(self, query_str: str, variables: dict = None):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            raise NotImplementedError("Démaches simplifiées is not enabled")
+            raise NotImplementedError("Démarches simplifiées is not enabled")
 
         query = gql(query_str)
         try:
@@ -95,17 +112,12 @@ class DemarchesSimplifieesClient:
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"Use fake dossier if dossier is not draft."
+                f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
             )
-            with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
-                "r",
-            ) as file:
-                response = json.load(file)
-                data = copy.deepcopy(response["data"])
+            data = self._fake_execute(fake_dossier_filename)
+
         else:
             try:
                 data = self.execute(query, variables)
@@ -232,8 +244,131 @@ class DemarchesSimplifieesClient:
             "endCursor": cursor,
         }
 
+    def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
+        """Create direct upload related to a dossier"""
+
+        # Only uploaded file in django allowed
+        if not isinstance(attachment_file, UploadedFile):
+            logger.error("File will not be sent, format not allowed")
+            return None
+
+        # Prepare input
+        attachment_checksum = hashlib.file_digest(attachment_file, "md5").digest()
+        attachment_checksum_b64 = b64encode(attachment_checksum).decode()
+        content_type = guess_type(attachment_file.name)[0]
+        variables = {
+            "input": {
+                "byteSize": attachment_file.size,
+                "checksum": attachment_checksum_b64,
+                "clientMutationId": "Envergo1234",
+                "contentType": content_type,
+                "dossierId": dossier_id,
+                "filename": attachment_file.name,
+            }
+        }
+
+        query = DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"{DS_DISABLED_BASE_MESSAGE}"
+                f"\nquery: {query}"
+                f"\nvariables: {variables}"
+            )
+            data = self._fake_execute(
+                fake_dossier_filename="fake_dossier_send_message_attachment.json"
+            )
+        else:
+            # Send query to create direct upload
+            try:
+                data = self.execute(query, variables)
+            except DemarchesSimplifieesError as e:
+                logger.error(
+                    "Error when getting credentials to direct upload file to Demarches Simplifiees",
+                    extra={
+                        "dossier_number": dossier_number,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                message = render_to_string(
+                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    context={
+                        "dossier_number": dossier_number,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                notify(dedent(message), "haie")
+                return None
+
+            # On query success, put file to url
+            if (
+                "createDirectUpload" in data
+                and "directUpload" in data["createDirectUpload"]
+            ):
+                credentials = data["createDirectUpload"]["directUpload"]
+                credentials_headers = json.loads(credentials["headers"])
+
+                try:
+                    with attachment_file.open("rb") as payload:
+                        response = requests.put(
+                            credentials["url"],
+                            data=payload,
+                            headers=credentials_headers,
+                        )
+                except Exception as e:
+                    logger.error(
+                        f"Error when sending attachment file Demarches Simplifiees direct upload : {e}",
+                        extra={
+                            "dossier_number": dossier_number,
+                        },
+                    )
+                    message = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                        context={
+                            "dossier_number": dossier_number,
+                        },
+                    )
+                    notify(dedent(message), "haie")
+                    return None
+
+                if response.status_code == 201:
+                    logger.info(
+                        f"File successfully put to direct upload {attachment_file.name}"
+                    )
+                    return data["createDirectUpload"]["directUpload"]
+                else:
+                    logger.error(
+                        f"Error on uploading {attachment_file.name}",
+                        extra={
+                            "dossier_number": dossier_number,
+                            "query": query,
+                            "variables": variables,
+                        },
+                    )
+                    return None
+
+            else:
+                logger.error(
+                    "Error with credentials for direct upload to Demarches Simplifiees",
+                    extra={
+                        "dossier_number": dossier_number,
+                        "query": query,
+                        "variables": variables,
+                    },
+                )
+                return None
+
     def dossier_send_message(
-        self, dossier_number, dossier_id, message_body, instructeur_id=None
+        self,
+        dossier_number,
+        dossier_id,
+        message_body,
+        attachment_file=None,
+        instructeur_id=None,
     ) -> dict:
         """Dossier send message query"""
 
@@ -253,21 +388,36 @@ class DemarchesSimplifieesClient:
             }
         }
 
+        # If attachments, upload files
+        # TODO: send message with several files
+        if attachment_file:
+            if isinstance(attachment_file, list):
+                if len(attachment_file) > 1:
+                    logger.warning("Can't send multiple files. Use first")
+                attachment_file = attachment_file[0]
+            else:
+                attachment_file = attachment_file
+
+            attachment_uploaded = self._create_direct_upload(
+                dossier_number, dossier_id, attachment_file
+            )
+            if attachment_uploaded is not None:
+                variables["input"].update(
+                    {"attachment": attachment_uploaded["signedBlobId"]}
+                )
+
+        # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"Use fake dossier if dossier is not draft."
+                f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
             )
-            with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json",
-                "r",
-            ) as file:
-                response = json.load(file)
-                data = copy.deepcopy(response["data"])
+            data = self._fake_execute(
+                fake_dossier_filename="fake_dossier_send_message.json"
+            )
         else:
             try:
                 data = self.execute(query, variables)
