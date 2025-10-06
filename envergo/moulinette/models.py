@@ -1004,6 +1004,11 @@ class ConfigHaie(ConfigBase):
         blank=True,
         default=list,
     )
+    single_procedure = models.BooleanField(
+        "Régime unique",
+        default=False,
+        help_text="Le régime unique s'applique dans ce département",
+    )
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
