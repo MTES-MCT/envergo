@@ -378,6 +378,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
+        "numero_pacage": "123456789",
     }
     moulinette_data = {"initial": data, "data": data}
 
@@ -642,6 +643,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "element": "haie",
         "department": 44,
         "lineaire_total": 5000,
+        "numero_pacage": "123456789",
     }
     moulinette_data = {"initial": data, "data": data}
 
