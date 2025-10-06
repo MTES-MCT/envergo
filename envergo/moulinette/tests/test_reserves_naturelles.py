@@ -76,7 +76,7 @@ def moulinette_data(lat1, lng1, lat2, lng2, plan_gestion):
 
 
 @pytest.mark.parametrize(
-    "lat1, lng1, lat2, lng2, plan_gestion, expected_result",
+    "lat1, lng1, lat2, lng2, plan_gestion, expected_result, expected_lenght_resnat",
     [
         (
             43.06930871579473,
@@ -85,6 +85,7 @@ def moulinette_data(lat1, lng1, lat2, lng2, plan_gestion):
             0.44236765047068033,
             "oui",
             "soumis_declaration",
+            25,
         ),  # inside
         (
             43.069807900393826,
@@ -93,6 +94,7 @@ def moulinette_data(lat1, lng1, lat2, lng2, plan_gestion):
             0.4415625648710002639653,
             "non",
             "soumis_autorisation",
+            7,
         ),  # edge inside but vertices outside
         (
             43.09248072614743,
@@ -101,10 +103,13 @@ def moulinette_data(lat1, lng1, lat2, lng2, plan_gestion):
             0.48095944654749073,
             "non",
             "non_concerne",
+            None,
         ),  # outside
     ],
 )
-def test_moulinette_evaluation(moulinette_data, expected_result):
+def test_moulinette_evaluation(
+    moulinette_data, expected_result, expected_lenght_resnat
+):
     ConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
     moulinette.evaluate()
@@ -114,3 +119,4 @@ def test_moulinette_evaluation(moulinette_data, expected_result):
         assert (
             moulinette.reserves_naturelles.reserves_naturelles.result == expected_result
         )
+        assert moulinette.catalog["l_resnat"] == expected_lenght_resnat

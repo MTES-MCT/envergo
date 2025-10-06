@@ -1,0 +1,21 @@
+{% load moulinette %}
+
+<ul class="instructor-view-list">
+
+  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire en réserve naturelle" value=l_resnat|default:0.0|floatformat:"0g" unit="m" %}
+
+  {% if l_resnat > 0 %}
+    <li>
+      <span><b>Détail :</b></span>
+
+      <span>
+        {# djlint:off #}
+        {% for hedge_id, length in resnat.items %}
+          {{ hedge_id }} ({{ length|floatformat:"0g" }} m){% if not forloop.last %},{% endif %}
+        {% endfor %}
+        {# djlint:on #}
+      </span>
+    </li>
+  {% endif %}
+
+</ul>
