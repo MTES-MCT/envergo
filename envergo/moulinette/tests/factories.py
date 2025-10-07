@@ -71,6 +71,7 @@ class ConfigHaieFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
+    single_procedure = False
     regulations_available = [
         "conditionnalite_pac",
         "ep",
