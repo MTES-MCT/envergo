@@ -41,7 +41,11 @@ from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEn
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
-from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
+from envergo.moulinette.fields import (
+    CriterionEvaluatorChoiceField,
+    RegulationEvaluatorChoiceField,
+    get_subclasses,
+)
 from envergo.moulinette.forms import (
     DisplayIntegerField,
     MoulinetteFormAmenagement,
@@ -235,6 +239,7 @@ class Regulation(models.Model):
         max_length=256,
         blank=True,
     )
+    evaluator = RegulationEvaluatorChoiceField(_("Evaluator"))
 
     weight = models.PositiveIntegerField("Ordre de calcul", default=1)
 
@@ -320,6 +325,9 @@ class Regulation(models.Model):
         self.moulinette = moulinette
         for criterion in self.criteria.all():
             criterion.evaluate(moulinette, criterion.distance)
+
+        self._evaluator = self.evaluator(moulinette)
+        self._evaluator.evaluate()
 
     @property
     def slug(self):
