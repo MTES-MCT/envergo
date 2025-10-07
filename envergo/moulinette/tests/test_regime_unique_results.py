@@ -33,14 +33,18 @@ def alignementarbres_criteria(france_map):  # noqa
     return criteria
 
 
-def test_moulinette_result_alignement():
+def test_moulinette_droit_constant():
     """Hedges with 100% "alignement d'arbres" are outside the unique procedure."""
 
-    ConfigHaieFactory(single_procedure=True)
+    ConfigHaieFactory(single_procedure=False)
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
-                additionalData={"type_haie": "alignement", "sur_parcelle_pac": False},
+                additionalData={
+                    "type_haie": "alignement",
+                    "bord_voie": True,
+                    "sur_parcelle_pac": False,
+                },
             )
         ]
     )
@@ -48,7 +52,43 @@ def test_moulinette_result_alignement():
         "element": "haie",
         "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_acces",
+        "motif": "securite",
+        "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "department": "44",
+    }
+    moulinette = MoulinetteHaie(data, data)
+    assert moulinette.is_evaluation_available()
+
+    # Update with this after the big moulinette refacto is merged
+    # moulinette_data = {"initial": data, "data": data}
+    # moulinette = MoulinetteHaie(moulinette_data)
+    # assert moulinette.is_valid(), moulinette.form_errors()
+
+    assert moulinette.result == "soumis"
+
+
+def test_moulinette_result_alignement():
+    """Hedges with 100% "alignement d'arbres" are outside the unique procedure."""
+
+    ConfigHaieFactory(single_procedure=True)
+    hedges = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(
+                additionalData={
+                    "type_haie": "alignement",
+                    "bord_voie": True,
+                    "sur_parcelle_pac": False,
+                },
+            )
+        ]
+    )
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "profil": "autre",
+        "motif": "securite",
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "haies": hedges,
@@ -70,7 +110,11 @@ def test_moulinette_result_non_alignement():
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
-                additionalData={"type_haie": "mixte", "sur_parcelle_pac": False},
+                additionalData={
+                    "type_haie": "mixte",
+                    "bord_voie": True,
+                    "sur_parcelle_pac": False,
+                },
             )
         ]
     )
@@ -78,7 +122,7 @@ def test_moulinette_result_non_alignement():
         "element": "haie",
         "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_acces",
+        "motif": "securite",
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "haies": hedges,
