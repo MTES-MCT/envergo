@@ -91,6 +91,26 @@ class ProcedureForm(forms.ModelForm):
                 ),
             )
 
+        previous_stage = self.initial["stage"]
+
+        if stage == "closed" and previous_stage == "to_be_processed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "Pour clore le dossier, il faut passer par une étape intermédiaire (autre que « À instruire »).",
+                    code="to_be_processed_to_closed",
+                ),
+            )
+        elif stage == "to_be_processed" and previous_stage == "closed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "Pour repasser le dossier à l'étape « À instruire », il faut passer par une étape "
+                    "intermédiaire (autre que « Dossier clos »).",
+                    code="closed_to_to_be_processed",
+                ),
+            )
+
         return cleaned_data
 
     class Meta:

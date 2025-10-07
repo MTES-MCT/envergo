@@ -1012,7 +1012,7 @@ class PetitionProjectInstructorProcedureView(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        form = ProcedureForm(request.POST)
+        form = ProcedureForm(request.POST, initial=self.get_initial())
         if form.is_valid():
             return self.form_valid(form)
         else:
