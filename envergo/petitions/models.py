@@ -54,7 +54,7 @@ DECISIONS = Choices(
     ("unset", "À déterminer"),
     ("express_agreement", "Accord exprés"),
     ("tacit_agreement", "Accord tacite"),
-    ("objection", "Opposition"),
+    ("opposition", "Opposition"),
     ("dropped", "Classé sans suite"),
 )
 
