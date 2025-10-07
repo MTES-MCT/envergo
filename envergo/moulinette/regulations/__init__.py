@@ -241,6 +241,12 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
         return None
 
 
+class RegulationEvaluator(ABC):
+    """Evaluate a single regulation."""
+
+    do_not_call_in_templates = True
+
+
 class CriterionEvaluator(ABC):
     """Evaluate a single criterion.
 

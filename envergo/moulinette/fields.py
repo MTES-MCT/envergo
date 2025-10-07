@@ -5,6 +5,7 @@ from django.utils.module_loading import import_string
 from envergo.moulinette.forms.fields import NoInstanciateChoiceField
 from envergo.moulinette.regulations import (  # noqa
     CriterionEvaluator,
+    RegulationEvaluator,
     alignementarbres,
     conditionnalitepac,
     ep,
@@ -52,18 +53,28 @@ class CriterionChoiceField(models.Field):
     pass
 
 
-class CriterionEvaluatorChoiceField(models.Field):
-    """Custom model field to select a `MoulinetteEvaluator` subclass.
+class ClassChoiceField(models.Field):
+    """Custom model field to select a custom class.
 
     At the database level, we store the full classpath.
     """
 
     description = "Field to select a CriterionEvaluator subclass."
+    class_selector = None
 
     def __init__(self, *args, **kwargs):
         kwargs["max_length"] = 256
         super().__init__(*args, **kwargs)
-        self.choices = get_all_evaluators()
+        self.choices = self.get_subclasses()
+
+    def get_subclasses(self):
+        """Return the list of all available classes."""
+
+        classes = [
+            (classpath(s), f"{s.choice_label}")
+            for s in get_subclasses(self.class_selector)
+        ]
+        return classes
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
@@ -117,3 +128,11 @@ class CriterionEvaluatorChoiceField(models.Field):
         defaults = {"choices_form_class": NoInstanciateChoiceField}
         defaults.update(kwargs)
         return super().formfield(**defaults)
+
+
+class RegulationEvaluatorChoiceField(ClassChoiceField):
+    class_selector = RegulationEvaluator
+
+
+class CriterionEvaluatorChoiceField(ClassChoiceField):
+    class_selector = CriterionEvaluator
