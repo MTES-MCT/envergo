@@ -23,17 +23,16 @@
                   action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
               {% csrf_token %}
 
-              <div id="field-message_body" class="fr-my-2w">
-                {% include '_field_snippet.html' with field=form.message_body %}
-
-                {{ form.additional_file }}
-
-                <button type="submit"
-                        class="fr-btn fr-btn--primary"
-                        formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
-                  Envoyer le message
-                </button>
+              <div id="field-message_body" class="fr-my-2w">{% include '_field_snippet.html' with field=form.message_body %}</div>
+              <div id="field-additional_file" class="fr-my-2w">
+                {% include '_file_snippet.html' with field=form.additional_file %}
               </div>
+
+              <button type="submit"
+                      class="fr-btn fr-btn--primary"
+                      formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+                Envoyer le message
+              </button>
             </form>
           </div>
         </div>
