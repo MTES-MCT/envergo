@@ -888,7 +888,7 @@ def test_update_demarches_simplifiees_state():
 
     # WHEN I update its status to "en instruction"
     update_demarches_simplifiees_status(
-        petition_project, DossierState.en_instruction, "go to instuction"
+        petition_project, DossierState.en_instruction.value, "go to instuction"
     )
 
     # THEN the status is updated
@@ -901,7 +901,7 @@ def test_update_demarches_simplifiees_state():
 
     # WHEN I update its status to "Accepté"
     update_demarches_simplifiees_status(
-        petition_project, DossierState.accepte, "go to accepted"
+        petition_project, DossierState.accepte.value, "go to accepted"
     )
 
     # THEN the status is updated
@@ -911,7 +911,7 @@ def test_update_demarches_simplifiees_state():
 
     # WHEN I update its status to "Refusé"
     update_demarches_simplifiees_status(
-        petition_project, DossierState.refuse, "go to refused"
+        petition_project, DossierState.refuse.value, "go to refused"
     )
 
     # THEN the status is updated
@@ -921,7 +921,7 @@ def test_update_demarches_simplifiees_state():
 
     # WHEN I update its status to "Classé sans suite"
     update_demarches_simplifiees_status(
-        petition_project, DossierState.sans_suite, "go to sans suite"
+        petition_project, DossierState.sans_suite.value, "go to sans suite"
     )
 
     # THEN the status is updated
