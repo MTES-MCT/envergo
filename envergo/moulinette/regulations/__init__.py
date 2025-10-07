@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from django.contrib.gis.geos import GEOSGeometry
 
-from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT
+from envergo.evaluations.models import RESULT_CASCADE, RESULTS, TAG_STYLES_BY_RESULT
 from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
 
 
@@ -245,6 +245,76 @@ class RegulationEvaluator(ABC):
     """Evaluate a single regulation."""
 
     do_not_call_in_templates = True
+
+    def __init__(self, moulinette):
+        self.moulinette = moulinette
+
+    def evaluate(self, regulation):
+        self._result = self.get_result(regulation)
+
+    def get_result(self, regulation):
+        """Compute global result from individual criteria.
+
+        When we perform an evaluation, a single regulation has many criteria.
+        Criteria can have different results, but we display a single value for
+        the regulation result.
+
+        We can reduce different criteria results into a single regulation
+        result because results have different priorities.
+
+        For example, if a single criterion has the "interdit" result, the
+        regulation result will be "interdit" too, no matter what the other
+        criteria results are. Then it will be "soumis", etc.
+
+        Different regulations have different set of possible result values, e.g
+        only the Évaluation environnementale regulation has the "cas par cas" or
+        "systematique" results, but the cascade still works.
+        """
+
+        # We start by handling edge cases:
+        # - when the regulation is not activated for the department
+        # - when the perimeter is not activated
+        # - when no perimeter is found
+        if not regulation.is_activated():
+            return RESULTS.non_active
+
+        if regulation.has_perimeters:
+            all_perimeters = regulation.perimeters.all()
+            activated_perimeters = [p for p in all_perimeters if p.is_activated]
+            if all_perimeters and not any(activated_perimeters):
+                return RESULTS.non_disponible
+            if not all_perimeters:
+                return RESULTS.non_concerne
+
+        # From this point, we made sure every data (regulation, perimeter) is existing
+        # and activated
+
+        results = [criterion.result for criterion in regulation.criteria.all()]
+        result = None
+        for status in RESULT_CASCADE:
+            if status in results:
+                result = status
+                break
+
+        # If there is no criterion at all, we have to set a default value
+        if result is None:
+            if self.has_perimeters:
+                result = RESULTS.non_soumis
+            else:
+                result = RESULTS.non_disponible
+        return result
+
+    @property
+    def result(self):
+        """Return the criterion result.
+
+        This value is used to render the criterion result label (e.g "action requise")
+        and to compute the whole regulation result.
+        """
+        if not hasattr(self, "_result"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return self._result
 
 
 class CriterionEvaluator(ABC):
