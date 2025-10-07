@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("unset", "À déterminer"),
-                    ("express_agreement", "Accord exprés"),
+                    ("express_agreement", "Accord exprès"),
                     ("tacit_agreement", "Accord tacite"),
                     ("objection", "Opposition"),
                     ("dropped", "Classé sans suite"),
@@ -75,4 +75,5 @@ class Migration(migrations.Migration):
                 name="forbid_closed_with_unset_decision",
             ),
         ),
+        migrations.RunPython(map_old_stages_to_new, migrations.RunPython.noop)
     ]
