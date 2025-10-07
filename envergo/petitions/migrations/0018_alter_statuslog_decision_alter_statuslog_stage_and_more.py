@@ -15,8 +15,8 @@ def map_old_stages_to_new(apps, schema_editor):
 
     decision_mapping = {
         "accord": "express_agreement",
-        "opposition": "objection",
         "sans_suite": "dropped",
+        "objection": "opposition",
     }
 
     for old, new in stage_mapping.items():
@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                     ("unset", "À déterminer"),
                     ("express_agreement", "Accord exprès"),
                     ("tacit_agreement", "Accord tacite"),
-                    ("objection", "Opposition"),
+                    ("opposition", "Opposition"),
                     ("dropped", "Classé sans suite"),
                 ],
                 default="unset",
