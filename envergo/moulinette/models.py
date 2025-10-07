@@ -2140,6 +2140,37 @@ class MoulinetteHaie(Moulinette):
     def get_config(self):
         return getattr(self.department, "confighaie", None)
 
+    @property
+    def result(self):
+        """Compute global result from individual regulation results."""
+
+        # return the cached result if it was overriden
+        # Otherwise, we don't cache the result because it can change between invocations
+        if hasattr(self, "_result"):
+            return self._result
+
+        results = [regulation.result for regulation in self.regulations]
+
+        # Check if we are in the "100% alignement d'arbres" case
+        hedges = self.catalog["haies"].hedges_filter("TO_REMOVE", "!alignement")
+        alignement_arbres = len(hedges) == 0
+
+        niveau_a = False
+
+        if self.config.single_procedure:
+            if RESULTS.interdit in results:
+                result = RESULTS.interdit
+            elif alignement_arbres:
+                result = "hors_regime_unique"
+            elif niveau_a:
+                result = "autorisation"
+            else:
+                result = "declaration"
+        else:
+            result = super().result
+
+        return result or RESULTS.non_soumis
+
     def summary(self):
         """Build a data summary, for analytics purpose."""
         summary = self.data.copy()
