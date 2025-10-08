@@ -109,7 +109,7 @@ class ClassChoiceField(models.Field):
         return value
 
     def validate(self, value, model_instance):
-        if not issubclass(value, CriterionEvaluator):
+        if not issubclass(value, self.class_selector):
             raise ValidationError("This is not a valid evaluator class")
 
     def get_prep_value(self, value):

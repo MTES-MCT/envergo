@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name="evaluator",
             field=envergo.moulinette.fields.RegulationEvaluatorChoiceField(
                 choices=[],
-                default="envergo.moulinette.regulations.RegulationEvaluator",
+                default="envergo.moulinette.regulations.HaieRegulationEvaluator",
                 verbose_name="Evaluator",
             ),
             preserve_default=False,
