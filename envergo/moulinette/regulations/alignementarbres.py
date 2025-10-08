@@ -2,9 +2,19 @@ import logging
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 logger = logging.getLogger(__name__)
+
+
+class AlignementArbresRegulation(HaieRegulationEvaluator):
+    choice_label = "Alignements d'arbres > L250-3"
+
+    LEVEL_MATRIX = {
+        "soumis_autorisation": "declaration",
+        "soumis_declaration": "declaration",
+        "non_soumis": "declaration",
+    }
 
 
 class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):

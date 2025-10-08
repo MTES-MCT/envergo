@@ -9,7 +9,17 @@ from django.db.models.functions import Cast
 from pyproj import Geod
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+
+
+class Natura2000HaieRegulation(HaieRegulationEvaluator):
+    choice_label = "Natura 2000 > Haie"
+
+    LEVEL_MATRIX = {
+        "soumis": "autorisation",
+        "non_concerne": "declaration",
+        "non_soumis": "declaration",
+    }
 
 
 class Natura2000HaieSettings(forms.Form):
