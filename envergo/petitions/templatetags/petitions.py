@@ -178,9 +178,9 @@ def decision_badge(decision, light_version=False):
         return (
             mark_safe(
                 f"""
-        <p class="fr-badge icon-only-badge {css_class}" aria-describedby="{uid}"></p>
-        <span class ="fr-tooltip fr-placement" id="{uid}" role="tooltip"> {label} </span>
-    """
+                    <p class="fr-badge icon-only-badge {css_class}" aria-describedby="{uid}"></p>
+                    <span class="fr-tooltip fr-placement" id="{uid}" role="tooltip"> {label} </span>
+            """
             )
             if css_class
             else "-"
