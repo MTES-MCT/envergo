@@ -611,13 +611,20 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
             if self.event_action:
-                log_event(
-                    self.event_category,
-                    self.event_action,
-                    self.request,
-                    **self.get_log_event_data(),
-                    **get_matomo_tags(self.request),
-                )
+                referer = request.META.get("HTTP_REFERER")
+                if referer and url_has_allowed_host_and_scheme(
+                    referer, allowed_hosts={request.get_host()}
+                ):
+                    path = urlparse(referer).path
+                    # avoid logging event if user is just refreshing the page or is redirected after posting a form
+                    if path != request.path:
+                        log_event(
+                            self.event_category,
+                            self.event_action,
+                            self.request,
+                            **self.get_log_event_data(),
+                            **get_matomo_tags(self.request),
+                        )
             return result
 
         else:
@@ -856,7 +863,7 @@ class PetitionProjectInstructorMessagerieView(
         elif "message" in ds_response and ds_response["message"] is not None:
             messages.success(
                 self.request,
-                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+                """Le message a bien été envoyé au demandeur.""",
             )
 
             # Log matomo event
