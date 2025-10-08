@@ -245,6 +245,7 @@ class RegulationEvaluator(ABC):
     """Evaluate a single regulation."""
 
     do_not_call_in_templates = True
+    choice_label = "Défaut"
 
     def __init__(self, moulinette):
         self.moulinette = moulinette
@@ -306,15 +307,35 @@ class RegulationEvaluator(ABC):
 
     @property
     def result(self):
-        """Return the criterion result.
+        """Return the regulation macro result."""
 
-        This value is used to render the criterion result label (e.g "action requise")
-        and to compute the whole regulation result.
-        """
         if not hasattr(self, "_result"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._result
+
+
+class HaieRegulationEvaluator(RegulationEvaluator):
+    """Specific evaluator for the haies site."""
+
+    # result -> autorisation / déclaration
+    LEVEL_MATRIX = {}
+
+    def evaluate(self, regulation):
+        super().evaluate(regulation)
+        self._level = self.get_level(regulation)
+
+    def get_level(self, regulation):
+        level = self.LEVEL_MATRIX.get(self.result)
+        return level
+
+    @property
+    def level(self):
+        """Return the regulation level (autorisation / déclaration)."""
+        if not hasattr(self, "_level"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return self._level
 
 
 class CriterionEvaluator(ABC):
