@@ -110,6 +110,15 @@ class ProcedureForm(forms.ModelForm):
                     code="closed_to_to_be_processed",
                 ),
             )
+        elif stage == "closed" and previous_stage == "closed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le repasser à une "
+                    "étape d'instruction.",
+                    code="closed_to_closed",
+                ),
+            )
 
         return cleaned_data
 
