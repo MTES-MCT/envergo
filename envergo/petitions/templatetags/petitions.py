@@ -161,7 +161,7 @@ def stage_badge(stage):
 
 
 @register.filter
-def decision_badge(decision):
+def decision_badge(decision, light_version=False):
     class_map = {
         DECISIONS.unset: None,
         DECISIONS.express_agreement: "fr-badge--success",
@@ -172,15 +172,22 @@ def decision_badge(decision):
 
     css_class = class_map.get(decision, None)
     label = dict(DECISIONS).get(decision, decision)
-    id = str(uuid.uuid4())
+    uid = str(uuid.uuid4())
 
-    return (
-        mark_safe(
-            f"""
-    <p class="fr-badge icon-only-badge {css_class}" aria-describedby="{id}"></p>
-    <span class ="fr-tooltip fr-placement" id="{id}" role="tooltip"> {label} </span>
-"""
+    if light_version:
+        return (
+            mark_safe(
+                f"""
+        <p class="fr-badge icon-only-badge {css_class}" aria-describedby="{uid}"></p>
+        <span class ="fr-tooltip fr-placement" id="{uid}" role="tooltip"> {label} </span>
+    """
+            )
+            if css_class
+            else "-"
         )
-        if css_class
-        else "-"
-    )
+    else:
+        return mark_safe(
+            f"""<p class="fr-badge fr-badge--sm fr-badge--no-icon {css_class if css_class else ''}">
+                          {label}
+                        </p>"""
+        )

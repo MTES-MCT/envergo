@@ -80,7 +80,7 @@
                       {{ project.city }}
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{{ project.current_decision|decision_badge }}</td>
+                    <td>{{ project.current_decision|decision_badge:True }}</td>
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>
