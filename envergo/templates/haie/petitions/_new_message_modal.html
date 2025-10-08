@@ -1,0 +1,42 @@
+<dialog id="modal-new-message"
+        class="fr-modal"
+        aria-labelledby="modal-new-message-title"
+        data-fr-concealing-backdrop="true">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button aria-controls="modal-new-message"
+                    title="Fermer"
+                    type="button"
+                    id="button-24"
+                    class="fr-btn--close fr-btn">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="modal-new-message-title" class="fr-modal__title">Nouveau message au pétitionnaire</h2>
+
+            <form method="post"
+                  id="petition-new-message-form"
+                  novalidate
+                  enctype="multipart/form-data"
+                  action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+              {% csrf_token %}
+
+              <div id="field-message_body" class="fr-my-2w">{% include '_field_snippet.html' with field=form.message_body %}</div>
+              <div id="field-additional_file" class="fr-my-2w">
+                {% include '_file_snippet.html' with field=form.additional_file %}
+              </div>
+
+              <button type="submit"
+                      class="fr-btn fr-btn--primary"
+                      formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
+                Envoyer le message
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>

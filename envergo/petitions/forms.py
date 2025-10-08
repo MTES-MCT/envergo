@@ -1,4 +1,5 @@
 from django import forms
+from django.forms.fields import FileField
 
 from envergo.petitions.models import PetitionProject, StatusLog
 
@@ -66,10 +67,17 @@ class PetitionProjectInstructorMessageForm(forms.Form):
         ),
     )
 
+    additional_file = FileField(
+        label="Fichier joint",
+        required=False,
+        help_text="""
+            Formats autorisés : images (png, jpg), pdf, zip. <br>
+            Maximum 20 Mo.
+        """,
+    )
+
     class Meta:
-        fields = [
-            "message_body",
-        ]
+        fields = ["message_body", "additional_file"]
 
 
 class ProcedureForm(forms.ModelForm):
