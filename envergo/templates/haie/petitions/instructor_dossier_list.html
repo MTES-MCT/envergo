@@ -39,11 +39,17 @@
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">N° dossier</th>
-                  <th scope="col">Date de dépôt</th>
+                  <th scope="col">
+                    N° dossier
+                    <br />
+                    Date de dépôt
+                  </th>
                   <th scope="col">Étape</th>
-                  <th scope="col">Demandeur</th>
-                  <th scope="col">Commune</th>
+                  <th scope="col">
+                    Demandeur
+                    <br />
+                    Commune
+                  </th>
                   <th scope="col">
                     Linéaire
                     <br />
@@ -60,15 +66,19 @@
                     <td>
                       <a href="{% url 'petition_project_instructor_view' project.reference %}"
                          class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
+                      <br />
+                      {{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}
                     </td>
-                    <td>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</td>
                     <td>{{ project.current_stage|stage_badge }}</td>
                     <td>
-                      {{ project.prefetched_dossier.applicant_name }}
+                      {% if project.organization %}
+                        {{ project.organization }}
+                      {% else %}
+                        {{ project.prefetched_dossier.applicant_name }}
+                      {% endif %}
                       <br />
-                      {{ project.organization }}
+                      {{ project.city }}
                     </td>
-                    <td>{{ project.city }}</td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{{ project.current_decision|decision_badge }}</td>
                     <td>
