@@ -1,10 +1,13 @@
+import uuid
 from typing import Literal
 
 from django import template
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
+from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
 
 register = template.Library()
@@ -130,3 +133,54 @@ def sum_degradee_and_buissonnante(dict_by_type):
 def format_ds_number(ds_number):
     s = str(ds_number)
     return f"{s[:4]}-{s[4:]}" if len(s) >= 8 else ds_number
+
+
+@register.filter
+def stage_badge(stage):
+    color_map = {
+        STAGES.to_be_processed: "pink-tuile",
+        STAGES.instruction_d: "blue-cumulus",
+        STAGES.instruction_a: "blue-cumulus",
+        STAGES.instruction_h: "blue-cumulus",
+        STAGES.preparing_decision: "blue-cumulus",
+        STAGES.notification: "blue-cumulus",
+        STAGES.closed: None,
+    }
+    label_map = {
+        STAGES.instruction_h: "Instruction hors r. unique",
+    }
+
+    color = color_map.get(stage, None)
+    label = label_map.get(stage, dict(STAGES).get(stage, stage))
+
+    return mark_safe(
+        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''} fr-badge--sm">
+                          {label}
+                        </p>"""
+    )
+
+
+@register.filter
+def decision_badge(decision):
+    class_map = {
+        DECISIONS.unset: None,
+        DECISIONS.express_agreement: "fr-badge--success",
+        DECISIONS.tacit_agreement: "fr-badge--success",
+        DECISIONS.opposition: "fr-badge--error",
+        DECISIONS.dropped: "fr-icon-folder-2-fill fr-badge--icon-left",
+    }
+
+    css_class = class_map.get(decision, None)
+    label = dict(DECISIONS).get(decision, decision)
+    id = str(uuid.uuid4())
+
+    return (
+        mark_safe(
+            f"""
+    <p class="fr-badge icon-only-badge {css_class}" aria-describedby="{id}"></p>
+    <span class ="fr-tooltip fr-placement" id="{id}" role="tooltip"> {label} </span>
+"""
+        )
+        if css_class
+        else "-"
+    )

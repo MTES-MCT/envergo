@@ -49,6 +49,7 @@
                     <br />
                     à détruire
                   </th>
+                  <th scope="col">Décision</th>
                   <th scope="col">Suivi</th>
                 </tr>
               </thead>
@@ -61,13 +62,7 @@
                          class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
                     </td>
                     <td>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</td>
-                    <td>
-                      {% if project.prefetched_dossier %}
-                        <p class="fr-badge fr-badge--{{ project.prefetched_dossier.state.color }} fr-badge--sm fr-badge--no-icon">
-                          {{ project.prefetched_dossier.state.display_value }}
-                        </p>
-                      {% endif %}
-                    </td>
+                    <td>{{ project.current_stage|stage_badge }}</td>
                     <td>
                       {{ project.prefetched_dossier.applicant_name }}
                       <br />
@@ -75,6 +70,7 @@
                     </td>
                     <td>{{ project.city }}</td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
+                    <td>{{ project.current_decision|decision_badge }}</td>
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>
