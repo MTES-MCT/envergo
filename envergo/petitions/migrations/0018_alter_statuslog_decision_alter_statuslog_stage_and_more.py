@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 choices=[
                     ("unset", "À déterminer"),
-                    ("express_agreement", "Accord exprès"),
+                    ("express_agreement", "Accord exprés"),
                     ("tacit_agreement", "Accord tacite"),
                     ("opposition", "Opposition"),
                     ("dropped", "Classé sans suite"),
