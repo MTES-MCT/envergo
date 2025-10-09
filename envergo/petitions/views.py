@@ -612,19 +612,21 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         if self.object.has_user_as_instructor(user):
             if self.event_action:
                 referer = request.META.get("HTTP_REFERER")
-                if referer and url_has_allowed_host_and_scheme(
-                    referer, allowed_hosts={request.get_host()}
+                if (
+                    not referer
+                    or url_has_allowed_host_and_scheme(
+                        referer, allowed_hosts={request.get_host()}
+                    )
+                    and urlparse(referer).path != request.path
                 ):
-                    path = urlparse(referer).path
                     # avoid logging event if user is just refreshing the page or is redirected after posting a form
-                    if path != request.path:
-                        log_event(
-                            self.event_category,
-                            self.event_action,
-                            self.request,
-                            **self.get_log_event_data(),
-                            **get_matomo_tags(self.request),
-                        )
+                    log_event(
+                        self.event_category,
+                        self.event_action,
+                        self.request,
+                        **self.get_log_event_data(),
+                        **get_matomo_tags(self.request),
+                    )
             return result
 
         else:
