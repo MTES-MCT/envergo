@@ -584,7 +584,7 @@ def test_petition_project_instructor_messagerie_ds(
     }
     response = client.post(instructor_messagerie_url, message_data, follow=True)
     content = response.content.decode()
-    assert "Le message a bien été envoyé sur Démarches Simplifiées." in content
+    assert "Le message a bien été envoyé au demandeur." in content
     assert Event.objects.filter(category="message", event="envoi").exists()
 
 
