@@ -454,13 +454,13 @@ def update_demarches_simplifiees_status(petition_project, new_status):
         response = client.refuse_dossier(
             petition_project.reference,
             petition_project.demarches_simplifiees_dossier_id,
-            "Votre dossier a été refusé.",
+            "La demande a été refusée. Consulter la messagerie pour plus de précisions.",
         )
     elif new_status == DossierState.sans_suite.value:
         response = client.close_dossier(
             petition_project.reference,
             petition_project.demarches_simplifiees_dossier_id,
-            "Votre dossier a été classé sans suite.",
+            "La demande a été classée sans suite. Consulter la messagerie pour plus de précisions.",
         )
     else:
         raise ValueError(f"Unknown status {new_status}")

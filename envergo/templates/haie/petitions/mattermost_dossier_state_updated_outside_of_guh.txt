@@ -4,7 +4,7 @@ Les changements de statut doivent normalement avoir lieu depuis la page Procédu
 Il faut vérifier pourquoi ce changement a eu lieu depuis DS.
 
 
-[Consulter le dossier]({{ instructor_url }})({{ department }})
+[Consulter le dossier]({{ instructor_url }}) ({{ department }})
 
 [Voir le dossier en admin]({{ admin_url }})
 

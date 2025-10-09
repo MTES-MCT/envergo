@@ -1019,6 +1019,28 @@ class PetitionProjectInstructorProcedureView(
             return self.form_invalid(form)
 
     def form_valid(self, form):
+
+        def notify_admin():
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            admin_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.object.pk],
+            )
+            procedure_url = reverse(
+                "petition_project_instructor_procedure_view",
+                kwargs={"reference": self.object.reference},
+            )
+            message = render_to_string(
+                "haie/petitions/mattermost_project_procedure_edition.txt",
+                context={
+                    "department": self.object.department,
+                    "reference": self.object.reference,
+                    "admin_url": f"https://{haie_site.domain}{admin_url}",
+                    "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+                },
+            )
+            notify(message, "haie")
+
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
@@ -1044,37 +1066,21 @@ class PetitionProjectInstructorProcedureView(
         log.save()
 
         res = HttpResponseRedirect(self.get_success_url())
-        log_event(
-            "projet",
-            "modification_statut",
-            self.request,
-            reference=self.object.reference,
-            etape_i=previous_stage,
-            etape_f=log.stage,
-            decision_i=previous_decision,
-            decision_f=log.decision,
-            **get_matomo_tags(self.request),
-        )
 
-        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-        admin_url = reverse(
-            "admin:petitions_petitionproject_change",
-            args=[self.object.pk],
+        transaction.on_commit(
+            lambda: log_event(
+                "projet",
+                "modification_statut",
+                self.request,
+                reference=self.object.reference,
+                etape_i=previous_stage,
+                etape_f=log.stage,
+                decision_i=previous_decision,
+                decision_f=log.decision,
+                **get_matomo_tags(self.request),
+            )
         )
-        procedure_url = reverse(
-            "petition_project_instructor_procedure_view",
-            kwargs={"reference": self.object.reference},
-        )
-        message = render_to_string(
-            "haie/petitions/mattermost_project_procedure_edition.txt",
-            context={
-                "department": self.object.department,
-                "reference": self.object.reference,
-                "admin_url": f"https://{haie_site.domain}{admin_url}",
-                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
-            },
-        )
-        notify(message, "haie")
+        transaction.on_commit(notify_admin)
 
         return res
 
