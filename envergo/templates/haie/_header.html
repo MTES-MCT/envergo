@@ -21,6 +21,13 @@
             <span class="fr-header__service-title">Guichet unique de la haie</span>
           </a>
         </div>
+        <div class="fr-header__navbar">
+          <button class="fr-btn--menu fr-btn"
+                  data-fr-opened="false"
+                  aria-controls="modal-menu"
+                  aria-haspopup="menu"
+                  title="Menu">Menu</button>
+        </div>
       </div>
 
       <div id="menu" class="fr-header__tools">
@@ -28,7 +35,11 @@
           <ul class="fr-btns-group">
             {% if user.is_authenticated %}
               <li>
-                <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+                <div class="account">
+                  <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+                  <br>
+                  <span class="account__email">{{ user.email }}</span>
+                </div>
               </li>
             {% else %}
               <li>
