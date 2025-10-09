@@ -451,7 +451,7 @@ class DemarchesSimplifieesClient:
         self,
         project_reference,
         dossier_id,
-        motivation: str,
+        motivation: str = None,
         disable_notification=True,
     ) -> dict | None:
         """Accept dossier

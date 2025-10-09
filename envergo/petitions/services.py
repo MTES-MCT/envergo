@@ -414,7 +414,7 @@ def get_demarches_simplifiees_dossier(
     return dossier
 
 
-def update_demarches_simplifiees_status(petition_project, new_status, message):
+def update_demarches_simplifiees_status(petition_project, new_status):
     client = DemarchesSimplifieesClient()
 
     if petition_project.demarches_simplifiees_dossier_id is None:
@@ -449,19 +449,18 @@ def update_demarches_simplifiees_status(petition_project, new_status, message):
         response = client.accept_dossier(
             petition_project.reference,
             petition_project.demarches_simplifiees_dossier_id,
-            message,
         )
     elif new_status == DossierState.refuse.value:
         response = client.refuse_dossier(
             petition_project.reference,
             petition_project.demarches_simplifiees_dossier_id,
-            message,
+            "Votre dossier a été refusé.",
         )
     elif new_status == DossierState.sans_suite.value:
         response = client.close_dossier(
             petition_project.reference,
             petition_project.demarches_simplifiees_dossier_id,
-            message,
+            "Votre dossier a été classé sans suite.",
         )
     else:
         raise ValueError(f"Unknown status {new_status}")

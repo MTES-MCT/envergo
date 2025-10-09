@@ -1029,9 +1029,7 @@ class PetitionProjectInstructorProcedureView(
         new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
         if previous_ds_status != new_ds_status:
             try:
-                update_demarches_simplifiees_status(
-                    self.object, new_ds_status, log.update_comment
-                )
+                update_demarches_simplifiees_status(self.object, new_ds_status)
             except DemarchesSimplifieesError:
                 form.add_error(
                     None,

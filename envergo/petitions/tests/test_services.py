@@ -888,7 +888,7 @@ def test_update_demarches_simplifiees_state():
 
     # WHEN I update its status to "en instruction"
     update_demarches_simplifiees_status(
-        petition_project, DossierState.en_instruction.value, "go to instuction"
+        petition_project, DossierState.en_instruction.value
     )
 
     # THEN the status is updated
@@ -900,9 +900,7 @@ def test_update_demarches_simplifiees_state():
     assert petition_project.prefetched_dossier.state == DossierState.en_instruction
 
     # WHEN I update its status to "Accepté"
-    update_demarches_simplifiees_status(
-        petition_project, DossierState.accepte.value, "go to accepted"
-    )
+    update_demarches_simplifiees_status(petition_project, DossierState.accepte.value)
 
     # THEN the status is updated
     petition_project.refresh_from_db()
@@ -910,9 +908,7 @@ def test_update_demarches_simplifiees_state():
     assert petition_project.prefetched_dossier.state == DossierState.accepte
 
     # WHEN I update its status to "Refusé"
-    update_demarches_simplifiees_status(
-        petition_project, DossierState.refuse.value, "go to refused"
-    )
+    update_demarches_simplifiees_status(petition_project, DossierState.refuse.value)
 
     # THEN the status is updated
     petition_project.refresh_from_db()
@@ -920,9 +916,7 @@ def test_update_demarches_simplifiees_state():
     assert petition_project.prefetched_dossier.state == DossierState.refuse
 
     # WHEN I update its status to "Classé sans suite"
-    update_demarches_simplifiees_status(
-        petition_project, DossierState.sans_suite.value, "go to sans suite"
-    )
+    update_demarches_simplifiees_status(petition_project, DossierState.sans_suite.value)
 
     # THEN the status is updated
     petition_project.refresh_from_db()
