@@ -35,7 +35,11 @@
           <ul class="fr-btns-group">
             {% if user.is_authenticated %}
               <li>
-                <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+                <div class="account">
+                  <a class="fr-btn fr-fi-lock-line" href="{% url 'logout' %}">Se déconnecter</a>
+                  <br>
+                  <span class="account__email">{{ user.email }}</span>
+                </div>
               </li>
             {% else %}
               <li>
