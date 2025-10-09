@@ -11,24 +11,22 @@
 {% block project_view_title %}<h2>Procédure</h2>{% endblock %}
 
 {% block project_content %}
-
-  <div class="dj-message fr-alert fr-alert--info">
-    <h3 class="fr-alert__title">Cette page est en cours de construction.</h3>
-    <p>
-      En attendant, si vous souhaitez modifier le statut dans Démarches Simplifiées il faut se rendre sur le site
-      <a href="{{ ds_url }}" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
-    </p>
+  <div>
+    <h3>État du dossier</h3>
   </div>
   <div class="project-inner-content">
     <section class="fr-my-3w">
+      <h4>Étape</h4>
       <p>
-        <span><b>Étape :</b></span> <span>{{ STAGES|get_choice_label:petition_project.current_stage }}</span>
+        {# TODO use the stage_badge filter when the PR is merged #}
+        {{ STAGES|get_choice_label:petition_project.current_stage }}
       </p>
-      {% if petition_project.current_decision != "unset" %}
-        <p>
-          <span><b>Décision :</b></span> <span>{{ DECISIONS|get_choice_label:petition_project.current_decision }}</span>
-        </p>
-      {% endif %}
+
+      <h4>Décision</h4>
+      <p>
+        {# TODO use the decision_badge filter when the PR is merged #}
+        {{ DECISIONS|get_choice_label:petition_project.current_decision }}
+      </p>
     </section>
   </div>
   {% if is_department_instructor %}

@@ -447,6 +447,10 @@ class StatusLog(models.Model):
         help_text="Vous pouvez choisir une date rétroactive si nécessaire.",
         default=timezone.now,
     )
+    due_date = models.DateField(
+        "Date de prochaine échéance",
+        null=True,
+    )
 
     # Meta fields
     created_at = models.DateTimeField(
