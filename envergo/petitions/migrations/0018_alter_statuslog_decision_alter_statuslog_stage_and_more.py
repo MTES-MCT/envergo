@@ -75,4 +75,5 @@ class Migration(migrations.Migration):
                 name="forbid_closed_with_unset_decision",
             ),
         ),
+        migrations.RunPython(map_old_stages_to_new, migrations.RunPython.noop)
     ]

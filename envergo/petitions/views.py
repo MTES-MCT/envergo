@@ -21,6 +21,7 @@ from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, UpdateView
@@ -38,6 +39,7 @@ from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
@@ -54,6 +56,7 @@ from envergo.petitions.models import (
     StatusLog,
 )
 from envergo.petitions.services import (
+    DEMARCHES_SIMPLIFIEES_STATUS_MAPPING,
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
@@ -62,6 +65,7 @@ from envergo.petitions.services import (
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
+    update_demarches_simplifiees_status,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -636,13 +640,22 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
             if self.event_action:
-                log_event(
-                    self.event_category,
-                    self.event_action,
-                    self.request,
-                    **self.get_log_event_data(),
-                    **get_matomo_tags(self.request),
-                )
+                referer = request.META.get("HTTP_REFERER")
+                if (
+                    not referer
+                    or url_has_allowed_host_and_scheme(
+                        referer, allowed_hosts={request.get_host()}
+                    )
+                    and urlparse(referer).path != request.path
+                ):
+                    # avoid logging event if user is just refreshing the page or is redirected after posting a form
+                    log_event(
+                        self.event_category,
+                        self.event_action,
+                        self.request,
+                        **self.get_log_event_data(),
+                        **get_matomo_tags(self.request),
+                    )
             return result
 
         else:
@@ -881,7 +894,7 @@ class PetitionProjectInstructorMessagerieView(
         elif "message" in ds_response and ds_response["message"] is not None:
             messages.success(
                 self.request,
-                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+                """Le message a bien été envoyé au demandeur.""",
             )
 
             # Log matomo event
@@ -1015,51 +1028,75 @@ class PetitionProjectInstructorProcedureView(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        form = ProcedureForm(request.POST)
+        form = ProcedureForm(request.POST, initial=self.get_initial())
         if form.is_valid():
             return self.form_valid(form)
         else:
             return self.form_invalid(form)
 
     def form_valid(self, form):
+
+        def notify_admin():
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            admin_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.object.pk],
+            )
+            procedure_url = reverse(
+                "petition_project_instructor_procedure_view",
+                kwargs={"reference": self.object.reference},
+            )
+            message = render_to_string(
+                "haie/petitions/mattermost_project_procedure_edition.txt",
+                context={
+                    "department": self.object.department,
+                    "reference": self.object.reference,
+                    "admin_url": f"https://{haie_site.domain}{admin_url}",
+                    "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+                },
+            )
+            notify(message, "haie")
+
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
-        log.save()
         previous_stage = self.object.current_stage
         previous_decision = self.object.current_decision
-        res = HttpResponseRedirect(self.get_success_url())
-        log_event(
-            "projet",
-            "modification_statut",
-            self.request,
-            reference=self.object.reference,
-            etape_i=previous_stage,
-            etape_f=log.stage,
-            decision_i=previous_decision,
-            decision_f=log.decision,
-            **get_matomo_tags(self.request),
-        )
 
-        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-        admin_url = reverse(
-            "admin:petitions_petitionproject_change",
-            args=[self.object.pk],
+        previous_ds_status = self.object.demarches_simplifiees_state
+        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
+        if previous_ds_status != new_ds_status:
+            try:
+                update_demarches_simplifiees_status(self.object, new_ds_status)
+            except DemarchesSimplifieesError:
+                form.add_error(
+                    None,
+                    mark_safe(
+                        f"Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste, "
+                        f"<a href='{reverse("contact_us")}'>contactez l'équipe du Guichet Unique de la Haie</a> en "
+                        f"indiquant l'identifiant du dossier."
+                    ),
+                )
+                return self.form_invalid(form)
+
+        log.save()
+
+        res = HttpResponseRedirect(self.get_success_url())
+
+        transaction.on_commit(
+            lambda: log_event(
+                "projet",
+                "modification_statut",
+                self.request,
+                reference=self.object.reference,
+                etape_i=previous_stage,
+                etape_f=log.stage,
+                decision_i=previous_decision,
+                decision_f=log.decision,
+                **get_matomo_tags(self.request),
+            )
         )
-        procedure_url = reverse(
-            "petition_project_instructor_procedure_view",
-            kwargs={"reference": self.object.reference},
-        )
-        message = render_to_string(
-            "haie/petitions/mattermost_project_procedure_edition.txt",
-            context={
-                "department": self.object.department,
-                "reference": self.object.reference,
-                "admin_url": f"https://{haie_site.domain}{admin_url}",
-                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
-            },
-        )
-        notify(message, "haie")
+        transaction.on_commit(notify_admin)
 
         return res
 
