@@ -19,7 +19,10 @@ def autouse_site(site):
 
 @pytest.fixture(autouse=True)
 def alignementarbres_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="alignement_arbres")
+    regulation = RegulationFactory(
+        regulation="alignement_arbres",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementArbresRegulation",
+    )
 
     criteria = [
         CriterionFactory(
@@ -35,12 +38,32 @@ def alignementarbres_criteria(france_map):  # noqa
 
 @pytest.fixture(autouse=True)
 def conditionnalite_pac_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    regulation = RegulationFactory(
+        regulation="conditionnalite_pac",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Regulation",
+    )
     criteria = [
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return criteria
+
+
+@pytest.fixture
+def ep_criteria(france_map):  # noqa
+    regulation = RegulationFactory(
+        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPEvaluator"
+    )
+    criteria = [
+        CriterionFactory(
+            title="Espèces protégées",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -151,6 +174,8 @@ def test_moulinette_result_non_alignement():
     # moulinette = MoulinetteHaie(moulinette_data)
     # assert moulinette.is_valid(), moulinette.form_errors()
 
+    assert moulinette.conditionnalite_pac.result == "non_soumis"
+    assert moulinette.alignement_arbres.result == "non_soumis"
     assert moulinette.result == "declaration"
 
 
@@ -192,3 +217,41 @@ def test_moulinette_result_interdit():
     config.single_procedure = True
     config.save()
     assert moulinette.result == "interdit"
+
+
+def test_moulinette_result_autorisation(ep_criteria):
+    ConfigHaieFactory(single_procedure=True)
+    hedges = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(
+                additionalData={
+                    "type_haie": "mixte",
+                    "sur_parcelle_pac": False,
+                    "mode_destruction": "coupe_a_blanc",
+                },
+            )
+        ]
+    )
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "profil": "autre",
+        "motif": "chemin_access",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "transfert_parcelles": "oui",
+        "meilleur_emplacement": "non",
+        "haies": hedges,
+        "department": "44",
+        "lineaire_total": 500,
+    }
+    moulinette = MoulinetteHaie(data, data)
+    assert moulinette.is_evaluation_available()
+
+    # Update with this after the big moulinette refacto is merged
+    # moulinette_data = {"initial": data, "data": data}
+    # moulinette = MoulinetteHaie(moulinette_data)
+    # assert moulinette.is_valid(), moulinette.form_errors()
+
+    assert moulinette.ep.ep_aisne.result == "derogation_simplifiee"
+    assert moulinette.result == "autorisation"

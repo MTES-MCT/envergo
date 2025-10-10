@@ -34,6 +34,7 @@ class RegulationFactory(DjangoModelFactory):
         model = Regulation
 
     regulation = "loi_sur_leau"
+    evaluator = "envergo.moulinette.regulations.RegulationEvaluator"
     has_perimeters = False
 
 
