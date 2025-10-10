@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -40,18 +41,21 @@ DOSSIER_STATES = Choices(
 )
 
 STAGES = Choices(
-    ("a_instruire", "À instruire"),
-    ("instruction", "Instruction"),
-    ("redaction_decision", "Rédaction décision"),
-    ("notification_publicite", "Notification & publicité"),
-    ("clos", "Dossier clos"),
+    ("to_be_processed", "À instruire"),
+    ("instruction_d", "Instruction déclaration"),
+    ("instruction_a", "Instruction autorisation"),
+    ("instruction_h", "Instruction hors régime unique"),
+    ("preparing_decision", "Rédaction décision"),
+    ("notification", "Notification / Publicité"),
+    ("closed", "Dossier clos"),
 )
 
 DECISIONS = Choices(
     ("unset", "À déterminer"),
-    ("accord", "Accord"),
+    ("express_agreement", "Accord exprès"),
+    ("tacit_agreement", "Accord tacite"),
     ("opposition", "Opposition"),
-    ("sans_suite", "Classé sans suite"),
+    ("dropped", "Classé sans suite"),
 )
 
 # This session key is used when we are not able to find the real user session key.
@@ -192,34 +196,37 @@ class PetitionProject(models.Model):
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
-        logger.info(f"Synchronizing file {self.reference} with DS")
 
-        if not self.is_dossier_submitted:
-            # first time we have some data about this dossier
+        def get_admin_url():
+            return reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.pk],
+            )
+
+        def get_instructor_url():
+            return reverse(
+                "petition_project_instructor_view", kwargs={"reference": self.reference}
+            )
+
+        def get_ds_url():
             demarche_number = (
                 dossier["demarche"]["number"]
                 if "demarche" in dossier and "number" in dossier["demarche"]
                 else "Numéro inconnu"
             )
 
-            ds_url = self.get_demarches_simplifiees_instructor_url(demarche_number)
+            return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
+        logger.info(f"Synchronizing file {self.reference} with DS")
+
+        if not self.is_dossier_submitted:
+            # first time we have some data about this dossier
             department = extract_param_from_url(self.moulinette_url, "department")
-            admin_url = reverse(
-                "admin:petitions_petitionproject_change",
-                args=[self.pk],
-            )
-
-            instructor_url = reverse(
-                "petition_project_instructor_view", kwargs={"reference": self.reference}
-            )
-
             usager_email = (
                 dossier["usager"]["email"]
                 if "usager" in dossier and "email" in dossier["usager"]
                 else "non renseigné"
             )
-
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
 
             message_body = render_to_string(
@@ -227,9 +234,9 @@ class PetitionProject(models.Model):
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
                     "dossier_number": self.demarches_simplifiees_dossier_number,
-                    "instructor_url": f"https://{haie_site.domain}{instructor_url}",
-                    "ds_url": ds_url,
-                    "admin_url": f"https://{haie_site.domain}{admin_url}",
+                    "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
+                    "ds_url": get_ds_url(),
+                    "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),
                 },
@@ -267,6 +274,24 @@ class PetitionProject(models.Model):
                 haie_site,
                 **self.get_log_event_data(),
             )
+        elif (
+            self.demarches_simplifiees_state
+            and dossier["state"] != self.demarches_simplifiees_state
+        ):
+            # DS state have been changed outside of GUH. We are trying to prevent this. Notify admin
+            department = extract_param_from_url(self.moulinette_url, "department")
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+
+            message_body = render_to_string(
+                "haie/petitions/mattermost_dossier_state_updated_outside_of_guh.txt",
+                context={
+                    "department": dict(DEPARTMENT_CHOICES).get(department, department),
+                    "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
+                    "ds_url": get_ds_url(),
+                    "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
+                },
+            )
+            notify(message_body, "haie")
 
         self.demarches_simplifiees_dossier_id = dossier["id"]
         self.demarches_simplifiees_state = dossier["state"]
@@ -430,7 +455,7 @@ class StatusLog(models.Model):
         "Étape",
         max_length=30,
         choices=STAGES,
-        default=STAGES.a_instruire,
+        default=STAGES.to_be_processed,
     )
     decision = models.CharField(
         "Décision",
@@ -460,3 +485,9 @@ class StatusLog(models.Model):
     class Meta:
         verbose_name = "Log de changement de statut de projet"
         verbose_name_plural = "Historique des changements de statut de projet"
+        constraints = [
+            models.CheckConstraint(
+                check=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
+                name="forbid_closed_with_unset_decision",
+            )
+        ]
