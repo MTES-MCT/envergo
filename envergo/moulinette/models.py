@@ -1930,6 +1930,9 @@ class MoulinetteHaie(Moulinette):
     def result(self):
         """Compute global result from individual regulation results."""
 
+        if not self.config.single_procedure:
+            return super().result
+
         # return the cached result if it was overriden
         # Otherwise, we don't cache the result because it can change between invocations
         if hasattr(self, "_result"):
@@ -1943,17 +1946,14 @@ class MoulinetteHaie(Moulinette):
         hedges = self.catalog["haies"].hedges_filter("TO_REMOVE", "!alignement")
         alignement_arbres = len(hedges) == 0
 
-        if self.config.single_procedure:
-            if is_interdit:
-                result = RESULTS.interdit
-            elif alignement_arbres:
-                result = "hors_regime_unique"
-            elif is_autorisation:
-                result = "autorisation"
-            else:
-                result = "declaration"
+        if is_interdit:
+            result = RESULTS.interdit
+        elif alignement_arbres:
+            result = "hors_regime_unique"
+        elif is_autorisation:
+            result = "autorisation"
         else:
-            result = super().result
+            result = "declaration"
 
         return result or RESULTS.non_soumis
 
