@@ -299,7 +299,7 @@ class RegulationEvaluator(ABC):
 
         # If there is no criterion at all, we have to set a default value
         if result is None:
-            if self.has_perimeters:
+            if regulation.has_perimeters:
                 result = RESULTS.non_soumis
             else:
                 result = RESULTS.non_disponible
