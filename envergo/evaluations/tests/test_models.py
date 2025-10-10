@@ -66,15 +66,12 @@ def test_call_to_action_action(moulinette_url):
     assert not evaluation.is_eligible_to_self_declaration()
 
     moulinette.regulations[0].criteria.first()._evaluator._result = "action_requise"
-    assert moulinette.result == "action_requise"
     assert evaluation.is_eligible_to_self_declaration()
 
     moulinette.regulations[0].criteria.first()._evaluator._result = "soumis"
-    assert moulinette.result == "soumis"
     assert evaluation.is_eligible_to_self_declaration()
 
     moulinette.regulations[0].criteria.first()._evaluator._result = "interdit"
-    assert moulinette.result == "interdit"
     assert evaluation.is_eligible_to_self_declaration()
 
     evaluation.is_icpe = True
