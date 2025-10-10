@@ -1028,6 +1028,7 @@ def test_instructor_view_with_hedges_outside_department(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("envergo.petitions.views.notify")
+@pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
     mock_notify, client, haie_user, instructor_haie_user_44, site
 ):
