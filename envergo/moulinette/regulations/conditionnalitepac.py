@@ -13,6 +13,17 @@ from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEva
 logger = logging.getLogger(__name__)
 
 
+class Bcae8Regulation(HaieRegulationEvaluator):
+    choice_label = "Conditionnalité PAC > BCAE8"
+
+    LEVEL_MATRIX = {
+        "interdit": "interdit",
+        "soumis": "declaration",
+        "dispense": "declaration",
+        "non_soumis": "declaration",
+    }
+
+
 def keep_fields(fields, keys):
     """Only keep selected fields from the field list.
 
@@ -164,17 +175,6 @@ class Bcae8Form(forms.Form):
                     code="inconsistent_reimplantation",
                 ),
             )
-
-
-class Bcae8Regulation(HaieRegulationEvaluator):
-    choice_label = "Conditionnalité PAC > BCAE8"
-
-    LEVEL_MATRIX = {
-        "interdit": "interdit",
-        "soumis": "declaration",
-        "dispense": "declaration",
-        "non_soumis": "declaration",
-    }
 
 
 class Bcae8(PlantationConditionMixin, CriterionEvaluator):

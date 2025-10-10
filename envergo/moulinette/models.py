@@ -1935,10 +1935,8 @@ class MoulinetteHaie(Moulinette):
         if hasattr(self, "_result"):
             return self._result
 
-        results = [regulation.result for regulation in self.regulations]
-        is_interdit = RESULTS.interdit in results
-
         levels = [regulation.level for regulation in self.regulations]
+        is_interdit = "interdit" in levels
         is_autorisation = "autorisation" in levels
 
         # Check if we are in the "100% alignement d'arbres" case
