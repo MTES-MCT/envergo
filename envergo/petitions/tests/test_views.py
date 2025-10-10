@@ -1028,6 +1028,7 @@ def test_instructor_view_with_hedges_outside_department(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("envergo.petitions.views.notify")
+@pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
     mock_notify, client, haie_user, instructor_haie_user_44, site
 ):
@@ -1075,10 +1076,23 @@ def test_petition_project_procedure(
     assert "<h2>Procédure</h2>" in content
     assert "Modifier</button>" in content
 
+    # WHEN the user try to go from to_be_processed to closed
+    data = {
+        "stage": "closed",
+        "decision": "dropped",
+        "update_comment": "aucun retour depuis 15 ans",
+        "status_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+    # THEN this step is not authorized
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.status_history.all().count() == 0
+
     # WHEN the user edit the status
     data = {
-        "stage": "clos",
-        "decision": "sans_suite",
+        "stage": "preparing_decision",
+        "decision": "dropped",
         "update_comment": "aucun retour depuis 15 ans",
         "status_date": "10/09/2025",
     }
@@ -1088,13 +1102,13 @@ def test_petition_project_procedure(
     assert res.status_code == 200
     project.refresh_from_db()
     last_status = project.status_history.all().order_by("-created_at").first()
-    assert last_status.stage == "clos"
-    assert last_status.decision == "sans_suite"
+    assert last_status.stage == "preparing_decision"
+    assert last_status.decision == "dropped"
     event = Event.objects.get(category="projet", event="modification_statut")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["etape_f"] == "clos"
-    assert event.metadata["decision_f"] == "sans_suite"
-    assert event.metadata["etape_i"] == "a_instruire"
+    assert event.metadata["etape_f"] == "preparing_decision"
+    assert event.metadata["decision_f"] == "dropped"
+    assert event.metadata["etape_i"] == "to_be_processed"
     assert event.metadata["decision_i"] == "unset"
 
     assert mock_notify.call_count == 1
