@@ -80,11 +80,24 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
+    latest_logs = StatusLog.objects.filter(petition_project=OuterRef("pk")).order_by(
+        "-created_at"
+    )
     queryset = (
         PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
         .select_related("hedge_data", "department__confighaie")
+        .annotate(
+            current_stage=Coalesce(
+                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
+                Value(STAGES.to_be_processed, output_field=CharField()),
+            ),
+            current_decision=Coalesce(
+                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
+                Value(DECISIONS.unset, output_field=CharField()),
+            ),
+        )
         .order_by("-demarches_simplifiees_date_depot", "-created_at")
     )
     paginate_by = 30
@@ -597,13 +610,25 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         current_user = self.request.user
         queryset = super().get_queryset()
 
+        latest_logs = StatusLog.objects.filter(
+            petition_project=OuterRef("pk")
+        ).order_by("-created_at")
+
         queryset = queryset.annotate(
             followed_up=Exists(
                 PetitionProject.followed_by.through.objects.filter(
                     petitionproject_id=OuterRef("pk"),
                     user_id=current_user.pk,
                 )
-            )
+            ),
+            current_stage=Coalesce(
+                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
+                Value(STAGES.to_be_processed, output_field=CharField()),
+            ),
+            current_decision=Coalesce(
+                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
+                Value(DECISIONS.unset, output_field=CharField()),
+            ),
         )
         return queryset
 
@@ -945,24 +970,6 @@ class PetitionProjectInstructorProcedureView(
     template_name = "haie/petitions/instructor_view_procedure.html"
     paginate_by = 10
     context_object_name = "petition_project"
-
-    def get_queryset(
-        self,
-    ):
-        latest_logs = StatusLog.objects.filter(
-            petition_project=OuterRef("pk")
-        ).order_by("-created_at")
-        queryset = super().get_queryset()
-        return queryset.annotate(
-            current_stage=Coalesce(
-                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
-                Value(STAGES.to_be_processed, output_field=CharField()),
-            ),
-            current_decision=Coalesce(
-                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
-                Value(DECISIONS.unset, output_field=CharField()),
-            ),
-        )
 
     def get_initial(self):
         initial = super().get_initial()
