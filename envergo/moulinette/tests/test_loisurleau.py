@@ -20,19 +20,28 @@ def autouse_site(site):
 
 @pytest.fixture(autouse=True)
 def loisurleau_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="loi_sur_leau")
+    regulation = RegulationFactory(
+        regulation="loi_sur_leau",
+        actions_to_take_map={
+            "soumis_ou_pac": ["depot_pac_lse", "mention_arrete_lse", "pc_ein"],
+            "soumis": ["depot_dossier_lse", "mention_arrete_lse", "pc_ein"],
+            "action_requise": ["mention_arrete_lse"],
+        },
+    )
     criteria = [
         CriterionFactory(
             title="Zone humide",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
             activation_map=france_map,
+            actions_to_take_map={"action_requise": ["etude_zh_lse"]},
         ),
         CriterionFactory(
             title="Zone inondable",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.ZoneInondable",
             activation_map=france_map,
+            actions_to_take_map={"action_requise": ["etude_zi_lse"]},
         ),
         CriterionFactory(
             title="Ruissellement",
@@ -45,6 +54,7 @@ def loisurleau_criteria(france_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.EcoulementSansBV",
             activation_map=france_map,
+            actions_to_take_map={"action_requise": ["etude_2150"]},
             is_optional=True,
         ),
         CriterionFactory(
@@ -52,6 +62,7 @@ def loisurleau_criteria(france_map):  # noqa
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.loisurleau.EcoulementAvecBV",
             activation_map=france_map,
+            actions_to_take_map={"action_requise": ["etude_2150"]},
             is_optional=True,
         ),
     ]
@@ -381,3 +392,13 @@ def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_pv_sol"
+
+
+@pytest.mark.parametrize("footprint", [700])
+def test_moulinette_returns_actions_to_take(moulinette_data):
+    ConfigAmenagementFactory()
+    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette.catalog["wetlands_within_25m"] = True
+    moulinette.evaluate()
+    assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
+    assert moulinette.actions_to_take == {"etude_zh_lse", "mention_arrete_lse"}
