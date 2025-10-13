@@ -13,7 +13,7 @@ from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEva
 
 
 class Natura2000HaieRegulation(HaieRegulationEvaluator):
-    choice_label = "Natura 2000 > Haie"
+    choice_label = "Natura 2000 Haie"
 
     LEVEL_MATRIX = {
         "soumis": "autorisation",
