@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Bcae8Regulation(HaieRegulationEvaluator):
-    choice_label = "Conditionnalité PAC > BCAE8"
+    choice_label = "Conditionnalité PAC"
 
     LEVEL_MATRIX = {
         "interdit": "interdit",
