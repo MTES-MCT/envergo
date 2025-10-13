@@ -300,16 +300,24 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
+        matomo_url = self.request.path
+
+        # Some value were pre-filled
+        if self.request.GET:
+            matomo_url = reverse("moulinette_prefilled_form")
+
+        # There are some additional forms displayed
+        if self.moulinette.additional_fields:
+            matomo_url = reverse("moulinette_missing_data")
 
         form = context["form"]
         if form.is_bound and not form.is_valid():
-            invalid_form_url = self.request.build_absolute_uri(
-                reverse("moulinette_invalid_form")
-            )
-            context["matomo_custom_url"] = update_url_with_matomo_params(
-                invalid_form_url, self.request
-            )
+            matomo_url = reverse("moulinette_invalid_form")
+
+        full_matomo_url = self.request.build_absolute_uri(matomo_url)
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            full_matomo_url, self.request
+        )
 
         return context
 
@@ -379,9 +387,6 @@ class MoulinetteResultMixin:
         # except for mtm_ ones
         bare_url = self.request.build_absolute_uri(self.request.path)
         debug_url = self.request.build_absolute_uri(reverse("moulinette_result_debug"))
-        missing_data_url = self.request.build_absolute_uri(
-            reverse("moulinette_missing_data")
-        )
         out_of_scope_result_url = self.request.build_absolute_uri(
             reverse("moulinette_result_out_of_scope")
         )
@@ -404,10 +409,6 @@ class MoulinetteResultMixin:
         elif not moulinette.is_valid():
             data["matomo_custom_url"] = update_url_with_matomo_params(
                 invalid_form_url, self.request
-            )
-        elif context["additional_forms_bound"]:
-            data["matomo_custom_url"] = update_url_with_matomo_params(
-                missing_data_url, self.request
             )
         elif is_debug:
             data["matomo_custom_url"] = update_url_with_matomo_params(
