@@ -1859,6 +1859,7 @@ class MoulinetteAmenagement(Moulinette):
 
         if self.is_evaluation_available():
             summary["result"] = self.result_data()
+            summary["main_result"] = self.result
 
         return summary
 
@@ -1970,6 +1971,7 @@ class MoulinetteHaie(Moulinette):
 
         if self.is_evaluation_available():
             summary["result"] = self.result_data()
+            summary["main_result"] = self.result
 
         if "haies" in self.catalog:
             haies = self.catalog["haies"]
