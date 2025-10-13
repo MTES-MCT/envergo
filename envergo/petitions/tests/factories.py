@@ -72,6 +72,10 @@ with open(
 
 FILE_TEST_PATH = Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
 
+FILE_TEST_NOK_PATH = Path(
+    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fichier_non_autorise.odt"
+)
+
 
 class PetitionProjectFactory(DjangoModelFactory):
     class Meta:

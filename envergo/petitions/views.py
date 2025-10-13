@@ -875,8 +875,21 @@ class PetitionProjectInstructorMessagerieView(
 
         return context
 
+    def form_invalid(self, form):
+        """Avoid errors if forms is invalid"""
+
+        if form.errors:
+            messages.warning(
+                self.request,
+                """Le message n'a pas pu être envoyé, la pièce jointe dépasse
+                la taille maximale autorisée de 20Mo ou n'est pas du type autorisé.""",
+            )
+
+        self.object = self.get_object()
+        return super().form_invalid(form)
+
     def form_valid(self, form):
-        """Send message"""
+        """Send message if form is valid"""
         message_body = form.cleaned_data["message_body"]
         attachments = form.cleaned_data["additional_file"]
 

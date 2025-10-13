@@ -10,5 +10,15 @@
          name="{{ field.html_name }}">
   <div class="fr-messages-group"
        id="{{ field.id_for_label }}-messages"
-       aria-live="polite"></div>
+       aria-live="polite">
+    {% if field.errors %}
+      <p class="fr-error-text">
+        ↑
+        {{ field.errors.0 }}
+        ↑
+      </p>
+    {% endif %}
+
+  </div>
+
 </div>
