@@ -30,6 +30,12 @@ urlpatterns = [
                     RedirectView.as_view(pattern_name="moulinette_result"),
                     name="moulinette_invalid_form",
                 ),
+                # An another one
+                path(
+                    "pre-rempli/",
+                    RedirectView.as_view(pattern_name="moulinette_result"),
+                    name="moulinette_prefilled_form",
+                ),
             ]
         ),
     ),
