@@ -19,7 +19,7 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
 
 class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
 
-    choice_label = "Alignements d'arbres  > L350-3"
+    choice_label = "Alignements d'arbres"
     slug = "alignement_arbres"
     plantation_conditions = [TreeAlignmentsCondition]
 
