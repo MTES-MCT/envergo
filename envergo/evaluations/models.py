@@ -107,6 +107,7 @@ RESULTS = Choices(
     ("soumis_autorisation", "Autorisation"),
     ("autorisation", "Autorisation"),
     ("declaration", "Declaration"),
+    ("hors_regime_unique", "Hors régime unique"),
 )
 
 RESULT_CASCADE = [
@@ -131,6 +132,7 @@ RESULT_CASCADE = [
     RESULTS.non_disponible,
     RESULTS.non_applicable,
     RESULTS.non_active,
+    RESULTS.hors_regime_unique,
 ]
 
 _missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
@@ -165,6 +167,7 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.non_soumis: TagStyleEnum.Green,
     RESULTS.non_disponible: TagStyleEnum.Grey,
     RESULTS.non_applicable: TagStyleEnum.Grey,
+    RESULTS.hors_regime_unique: TagStyleEnum.Grey,
     RESULTS.cas_par_cas: TagStyleEnum.Orange,
     RESULTS.systematique: TagStyleEnum.LightRed,
     RESULTS.non_concerne: TagStyleEnum.Green,

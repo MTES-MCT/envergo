@@ -123,6 +123,7 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.non_disponible: RESULTS.non_disponible,
     RESULTS.non_applicable: RESULTS.non_disponible,
     RESULTS.non_active: RESULTS.non_disponible,
+    RESULTS.hors_regime_unique: RESULTS.non_disponible,
 }
 
 
@@ -175,6 +176,7 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.non_disponible: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
     RESULTS.non_active: ResultGroupEnum.OtherRegulations,
+    RESULTS.hors_regime_unique: ResultGroupEnum.OtherRegulations,
 }
 
 
