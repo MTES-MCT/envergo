@@ -541,6 +541,7 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.declaration: False,
     RESULTS.soumis_autorisation: False,
     RESULTS.autorisation: False,
+    RESULTS.hors_regime_unique: False,
 }
 
 
