@@ -11,7 +11,7 @@ class UrbanismeHaieRegulation(HaieRegulationEvaluator):
 
 
 class UrbanismeHaie(CriterionEvaluator):
-    choice_label = "Urbanisme Haie > Urbanisme Haie"
+    choice_label = "Urbanisme Haie"
     slug = "urbanisme_haie"
 
     def evaluate(self):
