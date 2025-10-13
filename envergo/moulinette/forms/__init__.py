@@ -349,12 +349,6 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             .select_related("confighaie")
             .annotate(centroid=Centroid("geometry"))
         )
-        submitted_params = set(self.data.keys())
-        triage_fields = set(TriageFormHaie.base_fields.keys())
-
-        # Check if only the Triage form fields are submitted
-        if submitted_params.issubset(triage_fields):
-            self.is_bound = False
 
     def clean(self):
         data = super().clean()
