@@ -83,7 +83,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
     )
 
     additional_file = FileField(
-        label="Fichier joint",
+        label="Pièce jointe",
         required=False,
         help_text="""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
