@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class AlignementArbresRegulation(HaieRegulationEvaluator):
-    choice_label = "Alignements d'arbres > L250-3"
+    choice_label = "Alignements d'arbres"
 
     LEVEL_MATRIX = {
         "soumis_autorisation": "declaration",
@@ -19,7 +19,7 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
 
 class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
 
-    choice_label = "Alignements d'arbres"
+    choice_label = "Alignements d'arbres > L250-3"
     slug = "alignement_arbres"
     plantation_conditions = [TreeAlignmentsCondition]
 
