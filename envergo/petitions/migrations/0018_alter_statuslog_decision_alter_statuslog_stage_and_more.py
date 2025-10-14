@@ -7,7 +7,7 @@ def map_old_stages_to_new(apps, schema_editor):
 
     stage_mapping = {
         "a_instruire": "to_be_processed",
-        "instruction": "instruction_d",
+        "instruction": "instruction_h",
         "redaction_decision": "preparing_decision",
         "notification_publicite": "notification",
         "clos": "closed",
