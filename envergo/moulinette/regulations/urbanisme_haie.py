@@ -3,7 +3,7 @@ from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEva
 
 
 class UrbanismeHaieRegulation(HaieRegulationEvaluator):
-    choice_label = "Urbanisme Haie > Urbanisme Haie"
+    choice_label = "Urbanisme Haie"
 
     LEVEL_MATRIX = {
         "a_verifier": "declaration",
@@ -11,7 +11,7 @@ class UrbanismeHaieRegulation(HaieRegulationEvaluator):
 
 
 class UrbanismeHaie(CriterionEvaluator):
-    choice_label = "Urbanisme Haie"
+    choice_label = "Urbanisme Haie > Urbanisme Haie"
     slug = "urbanisme_haie"
 
     def evaluate(self):
