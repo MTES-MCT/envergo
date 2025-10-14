@@ -76,6 +76,25 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
 
+    class Meta:
+        model = StatusLog
+        fields = [
+            "stage",
+            "due_date",
+            "decision",
+            "status_date",
+            "update_comment",
+        ]
+        help_texts = {
+            "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
+            "update_comment": "Commentaire interne expliquant le contexte et les raisons du changement.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+        self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+
     def clean(self):
         cleaned_data = super().clean()
         stage = cleaned_data.get("stage")
@@ -121,15 +140,3 @@ class ProcedureForm(forms.ModelForm):
             )
 
         return cleaned_data
-
-    class Meta:
-        model = StatusLog
-        fields = [
-            "stage",
-            "decision",
-            "status_date",
-            "update_comment",
-        ]
-        help_texts = {
-            "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
-        }

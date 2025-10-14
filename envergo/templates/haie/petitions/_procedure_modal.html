@@ -18,7 +18,21 @@
             </p>
             <form method="post" action="" novalidate class="fr-mb-3w">
               {% csrf_token %}
-              {% include '_form_snippet.html' with form=form %}
+              {% load utils %}
+
+              {% include '_form_header.html' with form=form %}
+
+              {% for field in form.visible_fields %}
+                {% include '_field.html' with field=field %}
+                {% if field.name == "stage" %}
+                  {% for stage in STAGES %}
+                    <div id="stage-objective--{{ stage.0 }}" class="stage-objective">
+                      {% include "haie/petitions/stage_objectives/"|add:stage.0|add:".html" %}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+
+              {% endfor %}
 
               <button type="submit" class="fr-btn">Enregistrer</button>
             </form>

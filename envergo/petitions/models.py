@@ -466,6 +466,8 @@ class StatusLog(models.Model):
     update_comment = models.TextField(
         "Commentaire",
         help_text="Ajouter un commentaire expliquant le contexte du changement.",
+        null=True,
+        blank=True,
     )
     status_date = models.DateField(
         "Date effective du changement",
@@ -475,6 +477,7 @@ class StatusLog(models.Model):
     due_date = models.DateField(
         "Date de prochaine échéance",
         null=True,
+        blank=True,
     )
 
     # Meta fields

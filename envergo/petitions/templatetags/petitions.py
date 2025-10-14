@@ -1,8 +1,10 @@
 import uuid
+from datetime import date
 from typing import Literal
 
 from django import template
 from django.template import TemplateDoesNotExist
+from django.template.defaultfilters import date as date_filter
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
@@ -191,3 +193,39 @@ def decision_badge(decision, light_version=False):
                           {label}
                         </p>"""
         )
+
+
+@register.filter
+def display_due_date(due_date):
+    if not due_date or not isinstance(due_date, date):
+        return mark_safe('<span class="days-left">Non renseignée</span>')
+
+    days_left = (due_date - date.today()).days
+    if days_left >= 7:
+        icon_part = '<span class="fr-icon-timer-line"></span>'
+    elif days_left >= 0:
+        icon_part = '<span class="fr-icon-hourglass-2-fill fr-label--warning"></span>'
+    else:
+        icon_part = '<span class="fr-icon-warning-fill fr-label--error"></span>'
+
+    date_part = f"""<span class="due-date">
+                {icon_part}
+                {date_filter(due_date, "SHORT_DATE_FORMAT")}
+              </span><br/>"""
+
+    if days_left >= 2:
+        days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
+    elif days_left >= 0:
+        days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
+    elif days_left >= -1:
+        days_left_part = (
+            f'<span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
+        )
+    elif days_left:
+        days_left_part = (
+            f'<span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
+        )
+    else:
+        days_left_part = ""
+
+    return mark_safe(date_part + days_left_part)
