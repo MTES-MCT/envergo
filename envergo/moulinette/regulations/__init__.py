@@ -315,8 +315,16 @@ class RegulationEvaluator(ABC):
         return self._result
 
 
+class AmenagementRegulationEvaluator(RegulationEvaluator):
+    """Specific evaluator for the amenagement site."""
+
+    choice_label = "Défaut (Aménagement)"
+
+
 class HaieRegulationEvaluator(RegulationEvaluator):
     """Specific evaluator for the haies site."""
+
+    choice_label = "Défaut (Haie)"
 
     # result -> autorisation / déclaration
     LEVEL_MATRIX = {}
