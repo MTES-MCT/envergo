@@ -81,6 +81,20 @@ def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
     hedge_to_remove_properties_form = import_string(
         moulinette.config.hedge_to_remove_properties_form
     )
+
+    # Order keys according to fieldsets order in form without black listed keys
+    ordered_fields_keys = []
+    for values in hedge_to_remove_properties_form.fieldsets.values():
+        for value in values:
+            if value in black_list:
+                continue
+            ordered_fields_keys.append(value)
+    for values in hedge_to_plant_properties_form.fieldsets.values():
+        for value in values:
+            if value in black_list:
+                continue
+            ordered_fields_keys.append(value)
+
     for hedge in petition_project.hedge_data.hedges():
         form = (
             hedge_to_plant_properties_form
@@ -88,16 +102,11 @@ def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
             else hedge_to_remove_properties_form
         )
 
-        # Order keys according to fieldsets order in form without black listed keys
-        ordered_fields_keys = []
-        for values in form.fieldsets.values():
-            for value in values:
-                if value in black_list:
-                    continue
-                ordered_fields_keys.append(value)
-
         # Create list of hedges properties
         for key in ordered_fields_keys:
+
+            if key not in form.base_fields:
+                continue
 
             field = form.base_fields[key]
             is_choice = False
