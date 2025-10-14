@@ -88,18 +88,12 @@ class RegulationAdmin(admin.ModelAdmin):
         return obj.regulation
 
 
-class PerimeterChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.backend_name
-
-
 class CriterionAdminForm(forms.ModelForm):
     header = forms.CharField(
         label=_("Header"),
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    perimeter = PerimeterChoiceField(required=False, queryset=Perimeter.objects.all())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
