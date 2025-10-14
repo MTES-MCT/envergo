@@ -93,6 +93,8 @@ def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
         for value in values:
             if value in black_list:
                 continue
+            if value in ordered_fields_keys:
+                continue
             ordered_fields_keys.append(value)
 
     for hedge in petition_project.hedge_data.hedges():
