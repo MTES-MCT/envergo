@@ -882,7 +882,7 @@ class PetitionProjectInstructorMessagerieView(
             messages.warning(
                 self.request,
                 """Le message n'a pas pu être envoyé, la pièce jointe dépasse
-                la taille maximale autorisée de 20Mo ou n'est pas du type autorisé.""",
+                la taille maximale autorisée de 20Mo ou n'est pas du format autorisé.""",
             )
 
         self.object = self.get_object()
