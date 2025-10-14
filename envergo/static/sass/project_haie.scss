@@ -15,6 +15,17 @@ main.home {
   }
 }
 
+.fr-header {
+  .fr-btns-group .account .fr-btn {
+    margin-bottom: 0;
+  }
+
+  .account__email {
+    font-size: 0.875rem;
+    color: var(--text-mention-grey);
+  }
+}
+
 html.saisie {
   height: 100%;
 
