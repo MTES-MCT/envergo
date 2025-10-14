@@ -97,7 +97,11 @@ def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
                 continue
             ordered_fields_keys.append(value)
 
-    for hedge in petition_project.hedge_data.hedges():
+    # Start hedges list with a TO_REMOVE hedge
+    hedges = petition_project.hedge_data.hedges()
+    hedges.sort(key=lambda h: h.type, reverse=True)
+
+    for hedge in hedges:
         form = (
             hedge_to_plant_properties_form
             if hedge.type == TO_PLANT
