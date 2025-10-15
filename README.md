@@ -440,7 +440,7 @@ Voir [la documentation officielle Scaleway sur le stockage de fichiers](https://
 
 ### Backup des buckets S3
 
-Chaque semaine, on souhaite faire une sauvegarde du contenu des buckets s3 de production. Ceux-ci seront sauvegarder dans un object storage "glacier".
+Chaque semaine, on souhaite faire une sauvegarde du contenu des buckets s3 de production. Ceux-ci seront sauvegardé dans un object storage "glacier".
 
 Pour executer cette sauvegarde, on utilise [github action](.github/workflows/s3_backup.yml)
 
