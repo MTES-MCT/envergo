@@ -196,7 +196,7 @@ def decision_badge(decision, light_version=False):
 
 
 @register.filter
-def display_due_date(due_date):
+def display_due_date(due_date, display_days_left=True):
     if not due_date or not isinstance(due_date, date):
         return mark_safe('<span class="days-left">Non renseignée</span>')
 
@@ -213,7 +213,9 @@ def display_due_date(due_date):
                 {date_filter(due_date, "SHORT_DATE_FORMAT")}
               </span><br/>"""
 
-    if days_left >= 2:
+    if not display_days_left:
+        days_left_part = ""
+    elif days_left >= 2:
         days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
     elif days_left >= 0:
         days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
