@@ -68,7 +68,7 @@ def validate_file_size(value):
 
 
 validate_extension = FileExtensionValidator(
-    allowed_extensions=["png", "jpg", "tiff", "jpeg", "pdf", "zip"],
+    allowed_extensions=["png", "jpg", "jpeg", "pdf", "zip"],
 )
 
 
@@ -87,7 +87,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
         required=False,
         help_text="""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
-            Maximum 20 Mo.
+            Taille maximale autorisée : 20 Mo.
         """,
         validators=[validate_file_size, validate_extension],
     )
