@@ -42,6 +42,12 @@
       {% if petition_project.current_decision != "unset" %}
         <div class="fr-mt-2v">{{ petition_project.current_decision|decision_badge }}</div>
       {% endif %}
+      <div class="fr-mt-2v">
+        <div>
+          <strong>Prochaine échéance :</strong>
+        </div>
+        <div>{{ petition_project.due_date|display_due_date:False }}</div>
+      </div>
       {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
         <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
            href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"

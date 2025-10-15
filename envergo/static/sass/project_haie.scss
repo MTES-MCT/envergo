@@ -811,16 +811,14 @@ div#project-header-container {
   }
 }
 
-#due-date-container {
-  .due-date {
-    color: var(--text-mention-grey);
-  }
+.due-date {
+  color: var(--text-mention-grey);
+}
 
-  .days-left {
-    font-style: italic;
-    color: var(--text-mention-grey);
-    font-size: 0.75rem;
-  }
+.days-left {
+  font-style: italic;
+  color: var(--text-mention-grey);
+  font-size: 0.75rem;
 }
 
 .stage-objective {
