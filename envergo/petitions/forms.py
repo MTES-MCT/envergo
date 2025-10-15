@@ -85,8 +85,8 @@ class PetitionProjectInstructorMessageForm(forms.Form):
     additional_file = FileField(
         label="Pièce jointe",
         required=False,
-        help_text="""
-            Formats autorisés : images (png, jpg), pdf, zip. <br>
+        help_text="""Une seule pièce jointe est autorisée par message.<br>
+            Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
         validators=[validate_file_size, validate_extension],
