@@ -447,6 +447,7 @@ Ajouter les `Repository secrets` :
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
+Pour récupérer les backups et les restaurer.
 
 ## Glossaire
 
