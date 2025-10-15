@@ -435,11 +435,14 @@ $ docker compose run --rm django python manage.py anonymize_database
 
 Les documents sont stockés sur un répertoire distant compatible avec le protocole S3 sur [Scaleway](https://console.scaleway.com/object-storage/buckets) ce processus est géré via la librairie python boto en combinaison avec le package default_storage de Django
 
+Voir [la documentation officielle Scaleway sur le stockage de fichiers](https://www.scaleway.com/en/docs/object-storage/)
+
 
 ### Backup des buckets S3
 
-Chaque semaine, on souhaite faire un backup du contenu des buckets s3 de production.
-Pour executer ce back up on utilise [github action](.github/workflows/s3_backup.yml)
+Chaque semaine, on souhaite faire une sauvegarde du contenu des buckets s3 de production. Ceux-ci seront sauvegardés dans un object storage "glacier".
+
+Pour executer cette sauvegarde, on utilise [github action](.github/workflows/s3_backup.yml)
 
 Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans [Settings](https://github.com/MTES-MCT/envergo/settings) > Secrets and variables > [Actions](https://github.com/MTES-MCT/envergo/settings/secrets/actions).
 
@@ -447,6 +450,11 @@ Ajouter les `Repository secrets` :
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
+### Restauration des buckets S3
+
+Pour récupérer les backups et les restaurer.
+
+Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](https://www.scaleway.com/en/docs/object-storage/how-to/restore-an-object-from-glacier/)
 
 ## Glossaire
 
