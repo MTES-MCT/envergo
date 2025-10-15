@@ -881,8 +881,10 @@ class PetitionProjectInstructorMessagerieView(
         if form.errors:
             messages.warning(
                 self.request,
-                """Le message n'a pas pu être envoyé, la pièce jointe dépasse
-                la taille maximale autorisée de 20Mo ou n'est pas du format autorisé.""",
+                """Le message n’a pas pu être envoyé.
+Vérifiez que la pièce jointe respecte les conditions suivantes :
+<ul><li>Taille maximale : 20 Mo</li>
+<li>Formats autorisés : PNG, JPG, PDF et ZIP</li>""",
             )
 
         self.object = self.get_object()
