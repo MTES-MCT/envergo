@@ -37,16 +37,23 @@ def test_visitor_cookie_deactivation(client):
     assert request.COOKIES["visitorid"] == ""
 
 
-def test_store_mtm_values(client):
-    client.get("/")
+def test_no_analytics_values(client):
+    res = client.get("/", follow=True)
+    assert res.status_code == 200
+    assert len(res.redirect_chain) == 0
+
     session = client.session
     assert "mtm_campaign" not in session
     assert "mtm_source" not in session
     assert "mtm_medium" not in session
     assert "mtm_kwd" not in session
 
-    # mtm parameters are stored in session
-    client.get("/?mtm_campaign=campaign&mtm_source=source")
+
+def test_analytics_values_storage(client):
+    res = client.get("/?mtm_campaign=campaign&mtm_source=source", follow=True)
+    assert res.status_code == 200
+
+    # Values are stored in session
     session = client.session
     assert session["mtm_campaign"] == "campaign"
     assert session["mtm_source"] == "source"
@@ -65,3 +72,33 @@ def test_store_mtm_values(client):
     client.get("/?mtm_toto=toto")
     session = client.session
     assert "toto" not in session
+
+
+def test_analytics_values_url_parameters_cleanup(client):
+    res = client.get("/?mtm_campaign=campaign&mtm_source=source", follow=True)
+    assert res.status_code == 200
+
+    # Analytics parameters are remove from the url
+    assert len(res.redirect_chain) == 1
+    assert res.redirect_chain[0][0] == "/?"
+
+    # All analytics parameters are remove from the url
+    res = client.get(
+        "/?mtm_campaign=campaign2&mtm_medium=medium&mtm_kwd=kwd", follow=True
+    )
+    assert len(res.redirect_chain) == 1
+    assert res.redirect_chain[0][0] == "/?"
+
+    # Only manually selected mtm parameters are cleaned
+    res = client.get("/?mtm_campaign=test&mtm_toto=toto&test1=test1", follow=True)
+    assert len(res.redirect_chain) == 1
+    assert res.redirect_chain[0][0] == "/?mtm_toto=toto&test1=test1"
+
+
+def test_analytics_empty_values(client):
+    res = client.get("/?mtm_campaign=", follow=True)
+    assert res.status_code == 200
+
+    # Analytics parameters are remove from the url
+    assert len(res.redirect_chain) == 1
+    assert res.redirect_chain[0][0] == "/?"
