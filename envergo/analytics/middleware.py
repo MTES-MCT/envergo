@@ -81,7 +81,7 @@ class HandleMtmValues:
                     value = value_list[0]
                     request.session[key] = value
 
-        if has_mtm_values:
+        if has_mtm_values and request.method == "GET":
             clean_url = f"{request.path}?{GET_values.urlencode()}"
             response = HttpResponseRedirect(clean_url)
         else:
