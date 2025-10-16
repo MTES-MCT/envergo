@@ -89,6 +89,9 @@ class ProcedureForm(forms.ModelForm):
             "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
             "update_comment": "Commentaire interne expliquant le contexte et les raisons du changement.",
         }
+        labels = {
+            "due_date": "Prochaine échéance",
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

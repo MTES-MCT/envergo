@@ -137,8 +137,8 @@ def format_ds_number(ds_number):
     return f"{s[:4]}-{s[4:]}" if len(s) >= 8 else ds_number
 
 
-@register.filter
-def stage_badge(stage):
+@register.simple_tag
+def stage_badge(stage, is_small=True):
     color_map = {
         STAGES.to_be_processed: "pink-tuile",
         STAGES.instruction_d: "blue-cumulus",
@@ -156,14 +156,14 @@ def stage_badge(stage):
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
 
     return mark_safe(
-        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''} fr-badge--sm">
+        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''}  {'fr-badge--sm' if is_small else ''}">
                           {label}
                         </p>"""
     )
 
 
-@register.filter
-def decision_badge(decision, light_version=False):
+@register.simple_tag
+def decision_badge(decision, is_light=False, is_small=True):
     class_map = {
         DECISIONS.unset: None,
         DECISIONS.express_agreement: "fr-badge--success",
@@ -176,7 +176,7 @@ def decision_badge(decision, light_version=False):
     label = dict(DECISIONS).get(decision, decision)
     uid = str(uuid.uuid4())
 
-    if light_version:
+    if is_light:
         return (
             mark_safe(
                 f"""
@@ -189,7 +189,8 @@ def decision_badge(decision, light_version=False):
         )
     else:
         return mark_safe(
-            f"""<p class="fr-badge fr-badge--sm fr-badge--no-icon {css_class if css_class else ''}">
+            f"""<p
+            class="fr-badge {'fr-badge--sm' if is_small else ''} fr-badge--no-icon {css_class if css_class else ''}">
                           {label}
                         </p>"""
         )
@@ -198,17 +199,21 @@ def decision_badge(decision, light_version=False):
 @register.filter
 def display_due_date(due_date):
     if not due_date or not isinstance(due_date, date):
-        return mark_safe('<span class="days-left">Non renseignée</span>')
+        return mark_safe(
+            '<span class="fr-badge fr-badge--sm fr-badge--no-icon">Non renseignée</span>'
+        )
 
     days_left = (due_date - date.today()).days
     if days_left >= 7:
-        icon_part = '<span class="fr-icon-timer-line"></span>'
+        icon_part = '<span class="fr-icon-timer-line fr-icon--sm"></span>'
     elif days_left >= 0:
-        icon_part = '<span class="fr-icon-hourglass-2-fill fr-label--warning"></span>'
+        icon_part = '<span class="fr-icon-hourglass-2-fill fr-icon--sm fr-label--warning"></span>'
     else:
-        icon_part = '<span class="fr-icon-warning-fill fr-label--error"></span>'
+        icon_part = (
+            '<span class="fr-icon-warning-fill fr-icon--sm fr-label--error"></span>'
+        )
 
-    date_part = f"""<span class="due-date">
+    date_part = f"""<span class="due-date fr-text--sm">
                 {icon_part}
                 {date_filter(due_date, "SHORT_DATE_FORMAT")}
               </span><br/>"""
