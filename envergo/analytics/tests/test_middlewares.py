@@ -102,3 +102,9 @@ def test_analytics_empty_values(client):
     # Analytics parameters are remove from the url
     assert len(res.redirect_chain) == 1
     assert res.redirect_chain[0][0] == "/?"
+
+
+def test_analytics_with_post_request(client):
+    # We don't prevent POST queries with mtm_ parameters
+    res = client.post("/simulateur/formulaire/?mtm_campaign=test")
+    assert res.status_code == 200
