@@ -2137,6 +2137,7 @@ class MoulinetteHaie(Moulinette):
         if self.is_evaluation_available():
             summary["result"] = self.result_data()
             summary["main_result"] = self.result
+            summary["regime_type"] = "ru" if self.config.single_procedure else "dc"
 
         if "haies" in self.catalog:
             haies = self.catalog["haies"]
