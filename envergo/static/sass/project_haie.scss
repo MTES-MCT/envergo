@@ -713,10 +713,14 @@ ul.instructor-view-list {
   }
 }
 
+div#invitation-token-email-wrapper {
+  background-color: var(--background-contrast-grey);
+  padding: 2rem;
+}
+
 div#invitation-token-email-html {
   background-color: var(--background-contrast-grey);
   color: var(--text-mention-grey);
-  padding: 2rem;
   font-size: 0.875rem;
 }
 
