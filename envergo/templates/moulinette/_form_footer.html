@@ -5,7 +5,7 @@
     <h4 class="fr-accordion__title">
       <button class="fr-accordion__btn"
               type="button"
-              aria-expanded="false"
+              aria-expanded="{% if expand_optional_forms %}true{% else %}false{% endif %}"
               aria-controls="accordion-optional-forms">
         <span class="label-wrapper">
           <label class="step">
@@ -20,7 +20,8 @@
         </span>
       </button>
     </h4>
-    <div class="fr-collapse" id="accordion-optional-forms">
+    <div class="fr-collapse {% if expand_optional_forms %}fr-collapse--expanded{% endif %}"
+         id="accordion-optional-forms">
       {% for form in optional_forms %}
 
         <div class="optional-form">
