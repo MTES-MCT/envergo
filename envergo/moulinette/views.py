@@ -209,6 +209,19 @@ class MoulinetteMixin:
         data.update(cleaned_data)
         return data
 
+    def get_triage_url(self):
+        """Return the triage url while preserving existing parameters.
+
+        This method MUST NOT be called when a "triage" url is not defined,
+        e.g for amenagement.
+        """
+        data = self.get_results_params()
+        params = urlencode(data)
+        url = reverse("triage")
+
+        url_with_params = f"{url}?{params}"
+        return url_with_params
+
     def get_form_url(self):
         """Return the moulinette form url, with the correct url params."""
 
@@ -252,6 +265,17 @@ class MoulinetteMixin:
 
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteForm(MoulinetteMixin, FormView):
+
+    def get(self, request, *args, **kwargs):
+        moulinette = self.moulinette
+
+        # We make sure the triage data is valid before allowing this step
+        if moulinette.is_triage_valid():
+            response = super().get(request, *args, **kwargs)
+        else:
+            response = HttpResponseRedirect(self.get_triage_url())
+
+        return response
 
     def get_template_names(self):
         return self.moulinette.get_home_template()

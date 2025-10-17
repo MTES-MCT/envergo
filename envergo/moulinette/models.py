@@ -1405,6 +1405,16 @@ class Moulinette(ABC):
     def triage_form(self):
         return self.get_triage_form()
 
+    @cached_property
+    def bound_triage_form(self):
+        if self.triage_form.is_bound:
+            return self.triage_form
+        else:
+            form_kwargs = self.form_kwargs.copy()
+            form_kwargs["data"] = form_kwargs.get("initial", {})
+            bound_form = self.get_triage_form_class()(**form_kwargs)
+            return bound_form
+
     def get_additional_forms(self):
         """Get a list of instanciated additional questions forms.
 
@@ -2197,7 +2207,7 @@ class MoulinetteHaie(Moulinette):
     def is_triage_valid(self):
         """Should the triage params allow to go to next step?."""
 
-        triage_form = self.triage_form
+        triage_form = self.bound_triage_form
         if not triage_form.is_valid():
             return False
 
