@@ -200,7 +200,7 @@ def decision_badge(decision, is_light=False, is_small=True):
 def display_due_date(due_date, display_days_left=True):
     if not due_date or not isinstance(due_date, date):
         return mark_safe(
-            '<span class="fr-badge fr-badge--sm fr-badge--no-icon">Non renseignée</span>'
+            '<span class="fr-badge fr-badge--sm fr-badge--no-icon">À renseigner</span>'
         )
 
     days_left = (due_date - date.today()).days
