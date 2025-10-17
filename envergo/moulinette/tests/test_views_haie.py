@@ -102,6 +102,26 @@ def test_triage_result(client):
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
+def test_moulinette_form_with_invalid_triage(client):
+
+    ConfigHaieFactory(
+        department_doctrine_html="<h2>Doctrine du département</h2>",
+        hedge_maintenance_html="<h2>kikoo</h2>",
+    )
+
+    url = reverse("moulinette_form")
+    params = "department=44&element=haie"  # Missing the "travaux" value
+    full_url = f"{url}?{params}"
+    res = client.get(full_url, follow=True)
+
+    assert len(res.redirect_chain) == 1
+    assert res.redirect_chain[0][0].startswith("/simulateur/triage/")
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_debug_result(client):
     """WIP: Test for debug page.
     Missing fixtures criteria ep and pac for MoulinetteHaie"""
