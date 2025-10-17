@@ -17,7 +17,7 @@
   <div class="project-inner-content">
     <section class="fr-my-3w">
       <h4>Étape</h4>
-      <p>{{ petition_project.current_stage|stage_badge }}</p>
+      <p>{% stage_badge petition_project.current_stage False %}</p>
       <p id="due-date-container">
         <b>Échéance d'instruction :</b>
         <br />
@@ -28,7 +28,7 @@
       </p>
 
       <h4>Décision</h4>
-      <p>{{ petition_project.current_decision|decision_badge }}</p>
+      <p>{% decision_badge petition_project.current_decision False False %}</p>
     </section>
   </div>
   {% if is_department_instructor %}
