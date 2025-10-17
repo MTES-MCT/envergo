@@ -1906,6 +1906,14 @@ li.btn-link {
   }
 }
 
+.fr-label--warning {
+  color: var(--text-default-warning);
+}
+
+.fr-icon-hourglass-2-fill::before {
+  mask-image: url("/static/images/hourglass-2-fill.svg");
+}
+
 .dark-only {
   display: none;
 }
