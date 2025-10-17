@@ -73,7 +73,7 @@
                     </td>
                     <td>
                       <div>{% stage_badge project.current_stage %}</div>
-                      <div>{{ project.due_date|display_due_date:False }}</div>
+                      {% if project.current_stage != "closed" %}<div>{{ project.due_date|display_due_date:False }}</div>{% endif %}
                     </td>
                     <td>
                       <div>
