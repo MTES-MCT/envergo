@@ -43,7 +43,7 @@ def evalenv_criteria(france_map):  # noqa
 
 @pytest.fixture
 def moulinette_data(footprint):
-    return {
+    data = {
         # Mouais coordinates
         "lat": 47.696706,
         "lng": -1.646947,
@@ -56,12 +56,12 @@ def moulinette_data(footprint):
         "is_lotissement": "non",
         "terrain_assiette": 150000,
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize("footprint", [40000])
 def test_ein_if_evalenv_systematique(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
 
     assert moulinette.eval_env.emprise.result == "systematique"
     assert moulinette.natura2000.eval_env.result_code == "soumis_systematique"
@@ -71,9 +71,8 @@ def test_ein_if_evalenv_systematique(moulinette_data):
 
 @pytest.mark.parametrize("footprint", [40000])
 def test_ein_if_evalenv_cas_par_cas(moulinette_data):
-    moulinette_data["zone_u"] = "oui"
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette_data["data"]["zone_u"] = "oui"
+    moulinette = MoulinetteAmenagement(moulinette_data)
 
     assert moulinette.eval_env.emprise.result == "cas_par_cas"
     assert moulinette.natura2000.eval_env.result_code == "soumis_cas_par_cas"
@@ -83,8 +82,7 @@ def test_ein_if_evalenv_cas_par_cas(moulinette_data):
 
 @pytest.mark.parametrize("footprint", [5])
 def test_no_ein_if_evalenv_non_soumis(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteAmenagement(moulinette_data)
 
     assert moulinette.eval_env.emprise.result == "non_soumis"
     assert moulinette.natura2000.eval_env.result_code == "non_soumis"

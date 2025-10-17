@@ -113,9 +113,8 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
             config
         )
 
-        if self.object and "moulinette" in context:
-            moulinette = context["moulinette"]
-            plantation_evaluator = PlantationEvaluator(moulinette, self.object)
+        if self.object and self.moulinette.is_valid():
+            plantation_evaluator = PlantationEvaluator(self.moulinette, self.object)
             context.update(plantation_evaluator.get_context())
         else:
             context["minimum_length_to_plant"] = 0
@@ -176,13 +175,10 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         return kwargs
 
     def post(self, request, *args, **kwargs):
-        context = self.get_context_data(**kwargs)
-        moulinette = context["moulinette"]
-
         try:
             data = json.loads(request.body)
             hedge_data = HedgeData(data=data)
-            evaluator = PlantationEvaluator(moulinette, hedge_data)
+            evaluator = PlantationEvaluator(self.moulinette, hedge_data)
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
         except json.JSONDecodeError:

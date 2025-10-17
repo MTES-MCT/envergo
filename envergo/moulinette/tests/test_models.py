@@ -7,7 +7,7 @@ from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import ZoneFactory
-from envergo.moulinette.forms import MoulinetteFormAmenagement, MoulinetteFormHaie
+from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigHaie,
     MoulinetteAmenagement,
@@ -46,24 +46,26 @@ def moulinette_config(france_map):  # noqa
 
 @pytest.fixture
 def moulinette_data(footprint):
-    return {
+    data = {
         # Mouais coordinates
-        "lat": 47.6967066,
-        "lng": -1.6469477,
+        "lat": 47.696706,
+        "lng": -1.646947,
         "created_surface": 0,
         "final_surface": footprint,
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.fixture
 def mouais_church_data(footprint):
-    return {
-        "lat": 47.6967066,
-        "lng": -1.6469477,
+    data = {
+        "lat": 47.696706,
+        "lng": -1.646947,
         "existing_surface": 0,
         "created_surface": footprint,
         "final_surface": footprint,
     }
+    return {"initial": data, "data": data}
 
 
 def no_zones(_coords):
@@ -78,17 +80,18 @@ def create_zones():
 def test_result_without_contact_data(moulinette_data):
     """When dept. contact info is not set, we cannot run the eval."""
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.is_evaluation_available()
 
 
 @pytest.mark.parametrize("footprint", [50])
 def test_moulinette_config(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_config()
 
     ConfigAmenagementFactory(is_activated=False)
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.has_config()
 
 
@@ -97,7 +100,8 @@ def test_result_with_inactive_contact_data(moulinette_data):
     """Dept contact info is not activated, we cannot run the eval."""
 
     ConfigAmenagementFactory(is_activated=False)
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.is_valid()
     assert not moulinette.is_evaluation_available()
 
 
@@ -106,8 +110,8 @@ def test_result_with_contact_data(moulinette_data):
     """Dept contact info is set, we can run the eval."""
 
     ConfigAmenagementFactory(is_activated=True)
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
-    assert moulinette.is_evaluation_available()
+    moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.is_valid()
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -115,8 +119,8 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     site = SiteFactory()
     ConfigAmenagementFactory(is_activated=True)
     MoulinetteClass = get_moulinette_class_from_site(site)
-    moulinette = MoulinetteClass(moulinette_data, moulinette_data)
-    assert moulinette.is_evaluation_available()
+    moulinette = MoulinetteClass(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.get_main_form_class() == MoulinetteFormAmenagement
     assert moulinette.get_form_template() == "amenagement/moulinette/form.html"
     assert moulinette.get_result_template() == "amenagement/moulinette/result.html"
@@ -130,11 +134,7 @@ def test_moulinette_haie_has_specific_behavior():
     site = SiteFactory()
     site.domain = "haie.beta.gouv.fr"
     MoulinetteClass = get_moulinette_class_from_site(site)
-    moulinette = MoulinetteClass({}, {"department": "44"})
-    assert moulinette.is_evaluation_available()
-    assert moulinette.get_main_form_class() == MoulinetteFormHaie
-    assert moulinette.get_form_template() == "haie/moulinette/form.html"
-    assert moulinette.get_result_template() == "haie/moulinette/result.html"
+    assert MoulinetteClass is MoulinetteHaie
 
     MoulinetteClass = get_moulinette_class_from_url("haie.beta.gouv.fr")
     assert MoulinetteClass is MoulinetteHaie

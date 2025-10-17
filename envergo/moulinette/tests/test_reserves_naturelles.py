@@ -63,16 +63,17 @@ def moulinette_data(lat1, lng1, lat2, lng2, plan_gestion):
             }
         ]
     )
-    return {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "localisation_pac": "non",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
-        "department": 44,
+        "department": "44",
         "plan_gestion": plan_gestion,
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize(
@@ -111,8 +112,7 @@ def test_moulinette_evaluation(
     moulinette_data, expected_result, expected_lenght_resnat
 ):
     ConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.reserves_naturelles.result == expected_result
 
     if expected_result != "non_concerne":
