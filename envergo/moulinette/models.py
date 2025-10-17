@@ -2235,7 +2235,7 @@ class MoulinetteHaie(Moulinette):
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
 
-        if "haies" in request.GET:
+        if "haies" in request.GET and request.method == "GET":
             try:
                 hedge_data = HedgeData.objects.get(id=request.GET["haies"])
             except HedgeData.DoesNotExist:
