@@ -136,6 +136,10 @@ class MoulinetteMixin:
         context["optional_forms"] = self.get_optional_forms(
             context.get("moulinette", None)
         )
+        context["expand_optional_forms"] = (
+            self.request.user.is_staff
+            and self.request.user.groups.filter(name="Staff ops").exists()
+        )
 
         context = {**context, **MoulinetteClass.get_extra_context(self.request)}
 
