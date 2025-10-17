@@ -43,20 +43,23 @@ def loisurleau_criteria(france_map):  # noqa
 
 @pytest.fixture
 def moulinette_data(footprint):
-    return {
+    data = {
         # Mouais coordinates
         "lat": 47.696706,
         "lng": -1.646947,
         "existing_surface": 0,
         "created_surface": footprint,
+        "final_surface": footprint,
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize("footprint", [700])
 def test_zh_medium_footprint_inside_wetlands(moulinette_data):
     """Project with 700 <= footprint <= 1000m² within a wetland."""
 
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
 

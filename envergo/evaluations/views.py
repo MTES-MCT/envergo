@@ -133,8 +133,19 @@ class EvaluationDetail(
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
-    def get_moulinette_raw_data(self):
-        return self.object.moulinette_params
+    def get_initial(self):
+        return self.get_form_data()
+
+    def get_form_data(self):
+        """Get the data to pass to the moulinette forms."""
+
+        try:
+            eval = self.get_object()
+            moulinette_data = eval.moulinette_params
+        except (Evaluation.DoesNotExist, Http404):
+            moulinette_data = {}
+
+        return moulinette_data
 
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
@@ -234,9 +245,6 @@ class EvaluationDetail(
                 )
 
         return res
-
-    def should_activate_optional_criteria(self):
-        return True
 
 
 class Dashboard(LoginRequiredMixin, TemplateView):

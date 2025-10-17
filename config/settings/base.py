@@ -145,7 +145,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
-    "envergo.analytics.middleware.StoreMtmValues",
+    "envergo.analytics.middleware.HandleMtmValues",
 ]
 
 # STATIC
