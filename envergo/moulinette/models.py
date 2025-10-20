@@ -322,14 +322,14 @@ class Regulation(models.Model):
         return self._evaluator.result
 
     @property
-    def level(self):
-        """Return the regulation level (autorisation / déclaration)."""
+    def procedure_type(self):
+        """Return the regulation procedure type (autorisation / déclaration / hors r.u)."""
         if not hasattr(self, "_evaluator"):
             raise RuntimeError(
-                "Regulation must be evaluated before accessing the level."
+                "Regulation must be evaluated before accessing the proceture type."
             )
 
-        return self._evaluator.level
+        return self._evaluator.procedure_type
 
     @property
     def slug(self):
@@ -1945,9 +1945,9 @@ class MoulinetteHaie(Moulinette):
         if hasattr(self, "_result"):
             return self._result
 
-        levels = [regulation.level for regulation in self.regulations]
-        is_interdit = "interdit" in levels
-        is_autorisation = "autorisation" in levels
+        procedures = [regulation.procedure_type for regulation in self.regulations]
+        is_interdit = "interdit" in procedures
+        is_autorisation = "autorisation" in procedures
 
         # Check if we are in the "100% alignement d'arbres" case
         hedges = self.catalog["haies"].hedges_filter("TO_REMOVE", "!alignement")
