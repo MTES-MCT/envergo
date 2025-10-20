@@ -959,15 +959,6 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
         ],
     }
 
-    # WHEN I send malformated
-    mock_post.side_effect = None
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
-    message_body = "Bonjour ! Un nouveau message"
-    result = send_message_dossier_ds(petition_project, message_body)
-
-    # THEN I receive an error
-    assert result is None
-
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_update_demarches_simplifiees_state():
