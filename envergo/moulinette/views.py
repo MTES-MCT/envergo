@@ -660,7 +660,17 @@ class Triage(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
+        matomo_url = self.request.path
+
+        # Custom url when some values are pre-filled
+        GET_fields = set(self.request.GET.keys()) - set(["department"])
+        if GET_fields:
+            matomo_url = reverse("moulinette_prefilled_triage")
+
+        full_matomo_url = self.request.build_absolute_uri(matomo_url)
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            full_matomo_url, self.request
+        )
 
         return context
 

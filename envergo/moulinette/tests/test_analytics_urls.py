@@ -98,6 +98,18 @@ def test_haie_triage_form(client):
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
+def test_haie_triage_prefilled_form(client):
+    url = reverse("triage")
+    res = client.get(f"{url}?department=44&element=bosquet&travaux=entretien")
+
+    assert res.status_code == 200
+    assert_url(res, "/simulateur/triage/pre-rempli/")
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_haie_triage_invalid(client):
     url = reverse("moulinette_result")
     res = client.get(f"{url}?department=44&element=bosquet&travaux=entretien")
