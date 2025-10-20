@@ -15,7 +15,7 @@ from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEva
 class Natura2000HaieRegulation(HaieRegulationEvaluator):
     choice_label = "Natura 2000 Haie"
 
-    LEVEL_MATRIX = {
+    PROCEDURE_TYPE_MATRIX = {
         "soumis": "declaration",
         "non_concerne": "declaration",
         "non_soumis": "declaration",

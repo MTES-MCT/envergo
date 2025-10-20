@@ -327,23 +327,23 @@ class HaieRegulationEvaluator(RegulationEvaluator):
     choice_label = "Défaut (Haie)"
 
     # result -> autorisation / déclaration
-    LEVEL_MATRIX = {}
+    PROCEDURE_TYPE_MATRIX = {}
 
     def evaluate(self, regulation):
         super().evaluate(regulation)
-        self._level = self.get_level(regulation)
+        self._procedure_type = self.get_procedure_type(regulation)
 
-    def get_level(self, regulation):
-        level = self.LEVEL_MATRIX.get(self.result)
-        return level
+    def get_procedure_type(self, regulation):
+        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(self.result)
+        return procedure_type
 
     @property
-    def level(self):
-        """Return the regulation level (autorisation / déclaration)."""
-        if not hasattr(self, "_level"):
+    def procedure_type(self):
+        """Return the regulation procedure_type (autorisation / déclaration)."""
+        if not hasattr(self, "_procedure_type"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
-        return self._level
+        return self._procedure_type
 
 
 class CriterionEvaluator(ABC):

@@ -14,7 +14,7 @@ from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEva
 class ReservesNaturellesRegulation(HaieRegulationEvaluator):
     choice_label = "Réserves naturelles"
 
-    LEVEL_MATRIX = {
+    PROCEDURE_TYPE_MATRIX = {
         "soumis_autorisation": "autorisation",
         "soumis_declaration": "declaration",
         "non_concerne": "declaration",

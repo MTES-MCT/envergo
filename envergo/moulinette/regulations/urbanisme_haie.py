@@ -5,7 +5,7 @@ from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEva
 class UrbanismeHaieRegulation(HaieRegulationEvaluator):
     choice_label = "Urbanisme Haie"
 
-    LEVEL_MATRIX = {
+    PROCEDURE_TYPE_MATRIX = {
         "a_verifier": "declaration",
     }
 
