@@ -245,6 +245,12 @@ class Hedge {
     ['click', 'mouseover', 'mouseout'].forEach((ev) => {
       this.hitbox.on(ev, (e) => this.polyline.fire(ev, e));
     });
+
+    // hide hedges to plant on removal mode
+     if (this.type === TO_PLANT && mode === REMOVAL_MODE) {
+       this.map.removeLayer(this.hitbox);
+       this.map.removeLayer(this.polyline);
+     }
   }
 
   syncHitbox() {
