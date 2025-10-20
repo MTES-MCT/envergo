@@ -1,13 +1,10 @@
 import random
 from typing import Literal
-from urllib.parse import urlencode
 
 from django import template
-from django.core.cache import cache
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 
 register = template.Library()
@@ -106,40 +103,6 @@ def faq_menu(context):
         "faq_eval_env",
     ]
     return menu_item(context, link_route, link_label, subroutes=subroutes)
-
-
-@register.simple_tag(takes_context=True)
-def pilote_departments_menu(context, is_slim=False):
-    """Generate html for the "Départements pilotes" collapsible menu."""
-    cache_key = "activated_departments"
-    activated_departments = cache.get(cache_key)
-
-    if not activated_departments:
-        activated_departments = (
-            Department.objects.defer("geometry")
-            .filter(confighaie__is_activated=True)
-            .all()
-        )
-        cache.set(
-            cache_key, activated_departments, timeout=60 * 15
-        )  # Cache for 15 minutes
-
-    links = (
-        (
-            f"{reverse('triage')}?{urlencode({'department': department.department})}",
-            department,
-            [],
-        )
-        for department in activated_departments
-    )
-
-    return collapsible_menu(
-        context,
-        links,
-        "Départements pilotes",
-        "menu-pilote-department",
-        is_slim=is_slim,
-    )
 
 
 def collapsible_menu(
