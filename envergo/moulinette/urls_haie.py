@@ -21,6 +21,12 @@ urlpatterns = [
         Triage.as_view(),
         name="triage",
     ),
+    # A fake url for tracking
+    path(
+        "triage/pre-rempli/",
+        RedirectView.as_view(pattern_name="triage"),
+        name="moulinette_prefilled_triage",
+    ),
     path(
         _("form/"),
         include(
