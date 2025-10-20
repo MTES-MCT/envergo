@@ -35,6 +35,11 @@ urlpatterns = [
         name="legal_mentions",
     ),
     path(
+        _("privacy/"),
+        TemplateView.as_view(template_name="haie/pages/privacy.html"),
+        name="privacy",
+    ),
+    path(
         "stats/",
         RedirectView.as_view(url="https://sites.google.com/view/stats-envergo/"),
         name="stats",
