@@ -325,8 +325,16 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         context = super().get_context_data(**kwargs)
         matomo_url = self.request.path
 
-        # Some value were pre-filled
-        if self.request.GET:
+        # Custom url when some values are pre-filled
+        GET_fields = set(self.request.GET.keys())
+
+        # Don't send the pre-fill url when it's only triage fields though
+        triage_form = self.moulinette.triage_form
+        if triage_form:
+            triage_fields = set(triage_form.fields.keys())
+            GET_fields -= triage_fields
+
+        if GET_fields:
             matomo_url = reverse("moulinette_prefilled_form")
 
         # There are some additional forms displayed
