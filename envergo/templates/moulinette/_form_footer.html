@@ -5,7 +5,7 @@
     <h4 class="fr-accordion__title">
       <button class="fr-accordion__btn"
               type="button"
-              aria-expanded="{% if expand_optional_forms %}true{% else %}false{% endif %}"
+              aria-expanded="{{ expand_optional_forms|yesno:"true,false" }}"
               aria-controls="accordion-optional-forms">
         <span class="label-wrapper">
           <label class="step">
