@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from envergo.petitions.models import PetitionProject, StatusLog
+from envergo.utils.fields import ProjectStageField
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -92,11 +93,19 @@ class ProcedureForm(forms.ModelForm):
         labels = {
             "due_date": "Prochaine échéance",
         }
+        widgets = {
+            "stage": ProjectStageField(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+        # Pass field errors to the widget after validation
+        for name, field in self.fields.items():
+            bound_field = self[name]
+            if bound_field.errors:
+                field.widget.errors = bound_field.errors
 
     def clean(self):
         cleaned_data = super().clean()
