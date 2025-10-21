@@ -71,3 +71,16 @@ fieldset.module.recipients:has(input[type="checkbox"]:checked)
 a#add_id_departments {
   display: none;
 }
+
+/* Petition project */
+
+/* Disable delete button
+
+  to avoid unwanted project suppression when they only want to delete invited accounts
+  */
+
+.model-petitionproject.change-form .submit-row a.deletelink {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.4;
+}
