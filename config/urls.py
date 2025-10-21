@@ -5,6 +5,7 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
 
+from envergo.analytics.views import CSPReportView
 from envergo.pages.views import server_error
 from envergo.urlmappings.views import UrlMappingRedirect
 
@@ -22,6 +23,7 @@ urlpatterns = [
         UrlMappingRedirect.as_view(),
         name="urlmapping_redirect",
     ),
+    path("csp/reports/", CSPReportView.as_view(), name="csp_report"),
     path(settings.ADMIN_URL, admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

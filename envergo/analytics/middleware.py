@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from django.conf import settings
+from django.http.response import HttpResponseRedirect
 
 from envergo.analytics.utils import set_visitor_id_cookie
 
@@ -63,17 +64,27 @@ MTM_PARAMETERS = (
 )
 
 
-class StoreMtmValues:
-    """Make sure the mtm values are stored until we need them."""
+class HandleMtmValues:
+    """Store analytics data in session, then cleanup the url."""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         GET_values = request.GET.copy()
-        for key, val in GET_values.items():
-            if key in MTM_PARAMETERS:
-                request.session[key] = val
+        has_mtm_values = False
+        for key in MTM_PARAMETERS:
+            if key in GET_values:
+                has_mtm_values = True
+                value_list = GET_values.pop(key)
+                if value_list:
+                    value = value_list[0]
+                    request.session[key] = value
 
-        response = self.get_response(request)
+        if has_mtm_values and request.method == "GET":
+            clean_url = f"{request.path}?{GET_values.urlencode()}"
+            response = HttpResponseRedirect(clean_url)
+        else:
+            response = self.get_response(request)
+
         return response
