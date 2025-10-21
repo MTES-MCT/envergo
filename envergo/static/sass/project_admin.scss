@@ -74,7 +74,10 @@ a#add_id_departments {
 
 /* Petition project */
 
-/* Disable delete button */
+/* Disable delete button
+
+  to avoid unwanted project suppression when they only want to delete invited accounts
+  */
 
 .model-petitionproject.change-form .submit-row a.deletelink {
   pointer-events: none;
