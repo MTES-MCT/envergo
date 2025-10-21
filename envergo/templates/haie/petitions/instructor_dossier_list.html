@@ -69,7 +69,7 @@
                       <br />
                       {{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}
                     </td>
-                    <td>{{ project.current_stage|stage_badge }}</td>
+                    <td>{% stage_badge project.current_stage %}</td>
                     <td>
                       {% if project.organization %}
                         {{ project.organization }}
@@ -80,7 +80,7 @@
                       {{ project.city }}
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{{ project.current_decision|decision_badge:True }}</td>
+                    <td>{% decision_badge project.current_decision True %}</td>
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>

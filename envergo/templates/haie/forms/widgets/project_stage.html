@@ -1,0 +1,19 @@
+<div class="{% if widget.errors %}fr-select-group--error{% endif %}">
+  <select class="fr-select{% if widget.errors %} fr-input--error{% endif %}"
+          name="{{ widget.name }}"
+          {% include "django/forms/widgets/attrs.html" %}>
+    {% for group_name, group_choices, group_index in widget.optgroups %}
+      {% if group_name %}<optgroup label="{{ group_name }}">{% endif %}
+        {% for option in group_choices %}
+          {% include option.template_name with widget=option %}
+        {% endfor %}
+        {% if group_name %}</optgroup>{% endif %}
+    {% endfor %}
+  </select>
+</div>
+
+{% for stage in STAGES %}
+  <div id="stage-objective--{{ stage.0 }}" class="stage-objective">
+    {% include "haie/petitions/stage_objectives/"|add:stage.0|add:".html" %}
+  </div>
+{% endfor %}
