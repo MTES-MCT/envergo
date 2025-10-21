@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.templatetags.static import static
 from django.urls import NoReverseMatch, reverse
 
 from envergo.users.forms import NewsletterOptInForm
@@ -12,7 +13,7 @@ def settings_context(_request):
     # We disable the chatbox on the catchment area page
     # Because it breaks the map, for reasons I just don't understand
     try:
-        catchment_area_page_url = reverse("2150_debug")
+        catchment_area_page_url = reverse("demo_catchment_area")
     except NoReverseMatch:
         catchment_area_page_url = None
 
@@ -46,6 +47,7 @@ def settings_context(_request):
         "CRISP_CHATBOX_ENABLED": chatbox_enabled,
         "CRISP_WEBSITE_ID": crisp_website_id,
         "HAIE_FAQ_URL": settings.HAIE_FAQ_URL,
+        "HAIE_INSTRUCTORS_FAQ_URL": settings.HAIE_INSTRUCTORS_FAQ_URL,
     }
 
 
@@ -54,6 +56,11 @@ def multi_sites_context(_request):
     # _request.base_template has been populated by a middleware
     return {
         "base_template": _request.base_template,
+        "preview_image_url": (
+            _request.build_absolute_uri(static("images/preview_haie.png"))
+            if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
+            else None
+        ),
     }
 
 

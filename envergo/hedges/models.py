@@ -2,15 +2,22 @@ import operator
 import uuid
 from functools import reduce
 
-from django.contrib.gis.geos import Polygon
+import shapely
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, F, OuterRef, Q
+from django.utils import timezone
 from model_utils import Choices
-from pyproj import Geod
-from shapely import LineString
+from pyproj import Geod, Transformer
+from shapely import LineString, centroid, union_all
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import Department, Zone
+from envergo.geodata.utils import (
+    compute_hedge_density_around_point,
+    get_department_from_coords,
+)
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -53,6 +60,21 @@ class Hedge:
         }
 
     @property
+    def geos_geometry(self):
+        geom = GEOSGeometry(self.geometry.wkt, srid=EPSG_WGS84)
+        return geom
+
+    @property
+    def geometry_lamb93(self):
+        """Return a shapely geometry with a Lambert 93 projection."""
+
+        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
+        lamb93 = shapely.transform(
+            self.geometry, transformer.transform, interleaved=False
+        )
+        return lamb93
+
+    @property
     def length(self):
         """Returns the geodesic length (in meters) of the line."""
 
@@ -60,75 +82,126 @@ class Hedge:
         length = geod.geometry_length(self.geometry)
         return length
 
+    def has_property(self, property_name):
+        """Check if the hedge has a specific property."""
+        return property_name in self.additionalData
+
+    def prop(self, property_name):
+        """Get the value of a specific property."""
+        return self.additionalData.get(property_name, None)
+
     @property
     def is_on_pac(self):
-        return self.additionalData.get("surParcellePac", False)
+        return self.additionalData.get("sur_parcelle_pac", False)
 
     @property
     def hedge_type(self):
-        return self.additionalData.get("typeHaie", None)
+        return self.additionalData.get("type_haie", None)
+
+    @property
+    def mode_destruction(self):
+        return self.additionalData.get("mode_destruction", None)
+
+    @property
+    def mode_plantation(self):
+        return self.additionalData.get("mode_plantation", None)
 
     @property
     def proximite_mare(self):
-        return self.additionalData.get("proximiteMare", None)
+        return self.additionalData.get("proximite_mare", None)
 
     @property
     def vieil_arbre(self):
-        return self.additionalData.get("vieilArbre", None)
+        return self.additionalData.get("vieil_arbre", None)
 
     @property
     def proximite_point_eau(self):
-        return self.additionalData.get("proximitePointEau", None)
+        return self.additionalData.get("proximite_point_eau", None)
 
     @property
     def connexion_boisement(self):
-        return self.additionalData.get("connexionBoisement", None)
+        return self.additionalData.get("connexion_boisement", None)
 
     @property
     def sous_ligne_electrique(self):
-        return self.additionalData.get("sousLigneElectrique", None)
-
-    @property
-    def proximite_voirie(self):
-        return self.additionalData.get("proximiteVoirie", None)
+        return self.additionalData.get("sous_ligne_electrique", None)
 
     def get_species_filter(self):
-        """Build the filter to get possible protected species.
+        """Build the filter to get species possibly living in a single hedge.
 
         Species have requirements. For example, a "Pipistrelle commune" bat
         MAY live in an "alignement arboré" or "haie multistrate" and
-        requires old trees (vieilArbre is checked).
+        requires old trees (vieil_arbre is checked).
+
+        Also, there is a two way mechanism to filter species geographically.
+
+        Species are linked to a map through a "SpeciesMap" object. But each Zone
+        linked to the map has an additional field that links the species living in the
+        specific zone
         """
-        q_hedge_type = Q(hedge_types__contains=[self.hedge_type])
+        # if the hedge is recently planted, we consider it as a degradee hedge in a biodiversity point of view
+        hedge_type = "degradee" if self.prop("recemment_plantee") else self.hedge_type
 
-        exclude = []
+        q_hedge_type = Q(species_maps__hedge_types__contains=[hedge_type])
 
-        if not self.proximite_mare:
-            exclude.append(Q(proximite_mare=True))
-        if not self.vieil_arbre:
-            exclude.append(Q(vieil_arbre=True))
-        if not self.proximite_point_eau:
-            exclude.append(Q(proximite_point_eau=True))
-        if not self.connexion_boisement:
-            exclude.append(Q(connexion_boisement=True))
+        properties_to_exclude = []
+        for p, _ in HEDGE_PROPERTIES:
+            if p in self.additionalData and not self.additionalData[p]:
+                properties_to_exclude.append(p)
 
         filter = q_hedge_type
-        if exclude:
-            q_exclude = reduce(operator.or_, exclude)
+        if properties_to_exclude:
+            q_exclude = Q(species_maps__hedge_properties__overlap=properties_to_exclude)
             filter &= ~q_exclude
+
+        zone_subquery = (
+            Zone.objects.filter(geometry__intersects=self.geos_geometry)
+            .filter(map_id=OuterRef("species_maps__map_id"))
+            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
+        )
+        filter = filter & Q(Exists(zone_subquery))
         return filter
 
     def get_species(self):
         """Return known species that may be related to this hedge."""
 
-        qs = Species.objects.filter(self.get_species_filter())
+        qs = (
+            Species.objects.filter(self.get_species_filter())
+            .annotate(map_id=F("species_maps__map_id"))
+            .order_by("group", "common_name")
+            .distinct("group", "common_name")
+        )
         return qs
+
+    def get_zones(self):
+        zones = Zone.objects.filter(geometry__intersects=self.geos_geometry).filter(
+            map__map_type="species"
+        )
+        return zones
+
+
+class HedgeList(list[Hedge]):
+    def __init__(self, *args, label=None, **kwargs):
+        self.label = label
+        super().__init__(*args, **kwargs)
+
+    @property
+    def length(self):
+        return sum(h.length for h in self)
+
+    @property
+    def names(self):
+        return ", ".join(h.id for h in self)
 
 
 class HedgeData(models.Model):
+    """Hedge data model.
+    Field data is a json listing hedges"""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     data = models.JSONField()
+    _density = models.JSONField(null=True, default=None)
 
     class Meta:
         verbose_name = "Hedge data"
@@ -175,12 +248,27 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type != "alignement"
         ]
 
+    def get_centroid_to_remove(self):
+        hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
+        hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
+        return hedges_centroid
+
+    def get_department(self):
+        hedges_centroid = self.get_centroid_to_remove()
+        code_department = get_department_from_coords(
+            hedges_centroid.x, hedges_centroid.y
+        )
+        return code_department
+
     def hedges_to_plant_pac(self):
-        return [
-            h
-            for h in self.hedges_to_plant()
-            if h.is_on_pac and h.hedge_type != "alignement"
-        ]
+        def pac_selection(h):
+            """Check if hedge must be taken into account for pac plantation."""
+            res = h.is_on_pac and h.hedge_type != "alignement"
+            if h.has_property("mode_plantation"):
+                res = res and h.prop("mode_plantation") == "plantation"
+            return res
+
+        return [h for h in self.hedges_to_plant() if pac_selection(h)]
 
     def length_to_plant_pac(self):
         return sum(h.length for h in self.hedges_to_plant_pac())
@@ -198,6 +286,56 @@ class HedgeData(models.Model):
             if h.is_on_pac and h.hedge_type == "alignement"
         )
 
+    def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
+        """HedgeData filter
+
+        Args:
+            hedge_to: TO_PLANT or TO_REMOVE
+            hedge_type: hedge type from HEDGE_TYPES
+            props: other hedge properties
+
+        Returns:
+            HedgeList: hedges list filtered
+
+        Raises:
+            ValueError: If hedge to or type argument has a wrong value
+        """
+
+        def hedge_selection(hedge):
+            """Select h in hedges to return"""
+            result = True
+
+            # Check type_haie
+            if "!" in hedge_type:
+                result = result and not hedge.hedge_type == hedge_type.replace("!", "")
+            else:
+                result = result and hedge.hedge_type == hedge_type
+
+            # Check for each prop if
+            for prop in props:
+                operator_not = False
+                if "!" in prop:
+                    operator_not = True
+                    prop = prop.replace("!", "")
+                if hedge.has_property(prop):
+                    if operator_not:
+                        result = result and not hedge.prop(prop)
+                    else:
+                        result = result and hedge.prop(prop)
+            return result
+
+        if hedge_to == TO_REMOVE:
+            hedges_filtered = self.hedges_to_remove()
+        elif hedge_to == TO_PLANT:
+            hedges_filtered = self.hedges_to_plant()
+        else:
+            raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
+
+        if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
+            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+
+        return HedgeList([hedge for hedge in hedges_filtered if hedge_selection(hedge)])
+
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
         return any(h.proximite_mare for h in self.hedges_to_remove())
@@ -206,32 +344,63 @@ class HedgeData(models.Model):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
-    def get_hedge_species(self):
-        """Return species that may live in the hedges."""
-
-        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
-        union = reduce(operator.or_, filters)
-        species = Species.objects.filter(union).order_by("group", "common_name")
-        return species
-
-    def get_local_species_codes(self):
-        """Return species names that are known to live here."""
-
-        bbox = self.get_bounding_box(self.hedges_to_remove())
-        zones = Zone.objects.filter(geometry__intersects=bbox).filter(
-            map__map_type="species"
-        )
-        codes = set()
-        for zone in zones:
-            codes.update(zone.attributes.get("especes", []))
-        return list(codes)
-
     def get_all_species(self):
         """Return the local list of protected species."""
 
-        hedge_species_qs = self.get_hedge_species()
-        local_species_codes = self.get_local_species_codes()
-        return hedge_species_qs.filter(taxref_ids__overlap=local_species_codes)
+        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
+        union = reduce(operator.or_, filters)
+        species = (
+            Species.objects.filter(union)
+            .annotate(map_id=F("species_maps__map_id"))
+            .order_by("group", "common_name")
+            .distinct("group", "common_name")
+        )
+        return species
+
+    def compute_density_with_artifacts(self):
+        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
+
+        # get two circles at 200m and 5000m from the centroid of the hedges to remove
+        centroid_shapely = self.get_centroid_to_remove()
+        centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
+
+        density_200 = compute_hedge_density_around_point(centroid_geos, 200)
+        density_5000 = compute_hedge_density_around_point(centroid_geos, 5000)
+
+        return density_200, density_5000, centroid_geos
+
+    @property
+    def density(self):
+        """Returns pre-computed density of hedges if it exists, otherwise compute it."""
+        if not self._density:
+            density_200, density_5000, _ = self.compute_density_with_artifacts()
+            self._density = {
+                "length_200": density_200["artifacts"]["length"],
+                "length_5000": density_5000["artifacts"]["length"],
+                "area_200_ha": density_200["artifacts"]["area_ha"],
+                "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                "density_200": density_200["density"],
+                "density_5000": density_5000["density"],
+            }
+            self.save()
+
+        return self._density
+
+    def has_hedges_outside_department(self, department: Department):
+        """
+        Check if any hedge in the HedgeData instance is outside the given department geometry.
+
+        Args:
+            department: The department model with its geometry prefetched.
+
+        Returns:
+            bool: True if there are hedges outside the department geometry, False otherwise.
+        """
+        department_geom = GEOSGeometry(department.geometry.wkt)
+        for hedge in self.hedges():
+            if not department_geom.intersects(hedge.geos_geometry):
+                return True
+        return False
 
 
 HEDGE_TYPES = (
@@ -240,6 +409,13 @@ HEDGE_TYPES = (
     ("arbustive", "Haie arbustive"),
     ("alignement", "Alignement d'arbres"),
     ("mixte", "Haie mixte"),
+)
+
+HEDGE_PROPERTIES = (
+    ("proximite_mare", "Mare à moins de 200 m"),
+    ("proximite_point_eau", "Mare ou ruisseau à moins de 10 m"),
+    ("connexion_boisement", "Connectée à un boisement ou à une autre haie"),
+    ("vieil_arbre", "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"),
 )
 
 SPECIES_GROUPS = Choices(
@@ -295,23 +471,98 @@ class Species(models.Model):
     )
     highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
 
-    hedge_types = ArrayField(
-        verbose_name="Types de haies considérés",
-        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
-    )
-    # Those fields are in french to match existing fields describing hedges
-    proximite_mare = models.BooleanField("Mare à moins de 200 m")
-    proximite_point_eau = models.BooleanField("Mare ou ruisseau à moins de 10 m")
-    connexion_boisement = models.BooleanField(
-        "Connectée à un boisement ou à une autre haie"
-    )
-    vieil_arbre = models.BooleanField(
-        "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
-    )
-
     class Meta:
         verbose_name = "Espèce"
         verbose_name_plural = "Espèces"
 
     def __str__(self):
         return f"{self.common_name} ({self.scientific_name})"
+
+
+class SpeciesMap(models.Model):
+    """Represent a single species map."""
+
+    species = models.ForeignKey(
+        Species,
+        related_name="species_maps",
+        on_delete=models.CASCADE,
+        verbose_name="Espèce",
+    )
+    map = models.ForeignKey(
+        "geodata.Map",
+        related_name="species_maps",
+        on_delete=models.CASCADE,
+        verbose_name="Carte",
+    )
+    species_map_file = models.ForeignKey(
+        "SpeciesMapFile",
+        verbose_name="Importé par",
+        related_name="species_maps",
+        null=True,
+        on_delete=models.CASCADE,
+    )
+
+    hedge_types = ArrayField(
+        verbose_name="Types de haies considérés",
+        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
+    )
+    hedge_properties = ArrayField(
+        verbose_name="Propriétés de la haie",
+        help_text="Propriétés requises par l'espèce",
+        base_field=models.CharField(max_length=32, choices=HEDGE_PROPERTIES),
+    )
+
+    class Meta:
+        verbose_name = "Carte d'espèce"
+        verbose_name_plural = "Cartes d'espèces"
+        unique_together = ("species", "map")
+
+
+IMPORT_STATUSES = Choices(
+    ("success", "Succès"),
+    ("partial_success", "Succès partiel"),
+    ("failure", "Échec"),
+)
+
+
+class SpeciesMapFile(models.Model):
+    """Holds a csv file that links species and their caracteristics to a map."""
+
+    name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
+    file = models.FileField("Fichier", upload_to="species_maps/")
+    map = models.ForeignKey(
+        "geodata.Map", on_delete=models.PROTECT, verbose_name="Carte"
+    )
+
+    created_at = models.DateTimeField("Créé le", default=timezone.now)
+    import_status = models.CharField(
+        "Statut d'import", max_length=32, choices=IMPORT_STATUSES, null=True
+    )
+    import_date = models.DateTimeField("Date du dernier import", null=True, blank=True)
+    task_id = models.CharField("Celery task id", max_length=256, null=True, blank=True)
+    import_log = models.TextField("Log d'import", blank=True)
+
+    class Meta:
+        verbose_name = "Fichier de carte d'espèces"
+        verbose_name_plural = "Fichiers de carte d'espèces"
+
+    def __str__(self):
+        return self.file.name
+
+
+PACAGE_RE = r"[0-9]{9}"
+
+
+class Pacage(models.Model):
+    """Holds data related to pacage numbers."""
+
+    pacage_num = models.CharField(
+        "Numéro de PACAGE", validators=[RegexValidator(PACAGE_RE)], primary_key=True
+    )
+    exploitation_density = models.DecimalField(
+        "Densité de l'exploitation", max_digits=5, decimal_places=2
+    )
+
+    class Meta:
+        verbose_name = "Infos Pacage"
+        verbose_name_plural = "Infos Pacage"

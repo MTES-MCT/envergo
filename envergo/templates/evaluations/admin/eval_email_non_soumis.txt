@@ -1,6 +1,6 @@
 {% extends 'evaluations/admin/base_eval_email.txt' %}
 
-{% block greetings %}Nous faisons suite à votre demande d'avis réglementaire EnvErgo concernant le projet suivant : {% endblock %}
+{% block greetings %}Nous faisons suite à votre demande d'avis réglementaire Envergo concernant le projet suivant : {% endblock %}
 
 {% block detail %}
   Il apparaît que ce projet ne semble pas soumis :

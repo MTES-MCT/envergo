@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.template.defaultfilters import floatformat
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -101,39 +103,48 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
     def clean(self):
         data = super().clean()
 
-        if self.errors:
-            return data
-
+        # Concerning surfaces we want to support both:
+        #  * the old form with 'existing_surface'
+        #  * the new one with 'created_surface' and 'final_surface'
+        # depending on the data provided, the other fields will be computed
+        # we should add all surfaces error on the new surface fields, as they are the only ones that are displayed
         created_surface = data.get("created_surface")
         final_surface = data.get("final_surface")
 
         if final_surface is None:
-            self.add_error("final_surface", _("This field is required"))
-
-        # New version, project surface is provided
-        # If existing_surface is missing, we compute it
-        # If both values are somehow provided, we check that they are consistent
-        else:
-            if final_surface < created_surface:
-                self.add_error(
-                    "final_surface",
+            self.add_error(
+                "final_surface",
+                ValidationError(_("This field is required"), code="required"),
+            )
+        elif created_surface is None:
+            self.add_error(
+                "created_surface",
+                ValidationError(_("This field is required"), code="required"),
+            )
+        elif final_surface < created_surface:
+            self.add_error(
+                "final_surface",
+                ValidationError(
                     _("The total surface must be greater than the created surface"),
-                )
+                    code="inconsistent_surface",
+                ),
+            )
+
         return data
 
 
 REIMPLANTATION_CHOICES = (
+    (
+        "replantation",
+        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
+        "Oui, en plantant une haie à un autre endroit",
+    ),
     (
         "remplacement",
         mark_safe(
             "<span>Oui, en remplaçant la haie détruite <b>au même</b> endroit<span>"
         ),
         "Oui, en remplaçant la haie détruite au même endroit",
-    ),
-    (
-        "replantation",
-        mark_safe("<span>Oui, en plantant une haie <b>à un autre</b> endroit<span>"),
-        "Oui, en plantant une haie à un autre endroit",
     ),
     ("non", "Non, aucune réimplantation", "Non, aucune réimplantation"),
 )
@@ -166,10 +177,10 @@ MOTIF_CHOICES = (
         "securite",
         mark_safe(
             """
-            Mise en sécurité<br/>
+            Mise en sécurité, risque sanitaire<br/>
             <span class="fr-hint-text">
-                Sécurité des riverains, de la voirie, d’une installation attenante,
-                réparation suite à un effondrement…
+                Sécurité des riverains, de la circulation, d’une installation attenante ; maladie transmissible à
+                d’autres arbres…
             </span>
             """
         ),
@@ -178,7 +189,7 @@ MOTIF_CHOICES = (
         "amenagement",
         mark_safe(
             """
-            Opération d’aménagement foncier<br/>
+            Opération de construction ou d'aménagement<br/>
             <span class="fr-hint-text">
                 Création ou agrandissement d’un bâtiment, d’un lotissement, d’une infrastructure…
             </span>
@@ -189,10 +200,10 @@ MOTIF_CHOICES = (
         "amelioration_ecologique",
         mark_safe(
             """
-            Amélioration écologique<br/>
+            Amélioration environnementale<br/>
             <span class="fr-hint-text">
                 Restauration de la continuité écologique, réimplantation sur un meilleur
-                emplacement environnemental…
+                emplacement environnemental, amélioration de l'accueil de la faune et de la flore…
             </span>
             """
         ),
@@ -201,10 +212,10 @@ MOTIF_CHOICES = (
         "embellissement",
         mark_safe(
             """
-            Embellissement ou agrément<br/>
+            Raison esthétique<br/>
             <span class="fr-hint-text">
-                Amélioration de l’ensoleillement d’une habitation, dégagement d’une vue
-                depuis un jardin…
+                Embellissement, amélioration de l’ensoleillement d’une habitation, intervention pour garantir
+                l'esthétique d'un alignement d'arbres…
             </span>
             """
         ),
@@ -233,7 +244,8 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
     def get_display_value(self, value):
         data = self.clean(value)
         display_value = (
-            f"{round(data.length_to_remove())} m / {round(data.length_to_plant())} m"
+            f"{floatformat(data.length_to_remove(), "0g")} m / "
+            f"{floatformat(data.length_to_plant(), "0g")} m"
         )
         return display_value
 
@@ -288,15 +300,21 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if motif == "chemin_acces" and reimplantation == "remplacement":
             self.add_error(
                 "reimplantation",
-                """Le remplacement de la haie au même endroit est incompatible avec la
-                raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                ValidationError(
+                    """Le remplacement de la haie au même endroit est incompatible avec la
+                    raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
             )
 
         elif motif == "amelioration_ecologique" and reimplantation == "non":
             self.add_error(
                 "reimplantation",
-                """La destruction de la haie sans réimplantation est incompatible avec la raison
-                « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                ValidationError(
+                    """La destruction de la haie sans réimplantation est incompatible avec la raison
+                    « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
             )
 
         if localisation_pac == "oui" and haies:
@@ -304,20 +322,26 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             if not any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
-                    """Il est indiqué que « oui, au moins une des haies » est située
-                    sur une parcelle PAC, mais aucune des haies saisies n’est marquée
-                    comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                    les haies.""",
+                    ValidationError(
+                        """Il est indiqué que « oui, au moins une des haies » est située
+                        sur une parcelle PAC, mais aucune des haies saisies n’est marquée
+                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
+                        les haies.""",
+                        code="inconsistent_hedges",
+                    ),
                 )
         elif localisation_pac == "non" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
                 self.add_error(
                     "localisation_pac",
-                    """Il est indiqué que « non, aucune des haies » n’est située sur
-                    une parcelle PAC, mais au moins une des haies saisies est marquée
-                    comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                    les haies ci-dessous.""",
+                    ValidationError(
+                        """Il est indiqué que « non, aucune des haies » n’est située sur
+                        une parcelle PAC, mais au moins une des haies saisies est marquée
+                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
+                        les haies ci-dessous.""",
+                        code="inconsistent_hedges",
+                    ),
                 )
 
         return data
@@ -327,7 +351,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if haies.length_to_remove() == 0:
             self.add_error(
                 "haies",
-                "Merci de saisir au moins une haie à détruire.",
+                ValidationError(
+                    "Merci de saisir au moins une haie à détruire.", code="required"
+                ),
             )
         return haies
 
@@ -361,12 +387,14 @@ class TriageFormHaie(forms.Form):
                 "destruction",
                 mark_safe(
                     """Destruction<br />
-                    <span class="fr-hint-text">
-                        Toute intervention qui supprime définitivement la végétation : arrachage,
-                        coupe à blanc sur essences qui ne recèpent pas (ex : chêne,
-                        sorbier, noyer, merisier, bouleau, hêtre, tous les résineux…),
-                        entretien sévère et récurrent, etc.
-                    </span>
+<span class="fr-hint-text">
+Toute intervention supprimant définitivement la végétation :
+arrachage ; « déplacement » de haie ;
+coupe à blanc sur essences qui ne recèpent pas
+(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+target="_blank" rel="noopener">voir liste</a>) ;
+entretien sévère et récurrent ; etc.
+</span>
                     """
                 ),
             ),
@@ -374,10 +402,12 @@ class TriageFormHaie(forms.Form):
                 "entretien",
                 mark_safe(
                     """Entretien<br />
-                    <span class="fr-hint-text">
-                        Intervention qui permet la repousse durable de la végétation : élagage, taille,
-                        coupe à blanc sur une essence capable de recéper, etc.
-                    </span>
+<span class="fr-hint-text">
+    Intervention qui permet la repousse durable de la végétation :
+    élagage, taille, coupe à blanc sur une essence capable de recéper
+    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+    target="_blank" rel="noopener">voir liste</a>), etc.
+</span>
                     """
                 ),
             ),

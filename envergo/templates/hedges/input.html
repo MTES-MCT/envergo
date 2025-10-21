@@ -9,14 +9,24 @@
 {% block header %}{% endblock %}
 
 {% block main %}
+
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
-       data-save-url="{% url 'input_hedges' mode=mode %}"
-       data-quality-url="{% url 'hedge_quality' %}?{{ request.GET.urlencode|safe }}"
+       data-save-url="{% url 'input_hedges' department=department mode=mode %}"
+       data-conditions-url="{{ hedge_conditions_url }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
-
+    {% if is_alternative %}
+      <div class="fr-notice fr-notice--info">
+        <div class="fr-notice__body fr-ml-2w">
+          <p>
+            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
+            <span><b>Simulation alternative</b> à la simulation initiale</span>
+          </p>
+        </div>
+      </div>
+    {% endif %}
     <div id="saisie-ui">
       <div id="map">
 
@@ -24,9 +34,10 @@
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
           <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
           <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
-          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher ou zoomer sur l’emplacement des haies</span>
+          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l’emplacement des haies</span>
         </div>
       </div>
+      <div id="tooltip" style="display: none"></div>
       {% comment %}
       There is an awfully weird bug here: if we keep the search control inside the `map` div, then leaflet steals the click event, making the search widget usable with a keyboard only. The only way I could find to fix this issue is to move this control section outside the map.
       {% endcomment %}
@@ -86,7 +97,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
-              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_REMOVE.totalLength.toFixed(0) ]] m</span>
+              <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_REMOVE.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_REMOVE.hasCompletedHedge">
               <table>
@@ -114,7 +125,7 @@
                               @click.stop="hedge.remove()"
                               :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
+                    <td>[[ Math.ceil(hedge.length) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -129,7 +140,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
-              <span class="fr-tag fr-tag--sm">Total : [[ hedges.TO_PLANT.totalLength.toFixed(0) ]] m</span>
+              <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_PLANT.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_PLANT.hasCompletedHedge">
               <table>
@@ -158,7 +169,7 @@
                               @click.stop="hedge.remove()"
                               :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
-                    <td>[[ hedge.length.toFixed(0) ]] m</td>
+                    <td>[[ Math.ceil(hedge.length) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -168,107 +179,55 @@
             </template>
           </div>
         </div>
-        <div id="hedge-quality"
-             v-if="quality.status === 'loaded' && mode === 'plantation'">
+
+        <div id="hedge-conditions"
+             v-if="mode === 'plantation' || mode === 'read_only'">
           <div class="alt fr-m-2w" id="tile-16">
-            <h3 class="fr-p-1w">Plantation minimum attendue</h3>
-            <div id="conditions" class="fr-px-1w fr-pb-1w">
-              <div>
-                <div>
-                  <p :class="{ 'fr-badge--success': quality.length_to_plant.result, 'fr-badge--error': !quality.length_to_plant.result} "
-                     class="fr-badge"></p>
-                </div>
-                <div>
-                  <h6>Longueur de la haie plantée</h6>
-                  <p v-if="quality.length_to_plant.result">Le linéaire total planté est suffisant.</p>
-                  <p v-else>
-                    Le linéaire total planté doit être supérieur à {{ minimum_length_to_plant|floatformat:0 }} m.
-                    <br />
-                    Il manque au moins [[ Math.round(quality.length_to_plant.left_to_plant) ]] m.
-                  </p>
-                </div>
+            <div class="tile-header fr-p-1w">
+              <h3>Conditions à respecter pour la plantation</h3>
+              <div v-if="conditions.status === 'ok' && hedges.TO_PLANT.count > 0">
+                <span :class="{ 'fr-badge--success': conditions.result, 'fr-badge--warning': !conditions.result }"
+                      class="fr-badge">
+                  <span v-if="conditions.result">Plantation adéquate</span>
+                  <span v-if="!conditions.result">Plantation insuffisante</span>
+                </span>
+              </div>
+              <div v-if="conditions.status === 'loading'"
+                   class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
+            </div>
+            <div id="conditions"
+                 :class="conditions.status"
+                 class="fr-px-1w fr-pb-2w "
+                 v-if="conditions.conditions.length > 0">
+              <div class="condition-hint" v-for="condition in conditions.conditions">
+                <p class="fr-my-1w"
+                   v-if="condition.label === 'Type de haie plantée' && condition.hint">
+                  <span v-html="condition.hint"></span>
+                </p>
               </div>
 
-              {% if is_removing_pac %}
-                <div v-if="quality.length_to_plant_pac">
-                  <div>
-                    <p :class="{ 'fr-badge--success': quality.length_to_plant_pac.result, 'fr-badge--error': !quality.length_to_plant_pac.result} "
-                       class="fr-badge"></p>
-                  </div>
-                  <div>
-                    <h6>Maintien des haies PAC</h6>
-                    <p v-if="quality.length_to_plant_pac.result">
-                      Le linéaire de haie planté sur parcelle PAC est
-                      suffisant.
-                    </p>
-                    <p v-else>
-                      Le linéaire de haie planté sur parcelle PAC doit être supérieur à [[
-                      Math.round(quality.length_to_plant_pac.minimum_length_to_plant) ]] m.
-                      <br />
-                      Il manque au moins [[ Math.round(quality.length_to_plant_pac.left_to_plant) ]] m sur parcelle PAC,
-                      hors alignements d’arbres.
-                    </p>
-                  </div>
-                </div>
-              {% endif %}
-
-              <div v-if="quality.quality">
+              <div class="condition-content" v-for="condition in conditions.conditions">
                 <div>
-                  <p :class="{ 'fr-badge--success': quality.quality.result, 'fr-badge--error': !quality.quality.result} "
+                  <p :class="{ 'fr-badge--success': condition.result, 'fr-badge--error': !condition.result} "
                      class="fr-badge"></p>
                 </div>
                 <div>
-                  <h6>Type de haie plantée</h6>
-                  <p v-if="quality.quality.result">La qualité écologique du linéaire planté est suffisante.</p>
-                  <div v-else>
-                    <p>Le type de haie plantée ne permet pas de compenser la qualité écologique des haies détruites.</p>
-
-                    <p v-if="quality.quality.missing_plantation.alignement > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte +
-                      quality.quality.missing_plantation.alignement) ]] m de haie mixte ou alignement d'arbres.
-                    </p>
-                    <p v-else-if="quality.quality.missing_plantation.mixte > 0 || quality.quality.missing_plantation.degradee > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.mixte +
-                      quality.quality.missing_plantation.degradee) ]] m de haie mixte.
-                    </p>
-
-                    <p v-if="quality.quality.missing_plantation.buissonante > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.buissonante +
-                      quality.quality.missing_plantation.arbustive) ]] m de haie basse ou arbustive.
-                    </p>
-                    <p v-else-if="quality.quality.missing_plantation.arbustive > 0">
-                      Il manque au moins [[ Math.round(quality.quality.missing_plantation.arbustive) ]] m de haie
-                      arbustive.
-                    </p>
-
-                  </div>
-                </div>
-              </div>
-
-              <div v-if="quality.do_not_plant_under_power_line">
-                <div>
-                  <p :class="{ 'fr-badge--success': quality.do_not_plant_under_power_line.result, 'fr-badge--error': !quality.do_not_plant_under_power_line.result} "
-                     class="fr-badge"></p>
-                </div>
-                <div>
-                  <h6>Sécurité</h6>
-                  <p v-if="quality.do_not_plant_under_power_line.result">
-                    Aucune haie haute sous une ligne
-                    électrique.
+                  <h6>[[ condition.label ]]</h6>
+                  <p v-if="condition.hint && condition.label !== 'Type de haie plantée'">
+                    <span class="fr-hint-text fr-mb-1w" v-html="condition.hint"></span>
                   </p>
-                  <p v-else>
-                    Aucune haie haute ne doit se situer sous une ligne électrique. Déplacez les haies ou ne plantez à
-                    cet endroit que des haies basses ou arbustives.
-                  </p>
+                  <p v-html="condition.text"></p>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
+
       </div>
 
-      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" %}
-      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_remove_data_form dialog_id="removal-hedge-data-dialog" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_plant_data_form dialog_id="plantation-hedge-data-dialog" dialog_mode="plantation" %}
+      {% include 'hedges/_hedge_data_dialog.html' with form=hedge_to_remove_data_form dialog_id="removal-hedge-data-dialog" dialog_mode="removal" %}
 
       <dialog id="cancel-modal" class="fr-modal" role="dialog">
         <div class="fr-container fr-container--fluid fr-container-md">
@@ -318,23 +277,27 @@
     </div>
 
     <footer>
-      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-s-line fr-ml-13w"
+      <button v-if="mode == 'read_only'"
+              class="fr-btn fr-btn--secondary fr-ml-13w fr-btn--icon-left fr-icon-arrow-left-s-line"
               @click="cancel">Retour</button>
       <button v-if="mode !== 'read_only'"
-              class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-s-line fr-mr-13w"
-              @click="saveData">Enregistrer et poursuivre</button>
+              class="fr-btn fr-btn--secondary fr-ml-13w"
+              @click="cancel">Quitter sans enregistrer</button>
+      <button v-if="mode !== 'read_only'"
+              class="fr-btn fr-btn--primary fr-mr-13w fr-btn--icon-right fr-icon-arrow-right-s-line"
+              @click="saveData">Enregistrer</button>
     </footer>
   </div>
 {% endblock %}
 
 {% block extra_body %}{% endblock %}
+
 {% block footer %}{% endblock %}
 
 {% block bottom_js %}
   {{ block.super }}
   <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
-  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'leaflet-editable/src/Leaflet.Editable.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer
@@ -348,7 +311,6 @@
 {% block css %}
   {{ block.super }}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
-  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
   <link rel="stylesheet"
         href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 

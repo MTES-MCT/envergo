@@ -9,17 +9,4 @@
   internet permet de réaliser cette démarche en ligne. La prochaine étape est de décrire le projet de plantation.
 </p>
 
-<h6>
-  🌳 <strong>Plantation requise : {{ minimum_length_to_plant|floatformat:0 }} m</strong>
-</h6>
-<p>
-  Au vu des caractéristiques des haies détruites, la plantation d’une longueur minimale de
-  {{ minimum_length_to_plant|floatformat:0 }} m sera exigée pour que le projet puisse être autorisé.
-</p>
-<p>
-  Prochaine étape :
-  <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
-          type="button"
-          data-fr-opened="false"
-          aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
-</p>
+{% include "haie/moulinette/result/_replantation.html" %}

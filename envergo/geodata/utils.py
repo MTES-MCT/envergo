@@ -6,24 +6,48 @@ import sys
 import zipfile
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
+from django.contrib.gis.db.models import GeometryField
+from django.contrib.gis.db.models.functions import Intersection, Length
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, MultiPolygon, Point
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
+from django.contrib.gis.measure import Distance
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db import connection
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
+from django.db.models.functions import Cast
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
-from envergo.geodata.models import Zone
+from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
+
+if TYPE_CHECKING:
+    from envergo.hedges.models import HedgeData
 
 logger = logging.getLogger(__name__)
 
 EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
+
+FRANCE_LAT = 46.76305599999998
+FRANCE_LNG = 2.424722
+FRANCE_ZOOM = 6
+IGN_URL = "https://www.geoportail.gouv.fr/carte?c={0},{1}&z={2}&l0=ORTHOIMAGERY.ORTHOPHOTOS::GEOPORTAIL:OGC:WMTS(1)&l1=LIMITES_ADMINISTRATIVES_EXPRESS.LATEST::GEOPORTAIL:OGC:WMTS(1)&l2=hedge.hedge::GEOPORTAIL:OGC:WMTS(1)&permalink=yes"  # noqa
+GOOGLE_MAPS_URL = (
+    "https://www.google.com/maps/@?api=1&map_action=map&center={1},{0}&zoom={2}"
+)
+GEOPORTAIL_URL = (
+    "https://www.geoportail-urbanisme.gouv.fr/map/#tile=1&lon={0}&lat={1}&zoom={2}"
+)
+
+
+ATTRIBUTES = {
+    "especes": "species_taxrefs",
+}
 
 
 class CeleryDebugStream:
@@ -69,6 +93,11 @@ class CustomMapping(LayerMapping):
         fields = feat.fields
         attributes = {f: self.get_attribute(feat, f) for f in fields}
         kwargs["attributes"] = attributes
+
+        for field in fields:
+            if field in ATTRIBUTES:
+                kwargs[ATTRIBUTES[field]] = self.get_attribute(feat, field)
+
         return kwargs
 
     def get_attribute(self, feat, field):
@@ -84,7 +113,7 @@ class CustomMapping(LayerMapping):
 
     def get_attribute_especes(self, feat):
         raw_especes = feat.get("especes")
-        especes = list(map(int, raw_especes.split(",")))
+        especes = list(map(int, filter(None, raw_especes.split(","))))
         return especes
 
 
@@ -113,7 +142,9 @@ def extract_map(archive):
     elif archive.name.endswith(".gpkg"):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
-        elif hasattr(archive, "url"):
+
+        # Local files also get an url, but its just unreachable
+        elif hasattr(archive, "url") and archive.url.startswith("http"):
             yield archive.url
         else:
             yield archive.path
@@ -133,28 +164,45 @@ def count_features(map_file):
     return nb_zones
 
 
-def process_map_file(map, file, task=None):
-    logger.info("Creating temporary directory")
-    with extract_map(file) as map_file:
-        if task:
-            debug_stream = CeleryDebugStream(task, map.expected_zones)
-        else:
-            debug_stream = sys.stdout
+def process_geographic_file(map, lm, task):
+    if task:
+        debug_stream = CeleryDebugStream(task, map.expected_geometries)
+    else:
+        debug_stream = sys.stdout
 
-        logger.info("Instanciating custom LayerMapping")
-        mapping = {"geometry": "MULTIPOLYGON"}
-        extra = {"map": map}
-        lm = CustomMapping(
-            Zone,
-            map_file,
-            mapping,
-            transaction_mode="autocommit",
-            extra_kwargs=extra,
-        )
+    logger.info("Calling layer mapping `save`")
+    lm.save(strict=False, progress=True, stream=debug_stream)
+    logger.info("Importing is done")
 
-        logger.info("Calling layer mapping `save`")
-        lm.save(strict=False, progress=True, stream=debug_stream)
-        logger.info("Importing is done")
+
+def process_zones_file(map, map_file, task=None):
+    logger.info("Instanciating custom LayerMapping")
+    mapping = {"geometry": "MULTIPOLYGON"}
+    extra = {"map": map}
+    lm = CustomMapping(
+        Zone,
+        map_file,
+        mapping,
+        transaction_mode="autocommit",
+        extra_kwargs=extra,
+    )
+
+    process_geographic_file(map, lm, task)
+
+
+def process_lines_file(map, map_file, task=None):
+    logger.info("Instanciating custom LayerMapping")
+    mapping = {"geometry": "LINESTRING"}
+    extra = {"map": map}
+    lm = CustomMapping(
+        Line,
+        map_file,
+        mapping,
+        transaction_mode="autocommit",
+        extra_kwargs=extra,
+    )
+
+    process_geographic_file(map, lm, task)
 
 
 def make_polygons_valid(map):
@@ -288,6 +336,14 @@ def get_commune_from_coords(lng, lat, timeout=0.5):
     return data["nom"] if data else None
 
 
+def get_department_from_coords(lng, lat):
+    """Get department code from lng lat"""
+    lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
+    department = Department.objects.filter(geometry__contains=lng_lat).first()
+
+    return department.department if department else ""
+
+
 def merge_geometries(polygons):
     """Return a single polygon that is the fusion of the given polygons."""
 
@@ -357,6 +413,49 @@ def simplify_map(map):
 
     logger.info("Preview generation is done")
     return polygon
+
+
+def simplify_lines(map):
+    """Generates a simplified MultiLineString for the entire map.
+
+    It uses the sames algorithms as `simplify_map`, but for lines instead of polygons.
+    """
+
+    logger.info("Generating map preview as MultiLineString")
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+              ST_AsText(
+                ST_Multi(
+                  ST_CollectionExtract(
+                    ST_MakeValid(
+                      ST_Simplify(
+                        ST_Union(ST_MakeValid(l.geometry::geometry)),
+                        0.0001
+                      ),
+                      'method=structure keepcollapsed=false'
+                    ),
+                  2)
+                )::geography
+              )
+              AS lines
+            FROM geodata_line as l
+            WHERE l.map_id = %s
+            """,
+            [map.id],
+        )
+        row = cursor.fetchone()
+
+    lines = GEOSGeometry(row[0], srid=EPSG_WGS84)
+    if not isinstance(lines, MultiLineString):
+        logger.error(
+            f"The query did not generate the correct geometry type ({type(lines)})"
+        )
+
+    logger.info("Preview generation is done")
+    return lines
 
 
 def fill_polygon_stats():
@@ -453,3 +552,151 @@ def get_catchment_area_pixel_values(lng, lat):
 
 def is_test():
     return "pytest" in sys.modules
+
+
+def get_best_epsg_for_location(longitude, latitude) -> int:
+    """
+    Determine the most accurate EPSG code to use for geographical computation in meters,
+    based on a location latitude and longitude.
+
+    Returns:
+        EPSG code as int (326xx for northern UTM, 327xx for southern UTM)
+    """
+    utm_zone = int((longitude + 180) / 6) + 1
+
+    if latitude >= 0:
+        epsg_code = 32600 + utm_zone  # Northern hemisphere
+    else:
+        epsg_code = 32700 + utm_zone  # Southern hemisphere
+
+    return epsg_code
+
+
+def trim_land(geom):
+    """Keep only the part of the geometry that is in France and not in the sea.
+
+    Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
+    so it uses raw SQL
+    Returns:
+        - the intersection of the circle with the map zones
+        - None if there is no intersection
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            WITH input_poly AS (
+              SELECT ST_GeomFromEWKT(%s) AS geom
+            ),
+            unioned_geom AS (
+              SELECT ST_Union(z.geometry::geometry) AS merged_geom
+              FROM geodata_zone z
+              JOIN geodata_map m ON z.map_id = m.id
+              JOIN input_poly i ON ST_Intersects(z.geometry, i.geom)
+              WHERE m.map_type = %s
+            )
+            SELECT ST_AsText(ST_Intersection(u.merged_geom, i.geom))
+            FROM unioned_geom u, input_poly i;
+        """,
+            [geom.ewkt, MAP_TYPES.terres_emergees],
+        )
+        wkt = cursor.fetchone()[0]
+        if wkt:
+            trimmed_geom = GEOSGeometry(wkt)
+            trimmed_geom.srid = geom.srid  # Set SRID explicitly
+        else:
+            trimmed_geom = None
+        return trimmed_geom
+
+
+def compute_hedge_density_around_point(point_geos, radius):
+    """Compute the density of hedges around a point."""
+
+    # use specific projection to be able to use meters for buffering
+    epsg_utm = get_best_epsg_for_location(point_geos.x, point_geos.y)
+    centroid_meter = point_geos.transform(epsg_utm, clone=True)
+    circle = centroid_meter.buffer(radius)
+    circle = circle.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
+
+    # Check if the circle center is on land
+    on_land = (
+        Zone.objects.filter(map__map_type=MAP_TYPES.terres_emergees)
+        .filter(geometry__contains=point_geos)
+        .exists()
+    )
+    truncated_circle = None
+
+    if on_land:
+        # Remove the sea from the circle
+        truncated_circle = trim_land(circle)
+
+    if on_land and truncated_circle:
+        truncated_circle_m = truncated_circle.transform(
+            epsg_utm, clone=True
+        )  # use specific projection to compute the area in square meters
+
+        area = truncated_circle_m.area
+        area_ha = area * 0.0001
+
+        # get the length of the hedges in the circles
+        length = (
+            Line.objects.filter(
+                geometry__intersects=truncated_circle,
+                map__map_type=MAP_TYPES.haies,
+            )
+            .annotate(clipped=Intersection("geometry", truncated_circle))
+            .annotate(length=Length(Cast("clipped", GeometryField())))
+            .aggregate(total=Sum("length"))["total"]
+        )
+        length = length if length else Distance(0)
+
+        density = length.standard / area_ha if area_ha > 0 else 0.0
+    else:
+        # there is no land in the circle (e.g. sea or foreign country)
+        length = Distance(0)
+        area_ha = 0.0
+        density = 1.0
+
+    return {
+        "density": density,
+        "artifacts": {
+            "circle": circle,
+            "truncated_circle": truncated_circle,
+            "length": length.standard,
+            "area_ha": area_ha,
+        },
+    }
+
+
+def _get_centered_url(url, hedges: "HedgeData"):
+    lng = FRANCE_LNG
+    lat = FRANCE_LAT
+    zoom = FRANCE_ZOOM
+
+    if hedges:
+        # Generate urls centered on the project
+        centroid = hedges.get_centroid_to_remove()
+        lng = centroid.x
+        lat = centroid.y
+        zoom = 16
+
+    return url.format(lng, lat, zoom)
+
+
+def get_google_maps_centered_url(hedges: "HedgeData"):
+    """Return the GoogleMaps URL centered on the hedges to remove."""
+    return _get_centered_url(GOOGLE_MAPS_URL, hedges)
+
+
+def get_ign_centered_url(hedges: "HedgeData"):
+    """Return the IGN URL centered on the hedges to remove."""
+    return _get_centered_url(IGN_URL, hedges)
+
+
+def get_geoportail_urbanisme_centered_url(hedges: "HedgeData"):
+    """Return the Geoportail de l'urbanisme url centered on the hedges to remove."""
+    url = _get_centered_url(GEOPORTAIL_URL, hedges)
+    if hedges:
+        url += "&lowscale=0:0.7&municipality=0:0.7&document=0:0.7&zone_secteur,zone_secteur_psmv=0:0.7&du,psmv=1:0.7&info,info_psmv01020304050607080910111213141516171819202122232425262728293031323334353637383940414270979899=0:0.7&info,info_psmv98=0:0.7&info,info_psmv010203040506070809101112131415161718192021222324252627282930313233343536373839404142709799=0:0.7&prescription,prescription_psmv2217233006363743=0:0.7&prescription,prescription_psmv=1:0.7&prescription2217233006363743=0:0.7&prescription_psmv2217233006363743=0:0.7&prescription,prescription_psmv03041115162029383940414445=0:0.7&prescription03041115162029383940414445=0:0.7&prescription_psmv03041115162029383940414445=0:0.7&prescription,prescription_psmv141849=0:0.7&prescription141849=0:0.7&prescription_psmv141849=0:0.7&prescription,prescription_psmv0509102112242627284748=0:0.7&prescription0509102112242627284748=0:0.7&prescription_psmv0509102112242627284748=0:0.7&prescription,prescription_psmv0213195051=0:0.7&prescription0213195051=0:0.7&prescription_psmv0213195051=0:0.7"  # noqa
+
+    return url

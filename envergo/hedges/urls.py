@@ -1,9 +1,13 @@
 from django.urls import path
 
-from envergo.hedges.views import HedgeInput, HedgeQualityView
+from envergo.hedges.views import HedgeConditionsView, HedgeInput
 
 urlpatterns = [
-    path("qualite/", HedgeQualityView.as_view(), name="hedge_quality"),
-    path("<str:mode>/", HedgeInput.as_view(), name="input_hedges"),
-    path("<str:mode>/<uuid:id>/", HedgeInput.as_view(), name="input_hedges"),
+    path("conditions/", HedgeConditionsView.as_view(), name="hedge_conditions"),
+    path("<str:department>/<str:mode>/", HedgeInput.as_view(), name="input_hedges"),
+    path(
+        "<str:department>/<str:mode>/<uuid:id>/",
+        HedgeInput.as_view(),
+        name="input_hedges",
+    ),
 ]

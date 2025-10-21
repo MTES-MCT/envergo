@@ -49,8 +49,55 @@ herault_polygon = Polygon(
     ]
 )
 
+aisne_polygon = Polygon(
+    [
+        (3.1718682186441027, 50.00041883371105),
+        (4.2503606431506125, 49.92911270317336),
+        (4.079464816057314, 49.350343310805215),
+        (3.640677706563422, 49.26753056631054),
+        (3.4259028609826716, 48.84681813579178),
+        (2.976160950713585, 49.320267970519126),
+        (3.1718682186441027, 50.00041883371105),
+    ]
+)
+
+calvados_polygon = Polygon(
+    [
+        (-1.0763679690626593, 49.366695527098784),
+        (0.2990843940771724, 49.41824158929208),
+        (0.44224494627577665, 48.945376807525776),
+        (-1.1172909475059614, 48.76801610637284),
+        (-0.876659539266743, 49.09319617523499),
+        (-1.0763679690626593, 49.366695527098784),
+    ]
+)
+
+acy_polygon = Polygon(
+    [
+        (3.415440158691405, 49.369194107413875),
+        (3.386000232543945, 49.338667914674176),
+        (3.4286580847167962, 49.31931367054088),
+        (3.4495149420166005, 49.35521926418238),
+        (3.415440158691405, 49.369194107413875),
+    ]
+)
+
+limé_polygon = Polygon(
+    [
+        (3.549842492004394, 49.33552931554917),
+        (3.5300156029663086, 49.3152226495269),
+        (3.5619017037353515, 49.31217312946501),
+        (3.584561005493163, 49.32162882442222),
+        (3.5807415398559566, 49.329488538022105),
+        (3.5576530846557617, 49.33754274332614),
+        (3.549842492004394, 49.33552931554917),
+    ]
+)
+
+
 france_multipolygon = MultiPolygon([france_polygon])
 loire_atlantique_multipolygon = MultiPolygon([loire_atlantique_polygon])
+herault_multipolygon = MultiPolygon([herault_polygon])
 
 
 class FuzzyPolygon(fuzzy.BaseFuzzyAttribute):
@@ -96,34 +143,39 @@ class FuzzyMultiPolygon(fuzzy.BaseFuzzyAttribute):
 class MapFactory(DjangoModelFactory):
     class Meta:
         model = Map
-        skip_postgeneration_save = True
 
     name = factory_Faker("name")
     map_type = ""
     description = "Lorem ipsum"
-
-    @factory.post_generation
-    def zones(obj, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted:
-            obj.zones.add(*extracted)
-        else:
-            ZoneFactory(map=obj)
+    zones = factory.RelatedFactoryList(
+        "envergo.geodata.tests.factories.ZoneFactory",
+        factory_related_name="map",
+        size=1,
+    )
 
 
 class ZoneFactory(DjangoModelFactory):
     class Meta:
         model = Zone
 
-    map = factory.SubFactory(MapFactory, zones=[])
+    map = factory.SubFactory(MapFactory)
     geometry = france_multipolygon
+    species_taxrefs = []
 
 
 class DepartmentFactory(DjangoModelFactory):
     class Meta:
         model = Department
+        django_get_or_create = ["department"]
 
     department = 44
     geometry = loire_atlantique_multipolygon
+
+
+class Department34Factory(DjangoModelFactory):
+    class Meta:
+        model = Department
+        django_get_or_create = ["department"]
+
+    department = 34
+    geometry = herault_multipolygon

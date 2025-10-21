@@ -1,0 +1,164 @@
+{% extends 'haie/moulinette/result.html' %}
+
+{% load evaluations static moulinette %}
+
+{% block result %}
+
+  <section class="debug">
+
+    <h1>Paramètres de la moulinette</h1>
+    <p>
+      Résultat global : {% result_tag moulinette.result moulinette.result_tag_style %}
+      <small>({{ moulinette.result }})</small>
+    </p>
+
+    <h2>Données initiales</h2>
+
+    <ul class="fr-mb-2w">
+      <li>
+        Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
+        <ul>
+          {% for h in haies.hedges_to_remove %}
+            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+      <li>
+        Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m
+        <ul>
+          {% for h in haies.hedges_to_plant %}
+            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+
+      {% if moulinette.config %}
+        <li>
+          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+        </li>
+      {% else %}
+        <li>Département : {{ moulinette.department }}</li>
+      {% endif %}
+    </ul>
+
+    <h2>Conditions d'acceptabilité</h2>
+
+    <ul class="fr-mb-2w">
+      {% for condition in plantation_evaluation.conditions %}
+        <li>
+          {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
+          {% if condition.context %}
+            <ul>
+              {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    <h2>Réglementations</h2>
+
+    {% for regulation in moulinette.regulations %}
+      <h3>{{ regulation.title }}</h3>
+      <p>
+        {% result_tag regulation.result regulation.result_tag_style %}
+        <small>({{ regulation.result }})</small>
+      </p>
+
+      {% with criteria=regulation.criteria.all %}
+        {% if criteria %}
+          <ul>
+            {% for criterion in criteria %}
+              <li class="fr-mb-2w">
+                {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
+                <small>({{ criterion.result_code }})</small>
+                {% if criterion.get_evaluator.get_replantation_coefficient %}
+                  <br />
+                  R = {{ criterion.get_evaluator.get_replantation_coefficient|floatformat:"2g" }}
+                {% else %}
+                  <br />
+                  R = ND
+                {% endif %}
+                {% if criterion.get_evaluator.plantation_conditions %}
+                  <br />
+                  Conditions d'acceptabilité =
+                  {% for condition in criterion.get_evaluator.plantation_conditions %}
+                    {{ condition.label }}
+                    {% if not forloop.last %},&nbsp;{% endif %}
+                  {% endfor %}
+                {% else %}
+                  <br />
+                  Conditions d'acceptabilité = aucune
+                {% endif %}
+                {% if criterion|requires_hedge_density %}
+                  <br />
+
+                  <h6>Densité de haie</h6>
+
+                  <ul>
+                    <li>Numéro de PACAGE : {{ numero_pacage|default:"ND" }}</li>
+                    <li>Densité de l'exploitation : {{ density_exploitation|default:"ND" }}</li>
+                    <li>Densité 5 km : {{ density_5000|floatformat:"2" }}</li>
+                    <li>Rapport de densité exploitation / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
+                    <li>Identifiant zone : {{ density_zone }}</li>
+                  </ul>
+
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Rayon 200 m</th>
+                        <th scope="col">Rayon 5 km</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th scope="row">Linéaire</th>
+                        <td>{{ length_200|floatformat:"0g" }} ml</td>
+                        <td>{{ length_5000|floatformat:"0g" }} ml</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Surface</th>
+                        <td>{{ area_200_ha|floatformat:"g" }} ha</td>
+                        <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Densité</th>
+                        <td>{{ density_200|floatformat:"g" }} ml/ha</td>
+                        <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
+                      </tr>
+                      {% if pre_computed_density_200 or pre_computed_density_5000 %}
+                        <tr>
+                          <th scope="row">
+                            Densité persistée en base
+                            <br />
+                            <span class="fr-hint-text">Peut ne pas être à jour</span>
+                          </th>
+                          <td>{{ pre_computed_density_200|floatformat:"g" }} ml/ha</td>
+                          <td>{{ pre_computed_density_5000|floatformat:"g" }} ml/ha</td>
+                        </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+
+                  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+
+    <h2>Catalogue de données</h2>
+
+    <dd>
+      {% for key, value in moulinette.catalog.items %}
+        <dt>{{ key }}</dt>
+        <dd>
+          {{ value|truncatechars:150 }}
+        </dd>
+      {% endfor %}
+    </dd>
+  </section>
+{% endblock %}

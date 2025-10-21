@@ -1,5 +1,7 @@
 {% extends 'moulinette/result.html' %}
 
+{% load utils %}
+
 {% load static evaluations l10n %}
 
 {% block header %}
@@ -10,27 +12,34 @@
 {% endblock %}
 
 {% block project_summary %}
-  {{ form.lng.as_hidden }}
-  {{ form.lat.as_hidden }}
-  <figure class="fr-content-media">
-    <div id="map-container"
-         class="ratio-4x3 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
-      <div class="ratio-content">
-        <div class="leaflet-container">
-          <div id="map">
-            <a id="map-button"
-               href="{{ edit_url }}"
-               class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
-               data-event-category="Content"
-               data-event-action="Edit"
-               data-event-name="Map">Modifier le
-              projet
-            </a>
+  <form method="post"
+        class="spinner-form"
+        novalidate
+        autocomplete="off"
+        action="{% url "moulinette_home" %}"
+        id="moulinette-form">
+    {% csrf_token %}
+    {% for field in form %}{{ field|as_hidden }}{% endfor %}
+    {% for optional_form in optional_forms %}
+      {% for field in optional_form %}{{ field|as_hidden }}{% endfor %}
+    {% endfor %}
+    {% for additional_form in additional_forms %}
+      {% for field in additional_form %}{{ field|as_hidden }}{% endfor %}
+    {% endfor %}
+    <figure class="fr-mt-1w fr-mb-1w fr-content-media">
+      <div id="map-container"
+           class="ratio-4x3 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
+        <div class="ratio-content">
+          <div class="leaflet-container">
+            <div id="map"></div>
           </div>
         </div>
       </div>
-    </div>
-  </figure>
+      <button id="map-refresh-button"
+              type="submit"
+              class="fr-btn fr-btn--secondary">Renouveler la simulation</button>
+    </figure>
+  </form>
   {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
 {% endblock %}
 
@@ -46,7 +55,7 @@
 {% endblock %}
 
 {% block regulations_results %}
-  {% for regulation in moulinette.regulations %}
+  {% for regulation in moulinette.regulations|dictsort:"display_order" %}
     {% include 'amenagement/moulinette/_result_regulation.html' with regulation=regulation %}
   {% endfor %}
 {% endblock %}
@@ -58,7 +67,7 @@
 {% block liability_info %}
   <div id="liability-info" class="fr-alert fr-alert--info fr-my-5w">
     <p>
-      EnvErgo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de
+      Envergo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de
       l'aménagement en phase amont de leurs projets.
     </p>
     <p>
@@ -79,7 +88,7 @@
       <span class="content">Défrichement</span> {% result_tag 'non_disponible' non_disponible_tag_style %}
     </h2>
     <p>
-      Cette réglementation n'est pas encore prise en compte dans EnvErgo.
+      Cette réglementation n'est pas encore prise en compte dans Envergo.
       Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
       priorité</a>.
     </p>
@@ -91,7 +100,7 @@
       <span class="content">Sites classés / sites inscrits</span> {% result_tag 'non_disponible' non_disponible_tag_style %}
     </h2>
     <p>
-      Cette réglementation n'est pas encore prise en compte dans EnvErgo.
+      Cette réglementation n'est pas encore prise en compte dans Envergo.
       Vous pouvez <a target="_blank" rel="noopener" href="https://tally.so/r/w4QrEO">voter pour la demander en
       priorité</a>.
     </p>
@@ -121,8 +130,9 @@
   {{ block.super }}
   <script>
     var DEPARTMENT = "{{ moulinette.department.department }}";
+    var PROJECT_MAP_ID = 'map';
     window.MAPS = window.MAPS || {};
-    window.MAPS['map'] = {
+    window.MAPS[PROJECT_MAP_ID] = {
       center: {coordinates: [{{ center_map.0|unlocalize }}, {{ center_map.1|unlocalize }}]},
       entries: [],
       caption: null,
@@ -130,10 +140,11 @@
       type: "location",
       zoom: 15,
       ratio: "4x3",
+      displayMarkerAtCenter: false,
       fixed: {
         zoomControl: true,
         dragging: false,
-        doubleClickZoom: 'center',
+        doubleClickZoom: false,
         scrollWheelZoom: false,
         touchZoom: 'center',
         keyboard: true,
@@ -145,6 +156,7 @@
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+  <script defer src="{% static 'js/libs/moulinette_result_project_map.js' %}"></script>
   <script defer
           src="{% static 'js/libs/amenagement_result_actions_banner.js' %}"></script>
 {% endblock %}

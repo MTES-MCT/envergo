@@ -1,27 +1,72 @@
-import json
+import datetime
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from textwrap import dedent
-from typing import Any, List, Literal
+from typing import Any, List
 
-import requests
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.module_loading import import_string
 
-from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
+from envergo.hedges.models import HedgeList
+from envergo.petitions.demarches_simplifiees.client import (
+    DemarchesSimplifieesClient,
+    DemarchesSimplifieesError,
+)
+from envergo.petitions.demarches_simplifiees.models import (
+    CheckboxChamp,
+    Dossier,
+    DossierState,
+    ExplicationChampDescriptor,
+    HeaderSectionChampDescriptor,
+    PieceJustificativeChamp,
+    YesNoChamp,
+)
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class AdditionalInfo:
-    label: str
-    value: str | int | float
-    unit: str | None
+DEMARCHES_SIMPLIFIEES_STATUS_MAPPING = {
+    ("to_be_processed", "unset"): "en_construction",
+    ("to_be_processed", "express_agreement"): "en_construction",
+    ("to_be_processed", "tacit_agreement"): "en_construction",
+    ("to_be_processed", "opposition"): "en_construction",
+    ("to_be_processed", "dropped"): "en_construction",
+    ("instruction_d", "unset"): "en_instruction",
+    ("instruction_d", "express_agreement"): "en_instruction",
+    ("instruction_d", "tacit_agreement"): "en_instruction",
+    ("instruction_d", "opposition"): "en_instruction",
+    ("instruction_d", "dropped"): "en_instruction",
+    ("instruction_a", "unset"): "en_instruction",
+    ("instruction_a", "express_agreement"): "en_instruction",
+    ("instruction_a", "tacit_agreement"): "en_instruction",
+    ("instruction_a", "opposition"): "en_instruction",
+    ("instruction_a", "dropped"): "en_instruction",
+    ("instruction_h", "unset"): "en_instruction",
+    ("instruction_h", "express_agreement"): "en_instruction",
+    ("instruction_h", "tacit_agreement"): "en_instruction",
+    ("instruction_h", "opposition"): "en_instruction",
+    ("instruction_h", "dropped"): "en_instruction",
+    ("preparing_decision", "unset"): "en_instruction",
+    ("preparing_decision", "express_agreement"): "en_instruction",
+    ("preparing_decision", "tacit_agreement"): "en_instruction",
+    ("preparing_decision", "opposition"): "en_instruction",
+    ("preparing_decision", "dropped"): "en_instruction",
+    ("notification", "unset"): "en_instruction",
+    ("notification", "express_agreement"): "en_instruction",
+    ("notification", "tacit_agreement"): "en_instruction",
+    ("notification", "opposition"): "en_instruction",
+    ("notification", "dropped"): "en_instruction",
+    ("closed", "express_agreement"): "accepte",
+    ("closed", "tacit_agreement"): "accepte",
+    ("closed", "opposition"): "refuse",
+    ("closed", "dropped"): "sans_suite",
+}
 
 
 @dataclass
@@ -37,524 +82,85 @@ class ItemFiles:
 
 
 @dataclass
-class ItemDetails:
-    result: bool
-    details: list[AdditionalInfo]
-
-
-@dataclass
 class Item:
     label: str
-    value: str | int | float | ItemDetails
+    value: str | int | float
     unit: str | None
     comment: str | None
 
 
 @dataclass
-class InstructorInformationDetails:
-    """Instructor information details class formatted to be displayed in templates"""
-
-    label: str
-    items: list[Item]
-
-
-@dataclass
-class InstructorInformation:
-    """Instructor information class formatted to be displayed in templates"""
-
-    slug: str | None
-    label: str | None
-    items: list[Item | Literal["instructor_free_mention", "onagre_number"]]
-    details: list[InstructorInformationDetails]
-    comment: str | None = None
-
-
-@dataclass
 class DemarchesSimplifieesDetails:
-    applicant_name: str | None
-    city: str | None
-    pacage: str | None
-    usager: str
     header_sections: list | None
     champs: list | None
 
 
-@dataclass
-class ProjectDetails:
-    """Project details class formatted to be displayed in templates"""
-
-    demarches_simplifiees_dossier_number: int
-    demarche_simplifiee_number: int
-    usager: str
-    details: list[InstructorInformation]
-    ds_data: DemarchesSimplifieesDetails | None
-
-
-def build_instructor_informations_bcae8(
-    petition_project, moulinette
-) -> InstructorInformation:
-    """Build BCAE8 for instructor page view"""
-
-    hedge_data = petition_project.hedge_data
-    lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
-    lineaire_total = moulinette.catalog.get("lineaire_total", "")
-    motif = moulinette.catalog.get("motif", "")
-
-    bcae8 = InstructorInformation(
-        slug="bcae8",
-        comment="Seuls les tracés sur parcelle PAC et hors alignement d’arbres sont pris en compte",
-        label="BCAE 8",
-        items=[
-            Item("Total linéaire exploitation déclaré", lineaire_total, "m", None),
-            Item(
-                "Motif",
-                next((v[1] for v in MOTIF_CHOICES if v[0] == motif), motif),
-                None,
-                None,
-            ),
-        ],
-        details=[
-            InstructorInformationDetails(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove_pac()),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Total linéaire détruit",
-                        round(hedge_data.lineaire_detruit_pac()),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Pourcentage détruit / total linéaire",
-                        (
-                            round(lineaire_detruit_pac / lineaire_total * 100, 2)
-                            if lineaire_total
-                            else ""
-                        ),
-                        "%",
-                        None,
-                    ),
-                ],
-            ),
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Nombre de tracés plantés",
-                        len(hedge_data.hedges_to_plant_pac()),
-                        None,
-                        None,
-                    ),
-                    Item(
-                        "Total linéaire planté",
-                        round(hedge_data.length_to_plant_pac()),
-                        "m",
-                        None,
-                    ),
-                    Item(
-                        "Ratio en longueur",
-                        (
-                            round(
-                                hedge_data.length_to_plant_pac() / lineaire_detruit_pac,
-                                2,
-                            )
-                            if lineaire_detruit_pac > 0
-                            else ""
-                        ),
-                        None,
-                        "Longueur plantée / longueur détruite",
-                    ),
-                ],
-            ),
-        ],
-    )
-
-    return bcae8
-
-
-def build_instructor_informations_ep(petition_project) -> InstructorInformation:
-    """Build Espèces Protégées informations for instructor page view"""
-
-    hedge_data = petition_project.hedge_data
-
-    hedges_to_remove_near_pond = [
-        h for h in hedge_data.hedges_to_remove() if h.proximite_mare
-    ]
-    hedges_to_plant_near_pond = [
-        h for h in hedge_data.hedges_to_plant() if h.proximite_mare
-    ]
-
-    hedges_to_remove_woodland_connection = [
-        h for h in hedge_data.hedges_to_remove() if h.connexion_boisement
-    ]
-    hedges_to_plant_woodland_connection = [
-        h for h in hedge_data.hedges_to_plant() if h.connexion_boisement
-    ]
-
-    hedges_to_plant_under_power_line = [
-        h for h in hedge_data.hedges_to_plant() if h.sous_ligne_electrique
-    ]
-    ep = InstructorInformation(
-        slug="ep",
-        label="Espèces protégées",
-        items=[
-            "onagre_number",
-            Item(
-                "Présence d'une mare à moins de 200 m",
-                ItemDetails(
-                    result=len(hedges_to_remove_near_pond) > 0
-                    or len(hedges_to_plant_near_pond) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_near_pond))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_remove_near_pond])}"
-                                if hedges_to_remove_near_pond
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_near_pond))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_near_pond])}"
-                                if hedges_to_plant_near_pond
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Connexion à un boisement ou une haie",
-                ItemDetails(
-                    result=len(hedges_to_remove_woodland_connection) > 0
-                    or len(hedges_to_plant_woodland_connection) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Destruction",
-                            value=f"{round(sum(h.length for h in hedges_to_remove_woodland_connection))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_remove_woodland_connection])}"
-                                if hedges_to_remove_woodland_connection
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_woodland_connection))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_woodland_connection])}"
-                                if hedges_to_plant_woodland_connection
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-            Item(
-                "Proximité ligne électrique",
-                ItemDetails(
-                    result=len(hedges_to_plant_under_power_line) > 0,
-                    details=[
-                        AdditionalInfo(
-                            label="Plantation",
-                            value=f"{round(sum(h.length for h in hedges_to_plant_under_power_line))} m "
-                            + (
-                                f" • {', '.join([h.id for h in hedges_to_plant_under_power_line])}"
-                                if hedges_to_plant_under_power_line
-                                else ""
-                            ),
-                            unit=None,
-                        ),
-                    ],
-                ),
-                None,
-                None,
-            ),
-        ],
-        details=[],
-    )
-
-    return ep
-
-
-def build_project_details(petition_project) -> InstructorInformation:
-    """Build project details from petition project data"""
+def get_project_context(petition_project, moulinette) -> dict:
+    """Get parts of context for instructor pages from the PetitionProject"""
 
     hedge_data = petition_project.hedge_data
     length_to_remove = hedge_data.length_to_remove()
     length_to_plant = hedge_data.length_to_plant()
-    project_details = InstructorInformation(
-        slug=None,
-        label=None,
-        items=[
-            Item("Référence", petition_project.reference, None, None),
-            "instructor_free_mention",
-        ],
-        details=[
-            InstructorInformationDetails(
-                label="Destruction",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_remove()),
-                        None,
-                        None,
-                    ),
-                    Item("Total linéaire détruit", round(length_to_remove), "m", None),
-                ],
-            ),
-            InstructorInformationDetails(
-                label="Plantation",
-                items=[
-                    Item(
-                        "Nombre de tracés",
-                        len(hedge_data.hedges_to_plant()),
-                        None,
-                        None,
-                    ),
-                    Item("Total linéaire planté", round(length_to_plant), "m", None),
-                    Item(
-                        "Ratio en longueur",
-                        (
-                            round(length_to_plant / length_to_remove, 2)
-                            if length_to_remove
-                            else ""
-                        ),
-                        None,
-                        "Longueur plantée / longueur détruite",
-                    ),
-                ],
-            ),
-        ],
+
+    hedge_to_remove_by_destruction_mode = {
+        mode: HedgeList(label=label) for mode, _, label in MODE_DESTRUCTION_CHOICES
+    }
+
+    for hedge in hedge_data.hedges_to_remove():
+        hedge_to_remove_by_destruction_mode[hedge.mode_destruction].append(hedge)
+
+    hedge_to_plant_properties_form = import_string(
+        moulinette.config.hedge_to_plant_properties_form
     )
+    plantation_details = {}
+    if "mode_plantation" in hedge_to_plant_properties_form.base_fields:
+        hedge_to_plant_by_plantation_mode = {
+            key: HedgeList(label=label) for key, _, label in MODE_PLANTATION_CHOICES
+        }
 
-    return project_details
+        for hedge in hedge_data.hedges_to_plant():
+            if hedge.mode_plantation is not None:
+                hedge_to_plant_by_plantation_mode[hedge.mode_plantation].append(hedge)
+
+        plantation_details = {
+            "plantation_only_ratio": (
+                hedge_to_plant_by_plantation_mode["plantation"].length
+                / length_to_remove
+                if length_to_remove
+                else ""
+            ),
+            "hedge_to_plant_by_plantation_mode": hedge_to_plant_by_plantation_mode,
+        }
+
+    context = {
+        "length_to_remove": length_to_remove,
+        "hedge_to_remove_by_destruction_mode": hedge_to_remove_by_destruction_mode,
+        "length_to_plant": length_to_plant,
+        "plantation_ratio": (
+            length_to_plant / length_to_remove if length_to_remove else ""
+        ),
+    }
+    context.update(plantation_details)
+
+    return context
 
 
-def compute_instructor_informations(
-    petition_project, moulinette, site, visitor_id, user
-) -> ProjectDetails:
-    """Compute ProjectDetails with instructor informations"""
-
+def get_context_from_ds(petition_project, moulinette) -> dict:
+    """Get parts of context for instructor pages from Demarches Simplifiées"""
     # Get ds details
     config = moulinette.config
+    dossier = get_demarches_simplifiees_dossier(petition_project)
 
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, visitor_id, user
-    )
-
-    if not dossier:
-        return None
-
-    applicant = dossier.get("demandeur") or {}
-    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-    applicant_name = (
-        None
-        if applicant_name is None or applicant_name.strip() == ""
-        else applicant_name
-    )
-    city = None
-    pacage = None
-    champs = dossier.get("champs", [])
-
-    city_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_city_id
-        ),
-        None,
-    )
-    if city_field:
-        city = city_field.get("stringValue", None)
-    pacage_field = next(
-        (
-            champ
-            for champ in champs
-            if champ["id"] == config.demarches_simplifiees_pacage_id
-        ),
-        None,
-    )
-    if pacage_field:
-        pacage = pacage_field.get("stringValue", None)
-
-    usager = (dossier.get("usager") or {}).get("email", "")
-
-    ds_details = DemarchesSimplifieesDetails(
-        applicant_name, city, pacage, usager, None, None
-    )
-
-    # Build project details
-    project_details = build_project_details(petition_project)
-
-    if ds_details:
-        if ds_details.city:
-            project_details.items.append(
-                Item("Commune principale", ds_details.city, None, None)
-            )
-        if ds_details.applicant_name:
-            project_details.items.append(
-                Item("Nom du demandeur", ds_details.applicant_name, None, None)
-            )
-
-    # Build BCAE8
-    bcae8 = build_instructor_informations_bcae8(petition_project, moulinette)
-
-    if ds_details:
-        if ds_details.pacage:
-            bcae8.items.append(Item("N° PACAGE", ds_details.pacage, None, None))
-
-    # Build Espèces Protégées
-    ep = build_instructor_informations_ep(petition_project)
-
-    return ProjectDetails(
-        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-        demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=ds_details.usager if ds_details else "",
-        details=[project_details, bcae8, ep],
-        ds_data=ds_details,
-    )
-
-
-def compute_instructor_informations_ds(
-    petition_project, moulinette, site, visitor_id, user
-) -> ProjectDetails:
-    """Compute ProjectDetails with instructor informations"""
-
-    # Build project details
-    project_details = build_project_details(petition_project)
-
-    # Get ds details
-    config = moulinette.config
-
-    dossier = fetch_project_details_from_demarches_simplifiees(
-        petition_project, config, site, visitor_id, user
-    )
-
-    if not dossier:
-        return None
-
-    applicant = dossier.get("demandeur") or {}
-    applicant_name = f"{applicant.get('civilite', '')} {applicant.get('prenom', '')} {applicant.get('nom', '')}"
-    applicant_name = (
-        None
-        if applicant_name is None or applicant_name.strip() == ""
-        else applicant_name
-    )
-    demarche = dossier.get("demarche")
-    header_sections = None
-    champs = dossier.get("champs", [])
-
-    if demarche:
-        header_sections, explication_champs_ids = (
-            get_header_explanation_from_ds_demarche(demarche)
-        )
-
-    usager = (dossier.get("usager") or {}).get("email", "")
-
-    # Build champs_display list without explication_champs
-    champs_display = [
-        Item(
-            c.get("label"),
-            get_item_value_from_ds_champs(c),
-            None,
-            None,
-        )
-        for c in champs
-        if c.get("id") not in explication_champs_ids
-    ]
-
-    ds_details = DemarchesSimplifieesDetails(
-        applicant_name, None, None, usager, header_sections, champs_display
-    )
-
-    return ProjectDetails(
-        demarches_simplifiees_dossier_number=petition_project.demarches_simplifiees_dossier_number,
-        demarche_simplifiee_number=config.demarche_simplifiee_number,
-        usager=ds_details.usager if ds_details else "",
-        details=[project_details],
-        ds_data=ds_details,
-    )
-
-
-def get_item_value_from_ds_champs(champs):
-    """get item value from dossier champs
-    Ok better to do with yesno filter…
-    """
-
-    type_name = champs.get("__typename") or ""
-    value = champs.get("stringValue") or ""
-
-    if type_name == "CheckboxChamp":
-        if champs.get("checked"):
-            value = "oui"
-        else:
-            value = "non"
-    elif type_name == "YesNoChamp":
-        if champs.get("selected"):
-            value = "oui"
-        else:
-            value = "non"
-    elif type_name == "PieceJustificativeChamp":
-        pieces = champs.get("files") or []
-        value = ItemFiles(
-            [
-                FileInfo(
-                    p["filename"],
-                    p["contentType"],
-                    p["url"],
-                )
-                for p in pieces
-            ]
-        )
-
-    return value
-
-
-def get_header_explanation_from_ds_demarche(demarche):
-    """Get header sections and explanation from demarche champDescriptors"""
-
-    champ_descriptors = demarche.get("revision", {}).get("champDescriptors", [])
-    header_sections = []
-    explication_champs = []
-
-    if champ_descriptors:
-        for champ_descriptor in champ_descriptors:
-            type_name = champ_descriptor.get("__typename", "")
-            if type_name == "HeaderSectionChampDescriptor":
-                label = champ_descriptor.get("label", "")
-                header_sections.append(label)
-            if type_name == "ExplicationChampDescriptor":
-                champ_id = champ_descriptor.get("id")
-                explication_champs.append(champ_id)
-
-    return header_sections, explication_champs
-
-
-def fetch_project_details_from_demarches_simplifiees(
-    petition_project, config, site, visitor_id, user
-) -> dict | None:
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    city = ""
+    pacage = ""
+    organization = ""
+    usager = ""
+    applicant = ""
 
     if (
         not config.demarches_simplifiees_pacage_id
         or not config.demarches_simplifiees_city_id
+        or not config.demarches_simplifiees_organization_id
     ):
         logger.error(
             "Missing Demarches Simplifiees ids in Haie Config",
@@ -566,172 +172,308 @@ def fetch_project_details_from_demarches_simplifiees(
             "admin:moulinette_confighaie_change",
             args=[config.id],
         )
+        current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         message = render_to_string(
             "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
             context={
                 "department": config.department.department,
-                "domain": site.domain,
+                "domain": current_site.domain,
                 "admin_url": admin_url,
             },
         )
         notify(dedent(message), "haie")
-        return None
 
-    api_url = settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"]
-    variables = f"""{{
-              "dossierNumber":{dossier_number}
-            }}"""
+    if dossier:
+        city, organization, pacage = extract_data_from_fields(config, dossier)
+        usager = dossier.usager.email or ""
+        applicant = dossier.applicant_name or ""
 
-    query = ""
-
-    with open(
-        Path(
-            settings.APPS_DIR
-            / "petitions"
-            / "demarches_simplifiees"
-            / "queries"
-            / "get_dossier.gql"
-        ),
-        "r",
-    ) as file:
-        query = file.read()
-
-    body = {
-        "query": query,
-        "variables": variables,
+    context = {
+        "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
+        "demarche_simplifiee_number": config.demarche_simplifiee_number,
+        "usager": usager,
+        "city": city,
+        "pacage": pacage,
+        "organization": organization,
+        "applicant": applicant,
     }
 
-    dossier = None
+    return context
 
-    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-        logger.warning(
-            f"Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier."
-            f"\nrequest.url: {api_url}"
-            f"\nrequest.body: {body}"
-        )
 
-        with open(
-            Path(
-                settings.APPS_DIR
-                / "petitions"
-                / "demarches_simplifiees"
-                / "data"
-                / "fake_dossier.json"
-            ),
-            "r",
-        ) as file:
-            response = json.load(file)
-            dossier = response.get("data", {}).get("dossier") or {}
+def extract_data_from_fields(config, dossier):
+    """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
+    city = ""
+    pacage = ""
+    organization = ""
 
-    else:
-        response = requests.post(
-            api_url,
-            json=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}",
-            },
-        )
+    champs = dossier.champs
+    city_field = next(
+        (champ for champ in champs if champ.id == config.demarches_simplifiees_city_id),
+        None,
+    )
+    if city_field:
+        city = city_field.stringValue
+    pacage_field = next(
+        (
+            champ
+            for champ in champs
+            if champ.id == config.demarches_simplifiees_pacage_id
+        ),
+        None,
+    )
+    if pacage_field:
+        pacage = pacage_field.stringValue
+    organization_field = next(
+        (
+            champ
+            for champ in champs
+            if champ.id == config.demarches_simplifiees_organization_id
+        ),
+        None,
+    )
+    if organization_field:
+        organization = organization_field.stringValue
 
-        logger.info(
-            f"""
-                Demarches simplifiees API request status: {response.status_code}"
-                * response.text: {response.text},
-                * response.status_code: {response.status_code},
-                * request.url: {api_url},
-                * request.body: {body},
-                """,
-        )
+    return city, organization, pacage
 
-        if response.status_code >= 400:
-            logger.error(
-                "Demarches simplifiees API request failed",
-                extra={
-                    "response.text": response.text,
-                    "response.status_code": response.status_code,
-                    "request.url": api_url,
-                    "request.body": body,
-                },
-            )
 
-            message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
-                context={
-                    "dossier_number": dossier_number,
-                    "status_code": response.status_code,
-                    "response": response.text,
-                    "api_url": api_url,
-                    "body": body,
-                },
-            )
-            notify(dedent(message), "haie")
-            return None
+def compute_instructor_informations_ds(
+    petition_project,
+) -> DemarchesSimplifieesDetails | None:
+    """Compute ProjectDetails with instructor informations"""
+    # Get ds details
+    dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
 
-        data = response.json() or {}
-
-        dossier = (data.get("data") or {}).get("dossier")
-
-    if dossier is None:
-
-        if (
-            any(
-                error["extensions"]["code"] == "not_found"
-                for error in data.get("errors") or []
-            )
-            and not petition_project.is_dossier_submitted
-        ):
-            # the dossier is not found, but it's normal if the project is not submitted
-            logger.info(
-                "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
-                extra={
-                    "response.json": data,
-                    "response.status_code": response.status_code,
-                    "request.url": api_url,
-                    "request.body": body,
-                },
-            )
-            return None
-
-        logger.error(
-            "Demarches simplifiees API response is not well formated",
-            extra={
-                "response.json": data,
-                "response.status_code": response.status_code,
-                "request.url": api_url,
-                "request.body": body,
-            },
-        )
-
-        message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
-            context={
-                "status_code": response.status_code,
-                "response": response.text,
-                "api_url": api_url,
-                "body": body,
-                "command": "fetch_project_details_from_demarches_simplifiees",
-            },
-        )
-        notify(dedent(message), "haie")
+    if not dossier:
         return None
 
-    # we have got a dossier from DS for this petition project,
-    # let's synchronize project
+    demarche = dossier.demarche
+    champs = dossier.champs
+
+    header_sections, explication_champs_ids = get_header_explanation_from_ds_demarche(
+        demarche
+    )
+
+    # Build champs_display list without explication_champs
+    champs_display = [
+        Item(
+            c.label,
+            get_item_value_from_ds_champ(c),
+            None,
+            None,
+        )
+        for c in champs
+        if c.id not in explication_champs_ids
+    ]
+
+    ds_details = DemarchesSimplifieesDetails(
+        header_sections,
+        champs_display,
+    )
+
+    return ds_details
+
+
+def get_messages_and_senders_from_ds(
+    petition_project,
+) -> (List | None, List | None, str | None):
+    """Get messages and sender emails from DS
+
+    :param petition_project: PetitionProject object
+
+    :return: tuple (messages list, instructor emails list, petitioner email)
+    """
+
+    # Get messages only from DS
     dossier_number = petition_project.demarches_simplifiees_dossier_number
+    ds_client = DemarchesSimplifieesClient()
+    dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
 
-    demarche_name = dossier.get("demarche", {}).get("title", "Nom inconnu")
-    demarche_number = dossier.get("demarche", {}).get("number", "Numéro inconnu")
-    demarche_label = f"la démarche n°{demarche_number} ({demarche_name})"
+    if not dossier_with_messages_as_dict:
+        logger.error(
+            f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
+        )
+        return None, None, None
 
-    ds_url = (
-        f"https://www.demarches-simplifiees.fr/procedures/{demarche_number}/dossiers/"
-        f"{dossier_number}"
+    dossier = Dossier.from_dict(dossier_with_messages_as_dict)
+    petitioner_email = dossier.usager.email
+    instructor_emails = [i.email for i in dossier.instructeurs]
+
+    messages = sorted(
+        dossier.messages, key=lambda message: message.createdAt, reverse=True
     )
-    petition_project.synchronize_with_demarches_simplifiees(
-        dossier, site, demarche_label, ds_url, visitor_id, user
-    )
+    return messages, instructor_emails, petitioner_email
 
+
+def send_message_dossier_ds(petition_project, message_body):
+    """Send message via DS API for a given dossier"""
+
+    # Get dossier ID
+    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    dossier_id = petition_project.demarches_simplifiees_dossier_id
+    if not dossier_id or not dossier_number:
+        return None
+
+    # Send message
+    ds_client = DemarchesSimplifieesClient()
+    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+
+    return response
+
+
+def get_item_value_from_ds_champ(champ):
+    """get item value from a dossier champ
+    Ok better to do with yesno filter…
+    """
+
+    value = champ.stringValue or ""
+
+    if isinstance(champ, CheckboxChamp):
+        if champ.stringValue == "true":
+            value = "oui"
+        else:
+            value = "non"
+    elif isinstance(champ, YesNoChamp):
+        if champ.stringValue == "true":
+            value = "oui"
+        else:
+            value = "non"
+    elif isinstance(champ, PieceJustificativeChamp):
+        pieces = champ.files or []
+        value = ItemFiles(
+            [
+                FileInfo(
+                    p.filename,
+                    p.contentType,
+                    p.url,
+                )
+                for p in pieces
+            ]
+        )
+
+    return value
+
+
+def get_header_explanation_from_ds_demarche(demarche):
+    """Get header sections and explanation from demarche champDescriptors"""
+
+    champ_descriptors = demarche.revision.champDescriptors
+    header_sections = []
+    explication_champs = []
+
+    if champ_descriptors:
+        for champ_descriptor in champ_descriptors:
+            if isinstance(champ_descriptor, HeaderSectionChampDescriptor):
+                label = champ_descriptor.label
+                header_sections.append(label)
+            if isinstance(champ_descriptor, ExplicationChampDescriptor):
+                champ_id = champ_descriptor.id
+                explication_champs.append(champ_id)
+
+    return header_sections, explication_champs
+
+
+def get_demarches_simplifiees_dossier(
+    petition_project,
+    force_update: bool = False,
+) -> Dossier | None:
+    """Get dossier from Demarches Simplifiees either from DB if it is up to date, or from Demarches Simplifiees API.
+
+    args:
+        petition_project: The petition project to update with the fetched details.
+        force_update: If True, forces an update from Demarches Simplifiees even if the last sync is recent.
+    returns:
+        Dossier object if found, None otherwise.
+    """
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+
+    one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
+    if (
+        force_update
+        or not petition_project.demarches_simplifiees_raw_dossier
+        or petition_project.demarches_simplifiees_last_sync is not None
+        and petition_project.demarches_simplifiees_last_sync < one_hour_ago_utc
+    ):
+        # If the last sync is older than one hour, we fetch the dossier from Demarches Simplifiees
+        dossier_number = petition_project.demarches_simplifiees_dossier_number
+
+        ds_client = DemarchesSimplifieesClient()
+
+        dossier_as_dict = ds_client.get_dossier(dossier_number)
+
+        if dossier_as_dict is not None:
+            # we have got a dossier from DS for this petition project,
+            # let's synchronize project
+            petition_project.synchronize_with_demarches_simplifiees(dossier_as_dict)
+    else:
+        # If the last sync is recent, we can use the cached dossier from the petition project
+        dossier_as_dict = petition_project.demarches_simplifiees_raw_dossier
+
+    dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
+
+
+def update_demarches_simplifiees_status(petition_project, new_status):
+    client = DemarchesSimplifieesClient()
+
+    if petition_project.demarches_simplifiees_dossier_id is None:
+        # ensure that we have the dossier first because we need its id
+        get_demarches_simplifiees_dossier(petition_project, force_update=True)
+
+        if petition_project.demarches_simplifiees_dossier_id is None:
+            # this dossier cannot be fetched on DS, maybe it is in draft. We cannot update its status.
+            raise ValueError("Cannot update status of a dossier without DS id")
+
+    if new_status == DossierState.en_construction.value:
+        response = client.pass_back_dossier_under_construction(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+        )
+    elif new_status == DossierState.en_instruction.value:
+        if petition_project.demarches_simplifiees_state in [
+            DossierState.accepte.value,
+            DossierState.refuse.value,
+            DossierState.sans_suite.value,
+        ]:
+            response = client.pass_back_dossier_to_instruction(
+                petition_project.reference,
+                petition_project.demarches_simplifiees_dossier_id,
+            )
+        else:
+            response = client.pass_dossier_to_instruction(
+                petition_project.reference,
+                petition_project.demarches_simplifiees_dossier_id,
+            )
+    elif new_status == DossierState.accepte.value:
+        response = client.accept_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+        )
+    elif new_status == DossierState.refuse.value:
+        response = client.refuse_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            "La demande a été refusée. Consulter la messagerie pour plus de précisions.",
+        )
+    elif new_status == DossierState.sans_suite.value:
+        response = client.close_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            "La demande a été classée sans suite. Consulter la messagerie pour plus de précisions.",
+        )
+    else:
+        raise ValueError(f"Unknown status {new_status}")
+
+    if response:
+        # the status change was successful, we update the petition project
+        petition_project.demarches_simplifiees_state = response["dossier"]["state"]
+        petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
+    else:
+        # update failed, notification should have been sent by the DS client
+        raise DemarchesSimplifieesError(
+            "", {}, "Unable to update status on Démarches Simplifiées"
+        )
 
 
 class PetitionProjectCreationProblem:
@@ -815,12 +557,12 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                 args=[self._petition_project.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
-            dossier_url = None
+            dossier_url = self._petition_project.demarches_simplifiees_petitioner_url
             if self.config:
                 dossier_url = (
-                    f"https://www.demarches-simplifiees.fr/procedures/"
-                    f"{self.config.demarche_simplifiee_number}/dossiers/"
-                    f"{self._petition_project.demarches_simplifiees_dossier_number}"
+                    self._petition_project.get_demarches_simplifiees_instructor_url(
+                        self.config.demarche_simplifiee_number
+                    )
                 )
 
             message = render_to_string(

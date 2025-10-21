@@ -4,11 +4,12 @@ from collections import OrderedDict
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import GEOSGeometry, Point
+from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -27,6 +28,8 @@ from django.db.models import Value as V
 from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.http import QueryDict
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.urls import reverse
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -36,6 +39,8 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 from envergo.geodata.models import Department, Zone
+from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
+from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
 from envergo.moulinette.forms import (
     DisplayIntegerField,
@@ -43,7 +48,7 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import MapFactory
+from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
 from envergo.moulinette.utils import list_moulinette_templates
 from envergo.utils.tools import insert_before
 from envergo.utils.urls import update_qs
@@ -81,6 +86,9 @@ REGULATIONS = Choices(
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
+    ("alignement_arbres", "Alignements d'arbres (L350-3)"),
+    ("urbanisme_haie", "Urbanisme haie"),
+    ("reserves_naturelles", "Réserves naturelles"),
 )
 
 
@@ -89,9 +97,12 @@ RESULT_CASCADE = [
     RESULTS.systematique,
     RESULTS.cas_par_cas,
     RESULTS.soumis_ou_pac,
+    RESULTS.soumis_declaration,
     RESULTS.soumis,
+    RESULTS.soumis_autorisation,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
+    RESULTS.dispense_sous_condition,
     RESULTS.action_requise,
     RESULTS.a_verifier,
     RESULTS.iota_a_verifier,
@@ -116,8 +127,11 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.cas_par_cas: RESULTS.soumis,
     RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
+    RESULTS.soumis_declaration: RESULTS.soumis,
+    RESULTS.soumis_autorisation: RESULTS.soumis,
     RESULTS.derogation_inventaire: RESULTS.soumis,
     RESULTS.derogation_simplifiee: RESULTS.soumis,
+    RESULTS.dispense_sous_condition: RESULTS.soumis,
     RESULTS.action_requise: RESULTS.action_requise,
     RESULTS.a_verifier: RESULTS.action_requise,
     RESULTS.iota_a_verifier: RESULTS.action_requise,
@@ -153,7 +167,8 @@ class ResultGroupEnum(IntEnum):
         1  # if there is some regulation in this group, the project cannot go further
     )
     RestrictiveRegulations = 2  # a dossier will be required
-    OtherRegulations = 3  # these regulations do not impact the project
+    UnsimulatedRegulations = 3  # has an impact but will not be simulated
+    OtherRegulations = 4  # these regulations do not impact the project
 
 
 RESULTS_GROUP_MAPPING = {
@@ -162,15 +177,18 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis_declaration: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.soumis_autorisation: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.a_verifier: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.iota_a_verifier: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.dispense_sous_condition: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.non_soumis: ResultGroupEnum.OtherRegulations,
     RESULTS.dispense: ResultGroupEnum.OtherRegulations,
     RESULTS.non_concerne: ResultGroupEnum.OtherRegulations,
-    RESULTS.non_disponible: ResultGroupEnum.OtherRegulations,
+    RESULTS.non_disponible: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
     RESULTS.non_active: ResultGroupEnum.OtherRegulations,
 }
@@ -218,7 +236,9 @@ class Regulation(models.Model):
         blank=True,
     )
 
-    weight = models.PositiveIntegerField(_("Order"), default=1)
+    weight = models.PositiveIntegerField("Ordre de calcul", default=1)
+
+    display_order = models.PositiveIntegerField("Ordre d'affichage", default=1)
 
     has_perimeters = models.BooleanField(
         "Réglementation liée aux périmètres ?",
@@ -324,14 +344,6 @@ class Regulation(models.Model):
         """
         if self.result != "non_soumis":
             return None
-
-        optional_criteria = [
-            c
-            for c in self.criteria.all()
-            if c.is_optional and c.result != "non_disponible"
-        ]
-        subtitle = "(rubrique 39)" if not optional_criteria else None
-        return subtitle
 
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
@@ -576,6 +588,42 @@ class Regulation(models.Model):
         """Get the result group of the regulation, depending on its impact on the project."""
         return RESULTS_GROUP_MAPPING[self.result]
 
+    def has_instructor_result_details_template(self) -> bool:
+        """Check if the regulation has a template for instructor result details."""
+        return self.has_template("haie/petitions/{}/instructor_result_details.html")
+
+    def has_plantation_condition_details_template(self) -> bool:
+        """Check if the regulation has a template for plantation condition details for at least one criterion."""
+        return self.has_criterion_template(
+            "haie/petitions/{}/{}_plantation_condition_details.html"
+        )
+
+    def has_key_elements_template(self) -> bool:
+        """Check if the regulation has a template for key elements."""
+        return self.has_template("haie/petitions/{}/key_elements.html")
+
+    def has_instruction_guidelines_template(self) -> bool:
+        """Check if the regulation has a template for guidelines for instruction."""
+        return self.has_template("haie/petitions/{}/instruction_guidelines.html")
+
+    def has_criterion_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path for at least one criterion."""
+        for criterion in self.criteria.all():
+            try:
+                get_template(template_path.format(self.slug, criterion.slug))
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
+
+    def has_template(self, template_path) -> bool:
+        """Check if the regulation has a template of the given path."""
+        try:
+            get_template(template_path.format(self.slug))
+            return True
+        except TemplateDoesNotExist:
+            return False
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -689,6 +737,14 @@ class Criterion(models.Model):
         self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
         self._evaluator.evaluate()
 
+    def get_evaluator(self):
+        """Return the evaluator instance.
+
+        This method is useful because templates cannot access properties starting
+        with an underscore.
+        """
+        return self._evaluator
+
     @property
     def result_code(self):
         """Return the criterion result code."""
@@ -798,10 +854,9 @@ class Perimeter(models.Model):
         help_text=_("Check if all criteria have been set"),
         default=False,
     )
-    regulation = models.ForeignKey(
+    regulations = models.ManyToManyField(
         "moulinette.Regulation",
-        verbose_name=_("Regulation"),
-        on_delete=models.PROTECT,
+        verbose_name=_("Regulations"),
         related_name="perimeters",
     )
     activation_map = models.ForeignKey(
@@ -926,6 +981,20 @@ class ConfigAmenagement(ConfigBase):
         verbose_name_plural = _("Configs amenagement")
 
 
+def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
+    """Get hedge properties form
+    TODO: move this in hedges/forms.py
+    """
+    cls = (
+        HedgeToPlantPropertiesForm if type == TO_PLANT else HedgeToRemovePropertiesForm
+    )
+
+    return [
+        (f"{cls.__module__}.{cls.__name__}", cls.human_readable_name())
+        for cls in [cls] + list(get_subclasses(cls))
+    ]
+
+
 class ConfigHaie(ConfigBase):
     """Some moulinette content depends on the department.
 
@@ -938,6 +1007,10 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
+    department_doctrine_html = models.TextField(
+        "Champ html doctrine département", blank=True
+    )
+
     contacts_and_links = models.TextField(
         "Champ html d’information fléchage", blank=True
     )
@@ -946,6 +1019,20 @@ class ConfigHaie(ConfigBase):
 
     natura2000_coordinators_list_url = models.URLField(
         "URL liste des animateurs Natura 2000", blank=True
+    )
+
+    hedge_to_plant_properties_form = models.CharField(
+        "Caractéristiques demandées pour les haies à planter",
+        choices=get_hedge_properties_form(TO_PLANT),
+        max_length=256,
+        default=f"{HedgeToPlantPropertiesForm.__module__}.{HedgeToPlantPropertiesForm.__name__}",
+    )
+
+    hedge_to_remove_properties_form = models.CharField(
+        "Caractéristiques demandées pour les haies à détruire",
+        choices=get_hedge_properties_form(TO_REMOVE),
+        max_length=256,
+        default=f"{HedgeToRemovePropertiesForm.__module__}.{HedgeToRemovePropertiesForm.__name__}",
     )
 
     demarche_simplifiee_number = models.IntegerField(
@@ -966,6 +1053,12 @@ class ConfigHaie(ConfigBase):
 
     demarches_simplifiees_city_id = models.CharField(
         'Identifiant DS "Commune principale"',
+        blank=True,
+        max_length=64,
+    )
+
+    demarches_simplifiees_organization_id = models.CharField(
+        'Identifiant DS "Nom de votre structure"',
         blank=True,
         max_length=64,
     )
@@ -1059,8 +1152,20 @@ class ConfigHaie(ConfigBase):
             ("url_moulinette", "Url de la simulation"),
             ("url_projet", "Url du projet de dossier"),
             ("ref_projet", "Référence du projet de dossier"),
+            (
+                "plantation_adequate",
+                "Les conditions d’acceptabilité de la plantation sont toutes respectées (booléen)",
+            ),
             ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
             ("proximite_mare", "Proximité d'une mare (booléen)"),
+            (
+                "sur_talus_d",
+                "Au moins une haie à détruire est marquée “sur_talus” (booléen)",
+            ),
+            (
+                "sur_talus_p",
+                "Au moins une haie à planter est marquée “sur_talus” (booléen)",
+            ),
         }
 
         available_sources = {
@@ -1224,6 +1329,7 @@ class Moulinette(ABC):
         "sage",
         "conditionnalite_pac",
         "ep",
+        "alignement_arbres",
     ]
 
     def __init__(self, data, raw_data, activate_optional_criteria=True):
@@ -1231,8 +1337,8 @@ class Moulinette(ABC):
             self.raw_data = raw_data.dict()
         else:
             self.raw_data = raw_data
-        self.catalog = MoulinetteCatalog(**data)
-        self.catalog.update(self.get_catalog_data())
+
+        self.catalog = self.init_catalog(data)
 
         # Some criteria must be hidden to normal users in the
         self.activate_optional_criteria = activate_optional_criteria
@@ -1244,6 +1350,8 @@ class Moulinette(ABC):
             self.templates = {t.key: t for t in self.config.templates.all()}
         else:
             self.templates = {}
+
+        self.populate_catalog()
 
         self.evaluate()
 
@@ -1357,30 +1465,60 @@ class Moulinette(ABC):
         )
         return regulations
 
-    def get_catalog_data(self):
-        return {}
+    def init_catalog(self, data):
+        """Initialize the catalog with the moulinette data.
+
+        This method can be overridden to customize the catalog initialization.
+        """
+        return MoulinetteCatalog(**data)
+
+    def populate_catalog(self):
+        """Populate the catalog with any needed data.
+
+        Unlike init_catalog this method is called at the end of __init__, when the department, config, etc have already
+        been fetched.
+        This method can be overridden to customize the catalog population.
+        """
+        pass
 
     def is_evaluation_available(self):
         return self.config and self.config.is_activated
 
     def form_errors(self):
+        return self.required_form_errors() | self.optional_form_errors()
+
+    def required_form_errors(self):
         form_errors = {}
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
+                if criterion.is_optional:
+                    continue
                 form = criterion.get_form()
-                # We check for each form for errors
                 if form:
                     form.full_clean()
 
-                    # For optional forms, we only check for errors if the form
-                    # was activated (the "activate" checkbox was selected)
-                    if (
-                        criterion.is_optional
-                        and self.activate_optional_criteria
-                        and form.is_activated()
-                    ) or not criterion.is_optional:
+                    for k, v in form.errors.items():
+                        form_errors[k] = v
+
+        return form_errors
+
+    def optional_form_errors(self):
+        form_errors = {}
+        if not self.activate_optional_criteria:
+            return form_errors
+
+        for regulation in self.regulations:
+            for criterion in regulation.criteria.all():
+                if not criterion.is_optional:
+                    continue
+                form = criterion.get_form()
+                # For optional forms, we only check for errors if the form
+                # was activated (the "activate" checkbox was selected)
+                if form:
+                    form.full_clean()
+                    if form.is_activated():
                         for k, v in form.errors.items():
-                            form_errors[k] = v
+                            form_errors[f"{form.prefix}-{k}"] = v
 
         return form_errors
 
@@ -1656,13 +1794,13 @@ class MoulinetteAmenagement(Moulinette):
 
         return criteria
 
-    def get_catalog_data(self):
+    def init_catalog(self, data):
         """Fetch / compute data required for further computations."""
 
-        catalog = super().get_catalog_data()
+        catalog = super().init_catalog(data)
 
-        lng = self.catalog["lng"]
-        lat = self.catalog["lat"]
+        lng = catalog["lng"]
+        lat = catalog["lat"]
         catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
         catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
         catalog["circle_12"] = catalog["coords"].buffer(12)
@@ -1813,10 +1951,17 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class MoulinetteHaie(Moulinette):
-    REGULATIONS = ["conditionnalite_pac", "ep", "natura2000_haie"]
+    REGULATIONS = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+        "urbanisme_haie",
+        "reserves_naturelles",
+    ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
-    debug_result_template = "haie/moulinette/result.html"
+    debug_result_template = "haie/moulinette/result_debug.html"
     result_available_soon = "haie/moulinette/result_non_disponible.html"
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
@@ -1837,11 +1982,59 @@ class MoulinetteHaie(Moulinette):
             haies = self.catalog["haies"]
             summary["longueur_detruite"] = haies.length_to_remove()
             summary["longueur_plantee"] = haies.length_to_plant()
+            hedge_centroid_coords = haies.get_centroid_to_remove()
+            summary["lnglat_centroide_haie_detruite"] = (
+                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
+            )
+            summary["dept_haie_detruite"] = haies.get_department()
 
         return summary
 
     def get_debug_context(self):
-        return {}
+        context = {}
+        if "haies" in self.catalog and self.requires_hedge_density:
+            haies = self.catalog["haies"]
+
+            pre_computed_density = haies.density
+            if pre_computed_density:
+                context.update(
+                    {
+                        "pre_computed_density_200": pre_computed_density["density_200"],
+                        "pre_computed_density_5000": pre_computed_density[
+                            "density_5000"
+                        ],
+                    }
+                )
+
+            density_200, density_5000, centroid_geos = (
+                haies.compute_density_with_artifacts()
+            )
+            truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
+            truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
+
+            context.update(
+                {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                }
+            )
+
+            # Create the density map
+            from envergo.hedges.services import create_density_map
+
+            density_map = create_density_map(
+                centroid_geos,
+                haies.hedges_to_remove(),
+                truncated_circle_200,
+                truncated_circle_5000,
+            )
+            context["density_map"] = density_map
+
+        return context
 
     @classmethod
     def get_triage_params(cls):
@@ -1872,7 +2065,6 @@ class MoulinetteHaie(Moulinette):
         context["triage_url"] = update_qs(
             reverse("triage"), {**form_data.dict(), "edit": "true"}
         )
-
         triage_form = TriageFormHaie(data=form_data)
         if triage_form.is_valid():
             context["triage_form"] = triage_form
@@ -1883,7 +2075,7 @@ class MoulinetteHaie(Moulinette):
         department = (
             (
                 Department.objects.defer("geometry")
-                .filter(confighaie__is_activated=True, department=department_code)
+                .filter(department=department_code)
                 .select_related("confighaie")
                 .first()
             )
@@ -1893,18 +2085,30 @@ class MoulinetteHaie(Moulinette):
         context["department"] = department
 
         if hasattr(department, "confighaie") and department.confighaie:
+            context["config"] = department.confighaie
             context["hedge_maintenance_html"] = (
                 department.confighaie.hedge_maintenance_html
             )
 
+        context["is_alternative"] = bool(request.GET.get("alternative", False))
+
         return context
+
+    def populate_catalog(self):
+        """Fetch / compute data required for further computations."""
+        super().populate_catalog()
+
+        if "haies" in self.catalog:
+            hedges = self.catalog["haies"]
+            self.catalog["has_hedges_outside_department"] = (
+                hedges.has_hedges_outside_department(self.department)
+            )
 
     def get_department(self):
         department_code = self.raw_data.get("department", None)
         department = (
             (
-                Department.objects.defer("geometry")
-                .select_related("confighaie")
+                Department.objects.select_related("confighaie")
                 .filter(department=department_code)
                 .annotate(centroid=Centroid("geometry"))
                 .first()
@@ -1932,9 +2136,7 @@ class MoulinetteHaie(Moulinette):
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
         hedges_to_remove = (
-            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
-            if "haies" in self.catalog
-            else []
+            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
         if hedges_to_remove:
             zone_subquery = self.get_zone_subquery(hedges_to_remove)
@@ -1966,9 +2168,7 @@ class MoulinetteHaie(Moulinette):
 
         dept_centroid = self.department.centroid
         hedges_to_remove = (
-            [hedge.geometry for hedge in self.catalog["haies"].hedges_to_remove()]
-            if "haies" in self.catalog
-            else []
+            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
 
         # Filter for department_centroid activation mode
@@ -1999,25 +2199,12 @@ class MoulinetteHaie(Moulinette):
     def get_zone_subquery(self, hedges_to_remove):
         query = Q()
         for hedge in hedges_to_remove:
-            query |= Q(geometry__intersects=GEOSGeometry(hedge.wkt, srid=EPSG_WGS84))
+            query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
             Q(map_id=OuterRef("activation_map_id")) & query
         ).values("id")
         return zone_subquery
-
-    def must_check_acceptability_conditions(self):
-        """Some conditions must only be evaluated when a ep criterion exists."""
-
-        ep = self.ep
-        ep_criterion = ep.criteria.first()
-        return ep.is_activated() and ep_criterion
-
-    def must_check_pac_condition(self):
-        """The pac condition must only be evaluated when a bcea8 criterion exists."""
-        bcae8 = self.conditionnalite_pac
-        bcae8_criterion = bcae8.criteria.first()
-        return bcae8.is_activated() and bcae8_criterion
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
@@ -2051,7 +2238,9 @@ class MoulinetteHaie(Moulinette):
 
     def get_regulations_by_group(self):
         """Group regulations by their result_group"""
-        regulations_list = list(self.regulations)
+        regulations_list = sorted(
+            self.regulations, key=lambda regulation: regulation.display_order
+        )
 
         regulations_list.sort(key=attrgetter("result_group"))
         grouped = {
@@ -2064,6 +2253,15 @@ class MoulinetteHaie(Moulinette):
         """Returns at what coordinates is the perimeter."""
 
         return self.department.centroid
+
+    @property
+    def requires_hedge_density(self):
+        """Check if the moulinette requires the hedge density to be evaluated."""
+        return any(
+            isinstance(criterion._evaluator, HedgeDensityMixin)
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+        )
 
 
 def get_moulinette_class_from_site(site):

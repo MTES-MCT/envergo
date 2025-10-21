@@ -75,6 +75,10 @@
   </ul>
 
   {% if protected_species %}
+    <p>
+      <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire&nbsp;:</strong>
+    </p>
+    <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
     {% include 'hedges/_species_table.html' with species=protected_species %}
   {% endif %}
 

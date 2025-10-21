@@ -3,39 +3,56 @@
 {% block actions %}
   {% if is_result_plantation and moulinette.result == "soumis" %}
     <div class="banner-item">
-      <a href="{{ edit_plantation_url }}"
-         class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
-         data-event-category="Content"
-         data-event-action="Edit"
-         data-event-name="Main">Modifier le projet de plantation</a>
+      <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-left fr-icon-arrow-left-line"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="hedge-input-modal">Modifier les haies à planter</button>
     </div>
+
   {% else %}
     <div class="banner-item">
       <a href="{{ edit_url }}"
-         class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line"
+         class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line spinner-link"
          data-event-category="Content"
          data-event-action="Edit"
-         data-event-name="Main">
-        {% if moulinette.result == "soumis" %}
-          Modifier le projet de destruction
-        {% else %}
-          Modifier le projet
-        {% endif %}
-      </a>
+         data-event-name="Main">Modifier le projet</a>
     </div>
-
   {% endif %}
-  <div class="banner-item">
-    {% if plantation_evaluation.global_result == "soumis" %}
-      <button id="demarche-simplifiee-banner-btn"
-              class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
-              aria-controls="demarches-simplifiees-modal"
-              data-fr-opened="false">Déposer une demande d'autorisation</button>
-    {% elif moulinette.result == "soumis" and not is_result_plantation %}
-      <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
-              type="button"
-              data-fr-opened="false"
-              aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
+
+  {% if is_admin %}
+
+    {% if is_debug %}
+      <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
+        <a class="fr-btn fr-btn--icon-left fr-icon-article-line"
+           href="{{ result_url }}">Voir la simulation</a>
+      </div>
+
+    {% else %}
+      <div id="debug-btn" class="fr-hidden fr-unhidden-md banner-item">
+        <a class="fr-btn fr-btn--icon-left fr-icon-settings-5-line"
+           href="{{ debug_url }}">Voir le debug</a>
+      </div>
     {% endif %}
-  </div>
+
+  {% else %}
+    <div class="banner-item">
+      {% if is_alternative and is_result_plantation %}
+        <button id="copy-btn"
+                class="fr-btn fr-btn--icon-left fr-icon-link btn--copy-to-clipboard">
+          Copier le lien de cette page
+        </button>
+      {% elif plantation_evaluation.global_result == "soumis" and is_result_plantation %}
+        <button id="demarche-simplifiee-banner-btn"
+                class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
+                aria-controls="demarches-simplifiees-modal"
+                data-fr-opened="false">Déposer une demande d'autorisation</button>
+
+      {% elif replantation_coefficient > 0 and not is_result_plantation %}
+        <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
+                type="button"
+                data-fr-opened="false"
+                aria-controls="hedge-input-modal">Localiser les haies à planter</button>
+      {% endif %}
+    </div>
+  {% endif %}
 {% endblock %}

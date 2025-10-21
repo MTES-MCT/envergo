@@ -5,6 +5,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
+from envergo.utils.csp import CSP
+
 from .base import *  # noqa
 from .base import env
 
@@ -108,7 +110,7 @@ TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
 EMAIL_SUBJECT_PREFIX = env(
     "DJANGO_EMAIL_SUBJECT_PREFIX",
-    default="[EnvErgo]",
+    default="[Envergo]",
 )
 
 # ADMIN
@@ -236,15 +238,15 @@ ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 # this would be the default value used by Django.
 # So it's best to make sure this value stays valid.
 DEFAULT_FROM_EMAIL = env(
-    "DJANGO_DEFAULT_FROM_EMAIL", default="EnvErgo <contact@envergo.beta.gouv.fr>"
+    "DJANGO_DEFAULT_FROM_EMAIL", default="Envergo <contact@envergo.beta.gouv.fr>"
 )
 
 FROM_EMAIL = {
     "amenagement": {
-        "default": "EnvErgo <contact@envergo.beta.gouv.fr>",
-        "admin": "Admin EnvErgo <admin@envergo.beta.gouv.fr>",
-        "accounts": "EnvErgo <comptes@envergo.beta.gouv.fr>",
-        "evaluations": "Avis EnvErgo <avis@envergo.beta.gouv.fr>",
+        "default": "Envergo <contact@envergo.beta.gouv.fr>",
+        "admin": "Admin Envergo <admin@envergo.beta.gouv.fr>",
+        "accounts": "Envergo <comptes@envergo.beta.gouv.fr>",
+        "evaluations": "Avis Envergo <avis@envergo.beta.gouv.fr>",
     },
     "haie": {
         "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",
@@ -253,3 +255,31 @@ FROM_EMAIL = {
 }
 
 SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=FROM_EMAIL["amenagement"]["admin"])
+
+# Whenever we are confident the csp policy is ok, move the rules from the "report only"
+# settings to this setting.
+SECURE_CSP = {}
+
+SECURE_CSP_REPORT_ONLY = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
+    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
+    "img-src": [
+        CSP.SELF,
+        "https://data.geopf.fr",  # Leaflet geoportail images
+        "https://*.s3.fr-par.scw.cloud",
+        "data:",
+        "https://*.crisp.chat",
+    ],
+    "font-src": [CSP.SELF, "https://*.crisp.chat"],
+    "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
+    "frame-src": [CSP.SELF, "https://*.crisp.chat"],
+    "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
+    "connect-src": [
+        CSP.SELF,
+        "https://*.data.gouv.fr",  # Address autocomplete api
+        "https://*.crisp.chat",
+        "wss://*.relay.crisp.chat",
+    ],
+    "report-uri": "/csp/reports/",
+}

@@ -1,15 +1,22 @@
-from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import Enum
 from itertools import product
+from operator import attrgetter
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Literal
 
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString
+
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeData
+from envergo.geodata.models import MAP_TYPES, Line
+from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.regulations import MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
+from envergo.moulinette.regulations import Map, MapPolygon
 
 if TYPE_CHECKING:
+    from envergo.hedges.models import HedgeData
     from envergo.moulinette.models import MoulinetteHaie
 
 
@@ -26,19 +33,31 @@ PLANTATION_RESULT_MATRIX = {
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
     (RESULTS.soumis, PlantationResults.Adequate.value): RESULTS.soumis,
-    # not used for now
+    (RESULTS.non_soumis, PlantationResults.Adequate.value): RESULTS.non_soumis,
+    (
+        RESULTS.non_soumis,
+        PlantationResults.Inadequate.value,
+    ): PlantationResults.Inadequate.value,
     (
         RESULTS.action_requise,
         PlantationResults.Inadequate.value,
-    ): RESULTS.non_disponible,
-    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.non_disponible,
-    (RESULTS.non_soumis, PlantationResults.Inadequate.value): RESULTS.non_disponible,
-    (RESULTS.non_soumis, PlantationResults.Adequate.value): RESULTS.non_disponible,
+    ): PlantationResults.Inadequate.value,
+    (RESULTS.action_requise, PlantationResults.Adequate.value): RESULTS.action_requise,
+    # not used for now:
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,
     ): RESULTS.non_disponible,
     (RESULTS.non_disponible, PlantationResults.Adequate.value): RESULTS.non_disponible,
+}
+
+DISPLAY_FOR_ALTERNATIVES_MATRIX = {
+    RESULTS.interdit: True,
+    RESULTS.soumis: False,
+    RESULTS.non_soumis: False,
+    RESULTS.action_requise: False,
+    PlantationResults.Inadequate.value: True,
+    RESULTS.non_disponible: True,
 }
 
 
@@ -66,6 +85,16 @@ def _check_plantation_result_matrix():
 
 _check_plantation_result_matrix()
 
+_missing_results = set(
+    key
+    for key in PLANTATION_RESULT_MATRIX.values()
+    if key not in DISPLAY_FOR_ALTERNATIVES_MATRIX
+)
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in DISPLAY_FOR_ALTERNATIVES_MATRIX: {_missing_results}"
+    )
+
 
 # This method is outside the PlantationEvaluator class because it makes it
 # easier to patch it in tests.
@@ -74,23 +103,74 @@ def get_replantation_coefficient(moulinette):
 
     It depends on the activated criteria.
     """
-    ep_R = D("0")
-    if moulinette.ep.is_activated():
-        ep = moulinette.ep.criteria.first()
-        if ep:
-            form = ep.get_settings_form()
-            form.is_valid()
-            ep_R = form.cleaned_data.get("replantation_coefficient", D("0"))
+    R = D("0")
+    for regulation in moulinette.regulations:
+        if regulation.is_activated():
+            for criterion in regulation.criteria.all():
+                if hasattr(criterion._evaluator, "get_replantation_coefficient"):
+                    R = max(R, criterion._evaluator.get_replantation_coefficient())
 
-    ep_bcae8 = D("1")
-    if moulinette.conditionnalite_pac.is_activated():
-        bcae8 = moulinette.conditionnalite_pac.criteria.first()
-        if bcae8:
-            form = bcae8.get_settings_form()
-            form.is_valid()
-            ep_bcae8 = form.cleaned_data.get("replantation_coefficient", D("1"))
+    return float(R)
 
-    return float(max(ep_R, ep_bcae8))
+
+def create_density_map(
+    centroid_geos, hedges_to_remove, truncated_circle_200, truncated_circle_5000
+):
+    hedges_5000 = (
+        Line.objects.filter(
+            map__map_type=MAP_TYPES.haies,
+            geometry__intersects=truncated_circle_5000,
+        )
+        if truncated_circle_5000
+        else []
+    )
+
+    polygons = [
+        MapPolygon(
+            [SimpleNamespace(geometry=truncated_circle_200)],
+            "orange",
+            "200m",
+        ),
+        MapPolygon(
+            [SimpleNamespace(geometry=truncated_circle_5000)],
+            "blue",
+            "5km",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=MultiLineString(
+                        [hedge.geometry for hedge in hedges_5000],
+                        srid=EPSG_WGS84,
+                    )
+                )
+            ],
+            "green",
+            "Haies existantes",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                )
+                for hedge in hedges_to_remove
+            ],
+            "red",
+            "Haies à détruire",
+            class_name="hedge to-remove",
+        ),
+    ]
+
+    return Map(
+        type="regulation",
+        center=centroid_geos,
+        entries=polygons,
+        truncate=False,
+        display_marker_at_center=True,
+        zoom=None,
+        ratio_classes="ratio-2x1 ratio-sm-4x5",
+        fixed=False,
+    )
 
 
 @dataclass
@@ -106,10 +186,10 @@ class PlantationEvaluator:
     The plantation evaluator is used to evaluate if a project is compliant with the regulation.
     """
 
-    def __init__(self, moulinette: "MoulinetteHaie", hedge_data: HedgeData):
+    def __init__(self, moulinette: "MoulinetteHaie", hedge_data: "HedgeData"):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
-        self.evaluate()
+        self.replantation_coefficient = get_replantation_coefficient(moulinette)
 
     @property
     def result(self):
@@ -117,10 +197,17 @@ class PlantationEvaluator:
 
         This value is used to select the plantation result templates.
         """
-        if not hasattr(self, "_evaluation_result"):
-            raise RuntimeError("Call the evaluator `evaluate` method first")
+        if not hasattr(self, "_result"):
+            self.evaluate()
 
-        return self._evaluation_result.result.value
+        return self._result
+
+    @property
+    def conditions(self):
+        if not hasattr(self, "_conditions"):
+            self.evaluate()
+
+        return self._conditions
 
     @property
     def global_result(self):
@@ -128,12 +215,14 @@ class PlantationEvaluator:
 
         This value is used to select the plantation result templates.
         """
-        if not hasattr(self, "_evaluation_result"):
-            raise RuntimeError("Call the evaluator `evaluate` method first")
-
         return PLANTATION_RESULT_MATRIX.get(
             (self.moulinette.result, self.result), RESULTS.interdit
         )
+
+    @property
+    def display_for_alternatives(self):
+        """Should this evaluation global result be displayed for project alternatives?"""
+        return DISPLAY_FOR_ALTERNATIVES_MATRIX[self.global_result]
 
     @property
     def result_code(self):
@@ -141,268 +230,75 @@ class PlantationEvaluator:
 
         The result code is a unique code used to render the criterion template.
         """
-        if not hasattr(self, "_evaluation_result"):
-            raise RuntimeError("Call the evaluator `evaluate` method first")
-
         return f"{self.moulinette.result}_{self.result}"
 
-    @property
-    def unfulfilled_conditions(self):
-        """Return the list of conditions that are not met to make the plantation project adequate."""
-        if not hasattr(self, "_evaluation_result"):
-            raise RuntimeError("Call the evaluator `evaluate` method first")
-
-        return self._evaluation_result.conditions
-
-    def minimum_length_to_plant(self):
-        """Returns the minimum length of hedges to plant, considering the length of hedges to remove and the
-        replantation coefficient"""
-        R = get_replantation_coefficient(self.moulinette)
-        return R * self.hedge_data.length_to_remove()
-
-    def get_minimum_lengths_to_plant(self):
-        R = get_replantation_coefficient(self.moulinette)
-        lengths_by_type = defaultdict(int)
-        for to_remove in self.hedge_data.hedges_to_remove():
-            lengths_by_type[to_remove.hedge_type] += to_remove.length
-
-        return {
-            "degradee": R * lengths_by_type["degradee"],
-            "buissonnante": R * lengths_by_type["buissonnante"],
-            "arbustive": R * lengths_by_type["arbustive"],
-            "mixte": R * lengths_by_type["mixte"],
-            "alignement": R * lengths_by_type["alignement"],
-        }
-
-    def get_lengths_to_plant(self):
-        lengths_by_type = defaultdict(int)
-        for to_plant in self.hedge_data.hedges_to_plant():
-            lengths_by_type[to_plant.hedge_type] += to_plant.length
-
-        return {
-            "buissonnante": lengths_by_type["buissonnante"],
-            "arbustive": lengths_by_type["arbustive"],
-            "mixte": lengths_by_type["mixte"],
-            "alignement": lengths_by_type["alignement"],
-        }
-
-    @property
-    def evaluation(self):
-        """Return the list of conditions that are not met to make the plantation project adequate."""
-        if not hasattr(self, "_evaluation_result"):
-            raise RuntimeError("Call the evaluator `evaluate` method first")
-
-        return self._evaluation_result.evaluation
-
     def evaluate(self):
         """Returns if the plantation is compliant with the regulation"""
 
-        evaluator = HedgeEvaluator(self)
-        evaluation = evaluator.result
-        result = EvaluationResult(
-            result=(
-                PlantationResults.Adequate
-                if all(evaluation[item]["result"] for item in evaluation.keys())
-                else PlantationResults.Inadequate
-            ),
-            conditions=[
-                item for item in evaluation.keys() if not evaluation[item]["result"]
-            ],
-            evaluation=evaluation,
+        R = self.replantation_coefficient
+        conditions = []
+        for regulation in self.moulinette.regulations:
+            if not regulation.is_activated():
+                continue
+
+            if regulation.has_perimeters:
+                all_perimeters = regulation.perimeters.all()
+                activated_perimeters = [p for p in all_perimeters if p.is_activated]
+                if not all_perimeters or not any(activated_perimeters):
+                    continue
+
+            for criterion in regulation.criteria.all():
+                if hasattr(criterion._evaluator, "plantation_evaluate"):
+                    conditions.extend(
+                        criterion._evaluator.plantation_evaluate(
+                            self.hedge_data, R, self.moulinette.catalog
+                        )
+                    )
+
+        # We make sure the "min length condition" exists if it was not explicitely
+        # added by an evaluator.
+        has_min_length_condition = False
+        for condition in conditions:
+            if isinstance(condition, MinLengthCondition):
+                has_min_length_condition = True
+                break
+        if not has_min_length_condition:
+            conditions.append(
+                MinLengthCondition(self.hedge_data, R, None, None).evaluate()
+            )
+
+        conditions = filter(lambda c: c.result is not None, conditions)
+        self._conditions = sorted(conditions, key=attrgetter("order"))
+        self._result = (
+            PlantationResults.Adequate.value
+            if len(self.invalid_conditions) == 0
+            else PlantationResults.Inadequate.value
         )
 
-        self._evaluation_result = result
-        return result
+    def get_context(self):
+        context = {}
+        for condition in self.conditions:
+            context.update(condition.context)
+        return context
 
+    @property
+    def valid_conditions(self):
+        return [condition for condition in self.conditions if condition.result]
 
-class HedgeEvaluator:
-    """Evaluate the adequacy of a plantation project.
+    @property
+    def invalid_conditions(self):
+        return [condition for condition in self.conditions if not condition.result]
 
-    This is the "conditions d'acceptabilité" part of the plantation evaluation.
-    """
-
-    def __init__(self, plantation_evaluator: PlantationEvaluator):
-        self.plantation_evaluator = plantation_evaluator
-        self.hedge_data = plantation_evaluator.hedge_data
-        self.result = self.evaluate()
-
-    def is_not_planting_under_power_line(self):
-        """Returns True if there is NO hedges to plant, containing high-growing trees (type alignement or mixte),
-        that are under power line"""
-        return not any(
-            h.hedge_type in ["alignement", "mixte"]
-            and h.additionalData.get("sousLigneElectrique", False)
-            for h in self.hedge_data.hedges_to_plant()
-        )
-
-    def is_length_to_plant_sufficient(self):
-        """Returns True if the length of hedges to plant is sufficient
-
-        LP : longueur totale plantée
-        LD : longueur totale détruite
-        R : coefficient de replantation exigée
-
-        Condition à remplir :
-        LP ≥ R x LD
-        """
-        return (
-            self.hedge_data.length_to_plant()
-            >= self.plantation_evaluator.minimum_length_to_plant()
-        )
-
-    def evaluate_hedge_plantation_quality(self):
-        """Evaluate the quality of the plantation project.
-        The quality of the hedge planted must be at least as good as that of the hedge destroyed:
-            Type 5 (mixte) hedges must be replaced by type 5 (mixte) hedges
-            Type 4 (alignement) hedges must be replaced by type 4 (alignement) or 5 (mixte) hedges.
-            Type 3 (arbustive) hedges must be replaced by type 3 (arbustive) hedges.
-            Type 2 (buissonnante) hedges must be replaced by type 2 (buissonnante) or 3 (arbustive) hedges.
-            Type 1 (degradee) hedges must be replaced by type 2 (buissonnante), 3 (arbustive) or 5 (mixte) hedges.
-
-        return: {
-            is_quality_sufficient: True if the plantation quality is sufficient, False otherwise,
-            missing_plantation: {
-                mixte: missing length of mixte hedges to plant,
-                alignement: missing length of alignement hedges to plant,
-                arbustive: missing length of arbustive hedges to plant,
-                buissonante: missing length of buissonante hedges to plant,
-                degradee: missing length of dégradée hedges to plant,
+    def to_json(self):
+        data = [
+            {
+                "label": condition.label,
+                "hint": condition.hint,
+                "result": condition.result,
+                "text": condition.text,
+                "context": condition.context,
             }
-        }
-        """
-        minimum_lengths_to_plant = (
-            self.plantation_evaluator.get_minimum_lengths_to_plant()
-        )
-        lengths_to_plant = self.plantation_evaluator.get_lengths_to_plant()
-
-        reliquat = {
-            "mixte_remplacement_alignement": max(
-                0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"]
-            ),
-            "mixte_remplacement_dégradée": max(
-                0,
-                max(0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"])
-                - max(
-                    0,
-                    minimum_lengths_to_plant["alignement"]
-                    - lengths_to_plant["alignement"],
-                ),
-            ),
-            "arbustive_remplacement_buissonnante": max(
-                0, lengths_to_plant["arbustive"] - minimum_lengths_to_plant["arbustive"]
-            ),
-            "arbustive_remplacement_dégradée": max(
-                0,
-                max(
-                    0,
-                    lengths_to_plant["arbustive"]
-                    - minimum_lengths_to_plant["arbustive"],
-                )
-                - max(
-                    0,
-                    minimum_lengths_to_plant["buissonnante"]
-                    - lengths_to_plant["buissonnante"],
-                ),
-            ),
-            "buissonnante_remplacement_dégradée": max(
-                0,
-                lengths_to_plant["buissonnante"]
-                - minimum_lengths_to_plant["buissonnante"],
-            ),
-        }
-
-        missing_plantation = {
-            "mixte": max(
-                0, minimum_lengths_to_plant["mixte"] - lengths_to_plant["mixte"]
-            ),
-            "alignement": max(
-                0,
-                minimum_lengths_to_plant["alignement"]
-                - lengths_to_plant["alignement"]
-                - reliquat["mixte_remplacement_alignement"],
-            ),
-            "arbustive": max(
-                0, minimum_lengths_to_plant["arbustive"] - lengths_to_plant["arbustive"]
-            ),
-            "buissonante": max(
-                0,
-                minimum_lengths_to_plant["buissonnante"]
-                - lengths_to_plant["buissonnante"]
-                - reliquat["arbustive_remplacement_buissonnante"],
-            ),
-            "degradee": max(
-                0,
-                minimum_lengths_to_plant["degradee"]
-                - reliquat["mixte_remplacement_dégradée"]
-                - reliquat["arbustive_remplacement_dégradée"]
-                - reliquat["buissonnante_remplacement_dégradée"],
-            ),
-        }
-
-        return {
-            "result": all(
-                [
-                    missing_plantation["mixte"] == 0,
-                    missing_plantation["alignement"] == 0,
-                    missing_plantation["arbustive"] == 0,
-                    missing_plantation["buissonante"] == 0,
-                    missing_plantation["degradee"] == 0,
-                ]
-            ),
-            "missing_plantation": missing_plantation,
-        }
-
-    def evaluate_length_to_plant(self):
-        """Evaluate if there is enough hedges to plant in the project"""
-        left_to_plant = max(
-            0,
-            self.plantation_evaluator.minimum_length_to_plant()
-            - self.hedge_data.length_to_plant(),
-        )
-        return {
-            "result": self.is_length_to_plant_sufficient(),
-            "minimum_length_to_plant": self.plantation_evaluator.minimum_length_to_plant(),
-            "left_to_plant": left_to_plant,
-        }
-
-    def evaluate_length_to_plant_pac(self):
-        """Evaluate if there is enough hedges to plant in PAC parcel in the project"""
-        minimum_length_to_plant = (
-            self.hedge_data.lineaire_detruit_pac()
-        )  # no R coefficient for PAC
-        left_to_plant = max(
-            0,
-            minimum_length_to_plant - self.hedge_data.length_to_plant_pac(),
-        )
-        return {
-            "result": left_to_plant == 0,
-            "minimum_length_to_plant": minimum_length_to_plant,
-            "left_to_plant": left_to_plant,
-        }
-
-    def evaluate(self):
-        """Returns if the plantation is compliant with the regulation"""
-
-        result = {
-            "length_to_plant": self.evaluate_length_to_plant(),
-        }
-        moulinette = self.plantation_evaluator.moulinette
-
-        if moulinette.must_check_acceptability_conditions():
-            result.update(
-                {
-                    "quality": self.evaluate_hedge_plantation_quality(),
-                    "do_not_plant_under_power_line": {
-                        "result": self.is_not_planting_under_power_line(),
-                    },
-                }
-            )
-
-        if moulinette.must_check_pac_condition():
-            result.update(
-                {
-                    "length_to_plant_pac": self.evaluate_length_to_plant_pac(),
-                }
-            )
-
-        return result
+            for condition in self.conditions
+            if condition.must_display()
+        ]
+        return data

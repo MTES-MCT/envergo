@@ -14,20 +14,20 @@ from envergo.analytics.utils import (
     get_matomo_tags,
     is_request_from_a_bot,
     log_event,
+    update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import MoulinetteHaie, get_moulinette_class_from_site
-from envergo.moulinette.utils import compute_surfaces
-from envergo.utils.urls import (
-    extract_mtm_params,
-    remove_from_qs,
-    update_fragment,
-    update_qs,
+from envergo.moulinette.models import (
+    ConfigHaie,
+    MoulinetteHaie,
+    get_moulinette_class_from_site,
 )
+from envergo.moulinette.utils import compute_surfaces
+from envergo.utils.urls import remove_from_qs, update_qs
 
 
 class MoulinetteMixin:
@@ -133,10 +133,13 @@ class MoulinetteMixin:
             settings.VISITOR_COOKIE_NAME, ""
         )
 
-        if self.should_activate_optional_criteria():
-            context["optional_forms"] = self.get_optional_forms(
-                context.get("moulinette", None)
-            )
+        context["optional_forms"] = self.get_optional_forms(
+            context.get("moulinette", None)
+        )
+        context["expand_optional_forms"] = (
+            self.request.user.is_staff
+            and self.request.user.groups.filter(name="Staff ops").exists()
+        )
 
         context = {**context, **MoulinetteClass.get_extra_context(self.request)}
 
@@ -224,19 +227,21 @@ class MoulinetteMixin:
                 if value:
                     get[field.html_name] = value
 
-        if self.should_activate_optional_criteria():
-            optional_forms = self.get_optional_forms(moulinette)
-            for optional_form in optional_forms:
-                for field in optional_form:
-                    value = optional_form.data.get(field.html_name, None)
-                    if value:
-                        get[field.html_name] = value
+        optional_forms = self.get_optional_forms(moulinette)
+        for optional_form in optional_forms:
+            for field in optional_form:
+                value = optional_form.data.get(field.html_name, None)
+                if value:
+                    get[field.html_name] = value
 
         triage_params = moulinette.get_triage_params()
         if triage_params:
             get.update(
                 {key: form.data[key] for key in triage_params if key in form.data}
             )
+
+        if "alternative" in self.request.GET:
+            get["alternative"] = self.request.GET["alternative"]
 
         url_params = get.urlencode()
         url = reverse("moulinette_result")
@@ -248,7 +253,7 @@ class MoulinetteMixin:
         return url_with_params
 
     def should_activate_optional_criteria(self):
-        return self.request.user.is_staff
+        return True
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         export = moulinette.summary()
@@ -283,7 +288,7 @@ class MoulinetteHome(MoulinetteMixin, FormView):
 
         if "redirect_url" in context:
             return HttpResponseRedirect(context["redirect_url"])
-        elif self.moulinette:
+        elif self.moulinette and not context.get("is_alternative", False):
             return HttpResponseRedirect(self.get_results_url(context["form"]))
         else:
             return res
@@ -291,18 +296,43 @@ class MoulinetteHome(MoulinetteMixin, FormView):
     def form_valid(self, form):
         return HttpResponseRedirect(self.get_results_url(form))
 
+    def form_invalid(self, form):
+        context = self.get_context_data(form=form)
+
+        main_form_errors = {
+            field: [{"code": str(e.code), "message": str(e.message)} for e in errors]
+            for field, errors in form.errors.as_data().items()
+        }
+        optional_forms = context["optional_forms"]
+        optional_forms_errors = {
+            f"{optional_form.prefix}-{field}": [
+                {"code": str(e.code), "message": str(e.message)} for e in errors
+            ]
+            for optional_form in optional_forms
+            if optional_form.is_activated() and optional_form.errors
+            for field, errors in optional_form.errors.as_data().items()
+        }
+        log_event(
+            "erreur",
+            "formulaire-simu",
+            self.request,
+            data=form.data,
+            errors=main_form_errors | optional_forms_errors,
+        )
+        return self.render_to_response(context)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         form = context["form"]
         if form.is_bound and not form.is_valid():
-            mtm_params = extract_mtm_params(self.request.build_absolute_uri())
             invalid_form_url = self.request.build_absolute_uri(
                 reverse("moulinette_invalid_form")
             )
-            matomo_invalid_form_url = update_qs(invalid_form_url, mtm_params)
-            context["matomo_custom_url"] = matomo_invalid_form_url
+            context["matomo_custom_url"] = update_url_with_matomo_params(
+                invalid_form_url, self.request
+            )
 
         return context
 
@@ -377,56 +407,65 @@ class MoulinetteResultMixin:
         moulinette = context.get("moulinette", None)
         is_debug = bool(self.request.GET.get("debug", False))
         is_edit = bool(self.request.GET.get("edit", False))
-
+        is_alternative = bool(self.request.GET.get("alternative", False))
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
-        current_url = self.request.build_absolute_uri()
 
         # Url without any query parameters
         # We want to build "fake" urls for matomo tracking
         # For example, if the current url is /simulateur/resultat/?debug=true,
         # We want to track this as a custom url /simulateur/debug/
-        mtm_params = extract_mtm_params(current_url)
 
         # We want to log the current simulation url stripped from any query parameters
         # except for mtm_ ones
         bare_url = self.request.build_absolute_uri(self.request.path)
-        matomo_bare_url = update_qs(bare_url, mtm_params)
         debug_url = self.request.build_absolute_uri(reverse("moulinette_result_debug"))
-        matomo_debug_url = update_qs(debug_url, mtm_params)
         missing_data_url = self.request.build_absolute_uri(
             reverse("moulinette_missing_data")
         )
         form_url = self.request.build_absolute_uri(reverse("moulinette_home"))
         form_url_with_edit = update_qs(form_url, {"edit": "true"})
-        matomo_missing_data_url = update_qs(missing_data_url, mtm_params)
         out_of_scope_result_url = self.request.build_absolute_uri(
             reverse("moulinette_result_out_of_scope")
         )
-        matomo_out_of_scope_result_url = update_qs(out_of_scope_result_url, mtm_params)
         invalid_form_url = self.request.build_absolute_uri(
             reverse("moulinette_invalid_form")
         )
-        matomo_invalid_form_url = update_qs(invalid_form_url, mtm_params)
 
-        data["matomo_custom_url"] = matomo_bare_url
+        data["matomo_custom_url"] = update_url_with_matomo_params(
+            bare_url, self.request
+        )
 
         if moulinette and is_edit:
-            data["matomo_custom_url"] = form_url_with_edit
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                form_url_with_edit, self.request
+            )
 
         elif moulinette and is_debug:
-            data["matomo_custom_url"] = matomo_debug_url
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                debug_url, self.request
+            )
 
         elif moulinette and moulinette.has_missing_data():
             if context["additional_forms_bound"]:
-                context["matomo_custom_url"] = matomo_invalid_form_url
+                data["matomo_custom_url"] = update_url_with_matomo_params(
+                    invalid_form_url, self.request
+                )
             else:
-                context["matomo_custom_url"] = matomo_missing_data_url
+                data["matomo_custom_url"] = update_url_with_matomo_params(
+                    missing_data_url, self.request
+                )
 
-        elif context.get("triage_form", None):
-            context["matomo_custom_url"] = matomo_out_of_scope_result_url
+        elif not moulinette and context.get("triage_form", None):
+            data["matomo_custom_url"] = update_url_with_matomo_params(
+                out_of_scope_result_url, self.request
+            )
 
+        if is_alternative:
+            data["matomo_custom_url"] = update_qs(
+                data["matomo_custom_url"], {"alternative": "true"}
+            )
         return data
 
     def get_urls_context_data(self, context):
@@ -512,22 +551,48 @@ class BaseMoulinetteResult(FormView):
             ):
                 return HttpResponseRedirect(self.get_results_url(context["form"]))
 
+            required_form_errors = moulinette.required_form_errors()
+            optional_form_errors = moulinette.optional_form_errors()
+
             if not (
                 moulinette.has_missing_data()
                 or is_request_from_a_bot(request)
                 or is_edit
             ):
                 self.log_moulinette_event(moulinette, context)
+            elif (
+                bool(required_form_errors)
+                and context["additional_forms_bound"]
+                or bool(optional_form_errors)
+            ):
+                log_event(
+                    "erreur",
+                    "formulaire-simu",
+                    self.request,
+                    data=moulinette.raw_data,
+                    errors={
+                        field: [
+                            {"code": str(e.code), "message": str(e.message)}
+                            for e in errors.data
+                        ]
+                        for field, errors in (
+                            required_form_errors | optional_form_errors
+                        ).items()
+                    },
+                )
 
             return res
 
         elif triage_form is not None:
+            # Matomo parameters are stored in session, but some might remain in the url.
+            # We need to prevent duplicate values
+            params = get_matomo_tags(self.request)
+            params.update(self.request.GET.dict())
             log_event(
                 "simulateur",
                 "soumission_autre",
                 self.request,
-                **self.request.GET.dict(),
-                **get_matomo_tags(self.request),
+                **params,
             )
             return res
         else:
@@ -573,12 +638,20 @@ class MoulinetteHaieResult(
 
         if moulinette and "haies" in moulinette.catalog:
             hedge_data = moulinette.catalog["haies"]
-            context["plantation_evaluation"] = PlantationEvaluator(
-                moulinette, hedge_data
+            evaluator = PlantationEvaluator(moulinette, hedge_data)
+            context["plantation_evaluation"] = evaluator
+            context["replantation_coefficient"] = evaluator.replantation_coefficient
+
+            plantation_url = reverse(
+                "input_hedges",
+                args=[moulinette.department.department, "plantation", hedge_data.id],
             )
-            plantation_url = reverse("input_hedges", args=["plantation", hedge_data.id])
             plantation_url = update_qs(plantation_url, self.request.GET)
-            context["plantation_url"] = self.request.build_absolute_uri(plantation_url)
+            context["plantation_url"] = plantation_url
+
+            result_p_url = reverse("moulinette_result_plantation")
+            result_p_url = update_qs(result_p_url, self.request.GET)
+            context["result_p_url"] = result_p_url
         return context
 
 
@@ -590,26 +663,18 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
         """Check which template to use depending on the moulinette result."""
 
         moulinette = self.moulinette
-        triage_form = self.triage_form
         is_edit = bool(self.request.GET.get("edit", False))
-        is_admin = self.request.user.is_staff
 
-        if moulinette is None and triage_form is None:
-            MoulinetteClass = get_moulinette_class_from_site(self.request.site)
-            template_name = MoulinetteClass.get_home_template()
-        elif moulinette is None:
-            template_name = "haie/moulinette/triage_result.html"
-        elif is_edit:
+        # Moulinette result template for plantation is not the moulinette ABC class result template
+        # So we get the template name super and check specific cases
+
+        template_name = super().get_template_names()[0]
+
+        if is_edit:
             template_name = "TODO"  # TODO
-        elif not moulinette.has_config():
-            template_name = moulinette.get_result_non_disponible_template()
-        elif not (moulinette.is_evaluation_available() or is_admin):
-            template_name = moulinette.get_result_available_soon_template()
-        elif moulinette.has_missing_data():
-            template_name = moulinette.get_home_template()
         elif moulinette.has_missing_data():  # TODO missing only hedges to plant
             template_name = moulinette.get_result_template()
-        else:
+        elif template_name == "haie/moulinette/result.html":
             template_name = "haie/moulinette/result_plantation.html"
 
         return [template_name]
@@ -620,12 +685,19 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
         context["is_result_plantation"] = True
 
         if moulinette:
-            context["plantation_evaluation"] = PlantationEvaluator(
-                moulinette, moulinette.catalog["haies"]
+            evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+            context["plantation_evaluation"] = evaluator
+            context["replantation_coefficient"] = evaluator.replantation_coefficient
+
+            hedge_data_id = self.request.GET.get("haies")
+            plantation_url = reverse(
+                "input_hedges",
+                args=[moulinette.department.department, "plantation", hedge_data_id],
             )
+            plantation_url = update_qs(plantation_url, self.request.GET)
+            context["plantation_url"] = plantation_url
 
         result_d_url = update_qs(reverse("moulinette_result"), self.request.GET)
-        context["edit_plantation_url"] = update_fragment(result_d_url, "plantation")
         context["edit_url"] = update_qs(result_d_url, {"edit": "true"})
         return context
 
@@ -666,7 +738,10 @@ class Triage(FormView):
             if department_code
             else None
         )
+        config = ConfigHaie.objects.filter(department=department).first()
+
         context["department"] = department
+        context["config"] = config
         context["matomo_custom_url"] = extract_matomo_url_from_request(self.request)
 
         return context

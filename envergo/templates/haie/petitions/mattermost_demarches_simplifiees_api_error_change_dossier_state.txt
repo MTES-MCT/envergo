@@ -1,0 +1,18 @@
+### Changement de statut d'un dossier sur Démarches-simplifiées : :x: erreur
+
+L'API de Démarches Simplifiées a retourné une erreur lors d'un changement de statut sur le dossier {{dossier_number}}.
+
+Réponse de Démarches Simplifiées :
+```
+{{ error|safe }}
+```
+
+Requête envoyée :
+* Query:
+```
+{{ query|safe }}
+```
+* Variables:
+```
+{{ variables|safe }}
+```

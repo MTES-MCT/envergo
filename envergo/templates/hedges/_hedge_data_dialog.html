@@ -1,10 +1,10 @@
 <dialog id="{{ dialog_id }}"
         aria-labelledby="{{ dialog_id }}-title"
         role="dialog"
-        class="fr-modal hedge-data-dialog">
+        class="fr-modal hedge-data-dialog{% if dialog_mode != mode %} read-only{% endif %}">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
-      <div class="fr-col-12 fr-col-md-7 fr-col-lg-6 fr-col-xl-5">
+      <div class="fr-col-12 fr-col-md-10 fr-col-xl-9">
         <div class="fr-modal__body">
 
           <form method="dialog">
@@ -15,8 +15,7 @@
               <p class="fr-tag fr-mb-3w">
                 Longueur : <span class="hedge-data-dialog-hedge-length"></span> m
               </p>
-
-              {% include '_form_snippet.html' with form=form %}
+              {% include '_form_with_fieldsets_snippet.html' with form=form %}
             </div>
 
             <div class="fr-modal__footer">

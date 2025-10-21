@@ -29,7 +29,8 @@
     <link rel="shortcut icon"
           href="{% static '@gouvfr/dsfr/dist/favicon/favicon.ico' %}"
           type="image/x-icon">
-
+    {% block app_json_ld %}{% endblock %}
+    {% block open_graph %}{% endblock %}
     {% block css %}
       {% compress css %}
         <link href="{% static '@gouvfr/dsfr/dist/dsfr.css' %}" rel="stylesheet">
@@ -51,6 +52,8 @@
               type="text/javascript"
               nomodule
               src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}"></script>
+      <script defer src="{% static 'js/libs/spinner.js' %}"></script>
+
       <script>
         var EVENTS_URL = "{% url 'events' %}";
         var CSRF_TOKEN = '{{ csrf_token }}';
@@ -59,6 +62,7 @@
           var MATOMO_CUSTOM_URL = "{{ matomo_custom_url }}";
         {% endif %}
       </script>
+
       {% block extra_js %}{% endblock %}
       {% include '_analytics.html' %}
       {% include '_chatbox.html' %}
@@ -135,6 +139,7 @@
       window.addEventListener("load", function() {
         const header = document.querySelector('.fr-header.header-legacy');
         const slimHeader = document.querySelector('.fr-header.header-popup');
+        const main = document.querySelector('main');
         const options = {
           threshold: 0
         };
@@ -142,6 +147,7 @@
         const callback = ([entry], observer) => {
           const ratio = entry.intersectionRatio;
           slimHeader.classList.toggle('displayed', ratio <= 0);
+          main.classList.toggle('header-slim-displayed', ratio <= 0);
         };
 
         if (header && slimHeader) {

@@ -1,6 +1,8 @@
 import json
 import logging
 from collections import defaultdict
+from smtplib import SMTPException
+from urllib.error import HTTPError
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -37,7 +39,13 @@ def confirm_request_to_admin(request_id, host):
     notify(message_body, "amenagement")
 
 
-@app.task
+@app.task(
+    autoretry_for=(
+        HTTPError,
+        SMTPException,
+    ),
+    retry_backoff=True,
+)
 def confirm_request_to_requester(request_id, host):
     """Send a confirmation email to the requester."""
 
@@ -64,7 +72,7 @@ def confirm_request_to_requester(request_id, host):
     )
 
     email = EmailMultiAlternatives(
-        subject="[EnvErgo] Votre demande d'avis réglementaire",
+        subject="[Envergo] Votre demande d'avis réglementaire",
         body=txt_body,
         from_email=settings.FROM_EMAIL["amenagement"]["evaluations"],
         to=user_emails,
@@ -90,7 +98,10 @@ class BetterJsonSerializer(JSONSerializer):
             super().handle_field(obj, field)
 
 
-@app.task
+@app.task(
+    autoretry_for=(HTTPError,),
+    retry_backoff=True,
+)
 def post_evalreq_to_automation(request_id, host):
     """Send request data to Make.com."""
     webhook_url = settings.MAKE_COM_WEBHOOK
@@ -116,6 +127,12 @@ def post_evalreq_to_automation(request_id, host):
                     request_history[email] += 1
         extra_data["request_history"] = dict(request_history)
 
+    # Extract the additional file urls
+    # In local environment, this will return file paths
+    # But in production, the S3 storage will return full urls
+    files = request.additional_files.all()
+    extra_data["files"] = [f.file.storage.url(f.file.name) for f in files]
+
     post_a_model_to_automation(request, webhook_url, **extra_data)
 
 
@@ -130,7 +147,7 @@ def warn_admin_of_email_error(recipient_status_id):
     evalreq = evaluation.request
     base_url = get_base_url(
         settings.ENVERGO_AMENAGEMENT_DOMAIN
-    )  # Evaluations exist only for EnvErgo Amenagement.
+    )  # Evaluations exist only for Envergo Amenagement.
     eval_url = reverse(
         "admin:evaluations_evaluation_change",
         args=[evaluation.reference],

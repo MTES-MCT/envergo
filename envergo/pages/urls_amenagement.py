@@ -1,8 +1,11 @@
+from django.conf import settings
+from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
 from envergo.geodata.views import ParcelsExport
+from envergo.pages.models import AmenagementSitemap
 from envergo.pages.views import (
     AvailabilityInfo,
     GeometriciansView,
@@ -13,8 +16,28 @@ from envergo.pages.views import (
     TermsOfServiceView,
 )
 
+sitemaps = {"static_pages": AmenagementSitemap}
+
+
+# Exclude staging envs from search engine results
+if settings.ENV_NAME == "production":
+    robots_file = "amenagement/robots.txt"
+else:
+    robots_file = "robots_staging.txt"
+
+
 urlpatterns = [
     path("", HomeAmenagementView.as_view(), name="home"),
+    path(
+        "robots.txt",
+        TemplateView.as_view(template_name=robots_file, content_type="text/plain"),
+    ),
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": sitemaps},
+        name="django.contrib.sitemaps.views.sitemap",
+    ),
     path(
         _("legal-mentions/"),
         TemplateView.as_view(template_name="amenagement/pages/legal_mentions.html"),
@@ -23,7 +46,7 @@ urlpatterns = [
     path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
     path(
         _("privacy/"),
-        TemplateView.as_view(template_name="pages/privacy.html"),
+        TemplateView.as_view(template_name="amenagement/pages/privacy.html"),
         name="privacy",
     ),
     path(

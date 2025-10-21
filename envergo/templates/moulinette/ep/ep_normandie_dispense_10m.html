@@ -1,0 +1,30 @@
+<p>
+  Le projet est dispensé de la procédure de demande de dérogation au titre de la réglementation sur les espèces protégées.
+</p>
+
+<p>
+  En effet, la destruction ne concerne que des portions de haie de moins de 10 mètres. En Normandie, ces projets peuvent être acceptés sans exigence de compensation.
+</p>
+
+<p>
+  ⚠️ <em>Attention, le nombre de brèches est limité à deux par parcelles.</em> Si le projet dépasse ce nombre de brèches, le service instructeur le considérera comme une destruction nécessitant une dérogation, imposera une compensation en replantation de haies, et pourra le refuser.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>
+    La procédure mise en place en Normandie pour la prise en compte des espèces protégées dans les demandes de travaux sur haies est décrite dans
+    <a href="https://www.notion.so/Normandie-prise-en-compte-des-esp-ces-prot-g-es-pour-les-demandes-de-travaux-sur-haies-1bffe5fe476680f29375d34db7da53fc"
+       target="_blank"
+       rel="noopener">cette page d'information</a>.
+  </p>
+
+  {% if protected_species %}
+    <p>
+      <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire&nbsp;:</strong>
+    </p>
+    <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
+    {% include 'hedges/_species_table.html' with species=protected_species %}
+  {% endif %}
+</div>

@@ -24,7 +24,11 @@ from django.views.generic import (
 )
 from django.views.generic.edit import BaseFormView
 
-from envergo.analytics.utils import is_request_from_a_bot, log_event
+from envergo.analytics.utils import (
+    is_request_from_a_bot,
+    log_event,
+    update_url_with_matomo_params,
+)
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
     RequestForm,
@@ -149,6 +153,9 @@ class EvaluationDetail(
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
         context["share_print_url"] = share_print_url
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/+ref_ar+/", self.request
+        )
         context["evaluation_content"] = self.get_evaluation_content()
         return context
 
@@ -302,6 +309,21 @@ class WizardStepMixin:
         self.request.session.modified = True
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        log_event(
+            "erreur",
+            "formulaire-ar",
+            self.request,
+            data=form.data,
+            errors={
+                field: [
+                    {"code": str(e.code), "message": str(e.message)} for e in errors
+                ]
+                for field, errors in form.errors.as_data().items()
+            },
+        )
+        return super().form_invalid(form)
+
     def get_file_storage(self):
         file_storage = storages["upload"]
         return file_storage
@@ -317,7 +339,9 @@ class WizardStepMixin:
         form = self.get_form(self.get_form_class())
         if form.is_bound and not form.is_valid():
             # as it is not a complete url, Matomo concatenate it to the current url, which is OK for us
-            context["matomo_custom_url"] = "erreur-validation/"
+            context["matomo_custom_url"] = update_url_with_matomo_params(
+                "erreur-validation/", self.request
+            )
         return context
 
 
@@ -435,36 +459,42 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
         # Send notifications, once data is commited
         def confirm_request():
-            request.submitted = True
-            request.save()
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
+            request.submitted = True
+            request.save()
+
+        # Send data to after sales third party services, once data is commited
+        def post_to_automation():
             post_evalreq_to_automation.delay(request.id, self.request.get_host())
 
         # Special case, hackish
         # The product is often used for demo purpose. In that case, we don't
         # want to send confirmation emails or any other notifications.
-        if (
-            request.submitted is False
-            and settings.TEST_EMAIL not in request.urbanism_department_emails
-        ):
-            transaction.on_commit(confirm_request)
-            mtm_keys = {
-                k: v for k, v in self.request.session.items() if k.startswith("mtm_")
-            }
-            log_event(
-                "evaluation",
-                "request",
-                self.request,
-                request_reference=request.reference,
-                request_url=reverse(
-                    "admin:evaluations_request_change", args=[request.id]
-                ),
-                department=extract_department_from_address_or_city_string(
-                    request.address
-                ),
-                **mtm_keys,
-            )
+        if settings.TEST_EMAIL not in request.urbanism_department_emails:
+            if request.submitted is False:
+                transaction.on_commit(confirm_request)
+                mtm_keys = {
+                    k: v
+                    for k, v in self.request.session.items()
+                    if k.startswith("mtm_")
+                }
+                log_event(
+                    "evaluation",
+                    "request",
+                    self.request,
+                    request_reference=request.reference,
+                    request_url=reverse(
+                        "admin:evaluations_request_change", args=[request.id]
+                    ),
+                    department=extract_department_from_address_or_city_string(
+                        request.address
+                    ),
+                    **mtm_keys,
+                )
+
+            # Post to automation systems even is the request was already submitted, duplicates will be filtered later
+            transaction.on_commit(post_to_automation)
 
         return super().form_valid(form)
 
@@ -485,6 +515,10 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
         context["max_files"] = settings.MAX_EVALREQ_FILES
         context["uploaded_files"] = files
         context["request_submitted"] = self.object.submitted
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/formulaire/etape-3/+ref_ar+/", self.request
+        )
+
         return context
 
 
@@ -572,6 +606,13 @@ class RequestSuccess(DetailView):
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/formulaire/succès/+ref_ar+/", self.request
+        )
+        return context
+
 
 class SelfDeclaration(EvaluationDetailMixin, DetailView):
     template_name = "evaluations/self_declaration.html"
@@ -593,4 +634,8 @@ class SelfDeclaration(EvaluationDetailMixin, DetailView):
         context["address"] = quote_plus(self.object.address, safe="")
         context["application_number"] = self.object.application_number
         context["redirect_url"] = f"{self.object.get_absolute_url()}?tally=ok"
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            "/avis/+ref_ar+/conformite/", self.request
+        )
+
         return context

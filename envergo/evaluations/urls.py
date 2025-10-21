@@ -48,7 +48,7 @@ urlpatterns = [
                     ),
                 ),
                 path(
-                    "étape-1/indisponible/<slug:department>/",
+                    "etape-1/indisponible/<slug:department>/",
                     RequestEvalWizardDepartmentUnavailable.as_view(),
                     name="request_eval_wizard_unavailable_department",
                 ),

@@ -6,7 +6,7 @@
       <h2 id="moulinette-title">Projet de destruction de haies ou alignements d'arbres</h2>
       {% include 'haie/moulinette/_form_introduction.html' %}
 
-      <form class="fr-mb-3w"
+      <form class="fr-mb-3w spinner-form"
             method="post"
             novalidate
             autocomplete="off"
@@ -27,63 +27,65 @@
                name="travaux"
                value="{{ request.GET.travaux|default:'' }}" />
 
-        <div class="form-section">
-          {% include '_radio_snippet.html' with field=form.motif %}
-          {% include '_radio_snippet.html' with field=form.reimplantation %}
-          {% include '_radio_snippet.html' with field=form.localisation_pac %}
+        <div class="form-section">{% include '_radio_snippet.html' with field=form.motif %}</div>
+        <div class="form-section">{% include '_radio_snippet.html' with field=form.reimplantation %}</div>
+        <div class="form-section">{% include '_radio_snippet.html' with field=form.localisation_pac %}</div>
 
+        <div class="form-section">
           <div id="form-group-haies"
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
-            <label for="id_haies">Localisation des haies à détruire</label>
-            {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
-              {% if hedges_to_remove|length > 0 %}
-                <div id="statistics-container" class="fr-mb-3w">
-                  <div id="statistics" class="fr-mb-3w">
-                    <p>
-                      {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
-                    </p>
-                    <p>
-                      Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|floatformat:0 }}</span> m
-                    </p>
-                    {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
+            <div id="group-haies-content">
+              <label for="id_haies">Localisation des haies à détruire</label>
+              {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
+                {% if hedges_to_remove|length > 0 %}
+                  <div id="statistics-container" class="fr-mb-3w">
+                    <div id="statistics" class="fr-mb-3w">
                       <p>
-                        dont {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur des
-                        parcelles PAC
+                        {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                       </p>
-                    {% else %}
-                      <p id="lineaire-detruit-pac">Aucune haie située sur des parcelles PAC</p>
-                    {% endif %}
+                      <p>
+                        Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|floatformat:0 }}</span> m
+                      </p>
+                      {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
+                        <p>
+                          {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
+                          parcelles PAC
+                        </p>
+                      {% else %}
+                        <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
+                      {% endif %}
+                    </div>
                   </div>
-                </div>
-                <button id="hedge-input-open-btn"
-                        class="fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
-                        type="button"
-                        data-fr-opened="false"
-                        aria-controls="hedge-input-modal">Modifier les haies</button>
-              {% else %}
-                <div id="statistics-container" class="fr-mb-3w">
-                  <p>
-                    <i>Aucune haie renseignée</i>
-                  </p>
-                </div>
-                <button id="hedge-input-open-btn"
-                        class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
-                        type="button"
-                        data-fr-opened="false"
-                        aria-controls="hedge-input-modal">Localiser les haies</button>
+                  <button id="hedge-input-open-btn"
+                          class="hedge-input-open-btn fr-btn fr-btn--secondary"
+                          type="button"
+                          data-fr-opened="false"
+                          aria-controls="hedge-input-modal">Modifier les haies</button>
+                {% else %}
+                  <div id="statistics-container" class="fr-mb-3w">
+                    <p>
+                      <i>Aucune haie renseignée</i>
+                    </p>
+                  </div>
+                  <button id="hedge-input-open-btn"
+                          class="hedge-input-open-btn fr-btn fr-btn--primary"
+                          type="button"
+                          data-fr-opened="false"
+                          aria-controls="hedge-input-modal">Localiser les haies</button>
+                {% endif %}
+              {% endwith %}
+              {% if form.haies.errors %}
+                <p class="fr-error-text">
+                  ↑
+                  {{ form.haies.errors.0 }}
+                  ↑
+                </p>
               {% endif %}
-            {% endwith %}
-            {% if form.haies.errors %}
-              <p class="fr-error-text">
-                ↑
-                {{ form.haies.errors.0 }}
-                ↑
-              </p>
-            {% endif %}
+            </div>
           </div>
-
-          {% include 'haie/moulinette/_form_footer.html' %}
         </div>
+
+        {% include 'haie/moulinette/_form_footer.html' %}
       </form>
     </div>
   </div>
@@ -97,72 +99,53 @@
     <p>
       Linéaire total : <span id="length-to-remove">0</span> m
     </p>
-    <p id="lineaire-detruit-pac">Aucune haie située sur des parcelles PAC</p>
+    <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
   </div>
 </template>
 
 <script>
   window.addEventListener("load", function () {
-    let btn = document.getElementById("hedge-input-open-btn");
-    let modal = document.getElementById("hedge-input-modal");
     let hedgeIdField = document.getElementById("id_haies");
+    let hedgeInputOpenBtn = document.getElementById("hedge-input-open-btn");
     let hedgeDataStatsTpl = document.getElementById("hedge-data-statistics");
     let statisticsContainer = document.getElementById("statistics-container");
-    let hedgeInputOpenBtn = document.getElementById("hedge-input-open-btn");
-    let hedgeIframe;
+    let baseUrl = "{% url 'input_hedges' department=request.GET.department|default:'' mode='removal' %}";
+    let hedgeId = hedgeIdField.value;
+    let iframeUrl = baseUrl;
+    if (hedgeId) {
+      iframeUrl += hedgeId + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
+    }
+    let redirectUrl = null;
 
-    // open the hedge input ui in a modal upon the button click
-    btn.addEventListener("click", function () {
-      let saveUrl = "{% url 'input_hedges' mode='removal' %}";
-      let hedgeId = hedgeIdField.value;
-      if (hedgeId) {
-        saveUrl += hedgeId + "/";
+    var submitCallback = function(data) {
+      if(data.length_to_remove === 0){
+        statisticsContainer.innerHTML = "<p><i>Aucune haie renseignée</i></p>"
+
+        hedgeInputOpenBtn.textContent = "Localiser les haies";
+        hedgeInputOpenBtn.classList.remove('fr-btn--secondary');
+        hedgeInputOpenBtn.classList.add('fr-btn--primary');
       }
-      hedgeIframe = window.open(saveUrl, "hedge-input-iframe");
-      modal.showModal();
-    });
+      else {
+        let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
+        let lengthToRemove = statsContent.getElementById("length-to-remove");
+        let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
+        let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
+        lengthToRemove.textContent = Math.round(data.length_to_remove).toLocaleString('fr-FR');
+        lineaireDetruitPac.textContent = data.lineaire_detruit_pac === 0 ? "Aucune haie située sur parcelle PAC" : `${Math.round(data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur parcelles PAC`;
+        hedgesToRemoveCount.textContent = `${data.hedges_to_remove === 0 ? "Aucun" : data.hedges_to_remove.toLocaleString('fr-FR')} tracé${data.hedges_to_remove > 1 ? "s" : ""}`;
+        statisticsContainer.innerHTML = "";
+        statisticsContainer.appendChild(statsContent);
 
-    // When the input is saved, close the modal
-    window.addEventListener("message", function (event) {
-      if (event.origin !== window.location.origin) {
-        return;
+        hedgeInputOpenBtn.textContent = "Modifier les haies";
+        hedgeInputOpenBtn.classList.add('fr-btn--secondary');
+        hedgeInputOpenBtn.classList.remove('fr-btn--primary');
       }
 
-      if (event.data.action === "cancel") {
-        hedgeIframe.close();
-        modal.close();
-      }
+      hedgeIdField.value = data.input_id;
+      let iframeUrl = baseUrl + data.input_id + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
+      this.iframeUrl = iframeUrl;
+    };
 
-      if (event.data.input_id) {
-        if(event.data.length_to_remove === 0){
-          statisticsContainer.innerHTML = "<p><i>Aucune haie renseignée</i></p>"
-
-          hedgeInputOpenBtn.textContent = "Localiser les haies";
-          hedgeInputOpenBtn.classList.remove('fr-btn--secondary');
-          hedgeInputOpenBtn.classList.add('fr-btn--primary');
-        }
-        else {
-          let statsContent = hedgeDataStatsTpl.content.cloneNode(true);
-          let lengthToRemove = statsContent.getElementById("length-to-remove");
-          let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
-          let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
-          lengthToRemove.textContent = Math.round(event.data.length_to_remove).toLocaleString('fr-FR');
-          lineaireDetruitPac.textContent = event.data.lineaire_detruit_pac === 0 ? "Aucune haie située sur des parcelles PAC" : `dont ${Math.round(event.data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur des parcelles PAC`;
-          hedgesToRemoveCount.textContent = `${event.data.hedges_to_remove === 0 ? "Aucun" : event.data.hedges_to_remove.toLocaleString('fr-FR')} tracé${event.data.hedges_to_remove > 1 ? "s" : ""}`;
-          statisticsContainer.innerHTML = "";
-          statisticsContainer.appendChild(statsContent);
-
-          hedgeInputOpenBtn.textContent = "Modifier les haies";
-          hedgeInputOpenBtn.classList.add('fr-btn--secondary');
-          hedgeInputOpenBtn.classList.remove('fr-btn--primary');
-        }
-
-        hedgeIdField.value = event.data.input_id;
-        hedgeIframe.close();
-        modal.close();
-      }
-    });
-
-
+    var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl, submitCallback);
   });
 </script>

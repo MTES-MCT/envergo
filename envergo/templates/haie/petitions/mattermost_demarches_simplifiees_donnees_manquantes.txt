@@ -1,6 +1,5 @@
 ### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
 
-Les identifiants des champs PACAGE et Commune principale ne sont pas renseignés
-dans la configuration du département {{ department }}.
+Les identifiants des champs PACAGE, commune principale et/ou structure ne sont pas renseignés dans la configuration du département {{ department }}.
 
 [Admin django](https://{{ domain }}{{ admin_url }})

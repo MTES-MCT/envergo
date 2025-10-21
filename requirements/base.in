@@ -1,6 +1,6 @@
 django<4.3
 psycopg[binary]
-urllib3<2
+urllib3
 django-environ
 django-model-utils
 django-allauth
@@ -35,3 +35,6 @@ bs4
 
 # See this link for the urllib3 version pin
 # https://github.com/boto/botocore/issues/2926
+gql
+requests-toolbelt
+dacite

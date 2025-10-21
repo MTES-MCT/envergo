@@ -1,15 +1,43 @@
+from django.conf import settings
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
+from envergo.pages.models import HaieSitemap
 from envergo.pages.views import HomeHaieView, Outlinks
+
+sitemaps = {"static_pages": HaieSitemap}
+
+
+# Exclude staging envs from search engine results
+if settings.ENV_NAME == "production":
+    robots_file = "haie/robots.txt"
+else:
+    robots_file = "robots_staging.txt"
+
 
 urlpatterns = [
     path("", HomeHaieView.as_view(), name="home"),
     path(
+        "robots.txt",
+        TemplateView.as_view(template_name=robots_file, content_type="text/plain"),
+    ),
+    path(
+        "sitemap.xml",
+        sitemap,
+        {"sitemaps": sitemaps},
+        name="django.contrib.sitemaps.views.sitemap",
+    ),
+    path(
         _("legal-mentions/"),
         TemplateView.as_view(template_name="haie/pages/legal_mentions.html"),
         name="legal_mentions",
+    ),
+    path(
+        _("privacy/"),
+        TemplateView.as_view(template_name="haie/pages/privacy.html"),
+        name="privacy",
     ),
     path(
         "stats/",

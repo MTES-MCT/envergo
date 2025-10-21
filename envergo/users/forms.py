@@ -1,11 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from django.forms.widgets import Select
 from django.utils.translation import gettext_lazy as _
 
 from envergo.users.models import User
-from envergo.utils.fields import NoIdnEmailField
+from envergo.utils.fields import AllowDisabledSelect, NoIdnEmailField
 
 # This string is used in django's original AuthenticationForm
 # There is a typo in the string translation, so we add this variable here
@@ -73,20 +72,6 @@ class RegisterForm(UserCreationForm):
                     code="unique",
                 )
                 self.add_error("email", error)
-
-
-class AllowDisabledSelect(Select):
-    """A select widget (drop down list) that will disable options where the value is set to an empty string"""
-
-    def create_option(
-        self, name, value, label, selected, index, subindex=None, attrs=None
-    ):
-        option_dict = super().create_option(
-            name, value, label, selected, index, subindex=subindex, attrs=attrs
-        )
-        if not value:
-            option_dict["attrs"]["disabled"] = "disabled"
-        return option_dict
 
 
 class NewsletterOptInForm(forms.Form):

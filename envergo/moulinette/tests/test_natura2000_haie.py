@@ -23,7 +23,7 @@ def n2000_criteria(bizous_town_center):  # noqa
     regulation = RegulationFactory(regulation="natura2000_haie", has_perimeters=True)
 
     perimeter = PerimeterFactory(
-        name="N2000 Bizous", activation_map=bizous_town_center, regulation=regulation
+        name="N2000 Bizous", activation_map=bizous_town_center, regulations=[regulation]
     )
 
     criteria = [
@@ -52,12 +52,12 @@ def moulinette_data(lat1, lng1, lat2, lng2):
                     {"lat": lat2, "lng": lng2},
                 ],
                 "additionalData": {
-                    "typeHaie": "degradee",
-                    "vieilArbre": False,
-                    "proximiteMare": False,
-                    "surParcellePac": False,
-                    "proximitePointEau": False,
-                    "connexionBoisement": False,
+                    "type_haie": "degradee",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "proximite_point_eau": False,
+                    "connexion_boisement": False,
                 },
             }
         ]
@@ -106,3 +106,32 @@ def test_moulinette_evaluation(moulinette_data, expected_result):
     assert moulinette.natura2000_haie.result == expected_result
     if expected_result != "non_concerne":
         assert moulinette.natura2000_haie.natura2000_haie.result == expected_result
+
+
+@pytest.mark.parametrize(
+    "lat1, lng1, lat2, lng2, expected_result",
+    [
+        (
+            43.06930871579473,
+            0.4421436860179369,
+            43.069162248282396,
+            0.44236765047068033,
+            "non_soumis_aa",
+        ),  # inside
+        (
+            43.069807900393826,
+            0.4426179348420038,
+            43.068048918563875,
+            0.4415625648710002639653,
+            "non_soumis_aa",
+        ),  # edge inside but vertices outside
+    ],
+)
+def test_moulinette_evaluation_alignement(moulinette_data, expected_result):
+    ConfigHaieFactory()
+    hedges = moulinette_data["haies"]
+    hedges.data[0]["additionalData"]["type_haie"] = "alignement"
+    hedges.save()
+    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette.evaluate()
+    assert moulinette.natura2000_haie.natura2000_haie.result_code == expected_result

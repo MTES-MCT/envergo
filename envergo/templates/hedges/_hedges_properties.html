@@ -1,0 +1,25 @@
+{% load petitions %}
+
+<ul class="instructor-view-list">
+  {% for key, value in hedges_properties.items %}
+    {% include "haie/petitions/_item.html" with label=value.label value=value|display_property|yesno %}
+    {% if value|display_property %}
+      {% if value.TO_REMOVE %}
+        <li class="fr-pl-4w">
+          <span>Destruction :</span>
+          <span>{{ value.TO_REMOVE.length|floatformat:"0g" }} m
+            {% if value.TO_REMOVE %}• {{ value.TO_REMOVE.names }}{% endif %}
+          </span>
+        </li>
+      {% endif %}
+      {% if value.TO_PLANT %}
+        <li class="fr-pl-4w">
+          <span>Plantation :</span>
+          <span>{{ value.TO_PLANT.length|floatformat:"0g" }} m
+            {% if value.TO_PLANT %}• {{ value.TO_PLANT.names }}{% endif %}
+          </span>
+        </li>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+</ul>

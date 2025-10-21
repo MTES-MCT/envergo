@@ -23,7 +23,7 @@ def test_password_reset_with_existing_email_does_send_an_email(
     assert len(mailoutbox) == 1
 
     mail = mailoutbox[0]
-    assert mail.subject == "Réinitialisation du mot de passe sur EnvErgo"
+    assert mail.subject == "Réinitialisation du mot de passe sur Envergo"
     assert mail.from_email == "comptes@amenagement.local"
 
 
@@ -58,7 +58,6 @@ def test_amenagement_register_view(client, mailoutbox):
 
     user.refresh_from_db()
     assert user.is_active
-    assert not user.is_confirmed_by_admin
     assert user.access_amenagement
     assert not user.access_haie
 
@@ -149,7 +148,6 @@ def test_haie_register_view(client, mailoutbox):
 
     user.refresh_from_db()
     assert user.is_active
-    assert not user.is_confirmed_by_admin
     assert not user.access_amenagement
     assert user.access_haie
 
@@ -232,7 +230,6 @@ def test_register_duplicate_email_with_other_errors(
 
 def test_amenagement_login_on_amenagement_site(amenagement_user, client):
     assert amenagement_user.access_amenagement
-    assert not amenagement_user.is_confirmed_by_admin
 
     res = client.get("/")
     assert not res.wsgi_request.user.is_authenticated
@@ -247,17 +244,11 @@ def test_amenagement_login_on_amenagement_site(amenagement_user, client):
 
 def test_haie_login_on_amenagement_site(haie_user, client):
     assert not haie_user.access_amenagement
-    assert not haie_user.is_confirmed_by_admin
 
     res = client.get("/")
     assert not res.wsgi_request.user.is_authenticated
 
     login_url = reverse("login")
-    res = client.post(login_url, {"username": haie_user.email, "password": "password"})
-    assert res.status_code == 200
-    assert not res.wsgi_request.user.is_authenticated
-
-    haie_user.is_confirmed_by_admin = True
     res = client.post(login_url, {"username": haie_user.email, "password": "password"})
     assert res.status_code == 200
     assert not res.wsgi_request.user.is_authenticated
@@ -267,20 +258,11 @@ def test_haie_login_on_amenagement_site(haie_user, client):
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_amenagement_login_on_haie_site(amenagement_user, client):
     assert not amenagement_user.access_haie
-    assert not amenagement_user.is_confirmed_by_admin
 
     res = client.get("/")
     assert not res.wsgi_request.user.is_authenticated
 
     login_url = reverse("login")
-    res = client.post(
-        login_url, {"username": amenagement_user.email, "password": "password"}
-    )
-    assert res.status_code == 200
-    assert not res.wsgi_request.user.is_authenticated
-
-    amenagement_user.is_confirmed_by_admin = True
-    amenagement_user.save()
     res = client.post(
         login_url, {"username": amenagement_user.email, "password": "password"}
     )
@@ -292,21 +274,16 @@ def test_amenagement_login_on_haie_site(amenagement_user, client):
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_haie_login_on_haie_site(haie_user, client):
     assert haie_user.access_haie
-    assert not haie_user.is_confirmed_by_admin
+    assert haie_user.is_active
 
     res = client.get("/")
     assert not res.wsgi_request.user.is_authenticated
 
     login_url = reverse("login")
     res = client.post(login_url, {"username": haie_user.email, "password": "password"})
-    assert res.status_code == 200
-    assert not res.wsgi_request.user.is_authenticated
-
-    haie_user.is_confirmed_by_admin = True
-    haie_user.save()
-    res = client.post(login_url, {"username": haie_user.email, "password": "password"})
     assert res.status_code == 302
     assert res.wsgi_request.user.is_authenticated
+    assert res.url == "/projet/liste"
 
 
 def test_user_access_without_otp(settings, user, client):

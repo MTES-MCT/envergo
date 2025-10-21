@@ -1,0 +1,99 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load moulinette %}
+
+{% load utils %}
+
+{% block title %}Instruction du dossier – Dossier complet{% endblock %}
+
+{% block project_view_title %}<h2>Dossier complet</h2>{% endblock %}
+
+{% block project_content %}
+
+  <section>
+    <h3>Formulaire détaillé et pièces jointes</h3>
+    <section class="fr-py-3w">
+      <div class="tab-title">
+        <h4>Identité du demandeur</h4>
+        <div class="champ-content">{{ applicant }}</div>
+      </div>
+    </section>
+
+    <section class="section-ds fr-py-3w">
+      <div class="tab-title">
+        <h4>Sections du formulaire</h4>
+      </div>
+      {% for item in project_details.champs %}
+        {% if item.label in project_details.header_sections %}
+          <h5 id="section-{{ item.label|slugify }}">{{ item.label }}</h5>
+
+        {% else %}
+          <div class="champ-row fr-my-2w">
+            <p class="champ-label fr-mb-0">
+              <b>{{ item.label }}</b>
+            </p>
+            <div class="champ-content">
+              {% if item.value == "" %}
+                <div>
+                  <i>Non renseigné</i>
+                </div>
+              {% elif item.value|is_type:"ItemFiles" %}
+                <div class="ds-files fr-grid-row fr-grid-row--gutters">
+                  {% for file in item.value.files %}
+                    {% if "image" in file.content_type %}
+                      <div class="fr-col fr-col-md-6">
+                        <figure role="group"
+                                class="fr-content-media"
+                                aria-label="Description / Source">
+                          <div class="fr-content-media__img fr-enlarge-link">
+                            <img class="fr-responsive-img"
+                                 src="{{ file.url }}"
+                                 alt="{{ file.filename }}" />
+                            <figcaption class="fr-content-media__caption">
+                              <a href="{{ file.url }}" target="_blank" rel="noopener external">{{ file.filename }}</a>
+                            </figcaption>
+                          </div>
+                        </figure>
+                      </div>
+                    {% else %}
+                      <div class="fr-col-12">
+                        <a href="{{ file.url }}" target="_blank" rel="noopener external">{{ file.filename }}</a>
+                      </div>
+                    {% endif %}
+                  {% empty %}
+                    <div class="fr-col-12">
+                      <i>Aucun fichier attaché</i>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div>
+                  {{ item.value|urlize }}
+                  {% if item.unit %}{{ item.unit }}{% endif %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+
+    </section>
+  </section>
+  <section>
+    <h3>Informations saisies par le demandeur</h3>
+    <ul class="fr-mb-3w instructor-view-list">
+      {% for field in triage_form %}
+        <li>{% field_summary field %}</li>
+      {% endfor %}
+    </ul>
+    <hr class="fr-mb-3w" />
+    <ul class="fr-mb-3w instructor-view-list">
+      {% for field in moulinette.main_form %}
+        {% block main_form_field %}
+          <li>{% field_summary field %}</li>
+        {% endblock %}
+      {% endfor %}
+      {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
+    </ul>
+  </section>
+{% endblock %}

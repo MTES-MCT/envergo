@@ -3,7 +3,7 @@
 </p>
 
 <p>
-  Au vu des caractéristiques des haies détruites, une procédure simplifiée peut être suivie : l’inventaire de terrain pour recenser les espèces présentes dans les haies détruites n’est pas nécessaire.
+  Au vu des caractéristiques des haies détruites, une procédure allégée peut être suivie : l’inventaire de terrain pour recenser les espèces présentes dans les haies détruites n’est pas nécessaire.
 </p>
 
 <p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>
@@ -26,6 +26,10 @@
   </p>
 
   {% if protected_species %}
+    <p>
+      <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire&nbsp;:</strong>
+    </p>
+    <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
     {% include 'hedges/_species_table.html' with species=protected_species %}
   {% endif %}
 </div>

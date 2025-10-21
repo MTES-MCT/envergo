@@ -1,4 +1,5 @@
 from django.forms import EmailField
+from django.forms.widgets import RadioSelect, Select
 
 from envergo.utils.validators import NoIdnEmailValidator
 
@@ -11,3 +12,31 @@ class NoIdnEmailField(EmailField):
     """
 
     default_validators = [NoIdnEmailValidator()]
+
+
+class AllowDisabledSelect(Select):
+    """A select widget (drop down list) that is disabling options where the value is set to an empty string"""
+
+    def create_option(
+        self, name, value, label, selected, index, subindex=None, attrs=None
+    ):
+        option_dict = super().create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        if not value:
+            option_dict["attrs"]["disabled"] = "disabled"
+        return option_dict
+
+
+def get_human_readable_value(choices, key):
+    """Get the human-readable value of a choice field."""
+    for choice_key, human_readable in choices:
+        if choice_key == key:
+            return human_readable
+    return None
+
+
+class HedgeChoiceField(RadioSelect):
+    custom_template = True
+    template_name = "haie/forms/widgets/hedge_radio.html"
+    option_template_name = "haie/forms/widgets/hedge_radio_option.html"

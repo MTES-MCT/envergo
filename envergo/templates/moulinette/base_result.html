@@ -7,9 +7,14 @@
 {% block body-classes %}moulinette-result-body{% endblock %}
 
 {% block container %}
-
   <div id="project-result" class="fr-col">
-    <section class="fr-py-4w fr-px-2w">
+    <section id="project-result-top-bar">
+      {% block project-result-top-bar %}{% endblock %}
+    </section>
+    <section id="project-result-content" class="fr-py-4w fr-px-2w">
+      {% block messages_in_result %}
+        {% include '_messages.html' %}
+      {% endblock %}
       {% block result %}{% endblock %}
     </section>
   </div>
@@ -19,13 +24,22 @@
   </div>
   <div id="project-summary" class="fr-px-2w">
     <section>
-      <h2 class="fr-mb-5w">Caractéristiques du projet</h2>
+      <h4 class="fr-mb-3w fr-mt-2w">Caractéristiques du projet</h4>
+      {% if not is_read_only %}
+        <div class="button-container hide-print fr-mb-3w">
+          <a href="{{ edit_url }}"
+             class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button spinner-link"
+             data-event-category="Content"
+             data-event-action="Edit"
+             data-event-name="ProjectTop">Modifier le projet</a>
+        </div>
+      {% endif %}
       <p class="fr-text print-only">
         Simulation réalisée sur
-        <a title="EnvErgo : la réglementation environnementale pour les projets de construction et d'aménagement"
+        <a title="Envergo : la réglementation environnementale pour les projets de construction et d'aménagement"
            href="{{ envergo_url }}"
            target="_blank"
-           rel="noopener external">EnvErgo</a>
+           rel="noopener external">Envergo</a>
       </p>
       <p class="fr-text print-only">
         Cette simulation est
@@ -37,9 +51,9 @@
       </p>
       {% block project_summary %}{% endblock %}
       {% if not is_read_only %}
-        <div class="button-container  hide-print">
+        <div class="button-container hide-print fr-mb-3w">
           <a href="{{ edit_url }}"
-             class="fr-btn fr-btn--secondary fr-mt-3w fr-btn--icon-left fr-icon-arrow-left-line"
+             class="fr-btn fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-arrow-left-line moulinette-edit-button spinner-link"
              data-event-category="Content"
              data-event-action="Edit"
              data-event-name="Project">Modifier le projet</a>

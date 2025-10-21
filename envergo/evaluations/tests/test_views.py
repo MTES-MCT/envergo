@@ -7,6 +7,7 @@ from django.db.utils import IntegrityError
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 
+from envergo.analytics.models import Event
 from envergo.confs.models import Setting
 from envergo.evaluations.models import Request
 from envergo.evaluations.tests.factories import (
@@ -109,6 +110,21 @@ def test_eval_request_wizard_step_1_missing_department(client):
     assert res.status_code == 200
     res.context_data["form"].has_error(NON_FIELD_ERRORS, "unknown_department")
 
+    error_event = Event.objects.filter(category="erreur", event="formulaire-ar").get()
+    assert "errors" in error_event.metadata
+    assert error_event.metadata["errors"] == {
+        "__all__": [
+            {
+                "code": "unknown_department",
+                "message": "Nous ne parvenons pas à situer votre projet. Merci "
+                "de saisir quelques caractères et de sélectionner une "
+                "option dans la liste.",
+            }
+        ]
+    }
+    assert "data" in error_event.metadata
+    assert error_event.metadata["data"] == data
+
 
 def test_eval_request_wizard_step_2(client):
     qs = Request.objects.all()
@@ -149,6 +165,15 @@ def test_eval_request_wizard_step_2_missing_petitioner_data(client):
     res = client.post(url, data=data)
     assert res.status_code == 200
     assert "Ce champ est obligatoire" in res.content.decode()
+
+    error_event = Event.objects.filter(category="erreur", event="formulaire-ar").get()
+    assert "errors" in error_event.metadata
+    assert error_event.metadata["errors"] == {
+        "project_owner_emails": [
+            {"code": "required", "message": "Ce champ est obligatoire."}
+        ]
+    }
+    assert "data" in error_event.metadata
 
     data["project_owner_emails"] = "petitioner@example.com"
     data["project_owner_phone"] = "0612345678"
@@ -267,7 +292,7 @@ def test_eval_wizard_all_steps(
         res = client.post(url, data=data)
     assert res.status_code == 302
 
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to == ["urbanism@example.org"]
@@ -313,7 +338,7 @@ def test_eval_wizard_request_confirmation_recipient(
         res = client.post(url, data=data)
     assert res.status_code == 302
 
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to == ["sponsor1@example.org", "sponsor2@example.org"]
 
@@ -356,11 +381,11 @@ def test_eval_is_only_submitted_once(
     url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2  # first time both on_commit are called
 
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
-    assert len(callbacks) == 0
+    assert len(callbacks) == 1  # second time we call only the "post to automation" task
 
     mock_post.assert_called_once()
     assert len(mailoutbox) == 1

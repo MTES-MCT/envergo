@@ -62,6 +62,7 @@ DJANGO_APPS = [
     # "django.contrib.admin",  # it's overriden below
     "django.forms",
     "django.contrib.gis",
+    "django.contrib.sitemaps",
 ]
 THIRD_PARTY_APPS = [
     "phonenumber_field",
@@ -85,6 +86,7 @@ LOCAL_APPS = [
     "envergo.urlmappings",
     "envergo.hedges",
     "envergo.petitions",
+    "envergo.demos",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -132,6 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "envergo.middleware.csp.ContentSecurityPolicyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -143,7 +146,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
-    "envergo.analytics.middleware.StoreMtmValues",
+    "envergo.analytics.middleware.HandleMtmValues",
 ]
 
 # STATIC
@@ -402,6 +405,7 @@ DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
     "ENABLED": env("DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED", default=False),
+    "DOSSIER_BASE_URL": "https://www.demarches-simplifiees.fr",
     "PRE_FILL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
         default="https://www.demarches-simplifiees.fr/api/public/v1/",
@@ -414,6 +418,7 @@ DEMARCHES_SIMPLIFIEES = {
     "DOSSIER_DOMAIN_BLACK_LIST": env.list(
         "DJANGO_DOSSIER_DOMAIN_BLACK_LIST", default=[]
     ),
+    "INSTRUCTEUR_ID": env("DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID", default=None),
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
@@ -436,7 +441,15 @@ BREVO = {
     ),
 }
 
-HAIE_FAQ_URL = "https://www.notion.so/Guichet-unique-de-la-haie-propos-17afe5fe476680a9abe6c4bdf5301abb"
+HAIE_FAQ_URL = (
+    "https://www.notion.so/"
+    "Guichet-unique-de-la-haie-Ressources-pour-les-usagers-17efe5fe47668058a991eb26153a70b0"
+)
+HAIE_INSTRUCTORS_FAQ_URL = (
+    "https://www.notion.so/"
+    "Guichet-unique-de-la-haie-Ressources-pour-les-services-coordonnateurs-"
+    "et-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718"
+)
 
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
     "static/gpkg/hedge_data_export_template.gpkg"
@@ -459,3 +472,12 @@ HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = (
     "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-"
     "emplacement-environnemental-1a7fe5fe476680f8afb2c648119f8e23"
 )
+
+# Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload
+FILE_UPLOAD_HANDLERS = [
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler",
+]
+
+SECURE_CSP = {}
+
+SECURE_CSP_REPORT_ONLY = {}

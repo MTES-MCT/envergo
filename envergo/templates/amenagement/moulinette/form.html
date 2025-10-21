@@ -5,7 +5,7 @@
 <div id="moulinette-grid">
   <div id="moulinette-col" class="fr-col">
     <div id="moulinette" class="moulinette">
-      <form class="fr-mb-3w"
+      <form class="fr-mb-3w spinner-form"
             method="post"
             novalidate
             autocomplete="off"
@@ -21,15 +21,19 @@
           {{ form.lat.as_hidden }}
 
           {% include '_field_snippet.html' with field=form.address %}
+        </div>
 
+        <div id="form-section-map" class="form-section">
           <div class="fr-input-group fr-input-group-map">
-            <label class="step">
-              Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-              l'emplacement du projet.
-            </label>
+            <div class="fr-mb-3w">
+              <label class="step">
+                Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+                l'emplacement du projet.
+              </label>
+            </div>
             <figure class="fr-content-media">
               <div id="map-container"
-                   class="ratio-16x9 ratio-sm-4x5 fr-mt-1w fr-mb-2w fr-raw-link">
+                   class="ratio-16x9 ratio-sm-4x5 fr-mt-1w fr-raw-link">
                 <div class="ratio-content">
                   <div class="leaflet-container">
                     <div id="map"></div>
@@ -55,7 +59,7 @@
 
         <div id="form-section-surface" class="form-section">
           <div class="fr-mb-3w">
-            <label class="step">Complétez les informations décrivant le projet</label>
+            <label class="step">Saisissez les surfaces aménagées par le projet</label>
           </div>
           <p class="hint-header">
             <span class="fr-icon-info-fill" aria-hidden="true"></span>

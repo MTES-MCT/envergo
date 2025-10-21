@@ -3,9 +3,10 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.forms import SetPasswordForm
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 
 from config.urls import handler500  # noqa
-from envergo.users.views import ActivateAccount, Register, RegisterSuccess
+from envergo.users.views import ActivateAccount, LoginView, Register, RegisterSuccess
 
 from .urls import urlpatterns as common_urlpatterns
 
@@ -13,7 +14,9 @@ from .urls import urlpatterns as common_urlpatterns
 auth_patterns = [
     path(
         _("login/"),
-        auth_views.LoginView.as_view(template_name="haie/registration/login.html"),
+        LoginView.as_view(
+            template_name="haie/registration/login.html", next_page="/projet/liste"
+        ),
         name="login",
     ),
     path(
@@ -83,6 +86,10 @@ auth_patterns = [
         name="register_success",
     ),
     path(
+        "enregistrement-succès/",
+        RedirectView.as_view(pattern_name="register_success", permanent=True),
+    ),
+    path(
         _("register/<uidb64>/<token>/"),
         ActivateAccount.as_view(
             template_name="haie/registration/activate_account.html"
@@ -98,4 +105,5 @@ urlpatterns = [
     path(_("moulinette/"), include("envergo.moulinette.urls_haie")),
     path("haies/", include("envergo.hedges.urls")),
     path("projet/", include("envergo.petitions.urls_haie")),
+    path("demonstrateurs/", include("envergo.demos.urls")),
 ] + common_urlpatterns

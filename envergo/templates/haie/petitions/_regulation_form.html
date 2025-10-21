@@ -1,0 +1,20 @@
+{% load moulinette %}
+
+<h3 class="fr-h4">Informations saisies dans le simulateur</h3>
+
+{% for criterion in regulation.criteria.all %}
+  {% with criterion.get_form as regulation_form %}
+    {% if regulation_form %}
+      <ul class="instructor-view-list fr-mb-3w">
+        {% for field in regulation_form %}
+          <li>{% field_summary field %}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+{% endfor %}
+
+<button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-haie"
+        type="button"
+        data-fr-opened="false"
+        aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>

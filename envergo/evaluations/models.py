@@ -99,9 +99,12 @@ RESULTS = Choices(
         "Non disponible",
     ),  # Same message for users, but we need to separate `non_active` and `non_disponible`
     ("derogation_inventaire", "Dérogation"),
-    ("derogation_simplifiee", "Dérogation simplifiée"),
+    ("derogation_simplifiee", "Dérogation allégée"),
     ("dispense", "Dispense"),
+    ("dispense_sous_condition", "Dispense sous condition"),
     ("soumis_ou_pac", "Soumis"),
+    ("soumis_declaration", "Déclaration"),
+    ("soumis_autorisation", "Autorisation"),
 )
 
 
@@ -140,6 +143,9 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.derogation_inventaire: TagStyleEnum.LightRed,
     RESULTS.derogation_simplifiee: TagStyleEnum.LightRed,
     RESULTS.dispense: TagStyleEnum.Green,
+    RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
+    RESULTS.soumis_declaration: TagStyleEnum.LightRed,
+    RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
@@ -318,10 +324,9 @@ class Evaluation(models.Model):
             )  # there is only Amenagement evaluations
             form.is_valid()
             params = form.cleaned_data
-            activate_optional_criteria = True
             self._moulinette = (
                 MoulinetteAmenagement(  # there is only Amenagement evaluations
-                    params, raw_params, activate_optional_criteria
+                    params, raw_params
                 )
             )
 
@@ -371,7 +376,7 @@ class Evaluation(models.Model):
         moulinette = self.get_moulinette()
         template = "evaluations/_content.html"
 
-        # Evaluations exist only for EnvErgo Amenagement:
+        # Evaluations exist only for Envergo Amenagement:
         evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
         share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
 
@@ -574,7 +579,10 @@ class EvaluationEmail:
                 evaluation.send_eval_to_project_owner,
             )
         ):
-            if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result == "soumis":
+            if moulinette.loi_sur_leau and moulinette.loi_sur_leau.result in [
+                "soumis",
+                "soumis_ou_pac",
+            ]:
                 if config.ddtm_water_police_email:
                     bcc_recipients.append(config.ddtm_water_police_email)
                 else:
@@ -842,3 +850,8 @@ class RecipientStatus(models.Model):
     class Meta:
         verbose_name = _("Recipient status")
         verbose_name_plural = _("Recipient statuses")
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_index", fields=["regulatory_notice_log", "recipient"]
+            )
+        ]

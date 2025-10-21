@@ -18,12 +18,28 @@
   <hr class="separator fr-mb-3w" />
   <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
-      <li>{% field_summary field %}</li>
+      {% block main_form_field %}
+        <li>{% field_summary field %}</li>
+      {% endblock %}
     {% endfor %}
     {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
   </ul>
 {% endblock %}
 
+{% block project-result-top-bar %}
+  {% if is_alternative %}
+    <div class="fr-notice fr-notice--info">
+      <div class="fr-container">
+        <div class="fr-notice__body">
+          <p>
+            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
+            <span><b>Simulation alternative</b> à la simulation initiale</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
 {% block result %}
   {% if config and not config.is_activated %}
     <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
@@ -32,8 +48,25 @@
     </div>
   {% endif %}
 
-  {% block before-title-content %}{% endblock %}
-  {% block result_title %}<h1 class="fr-mb-5w">Simulation réglementaire</h1>{% endblock %}
+  {% block before-title-content %}
+    {% if not is_alternative %}
+      <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
+        <li>{% include '_share_url_btn.html' %}</li>
+      </ul>
+    {% endif %}
+  {% endblock %}
+  {% block result_title %}<h1>Simulation réglementaire</h1>{% endblock %}
+
+  {% include 'haie/moulinette/_department_doctrine_button.html' %}
+
+  {% if has_hedges_outside_department %}
+    <div class="fr-alert fr-alert--warning fr-mb-4w">
+      <h3 class="fr-alert__title">Au moins une des haies est située hors du département</h3>
+      <p>
+        Au moins une des haies est située en dehors du département choisi pour cette simulation – {{ config.department }}. Vérifiez que vous avez choisi le bon département en début de simulation, ou <a href="{% url 'contact_us' %}" target="_blank" rel="noopener">contactez le guichet unique</a> si le projet est à cheval sur plusieurs départements.
+      </p>
+    </div>
+  {% endif %}
 
   {% block result_header %}{% endblock %}
 
@@ -44,6 +77,11 @@
       <h3>Autres réglementations concernant le projet</h3>
     {% elif result.name == "RestrictiveRegulations" %}
       <h3>Réglementations concernant le projet</h3>
+    {% elif result.name == "UnsimulatedRegulations" %}
+      <h3>Réglementations non simulées</h3>
+      <p>
+        ⚠️ <em>Ces réglementations peuvent concerner le projet mais le simulateur n’est pas encore en mesure de se prononcer.</em>
+      </p>
     {% else %}
       <h3>Autres réglementations</h3>
     {% endif %}
@@ -56,7 +94,6 @@
       {% block liability_info %}{% endblock %}
     {% endif %}
   {% endfor %}
-  {% include 'haie/moulinette/_demarches_simplifiees_form.html' %}
 
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
 {% endblock %}
@@ -69,6 +106,7 @@
 
 {% block extra_body %}
   {% include '_share_url_modal.html' with title="Partager cette simulation" content='<p>Avec ce lien le destinataire pourra directement consulter cette page web présentant :</p> <ul class="fr-mb-0w"> <li>les mêmes caractéristiques de projet (réponses au formulaire et dessins de haies) ;</li> <li>les mêmes résultats de simulation.</li> </ul>' shorten_url=True share_url=share_btn_url %}
+  {% include 'haie/moulinette/_department_doctrine_modal.html' %}
 {% endblock %}
 
 {% block extra_css %}
@@ -82,4 +120,16 @@
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/libs/moulinette_result_maps.js' %}"></script>
+
+  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
+  <script>
+    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}"{% if is_alternative %} + "?alternative=True" {% endif %};
+    var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
+
+    window.addEventListener("load", function() {
+      let iframeUrl = HEDGES_PLANTATION_URL;
+      let redirectUrl = RESULT_P_URL;
+      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+    });
+  </script>
 {% endblock %}

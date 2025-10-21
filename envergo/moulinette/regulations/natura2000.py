@@ -193,7 +193,7 @@ class IOTA(SelfDeclarationMixin, CriterionEvaluator):
     def evaluate(self):
         try:
             iota = self.moulinette.loi_sur_leau.result
-            if iota == RESULTS.soumis:
+            if iota in (RESULTS.soumis, RESULTS.soumis_ou_pac):
                 result = RESULTS.soumis
             elif iota == RESULTS.non_soumis:
                 result = RESULTS.non_soumis

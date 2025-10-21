@@ -15,6 +15,17 @@ main.home {
   }
 }
 
+.fr-header {
+  .fr-btns-group .account .fr-btn {
+    margin-bottom: 0;
+  }
+
+  .account__email {
+    font-size: 0.875rem;
+    color: var(--text-mention-grey);
+  }
+}
+
 html.saisie {
   height: 100%;
 
@@ -77,6 +88,18 @@ div#app {
       .leaflet-control-layers-toggle {
         background-image: url("/static/icons/stack-line.svg");
       }
+    }
+
+    #tooltip {
+      display: none;
+      position: absolute;
+      background: white;
+      color: black;
+      border-radius: 0.75rem;
+      z-index: 1000;
+      font-size: 14px;
+      padding: 2px 6px;
+      border: 1px solid black;
     }
 
     #controls-container {
@@ -189,6 +212,30 @@ div#app {
       }
     }
 
+    .leaflet-vertex-icon {
+      margin-left: -8px !important;
+      margin-top: -8px !important;
+      width: 16px !important;
+      height: 16px !important;
+      border-radius: 50%;
+      opacity: 1;
+      border: 2px solid #333;
+    }
+
+    .leaflet-middle-icon {
+      margin-left: -6px ip !important;
+      margin-top: -6px ip !important;
+      width: 12px ip !important;
+      height: 12px ip !important;
+      border-radius: 50%;
+      opacity: 0.8 !important;
+      border: 1px solid #333;
+    }
+
+    #id_address {
+      background-color: var(--grey-1000-50);
+    }
+
     #sidebar {
       bottom: 0;
       overflow-y: auto;
@@ -268,13 +315,6 @@ div#app {
             }
 
             button {
-              visibility: visible; // Styles for touch UIs
-
-              @media (hover: hover) {
-                /* Styles for mouse UIs */
-                visibility: hidden;
-              }
-
               margin-left: auto;
               font-size: 14px;
               padding: 0.5rem;
@@ -286,10 +326,6 @@ div#app {
             &:hover,
             &.hovered {
               background-color: #f5f5f5;
-
-              button {
-                visibility: visible;
-              }
             }
 
             &:active {
@@ -298,65 +334,78 @@ div#app {
           }
         }
       }
+    }
+  }
+}
 
-      div#hedge-quality {
-        h3 {
-          margin: 0;
-          font-weight: 500 !important;
-          font-size: 16px !important;
-          background-color: var(--blue-france-925-125);
-          color: var(--blue-france-sun-113-625);
-        }
+div#app div#saisie-ui #sidebar div#hedge-conditions,
+section#section-plantation-evaluation div#hedge-conditions {
+  .tile-header {
+    background-color: var(--blue-france-925-125);
+    color: var(--blue-france-sun-113-625);
 
-        div#conditions {
-          .fr-badge {
-            margin-top: 0.2em;
+    .fr-badge::before {
+      background: none;
+      width: 0;
+      height: 0;
+    }
+  }
 
-            &::before {
-              margin: 0;
-            }
-          }
+  h3,
+  h4 {
+    margin: 0;
+    font-weight: 500 !important;
+    font-size: 16px !important;
+  }
 
-          .fr-badge--error {
-            color: var(--grey-625-425);
-            background-color: var(--background-contrast-grey);
-          }
+  div#conditions {
+    &.loading {
+      --text-title-grey: var(--text-disabled-grey);
 
-          span.fr-icon {
-            line-height: 1.75rem;
-            color: var(--grey-625-425);
-          }
+      color: var(--text-disabled-grey);
+    }
 
-          span.fr-icon.success {
-            color: var(--success-425-625);
-          }
+    .fr-badge {
+      margin-top: 0.2em;
 
-          p {
-            line-height: 1rem;
-            font-size: 14px;
-            margin: 0;
-          }
-
-          h6 {
-            margin: 0;
-            font-weight: 500 !important;
-            font-size: 16px !important;
-          }
-
-          > div {
-            display: flex;
-            margin-top: 1rem;
-
-            div {
-              margin-right: 0.8rem;
-            }
-          }
-        }
+      &::before {
+        margin: 0;
       }
     }
 
-    #id_address {
-      background-color: var(--grey-1000-50);
+    .fr-badge--error {
+      color: var(--grey-625-425);
+      background-color: var(--background-contrast-grey);
+    }
+
+    span.fr-icon {
+      line-height: 1.75rem;
+      color: var(--grey-625-425);
+    }
+
+    span.fr-icon.success {
+      color: var(--success-425-625);
+    }
+
+    p {
+      line-height: 1.2rem;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    h6 {
+      margin: 0;
+      font-weight: 500 !important;
+      font-size: 16px !important;
+    }
+
+    .condition-content {
+      display: flex;
+      margin-top: 1rem;
+
+      div {
+        margin-right: 0.8rem;
+      }
     }
   }
 }
@@ -371,20 +420,64 @@ dialog#hedge-input-modal {
   border: none;
   margin: 0;
   padding: 0;
-}
 
-dialog.hedge-data-dialog {
-  #form-group-removal-hedge_type label span.label-content,
-  #form-group-plantation-hedge_type label span.label-content {
+  &.loaded #loading-indicator {
+    display: none;
+  }
+
+  #loading-indicator {
+    width: 100%;
+    height: 100vh;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
+    align-items: center;
   }
 }
 
-div#statistics {
-  background-color: var(--grey-975-100);
-  padding: 16px;
+dialog.hedge-data-dialog {
+  #form-group-removal-type_haie label span.label-content,
+  #form-group-plantation-type_haie label span.label-content {
+    display: flex;
+    justify-content: space-between;
+  }
 
+  fieldset#id_removal-type_haie,
+  fieldset#id_plantation-type_haie {
+    div.fr-grid-row {
+      align-items: center;
+    }
+
+    div.fr-fieldset__element {
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+
+      .fr-radio-rich {
+        flex-grow: 1;
+      }
+
+      .fr-radio-rich__pictogram {
+        padding: 16px;
+        width: 0;
+        min-width: 0;
+
+        img {
+          width: 24px;
+        }
+      }
+
+      img.hedge-radio-img {
+        max-width: 100%;
+      }
+    }
+  }
+
+  &.read-only div.fr-fieldset__element:has(input[type="radio"]:not(:checked)) {
+    display: none !important;
+  }
+}
+
+div#group-haies-content {
   table {
     width: 100%;
     border-collapse: collapse;
@@ -464,6 +557,28 @@ div#project-specifications-instructor {
   i.optional-tag {
     display: none;
   }
+
+  ul#moulinette_fields {
+    list-style-type: none;
+    padding: 0;
+  }
+}
+
+div#instructor-view-side-menu {
+  .fr-sidemenu__list.fr-btns-group button.fr-btn,
+  .fr-sidemenu__list.fr-btns-group a.fr-btn {
+    justify-content: start;
+    text-align: left;
+  }
+}
+
+.department-doctrine-cta {
+  font-weight: bold;
+  color: var(--blue-france-sun-113-625);
+
+  a {
+    color: var(--blue-france-sun-113-625);
+  }
 }
 
 /**
@@ -473,7 +588,8 @@ div#project-specifications-instructor {
   text-align: center;
 }
 
-.project-list__table {
+.project-list__table,
+.procedure-history__table {
   caption {
     font-weight: lighter;
     font-size: 0.75rem;
@@ -485,54 +601,220 @@ div#project-specifications-instructor {
   }
 }
 
-.fr-link--icon-right.link-project-detail::after {
-  margin: 0;
-}
-
 /**
  * Page instructor
  */
 
-.ds-item > .fr-sidemenu__link::after {
-  content: "";
-  background-image: url("/static/images/logo_demarches_simplifiees.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center right;
-  display: block;
-  width: 64px;
-  height: 64px;
+.project-inner-content {
+  max-width: 42em;
+}
+
+#form-group-instructor_free_mention .label-content {
+  font-weight: bold;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+#normandie_plantation_table {
+  .fr-table__content table tfoot {
+    th {
+      background-color: var(--background-alt-grey);
+      font-weight: 700;
+      background-size:
+        100% 1px,
+        1px 100%;
+      background-repeat: no-repeat, no-repeat;
+      background-position:
+        0 100%,
+        100% 0;
+
+      --idle: transparent;
+      --hover: var(--background-alt-grey-hover);
+      --active: var(--background-alt-grey-active);
+
+      background-image:
+        linear-gradient(
+          0deg,
+          var(--border-contrast-grey),
+          var(--border-contrast-grey)
+        ),
+        linear-gradient(
+          0deg,
+          var(--border-plain-grey),
+          var(--border-plain-grey)
+        );
+    }
+
+    td {
+      font-weight: 700;
+    }
+  }
+}
+
+ul.instructor-view-list {
+  list-style-type: none;
+  padding: 0;
 }
 
 .section-ds {
   border-top: 1px solid var(--border-default-grey);
 }
 
-div#project-dossier-no {
-  border-bottom: solid 1px var(--border-default-grey);
+.ds-files {
+  .fr-content-media {
+    margin: 1rem 0;
+  }
+
+  .fr-content-media__caption {
+    align-items: start;
+    margin-top: 0;
+  }
 }
 
-@media (width >= 48em) {
-  .fr-sidemenu--sticky {
-    top: 2.5rem; // height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+/* Instructeur Messagerie */
+
+.dj-messages {
+  padding-bottom: 1rem !important;
+  padding-top: 1rem !important;
+}
+
+.ds-message {
+  background-color: var(--background-alt-grey);
+  border-left: 3px solid var(--grey-425-625);
+  padding: 2rem;
+
+  &__exp {
+    font-weight: bold;
   }
 
-  // Apply border grey on main instead of sidemenu to have it full height
-  // Don't use sticky-full-height because side menu scroll up at the end of the page but too early
-  .fr-sidemenu__inner {
-    padding: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    padding-left: 0;
-    box-shadow: none;
+  &--instructor {
+    border-color: var(--blue-france-main-525);
   }
 
-  div#project-specifications-instructor {
-    padding-left: 1.5rem;
-    border-left: solid 1px var(--border-default-grey);
+  &--petitioner {
+    border-color: var(--yellow-tournesol-850-200);
+  }
+}
+
+@media (width >=48em) {
+  .fr-sidemenu {
+    padding-right: 0;
   }
 
-  div#project-dossier-no {
-    border-bottom: solid 1px var(--border-default-grey);
+  main.header-slim-displayed div#instructor-view-side-menu {
+    padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
+  }
+
+  .ds-message {
+    &--instructor,
+    &--automatic {
+      margin-left: 5rem;
+    }
+  }
+}
+
+div#invitation-token-email-html {
+  background-color: var(--background-contrast-grey);
+  color: var(--text-mention-grey);
+  padding: 2rem;
+}
+
+pre#invitation-token-email-text {
+  display: none;
+}
+
+ul#instruction-summary-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.fr-icon-haie::before,
+.fr-icon-haie::after {
+  mask-image: url("/static/icons/haie.svg");
+}
+
+div.title-with-link-container {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+#table-dossier-list,
+.procedure-history__table {
+  td,
+  th {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  th {
+    line-height: 1.2rem;
+  }
+
+  td {
+    height: 72px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    a {
+      font-size: 0.875rem;
+    }
+  }
+
+  tbody tr {
+    &:hover td {
+      background-color: var(--background-default-grey-hover);
+    }
+
+    td {
+      .fr-btn--secondary:not(:hover) {
+        background-color: var(--background-default-grey);
+      }
+    }
+  }
+}
+
+div#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  p {
+    margin: auto;
+  }
+}
+
+#faq-dropdown-btn {
+  width: 20rem;
+}
+
+section#moulinette-regulation-result {
+  section.instruction-infos {
+    --text-spacing: 0 0 1rem;
+
+    h6 {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+}
+
+.procedure-history__table td span.described-by-tooltip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+div#project-header-container {
+  display: flex;
+  align-items: start;
+
+  form {
+    margin-left: 2em;
   }
 }

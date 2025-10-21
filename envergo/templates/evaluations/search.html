@@ -3,9 +3,9 @@
 {% block title %}Retrouvez un avis réglementaire{% endblock %}
 
 {% block article %}
-  <h1>Retrouver un avis réglementaire EnvErgo</h1>
+  <h1>Retrouver un avis réglementaire Envergo</h1>
 
-  <p>Saisissez la référence de votre demande EnvErgo pour accéder à l'avis réglementaire concernant un projet.</p>
+  <p>Saisissez la référence de votre demande Envergo pour accéder à l'avis réglementaire concernant un projet.</p>
 
   <form method="post" action="" novalidate>
     {% csrf_token %}
@@ -14,7 +14,7 @@
     <button type="submit" class="fr-btn">Consulter l'avis réglementaire</button>
 
     <p class="fr-mt-3w">
-      Vous n'avez pas de référence EnvErgo ?
+      Vous n'avez pas de référence Envergo ?
       <a href="{% url 'request_evaluation' %}">Demandez un avis réglementaire</a>
       pour connaître les réglementations environnementales qui s'appliquent à
       un projet de construction ou d'aménagement.

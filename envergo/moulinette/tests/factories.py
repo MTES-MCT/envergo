@@ -6,6 +6,7 @@ from envergo.moulinette.models import (
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
+    MoulinetteTemplate,
     Perimeter,
     Regulation,
 )
@@ -18,6 +19,14 @@ class ConfigAmenagementFactory(DjangoModelFactory):
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
     regulations_available = ["loi_sur_leau", "sage", "natura2000", "eval_env"]
+
+
+class MoulinetteTemplateFactory(DjangoModelFactory):
+    class Meta:
+        model = MoulinetteTemplate
+
+    config = factory.SubFactory(ConfigAmenagementFactory)
+    content = factory.Faker("text")
 
 
 class RegulationFactory(DjangoModelFactory):
@@ -44,8 +53,16 @@ class PerimeterFactory(DjangoModelFactory):
 
     name = "Loi sur l'eau Zone humide"
     activation_map = factory.SubFactory(MapFactory)
-    regulation = factory.SubFactory(RegulationFactory)
     is_activated = True
+
+    @factory.post_generation
+    def regulations(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            # Simple build, or nothing to add, do nothing.
+            return
+
+        # Add the iterable of groups using bulk addition
+        self.regulations.add(*extracted)
 
 
 class ConfigHaieFactory(DjangoModelFactory):
@@ -54,7 +71,13 @@ class ConfigHaieFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
-    regulations_available = ["conditionnalite_pac", "ep", "natura2000_haie"]
+    regulations_available = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+        "reserves_naturelles",
+    ]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [
         {

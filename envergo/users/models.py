@@ -36,21 +36,23 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """Default user for EnvErgo."""
+    """Default user for Envergo."""
 
     objects = UserManager()
 
     email = models.EmailField(_("Email address"), unique=True)
     name = CharField(_("Name of User"), blank=True, max_length=255)
-    is_confirmed_by_admin = models.BooleanField(
-        _("Confirmed by an admin"),
-        default=False,
-        help_text="Uniquement pour l'accès au GuH",
-    )
     access_amenagement = models.BooleanField(
         _("Access amenagement site"), default=False
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
+
+    departments = models.ManyToManyField(
+        "geodata.Department",
+        verbose_name=_("Departements"),
+        related_name="members",
+        blank=True,
+    )
 
     username = None  # type: ignore
     first_name = None  # type: ignore
@@ -66,3 +68,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
+
+    def is_instructor(self):
+        return self.is_superuser or all(
+            (
+                self.is_active,
+                self.access_haie,
+                self.departments.exists() or self.invitation_tokens.exists(),
+            )
+        )

@@ -1,13 +1,29 @@
 from django import template
+from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
     CheckboxInput,
     CheckboxSelectMultiple,
     FileInput,
+    HiddenInput,
     RadioSelect,
     Select,
 )
+from django.utils.dateparse import parse_datetime
 
 register = template.Library()
+
+
+@register.filter
+def has_custom_template(field):
+    """Should we use the field's own template.
+
+    This is a hack, since we should always override the field's templates instead
+    of defining "field snippets".
+
+    This should be fixed some day.
+    """
+
+    return hasattr(field.field.widget, "custom_template")
 
 
 @register.filter
@@ -128,3 +144,32 @@ def is_type(value, type_name):
 @register.filter
 def get_item(dictionary, key):
     return dictionary[key]
+
+
+@register.filter
+def as_hidden(field):
+    """Render the field as a hidden input without modifying the original widget."""
+    return field.as_widget(widget=HiddenInput())
+
+
+@register.filter
+def get_choice_label(choices, value):
+    """Return human-readable label for a given choice value."""
+    return dict(choices).get(value, value)
+
+
+@register.filter
+def to_datetime(value):
+    """Parse ISO string and return datetime.datetime or datetime.timezone"""
+    return parse_datetime(value)
+
+
+@register.filter
+def choice_default_label(model, field_name):
+    """Return the label of the default choice for a model choice field."""
+    field = model._meta.get_field(field_name)
+    if field.default is NOT_PROVIDED:
+        default = ""
+    else:
+        default = field.default
+    return dict(field.choices).get(default, default)

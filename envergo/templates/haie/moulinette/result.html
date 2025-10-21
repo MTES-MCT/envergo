@@ -6,25 +6,19 @@
   <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette plantation_evaluation %}</div>
 
   <p class="fr-hint-text fr-mb-3w">
-    Ce simulateur est fourni à titre informatif, et ne vaut pas position de l’administration.
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
     <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
 {% endblock %}
 
-{% block before-title-content %}
-  <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
-    <li>{% include '_share_url_btn.html' %}</li>
-  </ul>
+{% block main_form_field %}
+  {% if field.name == "haies" %}
+    <li>{{ field|display_remove_only_haies_field }}</li>
+  {% else %}
+    {{ block.super }}
+  {% endif %}
 {% endblock %}
 
 {% block liability_info %}
   {% show_haie_moulinette_liability_info moulinette.result %}
-{% endblock %}
-
-{% block extra_js %}
-  {{ block.super }}
-  <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
-  <script>var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";</script>
-  <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
-  <script defer src="{% static 'js/libs/haie_result_actions_banner.js' %}"></script>
 {% endblock %}

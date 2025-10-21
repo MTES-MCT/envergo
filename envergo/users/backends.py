@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class AuthBackend(ModelBackend):
-    """Custom Backend for EnvErgo.
+    """Custom Backend for Envergo.
 
     Login requirements are different for Amenagement and Haies.
     """
@@ -34,7 +34,6 @@ class AuthBackend(ModelBackend):
                     (
                         getattr(user, "access_haie", True),
                         getattr(user, "is_active", True),
-                        getattr(user, "is_confirmed_by_admin", True),
                     )
                 )
         else:
