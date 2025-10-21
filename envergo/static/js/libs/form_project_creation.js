@@ -130,7 +130,7 @@
 
 
 function displayMessage(title, message, type) {
-  const projectResult = document.getElementById('project-result');
+  const projectResultTopBar = document.getElementById('project-result-top-bar');
   const notification = `
                           <div id="demarche_simplifiee_message" class="messages fr-p-5w">
                             <div class="fr-alert fr-alert--${type} fr-alert--sm">
@@ -139,9 +139,9 @@ function displayMessage(title, message, type) {
                             </div>
                           </div>
                         `;
-  projectResult.insertAdjacentHTML('afterbegin', notification);
+  projectResultTopBar.insertAdjacentHTML('afterbegin', notification);
   // Scroll smoothly to the message
-  projectResult.scrollIntoView({behavior: 'smooth'});
+  projectResultTopBar.scrollIntoView({behavior: 'smooth'});
 }
 
 (function () {
