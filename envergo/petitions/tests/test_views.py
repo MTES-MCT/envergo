@@ -610,7 +610,10 @@ def test_petition_project_instructor_messagerie_ds(
     response = client.post(instructor_messagerie_url, message_data, follow=True)
     # THEN I receive nok response
     content = response.content.decode()
-    assert "Le message n'a pas pu être envoyé, la pièce jointe" in content
+    assert (
+        "Le message n’a pas pu être envoyé.\nVérifiez que la pièce jointe respecte les conditions suivantes"
+        in content
+    )  # noqa
 
 
 @pytest.mark.urls("config.urls_haie")
