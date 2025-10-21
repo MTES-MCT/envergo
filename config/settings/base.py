@@ -134,6 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/dev/ref/settings/#middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "envergo.middleware.csp.ContentSecurityPolicyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -145,7 +146,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
-    "envergo.analytics.middleware.StoreMtmValues",
+    "envergo.analytics.middleware.HandleMtmValues",
 ]
 
 # STATIC
@@ -476,3 +477,7 @@ HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = (
 FILE_UPLOAD_HANDLERS = [
     "django.core.files.uploadhandler.TemporaryFileUploadHandler",
 ]
+
+SECURE_CSP = {}
+
+SECURE_CSP_REPORT_ONLY = {}

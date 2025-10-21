@@ -32,3 +32,16 @@ class Event(models.Model):
             models.Index(fields=["session_key"]),
             models.Index(fields=["category", "event"]),
         ]
+
+
+class CSPReport(models.Model):
+    """Stores a csp report event in db."""
+
+    content = models.JSONField("Content", null=False)
+    site = models.ForeignKey(Site, on_delete=models.PROTECT)
+    session_key = models.CharField(_("Session key"), max_length=128)
+    date_created = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "CSP report"
+        verbose_name_plural = "CSP reports"
