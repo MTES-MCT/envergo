@@ -13,7 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import CharField, Exists, OuterRef, Q, Subquery, Value
+from django.db.models import CharField, DateField, Exists, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -629,6 +629,10 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                 Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
                 Value(DECISIONS.unset, output_field=CharField()),
             ),
+            due_date=Coalesce(
+                Subquery(latest_logs.values("due_date")[:1], output_field=DateField()),
+                Value(None, output_field=DateField()),
+            ),
         )
         return queryset
 
@@ -1013,7 +1017,6 @@ class PetitionProjectInstructorProcedureView(
             "page_obj": page_obj,
             "is_paginated": paginator.num_pages > 1,
             "STAGES": STAGES,
-            "DECISIONS": DECISIONS,
         }
 
         context.update(super().get_context_data(**kwargs))
