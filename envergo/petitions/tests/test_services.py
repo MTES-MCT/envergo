@@ -54,6 +54,8 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -127,6 +129,8 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
@@ -153,6 +157,8 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @patch("envergo.petitions.services.notify")
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
@@ -834,6 +840,8 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
 def test_get_message_project_via_demarches_simplifiees(
@@ -866,6 +874,8 @@ def test_get_message_project_via_demarches_simplifiees(
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
 def test_send_message_project_via_demarches_simplifiees(
@@ -908,6 +918,8 @@ def test_send_message_project_via_demarches_simplifiees(
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.sessions.Session.request")
 @patch("gql.Client.execute")
