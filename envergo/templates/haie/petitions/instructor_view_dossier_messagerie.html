@@ -1,37 +1,26 @@
 {% extends "haie/petitions/instructor_view_base.html" %}
 
-{% load utils petitions %}
+{% load utils petitions static %}
 
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
-{% block project_view_title %}<h2>Messagerie</h2>{% endblock %}
+{% block project_view_title %}
+  <div class="fr-container--fluid">
+    <div class="fr-grid-row">
+      <div class="fr-col">
+        <h2>Messagerie</h2>
+      </div>
+      <div>
+        <button aria-controls="modal-new-message"
+                data-fr-opened="false"
+                type="button"
+                class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
 
 {% block project_content %}
-
-  <div class="dj-message fr-alert fr-alert--info">
-    <h3 class="fr-alert__title">Cette page est en cours de construction.</h3>
-    <p>
-      En attendant, vous pouvez échanger avec le pétitionnaire via Démarches Simplifiées
-      <a href="{{ ds_url }}messagerie" target="_blank" rel="noopener external">en cliquant sur ce lien</a>.
-    </p>
-  </div>
-
-  <section class="ds-messages fr-my-4w">
-    <h4>Envoyer un message</h4>
-    <form method="post"
-          action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
-      {% csrf_token %}
-
-      <div id="field-message_body" class="fr-my-2w">
-        {% include '_field_snippet.html' with field=form.message_body %}
-        <button type="submit"
-                class="fr-btn fr-btn--primary"
-                formaction="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
-          Envoyer le message
-        </button>
-      </div>
-    </form>
-  </section>
 
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
@@ -71,5 +60,7 @@
       {% endfor %}
     </section>
   {% endif %}
+
+  {% include 'haie/petitions/_new_message_modal.html' %}
 
 {% endblock %}

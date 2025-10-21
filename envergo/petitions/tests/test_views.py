@@ -8,6 +8,7 @@ import factory
 import pytest
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +28,8 @@ from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
+    FILE_TEST_NOK_PATH,
+    FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
@@ -577,12 +580,40 @@ def test_petition_project_instructor_messagerie_ds(
 
     # Test send message
     assert not Event.objects.filter(category="message", event="envoi").exists()
+
+    # Given a message and attachment image file
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+
+    # WHEN I post message
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
-    message_data = {"message_body": "test"}
     response = client.post(instructor_messagerie_url, message_data, follow=True)
+
+    # THEN I receive ok response and an event is created
     content = response.content.decode()
     assert "Le message a bien été envoyé au demandeur." in content
     assert Event.objects.filter(category="message", event="envoi").exists()
+
+    # GIVEN a message and doc attachment unauthorized extension
+    attachment = SimpleUploadedFile(
+        FILE_TEST_NOK_PATH.name, FILE_TEST_NOK_PATH.read_bytes()
+    )
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    # WHEN I post message
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    response = client.post(instructor_messagerie_url, message_data, follow=True)
+    # THEN I receive nok response
+    content = response.content.decode()
+    assert (
+        "Le message n’a pas pu être envoyé.\nVérifiez que la pièce jointe respecte les conditions suivantes"
+        in content
+    )  # noqa
 
 
 @pytest.mark.urls("config.urls_haie")

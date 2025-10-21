@@ -306,7 +306,7 @@ def get_messages_and_senders_from_ds(
     return messages, instructor_emails, petitioner_email
 
 
-def send_message_dossier_ds(petition_project, message_body):
+def send_message_dossier_ds(petition_project, message_body, attachment_file=None):
     """Send message via DS API for a given dossier"""
 
     # Get dossier ID
@@ -317,7 +317,14 @@ def send_message_dossier_ds(petition_project, message_body):
 
     # Send message
     ds_client = DemarchesSimplifieesClient()
-    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+    if attachment_file:
+        response = ds_client.dossier_send_message(
+            dossier_number, dossier_id, message_body, attachment_file
+        )
+    else:
+        response = ds_client.dossier_send_message(
+            dossier_number, dossier_id, message_body
+        )
 
     return response
 
