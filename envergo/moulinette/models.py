@@ -1614,7 +1614,17 @@ class Moulinette(ABC):
 
     @property
     def result(self):
-        """Compute global result from individual regulation results."""
+        """Compute global result from individual regulation results.
+
+        There is no such thing as a "global simulation result", since a result
+        is a regulation level concept.
+
+        So this method returns a code that will be used to select the main template
+        of the moulinette result page. It is also used to select the evaluation email
+        template.
+
+        The name will be refactored eventually.
+        """
 
         # return the cached result if it was overriden
         # Otherwise, we don't cache the result because it can change between invocations
