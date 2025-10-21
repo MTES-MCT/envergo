@@ -546,10 +546,7 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.dispense: False,
     RESULTS.dispense_sous_condition: False,
     RESULTS.soumis_declaration: False,
-    RESULTS.declaration: False,
     RESULTS.soumis_autorisation: False,
-    RESULTS.autorisation: False,
-    RESULTS.hors_regime_unique: False,
 }
 
 

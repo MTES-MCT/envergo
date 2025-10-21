@@ -105,9 +105,6 @@ RESULTS = Choices(
     ("soumis_ou_pac", "Soumis"),
     ("soumis_declaration", "Déclaration"),
     ("soumis_autorisation", "Autorisation"),
-    ("autorisation", "Autorisation"),
-    ("declaration", "Declaration"),
-    ("hors_regime_unique", "Hors régime unique"),
 )
 
 RESULT_CASCADE = [
@@ -116,10 +113,8 @@ RESULT_CASCADE = [
     RESULTS.cas_par_cas,
     RESULTS.soumis_ou_pac,
     RESULTS.soumis_declaration,
-    RESULTS.declaration,
     RESULTS.soumis,
     RESULTS.soumis_autorisation,
-    RESULTS.autorisation,
     RESULTS.derogation_inventaire,
     RESULTS.derogation_simplifiee,
     RESULTS.dispense_sous_condition,
@@ -132,7 +127,6 @@ RESULT_CASCADE = [
     RESULTS.non_disponible,
     RESULTS.non_applicable,
     RESULTS.non_active,
-    RESULTS.hors_regime_unique,
 ]
 
 _missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
@@ -167,7 +161,6 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.non_soumis: TagStyleEnum.Green,
     RESULTS.non_disponible: TagStyleEnum.Grey,
     RESULTS.non_applicable: TagStyleEnum.Grey,
-    RESULTS.hors_regime_unique: TagStyleEnum.Grey,
     RESULTS.cas_par_cas: TagStyleEnum.Orange,
     RESULTS.systematique: TagStyleEnum.LightRed,
     RESULTS.non_concerne: TagStyleEnum.Green,
@@ -180,9 +173,7 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.dispense: TagStyleEnum.Green,
     RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
     RESULTS.soumis_declaration: TagStyleEnum.LightRed,
-    RESULTS.declaration: TagStyleEnum.LightRed,
     RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
-    RESULTS.autorisation: TagStyleEnum.LightRed,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
@@ -372,7 +363,6 @@ class Evaluation(models.Model):
 
     def is_eligible_to_self_declaration(self):
         """Should we display the "self declare" call to action?"""
-
         if self.is_icpe:
             return False
 
