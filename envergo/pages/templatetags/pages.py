@@ -1,10 +1,12 @@
 import random
 from typing import Literal
+from urllib.parse import urlencode
 
 from django import template
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
+from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 
 register = template.Library()
@@ -103,6 +105,43 @@ def faq_menu(context):
         "faq_eval_env",
     ]
     return menu_item(context, link_route, link_label, subroutes=subroutes)
+
+
+@register.simple_tag(takes_context=True)
+def parametrage_departments_menu(context, is_slim=False):
+    """Generate html for the "Paramétrages" collapsible menu.
+    List available departments for current user."""
+
+    current_user = context["user"]
+
+    if current_user.is_authenticated:
+        config_haies = ConfigHaie.objects.all()
+        departments_with_config = Department.objects.defer("geometry").filter(
+            confighaie__in=config_haies
+        )
+
+        if current_user.is_superuser:
+            available_departments = departments_with_config
+        else:
+            user_departments = current_user.departments.defer("geometry")
+            available_departments = departments_with_config & user_departments
+
+        links = (
+            (
+                f"{reverse('triage')}?{urlencode({'department': department.department})}",
+                department,
+                [],
+            )
+            for department in available_departments
+        )
+
+        return collapsible_menu(
+            context,
+            links,
+            "Paramétrages",
+            "menu-settings-departments",
+            is_slim=is_slim,
+        )
 
 
 def collapsible_menu(
