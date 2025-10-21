@@ -573,6 +573,14 @@ div#project-specifications-instructor {
   }
 }
 
+div#instructor-view-side-menu {
+  .fr-sidemenu__list.fr-btns-group button.fr-btn,
+  .fr-sidemenu__list.fr-btns-group a.fr-btn {
+    justify-content: start;
+    text-align: left;
+  }
+}
+
 .department-doctrine-cta {
   font-weight: bold;
   color: var(--blue-france-sun-113-625);
