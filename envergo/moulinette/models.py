@@ -108,9 +108,7 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
     RESULTS.soumis_declaration: RESULTS.soumis,
-    RESULTS.declaration: RESULTS.soumis,
     RESULTS.soumis_autorisation: RESULTS.soumis,
-    RESULTS.autorisation: RESULTS.soumis,
     RESULTS.derogation_inventaire: RESULTS.soumis,
     RESULTS.derogation_simplifiee: RESULTS.soumis,
     RESULTS.dispense_sous_condition: RESULTS.soumis,
@@ -123,7 +121,6 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.non_disponible: RESULTS.non_disponible,
     RESULTS.non_applicable: RESULTS.non_disponible,
     RESULTS.non_active: RESULTS.non_disponible,
-    RESULTS.hors_regime_unique: RESULTS.non_disponible,
 }
 
 
@@ -161,9 +158,7 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_declaration: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.declaration: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_autorisation: ResultGroupEnum.RestrictiveRegulations,
-    RESULTS.autorisation: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_inventaire: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.derogation_simplifiee: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.action_requise: ResultGroupEnum.RestrictiveRegulations,
@@ -176,7 +171,6 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.non_disponible: ResultGroupEnum.UnsimulatedRegulations,
     RESULTS.non_applicable: ResultGroupEnum.OtherRegulations,
     RESULTS.non_active: ResultGroupEnum.OtherRegulations,
-    RESULTS.hors_regime_unique: ResultGroupEnum.OtherRegulations,
 }
 
 
