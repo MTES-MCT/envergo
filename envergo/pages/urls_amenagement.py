@@ -46,7 +46,7 @@ urlpatterns = [
     path(_("tos/"), TermsOfServiceView.as_view(), name="terms_of_service"),
     path(
         _("privacy/"),
-        TemplateView.as_view(template_name="pages/privacy.html"),
+        TemplateView.as_view(template_name="amenagement/pages/privacy.html"),
         name="privacy",
     ),
     path(

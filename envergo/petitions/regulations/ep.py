@@ -63,6 +63,10 @@ def ep_base_get_instructor_view_context(
 
 
 def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
+    """Reduce heges properties grouped by property
+    Without properties black listed
+    Ordered by forms fieldset
+    """
 
     hedges_properties = {}
     black_list = [
@@ -77,16 +81,40 @@ def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
     hedge_to_remove_properties_form = import_string(
         moulinette.config.hedge_to_remove_properties_form
     )
-    for hedge in petition_project.hedge_data.hedges():
+
+    # Order keys according to fieldsets order in form without black listed keys
+    ordered_fields_keys = []
+    for values in hedge_to_remove_properties_form.fieldsets.values():
+        for value in values:
+            if value in black_list:
+                continue
+            ordered_fields_keys.append(value)
+    for values in hedge_to_plant_properties_form.fieldsets.values():
+        for value in values:
+            if value in black_list:
+                continue
+            if value in ordered_fields_keys:
+                continue
+            ordered_fields_keys.append(value)
+
+    # Start hedges list with a TO_REMOVE hedge
+    hedges = petition_project.hedge_data.hedges()
+    hedges.sort(key=lambda h: h.type, reverse=True)
+
+    for hedge in hedges:
         form = (
             hedge_to_plant_properties_form
             if hedge.type == TO_PLANT
             else hedge_to_remove_properties_form
         )
-        for key, field in form.base_fields.items():
-            if key in black_list:
+
+        # Create list of hedges properties
+        for key in ordered_fields_keys:
+
+            if key not in form.base_fields:
                 continue
 
+            field = form.base_fields[key]
             is_choice = False
 
             if isinstance(field, ChoiceField):
