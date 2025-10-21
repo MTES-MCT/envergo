@@ -338,6 +338,15 @@ div#app {
   }
 }
 
+// override leaflet cursor
+div#app div#saisie-ui #map.leaflet-grab {
+  cursor: default;
+}
+
+.leaflet-dragging div#app div#saisie-ui #map.leaflet-grab {
+  cursor: grabbing;
+}
+
 div#app div#saisie-ui #sidebar div#hedge-conditions,
 section#section-plantation-evaluation div#hedge-conditions {
   .tile-header {
