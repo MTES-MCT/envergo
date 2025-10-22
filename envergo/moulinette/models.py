@@ -241,13 +241,6 @@ class Regulation(models.Model):
         blank=True,
     )
 
-    actions_to_take_map = models.JSONField(
-        "Correspondance résultat/actions à mener",
-        help_text="Au format: {'resultat1': ['action1', 'action2'], 'resultat2': ['action3']}",
-        default=dict,
-        blank=True,
-    )
-
     class Meta:
         verbose_name = _("Regulation")
         verbose_name_plural = _("Regulations")
@@ -585,8 +578,13 @@ class Regulation(models.Model):
     @property
     def actions_to_take(self) -> set[str]:
         """Get potential actions to take from regulation result."""
-        if self.actions_to_take_map:
-            actions_to_take = set(self.actions_to_take_map.get(self.result, []))
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing actions to take."
+            )
+
+        if hasattr(self._evaluator, "actions_to_take"):
+            actions_to_take = set(self._evaluator.actions_to_take)
         else:
             actions_to_take = set()
 
@@ -663,13 +661,6 @@ class Criterion(models.Model):
     discussion_contact = models.TextField(
         _("Discussion contact (html)"),
         help_text="Le porteur de projet peut se rapprocher…",
-        blank=True,
-    )
-
-    actions_to_take_map = models.JSONField(
-        "Correspondance résultat/actions à mener",
-        help_text="Au format: {'resultat1': ['action1', 'action2'], 'resultat2': ['action3']}",
-        default=dict,
         blank=True,
     )
 
@@ -810,9 +801,14 @@ class Criterion(models.Model):
 
     @property
     def actions_to_take(self) -> set[str]:
-        """Get potential actions to take from criterion result."""
-        if self.actions_to_take_map:
-            actions_to_take = set(self.actions_to_take_map.get(self.result, []))
+        """Get potential actions to take from regulation result."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing actions to take."
+            )
+
+        if hasattr(self._evaluator, "actions_to_take"):
+            actions_to_take = set(self._evaluator.actions_to_take)
         else:
             actions_to_take = set()
 

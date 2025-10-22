@@ -574,3 +574,35 @@ class HedgeDensityMixin:
     """Mixin for criterion evaluators that need "hedge density" to be evaluated."""
 
     pass
+
+
+class ActionsToTakeBaseMixin:
+    ACTIONS_TO_TAKE_MATRIX = {}
+
+    def get_actions_to_take(self):
+        actions_to_take = self.ACTIONS_TO_TAKE_MATRIX.get(self.result, [])
+        return actions_to_take
+
+    @property
+    def actions_to_take(self):
+        """Return the actions to take depending on regulation result."""
+        if not hasattr(self, "_actions_to_take"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return self._actions_to_take
+
+
+class ActionsToTakeCriterionMixin(ActionsToTakeBaseMixin):
+    """Mixin for criterion evaluators that project result into actions to take."""
+
+    def evaluate(self):
+        super().evaluate()
+        self._actions_to_take = self.get_actions_to_take()
+
+
+class ActionsToTakeRegulationMixin(ActionsToTakeBaseMixin):
+    """Mixin for regulation evaluators that project result into actions to take."""
+
+    def evaluate(self, regulation):
+        super().evaluate(regulation)
+        self._actions_to_take = self.get_actions_to_take()

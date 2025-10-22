@@ -9,13 +9,27 @@ from envergo.moulinette.forms.fields import (
     extract_choices,
     extract_display_function,
 )
-from envergo.moulinette.regulations import CriterionEvaluator, SelfDeclarationMixin
+from envergo.moulinette.regulations import (
+    ActionsToTakeRegulationMixin,
+    AmenagementRegulationEvaluator,
+    CriterionEvaluator,
+    SelfDeclarationMixin,
+)
 
 # Only ask the "emprise" question if final surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
 
 # Only ask the "Zone u" question if final surface is greater or equal than
 ZONE_U_THRESHOLD = 40000
+
+
+class EvalEnvEvaluator(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
+    choice_label = "Évaluation environnementale"
+
+    ACTIONS_TO_TAKE_MATRIX = {
+        "systematique": ["depot_etude_impact"],
+        "cas_par_cas": ["depot_cas_par_cas", "pc_cas_par_cas"],
+    }
 
 
 class EmpriseForm(forms.Form):
