@@ -15,6 +15,17 @@ main.home {
   }
 }
 
+.fr-header {
+  .fr-btns-group .account .fr-btn {
+    margin-bottom: 0;
+  }
+
+  .account__email {
+    font-size: 0.875rem;
+    color: var(--text-mention-grey);
+  }
+}
+
 html.saisie {
   height: 100%;
 
@@ -550,6 +561,14 @@ div#project-specifications-instructor {
   ul#moulinette_fields {
     list-style-type: none;
     padding: 0;
+  }
+}
+
+div#instructor-view-side-menu {
+  .fr-sidemenu__list.fr-btns-group button.fr-btn,
+  .fr-sidemenu__list.fr-btns-group a.fr-btn {
+    justify-content: start;
+    text-align: left;
   }
 }
 

@@ -406,11 +406,14 @@ query getDossier($dossierNumber: Int!)
 """
 )
 
-DOSSIER_ENVOYER_MESSAGE_MUTATION = """
+DOSSIER_ENVOYER_MESSAGE_MUTATION = (
+    FILE_FRAGMENT
+    + MESSAGE_FRAGMENT
+    + """
 mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
   dossierEnvoyerMessage(input: $input) {
     message {
-      body
+      ...MessageFragment
     }
     errors {
       message
@@ -419,3 +422,126 @@ mutation dossierEnvoyerMessage($input: DossierEnvoyerMessageInput!) {
   }
 }
 """
+)
+
+DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION = """
+mutation dossierPreparePiecejointe($input: CreateDirectUploadInput!) {
+  createDirectUpload(input: $input) {
+    clientMutationId
+    directUpload {
+      blobId
+      headers
+      signedBlobId
+      url
+    }
+  }
+}
+"""
+
+DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION = (
+    DOSSIER_FRAGMENT
+    + """
+mutation (
+$input: DossierRepasserEnConstructionInput!,
+ $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false
+  ) {
+  dossierRepasserEnConstruction(input: $input) {
+    dossier {
+    ...DossierFragment
+    }
+    errors {
+      message
+    }
+  }
+}
+"""
+)
+
+DOSSIER_PASSER_EN_INSTRUCTION_MUTATION = (
+    DOSSIER_FRAGMENT
+    + """
+mutation (
+$input: DossierPasserEnInstructionInput!,
+ $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false
+  ) {
+  dossierPasserEnInstruction(input: $input) {
+    dossier {
+    ...DossierFragment
+    }
+    errors {
+      message
+    }
+  }
+}
+"""
+)
+
+DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION = (
+    DOSSIER_FRAGMENT
+    + """
+mutation (
+$input: DossierRepasserEnInstructionInput!,
+ $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false
+  ) {
+  dossierRepasserEnInstruction(input: $input) {
+    dossier {
+    ...DossierFragment
+    }
+    errors {
+      message
+    }
+  }
+}
+"""
+)
+
+DOSSIER_ACCEPTER_MUTATION = (
+    DOSSIER_FRAGMENT
+    + """
+mutation ($input: DossierAccepterInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+  dossierAccepter(input: $input) {
+    dossier {
+    ...DossierFragment
+    }
+    errors {
+      message
+    }
+  }
+}
+"""
+)
+
+DOSSIER_REFUSER_MUTATION = (
+    DOSSIER_FRAGMENT
+    + """
+mutation ($input: DossierRefuserInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+  dossierRefuser(input: $input) {
+    dossier {
+    ...DossierFragment
+    }
+    errors {
+      message
+    }
+  }
+}
+"""
+)
+
+DOSSIER_CLASSER_SANS_SUITE_MUTATION = (
+    DOSSIER_FRAGMENT
+    + """
+mutation ($input: DossierClasserSansSuiteInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+  dossierClasserSansSuite(input: $input) {
+    dossier {
+    ...DossierFragment
+    }
+    errors {
+      message
+    }
+  }
+}
+"""
+)
