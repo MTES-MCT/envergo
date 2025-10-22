@@ -218,7 +218,8 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     """Render the global moulinette result content."""
     context_data = context.flatten()
     context_data.update(plantation_evaluation.get_context())
-    template_name = f"haie/moulinette/result/{moulinette.result}.html"
+    regime = "regime_unique" if moulinette.config.single_procedure else "droit_constant"
+    template_name = f"haie/moulinette/result/{regime}/{moulinette.result}.html"
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
