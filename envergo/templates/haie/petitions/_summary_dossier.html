@@ -47,7 +47,7 @@
           <div>
             <strong>Prochaine échéance :</strong>
           </div>
-          <div>{{ petition_project.due_date|display_due_date:False }}</div>
+          <div>{% display_due_date project.due_date False %}</div>
         </div>
       {% endif %}
       {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
