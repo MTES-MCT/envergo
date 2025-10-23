@@ -12,7 +12,6 @@ from django.views.generic import FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
-    extract_matomo_url_from_request,
     get_matomo_tags,
     is_request_from_a_bot,
     log_event,
