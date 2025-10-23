@@ -821,6 +821,14 @@ div#project-header-container {
 
 .due-date {
   color: var(--text-mention-grey);
+
+  span.fr-icon-hourglass-2-fill {
+    color: var(--orange-terre-battue-main-645);
+  }
+
+  span.fr-icon-warning-fill {
+    color: var(--artwork-minor-red-marianne);
+  }
 }
 
 .days-left {
