@@ -21,8 +21,25 @@ from envergo.hedges.regulations import (
     SafetyCondition,
     StrenghteningCondition,
 )
-from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
+from envergo.moulinette.regulations import (
+    CriterionEvaluator,
+    HaieRegulationEvaluator,
+    HedgeDensityMixin,
+)
 from envergo.utils.fields import get_human_readable_value
+
+
+class EPRegulation(HaieRegulationEvaluator):
+    choice_label = "EP"
+
+    PROCEDURE_TYPE_MATRIX = {
+        "interdit": "interdit",
+        "derogation": "autorisation",
+        "derogation_simplifiee": "autorisation",
+        "dispense_sous_condition": "declaration",
+        "a_verifier": "declaration",
+        "dispense": "declaration",
+    }
 
 
 class EPMixin:

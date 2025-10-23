@@ -36,11 +36,20 @@ from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
-from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
+from envergo.evaluations.models import (
+    RESULT_CASCADE,
+    RESULTS,
+    TAG_STYLES_BY_RESULT,
+    TagStyleEnum,
+)
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
-from envergo.moulinette.fields import CriterionEvaluatorChoiceField, get_subclasses
+from envergo.moulinette.fields import (
+    CriterionEvaluatorChoiceField,
+    RegulationEvaluatorChoiceField,
+    get_subclasses,
+)
 from envergo.moulinette.forms import (
     DisplayIntegerField,
     MoulinetteFormAmenagement,
@@ -88,35 +97,6 @@ REGULATIONS = Choices(
     ("urbanisme_haie", "Urbanisme haie"),
     ("reserves_naturelles", "Réserves naturelles"),
 )
-
-
-RESULT_CASCADE = [
-    RESULTS.interdit,
-    RESULTS.systematique,
-    RESULTS.cas_par_cas,
-    RESULTS.soumis_ou_pac,
-    RESULTS.soumis_declaration,
-    RESULTS.soumis,
-    RESULTS.soumis_autorisation,
-    RESULTS.derogation_inventaire,
-    RESULTS.derogation_simplifiee,
-    RESULTS.dispense_sous_condition,
-    RESULTS.action_requise,
-    RESULTS.a_verifier,
-    RESULTS.iota_a_verifier,
-    RESULTS.non_soumis,
-    RESULTS.dispense,
-    RESULTS.non_concerne,
-    RESULTS.non_disponible,
-    RESULTS.non_applicable,
-    RESULTS.non_active,
-]
-
-_missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
-if _missing_results:
-    raise ValueError(
-        f"The following RESULTS are missing in RESULT_CASCADE: {_missing_results}"
-    )
 
 
 GLOBAL_RESULT_MATRIX = {
@@ -233,6 +213,7 @@ class Regulation(models.Model):
         max_length=256,
         blank=True,
     )
+    evaluator = RegulationEvaluatorChoiceField(_("Evaluator"))
 
     weight = models.PositiveIntegerField("Ordre de calcul", default=1)
 
@@ -319,6 +300,29 @@ class Regulation(models.Model):
         for criterion in self.criteria.all():
             criterion.evaluate(moulinette, criterion.distance)
 
+        self._evaluator = self.evaluator(moulinette)
+        self._evaluator.evaluate(self)
+
+    @property
+    def result(self):
+        """Return the regulation result."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing the result."
+            )
+
+        return self._evaluator.result
+
+    @property
+    def procedure_type(self):
+        """Return the regulation procedure type (autorisation / déclaration / hors r.u)."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing the proceture type."
+            )
+
+        return self._evaluator.procedure_type
+
     @property
     def slug(self):
         return self.regulation
@@ -332,16 +336,6 @@ class Regulation(models.Model):
         subtitle_property = f"{self.regulation}_subtitle"
         sub = getattr(self, subtitle_property, None)
         return sub
-
-    @property
-    def eval_env_subtitle(self):
-        """Custom subtitle for EvalEnv.
-
-        When an Eval Env evaluation is "non soumis", we need to display that not
-        all "rubriques" have been evaluated.
-        """
-        if self.result != "non_soumis":
-            return None
 
     def is_activated(self):
         """Is the regulation activated in the moulinette config?"""
@@ -366,59 +360,6 @@ class Regulation(models.Model):
             (not self.has_perimeters)
             or (self.has_perimeters and any(activated_perimeters))
         )
-
-    @property
-    def result(self):
-        """Compute global result from individual criterions.
-
-        When we perform an evaluation, a single regulation has many criteria.
-        Criteria can have different results, but we display a single value for
-        the regulation result.
-
-        We can reduce different criteria results into a single regulation
-        result because results have different priorities.
-
-        For example, if a single criterion has the "interdit" result, the
-        regulation result will be "interdit" too, no matter what the other
-        criteria results are. Then it will be "soumis", etc.
-
-        Different regulations have different set of possible result values, e.g
-        only the Évaluation environnementale regulation has the "cas par cas" or
-        "systematique" results, but the cascade still works.
-        """
-
-        # We start by handling edge cases:
-        # - when the regulation is not activated for the department
-        # - when the perimeter is not activated
-        # - when no perimeter is found
-        if not self.is_activated():
-            return RESULTS.non_active
-
-        if self.has_perimeters:
-            all_perimeters = self.perimeters.all()
-            activated_perimeters = [p for p in all_perimeters if p.is_activated]
-            if all_perimeters and not any(activated_perimeters):
-                return RESULTS.non_disponible
-            if not all_perimeters:
-                return RESULTS.non_concerne
-
-        # From this point, we made sure every data (regulation, perimeter) is existing
-        # and activated
-
-        results = [criterion.result for criterion in self.criteria.all()]
-        result = None
-        for status in RESULT_CASCADE:
-            if status in results:
-                result = status
-                break
-
-        # If there is no criterion at all, we have to set a default value
-        if result is None:
-            if self.has_perimeters:
-                result = RESULTS.non_soumis
-            else:
-                result = RESULTS.non_disponible
-        return result
 
     @property
     def results_by_perimeter(self):
@@ -1003,6 +944,11 @@ class ConfigHaie(ConfigBase):
         base_field=models.CharField(max_length=64, choices=REGULATIONS),
         blank=True,
         default=list,
+    )
+    single_procedure = models.BooleanField(
+        "Régime unique",
+        default=False,
+        help_text="Le régime unique s'applique dans ce département",
     )
 
     department_doctrine_html = models.TextField(
@@ -1807,7 +1753,17 @@ class Moulinette(ABC):
 
     @property
     def result(self):
-        """Compute global result from individual regulation results."""
+        """Compute global result from individual regulation results.
+
+        There is no such thing as a "global simulation result", since a result
+        is a regulation level concept.
+
+        So this method returns a code that will be used to select the main template
+        of the moulinette result page. It is also used to select the evaluation email
+        template.
+
+        The name will be refactored eventually.
+        """
 
         # return the cached result if it was overriden
         # Otherwise, we don't cache the result because it can change between invocations
@@ -2059,6 +2015,7 @@ class MoulinetteAmenagement(Moulinette):
 
         if self.is_evaluation_available():
             summary["result"] = self.result_data()
+            summary["main_result"] = self.result
 
         return summary
 
@@ -2135,6 +2092,37 @@ class MoulinetteHaie(Moulinette):
     def get_config(self):
         return getattr(self.department, "confighaie", None)
 
+    @property
+    def result(self):
+        """Compute global result from individual regulation results."""
+
+        if not self.config.single_procedure:
+            return super().result
+
+        # return the cached result if it was overriden
+        # Otherwise, we don't cache the result because it can change between invocations
+        if hasattr(self, "_result"):
+            return self._result
+
+        procedures = [regulation.procedure_type for regulation in self.regulations]
+        is_interdit = "interdit" in procedures
+        is_autorisation = "autorisation" in procedures
+
+        # Check if we are in the "100% alignement d'arbres" case
+        hedges = self.catalog["haies"].hedges_filter("TO_REMOVE", "!alignement")
+        alignement_arbres = len(hedges) == 0
+
+        if is_interdit:
+            result = RESULTS.interdit
+        elif alignement_arbres:
+            result = "hors_regime_unique"
+        elif is_autorisation:
+            result = "autorisation"
+        else:
+            result = "declaration"
+
+        return result or RESULTS.non_soumis
+
     def summary(self):
         """Build a data summary, for analytics purpose."""
         summary = self.data.copy()
@@ -2142,6 +2130,8 @@ class MoulinetteHaie(Moulinette):
 
         if self.is_evaluation_available():
             summary["result"] = self.result_data()
+            summary["main_result"] = self.result
+            summary["regime_type"] = "ru" if self.config.single_procedure else "dc"
 
         if "haies" in self.catalog:
             haies = self.catalog["haies"]

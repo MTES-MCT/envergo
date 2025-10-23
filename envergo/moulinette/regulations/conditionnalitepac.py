@@ -8,9 +8,20 @@ from django.core.exceptions import ValidationError
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
 from envergo.moulinette.forms import DisplayIntegerField
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 logger = logging.getLogger(__name__)
+
+
+class Bcae8Regulation(HaieRegulationEvaluator):
+    choice_label = "Conditionnalité PAC"
+
+    PROCEDURE_TYPE_MATRIX = {
+        "interdit": "interdit",
+        "soumis": "declaration",
+        "dispense": "declaration",
+        "non_soumis": "declaration",
+    }
 
 
 def keep_fields(fields, keys):

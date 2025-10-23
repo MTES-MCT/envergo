@@ -8,7 +8,17 @@ from django.contrib.gis.geos import MultiLineString
 from django.db.models.functions import Cast
 from pyproj import Geod
 
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+
+
+class ReservesNaturellesRegulation(HaieRegulationEvaluator):
+    choice_label = "Réserves naturelles"
+
+    PROCEDURE_TYPE_MATRIX = {
+        "soumis_autorisation": "autorisation",
+        "soumis_declaration": "declaration",
+        "non_concerne": "declaration",
+    }
 
 
 class ReservesNaturellesForm(forms.Form):
