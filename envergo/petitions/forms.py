@@ -87,14 +87,14 @@ class ProcedureForm(forms.ModelForm):
             "update_comment",
         ]
         help_texts = {
-            "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
             "update_comment": "Commentaire interne expliquant le contexte et les raisons du changement.",
         }
         labels = {
-            "due_date": "Prochaine échéance",
+            "due_date": "Échéance de l'étape",
         }
         widgets = {
             "stage": ProjectStageField(),
+            "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
     def __init__(self, *args, **kwargs):
