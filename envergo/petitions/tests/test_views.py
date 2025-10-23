@@ -222,10 +222,7 @@ def test_petition_project_detail(mock_post, client, site):
     assert "moulinette" in response.context
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
     assert response.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département"
-        in response.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" in response.content.decode()
 
     # Given hedges in department 44 and accross the department border
     hedge_44 = HedgeFactory(
@@ -253,8 +250,7 @@ def test_petition_project_detail(mock_post, client, site):
     # THEN I should see that there is no hedges to remove outside the department
     assert not response.context["has_hedges_outside_department"]
     assert (
-        "Au moins une des haies est située hors du département"
-        not in response.content.decode()
+        "Le projet est hors du département sélectionné" not in response.content.decode()
     )
 
 
@@ -1022,10 +1018,7 @@ def test_instructor_view_with_hedges_outside_department(
 
     # THEN the result page is displayed with a warning
     assert res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située en dehors du département"
-        in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" in res.content.decode()
 
     # Given hedges in department 44 and accross the department border
     hedge_44 = HedgeFactory(
@@ -1050,10 +1043,7 @@ def test_instructor_view_with_hedges_outside_department(
 
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département"
-        not in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" not in res.content.decode()
 
 
 @pytest.mark.urls("config.urls_haie")
