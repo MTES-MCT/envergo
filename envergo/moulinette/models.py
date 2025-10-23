@@ -882,7 +882,7 @@ class Perimeter(models.Model):
         verbose_name_plural = _("Perimeters")
 
     def __str__(self):
-        return self.backend_name
+        return self.name
 
     def has_contact(self):
         return any(
