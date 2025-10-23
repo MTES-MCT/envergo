@@ -57,7 +57,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
     regulation = RegulationFactory(
-        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPEvaluator"
+        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
     )
     criteria = [
         CriterionFactory(
