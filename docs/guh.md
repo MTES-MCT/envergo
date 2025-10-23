@@ -1,4 +1,4 @@
-# Guide administration du GUH
+# Guide administration du Portail du Guichet Unique de la Haie (PGUH)
 
 ## Ajouter une nouvelle config
 
