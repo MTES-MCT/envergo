@@ -93,7 +93,7 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
             }
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "securite",
         "reimplantation": "replantation",
         "localisation_pac": "non",
@@ -102,10 +102,11 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
         "element": "haie",
         "department": 44,
     }
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
 
     # WHEN the plantation evaluator is created with these regulations
-    evaluator = PlantationEvaluator(moulinette, moulinette_data["haies"])
+    evaluator = PlantationEvaluator(moulinette, moulinette_data["data"]["haies"])
     evaluator.evaluate()
 
     # THEN the plantation evaluator should only evaluate the activated regulation

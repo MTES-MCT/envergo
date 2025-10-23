@@ -251,7 +251,8 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
@@ -979,7 +980,7 @@ class PetitionProjectInstructorAlternativeView(
         flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
         flat_qs["alternative"] = "true"
         alternative_form_url = (
-            f"{reverse("moulinette_home")}?{urlencode(flat_qs, doseq=True)}"
+            f"{reverse("moulinette_form")}?{urlencode(flat_qs, doseq=True)}"
         )
 
         context["alternative_form_url"] = alternative_form_url
