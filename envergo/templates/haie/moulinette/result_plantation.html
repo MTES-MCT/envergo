@@ -8,9 +8,8 @@
     <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
       <li>
         <button id="copy-btn"
-                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-link btn--copy-to-clipboard">
-          Copier le lien de cette page
-        </button>
+                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-link btn--copy-to-clipboard btn--shorten-url"
+                data-clipboard-text="{{ current_url | safe }}">Copier le lien de cette page</button>
       </li>
     </ul>
   {% endif %}
@@ -40,9 +39,9 @@
   {{ block.super }}
   <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script>
-    window.TEXT_TO_COPY = "{{current_url | safe}}";
     window.SUCCESSFUL_COPY_MESSAGE = "Lien copié !";
     window.COPY_DISABLED_MESSAGE = "Impossible de copier le lien";
   </script>
   <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
+  <script defer src="{% static 'js/libs/shorten_url_for_copy.js' %}"></script>
 {% endblock %}
