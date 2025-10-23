@@ -197,18 +197,16 @@ def decision_badge(decision, is_light=False):
 def display_due_date(due_date, display_days_left=True, self_explanatory_label=False):
     if not due_date or not isinstance(due_date, date):
         return mark_safe(
-            f'<span>{"Échéance à" if self_explanatory_label else "À"} renseigner</span>'
+            f'<span class="due-date">{"Échéance à" if self_explanatory_label else "À"} renseigner</span>'
         )
 
     days_left = (due_date - date.today()).days
     if days_left >= 7:
         icon_part = '<span class="fr-icon-timer-line fr-icon--sm"></span>'
     elif days_left >= 0:
-        icon_part = '<span class="fr-icon-hourglass-2-fill fr-icon--sm fr-label--warning"></span>'
+        icon_part = '<span class="fr-icon-hourglass-2-fill fr-icon--sm"></span>'
     else:
-        icon_part = (
-            '<span class="fr-icon-warning-fill fr-icon--sm fr-label--error"></span>'
-        )
+        icon_part = '<span class="fr-icon-warning-fill fr-icon--sm"></span>'
 
     date_part = f"""<span class="due-date fr-text--sm">
                 {icon_part}
