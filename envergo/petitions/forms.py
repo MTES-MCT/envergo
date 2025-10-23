@@ -1,7 +1,9 @@
 from django import forms
-from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from django.forms.fields import FileField
 
-from envergo.petitions.models import PetitionProject
+from envergo.petitions.models import PetitionProject, StatusLog
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -57,6 +59,19 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         }
 
 
+def validate_file_size(value):
+    size_limit = 20 * 1024 * 1024  # 20 mb
+    if value.size > size_limit:
+        raise ValidationError(
+            "Le message n'a pas pu être envoyé car la pièce jointe dépasse la taille maximale autorisée de 20 Mo."
+        )
+
+
+validate_extension = FileExtensionValidator(
+    allowed_extensions=["png", "jpg", "jpeg", "pdf", "zip"],
+)
+
+
 class PetitionProjectInstructorMessageForm(forms.Form):
     """Form to send a message through demarches simplifiées API."""
 
@@ -67,45 +82,77 @@ class PetitionProjectInstructorMessageForm(forms.Form):
         ),
     )
 
+    additional_file = FileField(
+        label="Pièce jointe",
+        required=False,
+        help_text="""Une seule pièce jointe est autorisée par message.<br>
+            Formats autorisés : images (png, jpg), pdf, zip.<br>
+            Taille maximale autorisée : 20 Mo.
+        """,
+        validators=[validate_file_size, validate_extension],
+    )
+
     class Meta:
-        fields = [
-            "message_body",
-        ]
+        fields = ["message_body", "additional_file"]
 
 
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def clean(self):
+        cleaned_data = super().clean()
+        stage = cleaned_data.get("stage")
+        decision = cleaned_data.get("decision")
 
-        # force initial value (overrides instance)
-        self.initial["stage_date"] = timezone.now()
-        self.initial["stage_update_comment"] = ""
+        if stage == "closed" and decision == "unset":
+            self.add_error(
+                "decision",
+                ValidationError(
+                    "Pour clore le dossier, le champ « Décision » doit être renseigné avec une valeur "
+                    "définitive (autre que « À déterminer »).",
+                    code="closed_without_decision",
+                ),
+            )
 
-        self.fields["stage_date"].required = True
-        self.fields["stage_update_comment"].required = True
+        previous_stage = self.initial["stage"]
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.stage_updated_at = timezone.now()
-        if commit:
-            instance.save()
-        return instance
+        if stage == "closed" and previous_stage == "to_be_processed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "Pour clore le dossier, il faut passer par une étape intermédiaire (autre que « À instruire »).",
+                    code="to_be_processed_to_closed",
+                ),
+            )
+        elif stage == "to_be_processed" and previous_stage == "closed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "Pour repasser le dossier à l'étape « À instruire », il faut passer par une étape "
+                    "intermédiaire (autre que « Dossier clos »).",
+                    code="closed_to_to_be_processed",
+                ),
+            )
+        elif stage == "closed" and previous_stage == "closed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le repasser à une "
+                    "étape d'instruction.",
+                    code="closed_to_closed",
+                ),
+            )
+
+        return cleaned_data
 
     class Meta:
-        model = PetitionProject
+        model = StatusLog
         fields = [
             "stage",
             "decision",
-            "stage_date",
-            "stage_update_comment",
+            "status_date",
+            "update_comment",
         ]
-        labels = {
-            "stage_date": "Date effective du changement",
-            "stage_update_comment": "Commentaire",
-        }
         help_texts = {
-            "stage_date": "Vous pouvez choisir une date rétroactive si nécessaire.",
-            "stage_update_comment": "Ajouter un commentaire expliquant le contexte du changement.",
+            "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
         }

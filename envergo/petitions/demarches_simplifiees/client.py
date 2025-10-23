@@ -1,20 +1,35 @@
 import copy
+import hashlib
 import json
 import logging
+from base64 import b64encode
 from datetime import datetime
+from mimetypes import guess_type
 from pathlib import Path
 from textwrap import dedent
 
+import requests
 from django.conf import settings
+from django.core.files.uploadedfile import UploadedFile
 from django.template.loader import render_to_string
 from gql import Client, gql
 from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import DemarcheWithRawDossiers
+from envergo.petitions.demarches_simplifiees.models import (
+    DemarcheWithRawDossiers,
+    DossierState,
+)
 from envergo.petitions.demarches_simplifiees.queries import (
+    DOSSIER_ACCEPTER_MUTATION,
+    DOSSIER_CLASSER_SANS_SUITE_MUTATION,
+    DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION,
     DOSSIER_ENVOYER_MESSAGE_MUTATION,
+    DOSSIER_PASSER_EN_INSTRUCTION_MUTATION,
+    DOSSIER_REFUSER_MUTATION,
+    DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION,
+    DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION,
     GET_DOSSIER_MESSAGES_QUERY,
     GET_DOSSIER_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
@@ -27,6 +42,8 @@ logger = logging.getLogger(__name__)
 DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
     settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
 )
+
+DS_DISABLED_BASE_MESSAGE = "Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
 
 
 class DemarchesSimplifieesClient:
@@ -41,9 +58,18 @@ class DemarchesSimplifieesClient:
             transport=self.transport, fetch_schema_from_transport=False
         )
 
+    def _fake_execute(self, fake_dossier_filename):
+        """Mock response when Demarches Simplifiees is not enabled"""
+        with open(
+            DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
+            "r",
+        ) as file:
+            response = json.load(file)
+            return copy.deepcopy(response["data"])
+
     def execute(self, query_str: str, variables: dict = None):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            raise NotImplementedError("Démaches simplifiées is not enabled")
+            raise NotImplementedError("Démarches simplifiées is not enabled")
 
         query = gql(query_str)
         try:
@@ -86,17 +112,12 @@ class DemarchesSimplifieesClient:
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"Use fake dossier if dossier is not draft."
+                f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
             )
-            with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
-                "r",
-            ) as file:
-                response = json.load(file)
-                data = copy.deepcopy(response["data"])
+            data = self._fake_execute(fake_dossier_filename)
+
         else:
             try:
                 data = self.execute(query, variables)
@@ -223,8 +244,131 @@ class DemarchesSimplifieesClient:
             "endCursor": cursor,
         }
 
+    def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
+        """Create direct upload related to a dossier"""
+
+        # Only uploaded file in django allowed
+        if not isinstance(attachment_file, UploadedFile):
+            logger.error("File will not be sent, format not allowed")
+            return None
+
+        # Prepare input
+        attachment_checksum = hashlib.file_digest(attachment_file, "md5").digest()
+        attachment_checksum_b64 = b64encode(attachment_checksum).decode()
+        content_type = guess_type(attachment_file.name)[0]
+        variables = {
+            "input": {
+                "byteSize": attachment_file.size,
+                "checksum": attachment_checksum_b64,
+                "clientMutationId": "Envergo1234",
+                "contentType": content_type,
+                "dossierId": dossier_id,
+                "filename": attachment_file.name,
+            }
+        }
+
+        query = DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"{DS_DISABLED_BASE_MESSAGE}"
+                f"\nquery: {query}"
+                f"\nvariables: {variables}"
+            )
+            data = self._fake_execute(
+                fake_dossier_filename="fake_dossier_send_message_attachment.json"
+            )
+        else:
+            # Send query to create direct upload
+            try:
+                data = self.execute(query, variables)
+            except DemarchesSimplifieesError as e:
+                logger.error(
+                    "Error when getting credentials to direct upload file to Demarches Simplifiees",
+                    extra={
+                        "dossier_number": dossier_number,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                message = render_to_string(
+                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    context={
+                        "dossier_number": dossier_number,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                notify(dedent(message), "haie")
+                return None
+
+            # On query success, put file to url
+            if (
+                "createDirectUpload" in data
+                and "directUpload" in data["createDirectUpload"]
+            ):
+                credentials = data["createDirectUpload"]["directUpload"]
+                credentials_headers = json.loads(credentials["headers"])
+
+                try:
+                    with attachment_file.open("rb") as payload:
+                        response = requests.put(
+                            credentials["url"],
+                            data=payload,
+                            headers=credentials_headers,
+                        )
+                except Exception as e:
+                    logger.error(
+                        f"Error when sending attachment file Demarches Simplifiees direct upload : {e}",
+                        extra={
+                            "dossier_number": dossier_number,
+                        },
+                    )
+                    message = render_to_string(
+                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                        context={
+                            "dossier_number": dossier_number,
+                        },
+                    )
+                    notify(dedent(message), "haie")
+                    return None
+
+                if response.status_code == 201:
+                    logger.info(
+                        f"File successfully put to direct upload {attachment_file.name}"
+                    )
+                    return data["createDirectUpload"]["directUpload"]
+                else:
+                    logger.error(
+                        f"Error on uploading {attachment_file.name}",
+                        extra={
+                            "dossier_number": dossier_number,
+                            "query": query,
+                            "variables": variables,
+                        },
+                    )
+                    return None
+
+            else:
+                logger.error(
+                    "Error with credentials for direct upload to Demarches Simplifiees",
+                    extra={
+                        "dossier_number": dossier_number,
+                        "query": query,
+                        "variables": variables,
+                    },
+                )
+                return None
+
     def dossier_send_message(
-        self, dossier_number, dossier_id, message_body, instructeur_id=None
+        self,
+        dossier_number,
+        dossier_id,
+        message_body,
+        attachment_file=None,
+        instructeur_id=None,
     ) -> dict:
         """Dossier send message query"""
 
@@ -233,7 +377,7 @@ class DemarchesSimplifieesClient:
             logger.warning("Missing instructeur id.")
             return None
         if not dossier_id:
-            logger.warning("Missing instructeur id.")
+            logger.warning("Missing dossier id.")
             return None
 
         variables = {
@@ -244,21 +388,36 @@ class DemarchesSimplifieesClient:
             }
         }
 
+        # If attachments, upload files
+        # TODO: send message with several files
+        if attachment_file:
+            if isinstance(attachment_file, list):
+                if len(attachment_file) > 1:
+                    logger.warning("Can't send multiple files. Use first")
+                attachment_file = attachment_file[0]
+            else:
+                attachment_file = attachment_file
+
+            attachment_uploaded = self._create_direct_upload(
+                dossier_number, dossier_id, attachment_file
+            )
+            if attachment_uploaded is not None:
+                variables["input"].update(
+                    {"attachment": attachment_uploaded["signedBlobId"]}
+                )
+
+        # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"Use fake dossier if dossier is not draft."
+                f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
             )
-            with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json",
-                "r",
-            ) as file:
-                response = json.load(file)
-                data = copy.deepcopy(response["data"])
+            data = self._fake_execute(
+                fake_dossier_filename="fake_dossier_send_message.json"
+            )
         else:
             try:
                 data = self.execute(query, variables)
@@ -311,12 +470,250 @@ class DemarchesSimplifieesClient:
         # Return query response content
         return data["dossierEnvoyerMessage"]
 
+    def _change_dossier_state(
+        self,
+        project_reference,
+        dossier_id,
+        state,
+        motivation: str,
+        disable_notification: bool,
+    ) -> dict | None:
+        """Change dossier state. Use different query depending on target state
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+
+        mapping = {
+            DossierState.accepte: (DOSSIER_ACCEPTER_MUTATION, "dossierAccepter"),
+            DossierState.en_construction: (
+                DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION,
+                "dossierRepasserEnConstruction",
+            ),
+            DossierState.en_instruction: (
+                DOSSIER_PASSER_EN_INSTRUCTION_MUTATION,
+                "dossierPasserEnInstruction",
+            ),
+            "back_to_instruction": (
+                DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION,
+                "dossierRepasserEnInstruction",
+            ),
+            DossierState.refuse: (DOSSIER_REFUSER_MUTATION, "dossierRefuser"),
+            DossierState.sans_suite: (
+                DOSSIER_CLASSER_SANS_SUITE_MUTATION,
+                "dossierClasserSansSuite",
+            ),
+        }
+
+        query, result_key = mapping[state]
+        variables = {
+            "input": {
+                "disableNotification": disable_notification,
+                "dossierId": dossier_id,
+            }
+        }
+        if motivation:
+            variables["input"]["motivation"] = motivation
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"Use fake dossier if dossier is not draft."
+                f"\nquery: {query}"
+                f"\nvariables: {variables}"
+            )
+            with open(
+                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json",
+                "r",
+            ) as file:
+                response = json.load(file)
+                data = copy.deepcopy(response["data"])
+                data["dossier"]["state"] = (
+                    state.value
+                    if state != "back_to_instruction"
+                    else DossierState.en_instruction.value
+                )
+                data = {result_key: data, "errors": []}
+        else:
+            instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+            if not instructeur_id:
+                raise DemarchesSimplifieesError(
+                    query,
+                    {},
+                    "INSTRUCTEUR_ID is not set, please check the configuration.",
+                )
+
+            variables["input"]["instructeurId"] = instructeur_id
+
+            try:
+                data = self.execute(query, variables)
+            except DemarchesSimplifieesError as e:
+                logger.error(
+                    "Error when changing dossier state via Demarches Simplifiees API",
+                    extra={
+                        "dossier_id": dossier_id,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                message = render_to_string(
+                    "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                    context={
+                        "dossier_number": project_reference,
+                        "error": e.__cause__ if e.__cause__ else e.message,
+                        "query": e.query,
+                        "variables": e.variables,
+                    },
+                )
+                notify(dedent(message), "haie")
+                return None
+
+        # State change failed
+        if (
+            data.get("errors")
+            or result_key not in data
+            or data[result_key].get("errors")
+        ):
+            logger.error(
+                "Error when changing dossier state via Demarches Simplifiees API",
+                extra={
+                    "response": data,
+                    "query": query,
+                    "variables": variables,
+                },
+            )
+            message = render_to_string(
+                "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                context={
+                    "dossier_number": project_reference,
+                    "error": data,
+                    "query": query,
+                    "variables": variables,
+                },
+            )
+            notify(dedent(message), "haie")
+            return None
+
+        # Return query response content containing the whole dossier that can be cached in the project reference
+        return data[result_key]
+
+    def accept_dossier(
+        self,
+        project_reference,
+        dossier_id,
+        motivation: str = None,
+        disable_notification=True,
+    ) -> dict | None:
+        """Accept dossier
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.accepte,
+            motivation,
+            disable_notification,
+        )
+
+    def pass_back_dossier_under_construction(
+        self,
+        project_reference,
+        dossier_id,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass back the dossier under construction
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.en_construction,
+            "",
+            disable_notification,
+        )
+
+    def pass_dossier_to_instruction(
+        self,
+        project_reference,
+        dossier_id,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass the dossier to instruction
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.en_instruction,
+            "",
+            disable_notification,
+        )
+
+    def pass_back_dossier_to_instruction(
+        self,
+        project_reference,
+        dossier_id,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass back the dossier to instruction
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            "back_to_instruction",
+            "",
+            disable_notification,
+        )
+
+    def refuse_dossier(
+        self,
+        project_reference,
+        dossier_id,
+        motivation: str,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass the dossier to "refusé"
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.refuse,
+            motivation,
+            disable_notification,
+        )
+
+    def close_dossier(
+        self,
+        project_reference,
+        dossier_id,
+        motivation: str,
+        disable_notification=True,
+    ) -> dict | None:
+        """Pass the dossier to "classé sans suite"
+
+        returns: the query response containing the whole dossier that can be cached, or None if error
+        """
+        return self._change_dossier_state(
+            project_reference,
+            dossier_id,
+            DossierState.sans_suite,
+            motivation,
+            disable_notification,
+        )
+
 
 class DemarchesSimplifieesError(Exception):
     """Démarches Simplifiées client Exception"""
 
     def __init__(self, query: str, variables: dict, message: str = None):
-        super().__init__()
+        super().__init__(message)
         self.message = message
         self.query = query
         self.variables = variables

@@ -14,6 +14,13 @@
           <div class="fr-modal__content">
             <h2 id="invitation-token-modal-title" class="fr-modal__title">Inviter une personne à consulter le dossier</h2>
             <div id="invitation-token-modal-loading" class="fr-hint-text">Création de l'invitation en cours…</div>
+
+            <div id="invitation-token-modal-error"
+                 class="fr-alert fr-alert--error fr-mb-2w">
+              <h3 class="fr-alert__title">Nous n'avons pas pu créer l'invitation.</h3>
+              <p>Veuillez réessayer ultérieurement.</p>
+            </div>
+
             <div id="invitation-token-modal-content">
               <p>Copiez-collez le message ci-dessous dans un e-mail adressé à votre destinataire.</p>
               <div id="invitation-token-email-html">{% include 'haie/petitions/_invitation_token_email_body.html' %}</div>
@@ -30,10 +37,6 @@
               <p>
                 Ce lien est à <b>usage unique</b> : seul le premier compte qui l’utilise pourra accéder au dossier, les suivants n’y auront pas accès.
               </p>
-            </div>
-            <div id="invitation-token-modal-error" class="fr-alert fr-alert--error">
-              <h3 class="fr-alert__title">Nous n'avons pas pu créer l'invitation.</h3>
-              <p>Veuillez réessayer ultérieurement.</p>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import factory
 import pytest
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +28,8 @@ from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
+    FILE_TEST_NOK_PATH,
+    FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
@@ -577,12 +580,40 @@ def test_petition_project_instructor_messagerie_ds(
 
     # Test send message
     assert not Event.objects.filter(category="message", event="envoi").exists()
+
+    # Given a message and attachment image file
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+
+    # WHEN I post message
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
-    message_data = {"message_body": "test"}
     response = client.post(instructor_messagerie_url, message_data, follow=True)
+
+    # THEN I receive ok response and an event is created
     content = response.content.decode()
-    assert "Le message a bien été envoyé sur Démarches Simplifiées." in content
+    assert "Le message a bien été envoyé au demandeur." in content
     assert Event.objects.filter(category="message", event="envoi").exists()
+
+    # GIVEN a message and doc attachment unauthorized extension
+    attachment = SimpleUploadedFile(
+        FILE_TEST_NOK_PATH.name, FILE_TEST_NOK_PATH.read_bytes()
+    )
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    # WHEN I post message
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    response = client.post(instructor_messagerie_url, message_data, follow=True)
+    # THEN I receive nok response
+    content = response.content.decode()
+    assert (
+        "Le message n’a pas pu être envoyé.\nVérifiez que la pièce jointe respecte les conditions suivantes"
+        in content
+    )  # noqa
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -1028,6 +1059,7 @@ def test_instructor_view_with_hedges_outside_department(
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("envergo.petitions.views.notify")
+@pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
     mock_notify, client, haie_user, instructor_haie_user_44, site
 ):
@@ -1075,25 +1107,39 @@ def test_petition_project_procedure(
     assert "<h2>Procédure</h2>" in content
     assert "Modifier</button>" in content
 
+    # WHEN the user try to go from to_be_processed to closed
+    data = {
+        "stage": "closed",
+        "decision": "dropped",
+        "update_comment": "aucun retour depuis 15 ans",
+        "status_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+    # THEN this step is not authorized
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.status_history.all().count() == 0
+
     # WHEN the user edit the status
     data = {
-        "stage": "clos",
-        "decision": "sans_suite",
-        "stage_update_comment": "aucun retour depuis 15 ans",
-        "stage_date": "10/09/2025",
+        "stage": "preparing_decision",
+        "decision": "dropped",
+        "update_comment": "aucun retour depuis 15 ans",
+        "status_date": "10/09/2025",
     }
     res = client.post(status_url, data, follow=True)
 
     # THEN the state is up to date
     assert res.status_code == 200
     project.refresh_from_db()
-    assert project.stage == "clos"
-    assert project.decision == "sans_suite"
+    last_status = project.status_history.all().order_by("-created_at").first()
+    assert last_status.stage == "preparing_decision"
+    assert last_status.decision == "dropped"
     event = Event.objects.get(category="projet", event="modification_statut")
     assert event.metadata["reference"] == project.reference
-    assert event.metadata["etape_f"] == "clos"
-    assert event.metadata["decision_f"] == "sans_suite"
-    assert event.metadata["etape_i"] == "a_instruire"
+    assert event.metadata["etape_f"] == "preparing_decision"
+    assert event.metadata["decision_f"] == "dropped"
+    assert event.metadata["etape_i"] == "to_be_processed"
     assert event.metadata["decision_i"] == "unset"
 
     assert mock_notify.call_count == 1
@@ -1108,3 +1154,110 @@ def test_petition_project_procedure(
 
     # THEN he should be redirected to a 403 error page
     assert res.status_code == 403
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, site):
+    """Test follow up flow for petition project"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    toggle_follow_url = reverse(
+        "petition_project_toggle_follow",
+        kwargs={"reference": project.reference},
+    )
+    data = {
+        "next": reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": project.reference},
+        ),
+        "follow": "true",
+    }
+
+    # WHEN We try to follow the status page but no user is logged in
+    response = client.post(toggle_follow_url, data)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.post(toggle_follow_url, data)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.post(toggle_follow_url, data, follow=True)
+
+    # THEN the project is followed
+    assert response.status_code == 200
+    haie_user.refresh_from_db()
+    assert haie_user.followed_petition_projects.get(id=project.id)
+    event = Event.objects.get(category="projet", event="suivi")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["switch"] == "on"
+    assert event.metadata["view"] == "detail"
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.post(toggle_follow_url, data, follow=True)
+
+    # THEN the project is followed
+    assert response.status_code == 200
+    instructor_haie_user_44.refresh_from_db()
+    assert instructor_haie_user_44.followed_petition_projects.get(id=project.id)
+    assert Event.objects.filter(category="projet", event="suivi").count() == 2
+
+    # WHEN I switch off the follow up
+    data = {
+        "next": reverse("petition_project_list"),
+        "follow": "false",
+    }
+    response = client.post(toggle_follow_url, data, follow=True)
+
+    # THEN the project is followed
+    assert response.status_code == 200
+    instructor_haie_user_44.refresh_from_db()
+    assert not instructor_haie_user_44.followed_petition_projects.filter(
+        id=project.id
+    ).exists()
+
+    assert Event.objects.filter(category="projet", event="suivi").count() == 3
+    event = Event.objects.filter(category="projet", event="suivi").last()
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["switch"] == "off"
+    assert event.metadata["view"] == "liste"
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
+    """Test the buttons to toggle follow up are on the pages"""
+    # GIVEN a petition project
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN the user is a department instructor that is not following the project
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN there is a "Suivre" button to follow up the project
+    assert response.status_code == 200
+    assert 'type="submit">Suivre</button>' in response.content.decode()
+
+    # WHEN the user is following the project
+    project.followed_by.add(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN there is a "Ne plus suivre" button to stop following up the project
+    assert response.status_code == 200
+    assert 'type="submit">Ne plus suivre</button>' in response.content.decode()

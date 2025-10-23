@@ -39,49 +39,50 @@
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">N° dossier</th>
-                  <th scope="col">Déposé le</th>
-                  <th scope="col">Statut du dossier</th>
-                  <th scope="col">Demandeur</th>
+                  <th scope="col">
+                    N° dossier
+                    <br />
+                    Date de dépôt
+                  </th>
+                  <th scope="col">Étape</th>
+                  <th scope="col">
+                    Demandeur
+                    <br />
+                    Commune
+                  </th>
                   <th scope="col">
                     Linéaire
                     <br />
                     à détruire
                   </th>
-                  <th scope="col">
-                    Linéaire
-                    <br />
-                    à planter
-                  </th>
-                  <th scope="col">Commune</th>
-                  <th></th>
+                  <th scope="col">Décision</th>
+                  <th scope="col">Suivi</th>
                 </tr>
               </thead>
               <tbody>
                 {% for project in object_list %}
+
                   <tr class="project">
-                    <td>{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</td>
-                    <td>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</td>
                     <td>
-                      {% if project.prefetched_dossier %}
-                        <p class="fr-badge fr-badge--{{ project.prefetched_dossier.state.color }} fr-badge--sm fr-badge--no-icon">
-                          {{ project.prefetched_dossier.state.display_value }}
-                        </p>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {{ project.prefetched_dossier.applicant_name }}
+                      <a href="{% url 'petition_project_instructor_view' project.reference %}"
+                         class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
                       <br />
-                      {{ project.organization }}
+                      {{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}
+                    </td>
+                    <td>{{ project.current_stage|stage_badge }}</td>
+                    <td>
+                      {% if project.organization %}
+                        {{ project.organization }}
+                      {% else %}
+                        {{ project.prefetched_dossier.applicant_name }}
+                      {% endif %}
+                      <br />
+                      {{ project.city }}
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{{ project.hedge_data.length_to_plant|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{{ project.city }}</td>
+                    <td>{{ project.current_decision|decision_badge:True }}</td>
                     <td>
-                      <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right link-project-detail"
-                         href="{% url 'petition_project_instructor_view' project.reference %}">
-                        <span class="fr-sr-only">Dossier {{ project.reference }} en détail</span>
-                      </a>
+                      {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>
                   </tr>
                 {% endfor %}
@@ -99,4 +100,23 @@
     </div>
   {% endwith %}
 
+{% endblock %}
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
+  <script>
+    window.addEventListener('load', function () {
+      document.querySelectorAll("#table-dossier-list tbody tr").forEach(row => {
+        const link = row.querySelector("td:first-child a");
+        if (!link) return;
+
+        row.addEventListener("click", (e) => {
+          // Prevent row click if user clicked another link or a button
+          if (e.target.closest("a, button, input, textarea, select")) return;
+          window.location.href = link.href;
+        });
+
+        row.style.cursor = "pointer";
+      });
+    });
+  </script>
 {% endblock %}

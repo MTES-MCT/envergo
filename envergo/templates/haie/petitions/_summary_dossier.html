@@ -1,31 +1,52 @@
 {% load petitions %}
 
-<div class="alt fr-py-4w fr-px-2w fr-pl-md-10w">
-  <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
-  <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
-    <li>
-      {% if petition_project.demarches_simplifiees_date_depot %}
-        <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Déposé le {{ petition_project.demarches_simplifiees_date_depot|date:"DATE_FORMAT" }}
-      {% else %}
-        <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Créé le {{ petition_project.created_at|date:"DATE_FORMAT" }}
+<div class="fr-container--fluid alt fr-pt-4w fr-pb-2w fr-px-2w fr-pl-md-10w">
+  <div class="fr-grid-row">
+    <div class="fr-col-12 fr-col-sm-8 fr-pb-2w fr-pr-2w">
+      <div id="project-header-container">
+        <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
+        {% include 'haie/petitions/_follow_form.html' with reference=petition_project.reference followed_up=petition_project.followed_up %}
+      </div>
+      <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
+        <li>
+          {% if petition_project.demarches_simplifiees_date_depot %}
+            <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Déposé le
+            {{ petition_project.demarches_simplifiees_date_depot|date:"DATE_FORMAT" }}
+          {% else %}
+            <span class="fr-icon-calendar-line fr-icon--sm" aria-hidden="true"></span> Créé le
+            {{ petition_project.created_at|date:"DATE_FORMAT" }}
+          {% endif %}
+        </li>
+        {% if city %}
+          <li>
+            <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
+            {{ city }}
+          </li>
+        {% endif %}
+        {% if applicant or organization %}
+          <li>
+            <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
+            {% if applicant %}{{ applicant }}{% endif %}
+            {% if applicant and organization %}|{% endif %}
+            {% if organization %}{{ organization }}{% endif %}
+          </li>
+        {% endif %}
+        <li class="fr-hint-text">
+          Référence interne : {{ petition_project.reference }}  |  Département de la
+          simulation : {{ moulinette.department }}
+        </li>
+      </ul>
+    </div>
+    <div class="fr-col-12 fr-col-sm-4 fr-pb-2w">
+      <div>{{ petition_project.current_stage|stage_badge }}</div>
+      {% if petition_project.current_decision != "unset" %}
+        <div class="fr-mt-2v">{{ petition_project.current_decision|decision_badge }}</div>
       {% endif %}
-    </li>
-    {% if city %}
-      <li>
-        <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-        {{ city }}
-      </li>
-    {% endif %}
-    {% if applicant or organization %}
-      <li>
-        <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
-        {% if applicant %}{{ applicant }}{% endif %}
-        {% if applicant and organization %}|{% endif %}
-        {% if organization %}{{ organization }}{% endif %}
-      </li>
-    {% endif %}
-    <li class="fr-hint-text">
-      Référence interne : {{ petition_project.reference }}  |  Département de la simulation : {{ moulinette.department }}
-    </li>
-  </ul>
+      {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
+        <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
+           href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
+           {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
+      {% endif %}
+    </div>
+  </div>
 </div>

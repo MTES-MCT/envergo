@@ -12,10 +12,14 @@ from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
+from envergo.petitions.demarches_simplifiees.client import (
+    DemarchesSimplifieesClient,
+    DemarchesSimplifieesError,
+)
 from envergo.petitions.demarches_simplifiees.models import (
     CheckboxChamp,
     Dossier,
+    DossierState,
     ExplicationChampDescriptor,
     HeaderSectionChampDescriptor,
     PieceJustificativeChamp,
@@ -25,6 +29,44 @@ from envergo.utils.mattermost import notify
 from envergo.utils.tools import display_form_details
 
 logger = logging.getLogger(__name__)
+
+
+DEMARCHES_SIMPLIFIEES_STATUS_MAPPING = {
+    ("to_be_processed", "unset"): "en_construction",
+    ("to_be_processed", "express_agreement"): "en_construction",
+    ("to_be_processed", "tacit_agreement"): "en_construction",
+    ("to_be_processed", "opposition"): "en_construction",
+    ("to_be_processed", "dropped"): "en_construction",
+    ("instruction_d", "unset"): "en_instruction",
+    ("instruction_d", "express_agreement"): "en_instruction",
+    ("instruction_d", "tacit_agreement"): "en_instruction",
+    ("instruction_d", "opposition"): "en_instruction",
+    ("instruction_d", "dropped"): "en_instruction",
+    ("instruction_a", "unset"): "en_instruction",
+    ("instruction_a", "express_agreement"): "en_instruction",
+    ("instruction_a", "tacit_agreement"): "en_instruction",
+    ("instruction_a", "opposition"): "en_instruction",
+    ("instruction_a", "dropped"): "en_instruction",
+    ("instruction_h", "unset"): "en_instruction",
+    ("instruction_h", "express_agreement"): "en_instruction",
+    ("instruction_h", "tacit_agreement"): "en_instruction",
+    ("instruction_h", "opposition"): "en_instruction",
+    ("instruction_h", "dropped"): "en_instruction",
+    ("preparing_decision", "unset"): "en_instruction",
+    ("preparing_decision", "express_agreement"): "en_instruction",
+    ("preparing_decision", "tacit_agreement"): "en_instruction",
+    ("preparing_decision", "opposition"): "en_instruction",
+    ("preparing_decision", "dropped"): "en_instruction",
+    ("notification", "unset"): "en_instruction",
+    ("notification", "express_agreement"): "en_instruction",
+    ("notification", "tacit_agreement"): "en_instruction",
+    ("notification", "opposition"): "en_instruction",
+    ("notification", "dropped"): "en_instruction",
+    ("closed", "express_agreement"): "accepte",
+    ("closed", "tacit_agreement"): "accepte",
+    ("closed", "opposition"): "refuse",
+    ("closed", "dropped"): "sans_suite",
+}
 
 
 @dataclass
@@ -264,7 +306,7 @@ def get_messages_and_senders_from_ds(
     return messages, instructor_emails, petitioner_email
 
 
-def send_message_dossier_ds(petition_project, message_body):
+def send_message_dossier_ds(petition_project, message_body, attachment_file=None):
     """Send message via DS API for a given dossier"""
 
     # Get dossier ID
@@ -275,7 +317,14 @@ def send_message_dossier_ds(petition_project, message_body):
 
     # Send message
     ds_client = DemarchesSimplifieesClient()
-    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+    if attachment_file:
+        response = ds_client.dossier_send_message(
+            dossier_number, dossier_id, message_body, attachment_file
+        )
+    else:
+        response = ds_client.dossier_send_message(
+            dossier_number, dossier_id, message_body
+        )
 
     return response
 
@@ -370,6 +419,68 @@ def get_demarches_simplifiees_dossier(
 
     dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
+
+
+def update_demarches_simplifiees_status(petition_project, new_status):
+    client = DemarchesSimplifieesClient()
+
+    if petition_project.demarches_simplifiees_dossier_id is None:
+        # ensure that we have the dossier first because we need its id
+        get_demarches_simplifiees_dossier(petition_project, force_update=True)
+
+        if petition_project.demarches_simplifiees_dossier_id is None:
+            # this dossier cannot be fetched on DS, maybe it is in draft. We cannot update its status.
+            raise ValueError("Cannot update status of a dossier without DS id")
+
+    if new_status == DossierState.en_construction.value:
+        response = client.pass_back_dossier_under_construction(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+        )
+    elif new_status == DossierState.en_instruction.value:
+        if petition_project.demarches_simplifiees_state in [
+            DossierState.accepte.value,
+            DossierState.refuse.value,
+            DossierState.sans_suite.value,
+        ]:
+            response = client.pass_back_dossier_to_instruction(
+                petition_project.reference,
+                petition_project.demarches_simplifiees_dossier_id,
+            )
+        else:
+            response = client.pass_dossier_to_instruction(
+                petition_project.reference,
+                petition_project.demarches_simplifiees_dossier_id,
+            )
+    elif new_status == DossierState.accepte.value:
+        response = client.accept_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+        )
+    elif new_status == DossierState.refuse.value:
+        response = client.refuse_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            "La demande a été refusée. Consulter la messagerie pour plus de précisions.",
+        )
+    elif new_status == DossierState.sans_suite.value:
+        response = client.close_dossier(
+            petition_project.reference,
+            petition_project.demarches_simplifiees_dossier_id,
+            "La demande a été classée sans suite. Consulter la messagerie pour plus de précisions.",
+        )
+    else:
+        raise ValueError(f"Unknown status {new_status}")
+
+    if response:
+        # the status change was successful, we update the petition project
+        petition_project.demarches_simplifiees_state = response["dossier"]["state"]
+        petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
+    else:
+        # update failed, notification should have been sent by the DS client
+        raise DemarchesSimplifieesError(
+            "", {}, "Unable to update status on Démarches Simplifiées"
+        )
 
 
 class PetitionProjectCreationProblem:

@@ -8,16 +8,22 @@ import fiona
 import requests
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Q
-from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.db.models import CharField, Exists, OuterRef, Q, Subquery, Value
+from django.db.models.functions import Coalesce
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.safestring import mark_safe
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
@@ -33,6 +39,7 @@ from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
@@ -40,8 +47,16 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
 )
-from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
+from envergo.petitions.models import (
+    DECISIONS,
+    DOSSIER_STATES,
+    STAGES,
+    InvitationToken,
+    PetitionProject,
+    StatusLog,
+)
 from envergo.petitions.services import (
+    DEMARCHES_SIMPLIFIEES_STATUS_MAPPING,
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
@@ -50,6 +65,7 @@ from envergo.petitions.services import (
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
+    update_demarches_simplifiees_status,
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -64,11 +80,24 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
+    latest_logs = StatusLog.objects.filter(petition_project=OuterRef("pk")).order_by(
+        "-created_at"
+    )
     queryset = (
         PetitionProject.objects.exclude(
             demarches_simplifiees_state__exact=DOSSIER_STATES.draft
         )
         .select_related("hedge_data", "department__confighaie")
+        .annotate(
+            current_stage=Coalesce(
+                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
+                Value(STAGES.to_be_processed, output_field=CharField()),
+            ),
+            current_decision=Coalesce(
+                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
+                Value(DECISIONS.unset, output_field=CharField()),
+            ),
+        )
         .order_by("-demarches_simplifiees_date_depot", "-created_at")
     )
     paginate_by = 30
@@ -92,6 +121,15 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             ).distinct()
         else:
             queryset = self.queryset.none()
+
+        queryset = queryset.annotate(
+            followed_up=Exists(
+                PetitionProject.followed_by.through.objects.filter(
+                    petitionproject_id=OuterRef("pk"),
+                    user_id=current_user.pk,
+                )
+            )
+        )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -568,6 +606,32 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
     event_category = "projet"
     event_action = None
 
+    def get_queryset(self):
+        current_user = self.request.user
+        queryset = super().get_queryset()
+
+        latest_logs = StatusLog.objects.filter(
+            petition_project=OuterRef("pk")
+        ).order_by("-created_at")
+
+        queryset = queryset.annotate(
+            followed_up=Exists(
+                PetitionProject.followed_by.through.objects.filter(
+                    petitionproject_id=OuterRef("pk"),
+                    user_id=current_user.pk,
+                )
+            ),
+            current_stage=Coalesce(
+                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
+                Value(STAGES.to_be_processed, output_field=CharField()),
+            ),
+            current_decision=Coalesce(
+                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
+                Value(DECISIONS.unset, output_field=CharField()),
+            ),
+        )
+        return queryset
+
     def get(self, request, *args, **kwargs):
         """Authorize user according to project department and log event"""
         result = super().get(request, *args, **kwargs)
@@ -576,13 +640,22 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         # check if user is authorized, else returns 403 error
         if self.object.has_user_as_instructor(user):
             if self.event_action:
-                log_event(
-                    self.event_category,
-                    self.event_action,
-                    self.request,
-                    **self.get_log_event_data(),
-                    **get_matomo_tags(self.request),
-                )
+                referer = request.META.get("HTTP_REFERER")
+                if (
+                    not referer
+                    or url_has_allowed_host_and_scheme(
+                        referer, allowed_hosts={request.get_host()}
+                    )
+                    and urlparse(referer).path != request.path
+                ):
+                    # avoid logging event if user is just refreshing the page or is redirected after posting a form
+                    log_event(
+                        self.event_category,
+                        self.event_action,
+                        self.request,
+                        **self.get_log_event_data(),
+                        **get_matomo_tags(self.request),
+                    )
             return result
 
         else:
@@ -802,11 +875,28 @@ class PetitionProjectInstructorMessagerieView(
 
         return context
 
-    def form_valid(self, form):
-        """Send message"""
-        message_body = form.cleaned_data["message_body"]
+    def form_invalid(self, form):
+        """Avoid errors if forms is invalid"""
+
+        if form.errors:
+            messages.warning(
+                self.request,
+                """Le message n’a pas pu être envoyé.
+Vérifiez que la pièce jointe respecte les conditions suivantes :
+<ul><li>Taille maximale : 20 Mo</li>
+<li>Formats autorisés : PNG, JPG, PDF et ZIP</li>""",
+            )
+
         self.object = self.get_object()
-        ds_response = send_message_dossier_ds(self.object, message_body)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        """Send message if form is valid"""
+        message_body = form.cleaned_data["message_body"]
+        attachments = form.cleaned_data["additional_file"]
+
+        self.object = self.get_object()
+        ds_response = send_message_dossier_ds(self.object, message_body, attachments)
         self.event_action = "envoi"
 
         if ds_response is None or (
@@ -821,7 +911,7 @@ class PetitionProjectInstructorMessagerieView(
         elif "message" in ds_response and ds_response["message"] is not None:
             messages.success(
                 self.request,
-                """Le message a bien été envoyé sur Démarches Simplifiées.""",
+                """Le message a bien été envoyé au demandeur.""",
             )
 
             # Log matomo event
@@ -895,53 +985,135 @@ class PetitionProjectInstructorProcedureView(
 
     form_class = ProcedureForm
     template_name = "haie/petitions/instructor_view_procedure.html"
+    paginate_by = 10
+    context_object_name = "petition_project"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        obj = self.get_object()
+        initial["stage"] = obj.current_stage
+        initial["decision"] = obj.current_decision
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        obj = self.get_object()
+        history_qs = obj.status_history.select_related("created_by").order_by(
+            "-created_at"
+        )
+        paginator = Paginator(history_qs, self.paginate_by)
+
+        page_number = self.request.GET.get("page")
+        try:
+            page_obj = paginator.page(page_number)
+        except PageNotAnInteger:
+            page_obj = paginator.page(1)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
+
+        # Prefetch previous log in the current page
+        start = max(
+            page_obj.start_index() - 2, 0
+        )  # -1 for 0 index, -1 to get previous log
+        end = page_obj.end_index()
+        logs = list(history_qs[start:end])
+        for i, log in enumerate(logs):
+            log.previous_log = logs[i + 1] if i + 1 < len(logs) else None
+
+        # Drop the extra item (first one) if it's not part of this page
+        if page_obj.number > 1:
+            logs = logs[1:]
+
+        context = {
+            "object_list": logs,
+            "paginator": paginator,
+            "page_obj": page_obj,
+            "is_paginated": paginator.num_pages > 1,
+            "STAGES": STAGES,
+            "DECISIONS": DECISIONS,
+        }
+
+        context.update(super().get_context_data(**kwargs))
+        return context
 
     def post(self, request, *args, **kwargs):
         """Authorize edition only for department instructors"""
         # check if user is authorized, else returns 403 error
-        project = self.get_object()
-        if not project.has_user_as_department_instructor(request.user):
+        self.object = self.get_object()
+        if not self.object.has_user_as_department_instructor(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        return super().post(request, *args, **kwargs)
+        form = ProcedureForm(request.POST, initial=self.get_initial())
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
 
     def form_valid(self, form):
-        previous_stage = form.initial["stage"]
-        previous_decision = form.initial["decision"]
-        res = super().form_valid(form)
-        log_event(
-            "projet",
-            "modification_statut",
-            self.request,
-            reference=self.object.reference,
-            etape_i=previous_stage,
-            etape_f=self.object.stage,
-            decision_i=previous_decision,
-            decision_f=self.object.decision,
-            **get_matomo_tags(self.request),
-        )
 
-        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-        admin_url = reverse(
-            "admin:petitions_petitionproject_change",
-            args=[self.object.pk],
+        def notify_admin():
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            admin_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.object.pk],
+            )
+            procedure_url = reverse(
+                "petition_project_instructor_procedure_view",
+                kwargs={"reference": self.object.reference},
+            )
+            message = render_to_string(
+                "haie/petitions/mattermost_project_procedure_edition.txt",
+                context={
+                    "department": self.object.department,
+                    "reference": self.object.reference,
+                    "admin_url": f"https://{haie_site.domain}{admin_url}",
+                    "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+                },
+            )
+            notify(message, "haie")
+
+        log = form.save(commit=False)
+        log.petition_project = self.object
+        log.created_by = self.request.user
+        previous_stage = self.object.current_stage
+        previous_decision = self.object.current_decision
+
+        previous_ds_status = self.object.demarches_simplifiees_state
+        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
+        if previous_ds_status != new_ds_status:
+            try:
+                update_demarches_simplifiees_status(self.object, new_ds_status)
+            except DemarchesSimplifieesError:
+                form.add_error(
+                    None,
+                    mark_safe(
+                        f"Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste, "
+                        f"<a href='{reverse("contact_us")}'>contactez l'équipe du Guichet Unique de la Haie</a> en "
+                        f"indiquant l'identifiant du dossier."
+                    ),
+                )
+                return self.form_invalid(form)
+
+        log.save()
+
+        res = HttpResponseRedirect(self.get_success_url())
+
+        transaction.on_commit(
+            lambda: log_event(
+                "projet",
+                "modification_statut",
+                self.request,
+                reference=self.object.reference,
+                etape_i=previous_stage,
+                etape_f=log.stage,
+                decision_i=previous_decision,
+                decision_f=log.decision,
+                **get_matomo_tags(self.request),
+            )
         )
-        procedure_url = reverse(
-            "petition_project_instructor_procedure_view",
-            kwargs={"reference": self.object.reference},
-        )
-        message = render_to_string(
-            "haie/petitions/mattermost_project_procedure_edition.txt",
-            context={
-                "department": self.object.department,
-                "reference": self.object.reference,
-                "admin_url": f"https://{haie_site.domain}{admin_url}",
-                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
-            },
-        )
-        notify(message, "haie")
+        transaction.on_commit(notify_admin)
 
         return res
 
@@ -1084,3 +1256,46 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
                 },
             )
         )
+
+
+@login_required
+@require_POST
+def toggle_follow_project(request, reference):
+    """Toggle follow/unfollow a petition project"""
+    project = get_object_or_404(PetitionProject, reference=reference)
+    if not project.has_user_as_instructor(request.user):
+        return TemplateResponse(
+            request=request, template="haie/petitions/403.html", status=403
+        )
+
+    if request.POST.get("follow") == "true":
+        project.followed_by.add(request.user)
+        switch = "on"
+    else:
+        project.followed_by.remove(request.user)
+        switch = "off"
+
+    # Get the next URL from POST or referrer
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
+
+    log_event(
+        "projet",
+        "suivi",
+        request,
+        reference=project.reference,
+        switch=switch,
+        view=(
+            "liste"
+            if "liste" in next_url
+            else "detail" if "instruction" in next_url else next_url
+        ),
+        **get_matomo_tags(request),
+    )
+
+    # Ensure the URL is safe (avoid open redirects)
+    if not url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        next_url = settings.LOGIN_REDIRECT_URL  # or "/" as a safe fallback
+
+    return redirect(next_url)
