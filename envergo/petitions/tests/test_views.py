@@ -158,7 +158,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "champ_789": "http://haie.local:3000/projet/ABC123",
         "champ_abc": "true",
         "champ_def": "false",
-        "champ_ghi": "true",
+        "champ_ghi": "false",
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
@@ -956,7 +956,7 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
     content = res.content.decode()
     assert "<b>Simulation alternative</b> à la simulation initiale" in content
     assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/?alternative=true";'
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/pre-rempli/?alternative=true";'
         in content
     )
 
