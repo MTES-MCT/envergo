@@ -18,7 +18,7 @@ from envergo.moulinette.models import (
     Perimeter,
     Regulation,
 )
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
 from envergo.moulinette.utils import list_moulinette_templates
 
 
@@ -38,8 +38,23 @@ class MapDepartmentsListFilter(DepartmentsListFilter):
 
 class RegulationAdminForm(forms.ModelForm):
 
-    def clean(self):
+    def get_initial_for_field(self, field, field_name):
+        """Prevent Evaluator choice to be instanciated.
 
+        In the legacy's version of this function, callable values are, well,
+        called.
+
+        But since we have a custom field that should return
+        `RegulationEvaluator` subclasses, we don't want the form to actually
+        instanciate those classes.
+        """
+
+        value = self.initial.get(field_name, field.initial)
+        if callable(value) and not issubclass(value, RegulationEvaluator):
+            value = value()
+        return value
+
+    def clean(self):
         data = super().clean()
         show_map = bool(data.get("show_map"))
         has_map_factory_name = bool(data.get("map_factory_name"))
@@ -406,6 +421,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "department",
                     "is_activated",
+                    "single_procedure",
                     "regulations_available",
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",

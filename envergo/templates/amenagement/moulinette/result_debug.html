@@ -163,6 +163,16 @@
       </ul>
     {% endfor %}
 
+    <h2>Liste des actions à mener</h2>
+
+    {% if moulinette.actions_to_take %}
+      <ul>
+        {% for action_to_take in moulinette.actions_to_take %}<li>{{ action_to_take }}</li>{% endfor %}
+      </ul>
+    {% else %}
+      <p>Aucune</p>
+    {% endif %}
+
     <h2>Catalogue de données</h2>
 
     <dd>
