@@ -97,6 +97,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                 Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
                 Value(DECISIONS.unset, output_field=CharField()),
             ),
+            due_date=Coalesce(
+                Subquery(latest_logs.values("due_date")[:1], output_field=DateField()),
+                Value(None, output_field=DateField()),
+            ),
         )
         .order_by("-demarches_simplifiees_date_depot", "-created_at")
     )
