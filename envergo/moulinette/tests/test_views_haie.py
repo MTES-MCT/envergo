@@ -288,9 +288,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
     # THEN the result page is displayed with a warning
     assert res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département" in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" in res.content.decode()
 
     # Given hedges in department 44 and accross the department border
     hedge_44 = HedgeFactory(
@@ -314,7 +312,4 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département"
-        not in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" not in res.content.decode()
