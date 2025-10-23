@@ -21,21 +21,33 @@
               <p>Veuillez réessayer ultérieurement.</p>
             </div>
 
+            <p class="text-center fr-mt-2w">
+              <button id="copy-invitation-token-btn-above"
+                      class="copy-invitation-token-btn fr-btn">Copier le message dans le presse-papier</button>
+            </p>
+
             <div id="invitation-token-modal-content">
               <p>Copiez-collez le message ci-dessous dans un e-mail adressé à votre destinataire.</p>
-              <div id="invitation-token-email-wrapper">{% include 'haie/petitions/_invitation_token_email_body.html' %}</div>
+
+              <div id="invitation-token-email-wrapper" class="fr-mb-3w">
+                {% include 'haie/petitions/_invitation_token_email_body.html' %}
+              </div>
 
               <pre id="invitation-token-email-text">
               {% include 'haie/petitions/_invitation_token_email_body.txt' %}
               </pre>
 
               <p>
-                Avec le lien contenu dans ce message, le destinataire pourra consulter depuis son compte cette page web
-                présentant les informations permettant l'instruction du dossier.
+                Ce message contient un lien d’invitation.
+                Il permet au destinataire de consulter ce dossier après s'être connecté
+                ou avoir créé son compte.
               </p>
+
               <p>
-                Ce lien est à <b>usage unique</b> : seul le premier compte qui l’utilise pourra accéder au dossier, les suivants n’y auront pas accès.
+                Important : vous ne pouvez inviter qu'<strong>une seule personne à la fois</strong>,
+                car le lien d'invitation contenu dans le message est à usage unique.
               </p>
+
             </div>
           </div>
         </div>
