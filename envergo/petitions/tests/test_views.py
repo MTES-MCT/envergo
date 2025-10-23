@@ -949,14 +949,14 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
         assert False, "No href with alternative=true found"
 
     # WHEN the user create an alternative
-    res = client.get(alternative_url, follow=True)
+    res = client.get(alternative_url)
 
     # THEN the alternative form is displayed
     assert res.status_code == 200
     content = res.content.decode()
     assert "<b>Simulation alternative</b> à la simulation initiale" in content
     assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/?alternative=true";'
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/pre-rempli/?alternative=true";'
         in content
     )
 
