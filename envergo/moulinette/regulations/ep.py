@@ -29,7 +29,7 @@ from envergo.moulinette.regulations import (
 from envergo.utils.fields import get_human_readable_value
 
 
-class EPEvaluator(HaieRegulationEvaluator):
+class EPRegulation(HaieRegulationEvaluator):
     choice_label = "EP"
 
     PROCEDURE_TYPE_MATRIX = {
