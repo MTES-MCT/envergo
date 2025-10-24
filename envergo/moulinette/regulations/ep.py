@@ -29,7 +29,7 @@ from envergo.moulinette.regulations import (
 from envergo.utils.fields import get_human_readable_value
 
 
-class EPEvaluator(HaieRegulationEvaluator):
+class EPRegulation(HaieRegulationEvaluator):
     choice_label = "EP"
 
     PROCEDURE_TYPE_MATRIX = {
@@ -152,7 +152,8 @@ class EPNormandieForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        localisation_pac = self.data.get("localisation_pac")
+        data = self.data if self.data else self.initial
+        localisation_pac = data.get("localisation_pac")
         if localisation_pac == "non":
             self.fields = {}
             return

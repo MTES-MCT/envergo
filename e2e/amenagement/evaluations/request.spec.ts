@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('User can request an evaluation', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Menu principal').getByRole('link', { name: 'Demander un avis réglementaire' }).click();
-  await page.locator('p').filter({ hasText: 'Commencer la demande Durée : 1 min' }).getByRole('link').click();
+  await page.locator('p').filter({ hasText: 'Commencer la demande Durée : 1 min' }).getByRole('link').first().click();
   await page.getByLabel('Address of the project Type').click();
   await page.getByLabel('Address of the project Type').fill('44640 Vue');
   await page.getByPlaceholder('15 caractères commençant par').click();

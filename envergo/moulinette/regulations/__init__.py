@@ -508,7 +508,7 @@ class CriterionEvaluator(ABC):
 
         form_class = getattr(self, "form_class", None)
         if form_class:
-            form = self.form_class(self.moulinette.raw_data)
+            form = self.form_class(**self.moulinette.form_kwargs)
         else:
             form = None
         return form

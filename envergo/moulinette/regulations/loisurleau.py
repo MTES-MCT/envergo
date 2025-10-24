@@ -328,7 +328,7 @@ class EcoulementSansBV(
             final_surface = "lt_8000"
 
         is_pv_sol = "non_pv_sol"
-        if self.moulinette.raw_data.get("evalenv_rubrique_30-localisation") == "sol":
+        if self.moulinette.data.get("evalenv_rubrique_30-localisation") == "sol":
             is_pv_sol = "pv_sol"
 
         return final_surface, is_pv_sol
@@ -498,7 +498,7 @@ class EcoulementAvecBV(
             catchment_surface = "lt_9000"
 
         is_pv_sol = "non_pv_sol"
-        if self.moulinette.raw_data.get("evalenv_rubrique_30-localisation") == "sol":
+        if self.moulinette.data.get("evalenv_rubrique_30-localisation") == "sol":
             is_pv_sol = "pv_sol"
 
         existing_surface = "existing_lt_10000"

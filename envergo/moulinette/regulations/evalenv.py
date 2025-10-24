@@ -60,8 +60,9 @@ class EmpriseForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
 
-        final_surface = int(self.data["final_surface"])
+        final_surface = int(data.get("final_surface"))
         if final_surface < ZONE_U_THRESHOLD:
             del self.fields["zone_u"]
 
@@ -118,8 +119,9 @@ class SurfacePlancherForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
 
-        final_surface = int(self.data["final_surface"])
+        final_surface = int(data.get("final_surface"))
         if final_surface < SURFACE_PLANCHER_THRESHOLD:
             del self.fields["surface_plancher_sup_thld"]
 
@@ -171,8 +173,9 @@ class TerrainAssietteForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
 
-        final_surface = int(self.data["final_surface"])
+        final_surface = int(data.get("final_surface"))
         if final_surface < TERRAIN_ASSIETTE_QUESTION_THRESHOLD:
             del self.fields["terrain_assiette"]
             del self.fields["operation_amenagement"]
@@ -227,6 +230,12 @@ class OptionalFormMixin:
             prefixed[self.add_prefix(key)] = val
 
         return prefixed
+
+    def get_initial_for_field(self, field, field_name):
+        """By default, Django doesn't take prefix into account for initial fields."""
+
+        field_name = f"{self.prefix}-{field_name}"
+        return super().get_initial_for_field(field, field_name)
 
     def is_activated(self):
         """Did the user checked the "activate" checkbox?"""
@@ -464,7 +473,7 @@ TYPE_STATIONNEMENT_CHOICES = (
         {
             "label": "Entièrement privé",
             "help_text": """Emplacements attachés à des logements ou réservés aux employés
-            d’une entreprise ; en sous-sol ou en extérieur.""",
+            d’une entreprise ; en sous-sol ou en extérieur.""",
         },
         "Entièrement privé",
     ),

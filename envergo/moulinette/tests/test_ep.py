@@ -61,24 +61,29 @@ def zonage_normandie(france_map):  # noqa
 
 def test_ep_is_soumis(ep_criteria):  # noqa
     ConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+    )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "haies": hedges,
         "department": "44",
     }
     for motif_choice in [
-        "transfert_parcelles",
-        "chemin_acces",
-        "meilleur_emplacement",
         "amenagement",
         "autre",
     ]:
-        for reimplantation_choice in ["remplacement", "compensation", "non"]:
+        for reimplantation_choice in ["remplacement", "replantation", "non"]:
             data["motif"] = motif_choice
             data["reimplantation"] = reimplantation_choice
-            moulinette = MoulinetteHaie(data, data, False)
-            assert moulinette.is_evaluation_available()
+            moulinette_data = {"initial": data, "data": data}
+            moulinette = MoulinetteHaie(moulinette_data)
+            assert moulinette.is_valid(), moulinette.form_errors()
             assert moulinette.result == "soumis", (
                 motif_choice,
                 reimplantation_choice,
@@ -103,16 +108,20 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
     hedges = HedgeDataFactory(hedges=[hedge_lt10m_1, hedge_gt20m])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "non",
+        "localisation_pac": "oui",
         "department": "44",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.result == "interdit"
 
 
@@ -134,16 +143,20 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
     hedges = HedgeDataFactory(hedges=[hedge_lt10m_1, hedge_lt10m_2])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "dispense_10m"
 
 
@@ -179,16 +192,20 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
     )
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "dispense_20m"
 
 
@@ -224,16 +241,20 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
     )
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "non",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "interdit"
 
 
@@ -259,16 +280,20 @@ def test_ep_normandie_dispense_coupe_a_blanc(
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_lt20m_2])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_acces",
+        "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "dispense_coupe_a_blanc"
 
 
@@ -293,16 +318,20 @@ def test_ep_normandie_interdit_remplacement(
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_gt20m])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_acces",
+        "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "interdit_remplacement"
 
 
@@ -327,16 +356,20 @@ def test_ep_normandie_derogation_simplifiee(
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_gt20m])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
 
 
@@ -362,16 +395,20 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
     hedges = HedgeDataFactory(hedges=[hedge_gt20m])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == "dispense"
 
 
@@ -410,16 +447,20 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": motif,
         "reimplantation": "replantation",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
-    assert moulinette.is_evaluation_available()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.ep.ep_normandie.result_code == result_code
 
 
@@ -447,16 +488,20 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
 
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
         "motif": "securite",
         "reimplantation": "replantation",
         "department": "44",
+        "localisation_pac": "oui",
         "numero_pacage": "012345678",
         "haies": hedges,
     }
+    moulinette_data = {"initial": data, "data": data}
 
     with pytest.raises(RuntimeError) as exc_info:
-        MoulinetteHaie(data, data, False)
+        MoulinetteHaie(moulinette_data)
 
     assert "Criterion must be evaluated before accessing the result code" in str(
         exc_info.value
@@ -497,14 +542,20 @@ def test_min_length_condition_normandie(
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_gt20m]
     )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_acces",
+        "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "department": "44",
+        "localisation_pac": "oui",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.get_context().get("minimum_length_to_plant") == 59
@@ -543,14 +594,20 @@ def test_replantation_coefficient_normandie(
         hedges=[hedge_gt20m],
     )
     data = {
+        "element": "haie",
+        "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_acces",
+        "motif": "amelioration_culture",
         "reimplantation": "remplacement",
+        "localisation_pac": "oui",
         "department": "44",
+        "numero_pacage": "012345678",
         "haies": hedges,
     }
 
-    moulinette = MoulinetteHaie(data, data, False)
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.replantation_coefficient == r
