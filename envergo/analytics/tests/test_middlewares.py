@@ -75,7 +75,11 @@ def test_analytics_values_storage(client):
 
 
 def test_analytics_values_url_parameters_cleanup(client):
-    res = client.get("/?mtm_campaign=campaign&mtm_source=source", follow=True)
+    res = client.get(
+        "/?mtm_campaign=campaign&mtm_source=source",
+        follow=True,
+        HTTP_REFERER="http://testserver/",
+    )
     assert res.status_code == 200
 
     # Analytics parameters are remove from the url
@@ -84,19 +88,39 @@ def test_analytics_values_url_parameters_cleanup(client):
 
     # All analytics parameters are remove from the url
     res = client.get(
-        "/?mtm_campaign=campaign2&mtm_medium=medium&mtm_kwd=kwd", follow=True
+        "/?mtm_campaign=campaign2&mtm_medium=medium&mtm_kwd=kwd",
+        follow=True,
+        HTTP_REFERER="http://testserver/",
     )
     assert len(res.redirect_chain) == 1
     assert res.redirect_chain[0][0] == "/?"
 
     # Only manually selected mtm parameters are cleaned
-    res = client.get("/?mtm_campaign=test&mtm_toto=toto&test1=test1", follow=True)
+    res = client.get(
+        "/?mtm_campaign=test&mtm_toto=toto&test1=test1",
+        follow=True,
+        HTTP_REFERER="http://testserver/",
+    )
     assert len(res.redirect_chain) == 1
     assert res.redirect_chain[0][0] == "/?mtm_toto=toto&test1=test1"
 
 
+def test_analytics_from_outside_are_not_cleaned(client):
+
+    # Visit from outside link, no url cleanup
+    res = client.get(
+        "/?mtm_campaign=campaign&mtm_source=source",
+        HTTP_REFERER="http://example.com/",
+    )
+    assert res.status_code == 200
+
+    # No referer is set, this is an outside link too
+    res = client.get("/?mtm_campaign=campaign&mtm_source=source")
+    assert res.status_code == 200
+
+
 def test_analytics_empty_values(client):
-    res = client.get("/?mtm_campaign=", follow=True)
+    res = client.get("/?mtm_campaign=", follow=True, HTTP_REFERER="http://testserver/")
     assert res.status_code == 200
 
     # Analytics parameters are remove from the url
@@ -106,5 +130,7 @@ def test_analytics_empty_values(client):
 
 def test_analytics_with_post_request(client):
     # We don't prevent POST queries with mtm_ parameters
-    res = client.post("/simulateur/formulaire/?mtm_campaign=test")
+    res = client.post(
+        "/simulateur/formulaire/?mtm_campaign=test", HTTP_REFERER="http://testserver/"
+    )
     assert res.status_code == 200

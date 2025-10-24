@@ -1,6 +1,8 @@
+from urllib.parse import urlparse
 from uuid import uuid4
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.http.response import HttpResponseRedirect
 
 from envergo.analytics.utils import set_visitor_id_cookie
@@ -81,10 +83,22 @@ class HandleMtmValues:
                     value = value_list[0]
                     request.session[key] = value
 
-        if has_mtm_values and request.method == "GET":
-            clean_url = f"{request.path}?{GET_values.urlencode()}"
-            response = HttpResponseRedirect(clean_url)
-        else:
+        # Cleanup url from mtm_ values
+        # We want those values to be displayed once, when the user clicks from the
+        # original tracked link. However, we want to remove those values from the
+        # subsequent pages. This is necessary since some views (moulinette views)
+        # carry all GET parameters from one page to the other.
+        response = None
+        referer = request.META.get("HTTP_REFERER")
+        if referer:
+            referer_domain = urlparse(referer).netloc.split(":")[0]
+            current_domain = Site.objects.get_current(request).domain
+            is_internal_req = referer_domain == current_domain
+            if has_mtm_values and request.method == "GET" and is_internal_req:
+                clean_url = f"{request.path}?{GET_values.urlencode()}"
+                response = HttpResponseRedirect(clean_url)
+
+        if response is None:
             response = self.get_response(request)
 
         return response
