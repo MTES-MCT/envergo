@@ -2,7 +2,6 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.http.response import HttpResponseRedirect
 
 from envergo.analytics.utils import set_visitor_id_cookie
