@@ -8,8 +8,8 @@
   <h3>Configuration</h3>
 
   <ul>
-    <li>Simulateur activé pour le département : oui / non</li>
-    <li>Régime unique : oui / non</li>
+    <li>Simulateur activé pour le département : {{ object.is_activated|yesno }}</li>
+    <li>Régime unique : {{ object.single_procedure|yesno }}</li>
   </ul>
 
   <h3>Comptes</h3>
