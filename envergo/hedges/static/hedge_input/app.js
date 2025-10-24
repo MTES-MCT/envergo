@@ -225,6 +225,38 @@ class Hedge {
     this.polyline.on('click', () => showHedgeModal(this, this.type));
     this.polyline.on('mouseover', this.handleMouseOver.bind(this));
     this.polyline.on('mouseout', this.handleMouseOut.bind(this));
+
+     // add a hitbox polyline around the main polyline to improve accessibility
+    this.hitbox = L.polyline(latLngs, {
+      color: 'transparent',
+      weight: 20, // invisible but wide click zone
+      className: 'hedge-hitbox',
+      interactive: true,
+      bubblingMouseEvents: false,
+    }).addTo(this.map);
+
+    // Keep the hitbox geometry in sync with the main polyline
+     ['editable:vertex:new', 'editable:vertex:deleted', 'editable:vertex:dragend', 'editable:editing']
+      .forEach((evt) => {
+        this.polyline.on(evt, () => this.syncHitbox());
+      });
+
+     // --- Forward interaction events from hitbox → main polyline
+    ['click', 'mouseover', 'mouseout'].forEach((ev) => {
+      this.hitbox.on(ev, (e) => this.polyline.fire(ev, e));
+    });
+
+    // hide hedges to plant on removal mode
+     if (this.type === TO_PLANT && mode === REMOVAL_MODE) {
+       this.map.removeLayer(this.hitbox);
+       this.map.removeLayer(this.polyline);
+     }
+  }
+
+  syncHitbox() {
+    if (this.hitbox && this.polyline) {
+      this.hitbox.setLatLngs(this.polyline.getLatLngs())
+    }
   }
 
   calculateLength() {
@@ -266,6 +298,7 @@ class Hedge {
 
   remove() {
     this.polyline.remove();
+    this.hitbox.remove();
     this.onRemove(this);
   }
 
@@ -368,7 +401,7 @@ class HedgeList {
 
 function styleDrawGuide() {
   setTimeout(() => {
-    const paths = document.querySelectorAll(".leaflet-zoom-animated g path:not(.hedge)");
+    const paths = document.querySelectorAll(".leaflet-zoom-animated g path:not(.hedge, .hedge-hitbox)");
     let drawGuide = paths.length ? paths[paths.length - 1] : null;
     if (drawGuide) {
       drawGuide.classList.add('leaflet-draw-guide')

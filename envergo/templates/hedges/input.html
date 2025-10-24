@@ -135,7 +135,7 @@
             </template>
           </div>
           <hr>
-          <div v-if="mode === 'plantation' || hedges.TO_PLANT.count > 0"
+          <div v-if="mode !== 'removal' && (mode === 'plantation' || hedges.TO_PLANT.count > 0)"
                class="hedge-list to-plant">
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
@@ -177,6 +177,13 @@
             <template v-else>
               <p class="fr-text--light">Aucune haie tracée</p>
             </template>
+          </div>
+          <div v-else-if="hedges.TO_PLANT.count > 0" class="hedge-list to-plant">
+            <h3>
+              <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
+              Haies à planter
+            </h3>
+            <p class="fr-text--light">À modifier à l'étape suivante</p>
           </div>
         </div>
 
