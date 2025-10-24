@@ -23,7 +23,7 @@ EMPRISE_THRESHOLD = 10000
 ZONE_U_THRESHOLD = 40000
 
 
-class EvalEnvEvaluator(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
+class EvalEnvRegulation(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
     choice_label = "Évaluation environnementale"
 
     ACTIONS_TO_TAKE_MATRIX = {
