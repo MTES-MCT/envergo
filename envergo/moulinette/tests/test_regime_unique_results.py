@@ -57,7 +57,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
     regulation = RegulationFactory(
-        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPEvaluator"
+        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
     )
     criteria = [
         CriterionFactory(
@@ -96,13 +96,9 @@ def test_moulinette_droit_constant():
         "haies": hedges,
         "department": "44",
     }
-    moulinette = MoulinetteHaie(data, data)
-    assert moulinette.is_evaluation_available()
-
-    # Update with this after the big moulinette refacto is merged
-    # moulinette_data = {"initial": data, "data": data}
-    # moulinette = MoulinetteHaie(moulinette_data)
-    # assert moulinette.is_valid(), moulinette.form_errors()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
 
     assert moulinette.result == "soumis"
 
@@ -132,13 +128,9 @@ def test_moulinette_result_alignement():
         "haies": hedges,
         "department": "44",
     }
-    moulinette = MoulinetteHaie(data, data)
-    assert moulinette.is_evaluation_available()
-
-    # Update with this after the big moulinette refacto is merged
-    # moulinette_data = {"initial": data, "data": data}
-    # moulinette = MoulinetteHaie(moulinette_data)
-    # assert moulinette.is_valid(), moulinette.form_errors()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
 
     assert moulinette.result == "hors_regime_unique"
 
@@ -166,13 +158,9 @@ def test_moulinette_result_non_alignement():
         "haies": hedges,
         "department": "44",
     }
-    moulinette = MoulinetteHaie(data, data)
-    assert moulinette.is_evaluation_available()
-
-    # Update with this after the big moulinette refacto is merged
-    # moulinette_data = {"initial": data, "data": data}
-    # moulinette = MoulinetteHaie(moulinette_data)
-    # assert moulinette.is_valid(), moulinette.form_errors()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
 
     assert moulinette.conditionnalite_pac.result == "non_soumis"
     assert moulinette.alignement_arbres.result == "non_soumis"
@@ -204,13 +192,9 @@ def test_moulinette_result_interdit():
         "department": "44",
         "lineaire_total": 500,
     }
-    moulinette = MoulinetteHaie(data, data)
-    assert moulinette.is_evaluation_available()
-
-    # Update with this after the big moulinette refacto is merged
-    # moulinette_data = {"initial": data, "data": data}
-    # moulinette = MoulinetteHaie(moulinette_data)
-    # assert moulinette.is_valid(), moulinette.form_errors()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
 
     assert moulinette.result == "interdit"
 
@@ -236,7 +220,7 @@ def test_moulinette_result_autorisation(ep_criteria):
         "element": "haie",
         "travaux": "destruction",
         "profil": "autre",
-        "motif": "chemin_access",
+        "motif": "chemin_acces",
         "reimplantation": "replantation",
         "localisation_pac": "non",
         "transfert_parcelles": "oui",
@@ -245,13 +229,9 @@ def test_moulinette_result_autorisation(ep_criteria):
         "department": "44",
         "lineaire_total": 500,
     }
-    moulinette = MoulinetteHaie(data, data)
-    assert moulinette.is_evaluation_available()
-
-    # Update with this after the big moulinette refacto is merged
-    # moulinette_data = {"initial": data, "data": data}
-    # moulinette = MoulinetteHaie(moulinette_data)
-    # assert moulinette.is_valid(), moulinette.form_errors()
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
 
     assert moulinette.ep.ep_aisne.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"
