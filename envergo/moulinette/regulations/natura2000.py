@@ -19,7 +19,9 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 
 
-class Natura2000Evaluator(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
+class Natura2000Regulation(
+    ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator
+):
     choice_label = "Natura 2000 (Aménagement)"
 
     ACTIONS_TO_TAKE_MATRIX = {"soumis": ["depot_ein", "pc_ein"]}

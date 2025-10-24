@@ -22,7 +22,9 @@ PINK = "#FF9575"
 logger = logging.getLogger(__name__)
 
 
-class LoiSurLEauEvaluator(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
+class LoiSurLEauRegulation(
+    ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator
+):
     choice_label = "Loi sur l'eau"
 
     ACTIONS_TO_TAKE_MATRIX = {
