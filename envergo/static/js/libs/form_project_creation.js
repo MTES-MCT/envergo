@@ -4,8 +4,8 @@
   const DemarchesSimplifieesModal = function (modalElt) {
     this.modalElt = modalElt;
     this.formElt =  modalElt.querySelector("#demarche-simplifiee-form");
-    this.submitElt = modalElt.querySelector('input[type=submit]');
-    this.buttonElts = modalElt.querySelectorAll('input[type="button"], input[type="submit"]');
+    this.submitElt = modalElt.querySelector('button[type=submit]');
+    this.buttonElts = modalElt.querySelectorAll('input[type="button"], input[type="submit"], button[type=submit]');
     this.closeElt = modalElt.querySelector('.fr-link--close');
   };
   exports.DemarchesSimplifieesModal = DemarchesSimplifieesModal;

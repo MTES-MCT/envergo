@@ -174,6 +174,8 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
     RESULTS.soumis_declaration: TagStyleEnum.LightRed,
     RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
+    "declaration": TagStyleEnum.Green,
+    "autorisation": TagStyleEnum.LightRed,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
