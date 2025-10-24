@@ -22,7 +22,7 @@ def autouse_site(site):
 def loisurleau_criteria(france_map):  # noqa
     regulation = RegulationFactory(
         regulation="loi_sur_leau",
-        evaluator="envergo.moulinette.regulations.loisurleau.LoiSurLEauEvaluator",
+        evaluator="envergo.moulinette.regulations.loisurleau.LoiSurLEauRegulation",
     )
     criteria = [
         CriterionFactory(
@@ -390,7 +390,7 @@ def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
 @pytest.mark.parametrize("footprint", [700])
 def test_moulinette_returns_actions_to_take(moulinette_data):
     ConfigAmenagementFactory()
-    moulinette = MoulinetteAmenagement(moulinette_data, moulinette_data)
+    moulinette = MoulinetteAmenagement(moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
