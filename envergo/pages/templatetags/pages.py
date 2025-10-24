@@ -1,6 +1,5 @@
 import random
 from typing import Literal
-from urllib.parse import urlencode
 
 from django import template
 from django.urls import reverse
@@ -128,7 +127,9 @@ def parametrage_departments_menu(context, is_slim=False):
 
         links = (
             (
-                f"{reverse('triage')}?{urlencode({'department': department.department})}",
+                reverse(
+                    "confighaie_settings", kwargs={"department": department.department}
+                ),
                 department,
                 [],
             )
