@@ -715,10 +715,24 @@ ul.instructor-view-list {
   }
 }
 
+div#invitation-token-email-wrapper {
+  background-color: var(--background-contrast-grey);
+  padding: 1rem 2rem;
+  font-size: 0.875rem;
+
+  p {
+    margin-bottom: 0.5rem !important;
+    font-size: 0.875rem;
+  }
+
+  .fr-btn.fr-btn--tertiary {
+    font-size: 0.875rem;
+  }
+}
+
 div#invitation-token-email-html {
   background-color: var(--background-contrast-grey);
   color: var(--text-mention-grey);
-  padding: 2rem;
 }
 
 pre#invitation-token-email-text {
