@@ -68,7 +68,7 @@ urlpatterns = [
         ),
     ),
     path(
-        "parametrage/<int:department>",
+        "parametrage/<str:department>",
         ConfigHaieSettingsView.as_view(),
         name="confighaie_settings",
     ),

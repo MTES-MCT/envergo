@@ -714,3 +714,15 @@ class ConfigHaieSettingsView(DetailView):
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
         return obj
+
+    def get_context_data(self, **kwargs):
+        """Add department members emails"""
+        context = super().get_context_data()
+        department = self.department
+        department_members_emails = []
+
+        for member in department.members.all():
+            department_members_emails.append(member.email)
+        context["department_members"] = department_members_emails
+
+        return context

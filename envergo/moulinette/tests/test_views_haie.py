@@ -347,7 +347,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 def test_confighaie_settings_view(client):
     ConfigHaieFactory()
 
-    url = reverse("confighaie_settings", kwargs={"department": 44})
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url)
     content = response.content.decode()
     assert response.status_code == 200

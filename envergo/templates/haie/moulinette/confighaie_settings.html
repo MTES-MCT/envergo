@@ -16,9 +16,12 @@
 
   <h4>Liste des comptes ayant les droits instructeur sur le département :</h4>
 
-  <ul>
-    <li>email1@calvados.gouv.fr</li>
-    <li>email2@calvados.gouv.fr</li>
-  </ul>
+  {% if department_members_email %}
+    <ul>
+      {% for member in department_members %}<li>{{ member }}l</li>{% endfor %}
+    </ul>
+  {% else %}
+    <p>Pas de compte instructeur pour ce département.</p>
+  {% endif %}
 
 {% endblock %}
