@@ -341,3 +341,15 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+def test_confighaie_settings_view(client):
+    ConfigHaieFactory()
+
+    url = reverse("confighaie_settings", kwargs={"department": 44})
+    response = client.get(url)
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Paramétrage du portail" in content
+    assert "<h2>Loire-Atlantique (44)</h2>"

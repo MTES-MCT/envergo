@@ -1,0 +1,24 @@
+{% extends 'haie/base.html' %}
+
+{% block content %}
+  <h1>Paramétrage du portail</h1>
+
+  <h2>Département : {{ object }}</h2>
+
+  <h3>Configuration</h3>
+
+  <ul>
+    <li>Simulateur activé pour le département : oui / non</li>
+    <li>Régime unique : oui / non</li>
+  </ul>
+
+  <h3>Comptes</h3>
+
+  <h4>Liste des comptes ayant les droits instructeur sur le département :</h4>
+
+  <ul>
+    <li>email1@calvados.gouv.fr</li>
+    <li>email2@calvados.gouv.fr</li>
+  </ul>
+
+{% endblock %}

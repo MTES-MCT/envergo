@@ -4,11 +4,13 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.forms.widgets import CheckboxInput
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.views.generic import FormView
+from django.views.generic import DetailView, FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
@@ -18,10 +20,11 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
+from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import get_moulinette_class_from_site
+from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
 
@@ -687,3 +690,27 @@ class Triage(MoulinetteMixin, FormView):
         url_with_params = f"{url}?{qs}"
         url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
+
+
+class ConfigHaieSettingsView(DetailView):
+    """Config haie settings view for a given department"""
+
+    queryset = ConfigHaie.objects.all()
+    template_name = "haie/moulinette/confighaie_settings.html"
+
+    def get_object(self, queryset=None):
+        """Return Config haie related to department number"""
+        self.department = get_object_or_404(
+            Department, department=self.kwargs["department"]
+        )
+        queryset = self.queryset.filter(department=self.department)
+
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
