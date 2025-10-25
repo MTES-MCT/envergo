@@ -350,13 +350,45 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
-def test_confighaie_settings_view(client, loire_atlantique_department):  # noqa
+def test_confighaie_settings_view(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_user,
+    instructor_haie_user_44,
+    admin_user,
+):
     """Test config haie settings view"""
     ConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
+    # GIVEN an anonymous visitor
+    # WHEN they visit department setting page
     response = client.get(url)
+    # THEN response is redirection to login page
+    content = response.content.decode()
+    assert response.status_code == 302
+
+    # GIVEN a connected user with no right to departement
+    client.force_login(haie_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is 403
+    assert response.status_code == 403
+
+    # GIVEN a instructor user
+    client.force_login(instructor_haie_user_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN they've been redirected to login page
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Paramétrage du portail" in content
-    assert "<h2>Loire-Atlantique (44)</h2>"
+    assert "<h2>Département : Loire-Atlantique (44)</h2>" in content
+
+    # GIVEN an admin user
+    client.force_login(admin_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN they've been redirected to login page
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "<h2>Département : Loire-Atlantique (44)</h2>" in content

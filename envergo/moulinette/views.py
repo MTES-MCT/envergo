@@ -3,9 +3,11 @@ from collections import defaultdict
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -692,7 +694,7 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieSettingsView(DetailView):
+class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
     """Config haie settings view for a given department"""
 
     queryset = ConfigHaie.objects.all()
@@ -726,3 +728,19 @@ class ConfigHaieSettingsView(DetailView):
         context["department_members"] = department_members_emails
 
         return context
+
+    def get(self, request, *args, **kwargs):
+        """Authorize user according to project department and log event"""
+        result = super().get(request, *args, **kwargs)
+        current_user = request.user
+
+        # check if user is authorized, else returns 403 error
+        if (
+            not current_user.is_superuser
+            and self.department not in current_user.departments.all()
+        ):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+
+        return result
