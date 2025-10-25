@@ -347,6 +347,9 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_confighaie_settings_view(client, loire_atlantique_department):  # noqa
     """Test config haie settings view"""
     ConfigHaieFactory(department=loire_atlantique_department)
