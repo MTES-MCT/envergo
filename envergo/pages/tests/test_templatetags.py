@@ -69,8 +69,9 @@ def test_petition_department_list(
     # THEN department menu is displayed with only 44
     content = response.content.decode()
     assert "Paramétrage" in content
-    assert "Loire-Atlantique (44)" in content
-    assert "Hérault (34)" not in content
+
+    assert 'href="/simulateur/parametrage/44"' in content
+    assert 'href="/simulateur/parametrage/34"' not in content
 
     # GIVEN an admin user
     client.force_login(admin_user)
@@ -79,5 +80,5 @@ def test_petition_department_list(
     # THEN department menu is displayed with 34 and 44
     content = response.content.decode()
     assert "Paramétrage" in content
-    assert "Loire-Atlantique (44)" in content
-    assert "Hérault (34)" in content
+    assert 'href="/simulateur/parametrage/44"' in content
+    assert 'href="/simulateur/parametrage/34"' in content

@@ -6,7 +6,10 @@ from django.test import override_settings
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.conftest import loire_atlantique_map  # noqa
+from envergo.geodata.conftest import (  # noqa
+    loire_atlantique_department,
+    loire_atlantique_map,
+)
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
@@ -344,10 +347,11 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
 
 @pytest.mark.urls("config.urls_haie")
-def test_confighaie_settings_view(client):
-    ConfigHaieFactory()
-
+def test_confighaie_settings_view(client, loire_atlantique_department):  # noqa
+    """Test config haie settings view"""
+    ConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
+
     response = client.get(url)
     content = response.content.decode()
     assert response.status_code == 200
