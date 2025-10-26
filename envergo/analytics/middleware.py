@@ -2,7 +2,6 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.http.response import HttpResponseRedirect
 
 from envergo.analytics.utils import set_visitor_id_cookie
@@ -92,7 +91,7 @@ class HandleMtmValues:
         referer = request.META.get("HTTP_REFERER")
         if referer:
             referer_domain = urlparse(referer).netloc.split(":")[0]
-            current_domain = Site.objects.get_current(request).domain
+            current_domain = request.get_host().split(":")[0]
             is_internal_req = referer_domain == current_domain
             if has_mtm_values and request.method == "GET" and is_internal_req:
                 clean_url = f"{request.path}?{GET_values.urlencode()}"

@@ -1,9 +1,7 @@
 import random
 from typing import Literal
-from urllib.parse import urlencode
 
 from django import template
-from django.core.cache import cache
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -109,37 +107,42 @@ def faq_menu(context):
 
 
 @register.simple_tag(takes_context=True)
-def pilote_departments_menu(context, is_slim=False):
-    """Generate html for the "Départements pilotes" collapsible menu."""
-    cache_key = "activated_departments"
-    activated_departments = cache.get(cache_key)
+def parametrage_departments_menu(context, is_slim=False):
+    """Generate html for the "Paramétrages" collapsible menu.
+    List available departments for current user."""
 
-    if not activated_departments:
-        activated_departments = (
-            Department.objects.defer("geometry")
-            .filter(confighaie__is_activated=True)
-            .all()
+    current_user = context["user"]
+
+    if current_user.is_authenticated:
+        config_haies = ConfigHaie.objects.all()
+        departments_with_config = Department.objects.defer("geometry").filter(
+            confighaie__in=config_haies
         )
-        cache.set(
-            cache_key, activated_departments, timeout=60 * 15
-        )  # Cache for 15 minutes
 
-    links = (
-        (
-            f"{reverse('triage')}?{urlencode({'department': department.department})}",
-            department,
-            [],
+        if current_user.is_superuser:
+            available_departments = departments_with_config
+        else:
+            user_departments = current_user.departments.defer("geometry")
+            available_departments = departments_with_config & user_departments
+
+        links = (
+            (
+                reverse(
+                    "confighaie_settings", kwargs={"department": department.department}
+                ),
+                department,
+                [],
+            )
+            for department in available_departments
         )
-        for department in activated_departments
-    )
 
-    return collapsible_menu(
-        context,
-        links,
-        "Départements pilotes",
-        "menu-pilote-department",
-        is_slim=is_slim,
-    )
+        return collapsible_menu(
+            context,
+            links,
+            "Paramétrages",
+            "menu-settings-departments",
+            is_slim=is_slim,
+        )
 
 
 def collapsible_menu(

@@ -6,7 +6,10 @@ from django.test import override_settings
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.conftest import loire_atlantique_map  # noqa
+from envergo.geodata.conftest import (  # noqa
+    loire_atlantique_department,
+    loire_atlantique_map,
+)
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     ConfigHaieFactory,
@@ -341,3 +344,54 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_settings_view(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_user,
+    instructor_haie_user_44,
+    admin_user,
+):
+    """Test config haie settings view"""
+    ConfigHaieFactory(department=loire_atlantique_department)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+
+    # GIVEN an anonymous visitor
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is redirection to login page
+    content = response.content.decode()
+    assert response.status_code == 302
+
+    # GIVEN a connected user with no right to departement
+    client.force_login(haie_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is 403
+    assert response.status_code == 403
+
+    # GIVEN a instructor user
+    client.force_login(instructor_haie_user_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Département : Loire-Atlantique (44)" in content
+    # AND instructor emails are visible, not admin ones
+    assert instructor_haie_user_44.email in content
+    assert admin_user.email not in content
+
+    # GIVEN an admin user
+    client.force_login(admin_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Département : Loire-Atlantique (44)" in content
