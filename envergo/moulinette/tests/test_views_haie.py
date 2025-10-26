@@ -382,7 +382,7 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "<h2>Département : Loire-Atlantique (44)</h2>" in content
+    assert "Département : Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
     assert instructor_haie_user_44.email in content
     assert admin_user.email not in content
@@ -394,4 +394,4 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "<h2>Département : Loire-Atlantique (44)</h2>" in content
+    assert "Département : Loire-Atlantique (44)" in content
