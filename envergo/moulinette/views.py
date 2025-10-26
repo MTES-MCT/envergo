@@ -722,9 +722,9 @@ class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
         context = super().get_context_data()
         department = self.department
         department_members_emails = []
-
         for member in department.members.all():
-            department_members_emails.append(member.email)
+            if not member.is_superuser:
+                department_members_emails.append(member.email)
         context["department_members"] = department_members_emails
 
         return context
