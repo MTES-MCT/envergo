@@ -1,27 +1,36 @@
 {% extends 'haie/base.html' %}
 
 {% block content %}
-  <h1>Paramétrage du portail</h1>
+  <div class="fr-mb-3w">
 
-  <h2>Département : {{ object }}</h2>
+    <h1>Paramétrage du portail</h1>
 
-  <h3>Configuration</h3>
+    <p class="fr-text--lead">Département : {{ object }}</p>
 
-  <ul>
-    <li>Simulateur activé pour le département : {{ object.is_activated|yesno }}</li>
-    <li>Régime unique : {{ object.single_procedure|yesno }}</li>
-  </ul>
+    <h2>Configuration</h2>
 
-  <h3>Comptes</h3>
-
-  <h4>Liste des comptes ayant les droits instructeur sur le département :</h4>
-
-  {% if department_members %}
     <ul>
-      {% for member in department_members %}<li>{{ member }}</li>{% endfor %}
+      <li>
+        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
+      </li>
+      <li>
+        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
+      </li>
     </ul>
-  {% else %}
-    <p>Pas de compte instructeur pour ce département.</p>
-  {% endif %}
 
+    <h2>Comptes</h2>
+
+    <p>
+      <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
+    </p>
+
+    {% if department_members %}
+      <ul>
+        {% for member in department_members %}<li>{{ member }}</li>{% endfor %}
+      </ul>
+    {% else %}
+      <p>Pas de compte instructeur pour ce département.</p>
+    {% endif %}
+
+  </div>
 {% endblock %}
