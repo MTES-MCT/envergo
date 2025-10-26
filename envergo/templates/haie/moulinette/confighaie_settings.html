@@ -24,9 +24,9 @@
         <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
       </p>
 
-      {% if department_members %}
+      {% if department_members_emails %}
         <ul>
-          {% for member in department_members %}<li>{{ member }}</li>{% endfor %}
+          {% for member in department_members_emails %}<li>{{ member }}</li>{% endfor %}
         </ul>
       {% else %}
         <p>Pas de compte instructeur pour ce département.</p>

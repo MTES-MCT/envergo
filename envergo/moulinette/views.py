@@ -725,7 +725,7 @@ class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
         for member in department.members.order_by("email").all():
             if not member.is_superuser:
                 department_members_emails.append(member.email)
-        context["department_members"] = department_members_emails
+        context["department_members_emails"] = department_members_emails
 
         return context
 
