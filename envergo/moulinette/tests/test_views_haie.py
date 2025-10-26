@@ -379,16 +379,19 @@ def test_confighaie_settings_view(
     client.force_login(instructor_haie_user_44)
     # WHEN they visit department setting page
     response = client.get(url)
-    # THEN they've been redirected to login page
+    # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
     assert "<h2>Département : Loire-Atlantique (44)</h2>" in content
+    # AND instructor emails are visible, not admin ones
+    assert instructor_haie_user_44.email in content
+    assert admin_user.email not in content
 
     # GIVEN an admin user
     client.force_login(admin_user)
     # WHEN they visit department setting page
     response = client.get(url)
-    # THEN they've been redirected to login page
+    # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
     assert "<h2>Département : Loire-Atlantique (44)</h2>" in content
