@@ -9,14 +9,12 @@
 
       <h2>Configuration</h2>
 
-      <ul>
-        <li>
-          <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
-        </li>
-        <li>
-          <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
-        </li>
-      </ul>
+      <p class="fr-mb-1w">
+        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
+      </p>
+      <p>
+        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
+      </p>
 
       <h2>Comptes</h2>
 
@@ -26,7 +24,7 @@
 
       {% if department_members_emails %}
         <ul>
-          {% for member in department_members_emails %}<li>{{ member }}</li>{% endfor %}
+          {% for member in department_members_emails %}<li>{{ member.email }}</li>{% endfor %}
         </ul>
       {% else %}
         <p>Pas de compte instructeur pour ce département.</p>
