@@ -81,7 +81,7 @@ a#add_id_departments {
 
 .model-petitionproject.change-form .submit-row {
   &::after {
-    content: "Le bouton supprimé est désactivé pour éviter de supprimer un projet si on souhaite seulement supprimer des comptes invités. À réactiver dans l'inspecteur de code.";
+    content: "Le bouton supprimer est désactivé pour éviter de supprimer un projet si on souhaite seulement supprimer des comptes invités. À réactiver dans l'inspecteur de code.";
     font-style: italic;
     flex-basis: 100%;
     text-align: right;
