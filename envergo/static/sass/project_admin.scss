@@ -79,8 +79,18 @@ a#add_id_departments {
   to avoid unwanted project suppression when they only want to delete invited accounts
   */
 
-.model-petitionproject.change-form .submit-row a.deletelink {
-  pointer-events: none;
-  cursor: default;
-  opacity: 0.4;
+.model-petitionproject.change-form .submit-row {
+  &::after {
+    content: "Le bouton supprimé est désactivé pour éviter de supprimer un projet si on souhaite seulement supprimer des comptes invités. À réactiver dans l'inspecteur de code.";
+    font-style: italic;
+    flex-basis: 100%;
+    text-align: right;
+    font-size: 0.875rem;
+  }
+
+  a.deletelink {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.4;
+  }
 }
