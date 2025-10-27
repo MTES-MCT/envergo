@@ -32,6 +32,7 @@
 
               const htmlEmail = this.modalElt.querySelector("#invitation-token-email-html").innerHTML;
               const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
+              htmlEmail.replace("Copier le message dans le presse-papier", "")
               navigator.clipboard.write([
                 new ClipboardItem({
                   "text/plain": new Blob([textEmail.trim()], { type: "text/plain" }),
