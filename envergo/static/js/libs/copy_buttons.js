@@ -1,9 +1,8 @@
 (function (exports) {
   'use strict';
 
-  const CopyToClipboardButtons = function (btnsElement, textToCopy, successMessage, disabledMessage) {
+  const CopyToClipboardButtons = function (btnsElement, successMessage, disabledMessage) {
     this.btnsElement = btnsElement;
-    this.textToCopy = textToCopy;
     this.successMessage = successMessage;
     this.disabledMessage = disabledMessage;
   };
@@ -15,7 +14,8 @@
         if (navigator.clipboard !== undefined) {
           copyButton.addEventListener('click', () => {
             let btnText = copyButton.innerText;
-            navigator.clipboard.writeText(this.textToCopy).then(() => {
+            const textToCopy = copyButton.getAttribute("data-clipboard-text");
+            navigator.clipboard.writeText(textToCopy).then(() => {
               copyButton.innerText = this.successMessage;
             });
 
@@ -34,11 +34,10 @@
 (function () {
 // a script to add interactions on copy to clipboard buttons
   window.addEventListener('load', function () {
-    const textToCopy = window.TEXT_TO_COPY || "";
     const successMessage = window.SUCCESSFUL_COPY_MESSAGE || "Copié !";
     const disabledMessage = window.COPY_DISABLED_MESSAGE || "Copie impossible";
     const buttons = document.querySelectorAll(".btn--copy-to-clipboard");
-    const copyToClipboardButtons = new CopyToClipboardButtons(buttons, textToCopy, successMessage, disabledMessage);
+    const copyToClipboardButtons = new CopyToClipboardButtons(buttons, successMessage, disabledMessage);
     copyToClipboardButtons.init();
   });
 })();
