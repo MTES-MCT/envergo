@@ -26,8 +26,8 @@ def test_petition_department_list(
     content = response.content.decode()
     assert "Paramétrage" not in content
 
-    # GIVEN an authenticated inactive user
-    client.force_login(inactive_haie_user_44)
+    # GIVEN an authenticated user with no department
+    client.force_login(haie_user)
     response = client.get("/")
 
     # THEN department menu is not displayed
