@@ -84,28 +84,24 @@ def fake_moulinette(
     sage_perimeter = Mock(contact_email="sage@example.com")
     moulinette.regulations = [
         Mock(
-            regulation,
             wraps=regulation,
             result=lse,
             slug="loi_sur_leau",
             do_not_call_in_templates=True,
         ),
         Mock(
-            regulation,
             wraps=regulation,
             result=n2000,
             slug="natura2000",
             do_not_call_in_templates=True,
         ),
         Mock(
-            regulation,
             wraps=regulation,
             result=evalenv,
             slug="eval_env",
             do_not_call_in_templates=True,
         ),
         Mock(
-            regulation,
             wraps=regulation,
             result=sage,
             perimeters=Mock(all=MagicMock(return_value=[sage_perimeter])),

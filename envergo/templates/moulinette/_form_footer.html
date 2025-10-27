@@ -25,7 +25,6 @@
       {% for form in optional_forms %}
 
         <div class="optional-form">
-
           {% include '_checkbox_snippet.html' with field=form.activate %}
 
           <fieldset class="fr-fieldset">
@@ -58,11 +57,9 @@
       <strong>Questions complémentaires</strong>
     </h4>
 
-    {% if not request.GET.edit %}
-      <p>
-        Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
-      </p>
-    {% endif %}
+    <p>
+      Les caractéristiques du projet nécessitent de compléter les informations ci-dessous pour poursuivre votre demande.
+    </p>
 
     {% for field_name, field in additional_fields.items %}
       {% if field|is_checkbox %}
@@ -80,12 +77,6 @@
 
 {% block submit-section %}
   <div class="hide-print submit-section">
-    {% if not moulinette %}
-      <button type="submit" class="fr-btn">Démarrer la simulation</button>
-    {% elif additional_forms and moulinette.has_missing_data %}
-      <button type="submit" class="fr-btn">Démarrer la simulation</button>
-    {% else %}
-      <button type="submit" class="fr-btn">Renouveler la simulation</button>
-    {% endif %}
+    <button type="submit" class="fr-btn">Démarrer la simulation</button>
   </div>
 {% endblock %}

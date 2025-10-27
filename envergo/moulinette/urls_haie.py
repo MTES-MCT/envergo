@@ -12,13 +12,29 @@ from .urls import urlpatterns as common_urlpatterns
 
 urlpatterns = [
     path(
+        "",
+        RedirectView.as_view(pattern_name="triage", query_string=True),
+        name="moulinette_home",
+    ),
+    path(
+        "triage/",
+        Triage.as_view(),
+        name="triage",
+    ),
+    # A fake url for tracking
+    path(
+        "triage/pre-rempli/",
+        RedirectView.as_view(pattern_name="triage"),
+        name="moulinette_prefilled_triage",
+    ),
+    path(
         _("form/"),
         include(
             [
                 # This is another "fake" url, only for matomo tracking
                 path(
                     "saisie-destruction/",
-                    RedirectView.as_view(pattern_name="moulinette_home"),
+                    RedirectView.as_view(pattern_name="moulinette_form"),
                     name="moulinette_saisie_d",
                 ),
                 # This is another "fake" url, only for matomo tracking
@@ -49,10 +65,5 @@ urlpatterns = [
                 ),
             ]
         ),
-    ),
-    path(
-        "",
-        Triage.as_view(),
-        name="triage",
     ),
 ] + common_urlpatterns

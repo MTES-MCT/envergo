@@ -94,19 +94,42 @@ def test_triage_result(client):
     full_url = f"{url}?{params}"
     res = client.get(full_url)
 
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<h2>Doctrine du département</h2>" in content
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_moulinette_form_with_invalid_triage(client):
+
+    ConfigHaieFactory(
+        department_doctrine_html="<h2>Doctrine du département</h2>",
+        hedge_maintenance_html="<h2>kikoo</h2>",
+    )
+
+    url = reverse("moulinette_form")
+    params = "department=44&element=haie"  # Missing the "travaux" value
+    full_url = f"{url}?{params}"
+    res = client.get(full_url, follow=True)
+
+    assert len(res.redirect_chain) == 1
+    assert res.redirect_chain[0][0].startswith("/simulateur/triage/")
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_debug_result(client):
     """WIP: Test for debug page.
     Missing fixtures criteria ep and pac for MoulinetteHaie"""
 
     ConfigHaieFactory()
-    haies = HedgeDataFactory()
+    haies = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+    )
 
     data = {
         "profil": "autre",
@@ -222,8 +245,13 @@ def test_result_p_view_non_soumis_with_r_gt_0(client):
 )
 def test_moulinette_post_form_error(client):
     ConfigHaieFactory()
-    url = reverse("moulinette_home")
-    data = {"foo": "bar"}
+    url = reverse("moulinette_form")
+    data = {
+        "foo": "bar",
+        "department": "44",
+        "element": "haie",
+        "travaux": "destruction",
+    }
     res = client.post(f"{url}?department=44&element=haie&travaux=destruction", data)
 
     assert res.status_code == 200
@@ -288,9 +316,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
     # THEN the result page is displayed with a warning
     assert res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département" in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" in res.content.decode()
 
     # Given hedges in department 44 and accross the department border
     hedge_44 = HedgeFactory(
@@ -314,7 +340,4 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département"
-        not in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" not in res.content.decode()
