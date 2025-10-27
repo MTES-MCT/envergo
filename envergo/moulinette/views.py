@@ -7,7 +7,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -700,6 +699,23 @@ class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_settings.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        """Authorize user according to project department and log event"""
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        # Find department if exists and set object department attribute
+        self.department = get_object_or_404(
+            Department, department=self.kwargs["department"]
+        )
+
+        if (
+            not request.user.is_superuser
+            and self.department not in request.user.departments.all()
+        ):
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
     def get_object(self, queryset=None):
         """Return Config haie related to department number"""
         self.department = get_object_or_404(
@@ -721,26 +737,11 @@ class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
         """Add department members emails"""
         context = super().get_context_data()
         department = self.department
-        department_members_emails = []
-        for member in department.members.order_by("email").all():
-            if not member.is_superuser:
-                department_members_emails.append(member.email)
-        context["department_members_emails"] = department_members_emails
+        context["department_members"] = (
+            department.members.filter(is_superuser=False)
+            .filter(is_staff=False)
+            .order_by("email")
+            .values("email")
+        )
 
         return context
-
-    def get(self, request, *args, **kwargs):
-        """Authorize user according to project department and log event"""
-        result = super().get(request, *args, **kwargs)
-        current_user = request.user
-
-        # check if user is authorized, else returns 403 error
-        if (
-            not current_user.is_superuser
-            and self.department not in current_user.departments.all()
-        ):
-            return TemplateResponse(
-                request=request, template="haie/petitions/403.html", status=403
-            )
-
-        return result

@@ -113,36 +113,38 @@ def parametrage_departments_menu(context, is_slim=False):
 
     current_user = context["user"]
 
-    if current_user.is_authenticated:
-        config_haies = ConfigHaie.objects.all()
-        departments_with_config = Department.objects.defer("geometry").filter(
-            confighaie__in=config_haies
-        )
+    if not current_user.is_authenticated:
+        return None
 
-        if current_user.is_superuser:
-            available_departments = departments_with_config
-        else:
-            user_departments = current_user.departments.defer("geometry")
-            available_departments = departments_with_config & user_departments
+    config_haies = ConfigHaie.objects.all()
+    departments_with_config = Department.objects.defer("geometry").filter(
+        confighaie__in=config_haies
+    )
 
-        links = (
-            (
-                reverse(
-                    "confighaie_settings", kwargs={"department": department.department}
-                ),
-                department,
-                [],
-            )
-            for department in available_departments
-        )
+    if current_user.is_superuser:
+        available_departments = departments_with_config
+    else:
+        user_departments = current_user.departments.defer("geometry")
+        available_departments = departments_with_config & user_departments
 
-        return collapsible_menu(
-            context,
-            links,
-            "Paramétrages",
-            "menu-settings-departments",
-            is_slim=is_slim,
+    links = (
+        (
+            reverse(
+                "confighaie_settings", kwargs={"department": department.department}
+            ),
+            department,
+            [],
         )
+        for department in available_departments
+    )
+
+    return collapsible_menu(
+        context,
+        links,
+        "Paramétrages",
+        "menu-settings-departments",
+        is_slim=is_slim,
+    )
 
 
 def collapsible_menu(
