@@ -141,7 +141,7 @@ def parametrage_departments_menu(context, is_slim=False):
     return collapsible_menu(
         context,
         links,
-        "Paramétrages",
+        "Paramétrage",
         "menu-settings-departments",
         is_slim=is_slim,
     )
