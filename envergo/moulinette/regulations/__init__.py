@@ -318,13 +318,13 @@ class RegulationEvaluator(ABC):
 class AmenagementRegulationEvaluator(RegulationEvaluator):
     """Specific evaluator for the amenagement site."""
 
-    choice_label = "Défaut (Aménagement)"
+    choice_label = "Aménagement > Défaut"
 
 
 class HaieRegulationEvaluator(RegulationEvaluator):
     """Specific evaluator for the haies site."""
 
-    choice_label = "Défaut (Haie)"
+    choice_label = "Haie > Défaut"
 
     # result -> autorisation / déclaration
     PROCEDURE_TYPE_MATRIX = {}
