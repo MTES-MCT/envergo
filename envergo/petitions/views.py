@@ -247,7 +247,8 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
@@ -879,11 +880,28 @@ class PetitionProjectInstructorMessagerieView(
 
         return context
 
-    def form_valid(self, form):
-        """Send message"""
-        message_body = form.cleaned_data["message_body"]
+    def form_invalid(self, form):
+        """Avoid errors if forms is invalid"""
+
+        if form.errors:
+            messages.warning(
+                self.request,
+                """Le message n’a pas pu être envoyé.
+Vérifiez que la pièce jointe respecte les conditions suivantes :
+<ul><li>Taille maximale : 20 Mo</li>
+<li>Formats autorisés : PNG, JPG, PDF et ZIP</li>""",
+            )
+
         self.object = self.get_object()
-        ds_response = send_message_dossier_ds(self.object, message_body)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        """Send message if form is valid"""
+        message_body = form.cleaned_data["message_body"]
+        attachments = form.cleaned_data["additional_file"]
+
+        self.object = self.get_object()
+        ds_response = send_message_dossier_ds(self.object, message_body, attachments)
         self.event_action = "envoi"
 
         if ds_response is None or (
@@ -958,7 +976,7 @@ class PetitionProjectInstructorAlternativeView(
         flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
         flat_qs["alternative"] = "true"
         alternative_form_url = (
-            f"{reverse("moulinette_home")}?{urlencode(flat_qs, doseq=True)}"
+            f"{reverse("moulinette_form")}?{urlencode(flat_qs, doseq=True)}"
         )
 
         context["alternative_form_url"] = alternative_form_url

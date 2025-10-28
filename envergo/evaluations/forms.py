@@ -11,7 +11,7 @@ from envergo.evaluations.models import USER_TYPES, EvaluationVersion, Request
 from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
-from envergo.utils.fields import NoIdnEmailField
+from envergo.utils.fields import MultipleFileField, NoIdnEmailField
 
 
 class EvaluationFormMixin(forms.Form):
@@ -238,25 +238,6 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
             cleaned_data.pop("urbanism_department_phone", None)
 
         return cleaned_data
-
-
-# See https://docs.djangoproject.com/en/4.2/topics/http/file-uploads/#uploading-multiple-files
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
-        else:
-            result = single_file_clean(data, initial)
-        return result
 
 
 class WizardFilesForm(forms.ModelForm):

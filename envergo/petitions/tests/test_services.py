@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import ANY, patch
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from gql.transport.exceptions import TransportQueryError
 
@@ -37,10 +38,13 @@ from envergo.petitions.services import (
     update_demarches_simplifiees_status,
 )
 from envergo.petitions.tests.factories import (
+    CREATEUPLOAD_FAKE_RESPONSE,
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
+    FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
@@ -50,6 +54,8 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -123,6 +129,8 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
@@ -149,6 +157,8 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @patch("envergo.petitions.services.notify")
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
@@ -196,7 +206,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         ]
     )
     ConfigHaieFactory()
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "localisation_pac": "non",
@@ -205,7 +215,8 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         "element": "haie",
         "department": 44,
     }
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette_data = {"initial": data, "data": data}
+    moulinette = MoulinetteHaie(moulinette_data)
     get_context_from_ds(petition_project, moulinette)
 
     args, kwargs = mock_notify.call_args
@@ -369,15 +380,17 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             },
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
-        "localisation_pac": "non",
+        "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
+        "numero_pacage": "123456789",
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="ep")
     CriterionFactory(
@@ -393,7 +406,8 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesAisneForm",
     )
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_aisne_get_instructor_view_context(
         moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
     )
@@ -480,15 +494,17 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             },
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
-        "localisation_pac": "non",
+        "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
+        "numero_pacage": "123456789",
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="ep")
     CriterionFactory(
@@ -504,7 +520,8 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
     )
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_normandie_get_instructor_view_context(
         moulinette.ep.ep_normandie._evaluator, petition_project, moulinette
     )
@@ -627,15 +644,18 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
             },
         ]
     )
-    moulinette_data = {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
-        "localisation_pac": "non",
+        "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
         "department": 44,
+        "lineaire_total": 5000,
+        "numero_pacage": "123456789",
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="conditionnalite_pac")
     CriterionFactory(
@@ -648,7 +668,8 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     petition_project = PetitionProjectFactory(hedge_data=hedges)
     ConfigHaieFactory()
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     info = bcae8_get_instructor_view_context(
         moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
     )
@@ -658,7 +679,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "lineaire_to_plant_pac": 27.55060841703869,
         "pac_destruction_detail": [ANY],
         "pac_plantation_detail": [ANY],
-        "percentage_pac": "",
+        "percentage_pac": ANY,
         "replanting_ratio": 1.0,
         "replanting_ratio_comment": "Linéaire à planter / linéaire à détruire, sur "
         "parcelle PAC",
@@ -762,8 +783,8 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         ]
     )
 
-    moulinette_data = {
-        "motif": "amelioration",
+    data = {
+        "motif": "amelioration_culture",
         "reimplantation": "replantation",
         "localisation_pac": "non",
         "haies": hedges,
@@ -771,6 +792,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         "element": "haie",
         "department": 44,
     }
+    moulinette_data = {"initial": data, "data": data}
 
     regulation = RegulationFactory(regulation="alignement_arbres")
     CriterionFactory(
@@ -783,13 +805,14 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     petition_project = PetitionProjectFactory(hedge_data=hedges)
     ConfigHaieFactory()
 
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors()
     context = alignement_arbres_get_instructor_view_context(
         moulinette.alignement_arbres.alignement_arbres._evaluator,
         petition_project,
         moulinette,
     )
-    assert context["motif"] == "amelioration"
+    assert "Amélioration des conditions d’exploitation agricole" in context["motif"]
 
     aa_bord_voie_destruction_hedge = context["aa_bord_voie_destruction_detail"][0]
     assert (
@@ -830,12 +853,16 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 
 
 @pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, site):
+def test_get_message_project_via_demarches_simplifiees(
+    mock_gql_execute, haie_user, site
+):
     """Test send message for project via demarches simplifiées"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
-    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -849,7 +876,7 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I get messages for this dossier
-    mock_post.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
     messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
         petition_project
     )
@@ -858,8 +885,31 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     assert instructor_emails == ["instructeur@guh.gouv.fr"]
     assert petitioner_email == "hedy.lamarr@example.com"
 
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("gql.Client.execute")
+def test_send_message_project_via_demarches_simplifiees(
+    mock_gql_execute, haie_user, site
+):
+    """Test send message for project via demarches simplifiées"""
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+
+    # Fetch project from DS to create it
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
+
     # WHEN I send message for this dossier
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
     message_body = "Bonjour ! Un nouveau message"
     result = send_message_dossier_ds(petition_project, message_body)
 
@@ -871,12 +921,68 @@ def test_send_message_project_via_demarches_simplifiees(mock_post, haie_user, si
     }
 
     # WHEN I send malformated
-    mock_post.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
+    mock_gql_execute.side_effect = None
+    mock_gql_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR["data"]
     message_body = "Bonjour ! Un nouveau message"
     result = send_message_dossier_ds(petition_project, message_body)
 
     # THEN I receive an error
     assert result is None
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.sessions.Session.request")
+@patch("gql.Client.execute")
+def test_send_message_project_via_demarches_simplifiees_with_attachments(
+    mock_gql_execute, mock_request_put, haie_user, site
+):
+    """Test send message for project via demarches simplifiées"""
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+
+    petition_project = PetitionProjectFactory()
+
+    # Fetch project from DS to create it
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    dossier = get_demarches_simplifiees_dossier(petition_project)
+    assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
+
+    # WHEN I send message for this dossier with attachment
+    mock_gql_execute.side_effect = [
+        CREATEUPLOAD_FAKE_RESPONSE["data"],
+        DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE["data"],
+    ]
+    mock_request_put.result = "lala"
+
+    message_body = "Bonjour ! Un nouveau message"
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    result = send_message_dossier_ds(
+        petition_project, message_body, attachment_file=attachment
+    )
+
+    # THEN messages has this new message
+    assert result == {
+        "clientMutationId": "1234",
+        "errors": None,
+        "message": {"body": "Bonjour ! Un nouveau message"},
+        "attachments": [
+            {
+                "__typename": "File",
+                "filename": "Coriandrum_sativum.jpg",
+                "contentType": "image/jpeg",
+                "checksum": "RiNssRjMcFaITvQMLk6zNw==",
+                "byteSize": "21053",
+                "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",  # noqa: 501
+                "createdAt": "2025-07-17T17:25:13+02:00",
+            }
+        ],
+    }
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)

@@ -8,9 +8,20 @@ from django.core.exceptions import ValidationError
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
 from envergo.moulinette.forms import DisplayIntegerField
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 logger = logging.getLogger(__name__)
+
+
+class Bcae8Regulation(HaieRegulationEvaluator):
+    choice_label = "Conditionnalité PAC"
+
+    PROCEDURE_TYPE_MATRIX = {
+        "interdit": "interdit",
+        "soumis": "declaration",
+        "dispense": "declaration",
+        "non_soumis": "declaration",
+    }
 
 
 def keep_fields(fields, keys):
@@ -100,13 +111,14 @@ class Bcae8Form(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        localisation_pac = self.data.get("localisation_pac")
+        data = self.data if self.data else self.initial
+        localisation_pac = data.get("localisation_pac")
         if localisation_pac == "non":
             # We know the result will be "non soumis"
             self.fields = {}
             return
 
-        motif = self.data.get("motif")
+        motif = data.get("motif")
         if motif == "amelioration_culture":
             self.fields = keep_fields(
                 self.fields,
@@ -407,4 +419,4 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
         minimum_length_to_plant = D(haies.lineaire_detruit_pac()) * R
         if haies.length_to_remove() > 0:
             R = minimum_length_to_plant / D(haies.length_to_remove())
-        return R
+        return round(R, 2)
