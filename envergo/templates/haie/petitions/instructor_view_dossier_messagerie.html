@@ -11,10 +11,12 @@
         <h2>Messagerie</h2>
       </div>
       <div>
-        <button aria-controls="modal-new-message"
-                data-fr-opened="false"
-                type="button"
-                class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
+        {% if has_send_message_permission %}
+          <button aria-controls="modal-new-message"
+                  data-fr-opened="false"
+                  type="button"
+                  class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -61,6 +63,8 @@
     </section>
   {% endif %}
 
-  {% include 'haie/petitions/_new_message_modal.html' %}
+  {% if has_send_message_permission %}
+    {% include 'haie/petitions/_new_message_modal.html' %}
+  {% endif %}
 
 {% endblock %}

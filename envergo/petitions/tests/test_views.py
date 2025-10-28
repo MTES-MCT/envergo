@@ -1251,3 +1251,60 @@ def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
     # THEN there is a "Ne plus suivre" button to stop following up the project
     assert response.status_code == 200
     assert 'type="submit">Ne plus suivre</button>' in response.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_invited_instructor_cannot_see_send_message_button(
+    client, instructor_haie_user_44, haie_user
+):
+    client.force_login(instructor_haie_user_44)
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+    res = client.get(messagerie_url)
+    assert "Nouveau message</button>" in res.content.decode()
+
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    res = client.get(messagerie_url)
+    assert "Nouveau message</button>" not in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_petition_invited_instructor_cannot_send_message(
+    mock_ds_query_execute, client, instructor_haie_user_44, haie_user
+):
+    client.force_login(instructor_haie_user_44)
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    res = client.post(messagerie_url, message_data, follow=True)
+    assert res.status_code == 200
+
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    res = client.post(messagerie_url, message_data, follow=True)
+    assert res.status_code == 403
