@@ -22,7 +22,7 @@ LIGHTBLUE = "#00BFFF"
 class Natura2000Regulation(
     ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator
 ):
-    choice_label = "Natura 2000 (Aménagement)"
+    choice_label = "Aménagement > Natura 2000"
 
     ACTIONS_TO_TAKE_MATRIX = {"soumis": ["depot_ein", "pc_ein"]}
 

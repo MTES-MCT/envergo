@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class AlignementArbresRegulation(HaieRegulationEvaluator):
-    choice_label = "Alignements d'arbres"
+    choice_label = "Haie > Alignements d'arbres"
 
     PROCEDURE_TYPE_MATRIX = {
         "soumis_autorisation": "declaration",

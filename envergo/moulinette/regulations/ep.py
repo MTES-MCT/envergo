@@ -30,7 +30,7 @@ from envergo.utils.fields import get_human_readable_value
 
 
 class EPRegulation(HaieRegulationEvaluator):
-    choice_label = "EP"
+    choice_label = "Haie > EP"
 
     PROCEDURE_TYPE_MATRIX = {
         "interdit": "interdit",
