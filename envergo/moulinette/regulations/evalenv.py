@@ -24,7 +24,7 @@ ZONE_U_THRESHOLD = 40000
 
 
 class EvalEnvRegulation(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
-    choice_label = "Évaluation environnementale"
+    choice_label = "Aménagement > Eval Env"
 
     ACTIONS_TO_TAKE_MATRIX = {
         "systematique": ["depot_etude_impact"],

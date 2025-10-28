@@ -42,20 +42,6 @@ class HedgeChoiceField(RadioSelect):
     option_template_name = "haie/forms/widgets/hedge_radio_option.html"
 
 
-class ProjectStageField(Select):
-    custom_template = True
-    template_name = "haie/forms/widgets/project_stage.html"
-    option_template_name = "django/forms/widgets/select_option.html"
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        from envergo.petitions.models import STAGES
-
-        context["STAGES"] = STAGES
-        context["widget"]["errors"] = getattr(self, "errors", [])
-        return context
-
-
 # See https://docs.djangoproject.com/en/4.2/topics/http/file-uploads/#uploading-multiple-files
 class MultipleFileInput(ClearableFileInput):
     allow_multiple_selected = True
@@ -73,3 +59,17 @@ class MultipleFileField(FileField):
         else:
             result = single_file_clean(data, initial)
         return result
+
+
+class ProjectStageField(Select):
+    custom_template = True
+    template_name = "haie/forms/widgets/project_stage.html"
+    option_template_name = "django/forms/widgets/select_option.html"
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        from envergo.petitions.models import STAGES
+
+        context["STAGES"] = STAGES
+        context["widget"]["errors"] = getattr(self, "errors", [])
+        return context

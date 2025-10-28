@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class LoiSurLEauRegulation(
     ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator
 ):
-    choice_label = "Loi sur l'eau"
+    choice_label = "Aménagement > Loi sur l'eau"
 
     ACTIONS_TO_TAKE_MATRIX = {
         "soumis_ou_pac": ["depot_pac_lse", "mention_arrete_lse", "pc_ein"],
