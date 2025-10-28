@@ -102,8 +102,6 @@
       maxZoom: 21,
       scrollWheelZoom: this.options.isStatic ? 'center' : true,
       layers: layers,
-      dragging: !L.Browser.mobile,
-      tap: !L.Browser.mobile
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
