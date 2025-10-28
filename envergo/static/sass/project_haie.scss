@@ -340,6 +340,15 @@ div#app {
   }
 }
 
+// override leaflet cursor
+div#app div#saisie-ui #map.leaflet-grab {
+  cursor: default;
+}
+
+.leaflet-dragging div#app div#saisie-ui #map.leaflet-grab {
+  cursor: grabbing;
+}
+
 div#app div#saisie-ui #sidebar div#hedge-conditions,
 section#section-plantation-evaluation div#hedge-conditions {
   .tile-header {
@@ -456,6 +465,82 @@ dialog.hedge-data-dialog {
 
       .fr-radio-rich {
         flex-grow: 1;
+
+        input[type="radio"] {
+          // hacky: virtually inflate the input element to avoid the scroll jump when clicking on the label
+          height: 300px;
+          width: 300px;
+          scroll-behavior: smooth;
+          z-index: -1;
+
+          @supports (selector(:has(*))) {
+            // remove the bottom border of the label when the input is checked
+            &:checked {
+              + label {
+                background-image:
+                  linear-gradient(
+                    0deg,
+                    var(--border-active-blue-france),
+                    var(--border-active-blue-france)
+                  ),
+                  linear-gradient(
+                    0deg,
+                    var(--border-active-blue-france),
+                    var(--border-active-blue-france)
+                  ),
+                  linear-gradient(0deg, transparent, transparent),
+                  linear-gradient(
+                    0deg,
+                    var(--border-active-blue-france),
+                    var(--border-active-blue-france)
+                  ),
+                  radial-gradient(
+                    transparent 6px,
+                    var(--border-active-blue-france) 7px,
+                    transparent 8px
+                  ),
+                  radial-gradient(
+                    var(--background-active-blue-france) 3px,
+                    transparent 4px
+                  );
+              }
+
+              ~ .fr-radio-rich__pictogram {
+                background-image:
+                  linear-gradient(
+                    0deg,
+                    var(--background-action-high-blue-france),
+                    var(--background-action-high-blue-france)
+                  ),
+                  linear-gradient(0deg, transparent, transparent),
+                  linear-gradient(
+                    0deg,
+                    var(--background-action-high-blue-france),
+                    var(--background-action-high-blue-france)
+                  ),
+                  linear-gradient(
+                    0deg,
+                    var(--border-default-grey),
+                    var(--border-default-grey)
+                  );
+              }
+            }
+          }
+        }
+
+        @supports (selector(:has(*))) {
+          // on checked add the border on the image label too
+          &:has(input[type="radio"]) ~ label {
+            cursor: pointer;
+            border: solid var(--border-default-grey);
+            border-width: 0 1px 1px;
+          }
+
+          &:has(input[type="radio"]:checked) ~ label {
+            border: solid var(--border-active-blue-france);
+            border-width: 0 1px 1px;
+          }
+        }
       }
 
       .fr-radio-rich__pictogram {
@@ -470,6 +555,18 @@ dialog.hedge-data-dialog {
 
       img.hedge-radio-img {
         max-width: 100%;
+        height: 100%;
+      }
+
+      @supports (selector(:has(*))) {
+        // apply the hover behavior on the image label too
+        &:has(> label:hover) > .fr-radio-rich label {
+          background-color: var(--hover);
+
+          & + .fr-radio-rich__pictogram {
+            background-color: var(--hover);
+          }
+        }
       }
     }
   }
@@ -819,4 +916,20 @@ div#project-header-container {
   form {
     margin-left: 2em;
   }
+}
+
+#due-date-container {
+  .due-date {
+    color: var(--text-mention-grey);
+  }
+
+  .days-left {
+    font-style: italic;
+    color: var(--text-mention-grey);
+    font-size: 0.75rem;
+  }
+}
+
+.stage-objective {
+  display: none;
 }
