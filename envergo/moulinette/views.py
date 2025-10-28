@@ -292,12 +292,9 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         # If the main form is valid and all the errors are missing data, it means
         # that filling the main form triggered new additional questions. We then
         # redirect to the current form with the submitted values in the url.
-        elif all(
-            (
-                self.moulinette.main_form.is_valid(),
-                not self.moulinette.are_additional_forms_bound(),
-                not self.moulinette.are_optional_forms_bound(),
-            )
+        elif self.moulinette.main_form.is_valid() and (
+            self.moulinette.additional_fields
+            and not self.moulinette.are_additional_forms_bound()
         ):
             return HttpResponseRedirect(f"{self.get_form_url()}#additional-forms")
 
