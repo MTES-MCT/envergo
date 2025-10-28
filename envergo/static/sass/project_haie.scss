@@ -917,3 +917,19 @@ div#project-header-container {
     margin-left: 2em;
   }
 }
+
+#due-date-container {
+  .due-date {
+    color: var(--text-mention-grey);
+  }
+
+  .days-left {
+    font-style: italic;
+    color: var(--text-mention-grey);
+    font-size: 0.75rem;
+  }
+}
+
+.stage-objective {
+  display: none;
+}
