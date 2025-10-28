@@ -1,5 +1,6 @@
 import factory
 from factory.django import DjangoModelFactory
+from shapely import LineString
 
 from envergo.geodata.tests.factories import MapFactory
 from envergo.hedges.models import Hedge, HedgeData, Species, SpeciesMap
@@ -26,6 +27,18 @@ class HedgeFactory(factory.Factory):
             "connexion_boisement": False,
         }
     )
+
+    @factory.post_generation
+    def length(obj, create, extracted, **kwargs):
+        """Force the hedge to be a specific (althougr very approximate) length."""
+        if extracted:
+
+            # One degree of latitude is approx 111 km
+            obj.latLngs[1]["lng"] = obj.latLngs[0]["lng"]
+            obj.latLngs[1]["lat"] = obj.latLngs[0]["lat"] + (extracted / 111000.0)
+            obj.geometry = LineString(
+                [(latLng["lng"], latLng["lat"]) for latLng in obj.latLngs]
+            )
 
 
 class HedgeDataFactory(DjangoModelFactory):

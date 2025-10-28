@@ -34,6 +34,7 @@ class RegulationFactory(DjangoModelFactory):
         model = Regulation
 
     regulation = "loi_sur_leau"
+    evaluator = "envergo.moulinette.regulations.RegulationEvaluator"
     has_perimeters = False
 
 
@@ -71,6 +72,7 @@ class ConfigHaieFactory(DjangoModelFactory):
 
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
+    single_procedure = False
     regulations_available = [
         "conditionnalite_pac",
         "ep",

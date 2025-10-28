@@ -62,15 +62,16 @@ def moulinette_data(lat1, lng1, lat2, lng2):
             }
         ]
     )
-    return {
+    data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
         "localisation_pac": "non",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
-        "department": 44,
+        "department": "44",
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize(
@@ -101,8 +102,7 @@ def moulinette_data(lat1, lng1, lat2, lng2):
 )
 def test_moulinette_evaluation(moulinette_data, expected_result):
     ConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.natura2000_haie.result == expected_result
     if expected_result != "non_concerne":
         assert moulinette.natura2000_haie.natura2000_haie.result == expected_result
@@ -129,9 +129,8 @@ def test_moulinette_evaluation(moulinette_data, expected_result):
 )
 def test_moulinette_evaluation_alignement(moulinette_data, expected_result):
     ConfigHaieFactory()
-    hedges = moulinette_data["haies"]
+    hedges = moulinette_data["data"]["haies"]
     hedges.data[0]["additionalData"]["type_haie"] = "alignement"
     hedges.save()
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.natura2000_haie.natura2000_haie.result_code == expected_result

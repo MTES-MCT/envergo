@@ -107,6 +107,34 @@ RESULTS = Choices(
     ("soumis_autorisation", "Autorisation"),
 )
 
+RESULT_CASCADE = [
+    RESULTS.interdit,
+    RESULTS.systematique,
+    RESULTS.cas_par_cas,
+    RESULTS.soumis_ou_pac,
+    RESULTS.soumis_declaration,
+    RESULTS.soumis,
+    RESULTS.soumis_autorisation,
+    RESULTS.derogation_inventaire,
+    RESULTS.derogation_simplifiee,
+    RESULTS.dispense_sous_condition,
+    RESULTS.action_requise,
+    RESULTS.a_verifier,
+    RESULTS.iota_a_verifier,
+    RESULTS.non_soumis,
+    RESULTS.dispense,
+    RESULTS.non_concerne,
+    RESULTS.non_disponible,
+    RESULTS.non_applicable,
+    RESULTS.non_active,
+]
+
+_missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in RESULT_CASCADE: {_missing_results}"
+    )
+
 
 # All possible result codes for a single evaluation
 # This is for legacy evaluations only
@@ -312,21 +340,14 @@ class Evaluation(models.Model):
 
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
-        from envergo.moulinette.forms import MoulinetteFormAmenagement
         from envergo.moulinette.models import MoulinetteAmenagement
-        from envergo.moulinette.utils import compute_surfaces
 
         if not hasattr(self, "_moulinette"):
-            raw_params = self.moulinette_params
-            raw_params.update(compute_surfaces(raw_params))
-            form = MoulinetteFormAmenagement(
-                raw_params
-            )  # there is only Amenagement evaluations
-            form.is_valid()
-            params = form.cleaned_data
+            data = self.moulinette_params
+            moulinette_data = {"initial": data, "data": data}
             self._moulinette = (
                 MoulinetteAmenagement(  # there is only Amenagement evaluations
-                    params, raw_params
+                    moulinette_data
                 )
             )
 

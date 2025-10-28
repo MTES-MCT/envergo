@@ -12,6 +12,15 @@ def update_qs(url, params):
     return urlunsplit(new_bits)
 
 
+def copy_qs(url, from_url):
+    """Replace url querystring with querystring from `from_url`."""
+
+    bits = urlsplit(url)
+    from_bits = urlsplit(from_url)
+    new_bits = bits._replace(query=from_bits.query)
+    return urlunsplit(new_bits)
+
+
 def remove_from_qs(url, key):
     """Remove a parameter from an url query string."""
 
