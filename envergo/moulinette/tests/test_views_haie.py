@@ -359,6 +359,7 @@ def test_confighaie_settings_view(
 ):
     """Test config haie settings view"""
     ConfigHaieFactory(department=loire_atlantique_department)
+    admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
     # GIVEN an anonymous visitor
@@ -384,6 +385,7 @@ def test_confighaie_settings_view(
     assert response.status_code == 200
     assert "Département : Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
+    assert haie_user.email not in content
     assert instructor_haie_user_44.email in content
     assert admin_user.email not in content
 
