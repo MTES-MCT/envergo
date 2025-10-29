@@ -737,7 +737,7 @@ class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
         """Add department members emails"""
         context = super().get_context_data()
         department = self.department
-        context["department_members"] = (
+        context["department_members_emails"] = (
             department.members.filter(is_superuser=False)
             .filter(is_staff=False)
             .order_by("email")
