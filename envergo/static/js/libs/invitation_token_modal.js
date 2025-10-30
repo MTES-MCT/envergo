@@ -22,31 +22,35 @@
           buttonElt.addEventListener('click', this.createToken.bind(this));
         }
 
-        const copyButton = this.modalElt.querySelector("#copy-invitation-token-btn");
-        // The `navigator.clipboard` API is only available on `https` urls
-        if (navigator.clipboard !== undefined) {
-          copyButton.addEventListener('click', () => {
-            let btnText = copyButton.innerText;
+        const copyButtonElts = this.modalElt.querySelectorAll(".copy-invitation-token-btn");
 
-            const htmlEmail = this.modalElt.querySelector("#invitation-token-email-html").innerHTML;
-            const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
-            navigator.clipboard.write([
-              new ClipboardItem({
-                "text/plain": new Blob([textEmail.trim()], { type: "text/plain" }),
-                "text/html": new Blob([htmlEmail.trim()], { type: "text/html" })
-              })
-            ]).then(() => {
-              copyButton.innerText = "Message copié !";
+        copyButtonElts.forEach(copyButton => {
+          // The `navigator.clipboard` API is only available on `https` urls
+          if (navigator.clipboard !== undefined) {
+            copyButton.addEventListener('click', () => {
+              let btnText = copyButton.innerText;
+
+              const htmlEmail = this.modalElt.querySelector("#invitation-token-email-html").innerHTML;
+              const textEmail = this.modalElt.querySelector("#invitation-token-email-text").innerText;
+              htmlEmail.replace("Copier le message dans le presse-papier", "")
+              navigator.clipboard.write([
+                new ClipboardItem({
+                  "text/plain": new Blob([textEmail.trim()], { type: "text/plain" }),
+                  "text/html": new Blob([htmlEmail.trim()], { type: "text/html" })
+                })
+              ]).then(() => {
+                copyButton.innerText = "Message copié !";
+              });
+
+              setTimeout(function () {
+                copyButton.innerText = btnText;
+              }, 2000);
             });
-
-            setTimeout(function () {
-              copyButton.innerText = btnText;
-            }, 2000);
-          });
-        } else {
-          copyButton.innerText = "Impossible de copier le message";
-          copyButton.disabled = true;
-        }
+          } else {
+            copyButton.innerText = "Impossible de copier le message";
+            copyButton.disabled = true;
+          }
+        });
       };
 
       InvitationTokenModal.prototype.createToken = function () {
