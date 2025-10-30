@@ -3,7 +3,6 @@ from collections import defaultdict
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -26,6 +25,7 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
+from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
 
@@ -693,28 +693,11 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieSettingsView(LoginRequiredMixin, DetailView):
+class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     """Config haie settings view for a given department"""
 
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_settings.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        """Authorize user according to project department and log event"""
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-
-        # Find department if exists and set object department attribute
-        self.department = get_object_or_404(
-            Department, department=self.kwargs["department"]
-        )
-
-        if (
-            not request.user.is_superuser
-            and self.department not in request.user.departments.all()
-        ):
-            return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         """Return Config haie related to department number"""
