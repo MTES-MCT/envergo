@@ -5,7 +5,6 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -20,7 +19,6 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
-from envergo.geodata.models import Department
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
@@ -701,9 +699,10 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
 
     def get_object(self, queryset=None):
         """Return Config haie related to department number"""
-        self.department = get_object_or_404(
-            Department, department=self.kwargs["department"]
-        )
+
+        if self.department is None:
+            self.department = self.get_department(self.kwargs)
+
         queryset = self.queryset.filter(department=self.department)
 
         try:
