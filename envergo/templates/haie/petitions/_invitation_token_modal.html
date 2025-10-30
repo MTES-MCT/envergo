@@ -24,11 +24,6 @@
             <div id="invitation-token-modal-content">
               <p>Copiez-collez le message ci-dessous dans un e-mail adressé à votre destinataire.</p>
 
-              <p class="fr-mt-2w">
-                <button id="copy-invitation-token-btn-above"
-                        class="copy-invitation-token-btn fr-btn">Copier le message dans le presse-papier</button>
-              </p>
-
               <div id="invitation-token-email-wrapper" class="fr-mb-3w">
                 {% include 'haie/petitions/_invitation_token_email_body.html' %}
               </div>
@@ -36,6 +31,11 @@
               <pre id="invitation-token-email-text">
               {% include 'haie/petitions/_invitation_token_email_body.txt' %}
               </pre>
+
+              <p class="text-center fr-mt-2w">
+                <button id="copy-invitation-token-btn-inside"
+                        class="copy-invitation-token-btn fr-btn">Copier le message dans le presse-papier</button>
+              </p>
 
               <p>
                 Ce message contient un lien d’invitation.
