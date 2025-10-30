@@ -25,6 +25,7 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
+    EvaluationAction,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -711,3 +712,6 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
+
+
+admin.site.register(EvaluationAction)
