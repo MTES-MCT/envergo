@@ -63,6 +63,10 @@ hr.separator {
   }
 }
 
+.text-center {
+  text-align: center;
+}
+
 /**
  * Update some margins for paragraphs and lists
  */
@@ -1904,6 +1908,14 @@ li.btn-link {
   .fr-ml-lg-0 {
     margin-left: 0 !important;
   }
+}
+
+.fr-label--warning {
+  color: var(--text-default-warning);
+}
+
+.fr-icon-hourglass-2-fill::before {
+  mask-image: url("/static/images/hourglass-2-fill.svg");
 }
 
 .dark-only {
