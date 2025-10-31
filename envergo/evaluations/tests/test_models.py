@@ -2,11 +2,13 @@ from unittest.mock import call, patch
 from urllib.parse import urlencode
 
 import pytest
+from django.contrib.gis.geos import MultiPolygon
 
 from envergo.evaluations.models import Evaluation
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
+from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
@@ -22,6 +24,7 @@ def moulinette_config(france_map, loire_atlantique_department):  # noqa
     ConfigAmenagementFactory(
         department=loire_atlantique_department,
         is_activated=True,
+        lse_contact_ddtm="Contact de la DDTM du 44",
         ddtm_water_police_email="ddtm_email_test@example.org",
         ddtm_n2000_email="ddtm_n2000@example.org",
         dreal_eval_env_email="dreal_evalenv@example.org",
@@ -99,3 +102,17 @@ def test_evaluation_edition_triggers_an_automation():
             call(evaluation2.uid),
         ]
     )
+
+
+@pytest.mark.parametrize("footprint", [5000])
+def test_render_context(moulinette_url):
+    # GIVEN an evaluation that is "soumis" to Loi sur l'Eau due to presence of wetland
+    wetland = MapFactory(map_type="zone_humide", zones=None, data_type="certain")
+    ZoneFactory(map=wetland, geometry=MultiPolygon([france_polygon]))
+
+    evaluation = EvaluationFactory(moulinette_url=moulinette_url)
+    # WHEN rendering the content
+    content = evaluation.render_content()
+
+    # THEN some info from configuration are present in the content
+    assert "Contact de la DDTM du 44" in content
