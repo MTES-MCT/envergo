@@ -36,7 +36,7 @@ def moulinette_setup(france_map):  # noqa: F811
     )
 
 
-HOME_TITLE = "Simulez votre projet en phase amont"
+HOME_TITLE = "Réglementation environnementale : simuler un projet d'aménagement"
 RESULT_TITLE = "Simulation réglementaire du projet"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
