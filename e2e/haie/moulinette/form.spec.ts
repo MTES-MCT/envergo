@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test('A petitioner can submit a project', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('button', { name: 'Départements pilotes' }).click();
-    await page.getByLabel('Menu principal').getByRole('link', { name: 'Loire-Atlantique (44)' }).click();
+    await page.getByRole('link', { name: 'Simuler un projet' }).click();
+    await page.getByRole('link', { name: 'Loire-Atlantique (44)' }).click();
     await page.getByText('Haies ou alignements d’arbres').click();
     await page.getByText('Destruction').click();
     await page.getByRole('button', { name: 'Valider' }).click();

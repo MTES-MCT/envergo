@@ -1,9 +1,7 @@
 import random
 from typing import Literal
-from urllib.parse import urlencode
 
 from django import template
-from django.core.cache import cache
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
@@ -109,35 +107,42 @@ def faq_menu(context):
 
 
 @register.simple_tag(takes_context=True)
-def pilote_departments_menu(context, is_slim=False):
-    """Generate html for the "Départements pilotes" collapsible menu."""
-    cache_key = "activated_departments"
-    activated_departments = cache.get(cache_key)
+def parametrage_departments_menu(context, is_slim=False):
+    """Generate html for the "Paramétrages" collapsible menu.
+    List available departments for current user."""
 
-    if not activated_departments:
-        activated_departments = (
-            Department.objects.defer("geometry")
-            .filter(confighaie__is_activated=True)
-            .all()
-        )
-        cache.set(
-            cache_key, activated_departments, timeout=60 * 15
-        )  # Cache for 15 minutes
+    current_user = context["user"]
+
+    if not current_user.is_authenticated:
+        return None
+
+    config_haies = ConfigHaie.objects.all()
+    departments_with_config = Department.objects.defer("geometry").filter(
+        confighaie__in=config_haies
+    )
+
+    if current_user.is_superuser:
+        available_departments = departments_with_config
+    else:
+        user_departments = current_user.departments.defer("geometry")
+        available_departments = departments_with_config & user_departments
 
     links = (
         (
-            f"{reverse('triage')}?{urlencode({'department': department.department})}",
+            reverse(
+                "confighaie_settings", kwargs={"department": department.department}
+            ),
             department,
             [],
         )
-        for department in activated_departments
+        for department in available_departments
     )
 
     return collapsible_menu(
         context,
         links,
-        "Départements pilotes",
-        "menu-pilote-department",
+        "Paramétrage",
+        "menu-settings-departments",
         is_slim=is_slim,
     )
 
