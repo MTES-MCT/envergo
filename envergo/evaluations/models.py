@@ -3,7 +3,7 @@ import secrets
 import uuid
 from enum import Enum
 from os.path import splitext
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
@@ -402,7 +402,7 @@ class Evaluation(models.Model):
         share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
 
         emulated_request = HttpRequest()
-        emulated_request.GET = parse_qs(urlparse(self.moulinette_url).query)
+        emulated_request.GET = QueryDict(urlparse(self.moulinette_url).query)
 
         context = {
             "evaluation": self,
