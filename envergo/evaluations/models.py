@@ -320,6 +320,9 @@ class Evaluation(models.Model):
         _("Send evaluation to project sponsor"), default=True
     )
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
+    display_actions_to_take = models.BooleanField(
+        "Afficher les actions à mener ?", default=False
+    )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     updated_at = models.DateTimeField(_("Date updated"), auto_now=True)
 

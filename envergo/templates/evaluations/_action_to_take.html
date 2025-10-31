@@ -1,0 +1,18 @@
+<section class="action-to-take fr-mb-2w">
+  <button class="read-more-btn fr-btn fr-btn--tertiary-no-outline"
+          aria-expanded="false"
+          aria-controls="{{ action.slug }}">
+    <span class="fr-sr-only">{{ action.label }}</span>
+    <span aria-hidden="true" class="concealed-label">
+      <span class="fr-icon-arrow-right-line"></span>
+      {{ action.label }}
+      <span class="fr-icon-arrow-down-s-line"></span></span>
+      <span aria-hidden="true" class="expanded-label">
+        <span class="fr-icon-arrow-right-line"></span>
+        {{ action.label }}
+        <span class="fr-icon-arrow-up-s-line"></span></span>
+      </button>
+      <div class="fr-collapse" id="{{ action.slug }}">
+        <p class="fr-ml-4w fr-my-2w">{{ action.details|safe }}</p>
+      </div>
+    </section>
