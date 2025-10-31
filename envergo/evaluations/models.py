@@ -3,7 +3,7 @@ import secrets
 import uuid
 from enum import Enum
 from os.path import splitext
-from urllib.parse import urlencode, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
@@ -14,7 +14,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
-from django.http import QueryDict
+from django.http import HttpRequest, QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -403,11 +403,15 @@ class Evaluation(models.Model):
         evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
         share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
 
+        emulated_request = HttpRequest()
+        emulated_request.GET = parse_qs(urlparse(self.moulinette_url).query)
+
         context = {
             "evaluation": self,
             "moulinette": moulinette,
             "evaluation_url": evaluation_url,
             "share_print_url": share_print_url,
+            **moulinette.get_extra_context(emulated_request),
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
