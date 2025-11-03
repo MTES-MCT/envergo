@@ -243,6 +243,9 @@ def test_moulinette_missing_data_redirects_to_additional_forms(client):
         "created_surface": 30000,
         "final_surface": 30000,
     }
+    # This should require missing data:
+    # - Operation d'aménagement ?
+    # - Terrain d'assiette
     res = client.post(url, data, follow=True)
     assert res.status_code == 200
     assert res.redirect_chain[0][0].startswith("/simulateur/formulaire/")
@@ -276,6 +279,9 @@ def test_moulinette_qo_form_with_missing_data_redirects_to_additional_forms(clie
         "evalenv_rubrique_41-type_stationnement": "public",
         "evalenv_rubrique_41-nb_emplacements": "gte_50",
     }
+    # Missing data :
+    # - Opération d'aménagement ?
+    # - Terrain d'assiette
     res = client.post(url, data, follow=True)
     assert res.status_code == 200
     assert res.redirect_chain[0][0].startswith("/simulateur/formulaire/")
