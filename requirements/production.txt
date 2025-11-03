@@ -103,6 +103,7 @@ django==4.2.23
     #   django-allauth
     #   django-anymail
     #   django-appconf
+    #   django-autocomplete-light
     #   django-braces
     #   django-compressor
     #   django-crispy-forms
@@ -121,6 +122,10 @@ django-appconf==1.1.0
     # via
     #   -r base.txt
     #   django-compressor
+django-autocomplete-light==3.12.1
+    # via
+    #   -r base.txt
+    #   -r production.in
 django-braces==1.17.0
     # via -r base.txt
 django-compressor==4.5.1
@@ -292,7 +297,9 @@ tqdm==4.67.1
 typing-extensions==4.14.1
     # via
     #   -r base.txt
+    #   anyio
     #   beautifulsoup4
+    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt

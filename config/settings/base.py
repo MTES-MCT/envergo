@@ -70,6 +70,8 @@ THIRD_PARTY_APPS = [
     "localflavor",
     "django_otp",
     "django_otp.plugins.otp_totp",
+    "dal",
+    "dal_select2",
 ]
 
 LOCAL_APPS = [
