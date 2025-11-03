@@ -332,7 +332,8 @@ def test_ep_normandie_interdit_remplacement(
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "interdit_remplacement"
+    # Replacing hedges is no longer forbidden in Normandie
+    assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
 
 
 def test_ep_normandie_derogation_simplifiee(
