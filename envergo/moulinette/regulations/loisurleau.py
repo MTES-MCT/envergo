@@ -3,8 +3,7 @@ import logging
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import (
-    ActionsToTakeCriterionMixin,
-    ActionsToTakeRegulationMixin,
+    ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
     Map,
@@ -22,9 +21,7 @@ PINK = "#FF9575"
 logger = logging.getLogger(__name__)
 
 
-class LoiSurLEauRegulation(
-    ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator
-):
+class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Loi sur l'eau"
 
     ACTIONS_TO_TAKE_MATRIX = {
@@ -37,7 +34,7 @@ class LoiSurLEauRegulation(
 class ZoneHumide(
     ZoneHumideMixin,
     SelfDeclarationMixin,
-    ActionsToTakeCriterionMixin,
+    ActionsToTakeMixin,
     CriterionEvaluator,
 ):
     choice_label = "Loi sur l'eau > Zone humide"
@@ -171,7 +168,7 @@ class ZoneHumide(
 class ZoneInondable(
     ZoneInondableMixin,
     SelfDeclarationMixin,
-    ActionsToTakeCriterionMixin,
+    ActionsToTakeMixin,
     CriterionEvaluator,
 ):
     choice_label = "Loi sur l'eau > Zone inondable"
@@ -268,9 +265,7 @@ class ZoneInondable(
         return criterion_map
 
 
-class EcoulementSansBV(
-    SelfDeclarationMixin, ActionsToTakeCriterionMixin, CriterionEvaluator
-):
+class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP sans BV"
     slug = "ecoulement_sans_bv"
 
@@ -342,9 +337,7 @@ class Ruissellement(EcoulementSansBV):
     choice_label = "Loi sur l'eau > Ruissellement (obsolète)"
 
 
-class EcoulementAvecBV(
-    SelfDeclarationMixin, ActionsToTakeCriterionMixin, CriterionEvaluator
-):
+class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP avec BV"
     slug = "ecoulement_avec_bv"
 
