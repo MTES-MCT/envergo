@@ -563,6 +563,21 @@ class Regulation(models.Model):
         except TemplateDoesNotExist:
             return False
 
+    @property
+    def actions_to_take(self) -> set[str]:
+        """Get potential actions to take from regulation result."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing actions to take."
+            )
+
+        if hasattr(self._evaluator, "actions_to_take"):
+            actions_to_take = set(self._evaluator.actions_to_take)
+        else:
+            actions_to_take = set()
+
+        return actions_to_take
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -771,6 +786,21 @@ class Criterion(models.Model):
             )
 
         return self._evaluator.result_tag_style
+
+    @property
+    def actions_to_take(self) -> set[str]:
+        """Get potential actions to take from regulation result."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Criterion must be evaluated before accessing actions to take."
+            )
+
+        if hasattr(self._evaluator, "actions_to_take"):
+            actions_to_take = set(self._evaluator.actions_to_take)
+        else:
+            actions_to_take = set()
+
+        return actions_to_take
 
 
 class Perimeter(models.Model):
@@ -1842,6 +1872,17 @@ class Moulinette(ABC):
     def get_map_center(self):
         """Returns at what coordinates the perimeter."""
         raise NotImplementedError
+
+    @property
+    def actions_to_take(self) -> set[str]:
+        """Get potential actions to take from all activated regulations and criteria"""
+        actions_to_take = set()
+        for regulation in self.regulations:
+            actions_to_take.update(regulation.actions_to_take)
+            for criterion in regulation.criteria.all():
+                actions_to_take.update(criterion.actions_to_take)
+
+        return actions_to_take
 
 
 class MoulinetteAmenagement(Moulinette):
