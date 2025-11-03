@@ -2333,3 +2333,29 @@ article#evaluation {
   line-height: 1.75rem;
   padding: 0 0.75rem;
 }
+
+section#actions-to-take {
+  .actions-to-take-title {
+    display: flex;
+    align-items: center;
+  }
+
+  #self-declaration-cta {
+    margin: auto;
+    background-color: transparent;
+  }
+
+  section.action-to-take {
+    .action-btn {
+      font-weight: normal;
+      background-color: var(--background-action-low-blue-france);
+      min-height: unset;
+      padding: 0 0.5rem;
+      text-align: left;
+
+      &:not(.read-more-btn) {
+        cursor: default;
+      }
+    }
+  }
+}

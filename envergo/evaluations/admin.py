@@ -25,6 +25,7 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
+    EvaluationAction,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -153,7 +154,14 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             "Contenu de l'avis réglementaire",
-            {"fields": ("moulinette_url", "is_icpe", "details_md")},
+            {
+                "fields": (
+                    "moulinette_url",
+                    "is_icpe",
+                    "display_actions_to_take",
+                    "details_md",
+                )
+            },
         ),
         (
             _("Sent emails"),
@@ -711,3 +719,6 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
+
+
+admin.site.register(EvaluationAction)

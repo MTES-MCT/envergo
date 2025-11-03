@@ -167,7 +167,14 @@
 
     {% if moulinette.actions_to_take %}
       <ul>
-        {% for action_to_take in moulinette.actions_to_take %}<li>{{ action_to_take }}</li>{% endfor %}
+        {% for target, actions in moulinette.actions_to_take.items %}
+          <li>
+            {{ target }}
+            <ul>
+              {% for action in actions %}<li>{{ action }}</li>{% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
       </ul>
     {% else %}
       <p>Aucune</p>
