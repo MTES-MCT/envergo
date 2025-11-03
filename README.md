@@ -73,6 +73,12 @@ $ docker compose run --rm django python manage.py collectstatic
 
 ```
 
+Générer les traductions :
+
+```bash
+docker compose run --rm django python manage.py compilemessages
+```
+
 Ajouter dans `/etc/hosts` les domaines utilisés pour Envergo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
 
 ```
