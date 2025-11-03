@@ -63,6 +63,10 @@ hr.separator {
   }
 }
 
+.text-center {
+  text-align: center;
+}
+
 /**
  * Update some margins for paragraphs and lists
  */
@@ -2197,8 +2201,13 @@ main.demos {
 }
 
 #moulinette-title {
-  max-width: 700px;
+  max-width: 600px;
   margin: 1.5rem auto;
+}
+
+#moulinette-subtitle {
+  max-width: 700px;
+  margin: 2rem auto;
 }
 
 #demarche-simplifiee-form {

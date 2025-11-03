@@ -4,11 +4,12 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.forms.widgets import CheckboxInput
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.views.generic import FormView
+from django.views.generic import DetailView, FormView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
@@ -21,7 +22,8 @@ from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import get_moulinette_class_from_site
+from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
+from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
 
 
@@ -687,3 +689,42 @@ class Triage(MoulinetteMixin, FormView):
         url_with_params = f"{url}?{qs}"
         url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
+
+
+class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
+    """Config haie settings view for a given department"""
+
+    queryset = ConfigHaie.objects.all()
+    template_name = "haie/moulinette/confighaie_settings.html"
+
+    def get_object(self, queryset=None):
+        """Return Config haie related to department number"""
+
+        if self.department is None:
+            self.department = self.get_department(self.kwargs)
+
+        queryset = self.queryset.filter(department=self.department)
+
+        try:
+            # Get the single item from the filtered queryset
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+    def get_context_data(self, **kwargs):
+        """Add department members emails"""
+        context = super().get_context_data()
+        department = self.department
+        context["department"] = self.department
+        context["department_members_emails"] = (
+            department.members.filter(is_superuser=False)
+            .filter(is_staff=False)
+            .order_by("email")
+            .values("email")
+        )
+
+        return context

@@ -14,7 +14,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
-from django.http import QueryDict
+from django.http import HttpRequest, QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -174,6 +174,8 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
     RESULTS.soumis_declaration: TagStyleEnum.LightRed,
     RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
+    "declaration": TagStyleEnum.Green,
+    "autorisation": TagStyleEnum.LightRed,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
@@ -401,11 +403,15 @@ class Evaluation(models.Model):
         evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
         share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
 
+        emulated_request = HttpRequest()
+        emulated_request.GET = QueryDict(urlparse(self.moulinette_url).query)
+
         context = {
             "evaluation": self,
             "moulinette": moulinette,
             "evaluation_url": evaluation_url,
             "share_print_url": share_print_url,
+            **moulinette.get_extra_context(emulated_request),
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)

@@ -76,7 +76,7 @@
   {% for result, regulations in moulinette.get_regulations_by_group.items %}
     {% if result.name == "BlockingRegulations" %}
       <h3>Réglementations interdisant le projet</h3>
-    {% elif result.name == "RestrictiveRegulations" and moulinette.result != "soumis" %}
+    {% elif result.name == "RestrictiveRegulations" and moulinette.result == "interdit" %}
       <h3>Autres réglementations concernant le projet</h3>
     {% elif result.name == "RestrictiveRegulations" %}
       <h3>Réglementations concernant le projet</h3>

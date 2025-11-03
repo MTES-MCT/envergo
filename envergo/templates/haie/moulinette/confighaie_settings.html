@@ -1,0 +1,34 @@
+{% extends 'haie/base.html' %}
+
+{% block content %}
+  <div class="fr-grid-row fr-mb-3w">
+    <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-9">
+      <h1>Paramétrage du portail</h1>
+
+      <p class="fr-text--lead">Département : {{ department }}</p>
+
+      <h2>Configuration</h2>
+
+      <p class="fr-mb-1w">
+        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
+      </p>
+      <p>
+        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
+      </p>
+
+      <h2>Comptes</h2>
+
+      <p class="fr-mb-1w">
+        <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
+      </p>
+
+      {% if department_members_emails %}
+        <ul>
+          {% for member in department_members_emails %}<li>{{ member.email }}</li>{% endfor %}
+        </ul>
+      {% else %}
+        <p>Pas de compte instructeur pour ce département.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

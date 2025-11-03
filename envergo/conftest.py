@@ -4,6 +4,7 @@ import pytest
 from django.contrib.sites.models import Site
 
 from envergo.contrib.sites.tests.factories import SiteFactory
+from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 
@@ -26,6 +27,32 @@ def amenagement_user() -> User:
 @pytest.fixture
 def haie_user() -> User:
     return UserFactory(access_amenagement=False, access_haie=True)
+
+
+@pytest.fixture
+def inactive_haie_user_44() -> User:
+    """Haie user with dept 44"""
+    haie_user_44 = UserFactory(
+        access_amenagement=False,
+        access_haie=True,
+        is_active=False,
+    )
+    department_44 = DepartmentFactory.create()
+    haie_user_44.departments.add(department_44)
+    return haie_user_44
+
+
+@pytest.fixture
+def instructor_haie_user_44() -> User:
+    """Haie user with dept 44"""
+    instructor_haie_user_44 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+    )
+    department_44 = DepartmentFactory.create()
+    instructor_haie_user_44.departments.add(department_44)
+    return instructor_haie_user_44
 
 
 @pytest.fixture

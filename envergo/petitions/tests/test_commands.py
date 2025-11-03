@@ -32,6 +32,8 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
     )
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
