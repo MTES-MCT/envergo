@@ -1,0 +1,58 @@
+{% if not is_read_only %}
+  <h6>
+    ✅ <strong>Le dossier d’autorisation est prêt à être complété</strong>
+  </h6>
+
+  <p>Ce portail permet de compléter et transmettre une déclaration unique à l’administration.</p>
+
+  <p>Les étapes à venir sont les suivantes :</p>
+  <ol class="fr-mb-2w">
+    <li>
+      <button class="fr-link"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="demarches-simplifiees-modal">
+        <strong>Compléter le dossier d’autorisation.</strong>
+      </button>
+      Le formulaire sera pré-rempli avec les résultats de cette simulation. Vous devrez indiquer votre identité,
+      répondre à des questions sur le projet, joindre des photos et des pièces complémentaires.
+    </li>
+    <li>
+      <strong>Déposer le dossier complété.</strong> Vous recevez un récépissé qui accuse réception du dossier et
+      explique les étapes de la procédure.
+    </li>
+    <li>
+      <strong>Pièces complémentaires.</strong> Le guichet unique de la haie peut vous demander des précisions sur le
+      projet, et des photos ou des justificatifs additionnelles. Le délai d’instruction est alors suspendu, et vous avez
+      3 mois pour répondre.
+    </li>
+    <li>
+      <strong>Réponse du guichet unique.</strong> Dans les 2 mois après le dépôt (hors suspensions de délai), un premier examen du
+      dossier est effectué le guichet unique vous répond :
+      <ul>
+        <li>soit pour s’opposer au projet</li>
+        <li>
+          soit pour confirmer l’analyse de ce simulateur que le projet relève du régime d’autorisation, et vous
+          indiquer la durée de traitement. De nouveaux éléments complémentaires peuvent vous être demandés.
+        </li>
+      </ul>
+      Si aucune réponse ne vous est faite dans les 2 mois, le projet est considéré comme autorisé.
+    </li>
+  </ol>
+  <p>
+    Prochaine étape :
+    <button class="fr-btn fr-btn--primary"
+            type="button"
+            data-fr-opened="false"
+            aria-controls="demarches-simplifiees-modal">Compléter le dossier d’autorisation</button>
+  </p>
+{% else %}
+  <h6>
+    ✅ <strong>La demande d’autorisation est en cours</strong>
+  </h6>
+
+  <p>
+    Une fois la demande déposée, les services instructeurs examineront le projet.
+    Ils pourront vous contacter pour obtenir des compléments d’information.
+  </p>
+{% endif %}
