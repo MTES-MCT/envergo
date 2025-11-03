@@ -10,7 +10,7 @@ from envergo.moulinette.forms.fields import (
     extract_display_function,
 )
 from envergo.moulinette.regulations import (
-    ActionsToTakeRegulationMixin,
+    ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
     SelfDeclarationMixin,
@@ -23,7 +23,7 @@ EMPRISE_THRESHOLD = 10000
 ZONE_U_THRESHOLD = 40000
 
 
-class EvalEnvRegulation(ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator):
+class EvalEnvRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Eval Env"
 
     ACTIONS_TO_TAKE_MATRIX = {
