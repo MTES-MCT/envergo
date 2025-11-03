@@ -56,6 +56,8 @@
 
     this.inputElement.parentNode.insertBefore(this.autocompleteContainer, this.inputElement);
 
+    let inputId = this.inputId;
+
     accessibleAutocomplete({
       element: this.autocompleteContainer,
       id: this.inputId,
@@ -111,6 +113,11 @@
           };
           const event = new CustomEvent('Envergo:citycode_selected', { detail: eventData });
           window.dispatchEvent(event);
+
+          // Force blurring current input, so the keyboard is closed on mobile
+          // Also, we have to add a small delay because otherwise, other events have not
+          // stopped firing so the field keeps it's focus
+          setTimeout(() => { document.getElementById(inputId).blur(); }, 250);
         }
       },
       source: function (query, populateResults) {
