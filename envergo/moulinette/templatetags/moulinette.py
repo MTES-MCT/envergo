@@ -343,3 +343,16 @@ def display_remove_only_haies_field(field):
 @register.simple_tag
 def humanize_motif(motif):
     return dict(MOTIF_CHOICES).get(motif, "Motif non défini")
+
+
+@register.simple_tag(takes_context=True)
+def render_action_to_take_details(context, details):
+    """
+    Render action details that may contain template tags.
+    """
+    try:
+        template_context = Context(context.flatten())
+        template_obj = Template(details)
+        return template_obj.render(template_context)
+    except Exception:
+        return details

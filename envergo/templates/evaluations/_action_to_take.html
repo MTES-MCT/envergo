@@ -1,18 +1,23 @@
+{% load moulinette %}
+
 <section class="action-to-take fr-mb-2w">
-  <button class="read-more-btn fr-btn fr-btn--tertiary-no-outline"
-          aria-expanded="false"
-          aria-controls="{{ action.slug }}">
-    <span class="fr-sr-only">{{ action.label }}</span>
-    <span aria-hidden="true" class="concealed-label">
-      <span class="fr-icon-arrow-right-line"></span>
-      {{ action.label }}
-      <span class="fr-icon-arrow-down-s-line"></span></span>
-      <span aria-hidden="true" class="expanded-label">
+  <button class="action-btn {% if action.details %}read-more-btn{% endif %} fr-btn fr-btn--tertiary-no-outline"
+          {% if action.details %}aria-expanded="false" aria-controls="{{ action.slug }}"{% endif %}>
+    <span class="{% if action.details %}fr-sr-only{% endif %}">
+      <span class="fr-icon-arrow-right-line"></span>{{ action.label }}
+    </span>
+    {% if action.details %}
+      <span aria-hidden="true" class="concealed-label">
         <span class="fr-icon-arrow-right-line"></span>
         {{ action.label }}
-        <span class="fr-icon-arrow-up-s-line"></span></span>
+        <span class="fr-icon-arrow-down-s-line"></span></span>
+        <span aria-hidden="true" class="expanded-label">
+          <span class="fr-icon-arrow-right-line"></span>
+          {{ action.label }}
+          <span class="fr-icon-arrow-up-s-line"></span></span>
+        {% endif %}
       </button>
       <div class="fr-collapse" id="{{ action.slug }}">
-        <p class="fr-ml-4w fr-my-2w">{{ action.details|safe }}</p>
+        <p class="fr-ml-4w fr-my-2w">{% render_action_to_take_details action.details %}</p>
       </div>
     </section>

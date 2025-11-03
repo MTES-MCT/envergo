@@ -2308,12 +2308,16 @@ section#actions-to-take {
   }
 
   section.action-to-take {
-    .read-more-btn {
+    .action-btn {
       font-weight: normal;
       background-color: var(--background-action-low-blue-france);
       min-height: unset;
       padding: 0 0.5rem;
       text-align: left;
+
+      &:not(.read-more-btn) {
+        cursor: default;
+      }
     }
   }
 }

@@ -1883,12 +1883,21 @@ class Moulinette(ABC):
             for criterion in regulation.criteria.all():
                 actions_to_take.update(criterion.actions_to_take)
 
-        actions = EvaluationAction.objects.filter(slug__in=actions_to_take).all()
+        actions = (
+            EvaluationAction.objects.filter(slug__in=actions_to_take)
+            .order_by("order")
+            .all()
+        )
         result = {}
         for action in actions:
-            if action.target not in result:
-                result[action.target] = []
-            result[action.target].append(action)
+            if action.type == "pc":
+                if action.type not in result:
+                    result[action.type] = []
+                result[action.type].append(action)
+            else:
+                if action.target not in result:
+                    result[action.target] = []
+                result[action.target].append(action)
         return result
 
 

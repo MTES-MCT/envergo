@@ -1,3 +1,4 @@
+{% load moulinette %}
 {% load static %}
 
 <section id="actions-to-take" class="alt fr-container fr-py-2w">
@@ -50,13 +51,47 @@
          role="tabpanel"
          aria-labelledby="storybook-tab-1"
          tabindex="0">
-      {% if moulinette.actions_to_take.instructor %}
-        {% for action in moulinette.actions_to_take.instructor %}
-          {% include 'evaluations/_action_to_take.html' with action=action %}
-        {% endfor %}
-      {% else %}
-        {# todo #}
-      {% endif %}
-    </div>
-  </div>
-</section>
+      {% if moulinette.actions_to_take.pc %}
+        <section class="action-to-take fr-mb-2w">
+          <button class="action-btn read-more-btn  fr-btn fr-btn--tertiary-no-outline"
+                  aria-expanded="false"
+                  aria-controls="action-pc">
+            <span class="fr-sr-only">
+              <span class="fr-icon-arrow-right-line"></span>Pièces complémentaires à demander au pétitionnaire
+            </span>
+
+            <span aria-hidden="true" class="concealed-label">
+              <span class="fr-icon-arrow-right-line"></span>
+              Pièces complémentaires à demander au pétitionnaire
+              <span class="fr-icon-arrow-down-s-line"></span></span>
+              <span aria-hidden="true" class="expanded-label">
+                <span class="fr-icon-arrow-right-line"></span>
+                Pièces complémentaires à demander au pétitionnaire
+                <span class="fr-icon-arrow-up-s-line"></span></span>
+              </button>
+              <div class="fr-collapse" id="action-pc">
+                <ul>
+                  {% for action in moulinette.actions_to_take.pc %}
+                    <li>
+                      {{ action.label }}
+                      <div class="color-text-light">{{ action.documents_to_attach|join:", " }}</div>
+                      <div class="color-text-light">{% render_action_to_take_details action.details %}</div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </section>
+
+          {% else %}
+            Pas de pièce complémentaire à demander au titre des réglementations environnementales prises en compte dans cet avis : Loi sur l’eau, Évaluation environnementale, Règlement de SAGE, Natura 2000.
+          {% endif %}
+          {% if moulinette.actions_to_take.instructor %}
+            {% for action in moulinette.actions_to_take.instructor %}
+              {% include 'evaluations/_action_to_take.html' with action=action %}
+            {% endfor %}
+          {% else %}
+            {# todo #}
+          {% endif %}
+        </div>
+      </div>
+    </section>
