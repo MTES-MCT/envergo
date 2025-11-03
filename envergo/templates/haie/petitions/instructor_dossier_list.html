@@ -9,7 +9,7 @@
 {% endblock title %}
 
 {% block content %}
-  <h1 class="fr-my-4w project-list__title">Tous les dossiers</h1>
+  <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
     {% if project_number <= 0 %}
       <div class="fr-alert fr-alert--info">
@@ -40,15 +40,13 @@
               <thead>
                 <tr>
                   <th scope="col">
-                    N° dossier
-                    <br />
-                    Date de dépôt
+                    <div class="fr-mb-1v">N° dossier</div>
+                    <div>Date de dépôt</div>
                   </th>
                   <th scope="col">Étape</th>
                   <th scope="col">
-                    Demandeur
-                    <br />
-                    Commune
+                    <div class="fr-mb-1v">Demandeur</div>
+                    <div>Commune</div>
                   </th>
                   <th scope="col">
                     Linéaire

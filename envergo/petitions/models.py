@@ -52,8 +52,8 @@ STAGES = Choices(
 
 DECISIONS = Choices(
     ("unset", "À déterminer"),
-    ("express_agreement", "Accord exprès"),
     ("tacit_agreement", "Accord tacite"),
+    ("express_agreement", "Accord exprès"),
     ("opposition", "Opposition"),
     ("dropped", "Classé sans suite"),
 )

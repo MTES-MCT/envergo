@@ -18,7 +18,7 @@ def autouse_site(site):
     pass
 
 
-HOME_TITLE = "Simulez votre projet en phase amont"
+HOME_TITLE = "Réglementation environnementale : simuler un projet d'aménagement"
 RESULT_TITLE = "Simulation réglementaire du projet"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
