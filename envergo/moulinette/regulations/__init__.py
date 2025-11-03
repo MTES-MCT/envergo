@@ -592,17 +592,9 @@ class ActionsToTakeBaseMixin:
         return self._actions_to_take
 
 
-class ActionsToTakeCriterionMixin(ActionsToTakeBaseMixin):
-    """Mixin for criterion evaluators that project result into actions to take."""
+class ActionsToTakeMixin(ActionsToTakeBaseMixin):
+    """Mixin for evaluators (for both criterion and regulation) that project result into actions to take."""
 
-    def evaluate(self):
-        super().evaluate()
-        self._actions_to_take = self.get_actions_to_take()
-
-
-class ActionsToTakeRegulationMixin(ActionsToTakeBaseMixin):
-    """Mixin for regulation evaluators that project result into actions to take."""
-
-    def evaluate(self, regulation):
-        super().evaluate(regulation)
+    def evaluate(self, *args):
+        super().evaluate(*args)
         self._actions_to_take = self.get_actions_to_take()

@@ -5,8 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms.fields import DisplayChoiceField
 from envergo.moulinette.regulations import (
-    ActionsToTakeCriterionMixin,
-    ActionsToTakeRegulationMixin,
+    ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
     Map,
@@ -19,9 +18,7 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 
 
-class Natura2000Regulation(
-    ActionsToTakeRegulationMixin, AmenagementRegulationEvaluator
-):
+class Natura2000Regulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Natura 2000"
 
     ACTIONS_TO_TAKE_MATRIX = {"soumis": ["depot_ein", "pc_ein"]}
@@ -38,7 +35,7 @@ class ZoneHumideSettingsForm(forms.Form):
 class ZoneHumide(
     ZoneHumideMixin,
     SelfDeclarationMixin,
-    ActionsToTakeCriterionMixin,
+    ActionsToTakeMixin,
     CriterionEvaluator,
 ):
     choice_label = "Natura 2000 > Zone humide"
@@ -155,7 +152,7 @@ class ZoneHumide(
 class ZoneInondable(
     ZoneInondableMixin,
     SelfDeclarationMixin,
-    ActionsToTakeCriterionMixin,
+    ActionsToTakeMixin,
     CriterionEvaluator,
 ):
     choice_label = "Natura 2000 > Zone inondable"
