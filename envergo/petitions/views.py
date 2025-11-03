@@ -882,6 +882,11 @@ class PetitionProjectInstructorMessagerieView(
                 Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
             )
 
+        # Invited instructors cannot send messages
+        context["has_send_message_permission"] = (
+            self.object.has_user_as_department_instructor(self.request.user)
+        )
+
         return context
 
     def form_invalid(self, form):
@@ -905,6 +910,13 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
         attachments = form.cleaned_data["additional_file"]
 
         self.object = self.get_object()
+
+        # Invited instructors cannot send messages
+        if not self.object.has_user_as_department_instructor(self.request.user):
+            return TemplateResponse(
+                request=self.request, template="haie/petitions/403.html", status=403
+            )
+
         ds_response = send_message_dossier_ds(self.object, message_body, attachments)
         self.event_action = "envoi"
 
