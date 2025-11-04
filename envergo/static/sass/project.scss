@@ -2302,18 +2302,49 @@ section#actions-to-take {
     align-items: center;
   }
 
+  hr {
+    margin: 2rem 0;
+    padding-bottom: 1px;
+  }
+
   #self-declaration-cta {
     margin: auto;
     background-color: transparent;
+    padding: 0;
+
+    .fr-container {
+      padding: 0;
+    }
+  }
+
+  .fr-tabs {
+    border-bottom: 1px solid var(--border-default-grey);
+
+    &::before {
+      background-color: var(--background-default-grey);
+    }
   }
 
   section.action-to-take {
+    p,
+    div {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
+
+    .action-pc-list {
+      font-size: 12px;
+    }
+
     .action-btn {
       font-weight: normal;
       background-color: var(--background-action-low-blue-france);
       min-height: unset;
       padding: 0 0.5rem;
       text-align: left;
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      margin: var(--text-spacing);
 
       &:not(.read-more-btn) {
         cursor: default;
