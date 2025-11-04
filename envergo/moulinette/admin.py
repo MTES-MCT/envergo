@@ -1,5 +1,3 @@
-import json
-
 from django import forms
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
@@ -20,6 +18,7 @@ from envergo.moulinette.models import (
 )
 from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.widgets import JSONWidget
 
 
 class MapDepartmentsListFilter(DepartmentsListFilter):
@@ -365,19 +364,6 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
-class JSONWidget(forms.Textarea):
-    """A widget to prettily display formated JSON in a textarea."""
-
-    def format_value(self, value):
-        if value is None:
-            return ""
-        try:
-            # Format the JSON in a readable way
-            return json.dumps(json.loads(value), indent=4)
-        except (TypeError, ValueError):
-            return value
-
-
 class ConfigHaieAdminForm(forms.ModelForm):
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
@@ -388,6 +374,9 @@ class ConfigHaieAdminForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "demarche_simplifiee_pre_fill_config": JSONWidget(
+                attrs={"rows": 20, "cols": 80}
+            ),
+            "demarches_simplifiees_display_config": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
         }
