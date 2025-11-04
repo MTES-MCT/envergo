@@ -1025,6 +1025,12 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
+    demarches_simplifiees_display_config = models.JSONField(
+        blank=True,
+        null=False,
+        default=list,
+    )
+
     demarches_simplifiees_city_id = models.CharField(
         'Identifiant DS "Commune principale"',
         blank=True,
