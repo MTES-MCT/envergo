@@ -18,7 +18,25 @@ def autouse_site(site):
     pass
 
 
-HOME_TITLE = "Simulez votre projet en phase amont"
+@pytest.fixture(autouse=True)
+def moulinette_setup(france_map):  # noqa: F811
+    regulation = RegulationFactory(regulation="eval_env")
+    CriterionFactory(
+        title="Terrain d'assiette",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
+        activation_map=france_map,
+    )
+    CriterionFactory(
+        title="Aire de stationnement",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.evalenv.AireDeStationnement",
+        activation_map=france_map,
+        is_optional=True,
+    )
+
+
+HOME_TITLE = "Réglementation environnementale : simuler un projet d'aménagement"
 RESULT_TITLE = "Simulation réglementaire du projet"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
@@ -155,16 +173,8 @@ def test_moulinette_post_form_error(client):
     assert error_event.metadata["data"] == data
 
 
-def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
+def test_moulinette_post_qc_form_error(client):
     # GIVEN a moulinette configured with one criterion requiring complementary questions
-    ConfigAmenagementFactory(is_activated=True)
-    regulation = RegulationFactory(regulation="eval_env")
-    CriterionFactory(
-        title="Terrain d'assiette",
-        regulation=regulation,
-        evaluator="envergo.moulinette.regulations.evalenv.TerrainAssiette",
-        activation_map=france_map,
-    )
     url = reverse("moulinette_form")
     data = {
         "lng": "-1.54394",
@@ -210,6 +220,90 @@ def test_moulinette_post_qc_form_error(client, france_map):  # noqa: F811
         ],
     }
     assert "data" in error_event.metadata
+
+
+def test_moulinette_valid_post_redirects_to_results(client):
+    url = reverse("moulinette_form")
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 200,
+        "final_surface": 200,
+    }
+    res = client.post(url, data, follow=True)
+    assert res.status_code == 200
+    assert res.redirect_chain[0][0].startswith("/simulateur/resultat/")
+
+
+def test_moulinette_missing_data_redirects_to_additional_forms(client):
+    url = reverse("moulinette_form")
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 30000,
+        "final_surface": 30000,
+    }
+    # This should require missing data:
+    # - Operation d'aménagement ?
+    # - Terrain d'assiette
+    res = client.post(url, data, follow=True)
+    assert res.status_code == 200
+    assert res.redirect_chain[0][0].startswith("/simulateur/formulaire/")
+    assert res.redirect_chain[0][0].endswith("#additional-forms")
+
+
+def test_moulinette_invalid_qc_forms_displays_error(client):
+    url = reverse("moulinette_form")
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 30000,
+        "final_surface": 30000,
+        "terrain_assiette": 50000,
+        # Missing the "operation amenagement" field
+    }
+    res = client.post(url, data, follow=True)
+    assert res.status_code == 200
+    assert not res.redirect_chain
+    assert "Nous n'avons pas pu traiter votre demande" in res.content.decode()
+
+
+def test_moulinette_qo_form_with_missing_data_redirects_to_additional_forms(client):
+    url = reverse("moulinette_form")
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 30000,
+        "final_surface": 30000,
+        "evalenv_rubrique_41-activate": True,
+        "evalenv_rubrique_41-type_stationnement": "public",
+        "evalenv_rubrique_41-nb_emplacements": "gte_50",
+    }
+    # Missing data :
+    # - Opération d'aménagement ?
+    # - Terrain d'assiette
+    res = client.post(url, data, follow=True)
+    assert res.status_code == 200
+    assert res.redirect_chain[0][0].startswith("/simulateur/formulaire/")
+    assert res.redirect_chain[0][0].endswith("#additional-forms")
+
+
+def test_moulinette_invalid_qo_form_displays_error(client):
+    url = reverse("moulinette_form")
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 800,
+        "final_surface": 800,
+        "evalenv_rubrique_41-activate": True,
+        "evalenv_rubrique_41-type_stationnement": "public",
+        # Missing nb emplacements field
+    }
+    # No additional questions are necessary, but the qo form is invalid
+    res = client.post(url, data, follow=True)
+    assert res.status_code == 200
+    assert not res.redirect_chain
+    assert "Nous n'avons pas pu traiter votre demande" in res.content.decode()
 
 
 def test_moulinette_utm_param(client):

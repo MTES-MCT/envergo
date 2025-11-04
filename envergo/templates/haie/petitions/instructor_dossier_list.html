@@ -9,7 +9,7 @@
 {% endblock title %}
 
 {% block content %}
-  <h1 class="fr-my-4w project-list__title">Tous les dossiers</h1>
+  <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
     {% if project_number <= 0 %}
       <div class="fr-alert fr-alert--info">
@@ -40,15 +40,16 @@
               <thead>
                 <tr>
                   <th scope="col">
-                    N° dossier
-                    <br />
-                    Date de dépôt
+                    <div class="fr-mb-1v">N° dossier</div>
+                    <div>Date de dépôt</div>
                   </th>
-                  <th scope="col">Étape</th>
                   <th scope="col">
-                    Demandeur
-                    <br />
-                    Commune
+                    <div class="fr-mb-1v">Étape</div>
+                    <div>Date d'échéance</div>
+                  </th>
+                  <th scope="col">
+                    <div class="fr-mb-1v">Demandeur</div>
+                    <div>Commune</div>
                   </th>
                   <th scope="col">
                     Linéaire
@@ -64,20 +65,27 @@
 
                   <tr class="project">
                     <td>
-                      <a href="{% url 'petition_project_instructor_view' project.reference %}"
-                         class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
-                      <br />
-                      {{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}
+                      <div>
+                        <a href="{% url 'petition_project_instructor_view' project.reference %}"
+                           class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
+                      </div>
+                      <div>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
-                    <td>{% stage_badge project.current_stage %}</td>
                     <td>
-                      {% if project.organization %}
-                        {{ project.organization }}
-                      {% else %}
-                        {{ project.prefetched_dossier.applicant_name }}
+                      <div>{% stage_badge project.current_stage %}</div>
+                      {% if project.current_stage != "closed" %}
+                        <div>{% display_due_date project.due_date False True %}</div>
                       {% endif %}
-                      <br />
-                      {{ project.city }}
+                    </td>
+                    <td>
+                      <div>
+                        {% if project.organization %}
+                          {{ project.organization }}
+                        {% else %}
+                          {{ project.prefetched_dossier.applicant_name }}
+                        {% endif %}
+                      </div>
+                      <div>{{ project.city }}</div>
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{% decision_badge project.current_decision True %}</td>

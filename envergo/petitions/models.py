@@ -52,8 +52,8 @@ STAGES = Choices(
 
 DECISIONS = Choices(
     ("unset", "À déterminer"),
-    ("express_agreement", "Accord exprès"),
     ("tacit_agreement", "Accord tacite"),
+    ("express_agreement", "Accord exprès"),
     ("opposition", "Opposition"),
     ("dropped", "Classé sans suite"),
 )
@@ -467,7 +467,8 @@ class StatusLog(models.Model):
     )
     status_date = models.DateField(
         "Date effective du changement",
-        help_text="Vous pouvez choisir une date rétroactive si nécessaire.",
+        help_text="Par défaut, la date du jour. Il est possible de choisir une date passée si le changement est "
+        "rétroactif.",
         default=timezone.now,
     )
     due_date = models.DateField(

@@ -3,6 +3,8 @@ import logging
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import (
+    ActionsToTakeMixin,
+    AmenagementRegulationEvaluator,
     CriterionEvaluator,
     Map,
     MapPolygon,
@@ -19,7 +21,22 @@ PINK = "#FF9575"
 logger = logging.getLogger(__name__)
 
 
-class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
+class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
+    choice_label = "Aménagement > Loi sur l'eau"
+
+    ACTIONS_TO_TAKE_MATRIX = {
+        "soumis_ou_pac": ["depot_pac_lse", "mention_arrete_lse", "pc_ein"],
+        "soumis": ["depot_dossier_lse", "mention_arrete_lse", "pc_ein"],
+        "action_requise": ["mention_arrete_lse"],
+    }
+
+
+class ZoneHumide(
+    ZoneHumideMixin,
+    SelfDeclarationMixin,
+    ActionsToTakeMixin,
+    CriterionEvaluator,
+):
     choice_label = "Loi sur l'eau > Zone humide"
     slug = "zone_humide"
 
@@ -60,6 +77,8 @@ class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
         "action_requise_dans_doute": RESULTS.action_requise,
         "action_requise_tout_dpt": RESULTS.action_requise,
     }
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zh_lse"]}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -146,7 +165,12 @@ class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
         return criterion_map
 
 
-class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator):
+class ZoneInondable(
+    ZoneInondableMixin,
+    SelfDeclarationMixin,
+    ActionsToTakeMixin,
+    CriterionEvaluator,
+):
     choice_label = "Loi sur l'eau > Zone inondable"
     slug = "zone_inondable"
 
@@ -175,6 +199,8 @@ class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator
         "action_requise": RESULTS.action_requise,
         "action_requise_dans_doute": RESULTS.action_requise,
     }
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zi_lse"]}
 
     def get_result_data(self):
         """Run the check for the 3.1.2.0 rule."""
@@ -239,7 +265,7 @@ class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator
         return criterion_map
 
 
-class EcoulementSansBV(SelfDeclarationMixin, CriterionEvaluator):
+class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP sans BV"
     slug = "ecoulement_sans_bv"
 
@@ -273,6 +299,8 @@ class EcoulementSansBV(SelfDeclarationMixin, CriterionEvaluator):
         ("gte_8000", "pv_sol"): "non_soumis_pv_sol",
         ("lt_8000", "pv_sol"): "non_soumis_pv_sol",
     }
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_2150"]}
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
@@ -309,7 +337,7 @@ class Ruissellement(EcoulementSansBV):
     choice_label = "Loi sur l'eau > Ruissellement (obsolète)"
 
 
-class EcoulementAvecBV(SelfDeclarationMixin, CriterionEvaluator):
+class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator):
     choice_label = "Loi sur l'eau > Écoulement EP avec BV"
     slug = "ecoulement_avec_bv"
 
@@ -420,6 +448,8 @@ class EcoulementAvecBV(SelfDeclarationMixin, CriterionEvaluator):
         "non_soumis_pv_sol": RESULTS.non_soumis,
         "non_soumis": RESULTS.non_soumis,
     }
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_2150"]}
 
     def get_catalog_data(self):
         data = {}

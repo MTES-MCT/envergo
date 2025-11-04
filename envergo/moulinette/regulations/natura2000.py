@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms.fields import DisplayChoiceField
 from envergo.moulinette.regulations import (
+    ActionsToTakeMixin,
+    AmenagementRegulationEvaluator,
     CriterionEvaluator,
     Map,
     MapPolygon,
@@ -16,6 +18,12 @@ BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 
 
+class Natura2000Regulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
+    choice_label = "Aménagement > Natura 2000"
+
+    ACTIONS_TO_TAKE_MATRIX = {"soumis": ["depot_ein", "pc_ein"]}
+
+
 class ZoneHumideSettingsForm(forms.Form):
     threshold = forms.fields.IntegerField(
         label="Seuil réglementaire (en m²)",
@@ -24,7 +32,12 @@ class ZoneHumideSettingsForm(forms.Form):
     )
 
 
-class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
+class ZoneHumide(
+    ZoneHumideMixin,
+    SelfDeclarationMixin,
+    ActionsToTakeMixin,
+    CriterionEvaluator,
+):
     choice_label = "Natura 2000 > Zone humide"
     slug = "zone_humide"
     settings_form_class = ZoneHumideSettingsForm
@@ -59,6 +72,8 @@ class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
         "non_soumis_dans_doute": RESULTS.non_soumis,
         "non_concerne": RESULTS.non_concerne,
     }
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zh_n2000"]}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -134,7 +149,12 @@ class ZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
         return criterion_map
 
 
-class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator):
+class ZoneInondable(
+    ZoneInondableMixin,
+    SelfDeclarationMixin,
+    ActionsToTakeMixin,
+    CriterionEvaluator,
+):
     choice_label = "Natura 2000 > Zone inondable"
     slug = "zone_inondable"
 
@@ -146,6 +166,8 @@ class ZoneInondable(ZoneInondableMixin, SelfDeclarationMixin, CriterionEvaluator
         ("outside", "big"): RESULTS.non_concerne,
         ("outside", "small"): RESULTS.non_concerne,
     }
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zi_n2000"]}
 
     def get_result_data(self):
         if self.catalog["flood_zones_within_12m"]:
