@@ -56,9 +56,9 @@
            tabindex="0">
         {% if moulinette.actions_to_take.pc %}
           <section class="action-to-take fr-mb-2w">
-            <button class="action-btn read-more-btn  fr-btn fr-btn--tertiary-no-outline"
+            <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
                     aria-expanded="false"
-                    aria-controls="action-pcs">
+                    aria-controls="pieces-complementaires">
               <span class="fr-sr-only">
                 <span class="fr-icon-arrow-right-line fr-icon--sm"></span>Pièces complémentaires à demander au pétitionnaire
               </span>
@@ -72,7 +72,7 @@
                   Pièces complémentaires à demander au pétitionnaire
                   <span class="fr-icon-arrow-up-s-line fr-icon--sm"></span></span>
                 </button>
-                <div class="fr-collapse fr-ml-5w" id="action-pcs">
+                <div class="fr-collapse fr-ml-5w" id="pieces-complementaires">
                   <ul>
                     {% for action in moulinette.actions_to_take.pc %}
                       <li>
