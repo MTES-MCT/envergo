@@ -1,7 +1,7 @@
 {% load moulinette %}
 
 <section class="action-to-take">
-  <button class="action-btn {% if action.details %}read-more-btn{% endif %} fr-btn fr-btn--tertiary-no-outline"
+  <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
           {% if action.details %}aria-expanded="false" aria-controls="{{ action.slug }}"{% endif %}>
     <span class="{% if action.details %}fr-sr-only{% endif %}">
       <span class="fr-icon-arrow-right-line fr-icon--sm"></span>{{ action.label }}
