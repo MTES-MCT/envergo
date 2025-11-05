@@ -947,3 +947,4 @@ class EvaluationAction(models.Model):
     class Meta:
         verbose_name = "Action à mener"
         verbose_name_plural = "Actions à mener"
+        ordering = ["order"]
