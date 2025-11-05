@@ -721,4 +721,12 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         return response
 
 
-admin.site.register(EvaluationAction)
+@admin.register(EvaluationAction)
+class EvaluationAction(admin.ModelAdmin):
+
+    list_display = [
+        "slug",
+        "type",
+        "target",
+        "order",
+    ]
