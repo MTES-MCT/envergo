@@ -22,15 +22,3 @@ window.addEventListener('load', function () {
     _paq.push(['trackEvent', 'Content', 'JumpToAnchor', title]);
   }));
 });
-
-// Track when an action to take accordion is toggled
-window.addEventListener('load', function () {
-  const actionBtns = document.querySelectorAll('.action-btn-btn');
-  actionBtns.forEach(btn => btn.addEventListener('click', function (evt) {
-    const btn = evt.currentTarget;
-    const target = btn.getAttribute('aria-controls');
-    const expanded = btn.getAttribute('aria-expanded');
-    const action = expanded == 'false' ? 'ActionDetailExpand' : 'ActionDetailConceal';
-    _paq.push(['trackEvent', 'Content', action, target]);
-  }));
-});
