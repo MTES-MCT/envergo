@@ -376,7 +376,7 @@ class ConfigHaieAdminForm(forms.ModelForm):
             "demarche_simplifiee_pre_fill_config": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
-            "demarches_simplifiees_display_config": JSONWidget(
+            "demarches_simplifiees_display_fields": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
         }
@@ -440,6 +440,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "demarche_simplifiee_number",
                     "demarche_simplifiee_pre_fill_config",
+                    "demarches_simplifiees_display_fields",
                     "demarches_simplifiees_city_id",
                     "demarches_simplifiees_organization_id",
                     "demarches_simplifiees_pacage_id",
