@@ -1026,7 +1026,7 @@ class ConfigHaie(ConfigBase):
         default=list,
     )
 
-    demarches_simplifiees_display_config = models.JSONField(
+    demarches_simplifiees_display_fields = models.JSONField(
         blank=True,
         null=False,
         default=list,
