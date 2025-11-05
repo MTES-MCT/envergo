@@ -668,3 +668,13 @@ def test_admin_can_view_unpublished_content(admin_client):
     assert "This is a draft version" not in res.content.decode()
     assert "This is a published version" not in res.content.decode()
     assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+
+
+def test_eval_detail_shows_actions_to_take(client):
+    """Eval detail page shows actions to take"""
+    eval = EvaluationFactory()
+    url = eval.get_absolute_url()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+    "<h2>Actions à mener</h2>" in res.content.decode()
