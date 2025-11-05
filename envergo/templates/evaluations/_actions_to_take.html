@@ -2,9 +2,9 @@
 {% load static %}
 
 {% if moulinette.actions_to_take %}
-  <section id="actions-to-take" class="alt fr-container fr-py-2w">
-    <h2 class="actions-to-take-title">
-      <img src="{% static 'images/todo-light.svg' %}" alt="" class="light-only">
+  <section id="actions-to-take" class="alt fr-container fr-py-2w fr-mb-5w">
+    <h2 class="actions-to-take-title fr-h3">
+      <img src="{% static 'images/todo-light.svg' %}" alt="" class="light-only fr-mr-1w">
       Actions à mener
     </h2>
     <div class="fr-tabs">
@@ -76,7 +76,7 @@
                   <ul>
                     {% for action in moulinette.actions_to_take.pc %}
                       <li>
-                        {{ action.label }}
+                        <strong>{{ action.label }}</strong>
                         <span class="fr-ml-2w action-pc-list">{{ action.documents_to_attach|join:", " }}</span>
                         <div>{% render_action_to_take_details action.details %}</div>
                       </li>
