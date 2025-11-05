@@ -16,6 +16,7 @@ from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.regulations import HedgeDensityMixin
+from envergo.petitions.services import get_demarches_simplifiees_dossier
 
 register = template.Library()
 
@@ -139,6 +140,16 @@ def perimeter_detail(regulation):
 def ends_with_punctuation(sentence):
     trimmed_sentence = sentence.strip() if sentence else sentence
     return trimmed_sentence[-1] in string.punctuation if trimmed_sentence else False
+
+
+@register.simple_tag()
+def display_ds_field(config, petition_project, field_name):
+    """Display a field from démarches simplifiées related to a given config and a given petition project."""
+    ds_field_id = config.config_display_ds.get(field_name, None)
+    if not ds_field_id:
+        return ""
+    dossier_ds = get_demarches_simplifiees_dossier(petition_project)
+    return dossier_ds.get(field_name)
 
 
 @register.simple_tag()
