@@ -142,13 +142,18 @@ def ends_with_punctuation(sentence):
     return trimmed_sentence[-1] in string.punctuation if trimmed_sentence else False
 
 
-@register.simple_tag()
-def display_ds_field(config, petition_project, field_name):
+@register.simple_tag(takes_context=True)
+def display_ds_field(context, field_name):
     """Display a field from démarches simplifiées related to a given config and a given petition project."""
-    ds_field_id = config.config_display_ds.get(field_name, None)
+    breakpoint()
+    ds_field_id = context["config"].config_display_ds.get(field_name, None)
     if not ds_field_id:
         return ""
+    petition_project = context.get("petition_project", None)
+    if petition_project is None:
+        return None
     dossier_ds = get_demarches_simplifiees_dossier(petition_project)
+
     return dossier_ds.get(field_name)
 
 
