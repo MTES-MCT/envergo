@@ -27,7 +27,7 @@
 
 <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Plantation</h3>
 <ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Alignements d'arbres à détruire marqués en bord de voie ouverte à la circulation du public" value=length_to_plant_aa_bord_voie|floatformat:"0g" unit="m" %}
+  {% include "haie/petitions/_item.html" with label="Alignements d'arbres à planter marqués en bord de voie ouverte à la circulation du public" value=length_to_plant_aa_bord_voie|floatformat:"0g" unit="m" %}
 
   {% if length_to_plant_aa_bord_voie %}
     {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=aa_bord_voie_plantation_detail %}
