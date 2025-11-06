@@ -94,7 +94,7 @@ REGULATIONS = Choices(
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
-    ("urbanisme_haie", "Urbanisme haie"),
+    ("urbanisme_haie", "Urbanisme Haie"),
     ("reserves_naturelles", "Réserves naturelles"),
 )
 
