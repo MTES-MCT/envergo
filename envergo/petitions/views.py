@@ -46,6 +46,7 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
+    RequestAdditionalInfoForm,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1045,7 +1046,10 @@ class PetitionProjectInstructorProcedureView(
         if page_obj.number > 1:
             logs = logs[1:]
 
+        request_info_form = RequestAdditionalInfoForm()
+
         context = {
+            "request_info_form": request_info_form,
             "object_list": logs,
             "paginator": paginator,
             "page_obj": page_obj,
