@@ -43,7 +43,7 @@
         <div>{% decision_badge petition_project.current_decision %}</div>
       {% endif %}
       {% if petition_project.current_stage != "closed" %}
-        <div class="fr-mt-2v">
+        <div class="fr-mt-2v fr-text--sm fr-mb-0">
           <div>
             <strong>Prochaine échéance :</strong>
           </div>
@@ -51,7 +51,7 @@
         </div>
       {% endif %}
       {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
-        <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
+        <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-2v"
            href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
            {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
       {% endif %}
