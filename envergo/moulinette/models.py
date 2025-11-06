@@ -1029,7 +1029,7 @@ class ConfigHaie(ConfigBase):
     demarches_simplifiees_display_fields = models.JSONField(
         blank=True,
         null=False,
-        default=list,
+        default=dict,
     )
 
     demarches_simplifiees_city_id = models.CharField(

@@ -20,7 +20,7 @@
         {% if city %}
           <li>
             <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-            {{ city }}
+            {% display_ds_field commune %}
           </li>
         {% endif %}
         {% if applicant or organization %}
@@ -35,7 +35,6 @@
           Référence interne : {{ petition_project.reference }}  |  Département de la
           simulation : {{ moulinette.department }}
         </li>
-        <li>{% display_ds_field config project commune %}</li>
       </ul>
     </div>
     <div class="fr-col-12 fr-col-sm-4 fr-pb-2w">
