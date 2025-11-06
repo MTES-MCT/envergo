@@ -433,6 +433,28 @@ class InvitationToken(models.Model):
         return self.user_id is None and self.valid_until >= timezone.now()
 
 
+# Some data constraints checks
+
+# Check that all request for info suspension data is set
+q_suspended = (
+    Q(suspension_date__isnull=False)
+    & Q(response_due_date__isnull=False)
+    & Q(original_due_date__isnull=False)
+)
+
+# Check that no single field is set
+q_not_suspended = (
+    Q(suspension_date__isnull=True)
+    & Q(response_due_date__isnull=True)
+    & Q(original_due_date__isnull=True)
+)
+
+# Check that the receipt date is only set if the project was suspended
+q_receipt_date = Q(info_receipt_date__isnull=True) | (
+    Q(info_receipt_date__isnull=False) & q_suspended
+)
+
+
 class StatusLog(models.Model):
     """A petition project status (stage + decision) change log entry."""
 
@@ -477,6 +499,31 @@ class StatusLog(models.Model):
         blank=True,
     )
 
+    # "Request for additional information" related fields
+    suspension_date = models.DateField(
+        "Date de suspension pour demande d'information complémentaire",
+        null=True,
+        blank=True,
+    )
+    response_due_date = models.DateField(
+        "Échéance pour l'envoi de pièces complémentaires",
+        null=True,
+        blank=True,
+    )
+    original_due_date = models.DateField(
+        "Date de prochaine échéance avant suspension", null=True, blank=True
+    )
+    suspended_by = models.ForeignKey(
+        "users.User",
+        related_name="suspended_logs",
+        on_delete=models.SET_NULL,
+        verbose_name="Auteur de la demande d'informations complémentaires",
+        null=True,
+    )
+    info_receipt_date = models.DateField(
+        "Date de réception des pièces complémentaires", null=True, blank=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(
         "Date de saisie du changement de statut", default=timezone.now
@@ -489,5 +536,12 @@ class StatusLog(models.Model):
             models.CheckConstraint(
                 check=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
                 name="forbid_closed_with_unset_decision",
-            )
+            ),
+            models.CheckConstraint(
+                check=q_suspended | q_not_suspended,
+                name="supension_data_is_consistent",
+            ),
+            models.CheckConstraint(
+                check=q_receipt_date, name="receipt_date_data_is_consistent"
+            ),
         ]
