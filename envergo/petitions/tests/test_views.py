@@ -338,6 +338,7 @@ def test_petition_project_instructor_notes_view(
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={"commune": "Q2hhbXAtNDcyOTE4Nw=="},
     )
     project = PetitionProjectFactory()
     instructor_notes_url = reverse(
