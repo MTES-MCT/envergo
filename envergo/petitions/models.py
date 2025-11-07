@@ -307,11 +307,12 @@ class PetitionProject(models.Model):
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
-        moulinette_data = self._parse_moulinette_data()
-        moulinette_data["haies"] = self.hedge_data
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
-        return moulinette
+        if not hasattr(self, "_moulinette"):
+            moulinette_data = self._parse_moulinette_data()
+            moulinette_data["haies"] = self.hedge_data
+            form_data = {"initial": moulinette_data, "data": moulinette_data}
+            self._moulinette = MoulinetteHaie(form_data)
+        return self._moulinette
 
     def get_triage_form(self):
         """Recreate triage form from moulinette url"""
