@@ -59,15 +59,18 @@ def test_display_choice():
 def test_display_ds_field(mock_post, client):
     """Test display DS field template tag"""
 
+    # Given DS dossier fake data
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
-
+    # Given a config haie with a DS display field
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
         demarches_simplifiees_display_fields={"motivation": "Q2hhbXAtNDUzNDE0Ng=="},
     )
+    # Given a petition project
     petition_project = PetitionProjectFactory.create()
 
+    # When I want to display this DS field in a template
     template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
     context_data = {
         "petition_project": petition_project,
@@ -75,7 +78,9 @@ def test_display_ds_field(mock_post, client):
     }
     content = Template(template_html).render(Context(context_data))
 
+    # Then this DS field label and value are present in rendered page
     assert (
         "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
         in content
     )
+    assert "La motivation" in content
