@@ -251,4 +251,6 @@ def display_ds_field(context, field_name):
 
     ds_dossier = get_demarches_simplifiees_dossier(petition_project)
     field_label, field_value = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
-    return mark_safe(f"<strong>{field_label}</strong> {field_value}")
+    return mark_safe(
+        f'<div class="fr-my-2w"><p class="fr-mb-0"><strong>{field_label}</strong></p> <div>{field_value}</div></div>'
+    )
