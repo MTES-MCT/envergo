@@ -56,11 +56,9 @@ def test_display_choice():
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
-def test_display_ds_field(mock_post, client):
+def test_display_ds_field(mock_post):
     """Test display DS field template tag"""
 
-    # Given DS dossier fake data
-    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     # Given a config haie with a DS display field
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
@@ -69,6 +67,8 @@ def test_display_ds_field(mock_post, client):
     )
     # Given a petition project
     petition_project = PetitionProjectFactory.create()
+    # Given DS dossier is available
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     # When I want to display this DS field in a template
     template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
@@ -84,3 +84,17 @@ def test_display_ds_field(mock_post, client):
         in content
     )
     assert "La motivation" in content
+
+    # Given DS dossier is not available
+    petition_project.demarches_simplifiees_raw_dossier = None
+    mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
+
+    # When I want to display the same content
+    content = Template(template_html).render(Context(context_data))
+
+    # Then template is rendered without any error but no DS field is in rendered page
+    assert (
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
+        not in content
+    )
+    assert "La motivation" not in content
