@@ -33,7 +33,8 @@
           La demande de compléments suspendra le délai d'instruction. À l'étape suivante vous pourrez compléter le message pour le demandeur.
         </p>
 
-        <form method="post" action="">
+        <form method="post"
+              action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}">
           {% csrf_token %}
           {% include '_form_snippet.html' with form=request_info_form %}
           <button type="submit" class="fr-btn fr-btn--primary">Envoyer au demander</button>

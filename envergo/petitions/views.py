@@ -20,6 +20,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -1143,6 +1144,49 @@ class PetitionProjectInstructorProcedureView(
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
+
+
+class PetitionProjectInstructorRequestAdditionalInfoView(
+    PetitionProjectInstructorMixin, FormView
+):
+    http_method_names = ["post"]
+    form_class = RequestAdditionalInfoForm
+
+    def form_invalid(self, form):
+        messages.error(self.request, "L'état du dossier n'a pas pu être mis à jour.")
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_valid(self, form):
+        project = self.get_object()
+        status = project.status_history.order_by("created_at")[0]
+
+        # Let's make sure the project cannot be suspended twice
+        if not status.suspension_date:
+            status.suspension_date = timezone.now().date()
+            status.original_due_date = status.due_date
+            status.response_due_date = form.cleaned_data["response_due_date"]
+            status.due_date = status.response_due_date
+            status.suspended_by = self.request.user
+            status.save()
+
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view", args=[project.reference]
+        )
+        success_message = f"""
+        Le message au demandeur a bien été envoyé.
+        <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
+        """
+        messages.success(self.request, success_message)
+        res = HttpResponseRedirect(self.get_success_url())
+        return res
+
+    def get_success_url(self):
+        project = self.get_object()
+        url = reverse(
+            "petition_project_instructor_procedure_view", args=[project.reference]
+        )
+        return url
 
 
 class PetitionProjectHedgeDataExport(DetailView):

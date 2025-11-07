@@ -193,7 +193,7 @@ def three_months_from_now():
 class RequestAdditionalInfoForm(forms.Form):
     """Let an instructor pause the instruction and request for more information."""
 
-    response_deadline = forms.DateField(
+    response_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
         required=True,
         initial=three_months_from_now,
