@@ -11,6 +11,10 @@ from django.utils.safestring import mark_safe
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
+from envergo.petitions.services import (
+    get_demarches_simplifiees_dossier,
+    get_field_data_from_ds_dossier,
+)
 
 register = template.Library()
 
@@ -231,3 +235,22 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
         days_left_part = ""
 
     return mark_safe(date_part + days_left_part)
+
+
+@register.simple_tag(takes_context=True)
+def display_ds_field(context, field_name):
+    """Display a field from démarches simplifiées related to a given config and a given petition project."""
+
+    config = context.get("moulinette").config
+    ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
+    if ds_field_id is None:
+        return ""
+    petition_project = context.get("petition_project", None)
+    if petition_project is None:
+        return ""
+
+    ds_dossier = get_demarches_simplifiees_dossier(petition_project)
+    field_label, field_value = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+    return mark_safe(
+        f'<div class="fr-my-2w"><p class="fr-mb-0"><strong>{field_label}</strong></p> <div>{field_value}</div></div>'
+    )
