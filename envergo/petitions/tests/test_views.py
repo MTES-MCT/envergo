@@ -327,6 +327,41 @@ def test_petition_project_instructor_view_requires_authentication(
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
+def test_petition_project_instructor_view_display_ds_fields(
+    mock_post, instructor_haie_user_44, client, site
+):
+    """
+    Test petition project instructor view display DS fields
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    ConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={"motivation": "Q2hhbXAtNDUzNDE0Ng=="},
+    )
+    project = PetitionProjectFactory()
+    instructor_url = reverse(
+        "petition_project_instructor_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # Check that the response status code is 200
+    client.force_login(instructor_haie_user_44)
+    response = client.get(instructor_url)
+    assert response.status_code == 200
+    assert (
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
+        in response.content.decode()
+    )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_petition_project_instructor_notes_view(
     mock_post, instructor_haie_user_44, client, site
 ):
@@ -338,7 +373,6 @@ def test_petition_project_instructor_notes_view(
     ConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_display_fields={"commune": "Q2hhbXAtNDcyOTE4Nw=="},
     )
     project = PetitionProjectFactory()
     instructor_notes_url = reverse(
