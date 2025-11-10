@@ -2,6 +2,7 @@
 
 from django.db import migrations, connection
 
+
 def add_sites(apps, schema_editor):
     """Add envergo site objects.
 
@@ -22,7 +23,9 @@ def add_sites(apps, schema_editor):
         with connection.cursor() as cursor:
             cursor.execute("SELECT MAX(id) FROM django_site;")
             max_id = cursor.fetchone()[0]
-            cursor.execute(f"ALTER SEQUENCE django_site_id_seq RESTART WITH {max_id + 1};")
+            cursor.execute(
+                f"ALTER SEQUENCE django_site_id_seq RESTART WITH {max_id + 1};"
+            )
 
 
 def rm_sites(apps, schema_editor):
@@ -37,5 +40,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_sites, migrations.RunPython.noop),
+        migrations.RunPython(add_sites, rm_sites),
     ]
