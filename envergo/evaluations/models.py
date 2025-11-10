@@ -910,6 +910,13 @@ class RecipientStatus(models.Model):
 
 
 class EvaluationAction(models.Model):
+    """Actions to take listed in an evaluation and debug page
+
+    Actions to take are displayed in an evaluation if :
+    - ACTIONS_TO_TAKE_MATRIX is setted in a related Regulation or Criterion evaluator class
+    - Display actions to take is True in Evaluation object
+    """
+
     slug = models.CharField(
         "Référence de l'action",
         max_length=50,
@@ -918,6 +925,7 @@ class EvaluationAction(models.Model):
     )
 
     type = models.CharField(
+        "Type d'action",
         max_length=20,
         choices=Choices(
             ("action", "Action"),
@@ -927,22 +935,28 @@ class EvaluationAction(models.Model):
 
     target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
 
-    order = models.PositiveIntegerField(_("Order"), default=1)
+    order = models.PositiveIntegerField("Ordre", default=1)
 
     label = models.TextField(
+        verbose_name="Titre affiché",
         help_text="Texte de niveau 1",
     )
 
     details = models.TextField(
-        help_text="Texte de niveau 2",
+        verbose_name="Détails",
+        help_text="Texte de niveau 2, contenu HTML évalué comme un template.",
     )
 
     documents_to_attach = ArrayField(
-        models.CharField(max_length=255), blank=True, default=list
+        models.CharField(max_length=255),
+        verbose_name="référence des pièces complémentaires",
+        help_text="Valeurs séparées par des virgules sans espace",
+        blank=True,
+        default=list,
     )
 
     def __str__(self):
-        return f"{self.get_slug_display()}"
+        return self.get_slug_display()
 
     class Meta:
         verbose_name = "Action à mener"
