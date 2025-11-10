@@ -19,11 +19,33 @@
       <h4>Étape</h4>
       <p>{% stage_badge petition_project.current_stage False %}</p>
       <p id="due-date-container">
-        {% if petition_project.current_stage != "closed" %}
-          <b>Échéance pour cette étape :</b>
-          <br />
-          {% display_due_date petition_project.due_date %}
+
+        {% if petition_project.is_paused %}
+          <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
+            <b>En attente de compléments</b>
+            <br />
+            {% display_due_date petition_project.due_date %}
+          </div>
+
+          <p>
+            <strong>Échéance avant la suspension</strong>
+            <br />
+            {% display_due_date petition_project.latest_log.original_due_date False %}
+          </p>
+
+          <p>
+            <strong>Date de la suspension</strong>
+            <br />
+            {% display_due_date petition_project.latest_log.suspension_date False %}
+          </p>
+        {% else %}
+          {% if petition_project.current_stage != "closed" %}
+            <b>Échéance pour cette étape :</b>
+            <br />
+            {% display_due_date petition_project.due_date %}
+          {% endif %}
         {% endif %}
+
         {% include "haie/petitions/stage_objectives/"|add:petition_project.current_stage|add:".html" %}
       </p>
 
