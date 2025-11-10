@@ -13,6 +13,7 @@ from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
@@ -161,6 +162,26 @@ class PetitionProject(models.Model):
             except ObjectDoesNotExist:
                 self.department = None
         super().save(*args, **kwargs)
+
+    @cached_property
+    def latest_log(self):
+        return self.status_history.order_by("-created_at").first()
+
+    @property
+    def current_stage(self):
+        return self.latest_log.stage if self.latest_log else STAGES.to_be_processed
+
+    @property
+    def current_decision(self):
+        return self.latest_log.decision if self.latest_log else DECISIONS.unset
+
+    @property
+    def due_date(self):
+        return self.latest_log.due_date if self.latest_log else None
+
+    @property
+    def is_paused(self):
+        return self.latest_log.is_paused if self.latest_log else False
 
     def get_department_code(self):
         """Get department from moulinette url"""
@@ -437,11 +458,7 @@ class InvitationToken(models.Model):
 # Some data constraints checks
 
 # Check that all request for info suspension data is set
-q_suspended = (
-    Q(suspension_date__isnull=False)
-    & Q(response_due_date__isnull=False)
-    & Q(original_due_date__isnull=False)
-)
+q_suspended = Q(suspension_date__isnull=False) & Q(response_due_date__isnull=False)
 
 # Check that no single field is set
 q_not_suspended = (
@@ -540,9 +557,14 @@ class StatusLog(models.Model):
             ),
             models.CheckConstraint(
                 check=q_suspended | q_not_suspended,
-                name="supension_data_is_consistent",
+                name="suspension_data_is_consistent",
             ),
             models.CheckConstraint(
                 check=q_receipt_date, name="receipt_date_data_is_consistent"
             ),
         ]
+
+    @property
+    def is_paused(self):
+        """Are we currently waiting for additional info?"""
+        return self.suspension_date and not self.info_receipt_date
