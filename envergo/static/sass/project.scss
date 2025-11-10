@@ -2363,6 +2363,10 @@ section#actions-to-take {
     }
   }
 
+  div.action-wrapper:not(:last-of-type) {
+    margin-bottom: 0.5rem;
+  }
+
   section.action-to-take {
     p,
     div {

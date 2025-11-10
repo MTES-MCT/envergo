@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
@@ -1890,16 +1890,10 @@ class Moulinette(ABC):
                 actions_to_take.update(criterion.actions_to_take)
 
         actions = EvaluationAction.objects.filter(slug__in=actions_to_take).all()
-        result = {}
+        result = defaultdict(list)
         for action in actions:
-            if action.type == "pc":
-                if action.type not in result:
-                    result[action.type] = []
-                result[action.type].append(action)
-            else:
-                if action.target not in result:
-                    result[action.target] = []
-                result[action.target].append(action)
+            action_key = action.type if action.type == "pc" else action.target
+            result[action_key].append(action)
         return result
 
 
