@@ -615,11 +615,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
     def get_queryset(self):
         current_user = self.request.user
-
-        latest_logs = StatusLog.objects.filter(
-            petition_project=OuterRef("pk")
-        ).order_by("-created_at")
-
         queryset = PetitionProject.objects.all()
         queryset = queryset.annotate(
             followed_up=Exists(
@@ -627,18 +622,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                     petitionproject_id=OuterRef("pk"),
                     user_id=current_user.pk,
                 )
-            ),
-            current_stage=Coalesce(
-                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
-                Value(STAGES.to_be_processed, output_field=CharField()),
-            ),
-            current_decision=Coalesce(
-                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
-                Value(DECISIONS.unset, output_field=CharField()),
-            ),
-            due_date=Coalesce(
-                Subquery(latest_logs.values("due_date")[:1], output_field=DateField()),
-                Value(None, output_field=DateField()),
             ),
         )
         return queryset
