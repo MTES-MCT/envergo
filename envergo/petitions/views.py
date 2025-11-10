@@ -1160,7 +1160,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
 
     def form_valid(self, form):
         project = self.object
-        status = project.status_history.order_by("created_at")[0]
+        status = project.status_history.order_by("-created_at").first()
 
         # Let's make sure the project cannot be suspended twice
         if not status.suspension_date:
