@@ -248,12 +248,13 @@ def display_ds_field(context, field_name):
     petition_project = context.get("petition_project", None)
     if petition_project is None:
         return ""
-
     ds_dossier = get_demarches_simplifiees_dossier(petition_project)
     if ds_dossier is None:
         return ""
 
     field_label, field_value = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+    if not field_label:
+        return ""
     return mark_safe(
         f'<div class="fr-my-2w"><p class="fr-mb-0"><strong>{field_label}</strong></p> <div>{field_value}</div></div>'
     )
