@@ -1,0 +1,23 @@
+{% load moulinette %}
+
+<section class="action-to-take">
+  <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
+          {% if action.details %}aria-expanded="false" aria-controls="action-{{ action.slug }}"{% endif %}>
+    <span class="{% if action.details %}fr-sr-only{% endif %}">
+      <span class="fr-icon-arrow-right-line fr-icon--sm"></span>{{ action.label }}
+    </span>
+    {% if action.details %}
+      <span aria-hidden="true" class="concealed-label">
+        <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
+        {{ action.label }}
+        <span class="fr-icon-arrow-down-s-line fr-icon--sm"></span></span>
+        <span aria-hidden="true" class="expanded-label">
+          <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
+          {{ action.label }}
+          <span class="fr-icon-arrow-up-s-line fr-icon--sm"></span></span>
+        {% endif %}
+      </button>
+      <div class="fr-collapse" id="action-{{ action.slug }}">
+        <p class="fr-ml-5w fr-my-1w">{% render_action_to_take_details action.details %}</p>
+      </div>
+    </section>

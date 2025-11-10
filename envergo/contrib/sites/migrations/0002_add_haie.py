@@ -2,20 +2,35 @@
 
 from django.db import migrations, connection
 
-def add_haie_site(apps, schema_editor):
+
+def add_sites(apps, schema_editor):
+    """Add envergo site objects.
+
+    This should only be run on local envs (e.g setting up a new dev
+    environment).
+    """
     Site = apps.get_model("sites", "Site")
+
+    if not Site.objects.filter(id=1).exists():
+        Site.objects.create(id=1, domain="envergo.local", name="Aménagement")
 
     if not Site.objects.filter(id=2).exists():
         # hard coding the id to match the settings file and because the sequence is already broken by cookiecutter
         # https://github.com/cookiecutter/cookiecutter-django/discussions/3506?sort=top
-        Site.objects.create(id=2, domain="haie.beta.gouv.fr", name="Haie")
+        Site.objects.create(id=2, domain="haie.local", name="Haie")
 
         # then alter the id sequence to make it up to date
         with connection.cursor() as cursor:
             cursor.execute("SELECT MAX(id) FROM django_site;")
             max_id = cursor.fetchone()[0]
-            cursor.execute(f"ALTER SEQUENCE django_site_id_seq RESTART WITH {max_id + 1};")
+            cursor.execute(
+                f"ALTER SEQUENCE django_site_id_seq RESTART WITH {max_id + 1};"
+            )
 
+
+def rm_sites(apps, schema_editor):
+    Site = apps.get_model("sites", "Site")
+    Site.objects.all().delete()
 
 
 class Migration(migrations.Migration):
@@ -25,5 +40,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_haie_site, migrations.RunPython.noop),
+        migrations.RunPython(add_sites, rm_sites),
     ]

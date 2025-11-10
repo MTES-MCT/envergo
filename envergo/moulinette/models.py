@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
@@ -40,6 +40,7 @@ from envergo.evaluations.models import (
     RESULT_CASCADE,
     RESULTS,
     TAG_STYLES_BY_RESULT,
+    EvaluationAction,
     TagStyleEnum,
 )
 from envergo.geodata.models import Department, Zone
@@ -1873,8 +1874,8 @@ class Moulinette(ABC):
         """Returns at what coordinates the perimeter."""
         raise NotImplementedError
 
-    @property
-    def actions_to_take(self) -> set[str]:
+    @cached_property
+    def actions_to_take(self):
         """Get potential actions to take from all activated regulations and criteria"""
         actions_to_take = set()
         for regulation in self.regulations:
@@ -1882,7 +1883,12 @@ class Moulinette(ABC):
             for criterion in regulation.criteria.all():
                 actions_to_take.update(criterion.actions_to_take)
 
-        return actions_to_take
+        actions = EvaluationAction.objects.filter(slug__in=actions_to_take).all()
+        result = defaultdict(list)
+        for action in actions:
+            action_key = action.type if action.type == "pc" else action.target
+            result[action_key].append(action)
+        return result
 
 
 class MoulinetteAmenagement(Moulinette):
