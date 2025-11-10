@@ -923,7 +923,6 @@ class EvaluationAction(models.Model):
         choices=ACTIONS_TO_TAKE,
         unique=True,
     )
-
     type = models.CharField(
         "Type d'action",
         max_length=20,
@@ -932,16 +931,13 @@ class EvaluationAction(models.Model):
             ("pc", "Pièce complémentaire"),
         ),
     )
-
     target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
-
     order = models.PositiveIntegerField("Ordre", default=1)
 
     label = models.TextField(
         verbose_name="Titre affiché",
         help_text="Texte de niveau 1",
     )
-
     details = models.TextField(
         verbose_name="Détails",
         help_text="Texte de niveau 2, contenu HTML évalué comme un template.",
