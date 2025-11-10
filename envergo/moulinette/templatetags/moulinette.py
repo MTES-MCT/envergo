@@ -355,4 +355,5 @@ def render_action_to_take_details(context, details):
         template_obj = Template(details)
         return template_obj.render(template_context)
     except Exception:
+        """To avoid error on action detail render, return action details without rendering."""
         return details
