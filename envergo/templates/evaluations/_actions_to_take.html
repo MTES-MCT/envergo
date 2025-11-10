@@ -13,34 +13,32 @@
       <ul class="fr-tabs__list" role="tablist" aria-label="Actions à mener">
         <li role="presentation">
           <button type="button"
-                  id="storybook-tab-0"
+                  id="action-target-tab-0"
                   class="fr-tabs__tab"
                   tabindex="0"
                   role="tab"
                   aria-selected="true"
-                  aria-controls="storybook-tab-0-panel">Porteur de projet</button>
+                  aria-controls="action-target-tab-0-panel">Porteur de projet</button>
         </li>
         <li role="presentation">
           <button type="button"
-                  id="storybook-tab-1"
+                  id="action-target-tab-1"
                   class="fr-tabs__tab"
                   tabindex="-1"
                   role="tab"
                   aria-selected="false"
-                  aria-controls="storybook-tab-1-panel">Instruction urbanisme</button>
+                  aria-controls="action-target-tab-1-panel">Instruction urbanisme</button>
         </li>
       </ul>
-      <div id="storybook-tab-0-panel"
+      <div id="action-target-tab-0-panel"
            class="fr-tabs__panel fr-tabs__panel--selected"
            role="tabpanel"
-           aria-labelledby="storybook-tab-0"
+           aria-labelledby="action-target-tab-0"
            tabindex="0">
 
         {% if moulinette.actions_to_take.petitioner %}
           {% for action in moulinette.actions_to_take.petitioner %}
-            <div {% if not forloop.last %}class="fr-mb-2w"{% endif %}>
-              {% include 'evaluations/_action_to_take.html' with action=action %}
-            </div>
+            <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
           {% endfor %}
         {% else %}
           Aucune action à mener.
@@ -51,10 +49,10 @@
           {% include 'evaluations/_self_declaration_cta.html' %}
         {% endif %}
       </div>
-      <div id="storybook-tab-1-panel"
+      <div id="action-target-tab-1-panel"
            class="fr-tabs__panel"
            role="tabpanel"
-           aria-labelledby="storybook-tab-1"
+           aria-labelledby="action-target-tab-1"
            tabindex="0">
         {% if moulinette.actions_to_take.pc %}
           <section class="action-to-take fr-mb-2w">
@@ -95,9 +93,7 @@
             {% endif %}
             {% if moulinette.actions_to_take.instructor %}
               {% for action in moulinette.actions_to_take.instructor %}
-                <div {% if not forloop.last %}class="fr-mb-2w"{% endif %}>
-                  {% include 'evaluations/_action_to_take.html' with action=action %}
-                </div>
+                <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
               {% endfor %}
             {% else %}
               Aucune action à mener.
