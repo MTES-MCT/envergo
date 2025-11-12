@@ -201,6 +201,24 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
     return context
 
 
+def get_field_data_from_ds_dossier(field_id, dossier):
+    """Get field value from dossier DS with id"""
+    champs = dossier.champs
+    field = next(
+        (champ for champ in champs if champ.id == field_id),
+        None,
+    )
+    if not field:
+        return None
+    item = Item(
+        field.label,
+        get_item_value_from_ds_champ(field),
+        None,
+        None,
+    )
+    return item
+
+
 def extract_data_from_fields(config, dossier):
     """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
     city = ""

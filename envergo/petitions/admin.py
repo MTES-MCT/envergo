@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.models import DEPARTMENT_CHOICES
 from envergo.petitions.models import InvitationToken, PetitionProject
 from envergo.users.models import User
+from envergo.utils.widgets import JSONWidget
 
 
 class InvitationTokenInlineForm(forms.ModelForm):
@@ -54,6 +55,11 @@ class PetitionProjectAdminForm(forms.ModelForm):
     class Meta:
         model = PetitionProject
         fields = "__all__"
+        widgets = {
+            "demarches_simplifiees_raw_dossier": JSONWidget(
+                attrs={"rows": 20, "cols": 80}
+            ),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
