@@ -209,9 +209,14 @@ def get_field_data_from_ds_dossier(field_id, dossier):
         None,
     )
     if not field:
-        return None, None
-    field_value = field.stringValue
-    return field.label, field_value
+        return None
+    item = Item(
+        field.label,
+        get_item_value_from_ds_champ(field),
+        None,
+        None,
+    )
+    return item
 
 
 def extract_data_from_fields(config, dossier):
