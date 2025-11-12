@@ -237,24 +237,26 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     return mark_safe(date_part + days_left_part)
 
 
-@register.simple_tag(takes_context=True)
+@register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
 def display_ds_field(context, field_name):
-    """Display a field from démarches simplifiées related to a given config and a given petition project."""
+    """Include tag to display a field from démarches simplifiées
+    related to a given config and a given petition project.
+
+    Use _item_ds.html template, also included in full DS view template.
+    """
 
     config = context.get("moulinette").config
     ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
     if ds_field_id is None:
-        return ""
+        return {}
     petition_project = context.get("petition_project", None)
     if petition_project is None:
-        return ""
+        return {}
     ds_dossier = get_demarches_simplifiees_dossier(petition_project)
     if ds_dossier is None:
-        return ""
+        return {}
 
-    field_label, field_value = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
-    if not field_label:
-        return ""
-    return mark_safe(
-        f'<div class="fr-my-2w"><p class="fr-mb-0"><strong>{field_label}</strong></p> <div>{field_value}</div></div>'
-    )
+    item = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+    if not item:
+        return {}
+    return {"item": item}

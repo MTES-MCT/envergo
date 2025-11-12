@@ -83,6 +83,22 @@ def test_display_ds_field(mock_post):
     )
     assert "La motivation" in content
 
+    # Given config haie with no display fields
+    config_haie.demarches_simplifiees_display_fields = {}
+    config_haie.save()
+    # When I want to display the same content
+    context_data = {
+        "petition_project": petition_project,
+        "moulinette": petition_project.get_moulinette(),
+    }
+    content = Template(template_html).render(Context(context_data))
+    # Then template is rendered without any error but no DS field is in rendered page
+    assert (
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
+        not in content
+    )
+    assert "La motivation" not in content
+
     # Given config haie with display fields not existing id
     config_haie.demarches_simplifiees_display_fields = {"motivation": "id_imaginaire"}
     config_haie.save()
