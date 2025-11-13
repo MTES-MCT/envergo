@@ -20,7 +20,8 @@
       <p>{% stage_badge petition_project.current_stage False %}</p>
 
       <div id="due-date-container" class="fr-mb-3w">
-        {% if petition_project.is_paused %}
+
+        {% if petition_project.is_paused and resume_processing_form %}
           <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
             <b>En attente de compléments</b>
             <br />
@@ -57,7 +58,9 @@
               {{ petition_project.latest_log.suspension_date|date:"DATE_FORMAT" }}
             </span>
           </p>
+
         {% else %}
+
           {% if petition_project.current_stage != "closed" %}
             <b>Échéance pour cette étape :</b>
             <br />
