@@ -1158,6 +1158,8 @@ class PetitionProjectInstructorProcedureView(
 class PetitionProjectInstructorRequestAdditionalInfoView(
     BasePetitionProjectInstructorView, FormView
 ):
+    """Process the "request additional info / resume instruction" forms."""
+
     http_method_names = ["post"]
 
     def has_edit_permission(self, user, object):
@@ -1238,11 +1240,33 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         project = self.object
         status = project.latest_log
 
+        # Update model data
         status.info_receipt_date = form.cleaned_data["info_receipt_date"]
         interruption_days = status.info_receipt_date - status.suspension_date
         if status.original_due_date:
             status.due_date = status.original_due_date + interruption_days
         status.save()
+
+        # Send Mattermost notification
+        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        admin_url = reverse(
+            "admin:petitions_petitionproject_change",
+            args=[self.object.pk],
+        )
+        procedure_url = reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": self.object.reference},
+        )
+        message = render_to_string(
+            "haie/petitions/mattermost_project_resume_instruction.txt",
+            context={
+                "department": self.object.department,
+                "reference": self.object.reference,
+                "admin_url": f"https://{haie_site.domain}{admin_url}",
+                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+            },
+        )
+        notify(message, "haie")
 
         success_message = "L'instruction du dossier a repris."
         messages.success(self.request, success_message)
