@@ -25,6 +25,15 @@
             <b>En attente de compléments</b>
             <br />
             {% display_due_date petition_project.due_date %}
+
+            <form method="post"
+                  action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}"
+                  class="fr-mt-1w">
+              {% csrf_token %}
+              {% include '_form_snippet.html' with form=resume_processing_form %}
+              <button type="submit" class="fr-btn fr-btn--primary">Reprendre l'instruction</button>
+            </form>
+
           </div>
 
           <p>

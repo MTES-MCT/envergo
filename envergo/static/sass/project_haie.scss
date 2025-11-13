@@ -711,8 +711,13 @@ div#instructor-view-side-menu {
     #due-date-container {
       color: var(--text-mention-grey);
 
-      .alt-light b {
-        color: var(--text-title-grey);
+      .alt-light {
+        display: inline-block;
+        min-width: 24rem;
+
+        b {
+          color: var(--text-title-grey);
+        }
       }
     }
   }

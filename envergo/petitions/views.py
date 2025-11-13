@@ -48,6 +48,7 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
     RequestAdditionalInfoForm,
+    ResumeProcessingForm,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1058,10 +1059,12 @@ class PetitionProjectInstructorProcedureView(
             logs = logs[1:]
 
         request_info_form = RequestAdditionalInfoForm()
+        resume_processing_form = ResumeProcessingForm()
 
         context.update(
             {
                 "request_info_form": request_info_form,
+                "resume_processing_form": resume_processing_form,
                 "object_list": logs,
                 "paginator": paginator,
                 "page_obj": page_obj,
@@ -1151,7 +1154,13 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
     BasePetitionProjectInstructorView, FormView
 ):
     http_method_names = ["post"]
-    form_class = RequestAdditionalInfoForm
+
+    def get_form_class(self):
+        if self.object.is_paused:
+            form_class = ResumeProcessingForm
+        else:
+            form_class = RequestAdditionalInfoForm
+        return form_class
 
     def form_invalid(self, form):
         messages.error(self.request, "L'état du dossier n'a pas pu être mis à jour.")
@@ -1159,8 +1168,16 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         return HttpResponseRedirect(self.get_success_url())
 
     def form_valid(self, form):
+        if isinstance(form, ResumeProcessingForm):
+            return self.resume_form_valid(form)
+        else:
+            return self.pause_form_valid(form)
+
+    def pause_form_valid(self, form):
+        """Instructor requested additional data."""
+
         project = self.object
-        status = project.status_history.order_by("-created_at").first()
+        status = project.latest_log
 
         # Let's make sure the project cannot be suspended twice
         if not status.suspension_date:
@@ -1178,6 +1195,23 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         Le message au demandeur a bien été envoyé.
         <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
         """
+        messages.success(self.request, success_message)
+        res = HttpResponseRedirect(self.get_success_url())
+        return res
+
+    def resume_form_valid(self, form):
+        """Instructor received the requested additional info."""
+
+        project = self.object
+        status = project.latest_log
+
+        status.info_receipt_date = form.cleaned_data["info_receipt_date"]
+        interruption_days = status.info_receipt_date - status.suspension_date
+        if status.original_due_date:
+            status.due_date = status.original_due_date + interruption_days
+        status.save()
+
+        success_message = "L'instruction du dossier a repris."
         messages.success(self.request, success_message)
         res = HttpResponseRedirect(self.get_success_url())
         return res

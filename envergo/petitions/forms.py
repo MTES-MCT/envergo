@@ -203,3 +203,11 @@ class RequestAdditionalInfoForm(forms.Form):
         required=True,
         widget=forms.Textarea(attrs={"rows": 6}),
     )
+
+
+class ResumeProcessingForm(forms.Form):
+    """Resume instruction processing."""
+
+    info_receipt_date = forms.DateField(
+        label="Date de réception des pièces", required=True, initial=timezone.now
+    )
