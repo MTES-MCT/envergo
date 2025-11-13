@@ -1,4 +1,5 @@
 from datetime import timedelta
+from textwrap import dedent
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -190,6 +191,29 @@ def three_months_from_now():
     return res
 
 
+def rai_message():
+    date = three_months_from_now()
+    from django.utils.formats import date_format
+
+    date_fmt = date_format(date, "d F Y")
+    message = dedent(
+        f"""
+        Bonjour,
+
+        Il apparaît que des informations sont manquantes pour instruire votre demande.
+
+        Vous avez jusqu'au ~{date_fmt}~ pour les fournir.
+
+        ***Liste des compléments à fournir***
+
+
+        Cordialement,
+        L'instructeur / le service instructeur.
+    """
+    )
+    return message.strip()
+
+
 class RequestAdditionalInfoForm(forms.Form):
     """Let an instructor pause the instruction and request for more information."""
 
@@ -201,7 +225,13 @@ class RequestAdditionalInfoForm(forms.Form):
     request_message = forms.CharField(
         label="Message au demandeur",
         required=True,
-        widget=forms.Textarea(attrs={"rows": 6}),
+        widget=forms.Textarea(attrs={"rows": 12}),
+        help_text="""
+        Ce message, à compléter par vos soins, sera envoyé au demandeur pour solliciter
+        les compléments et l'informer de la suspension du délai en attendant sa réponse.
+        Une fois envoyé, vous pourrez le retrouver dans la messagerie.
+        """,
+        initial=rai_message,
     )
 
 

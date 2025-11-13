@@ -1192,6 +1192,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         # Let's make sure the project cannot be suspended twice
         if not status.suspension_date:
             status.suspension_date = timezone.now().date()
+            status.info_receipt_date = None
             status.original_due_date = status.due_date
             status.response_due_date = form.cleaned_data["response_due_date"]
             status.due_date = status.response_due_date
