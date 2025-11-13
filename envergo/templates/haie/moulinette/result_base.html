@@ -19,7 +19,9 @@
   <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
       {% block main_form_field %}
-        <li>{% field_summary field %}</li>
+        {% if not field.name in "department,element,travaux" %}
+          <li>{% field_summary field %}</li>
+        {% endif %}
       {% endblock %}
     {% endfor %}
     {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
