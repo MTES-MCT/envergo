@@ -69,7 +69,13 @@
       </div>
 
       {% if request_info_form and not petition_project.is_paused %}
-        <div class="alt fr-py-3w fr-px-3w fr-mb-3w">
+        <button type="button"
+                class="fr-btn fr-btn--secondary"
+                aria-expanded="false"
+                aria-controls="rai-date-form">Demander des compléments</button>
+
+        <div id="rai-date-form"
+             class="alt fr-collapse fr-py-3w fr-px-3w fr-mt-2w fr-mb-3w">
           <h4>Demander des compléments</h4>
           <p>
             La demande de compléments suspendra le délai d'instruction. À l'étape suivante vous pourrez compléter le message pour le demandeur.
@@ -79,7 +85,14 @@
                 action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}">
             {% csrf_token %}
             {% include '_form_snippet.html' with form=request_info_form %}
-            <button type="submit" class="fr-btn fr-btn--primary">Envoyer au demander</button>
+
+            <button type="button"
+                    class="fr-btn fr-btn--secondary"
+                    aria-expanded="false"
+                    aria-controls="rai-date-form">Annuler</button>
+
+            <button type="button" class="fr-btn fr-btn--primary">Voir et compléter le message</button>
+
           </form>
         </div>
       {% endif %}

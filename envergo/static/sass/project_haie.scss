@@ -707,6 +707,10 @@ div#instructor-view-side-menu {
 .project-inner-content {
   max-width: 42em;
 
+  #due-date-container + button[aria-expanded="true"] {
+    display: none;
+  }
+
   &.paused {
     #due-date-container {
       color: var(--text-mention-grey);
