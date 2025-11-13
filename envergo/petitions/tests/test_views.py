@@ -1281,3 +1281,38 @@ def test_petition_invited_instructor_cannot_send_message(
     }
     res = client.post(messagerie_url, message_data, follow=True)
     assert res.status_code == 403
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44, site):
+    """Only department admin can see the "request additional info" button"""
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN the page is displayed but the edition button is not there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Demander des compléments" not in content
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN the page is displayed and the edition button is there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Demander des compléments" in content

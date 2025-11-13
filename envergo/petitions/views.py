@@ -1058,13 +1058,8 @@ class PetitionProjectInstructorProcedureView(
         if page_obj.number > 1:
             logs = logs[1:]
 
-        request_info_form = RequestAdditionalInfoForm()
-        resume_processing_form = ResumeProcessingForm()
-
         context.update(
             {
-                "request_info_form": request_info_form,
-                "resume_processing_form": resume_processing_form,
                 "object_list": logs,
                 "paginator": paginator,
                 "page_obj": page_obj,
@@ -1072,6 +1067,16 @@ class PetitionProjectInstructorProcedureView(
                 "STAGES": STAGES,
             }
         )
+
+        if self.has_edit_permission(self.request.user, self.object):
+            request_info_form = RequestAdditionalInfoForm()
+            resume_processing_form = ResumeProcessingForm()
+            context.update(
+                {
+                    "request_info_form": request_info_form,
+                    "resume_processing_form": resume_processing_form,
+                }
+            )
 
         return context
 
@@ -1154,6 +1159,11 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
     BasePetitionProjectInstructorView, FormView
 ):
     http_method_names = ["post"]
+
+    def has_edit_permission(self, user, object):
+        """Authorize only for department instructors"""
+
+        return object.has_user_as_department_instructor(user)
 
     def get_form_class(self):
         if self.object.is_paused:

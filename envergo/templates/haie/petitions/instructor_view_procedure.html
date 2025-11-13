@@ -68,7 +68,7 @@
         {% include "haie/petitions/stage_objectives/"|add:petition_project.current_stage|add:".html" %}
       </div>
 
-      {% if not petition_project.is_paused %}
+      {% if request_info_form and not petition_project.is_paused %}
         <div class="alt fr-py-3w fr-px-3w fr-mb-3w">
           <h4>Demander des compléments</h4>
           <p>
