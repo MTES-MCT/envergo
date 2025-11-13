@@ -1,7 +1,11 @@
+from datetime import timedelta
+from textwrap import dedent
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
+from django.utils import timezone
 
 from envergo.petitions.models import PetitionProject, StatusLog
 from envergo.utils.fields import ProjectStageField
@@ -175,3 +179,70 @@ class ProcedureForm(forms.ModelForm):
             )
 
         return cleaned_data
+
+
+def three_months_from_now():
+    now = timezone.now()
+
+    # Very naive strategy for "three months from now", but it is just for the
+    # default field value, so there is no need to be super clever here.
+    delta = timedelta(days=3 * 30 + 1)
+    res = now + delta
+    return res
+
+
+def rai_message():
+    date = three_months_from_now()
+    from django.utils.formats import date_format
+
+    date_fmt = date_format(date, "d F Y")
+    message = dedent(
+        f"""
+        Bonjour,
+
+        Il apparaît que des informations sont manquantes pour instruire votre demande.
+
+        Vous avez jusqu'au ~{date_fmt}~ pour les fournir.
+
+        ***Liste des compléments à fournir***
+
+
+        Cordialement,
+        L'instructeur / le service instructeur.
+    """
+    )
+    return message.strip()
+
+
+class RequestAdditionalInfoForm(forms.Form):
+    """Let an instructor pause the instruction and request for more information."""
+
+    response_due_date = forms.DateField(
+        label="Date limite de réponse du demandeur",
+        required=True,
+        initial=three_months_from_now,
+    )
+    request_message = forms.CharField(
+        label="Message au demandeur",
+        required=True,
+        widget=forms.Textarea(attrs={"rows": 12}),
+        help_text="""
+        Ce message, à compléter par vos soins, sera envoyé au demandeur pour solliciter
+        les compléments et l'informer de la suspension du délai en attendant sa réponse.
+        Une fois envoyé, vous pourrez le retrouver dans la messagerie.
+        """,
+        initial=rai_message,
+    )
+
+
+class ResumeProcessingForm(forms.Form):
+    """Resume instruction processing."""
+
+    info_receipt_date = forms.DateField(
+        label="Date de réception des pièces",
+        required=True,
+        initial=timezone.now,
+        help_text="""
+        La nouvelle échéance d'instruction sera mise à jour automatiquement.
+        """,
+    )

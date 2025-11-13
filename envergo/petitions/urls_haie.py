@@ -13,6 +13,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorNotesView,
     PetitionProjectInstructorProcedureView,
     PetitionProjectInstructorRegulationView,
+    PetitionProjectInstructorRequestAdditionalInfoView,
     PetitionProjectInstructorView,
     PetitionProjectInvitationToken,
     PetitionProjectList,
@@ -56,6 +57,11 @@ instruction_urlpatterns = [
         "procedure/",
         PetitionProjectInstructorProcedureView.as_view(),
         name="petition_project_instructor_procedure_view",
+    ),
+    path(
+        "demander-complement/",
+        PetitionProjectInstructorRequestAdditionalInfoView.as_view(),
+        name="petition_project_instructor_request_info_view",
     ),
     path(
         "<slug:regulation>/",

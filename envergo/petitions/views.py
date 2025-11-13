@@ -20,6 +20,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -46,6 +47,8 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     ProcedureForm,
+    RequestAdditionalInfoForm,
+    ResumeProcessingForm,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -602,23 +605,18 @@ class PetitionProjectAutoRedirection(View):
         return redirect(reverse("petition_project", kwargs=kwargs))
 
 
-class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
+class PetitionProjectInstructorMixin(SingleObjectMixin):
     """Mixin for petition project instructor views"""
 
-    queryset = PetitionProject.objects.all()
     slug_field = "reference"
     slug_url_kwarg = "reference"
     event_category = "projet"
     event_action = None
+    context_object_name = "petition_project"
 
     def get_queryset(self):
         current_user = self.request.user
-        queryset = super().get_queryset()
-
-        latest_logs = StatusLog.objects.filter(
-            petition_project=OuterRef("pk")
-        ).order_by("-created_at")
-
+        queryset = PetitionProject.objects.all()
         queryset = queryset.annotate(
             followed_up=Exists(
                 PetitionProject.followed_by.through.objects.filter(
@@ -626,51 +624,8 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
                     user_id=current_user.pk,
                 )
             ),
-            current_stage=Coalesce(
-                Subquery(latest_logs.values("stage")[:1], output_field=CharField()),
-                Value(STAGES.to_be_processed, output_field=CharField()),
-            ),
-            current_decision=Coalesce(
-                Subquery(latest_logs.values("decision")[:1], output_field=CharField()),
-                Value(DECISIONS.unset, output_field=CharField()),
-            ),
-            due_date=Coalesce(
-                Subquery(latest_logs.values("due_date")[:1], output_field=DateField()),
-                Value(None, output_field=DateField()),
-            ),
         )
         return queryset
-
-    def get(self, request, *args, **kwargs):
-        """Authorize user according to project department and log event"""
-        result = super().get(request, *args, **kwargs)
-        user = request.user
-
-        # check if user is authorized, else returns 403 error
-        if self.object.has_user_as_instructor(user):
-            if self.event_action:
-                referer = request.META.get("HTTP_REFERER")
-                if (
-                    not referer
-                    or url_has_allowed_host_and_scheme(
-                        referer, allowed_hosts={request.get_host()}
-                    )
-                    and urlparse(referer).path != request.path
-                ):
-                    # avoid logging event if user is just refreshing the page or is redirected after posting a form
-                    log_event(
-                        self.event_category,
-                        self.event_action,
-                        self.request,
-                        **self.get_log_event_data(),
-                        **get_matomo_tags(self.request),
-                    )
-            return result
-
-        else:
-            return TemplateResponse(
-                request=request, template="haie/petitions/403.html", status=403
-            )
 
     def get_log_event_data(self):
         return self.object.get_log_event_data()
@@ -679,7 +634,6 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         context = super().get_context_data(**kwargs)
 
         moulinette = self.object.get_moulinette()
-        context["petition_project"] = self.object
         context["moulinette"] = moulinette
 
         context.update(get_context_from_ds(self.object, moulinette))
@@ -747,29 +701,74 @@ class PetitionProjectInstructorMixin(LoginRequiredMixin, SingleObjectMixin):
         return context
 
 
-class PetitionProjectInstructorUpdateView(PetitionProjectInstructorMixin, UpdateView):
-    """Base form view for petition project instructor pages"""
+class BasePetitionProjectInstructorView(
+    LoginRequiredMixin, PetitionProjectInstructorMixin, View
+):
+    """Base class for all instructor pages.
 
-    form_class = PetitionProjectInstructorNotesForm
+    - make sure the project is always available in the view.
+    - make sure the permission is checked.
+    - log read event (XXX why?)
+    """
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.has_view_permission(request.user, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+        res = super().get(request, *args, **kwargs)
+        self.log_event_action(self.request)
+        return res
 
     def post(self, request, *args, **kwargs):
-        project = self.get_object()
-        if not project.has_user_as_department_instructor(request.user):
+        self.object = self.get_object()
+        if not self.has_edit_permission(request.user, self.object):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        return super().post(request, *args, **kwargs)
+        res = super().post(request, *args, **kwargs)
+        return res
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if not context["is_department_instructor"]:
-            for field in context["form"].fields.values():
-                field.widget.attrs["disabled"] = "disabled"
-        return context
+    def has_view_permission(self, user, object):
+        """Check that the current user has permission to access the project."""
+
+        return self.has_permission(user, object)
+
+    def has_edit_permission(self, user, object):
+        """Check that the current user has permission to update the project."""
+
+        return self.has_permission(user, object)
+
+    def has_permission(self, user, object):
+        """Only instructors can edit the project."""
+
+        return object.has_user_as_instructor(user)
+
+    def log_event_action(self, request):
+        if not self.event_action:
+            return
+
+        referer = request.META.get("HTTP_REFERER")
+        if (
+            not referer
+            or url_has_allowed_host_and_scheme(
+                referer, allowed_hosts={request.get_host()}
+            )
+            and urlparse(referer).path != request.path
+        ):
+            # avoid logging event if user is just refreshing the page or is redirected after posting a form
+            log_event(
+                self.event_category,
+                self.event_action,
+                self.request,
+                **self.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
 
 
-class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
+class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
@@ -784,7 +783,22 @@ class PetitionProjectInstructorView(PetitionProjectInstructorMixin, DetailView):
         return reverse("petition_project_instructor_view", kwargs=self.kwargs)
 
 
-class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateView):
+class BasePetitionProjectInstructorUpdateView(
+    BasePetitionProjectInstructorView, UpdateView
+):
+    """Base form view for petition project instructor pages"""
+
+    form_class = PetitionProjectInstructorNotesForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if not context["is_department_instructor"]:
+            for field in context["form"].fields.values():
+                field.widget.attrs["disabled"] = "disabled"
+        return context
+
+
+class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdateView):
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
@@ -824,17 +838,18 @@ class PetitionProjectInstructorRegulationView(PetitionProjectInstructorUpdateVie
 
 
 class PetitionProjectInstructorDossierDSView(
-    PetitionProjectInstructorMixin, DetailView
+    BasePetitionProjectInstructorView, DetailView
 ):
     """View for petition project page with demarches simplifiées data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
 
     def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
         project_details = compute_instructor_informations_ds(
             self.object
         )  # compute DS details first as it will force update the dossier cache
-        context = super().get_context_data(**kwargs)
         context["project_details"] = project_details
         # Send message if info from DS is not in project details
         if not context["project_details"]:
@@ -849,8 +864,28 @@ class PetitionProjectInstructorDossierDSView(
         return context
 
 
+class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView):
+    """View for petition project instructor page"""
+
+    template_name = "haie/petitions/instructor_view_notes.html"
+
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        log_event(
+            "projet",
+            "edition_notes",
+            self.request,
+            reference=self.object.reference,
+            **get_matomo_tags(self.request),
+        )
+        return res
+
+    def get_success_url(self):
+        return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
+
+
 class PetitionProjectInstructorMessagerieView(
-    PetitionProjectInstructorMixin, DetailView, FormView
+    BasePetitionProjectInstructorView, FormView
 ):
     """View for petition project instructor page with demarche simplifiées messagerie"""
 
@@ -862,7 +897,6 @@ class PetitionProjectInstructorMessagerieView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        self.object = self.get_object()
         ds_messages, ds_instructeurs_emails, ds_petitioner_email = (
             get_messages_and_senders_from_ds(self.object)
         )
@@ -957,28 +991,8 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
         )
 
 
-class PetitionProjectInstructorNotesView(PetitionProjectInstructorUpdateView):
-    """View for petition project instructor page"""
-
-    template_name = "haie/petitions/instructor_view_notes.html"
-
-    def form_valid(self, form):
-        res = super().form_valid(form)
-        log_event(
-            "projet",
-            "edition_notes",
-            self.request,
-            reference=self.object.reference,
-            **get_matomo_tags(self.request),
-        )
-        return res
-
-    def get_success_url(self):
-        return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)
-
-
 class PetitionProjectInstructorAlternativeView(
-    PetitionProjectInstructorMixin, DetailView
+    BasePetitionProjectInstructorView, DetailView
 ):
     """View for creating an alternative of a petition project by the instructor"""
 
@@ -1000,25 +1014,24 @@ class PetitionProjectInstructorAlternativeView(
 
 
 class PetitionProjectInstructorProcedureView(
-    PetitionProjectInstructorMixin, UpdateView
+    BasePetitionProjectInstructorView, FormView
 ):
     """View for display and edit the petition project procedure by the instructor"""
 
     form_class = ProcedureForm
     template_name = "haie/petitions/instructor_view_procedure.html"
     paginate_by = 10
-    context_object_name = "petition_project"
 
     def get_initial(self):
         initial = super().get_initial()
-        obj = self.get_object()
-        initial["stage"] = obj.current_stage
-        initial["decision"] = obj.current_decision
+        initial["stage"] = self.object.current_stage
+        initial["decision"] = self.object.current_decision
 
         return initial
 
     def get_context_data(self, **kwargs):
-        obj = self.get_object()
+        context = super().get_context_data(**kwargs)
+        obj = self.object
         history_qs = obj.status_history.select_related("created_by").order_by(
             "-created_at"
         )
@@ -1045,31 +1058,32 @@ class PetitionProjectInstructorProcedureView(
         if page_obj.number > 1:
             logs = logs[1:]
 
-        context = {
-            "object_list": logs,
-            "paginator": paginator,
-            "page_obj": page_obj,
-            "is_paginated": paginator.num_pages > 1,
-            "STAGES": STAGES,
-        }
+        context.update(
+            {
+                "object_list": logs,
+                "paginator": paginator,
+                "page_obj": page_obj,
+                "is_paginated": paginator.num_pages > 1,
+                "STAGES": STAGES,
+            }
+        )
 
-        context.update(super().get_context_data(**kwargs))
-        return context
-
-    def post(self, request, *args, **kwargs):
-        """Authorize edition only for department instructors"""
-        # check if user is authorized, else returns 403 error
-        self.object = self.get_object()
-        if not self.object.has_user_as_department_instructor(request.user):
-            return TemplateResponse(
-                request=request, template="haie/petitions/403.html", status=403
+        if self.has_edit_permission(self.request.user, self.object):
+            request_info_form = RequestAdditionalInfoForm()
+            resume_processing_form = ResumeProcessingForm()
+            context.update(
+                {
+                    "request_info_form": request_info_form,
+                    "resume_processing_form": resume_processing_form,
+                }
             )
 
-        form = ProcedureForm(request.POST, initial=self.get_initial())
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+        return context
+
+    def has_edit_permission(self, user, object):
+        """Authorize edition only for department instructors"""
+
+        return object.has_user_as_department_instructor(user)
 
     def form_valid(self, form):
 
@@ -1139,6 +1153,132 @@ class PetitionProjectInstructorProcedureView(
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
+
+
+class PetitionProjectInstructorRequestAdditionalInfoView(
+    BasePetitionProjectInstructorView, FormView
+):
+    """Process the "request additional info / resume instruction" forms."""
+
+    http_method_names = ["post"]
+
+    def has_edit_permission(self, user, object):
+        """Authorize only for department instructors"""
+
+        return object.has_user_as_department_instructor(user)
+
+    def get_form_class(self):
+        if self.object.is_paused:
+            form_class = ResumeProcessingForm
+        else:
+            form_class = RequestAdditionalInfoForm
+        return form_class
+
+    def form_invalid(self, form):
+        messages.error(self.request, "L'état du dossier n'a pas pu être mis à jour.")
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def form_valid(self, form):
+        if isinstance(form, ResumeProcessingForm):
+            return self.resume_form_valid(form)
+        else:
+            return self.pause_form_valid(form)
+
+    def pause_form_valid(self, form):
+        """Instructor requested additional data."""
+
+        project = self.object
+        status = project.latest_log
+
+        try:
+            with transaction.atomic():
+                # Update data model
+                status.suspension_date = timezone.now().date()
+                status.info_receipt_date = None
+                status.original_due_date = status.due_date
+                status.response_due_date = form.cleaned_data["response_due_date"]
+                status.due_date = status.response_due_date
+                status.suspended_by = self.request.user
+                status.save()
+
+                # Send DS Message
+                message = form.cleaned_data["request_message"]
+                ds_response = send_message_dossier_ds(self.object, message)
+
+                if ds_response is None or (
+                    "errors" in ds_response and ds_response["errors"] is not None
+                ):
+                    # We raise an exception to make sure the data model transaction
+                    # is aborted
+                    raise RuntimeError("DS message not sent")
+
+            messagerie_url = reverse(
+                "petition_project_instructor_messagerie_view",
+                args=[project.reference],
+            )
+            success_message = f"""
+            Le message au demandeur a bien été envoyé.
+            <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
+            """
+            messages.success(self.request, success_message)
+            res = HttpResponseRedirect(self.get_success_url())
+            return res
+
+        except RuntimeError:
+            error_message = """Le message n'a pas pu être envoyé.
+            Merci de ré-essayer dans quelques minutes.
+            Si le problème persiste, contacter le support en indiquant l'identifiant du dossier.
+            """
+            messages.error(self.request, error_message)
+            res = HttpResponseRedirect(self.get_success_url())
+            return res
+
+    def resume_form_valid(self, form):
+        """Instructor received the requested additional info."""
+
+        project = self.object
+        status = project.latest_log
+
+        # Update model data
+        status.info_receipt_date = form.cleaned_data["info_receipt_date"]
+        interruption_days = status.info_receipt_date - status.suspension_date
+        if status.original_due_date:
+            status.due_date = status.original_due_date + interruption_days
+        status.save()
+
+        # Send Mattermost notification
+        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        admin_url = reverse(
+            "admin:petitions_petitionproject_change",
+            args=[self.object.pk],
+        )
+        procedure_url = reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": self.object.reference},
+        )
+        message = render_to_string(
+            "haie/petitions/mattermost_project_resume_instruction.txt",
+            context={
+                "department": self.object.department,
+                "reference": self.object.reference,
+                "admin_url": f"https://{haie_site.domain}{admin_url}",
+                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+            },
+        )
+        notify(message, "haie")
+
+        success_message = "L'instruction du dossier a repris."
+        messages.success(self.request, success_message)
+        res = HttpResponseRedirect(self.get_success_url())
+        return res
+
+    def get_success_url(self):
+        project = self.get_object()
+        url = reverse(
+            "petition_project_instructor_procedure_view", args=[project.reference]
+        )
+        return url
 
 
 class PetitionProjectHedgeDataExport(DetailView):
