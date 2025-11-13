@@ -706,6 +706,16 @@ div#instructor-view-side-menu {
 
 .project-inner-content {
   max-width: 42em;
+
+  &.paused {
+    #due-date-container {
+      color: var(--text-mention-grey);
+
+      .alt-light b {
+        color: var(--text-title-grey);
+      }
+    }
+  }
 }
 
 #form-group-instructor_free_mention .label-content {

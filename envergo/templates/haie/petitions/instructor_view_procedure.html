@@ -14,12 +14,12 @@
   <div>
     <h3>État du dossier</h3>
   </div>
-  <div class="project-inner-content">
+  <div class="project-inner-content{{ petition_project.is_paused|yesno:" paused," }}">
     <section class="fr-my-3w">
       <h4>Étape</h4>
       <p>{% stage_badge petition_project.current_stage False %}</p>
-      <p id="due-date-container">
 
+      <div id="due-date-container">
         {% if petition_project.is_paused %}
           <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
             <b>En attente de compléments</b>
@@ -30,13 +30,23 @@
           <p>
             <strong>Échéance avant la suspension</strong>
             <br />
-            {% display_due_date petition_project.latest_log.original_due_date False %}
+            {% if petition_project.latest_log.original_due_date %}
+              <span class="due-date fr-text--sm">
+                <span class="fr-icon-timer-line fr-icon--sm"></span>
+                {{ petition_project.latest_log.original_due_date|date:"DATE_FORMAT" }}
+              </span>
+            {% else %}
+              <abbr title="Non disponible">ND</abbr>
+            {% endif %}
           </p>
 
           <p>
             <strong>Date de la suspension</strong>
             <br />
-            {% display_due_date petition_project.latest_log.suspension_date False %}
+            <span class="due-date fr-text--sm">
+              <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
+              {{ petition_project.latest_log.suspension_date|date:"DATE_FORMAT" }}
+            </span>
           </p>
         {% else %}
           {% if petition_project.current_stage != "closed" %}
@@ -47,21 +57,23 @@
         {% endif %}
 
         {% include "haie/petitions/stage_objectives/"|add:petition_project.current_stage|add:".html" %}
-      </p>
-
-      <div class="alt fr-py-3w fr-px-3w fr-mb-3w">
-        <h4>Demander des compléments</h4>
-        <p>
-          La demande de compléments suspendra le délai d'instruction. À l'étape suivante vous pourrez compléter le message pour le demandeur.
-        </p>
-
-        <form method="post"
-              action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}">
-          {% csrf_token %}
-          {% include '_form_snippet.html' with form=request_info_form %}
-          <button type="submit" class="fr-btn fr-btn--primary">Envoyer au demander</button>
-        </form>
       </div>
+
+      {% if not petition_project.is_paused %}
+        <div class="alt fr-py-3w fr-px-3w fr-mb-3w">
+          <h4>Demander des compléments</h4>
+          <p>
+            La demande de compléments suspendra le délai d'instruction. À l'étape suivante vous pourrez compléter le message pour le demandeur.
+          </p>
+
+          <form method="post"
+                action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}">
+            {% csrf_token %}
+            {% include '_form_snippet.html' with form=request_info_form %}
+            <button type="submit" class="fr-btn fr-btn--primary">Envoyer au demander</button>
+          </form>
+        </div>
+      {% endif %}
 
       <h4>Décision</h4>
       <p>{% decision_badge petition_project.current_decision False %}</p>
