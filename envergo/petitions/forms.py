@@ -239,5 +239,10 @@ class ResumeProcessingForm(forms.Form):
     """Resume instruction processing."""
 
     info_receipt_date = forms.DateField(
-        label="Date de réception des pièces", required=True, initial=timezone.now
+        label="Date de réception des pièces",
+        required=True,
+        initial=timezone.now,
+        help_text="""
+        La nouvelle échéance d'instruction sera mise à jour automatiquement.
+        """,
     )
