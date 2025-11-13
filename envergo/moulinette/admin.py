@@ -1,4 +1,3 @@
-from dal_select2.widgets import ModelSelect2
 from django import forms
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
@@ -88,27 +87,21 @@ class RegulationAdmin(admin.ModelAdmin):
         return obj.regulation
 
 
-class PerimeterChoiceField(forms.ModelChoiceField):
-    """Field for perimeter with autocomplete and backend name title"""
-
-    def label_from_instance(self, obj):
-        return obj.backend_name
-
-
 class CriterionAdminForm(forms.ModelForm):
     header = forms.CharField(
         label=_("Header"),
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    perimeter = PerimeterChoiceField(
-        required=False,
-        queryset=Perimeter.objects.all(),
-        widget=ModelSelect2,
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "perimeter" in self.fields:
+            perimeter_field = self.fields["perimeter"]
+            perimeter_field.label_from_instance = (
+                lambda perimeter: perimeter.backend_name
+            )
+
         if "activation_map" in self.fields:
             self.fields["activation_map"].queryset = self.fields[
                 "activation_map"
