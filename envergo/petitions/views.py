@@ -1189,26 +1189,48 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         project = self.object
         status = project.latest_log
 
-        # Let's make sure the project cannot be suspended twice
-        if not status.suspension_date:
-            status.suspension_date = timezone.now().date()
-            status.info_receipt_date = None
-            status.original_due_date = status.due_date
-            status.response_due_date = form.cleaned_data["response_due_date"]
-            status.due_date = status.response_due_date
-            status.suspended_by = self.request.user
-            status.save()
+        try:
+            with transaction.atomic():
+                # Update data model
+                status.suspension_date = timezone.now().date()
+                status.info_receipt_date = None
+                status.original_due_date = status.due_date
+                status.response_due_date = form.cleaned_data["response_due_date"]
+                status.due_date = status.response_due_date
+                status.suspended_by = self.request.user
+                status.save()
 
-        messagerie_url = reverse(
-            "petition_project_instructor_messagerie_view", args=[project.reference]
-        )
-        success_message = f"""
-        Le message au demandeur a bien été envoyé.
-        <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
-        """
-        messages.success(self.request, success_message)
-        res = HttpResponseRedirect(self.get_success_url())
-        return res
+                # Send DS Message
+                message = form.cleaned_data["request_message"]
+                ds_response = send_message_dossier_ds(self.object, message)
+
+                if ds_response is None or (
+                    "errors" in ds_response and ds_response["errors"] is not None
+                ):
+                    # We raise an exception to make sure the data model transaction
+                    # is aborted
+                    raise RuntimeError("DS message not sent")
+
+            messagerie_url = reverse(
+                "petition_project_instructor_messagerie_view",
+                args=[project.reference],
+            )
+            success_message = f"""
+            Le message au demandeur a bien été envoyé.
+            <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
+            """
+            messages.success(self.request, success_message)
+            res = HttpResponseRedirect(self.get_success_url())
+            return res
+
+        except RuntimeError:
+            error_message = """Le message n'a pas pu être envoyé.
+            Merci de ré-essayer dans quelques minutes.
+            Si le problème persiste, contacter le support en indiquant l'identifiant du dossier.
+            """
+            messages.error(self.request, error_message)
+            res = HttpResponseRedirect(self.get_success_url())
+            return res
 
     def resume_form_valid(self, form):
         """Instructor received the requested additional info."""
