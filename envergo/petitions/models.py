@@ -572,4 +572,5 @@ class StatusLog(models.Model):
     @property
     def is_paused(self):
         """Are we currently waiting for additional info?"""
-        return self.suspension_date and not self.info_receipt_date
+
+        return self.suspension_date is not None and self.info_receipt_date is None
