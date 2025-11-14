@@ -90,7 +90,7 @@
     <ul class="fr-mb-3w instructor-view-list">
       {% for field in moulinette.main_form %}
         {% block main_form_field %}
-          {% if not field.name in "department,element,travaux" %}
+          {% if not field.name in moulinette.get_triage_params %}
             <li>{% field_summary field %}</li>
           {% endif %}
         {% endblock %}
