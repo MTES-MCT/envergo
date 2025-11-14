@@ -165,7 +165,9 @@ class PetitionProject(models.Model):
 
     @cached_property
     def latest_log(self):
-        return self.status_history.order_by("-created_at").first()
+        # Make sure the `status_history` is prefetched with the correct ordering
+        log = self.status_history.first()
+        return log
 
     @property
     def current_stage(self):
