@@ -129,9 +129,3 @@ class InvitationTokenFactory(DjangoModelFactory):
 
     created_by = factory.SubFactory(UserFactory)
     petition_project = factory.SubFactory(PetitionProjectFactory)
-
-    class Meta:
-        model = InvitationToken
-
-    created_by = factory.SubFactory(UserFactory)
-    petition_project = factory.SubFactory(PetitionProjectFactory)
