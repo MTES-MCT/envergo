@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
+    ActionToTake,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
@@ -19,7 +20,7 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
-from envergo.moulinette.utils import list_moulinette_templates
+from envergo.moulinette.utils import get_template_choices, list_moulinette_templates
 
 
 class MapDepartmentsListFilter(DepartmentsListFilter):
@@ -467,3 +468,24 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             .order_by("department__department")
             .defer("department__geometry")
         )
+
+
+class ActionToTakeForm(forms.ModelForm):
+    details = forms.ChoiceField(
+        choices=get_template_choices(template_subdir="moulinette/actions_to_take/")
+    )
+
+    class Meta:
+        model = ActionToTake
+        fields = "__all__"
+
+
+@admin.register(ActionToTake)
+class ActionToTakeAdmin(admin.ModelAdmin):
+    form = ActionToTakeForm
+    list_display = [
+        "slug",
+        "type",
+        "target",
+        "order",
+    ]
