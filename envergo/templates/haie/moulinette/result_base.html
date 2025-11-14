@@ -15,11 +15,11 @@
       <li>{% field_summary field %}</li>
     {% endfor %}
   </ul>
-  <hr class="separator fr-mb-3w" />
+  <hr class="separator" />
   <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
       {% block main_form_field %}
-        {% if not field.name in "department,element,travaux" %}
+        {% if not field.name in moulinette.get_triage_params %}
           <li>{% field_summary field %}</li>
         {% endif %}
       {% endblock %}
