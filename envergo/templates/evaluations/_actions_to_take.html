@@ -80,7 +80,9 @@
                     <li>
                       <strong>{{ action.label }}</strong>
                       <span class="fr-ml-2w action-pc-list">{{ action.documents_to_attach|join:", " }}</span>
-                      <div>{% render_action_to_take_details action.details %}</div>
+                      {% if action.details %}
+                        <div>{% include action.details %}</div>
+                      {% endif %}
                     </li>
                   {% endfor %}
                 </ul>

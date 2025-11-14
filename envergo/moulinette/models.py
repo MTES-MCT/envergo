@@ -2536,9 +2536,10 @@ class ActionToTake(models.Model):
         verbose_name="Titre affiché",
         help_text="Texte de niveau 1",
     )
-    details = models.TextField(
+    details = models.CharField(
         verbose_name="Détails",
-        help_text="Texte de niveau 2, contenu HTML évalué comme un template.",
+        max_length=255,
+        help_text="Texte de niveau 2, choisir le template correspondant.",
     )
 
     documents_to_attach = ArrayField(
