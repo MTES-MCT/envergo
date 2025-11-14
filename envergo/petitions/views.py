@@ -740,17 +740,12 @@ class BasePetitionProjectInstructorView(
     def has_view_permission(self, user, object):
         """Check that the current user has permission to access the project."""
 
-        return self.has_permission(user, object)
+        return object.has_user_as_instructor(user)
 
     def has_edit_permission(self, user, object):
-        """Check that the current user has permission to update the project."""
+        """Authorize edition only for department instructors"""
 
-        return self.has_permission(user, object)
-
-    def has_permission(self, user, object):
-        """Only instructors can edit the project."""
-
-        return object.has_user_as_instructor(user)
+        return object.has_user_as_department_instructor(user)
 
     def log_event_action(self, request):
         if not self.event_action:
@@ -1086,11 +1081,6 @@ class PetitionProjectInstructorProcedureView(
 
         return context
 
-    def has_edit_permission(self, user, object):
-        """Authorize edition only for department instructors"""
-
-        return object.has_user_as_department_instructor(user)
-
     def form_valid(self, form):
 
         def notify_admin():
@@ -1167,11 +1157,6 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
     """Process the "request additional info / resume instruction" forms."""
 
     http_method_names = ["post"]
-
-    def has_edit_permission(self, user, object):
-        """Authorize only for department instructors"""
-
-        return object.has_user_as_department_instructor(user)
 
     def get_form_class(self):
         if self.object.is_paused:
