@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
+    ActionToTake,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
@@ -467,3 +468,14 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             .order_by("department__department")
             .defer("department__geometry")
         )
+
+
+@admin.register(ActionToTake)
+class ActionToTakeAdmin(admin.ModelAdmin):
+
+    list_display = [
+        "slug",
+        "type",
+        "target",
+        "order",
+    ]
