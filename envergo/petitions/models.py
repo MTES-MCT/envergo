@@ -567,6 +567,7 @@ class StatusLog(models.Model):
                 check=q_receipt_date, name="receipt_date_data_is_consistent"
             ),
         ]
+        ordering = ["-created_at"]
 
     @property
     def is_paused(self):
