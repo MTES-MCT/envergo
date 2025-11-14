@@ -40,10 +40,10 @@
           <p>
             <strong>Échéance avant la suspension</strong>
             <br />
-            {% if petition_project.latest_log.original_due_date %}
+            {% if petition_project.current_status.original_due_date %}
               <span class="due-date fr-text--sm">
                 <span class="fr-icon-timer-line fr-icon--sm"></span>
-                {{ petition_project.latest_log.original_due_date|date:"DATE_FORMAT" }}
+                {{ petition_project.current_status.original_due_date|date:"DATE_FORMAT" }}
               </span>
             {% else %}
               <abbr title="Non disponible">ND</abbr>
@@ -55,7 +55,7 @@
             <br />
             <span class="due-date fr-text--sm">
               <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
-              {{ petition_project.latest_log.suspension_date|date:"DATE_FORMAT" }}
+              {{ petition_project.current_status.suspension_date|date:"DATE_FORMAT" }}
             </span>
           </p>
 

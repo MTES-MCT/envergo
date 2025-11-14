@@ -1180,7 +1180,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor requested additional data."""
 
         project = self.object
-        status = project.latest_log
+        status = project.current_status
 
         try:
             with transaction.atomic():
@@ -1229,7 +1229,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor received the requested additional info."""
 
         project = self.object
-        status = project.latest_log
+        status = project.current_status
 
         # Update model data
         status.info_receipt_date = form.cleaned_data["info_receipt_date"]
