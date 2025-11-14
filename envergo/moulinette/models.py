@@ -1888,7 +1888,7 @@ class Moulinette(ABC):
         for action in actions:
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
-        return result
+        return dict(result)
 
 
 class MoulinetteAmenagement(Moulinette):
