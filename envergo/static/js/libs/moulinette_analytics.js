@@ -50,11 +50,16 @@ window.addEventListener('load', function () {
 // Track when an actions to take tab is browsed
 window.addEventListener('load', function () {
   const  instructorActionsTab = document.getElementById('actions-instructor-tab-1');
-  instructorActionsTab.addEventListener('click', function (evt) {
-    _paq.push(['trackEvent', 'Content', 'ActionTabClick', 'UrbaInstructor']);
-  });
+  if(instructorActionsTab) {
+    instructorActionsTab.addEventListener('click', function (evt) {
+      _paq.push(['trackEvent', 'Content', 'ActionTabClick', 'UrbaInstructor']);
+    });
+  }
+
   const  petitionerActionsTab = document.getElementById('actions-petitioner-tab-0');
-  petitionerActionsTab.addEventListener('click', function (evt) {
-    _paq.push(['trackEvent', 'Content', 'ActionTabClick', 'ProjectOwner']);
-  });
+  if(petitionerActionsTab) {
+    petitionerActionsTab.addEventListener('click', function (evt) {
+      _paq.push(['trackEvent', 'Content', 'ActionTabClick', 'ProjectOwner']);
+    });
+  }
 });
