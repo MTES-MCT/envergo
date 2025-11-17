@@ -2370,6 +2370,37 @@ section#actions-to-take {
       }
     }
   }
+
+  // Display all tabs for print
+  @media only print {
+    .fr-tabs {
+      display: block;
+      overflow: inherit;
+      position: static;
+      height: auto;
+
+      &::before {
+        content: "";
+        display: inline;
+      }
+
+      &__list {
+        display: block;
+      }
+
+      &__panel {
+        position: static;
+
+        &:not(.fr-tabs__panel--selected) {
+          visibility: visible;
+        }
+
+        &--direction-end {
+          transform: translate(0);
+        }
+      }
+    }
+  }
 }
 
 .alt-light {
