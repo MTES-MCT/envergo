@@ -2373,6 +2373,9 @@ section#actions-to-take {
 
   // Display all tabs for print
   @media only print {
+    background-color: inherit;
+    padding: 0;
+
     .fr-tabs {
       display: block;
       overflow: inherit;
@@ -2390,6 +2393,7 @@ section#actions-to-take {
 
       &__panel {
         position: static;
+        padding: 1rem;
 
         &:not(.fr-tabs__panel--selected) {
           visibility: visible;
@@ -2398,6 +2402,10 @@ section#actions-to-take {
         &--direction-end {
           transform: translate(0);
         }
+      }
+
+      section#actions-to-take hr {
+        margin: 0;
       }
     }
   }
