@@ -8,4 +8,3 @@ sentry-sdk
 # Django
 # ------------------------------------------------------------------------------
 django-storages[boto3]
-django-autocomplete-light
