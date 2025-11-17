@@ -1191,10 +1191,32 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     # is aborted
                     raise RuntimeError("DS message not sent")
 
+            # Send Mattermost notification
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            admin_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.object.pk],
+            )
+            procedure_url = reverse(
+                "petition_project_instructor_procedure_view",
+                kwargs={"reference": self.object.reference},
+            )
             messagerie_url = reverse(
                 "petition_project_instructor_messagerie_view",
                 args=[project.reference],
             )
+            message = render_to_string(
+                "haie/petitions/mattermost_project_request_additional_info.txt",
+                context={
+                    "department": self.object.department,
+                    "reference": self.object.reference,
+                    "admin_url": f"https://{haie_site.domain}{admin_url}",
+                    "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+                    "messagerie_url": f"https://{haie_site.domain}{messagerie_url}",
+                },
+            )
+            notify(message, "haie")
+
             success_message = f"""
             Le message au demandeur a bien été envoyé.
             <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
