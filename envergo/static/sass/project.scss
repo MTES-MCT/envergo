@@ -2367,13 +2367,13 @@ section#actions-to-take {
     margin-bottom: 1rem;
   }
 
-  section.action-to-take {
-    p,
-    div {
-      font-size: 0.875rem;
-      line-height: 1.5rem;
-    }
+  p,
+  div {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
 
+  section.action-to-take {
     .action-pc-list {
       font-size: 12px;
     }
@@ -2387,10 +2387,6 @@ section#actions-to-take {
       font-size: 0.875rem;
       line-height: 1.5rem;
       margin: var(--text-spacing);
-
-      &:not(.read-more-btn) {
-        cursor: default;
-      }
     }
   }
 }

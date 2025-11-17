@@ -25,12 +25,36 @@ window.addEventListener('load', function () {
 
 // Track when an action to take accordion is toggled
 window.addEventListener('load', function () {
-  const actionBtns = document.querySelectorAll('.action-btn-btn');
+  const actionBtns = document.querySelectorAll('.action-btn');
   actionBtns.forEach(btn => btn.addEventListener('click', function (evt) {
     const btn = evt.currentTarget;
     const target = btn.getAttribute('aria-controls');
     const expanded = btn.getAttribute('aria-expanded');
     const action = expanded == 'false' ? 'ActionDetailExpand' : 'ActionDetailConceal';
-    _paq.push(['trackEvent', 'Content', action, target]);
+    _paq.push(['trackEvent', 'Content', action, target.replace(/^action-/, "")]);
   }));
+});
+
+// Track when an action to take learn more link is clicked
+window.addEventListener('load', function () {
+  const  actionLearnMoreLinks = document.querySelectorAll('.action-learn-more-link');
+  actionLearnMoreLinks.forEach(btn => btn.addEventListener('click', function (evt) {
+    const btn = evt.currentTarget;
+    const actionContainer = btn.closest(".action-details-container");
+    actionContainer.id;
+    _paq.push(['trackEvent', 'Content', 'ActionDetailJumpToDetail', actionContainer.id.replace(/^action-/, "")]);
+  }));
+});
+
+
+// Track when an actions to take tab is browsed
+window.addEventListener('load', function () {
+  const  instructorActionsTab = document.getElementById('actions-instructor-tab-1');
+  instructorActionsTab.addEventListener('click', function (evt) {
+    _paq.push(['trackEvent', 'Content', 'ActionTabClick', 'UrbaInstructor']);
+  });
+  const  petitionerActionsTab = document.getElementById('actions-petitioner-tab-0');
+  petitionerActionsTab.addEventListener('click', function (evt) {
+    _paq.push(['trackEvent', 'Content', 'ActionTabClick', 'ProjectOwner']);
+  });
 });

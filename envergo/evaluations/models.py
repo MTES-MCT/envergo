@@ -47,28 +47,6 @@ USER_TYPES = Choices(
     ("petitioner", "Un porteur de projet ou maître d'œuvre"),
 )
 
-ACTIONS_TO_TAKE = Choices(
-    (
-        "mention_arrete_lse",
-        "Mentionner dans l’arrêté le différé de réalisation des travaux",
-    ),
-    ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
-    ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
-    ("etude_zh_lse", "LSE > Réaliser un inventaire zones humides"),
-    ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
-    ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
-    ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
-    ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
-    ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
-    ("etude_zh_n2000", "Natura 2000 > Réaliser un inventaire zones humides"),
-    ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
-    (
-        "pc_cas_par_cas",
-        "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
-    ),
-    ("pc_ein", "L’évaluation des incidences Natura 2000"),
-)
-
 
 def evaluation_file_format(instance, filename):
     return f"evaluations/{instance.application_number}.pdf"
@@ -907,54 +885,3 @@ class RecipientStatus(models.Model):
                 name="unique_index", fields=["regulatory_notice_log", "recipient"]
             )
         ]
-
-
-class EvaluationAction(models.Model):
-    """Actions to take listed in an evaluation and debug page
-
-    Actions to take are displayed in an evaluation if :
-    - ACTIONS_TO_TAKE_MATRIX is setted in a related Regulation or Criterion evaluator class
-    - Display actions to take is True in Evaluation object
-    """
-
-    slug = models.CharField(
-        "Référence de l'action",
-        max_length=50,
-        choices=ACTIONS_TO_TAKE,
-        unique=True,
-    )
-    type = models.CharField(
-        "Type d'action",
-        max_length=20,
-        choices=Choices(
-            ("action", "Action"),
-            ("pc", "Pièce complémentaire"),
-        ),
-    )
-    target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
-    order = models.PositiveIntegerField("Ordre", default=1)
-
-    label = models.TextField(
-        verbose_name="Titre affiché",
-        help_text="Texte de niveau 1",
-    )
-    details = models.TextField(
-        verbose_name="Détails",
-        help_text="Texte de niveau 2, contenu HTML évalué comme un template.",
-    )
-
-    documents_to_attach = ArrayField(
-        models.CharField(max_length=255),
-        verbose_name="référence des pièces complémentaires",
-        help_text="Valeurs séparées par des virgules sans espace",
-        blank=True,
-        default=list,
-    )
-
-    def __str__(self):
-        return self.get_slug_display()
-
-    class Meta:
-        verbose_name = "Action à mener"
-        verbose_name_plural = "Actions à mener"
-        ordering = ["order"]
