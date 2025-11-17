@@ -21,19 +21,36 @@
 
       <div id="due-date-container" class="fr-mb-3w">
 
-        {% if petition_project.is_paused and resume_processing_form %}
+        {% if petition_project.is_paused %}
           <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
             <b>En attente de compléments</b>
             <br />
             {% display_due_date petition_project.due_date %}
 
-            <form method="post"
-                  action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}"
-                  class="fr-mt-1w">
-              {% csrf_token %}
-              {% include '_form_snippet.html' with form=resume_processing_form %}
-              <button type="submit" class="fr-btn fr-btn--primary">Reprendre l'instruction</button>
-            </form>
+            {% if resume_processing_form %}
+              <div class="fr-mt-1w">
+                <button type="button"
+                        class="fr-btn fr-btn--primary hide-expanded"
+                        aria-expanded="false"
+                        aria-controls="resume-form">Reprendre l'instruction</button>
+              </div>
+
+              <div id="resume-form" class="fr-collapse">
+                <form method="post"
+                      action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}"
+                      class="fr-mt-1w">
+                  {% csrf_token %}
+                  {% include '_form_snippet.html' with form=resume_processing_form %}
+
+                  <button type="button"
+                          class="fr-btn fr-btn--secondary"
+                          aria-expanded="false"
+                          aria-controls="resume-form">Annuler</button>
+
+                  <button type="submit" class="fr-btn fr-btn--primary">Reprendre l'instruction</button>
+                </form>
+              </div>
+            {% endif %}
 
           </div>
 
@@ -73,7 +90,7 @@
 
       {% if request_info_form and not petition_project.is_paused %}
         <button type="button"
-                class="fr-btn fr-btn--secondary fr-mb-3w"
+                class="fr-btn fr-btn--secondary fr-mb-3w hide-expanded"
                 aria-expanded="false"
                 aria-controls="rai-date-form">Demander des compléments</button>
 
