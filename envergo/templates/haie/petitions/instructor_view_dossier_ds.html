@@ -86,11 +86,13 @@
         <li>{% field_summary field %}</li>
       {% endfor %}
     </ul>
-    <hr class="fr-mb-3w" />
+    <hr />
     <ul class="fr-mb-3w instructor-view-list">
       {% for field in moulinette.main_form %}
         {% block main_form_field %}
-          <li>{% field_summary field %}</li>
+          {% if not field.name in moulinette.get_triage_params %}
+            <li>{% field_summary field %}</li>
+          {% endif %}
         {% endblock %}
       {% endfor %}
       {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
