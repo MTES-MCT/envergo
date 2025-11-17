@@ -1,0 +1,13 @@
+{
+  "data": {
+    "dossierEnvoyerMessage": {
+      "message": null,
+      "errors": [
+        {
+          "message": "Le hash du fichier téléversé est invalide"
+        }
+      ],
+      "clientMutationId": null
+    }
+  }
+}

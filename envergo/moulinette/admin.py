@@ -1,5 +1,3 @@
-import json
-
 from django import forms
 from django.contrib import admin
 from django.template.defaultfilters import truncatechars
@@ -18,8 +16,9 @@ from envergo.moulinette.models import (
     Perimeter,
     Regulation,
 )
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
 from envergo.moulinette.utils import list_moulinette_templates
+from envergo.utils.widgets import JSONWidget
 
 
 class MapDepartmentsListFilter(DepartmentsListFilter):
@@ -38,8 +37,23 @@ class MapDepartmentsListFilter(DepartmentsListFilter):
 
 class RegulationAdminForm(forms.ModelForm):
 
-    def clean(self):
+    def get_initial_for_field(self, field, field_name):
+        """Prevent Evaluator choice to be instanciated.
 
+        In the legacy's version of this function, callable values are, well,
+        called.
+
+        But since we have a custom field that should return
+        `RegulationEvaluator` subclasses, we don't want the form to actually
+        instanciate those classes.
+        """
+
+        value = self.initial.get(field_name, field.initial)
+        if callable(value) and not issubclass(value, RegulationEvaluator):
+            value = value()
+        return value
+
+    def clean(self):
         data = super().clean()
         show_map = bool(data.get("show_map"))
         has_map_factory_name = bool(data.get("map_factory_name"))
@@ -73,21 +87,21 @@ class RegulationAdmin(admin.ModelAdmin):
         return obj.regulation
 
 
-class PerimeterChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.backend_name
-
-
 class CriterionAdminForm(forms.ModelForm):
     header = forms.CharField(
         label=_("Header"),
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
     )
-    perimeter = PerimeterChoiceField(required=False, queryset=Perimeter.objects.all())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if "perimeter" in self.fields:
+            perimeter_field = self.fields["perimeter"]
+            perimeter_field.label_from_instance = (
+                lambda perimeter: perimeter.backend_name
+            )
+
         if "activation_map" in self.fields:
             self.fields["activation_map"].queryset = self.fields[
                 "activation_map"
@@ -350,19 +364,6 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
-class JSONWidget(forms.Textarea):
-    """A widget to prettily display formated JSON in a textarea."""
-
-    def format_value(self, value):
-        if value is None:
-            return ""
-        try:
-            # Format the JSON in a readable way
-            return json.dumps(json.loads(value), indent=4)
-        except (TypeError, ValueError):
-            return value
-
-
 class ConfigHaieAdminForm(forms.ModelForm):
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
@@ -373,6 +374,9 @@ class ConfigHaieAdminForm(forms.ModelForm):
         fields = "__all__"
         widgets = {
             "demarche_simplifiee_pre_fill_config": JSONWidget(
+                attrs={"rows": 20, "cols": 80}
+            ),
+            "demarches_simplifiees_display_fields": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
         }
@@ -412,6 +416,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "department",
                     "is_activated",
+                    "single_procedure",
                     "regulations_available",
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",
@@ -435,6 +440,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "demarche_simplifiee_number",
                     "demarche_simplifiee_pre_fill_config",
+                    "demarches_simplifiees_display_fields",
                     "demarches_simplifiees_city_id",
                     "demarches_simplifiees_organization_id",
                     "demarches_simplifiees_pacage_id",

@@ -35,7 +35,8 @@ def show_moulinette_form(context):
     We do so by selecting the correct template depending on the current domain.
     """
     MoulinetteClass = get_moulinette_class_from_site(context["request"].site)
-    template_name = MoulinetteClass.get_form_template()
+    moulinette = MoulinetteClass({})
+    template_name = moulinette.get_form_template()
 
     template = get_template(template_name)
     content = template.render(context.flatten())
@@ -218,7 +219,8 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     """Render the global moulinette result content."""
     context_data = context.flatten()
     context_data.update(plantation_evaluation.get_context())
-    template_name = f"haie/moulinette/result/{moulinette.result}.html"
+    regime = "regime_unique" if moulinette.config.single_procedure else "droit_constant"
+    template_name = f"haie/moulinette/result/{regime}/{moulinette.result}.html"
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
@@ -341,3 +343,17 @@ def display_remove_only_haies_field(field):
 @register.simple_tag
 def humanize_motif(motif):
     return dict(MOTIF_CHOICES).get(motif, "Motif non défini")
+
+
+@register.simple_tag(takes_context=True)
+def render_action_to_take_details(context, details):
+    """
+    Render action details that may contain template tags.
+    """
+    try:
+        template_context = Context(context.flatten())
+        template_obj = Template(details)
+        return template_obj.render(template_context)
+    except Exception:
+        """To avoid error on action detail render, return action details without rendering."""
+        return details

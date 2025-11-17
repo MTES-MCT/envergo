@@ -1,14 +1,20 @@
 import uuid
+from datetime import date
 from typing import Literal
 
 from django import template
 from django.template import TemplateDoesNotExist
+from django.template.defaultfilters import date as date_filter
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
+from envergo.petitions.services import (
+    get_demarches_simplifiees_dossier,
+    get_field_data_from_ds_dossier,
+)
 
 register = template.Library()
 
@@ -135,8 +141,8 @@ def format_ds_number(ds_number):
     return f"{s[:4]}-{s[4:]}" if len(s) >= 8 else ds_number
 
 
-@register.filter
-def stage_badge(stage):
+@register.simple_tag
+def stage_badge(stage, is_small=True):
     color_map = {
         STAGES.to_be_processed: "pink-tuile",
         STAGES.instruction_d: "blue-cumulus",
@@ -154,27 +160,27 @@ def stage_badge(stage):
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
 
     return mark_safe(
-        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''} fr-badge--sm">
+        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''}  {'fr-badge--sm' if is_small else 'badge--lg'}">
                           {label}
                         </p>"""
     )
 
 
-@register.filter
-def decision_badge(decision, light_version=False):
+@register.simple_tag
+def decision_badge(decision, is_light=False):
     class_map = {
         DECISIONS.unset: None,
-        DECISIONS.express_agreement: "fr-badge--success",
-        DECISIONS.tacit_agreement: "fr-badge--success",
-        DECISIONS.opposition: "fr-badge--error",
-        DECISIONS.dropped: "fr-icon-folder-2-fill fr-badge--icon-left",
+        DECISIONS.express_agreement: "fr-badge--success fr-badge fr-badge--sm",
+        DECISIONS.tacit_agreement: "fr-badge--success fr-badge fr-badge--sm",
+        DECISIONS.opposition: "fr-badge--error fr-badge fr-badge--sm",
+        DECISIONS.dropped: "fr-icon-folder-2-fill fr-badge--icon-left fr-badge fr-badge--sm",
     }
 
     css_class = class_map.get(decision, None)
     label = dict(DECISIONS).get(decision, decision)
     uid = str(uuid.uuid4())
 
-    if light_version:
+    if is_light:
         return (
             mark_safe(
                 f"""
@@ -187,7 +193,70 @@ def decision_badge(decision, light_version=False):
         )
     else:
         return mark_safe(
-            f"""<p class="fr-badge fr-badge--sm fr-badge--no-icon {css_class if css_class else ''}">
-                          {label}
-                        </p>"""
+            f'<p class="{css_class if css_class else ''} fr-badge--no-icon">{label}</p>'
         )
+
+
+@register.simple_tag
+def display_due_date(due_date, display_days_left=True, self_explanatory_label=False):
+    if not due_date or not isinstance(due_date, date):
+        return mark_safe(
+            f'<span class="due-date">{"Échéance à" if self_explanatory_label else "À"} renseigner</span>'
+        )
+
+    days_left = (due_date - date.today()).days
+    if days_left >= 7:
+        icon_part = '<span class="fr-icon-timer-line fr-icon--sm"></span>'
+    elif days_left >= 0:
+        icon_part = '<span class="fr-icon-hourglass-2-fill fr-icon--sm"></span>'
+    else:
+        icon_part = '<span class="fr-icon-warning-fill fr-icon--sm"></span>'
+
+    date_part = f"""<span class="due-date fr-text--sm">
+                {icon_part}
+                {date_filter(due_date, "SHORT_DATE_FORMAT")}
+              </span><br/>"""
+
+    if not display_days_left:
+        days_left_part = ""
+    elif days_left >= 2:
+        days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
+    elif days_left >= 0:
+        days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
+    elif days_left >= -1:
+        days_left_part = (
+            f'<span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
+        )
+    elif days_left:
+        days_left_part = (
+            f'<span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
+        )
+    else:
+        days_left_part = ""
+
+    return mark_safe(date_part + days_left_part)
+
+
+@register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
+def display_ds_field(context, field_name):
+    """Include tag to display a field from démarches simplifiées
+    related to a given config and a given petition project.
+
+    Use _item_ds.html template, also included in full DS view template.
+    """
+
+    config = context.get("moulinette").config
+    ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
+    if ds_field_id is None:
+        return {}
+    petition_project = context.get("petition_project", None)
+    if petition_project is None:
+        return {}
+    ds_dossier = get_demarches_simplifiees_dossier(petition_project)
+    if ds_dossier is None:
+        return {}
+
+    item = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+    if not item:
+        return {}
+    return {"item": item}

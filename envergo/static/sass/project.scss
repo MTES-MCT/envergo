@@ -63,6 +63,10 @@ hr.separator {
   }
 }
 
+.text-center {
+  text-align: center;
+}
+
 /**
  * Update some margins for paragraphs and lists
  */
@@ -1929,6 +1933,14 @@ img.moulinette-incentive-img {
   object-position: 50% 50%;
 }
 
+.fr-label--warning {
+  color: var(--text-default-warning);
+}
+
+.fr-icon-hourglass-2-fill::before {
+  mask-image: url("/static/images/hourglass-2-fill.svg");
+}
+
 .dark-only {
   display: none !important;
 }
@@ -2212,8 +2224,13 @@ main.demos {
 }
 
 #moulinette-title {
-  max-width: 700px;
+  max-width: 600px;
   margin: 1.5rem auto;
+}
+
+#moulinette-subtitle {
+  max-width: 700px;
+  margin: 2rem auto;
 }
 
 #demarche-simplifiee-form {
@@ -2309,4 +2326,71 @@ article#evaluation {
 
 .fr-badge.icon-only-badge::before {
   margin: 0;
+}
+
+.fr-badge.badge--lg {
+  font-size: 1rem;
+  line-height: 1.75rem;
+  padding: 0 0.75rem;
+}
+
+section#actions-to-take {
+  .actions-to-take-title {
+    display: flex;
+    align-items: center;
+  }
+
+  hr {
+    margin: 1.5rem 0;
+    padding-bottom: 1px;
+  }
+
+  #self-declaration-cta {
+    margin: auto;
+    background-color: transparent;
+    padding: 0;
+
+    .fr-container {
+      padding: 0;
+    }
+  }
+
+  .fr-tabs {
+    border-bottom: 1px solid var(--border-default-grey);
+
+    &::before {
+      background-color: var(--background-default-grey);
+    }
+  }
+
+  div.action-wrapper:not(:last-of-type) {
+    margin-bottom: 1rem;
+  }
+
+  section.action-to-take {
+    p,
+    div {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+    }
+
+    .action-pc-list {
+      font-size: 12px;
+    }
+
+    .action-btn {
+      font-weight: normal;
+      background-color: var(--background-action-low-blue-france);
+      min-height: unset;
+      padding: 0 0.5rem;
+      text-align: left;
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      margin: var(--text-spacing);
+
+      &:not(.read-more-btn) {
+        cursor: default;
+      }
+    }
+  }
 }

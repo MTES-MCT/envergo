@@ -21,8 +21,25 @@ from envergo.hedges.regulations import (
     SafetyCondition,
     StrenghteningCondition,
 )
-from envergo.moulinette.regulations import CriterionEvaluator, HedgeDensityMixin
+from envergo.moulinette.regulations import (
+    CriterionEvaluator,
+    HaieRegulationEvaluator,
+    HedgeDensityMixin,
+)
 from envergo.utils.fields import get_human_readable_value
+
+
+class EPRegulation(HaieRegulationEvaluator):
+    choice_label = "Haie > EP"
+
+    PROCEDURE_TYPE_MATRIX = {
+        "interdit": "interdit",
+        "derogation": "autorisation",
+        "derogation_simplifiee": "autorisation",
+        "dispense_sous_condition": "declaration",
+        "a_verifier": "declaration",
+        "dispense": "declaration",
+    }
 
 
 class EPMixin:
@@ -135,7 +152,8 @@ class EPNormandieForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        localisation_pac = self.data.get("localisation_pac")
+        data = self.data if self.data else self.initial
+        localisation_pac = data.get("localisation_pac")
         if localisation_pac == "non":
             self.fields = {}
             return
@@ -161,7 +179,6 @@ class EspecesProtegeesNormandie(
 
     RESULT_MATRIX = {
         "interdit": RESULTS.interdit,
-        "interdit_remplacement": RESULTS.interdit,
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
         "dispense_coupe_a_blanc": RESULTS.dispense_sous_condition,
         "dispense_20m": RESULTS.dispense_sous_condition,
@@ -179,7 +196,7 @@ class EspecesProtegeesNormandie(
         ("lte_1", True, False, "remplacement"): "dispense_20m",
         ("lte_1", True, False, "replantation"): "dispense_20m",
         ("gt_1", True, False, "non"): "interdit",
-        ("gt_1", True, False, "remplacement"): "interdit_remplacement",
+        ("gt_1", True, False, "remplacement"): "derogation_simplifiee",
         ("gt_1", True, False, "replantation"): "derogation_simplifiee",
         ("0", True, True, "non"): "dispense_10m",
         ("0", True, True, "remplacement"): "dispense_10m",
@@ -197,7 +214,7 @@ class EspecesProtegeesNormandie(
         ("lte_1", False, False, "remplacement"): "dispense",
         ("lte_1", False, False, "replantation"): "dispense",
         ("gt_1", False, False, "non"): "interdit",
-        ("gt_1", False, False, "remplacement"): "interdit_remplacement",
+        ("gt_1", False, False, "remplacement"): "derogation_simplifiee",
         ("gt_1", False, False, "replantation"): "derogation_simplifiee",
         ("0", False, True, "non"): "dispense_10m",
         ("0", False, True, "remplacement"): "dispense_10m",

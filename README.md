@@ -37,10 +37,6 @@ Il est recommandé de se baser sur la version docker.
 
 #### Avec Docker
 
-> NB : pour les commandes `docker compose`, cette documentation utilise la syntaxe de la version 2 en remplacant le tiret (`-`) par un espace et utlisant donc `docker compose` à la place de `docker-compose`.
-> Si vous avez une version plus ancienne, vous pouvez utiliser la syntaxe `docker-compose`.
-> [Plus d'infos…](https://docs.docker.com/compose/releases/migrate/#what-are-the-differences-between-compose-v1-and-compose-v2)
-
 Pour lancer l'environnement rapidement :
 
 ```bash
@@ -75,6 +71,12 @@ $ npm install
 $ npm run build
 $ docker compose run --rm django python manage.py collectstatic
 
+```
+
+Générer les traductions :
+
+```bash
+docker compose run --rm django python manage.py compilemessages
 ```
 
 Ajouter dans `/etc/hosts` les domaines utilisés pour Envergo (http://envergo.local:8000/) et le Guichet Unique de la Haie (http://haie.local:8000/).
@@ -435,11 +437,14 @@ $ docker compose run --rm django python manage.py anonymize_database
 
 Les documents sont stockés sur un répertoire distant compatible avec le protocole S3 sur [Scaleway](https://console.scaleway.com/object-storage/buckets) ce processus est géré via la librairie python boto en combinaison avec le package default_storage de Django
 
+Voir [la documentation officielle Scaleway sur le stockage de fichiers](https://www.scaleway.com/en/docs/object-storage/)
+
 
 ### Backup des buckets S3
 
-Chaque semaine, on souhaite faire un backup du contenu des buckets s3 de production.
-Pour executer ce back up on utilise [github action](.github/workflows/s3_backup.yml)
+Chaque semaine, on souhaite faire une sauvegarde du contenu des buckets s3 de production. Ceux-ci seront sauvegardés dans un object storage "glacier".
+
+Pour executer cette sauvegarde, on utilise [github action](.github/workflows/s3_backup.yml)
 
 Pour s'exécuter, github action a besoin des identifiants s3 à configurer dans [Settings](https://github.com/MTES-MCT/envergo/settings) > Secrets and variables > [Actions](https://github.com/MTES-MCT/envergo/settings/secrets/actions).
 
@@ -447,6 +452,11 @@ Ajouter les `Repository secrets` :
 * S3_ACCESS_KEY
 * S3_SECRET_KEY
 
+### Restauration des buckets S3
+
+Pour récupérer les backups et les restaurer.
+
+Voir la [documentation Scaleway pour restaurer un fichier depuis le glacier](https://www.scaleway.com/en/docs/object-storage/how-to/restore-an-object-from-glacier/)
 
 ## Glossaire
 

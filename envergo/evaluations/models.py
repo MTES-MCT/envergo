@@ -14,7 +14,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
-from django.http import QueryDict
+from django.http import HttpRequest, QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -45,6 +45,28 @@ EPSG_MERCATOR = 3857
 USER_TYPES = Choices(
     ("instructor", "Un service instruction urbanisme"),
     ("petitioner", "Un porteur de projet ou maître d'œuvre"),
+)
+
+ACTIONS_TO_TAKE = Choices(
+    (
+        "mention_arrete_lse",
+        "Mentionner dans l’arrêté le différé de réalisation des travaux",
+    ),
+    ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
+    ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
+    ("etude_zh_lse", "LSE > Réaliser un inventaire zones humides"),
+    ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
+    ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
+    ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
+    ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
+    ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
+    ("etude_zh_n2000", "Natura 2000 > Réaliser un inventaire zones humides"),
+    ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
+    (
+        "pc_cas_par_cas",
+        "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
+    ),
+    ("pc_ein", "L’évaluation des incidences Natura 2000"),
 )
 
 
@@ -107,6 +129,34 @@ RESULTS = Choices(
     ("soumis_autorisation", "Autorisation"),
 )
 
+RESULT_CASCADE = [
+    RESULTS.interdit,
+    RESULTS.systematique,
+    RESULTS.cas_par_cas,
+    RESULTS.soumis_ou_pac,
+    RESULTS.soumis_declaration,
+    RESULTS.soumis,
+    RESULTS.soumis_autorisation,
+    RESULTS.derogation_inventaire,
+    RESULTS.derogation_simplifiee,
+    RESULTS.dispense_sous_condition,
+    RESULTS.action_requise,
+    RESULTS.a_verifier,
+    RESULTS.iota_a_verifier,
+    RESULTS.non_soumis,
+    RESULTS.dispense,
+    RESULTS.non_concerne,
+    RESULTS.non_disponible,
+    RESULTS.non_applicable,
+    RESULTS.non_active,
+]
+
+_missing_results = [key for (key, label) in RESULTS if key not in RESULT_CASCADE]
+if _missing_results:
+    raise ValueError(
+        f"The following RESULTS are missing in RESULT_CASCADE: {_missing_results}"
+    )
+
 
 # All possible result codes for a single evaluation
 # This is for legacy evaluations only
@@ -146,6 +196,8 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.dispense_sous_condition: TagStyleEnum.Orange,
     RESULTS.soumis_declaration: TagStyleEnum.LightRed,
     RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
+    "declaration": TagStyleEnum.Green,
+    "autorisation": TagStyleEnum.LightRed,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
@@ -270,6 +322,9 @@ class Evaluation(models.Model):
         _("Send evaluation to project sponsor"), default=True
     )
     is_icpe = models.BooleanField(_("Is ICPE?"), default=False)
+    display_actions_to_take = models.BooleanField(
+        "Afficher les actions à mener ?", default=False
+    )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     updated_at = models.DateTimeField(_("Date updated"), auto_now=True)
 
@@ -312,21 +367,14 @@ class Evaluation(models.Model):
 
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
-        from envergo.moulinette.forms import MoulinetteFormAmenagement
         from envergo.moulinette.models import MoulinetteAmenagement
-        from envergo.moulinette.utils import compute_surfaces
 
         if not hasattr(self, "_moulinette"):
-            raw_params = self.moulinette_params
-            raw_params.update(compute_surfaces(raw_params))
-            form = MoulinetteFormAmenagement(
-                raw_params
-            )  # there is only Amenagement evaluations
-            form.is_valid()
-            params = form.cleaned_data
+            data = self.moulinette_params
+            moulinette_data = {"initial": data, "data": data}
             self._moulinette = (
                 MoulinetteAmenagement(  # there is only Amenagement evaluations
-                    params, raw_params
+                    moulinette_data
                 )
             )
 
@@ -380,11 +428,15 @@ class Evaluation(models.Model):
         evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
         share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
 
+        emulated_request = HttpRequest()
+        emulated_request.GET = QueryDict(urlparse(self.moulinette_url).query)
+
         context = {
             "evaluation": self,
             "moulinette": moulinette,
             "evaluation_url": evaluation_url,
             "share_print_url": share_print_url,
+            **moulinette.get_extra_context(emulated_request),
         }
         context.update(moulinette.catalog)
         content = render_to_string(template, context)
@@ -855,3 +907,54 @@ class RecipientStatus(models.Model):
                 name="unique_index", fields=["regulatory_notice_log", "recipient"]
             )
         ]
+
+
+class EvaluationAction(models.Model):
+    """Actions to take listed in an evaluation and debug page
+
+    Actions to take are displayed in an evaluation if :
+    - ACTIONS_TO_TAKE_MATRIX is setted in a related Regulation or Criterion evaluator class
+    - Display actions to take is True in Evaluation object
+    """
+
+    slug = models.CharField(
+        "Référence de l'action",
+        max_length=50,
+        choices=ACTIONS_TO_TAKE,
+        unique=True,
+    )
+    type = models.CharField(
+        "Type d'action",
+        max_length=20,
+        choices=Choices(
+            ("action", "Action"),
+            ("pc", "Pièce complémentaire"),
+        ),
+    )
+    target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
+    order = models.PositiveIntegerField("Ordre", default=1)
+
+    label = models.TextField(
+        verbose_name="Titre affiché",
+        help_text="Texte de niveau 1",
+    )
+    details = models.TextField(
+        verbose_name="Détails",
+        help_text="Texte de niveau 2, contenu HTML évalué comme un template.",
+    )
+
+    documents_to_attach = ArrayField(
+        models.CharField(max_length=255),
+        verbose_name="référence des pièces complémentaires",
+        help_text="Valeurs séparées par des virgules sans espace",
+        blank=True,
+        default=list,
+    )
+
+    def __str__(self):
+        return self.get_slug_display()
+
+    class Meta:
+        verbose_name = "Action à mener"
+        verbose_name_plural = "Actions à mener"
+        ordering = ["order"]

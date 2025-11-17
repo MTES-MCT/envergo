@@ -15,11 +15,13 @@
       <li>{% field_summary field %}</li>
     {% endfor %}
   </ul>
-  <hr class="separator fr-mb-3w" />
+  <hr class="separator" />
   <ul class="fr-mb-3w">
     {% for field in moulinette.main_form %}
       {% block main_form_field %}
-        <li>{% field_summary field %}</li>
+        {% if not field.name in moulinette.get_triage_params %}
+          <li>{% field_summary field %}</li>
+        {% endif %}
       {% endblock %}
     {% endfor %}
     {% include 'moulinette/_additional_specifications.html' with params=moulinette.raw_data %}
@@ -61,9 +63,12 @@
 
   {% if has_hedges_outside_department %}
     <div class="fr-alert fr-alert--warning fr-mb-4w">
-      <h3 class="fr-alert__title">Au moins une des haies est située hors du département</h3>
+      <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
       <p>
-        Au moins une des haies est située en dehors du département choisi pour cette simulation – {{ config.department }}. Vérifiez que vous avez choisi le bon département en début de simulation, ou <a href="{% url 'contact_us' %}" target="_blank" rel="noopener">contactez le guichet unique</a> si le projet est à cheval sur plusieurs départements.
+        Au moins un des linéaires saisi est situé hors du département choisi pour cette simulation – {{ config.department }}.
+      </p>
+      <p>
+        Vous pouvez poursuivre la simulation si le projet est en majorité situé dans ce département, mais la décision de l'administration pourra différer du résultat du simulateur. <a href="{% url 'contact_us' %}">Contactez-nous</a> pour toute question.
       </p>
     </div>
   {% endif %}
@@ -73,7 +78,7 @@
   {% for result, regulations in moulinette.get_regulations_by_group.items %}
     {% if result.name == "BlockingRegulations" %}
       <h3>Réglementations interdisant le projet</h3>
-    {% elif result.name == "RestrictiveRegulations" and moulinette.result != "soumis" %}
+    {% elif result.name == "RestrictiveRegulations" and moulinette.result == "interdit" %}
       <h3>Autres réglementations concernant le projet</h3>
     {% elif result.name == "RestrictiveRegulations" %}
       <h3>Réglementations concernant le projet</h3>

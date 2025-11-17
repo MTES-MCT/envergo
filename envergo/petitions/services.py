@@ -201,6 +201,24 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
     return context
 
 
+def get_field_data_from_ds_dossier(field_id, dossier):
+    """Get field value from dossier DS with id"""
+    champs = dossier.champs
+    field = next(
+        (champ for champ in champs if champ.id == field_id),
+        None,
+    )
+    if not field:
+        return None
+    item = Item(
+        field.label,
+        get_item_value_from_ds_champ(field),
+        None,
+        None,
+    )
+    return item
+
+
 def extract_data_from_fields(config, dossier):
     """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
     city = ""
@@ -306,7 +324,7 @@ def get_messages_and_senders_from_ds(
     return messages, instructor_emails, petitioner_email
 
 
-def send_message_dossier_ds(petition_project, message_body):
+def send_message_dossier_ds(petition_project, message_body, attachment_file=None):
     """Send message via DS API for a given dossier"""
 
     # Get dossier ID
@@ -317,7 +335,14 @@ def send_message_dossier_ds(petition_project, message_body):
 
     # Send message
     ds_client = DemarchesSimplifieesClient()
-    response = ds_client.dossier_send_message(dossier_number, dossier_id, message_body)
+    if attachment_file:
+        response = ds_client.dossier_send_message(
+            dossier_number, dossier_id, message_body, attachment_file
+        )
+    else:
+        response = ds_client.dossier_send_message(
+            dossier_number, dossier_id, message_body
+        )
 
     return response
 

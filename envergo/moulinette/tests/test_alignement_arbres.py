@@ -56,15 +56,16 @@ def moulinette_data(type_haie, bord_voie, motif):
             }
         ]
     )
-    return {
+    data = {
         "motif": motif,
         "reimplantation": "replantation",
         "localisation_pac": "non",
         "haies": hedges,
         "travaux": "destruction",
         "element": "haie",
-        "department": 44,
+        "department": "44",
     }
+    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize(
@@ -95,8 +96,7 @@ def test_moulinette_evaluation(
     moulinette_data, expected_result_code, expected_result, expected_r
 ):
     ConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data, moulinette_data)
-    moulinette.evaluate()
+    moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.alignement_arbres.result == expected_result
     assert (
         moulinette.alignement_arbres.alignement_arbres.result_code

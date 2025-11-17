@@ -8,13 +8,14 @@ import factory
 import pytest
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
-from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
+from envergo.geodata.tests.factories import Department34Factory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
@@ -27,6 +28,8 @@ from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
+    FILE_TEST_NOK_PATH,
+    FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
@@ -39,36 +42,9 @@ from envergo.petitions.views import (
     PetitionProjectCreationAlert,
     PetitionProjectInstructorView,
 )
-from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def inactive_haie_user_44() -> User:
-    """Haie user with dept 44"""
-    haie_user_44 = UserFactory(
-        access_amenagement=False,
-        access_haie=True,
-        is_active=False,
-    )
-    department_44 = DepartmentFactory.create()
-    haie_user_44.departments.add(department_44)
-    return haie_user_44
-
-
-@pytest.fixture
-def instructor_haie_user_44() -> User:
-    """Haie user with dept 44"""
-    instructor_haie_user_44 = UserFactory(
-        is_active=True,
-        access_amenagement=False,
-        access_haie=True,
-    )
-    department_44 = DepartmentFactory.create()
-    instructor_haie_user_44.departments.add(department_44)
-    return instructor_haie_user_44
 
 
 @pytest.fixture()
@@ -155,7 +131,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "champ_789": "http://haie.local:3000/projet/ABC123",
         "champ_abc": "true",
         "champ_def": "false",
-        "champ_ghi": "true",
+        "champ_ghi": "false",
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
@@ -219,10 +195,7 @@ def test_petition_project_detail(mock_post, client, site):
     assert "moulinette" in response.context
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
     assert response.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département"
-        in response.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" in response.content.decode()
 
     # Given hedges in department 44 and accross the department border
     hedge_44 = HedgeFactory(
@@ -250,8 +223,7 @@ def test_petition_project_detail(mock_post, client, site):
     # THEN I should see that there is no hedges to remove outside the department
     assert not response.context["has_hedges_outside_department"]
     assert (
-        "Au moins une des haies est située hors du département"
-        not in response.content.decode()
+        "Le projet est hors du département sélectionné" not in response.content.decode()
     )
 
 
@@ -577,12 +549,40 @@ def test_petition_project_instructor_messagerie_ds(
 
     # Test send message
     assert not Event.objects.filter(category="message", event="envoi").exists()
+
+    # Given a message and attachment image file
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+
+    # WHEN I post message
     mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
-    message_data = {"message_body": "test"}
     response = client.post(instructor_messagerie_url, message_data, follow=True)
+
+    # THEN I receive ok response and an event is created
     content = response.content.decode()
     assert "Le message a bien été envoyé au demandeur." in content
     assert Event.objects.filter(category="message", event="envoi").exists()
+
+    # GIVEN a message and doc attachment unauthorized extension
+    attachment = SimpleUploadedFile(
+        FILE_TEST_NOK_PATH.name, FILE_TEST_NOK_PATH.read_bytes()
+    )
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    # WHEN I post message
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    response = client.post(instructor_messagerie_url, message_data, follow=True)
+    # THEN I receive nok response
+    content = response.content.decode()
+    assert (
+        "Le message n’a pas pu être envoyé.\nVérifiez que la pièce jointe respecte les conditions suivantes"
+        in content
+    )  # noqa
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -929,7 +929,7 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
     content = res.content.decode()
     assert "<b>Simulation alternative</b> à la simulation initiale" in content
     assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/?alternative=true";'
+        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/pre-rempli/?alternative=true";'
         in content
     )
 
@@ -991,10 +991,7 @@ def test_instructor_view_with_hedges_outside_department(
 
     # THEN the result page is displayed with a warning
     assert res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située en dehors du département"
-        in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" in res.content.decode()
 
     # Given hedges in department 44 and accross the department border
     hedge_44 = HedgeFactory(
@@ -1019,10 +1016,7 @@ def test_instructor_view_with_hedges_outside_department(
 
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
-    assert (
-        "Au moins une des haies est située hors du département"
-        not in res.content.decode()
-    )
+    assert "Le projet est hors du département sélectionné" not in res.content.decode()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -1230,3 +1224,60 @@ def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
     # THEN there is a "Ne plus suivre" button to stop following up the project
     assert response.status_code == 200
     assert 'type="submit">Ne plus suivre</button>' in response.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_invited_instructor_cannot_see_send_message_button(
+    client, instructor_haie_user_44, haie_user
+):
+    client.force_login(instructor_haie_user_44)
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+    res = client.get(messagerie_url)
+    assert "Nouveau message</button>" in res.content.decode()
+
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    res = client.get(messagerie_url)
+    assert "Nouveau message</button>" not in res.content.decode()
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_petition_invited_instructor_cannot_send_message(
+    mock_ds_query_execute, client, instructor_haie_user_44, haie_user
+):
+    client.force_login(instructor_haie_user_44)
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+    res = client.post(messagerie_url, message_data, follow=True)
+    assert res.status_code == 200
+
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    message_data = {
+        "message_body": "test",
+        "additional_file": attachment,
+    }
+    res = client.post(messagerie_url, message_data, follow=True)
+    assert res.status_code == 403

@@ -25,6 +25,7 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
+    EvaluationAction,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -83,13 +84,13 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
         moulinette_url = cleaned_data.get("moulinette_url", None)
         if moulinette_url:
             parsed_url = urlparse(moulinette_url)
-            query = QueryDict(parsed_url.query)
+            data = QueryDict(parsed_url.query).dict()
+            moulinette_data = {"initial": data, "data": data}
             MoulinetteClass = get_moulinette_class_from_url(moulinette_url)
-            MoulinetteForm = MoulinetteClass.get_main_form_class()
-            moulinette_form = MoulinetteForm(data=query)
-            if not moulinette_form.is_valid():
+            moulinette = MoulinetteClass(moulinette_data)
+            if not moulinette.is_valid():
                 self.add_error("moulinette_url", _("The moulinette url is invalid."))
-                for field, errors in moulinette_form.errors.items():
+                for field, errors in moulinette.form_errors().items():
                     for error in errors:
                         self.add_error(
                             "moulinette_url", mark_safe(f"{field} : {error}")
@@ -153,7 +154,14 @@ class EvaluationAdmin(admin.ModelAdmin):
         ),
         (
             "Contenu de l'avis réglementaire",
-            {"fields": ("moulinette_url", "is_icpe", "details_md")},
+            {
+                "fields": (
+                    "moulinette_url",
+                    "is_icpe",
+                    "display_actions_to_take",
+                    "details_md",
+                )
+            },
         ),
         (
             _("Sent emails"),
@@ -397,7 +405,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                 subject=eval_email.subject,
                 txt_body=eval_email.body,
                 html_body=eval_email.alternatives[0][0],
-                moulinette_data=moulinette.raw_data,
+                moulinette_data=moulinette.data,
                 moulinette_result=moulinette.result_data(),
                 message_id=message_id,
             )
@@ -711,3 +719,14 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
+
+
+@admin.register(EvaluationAction)
+class EvaluationAction(admin.ModelAdmin):
+
+    list_display = [
+        "slug",
+        "type",
+        "target",
+        "order",
+    ]

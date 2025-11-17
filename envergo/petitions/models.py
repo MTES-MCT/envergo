@@ -52,8 +52,8 @@ STAGES = Choices(
 
 DECISIONS = Choices(
     ("unset", "À déterminer"),
-    ("express_agreement", "Accord exprès"),
     ("tacit_agreement", "Accord tacite"),
+    ("express_agreement", "Accord exprès"),
     ("opposition", "Opposition"),
     ("dropped", "Classé sans suite"),
 )
@@ -309,11 +309,8 @@ class PetitionProject(models.Model):
         """Recreate moulinette from moulinette url and hedge data"""
         moulinette_data = self._parse_moulinette_data()
         moulinette_data["haies"] = self.hedge_data
-        moulinette = MoulinetteHaie(
-            moulinette_data,
-            moulinette_data,
-            False,
-        )
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
         return moulinette
 
     def get_triage_form(self):
@@ -466,11 +463,18 @@ class StatusLog(models.Model):
     update_comment = models.TextField(
         "Commentaire",
         help_text="Ajouter un commentaire expliquant le contexte du changement.",
+        blank=True,
     )
     status_date = models.DateField(
         "Date effective du changement",
-        help_text="Vous pouvez choisir une date rétroactive si nécessaire.",
+        help_text="Par défaut, la date du jour. Il est possible de choisir une date passée si le changement est "
+        "rétroactif.",
         default=timezone.now,
+    )
+    due_date = models.DateField(
+        "Date de prochaine échéance",
+        null=True,
+        blank=True,
     )
 
     # Meta fields

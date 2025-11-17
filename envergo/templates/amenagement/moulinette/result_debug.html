@@ -63,7 +63,7 @@
           <ul>
             {% for perimeter in map.list %}
               <li>
-                <a href="{% url 'admin:moulinette_perimeter_change' perimeter.id %}">{{ perimeter }}</a>
+                <a href="{% url 'admin:moulinette_perimeter_change' perimeter.id %}">{{ perimeter.name }}</a>
               </li>
             {% endfor %}
           </ul>
@@ -162,6 +162,23 @@
         {% endfor %}
       </ul>
     {% endfor %}
+
+    <h2>Liste des actions à mener</h2>
+
+    {% if moulinette.actions_to_take %}
+      <ul>
+        {% for target, actions in moulinette.actions_to_take.items %}
+          <li>
+            {{ target }}
+            <ul>
+              {% for action in actions %}<li>{{ action }}</li>{% endfor %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Aucune</p>
+    {% endif %}
 
     <h2>Catalogue de données</h2>
 

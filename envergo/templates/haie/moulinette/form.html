@@ -10,22 +10,11 @@
             method="post"
             novalidate
             autocomplete="off"
-            action="{% url 'moulinette_home' %}?{{ request.GET.urlencode }}"
+            action="{% url 'moulinette_form' %}?{{ request.GET.urlencode|safe }}"
             id="moulinette-form">
         {% csrf_token %}
 
         {% include '_form_header.html' with form=form %}
-
-        <!-- Include current query parameters as hidden fields to keep Triage inputs -->
-        <input type="hidden"
-               name="department"
-               value="{{ request.GET.department|default:'' }}" />
-        <input type="hidden"
-               name="element"
-               value="{{ request.GET.element|default:'' }}" />
-        <input type="hidden"
-               name="travaux"
-               value="{{ request.GET.travaux|default:'' }}" />
 
         <div class="form-section">{% include '_radio_snippet.html' with field=form.motif %}</div>
         <div class="form-section">{% include '_radio_snippet.html' with field=form.reimplantation %}</div>
@@ -36,7 +25,7 @@
                class="hedges-input fr-input-group required {% if form.haies.errors %}fr-input-group--error{% endif %}">
             <div id="group-haies-content">
               <label for="id_haies">Localisation des haies à détruire</label>
-              {% with hedges_to_remove=form.cleaned_data.haies.hedges_to_remove %}
+              {% with hedges_to_remove=hedge_data.hedges_to_remove %}
                 {% if hedges_to_remove|length > 0 %}
                   <div id="statistics-container" class="fr-mb-3w">
                     <div id="statistics" class="fr-mb-3w">
@@ -44,11 +33,11 @@
                         {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                       </p>
                       <p>
-                        Linéaire total : <span id="length-to-remove">{{ form.cleaned_data.haies.length_to_remove|floatformat:0 }}</span> m
+                        Linéaire total : <span id="length-to-remove">{{ hedge_data.length_to_remove|floatformat:0 }}</span> m
                       </p>
-                      {% if form.cleaned_data.haies.lineaire_detruit_pac_including_alignement > 0 %}
+                      {% if hedge_data.lineaire_detruit_pac_including_alignement > 0 %}
                         <p>
-                          {{ form.cleaned_data.haies.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
+                          {{ hedge_data.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
                           parcelles PAC
                         </p>
                       {% else %}

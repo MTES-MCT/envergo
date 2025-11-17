@@ -67,15 +67,15 @@
   </div>
 {% endif %}
 
+{% if evaluation.display_actions_to_take %}
+  {% include 'evaluations/_actions_to_take.html' %}
+{% endif %}
+
 {% if evaluation.details_html %}
   <div class="fr-callout evaluation-comment fr-mb-5w">
     <h3 class="fr-callout__title">Commentaire de l'équipe Envergo</h3>
     <div class="fr-callout__text">{{ evaluation.details_html|safe }}</div>
   </div>
-{% endif %}
-
-{% if evaluation.is_eligible_to_self_declaration %}
-  {% include 'evaluations/_self_declaration_cta.html' %}
 {% endif %}
 
 {% for regulation in moulinette.regulations %}

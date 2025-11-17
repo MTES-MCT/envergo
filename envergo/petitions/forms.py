@@ -1,7 +1,10 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from django.forms.fields import FileField
 
 from envergo.petitions.models import PetitionProject, StatusLog
+from envergo.utils.fields import ProjectStageField
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -57,6 +60,19 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         }
 
 
+def validate_file_size(value):
+    size_limit = 20 * 1024 * 1024  # 20 mb
+    if value.size > size_limit:
+        raise ValidationError(
+            "Le message n'a pas pu être envoyé car la pièce jointe dépasse la taille maximale autorisée de 20 Mo."
+        )
+
+
+validate_extension = FileExtensionValidator(
+    allowed_extensions=["png", "jpg", "jpeg", "pdf", "zip"],
+)
+
+
 class PetitionProjectInstructorMessageForm(forms.Form):
     """Form to send a message through demarches simplifiées API."""
 
@@ -67,14 +83,52 @@ class PetitionProjectInstructorMessageForm(forms.Form):
         ),
     )
 
+    additional_file = FileField(
+        label="Pièce jointe",
+        required=False,
+        help_text="""Une seule pièce jointe est autorisée par message.<br>
+            Formats autorisés : images (png, jpg), pdf, zip.<br>
+            Taille maximale autorisée : 20 Mo.
+        """,
+        validators=[validate_file_size, validate_extension],
+    )
+
     class Meta:
-        fields = [
-            "message_body",
-        ]
+        fields = ["message_body", "additional_file"]
 
 
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage."""
+
+    class Meta:
+        model = StatusLog
+        fields = [
+            "stage",
+            "due_date",
+            "decision",
+            "status_date",
+            "update_comment",
+        ]
+        help_texts = {
+            "update_comment": "Commentaire interne expliquant le contexte et les raisons du changement.",
+        }
+        labels = {
+            "due_date": "Échéance de l'étape",
+        }
+        widgets = {
+            "stage": ProjectStageField(),
+            "update_comment": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+        self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+        # Pass field errors to the widget after validation
+        for name, field in self.fields.items():
+            bound_field = self[name]
+            if bound_field.errors:
+                field.widget.errors = bound_field.errors
 
     def clean(self):
         cleaned_data = super().clean()
@@ -121,15 +175,3 @@ class ProcedureForm(forms.ModelForm):
             )
 
         return cleaned_data
-
-    class Meta:
-        model = StatusLog
-        fields = [
-            "stage",
-            "decision",
-            "status_date",
-            "update_comment",
-        ]
-        help_texts = {
-            "stage": "Un dossier dans l'étape « à instruire » est encore modifiable par le pétitionnaire.",
-        }

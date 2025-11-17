@@ -1,0 +1,16 @@
+<h6>
+  📃 <strong>Le projet est interdit</strong>, au titre d’une ou plusieurs réglementations.
+</h6>
+
+<p>Pour rendre le projet autorisable, des options sont proposées dans le détail des réglementations ci-dessous.</p>
+
+{% if not is_read_only %}
+  <p>
+    Nous vous invitons à <a href="{{ edit_url }}">modifier votre projet</a> dans le simulateur.
+  </p>
+
+  <p>
+    <a href="{{ edit_url }}"
+       class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line spinner-link">Modifier le projet</a>
+  </p>
+{% endif %}
