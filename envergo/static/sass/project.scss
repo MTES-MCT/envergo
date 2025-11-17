@@ -1947,7 +1947,7 @@ img.moulinette-incentive-img {
 
 :root[data-fr-theme="dark"] {
   .dark-only {
-    display: inherit;
+    display: inherit !important;
   }
 
   .light-only {
