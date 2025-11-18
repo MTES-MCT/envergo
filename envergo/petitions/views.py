@@ -1247,6 +1247,8 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         interruption_days = status.info_receipt_date - status.suspension_date
         if status.original_due_date:
             status.due_date = status.original_due_date + interruption_days
+        else:
+            status.due_date = None
         status.save()
 
         # Send Mattermost notification
