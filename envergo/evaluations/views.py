@@ -50,7 +50,7 @@ from envergo.evaluations.tasks import (
 from envergo.evaluations.utils import extract_department_from_address_or_city_string
 from envergo.geodata.models import Department
 from envergo.moulinette.views import MoulinetteMixin
-from envergo.utils.urls import update_qs
+from envergo.utils.urls import remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -157,9 +157,9 @@ class EvaluationDetail(
         context["is_map_static"] = True
         context["source"] = "evaluation"
         current_url = self.request.build_absolute_uri()
-
-        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-ar"})
-        share_print_url = update_qs(current_url, {"mtm_campaign": "print-ar"})
+        current_url_mtm_free = remove_mtm_params(current_url)
+        share_btn_url = update_qs(current_url_mtm_free, {"mtm_campaign": "share-ar"})
+        share_print_url = update_qs(current_url_mtm_free, {"mtm_campaign": "print-ar"})
 
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
