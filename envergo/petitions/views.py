@@ -178,6 +178,8 @@ class PetitionProjectCreate(FormView):
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
                 petition_project.save()
 
+                StatusLog.objects.create(petition_project=petition_project)
+
                 log_event(
                     "dossier",
                     "creation",
