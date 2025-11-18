@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from envergo.petitions.models import PetitionProject, StatusLog
 from envergo.utils.fields import ProjectStageField
@@ -194,8 +195,6 @@ def three_months_from_now():
 def request_for_info_message():
     """Format the default text for request for information message."""
     date = three_months_from_now()
-    from django.utils.formats import date_format
-
     date_fmt = date_format(date, "d F Y")
     message = dedent(
         f"""
