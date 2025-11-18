@@ -353,3 +353,21 @@ def test_moulinette_form_surface_field(client):
         res.url
         == "/simulateur/resultat/?created_surface=1500&existing_surface=0&final_surface=1500&address=&lng=-1.54394&lat=47.21381"  # noqa
     )
+
+
+def test_previous_mtm_params_are_removed_before_new_campaign(client):
+    ConfigAmenagementFactory(is_activated=True)
+
+    url = reverse("moulinette_result")
+    params = (
+        "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+        "&mtm_campaign=old_campaign&mtm_source=old_source&mtm_keyword=old_keyword"
+    )
+    full_url = f"{url}?{params}"
+    response = client.get(full_url)
+
+    assert response.context is not None
+    assert "share_btn_url" in response.context
+    assert "old_source" not in response.context["share_btn_url"]
+    assert "old_keyword" not in response.context["share_btn_url"]
+    assert "old_campaign" not in response.context["share_btn_url"]

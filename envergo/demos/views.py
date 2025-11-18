@@ -14,7 +14,7 @@ from envergo.geodata.utils import (
     get_catchment_area_pixel_values,
     to_geojson,
 )
-from envergo.utils.urls import update_qs
+from envergo.utils.urls import remove_mtm_params, update_qs
 
 EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
@@ -52,7 +52,9 @@ class LatLngDemoMixin:
         context = super().get_context_data(**kwargs)
 
         current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_campaign": self.mtm_campaign_tag})
+        share_btn_url = update_qs(
+            remove_mtm_params(current_url), {"mtm_campaign": self.mtm_campaign_tag}
+        )
         context["share_btn_url"] = share_btn_url
         context["debug"] = bool(self.request.GET.get("debug", False))
 

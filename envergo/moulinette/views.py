@@ -24,7 +24,7 @@ from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
-from envergo.utils.urls import copy_qs, remove_from_qs, update_qs
+from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
 
 class MoulinetteMixin:
@@ -154,7 +154,7 @@ class MoulinetteMixin:
         """Custom context data related to urls.
 
         We need to build different urls to make linking easier.
-        For example, we dislpay a "share" button that links to the current page
+        For example, we display a "share" button that links to the current page
         with additional mtm params, a "debug" button that links to the
         debug page, etc.
         """
@@ -162,8 +162,11 @@ class MoulinetteMixin:
         moulinette = self.moulinette
 
         current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
-        share_print_url = update_qs(current_url, {"mtm_campaign": "print-simu"})
+        current_url_mtm_free = remove_mtm_params(current_url)
+        share_btn_url = update_qs(current_url_mtm_free, {"mtm_campaign": "share-simu"})
+        share_print_url = update_qs(
+            current_url_mtm_free, {"mtm_campaign": "print-simu"}
+        )
         result_url = remove_from_qs(current_url, "debug")
         debug_result_url = update_qs(current_url, {"debug": "true"})
         form_url = reverse("moulinette_form")
