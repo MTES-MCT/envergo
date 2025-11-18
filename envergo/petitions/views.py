@@ -1220,6 +1220,16 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             )
             notify(message, "haie")
 
+            # Log analytics event
+            log_event(
+                "projet",
+                "suspension_delai",
+                self.request,
+                switch="on",
+                **project.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
             success_message = f"""
             Le message au demandeur a bien été envoyé.
             <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
@@ -1274,6 +1284,16 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             },
         )
         notify(message, "haie")
+
+        # Log analytics event
+        log_event(
+            "projet",
+            "suspension_delai",
+            self.request,
+            switch="off",
+            **project.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
 
         success_message = "L'instruction du dossier a repris."
         messages.success(self.request, success_message)
