@@ -574,3 +574,7 @@ class StatusLog(models.Model):
         """Are we currently waiting for additional info?"""
 
         return self.suspension_date is not None and self.info_receipt_date is None
+
+    @property
+    def is_closed(self):
+        return self.stage == STAGES.closed

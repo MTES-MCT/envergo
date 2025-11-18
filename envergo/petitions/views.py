@@ -1058,7 +1058,10 @@ class PetitionProjectInstructorProcedureView(
             }
         )
 
-        if self.has_edit_permission(self.request.user, self.object):
+        if (
+            self.has_edit_permission(self.request.user, self.object)
+            and not obj.current_status.is_closed
+        ):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
             context.update(
