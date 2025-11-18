@@ -25,7 +25,7 @@
     }
 
     activate() {
-      this.elt.disabled = false;
+      this.spinnerElt.disabled = false;
       this.spinnerElt.classList.remove("icon-spinner");
       let textElt = this.spinnerElt.parentNode.querySelector('.submit-feedback-hint-text');
       if (textElt) {
@@ -34,7 +34,7 @@
     }
 
     deactivate() {
-      this.elt.disabled = true;
+      this.spinnerElt.disabled = true;
       this.spinnerElt.classList.add("icon-spinner");
 
       let textElt = document.createElement('span');
