@@ -164,26 +164,28 @@ class PetitionProject(models.Model):
         super().save(*args, **kwargs)
 
     @cached_property
-    def latest_log(self):
+    def current_status(self):
         # Make sure the `status_history` is prefetched with the correct ordering
         log = self.status_history.first()
         return log
 
     @property
     def current_stage(self):
-        return self.latest_log.stage if self.latest_log else STAGES.to_be_processed
+        return (
+            self.current_status.stage if self.current_status else STAGES.to_be_processed
+        )
 
     @property
     def current_decision(self):
-        return self.latest_log.decision if self.latest_log else DECISIONS.unset
+        return self.current_status.decision if self.current_status else DECISIONS.unset
 
     @property
     def due_date(self):
-        return self.latest_log.due_date if self.latest_log else None
+        return self.current_status.due_date if self.current_status else None
 
     @property
     def is_paused(self):
-        return self.latest_log.is_paused if self.latest_log else False
+        return self.current_status.is_paused if self.current_status else False
 
     def get_department_code(self):
         """Get department from moulinette url"""
@@ -565,8 +567,14 @@ class StatusLog(models.Model):
                 check=q_receipt_date, name="receipt_date_data_is_consistent"
             ),
         ]
+        ordering = ["-created_at"]
 
     @property
     def is_paused(self):
         """Are we currently waiting for additional info?"""
-        return self.suspension_date and not self.info_receipt_date
+
+        return self.suspension_date is not None and self.info_receipt_date is None
+
+    @property
+    def is_closed(self):
+        return self.stage == STAGES.closed

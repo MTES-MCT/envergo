@@ -1316,3 +1316,87 @@ def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44,
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
     assert "Demander des compléments" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.views.send_message_dossier_ds")
+def test_petition_project_request_for_info(
+    mock_ds_msg, client, instructor_haie_user_44, site
+):
+    """Instructors can request for additional info."""
+
+    client.force_login(instructor_haie_user_44)
+    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    today = date.today()
+    next_month = today + timedelta(days=30)
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory(status__due_date=today)
+    assert project.due_date == today
+    assert project.is_paused is False
+
+    # Request for additional info
+    rai_url = reverse(
+        "petition_project_instructor_request_info_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "response_due_date": next_month,
+        "request_message": "Test",
+    }
+    res = client.post(rai_url, form_data, follow=True)
+    assert res.status_code == 200
+    assert "Le message au demandeur a bien été envoyé." in res.content.decode()
+
+    project.refresh_from_db()
+    project.current_status.refresh_from_db()
+    assert project.is_paused is True
+    assert project.current_status.due_date == next_month
+    assert project.current_status.original_due_date == today
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.views.send_message_dossier_ds")
+def test_petition_project_resume_instruction(
+    mock_ds_msg, client, instructor_haie_user_44, site
+):
+    """Instructors can resume_instruction."""
+
+    client.force_login(instructor_haie_user_44)
+    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    today = date.today()
+    last_month = today - timedelta(days=30)
+    next_month = today + timedelta(days=30)
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__suspension_date=last_month,
+        status__original_due_date=today,
+        status__due_date=next_month,
+        status__response_due_date=next_month,
+    )
+    assert project.is_paused is True
+    assert project.due_date == next_month
+
+    # Request for additional info
+    rai_url = reverse(
+        "petition_project_instructor_request_info_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "info_receipt_date": today,
+    }
+    res = client.post(rai_url, form_data, follow=True)
+    assert res.status_code == 200
+    assert "L'instruction du dossier a repris." in res.content.decode()
+
+    project.refresh_from_db()
+    project.current_status.refresh_from_db()
+    assert project.is_paused is False
+    assert project.current_status.due_date == next_month

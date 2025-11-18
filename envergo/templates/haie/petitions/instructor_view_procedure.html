@@ -21,43 +21,76 @@
 
       <div id="due-date-container" class="fr-mb-3w">
 
-        {% if petition_project.is_paused and resume_processing_form %}
+        {% if petition_project.is_paused %}
           <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
             <b>En attente de compléments</b>
             <br />
             {% display_due_date petition_project.due_date %}
 
-            <form method="post"
-                  action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}"
-                  class="fr-mt-1w">
-              {% csrf_token %}
-              {% include '_form_snippet.html' with form=resume_processing_form %}
-              <button type="submit" class="fr-btn fr-btn--primary">Reprendre l'instruction</button>
-            </form>
+            {% if resume_processing_form %}
+              <div class="fr-mt-1w">
+                <button type="button"
+                        class="fr-btn fr-btn--primary hide-expanded"
+                        aria-expanded="false"
+                        aria-controls="resume-form">Reprendre l'instruction</button>
+              </div>
+
+              <div id="resume-form" class="fr-collapse">
+                <h4>Reprendre l'instruction</h4>
+
+                <form method="post"
+                      action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}"
+                      class="fr-mt-1w">
+                  {% csrf_token %}
+                  {% include '_form_snippet.html' with form=resume_processing_form %}
+
+                  {% if petition_project.current_status.original_due_date %}
+                    <div class="fr-input-group">
+                      <label for="" class="fr-label">
+                        <span class="label-content fr-text--bold">Nouvelle échéance d'instructions</span>
+                        <span class="fr-text--light">(calcul auto)</span>
+                      </label>
+
+                      <input id="id_new_due_date"
+                             type="date"
+                             disabled="disabled"
+                             class="fr-input"
+                             data-suspension-date="{{ petition_project.current_status.suspension_date|date:"c" }}"
+                             data-original-due-date="{{ petition_project.current_status.original_due_date|date:"c" }}">
+                    </div>
+                  {% endif %}
+
+                  <button type="button"
+                          class="fr-btn fr-btn--secondary"
+                          aria-expanded="false"
+                          aria-controls="resume-form">Annuler</button>
+
+                  <button type="submit" class="fr-btn fr-btn--primary">Reprendre l'instruction</button>
+                </form>
+              </div>
+            {% endif %}
 
           </div>
-
-          <p>
-            <strong>Échéance avant la suspension</strong>
-            <br />
-            {% if petition_project.latest_log.original_due_date %}
-              <span class="due-date fr-text--sm">
-                <span class="fr-icon-timer-line fr-icon--sm"></span>
-                {{ petition_project.latest_log.original_due_date|date:"DATE_FORMAT" }}
-              </span>
-            {% else %}
-              <abbr title="Non disponible">ND</abbr>
-            {% endif %}
-          </p>
 
           <p>
             <strong>Date de la suspension</strong>
             <br />
             <span class="due-date fr-text--sm">
               <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
-              {{ petition_project.latest_log.suspension_date|date:"DATE_FORMAT" }}
+              {{ petition_project.current_status.suspension_date|date:"DATE_FORMAT" }}
             </span>
           </p>
+
+          {% if petition_project.current_status.original_due_date %}
+            <p>
+              <strong>Échéance d'instruction avant la suspension</strong>
+              <br />
+              <span class="due-date fr-text--sm">
+                <span class="fr-icon-timer-line fr-icon--sm"></span>
+                {{ petition_project.current_status.original_due_date|date:"DATE_FORMAT" }}
+              </span>
+            </p>
+          {% endif %}
 
         {% else %}
 
@@ -73,7 +106,7 @@
 
       {% if request_info_form and not petition_project.is_paused %}
         <button type="button"
-                class="fr-btn fr-btn--secondary fr-mb-3w"
+                class="fr-btn fr-btn--secondary fr-mb-3w hide-expanded"
                 aria-expanded="false"
                 aria-controls="rai-date-form">Demander des compléments</button>
 
@@ -109,7 +142,7 @@
     <button class="fr-btn"
             {% if petition_project.demarches_simplifiees_state == "draft" %}disabled{% endif %}
             data-fr-opened="{% if form.errors %}true{% else %}false{% endif %}"
-            aria-controls="procedure-modal">Modifier</button>
+            aria-controls="procedure-modal">Modifier l'état du dossier</button>
     {% if petition_project.demarches_simplifiees_state == "draft" %}
       <span class="fr-hint-text">Ce dossier n'a pas encore été déposé par le pétitionnaire.</span>
     {% endif %}
@@ -197,6 +230,18 @@
 
 {% block extra_js %}
   {{ block.super }}
+  <script defer src="{% static 'js/libs/sync_new_due_date.js' %}"></script>
+
+  {% if resume_processing_form and petition_project.current_status.original_due_date %}
+    <script>
+    window.addEventListener("load", function() {
+      let receipt_date_input = document.getElementById("id_info_receipt_date");
+      let due_date_input = document.getElementById("id_new_due_date");
+      new DueDateInput(due_date_input, receipt_date_input);
+    });
+    </script>
+  {% endif %}
+
   <script>
     window.addEventListener('load', function () {
       const displayStageObjective = (stage) => {

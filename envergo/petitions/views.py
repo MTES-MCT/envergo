@@ -13,17 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import (
-    CharField,
-    DateField,
-    Exists,
-    OuterRef,
-    Prefetch,
-    Q,
-    Subquery,
-    Value,
-)
-from django.db.models.functions import Coalesce
+from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -60,7 +50,6 @@ from envergo.petitions.forms import (
     ResumeProcessingForm,
 )
 from envergo.petitions.models import (
-    DECISIONS,
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
@@ -742,17 +731,12 @@ class BasePetitionProjectInstructorView(
     def has_view_permission(self, user, object):
         """Check that the current user has permission to access the project."""
 
-        return self.has_permission(user, object)
+        return object.has_user_as_instructor(user)
 
     def has_edit_permission(self, user, object):
-        """Check that the current user has permission to update the project."""
+        """Authorize edition only for department instructors"""
 
-        return self.has_permission(user, object)
-
-    def has_permission(self, user, object):
-        """Only instructors can edit the project."""
-
-        return object.has_user_as_instructor(user)
+        return object.has_user_as_department_instructor(user)
 
     def log_event_action(self, request):
         if not self.event_action:
@@ -1076,7 +1060,10 @@ class PetitionProjectInstructorProcedureView(
             }
         )
 
-        if self.has_edit_permission(self.request.user, self.object):
+        if (
+            self.has_edit_permission(self.request.user, self.object)
+            and not obj.current_status.is_closed
+        ):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
             context.update(
@@ -1087,11 +1074,6 @@ class PetitionProjectInstructorProcedureView(
             )
 
         return context
-
-    def has_edit_permission(self, user, object):
-        """Authorize edition only for department instructors"""
-
-        return object.has_user_as_department_instructor(user)
 
     def form_valid(self, form):
 
@@ -1170,11 +1152,6 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
 
     http_method_names = ["post"]
 
-    def has_edit_permission(self, user, object):
-        """Authorize only for department instructors"""
-
-        return object.has_user_as_department_instructor(user)
-
     def get_form_class(self):
         if self.object.is_paused:
             form_class = ResumeProcessingForm
@@ -1197,7 +1174,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor requested additional data."""
 
         project = self.object
-        status = project.latest_log
+        status = project.current_status
 
         try:
             with transaction.atomic():
@@ -1214,17 +1191,47 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 
-                if ds_response is None or (
-                    "errors" in ds_response and ds_response["errors"] is not None
-                ):
+                if ds_response is None or ds_response.get("errors") is not None:
                     # We raise an exception to make sure the data model transaction
                     # is aborted
                     raise RuntimeError("DS message not sent")
 
+            # Send Mattermost notification
+            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+            admin_url = reverse(
+                "admin:petitions_petitionproject_change",
+                args=[self.object.pk],
+            )
+            procedure_url = reverse(
+                "petition_project_instructor_procedure_view",
+                kwargs={"reference": self.object.reference},
+            )
             messagerie_url = reverse(
                 "petition_project_instructor_messagerie_view",
                 args=[project.reference],
             )
+            message = render_to_string(
+                "haie/petitions/mattermost_project_request_additional_info.txt",
+                context={
+                    "department": self.object.department,
+                    "reference": self.object.reference,
+                    "admin_url": f"https://{haie_site.domain}{admin_url}",
+                    "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+                    "messagerie_url": f"https://{haie_site.domain}{messagerie_url}",
+                },
+            )
+            notify(message, "haie")
+
+            # Log analytics event
+            log_event(
+                "projet",
+                "suspension_delai",
+                self.request,
+                switch="on",
+                **project.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
             success_message = f"""
             Le message au demandeur a bien été envoyé.
             <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
@@ -1246,13 +1253,17 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor received the requested additional info."""
 
         project = self.object
-        status = project.latest_log
+        status = project.current_status
 
         # Update model data
+        # Compute the new due date, that is the original due date + number of interruption days
+        # Note: if you modify this rule, you must apply the same update in the sync_new_due_date.js file
         status.info_receipt_date = form.cleaned_data["info_receipt_date"]
         interruption_days = status.info_receipt_date - status.suspension_date
         if status.original_due_date:
             status.due_date = status.original_due_date + interruption_days
+        else:
+            status.due_date = None
         status.save()
 
         # Send Mattermost notification
@@ -1275,6 +1286,16 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             },
         )
         notify(message, "haie")
+
+        # Log analytics event
+        log_event(
+            "projet",
+            "suspension_delai",
+            self.request,
+            switch="off",
+            **project.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
 
         success_message = "L'instruction du dossier a repris."
         messages.success(self.request, success_message)

@@ -235,14 +235,18 @@ class RequestAdditionalInfoForm(forms.Form):
     )
 
 
+def today_formatted():
+    """[type=date] input require values formatted in iso 8601."""
+
+    return timezone.now().date().isoformat()
+
+
 class ResumeProcessingForm(forms.Form):
     """Resume instruction processing."""
 
     info_receipt_date = forms.DateField(
         label="Date de réception des pièces",
         required=True,
-        initial=timezone.now,
-        help_text="""
-        La nouvelle échéance d'instruction sera mise à jour automatiquement.
-        """,
+        initial=today_formatted,
+        widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
     )
