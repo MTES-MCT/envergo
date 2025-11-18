@@ -44,19 +44,21 @@
                   {% csrf_token %}
                   {% include '_form_snippet.html' with form=resume_processing_form %}
 
-                  <div class="fr-input-group">
-                    <label for="" class="fr-label">
-                      <span class="label-content fr-text--bold">Nouvelle échéance d'instructions</span>
-                      <span class="fr-text--light">(calcul auto)</span>
-                    </label>
+                  {% if petition_project.current_status.original_due_date %}
+                    <div class="fr-input-group">
+                      <label for="" class="fr-label">
+                        <span class="label-content fr-text--bold">Nouvelle échéance d'instructions</span>
+                        <span class="fr-text--light">(calcul auto)</span>
+                      </label>
 
-                    <input id="id_new_due_date"
-                           type="date"
-                           disabled="disabled"
-                           class="fr-input"
-                           data-suspension-date="{{ petition_project.current_status.suspension_date|date:"c" }}"
-                           data-original-due-date="{{ petition_project.current_status.original_due_date|date:"c" }}">
-                  </div>
+                      <input id="id_new_due_date"
+                             type="date"
+                             disabled="disabled"
+                             class="fr-input"
+                             data-suspension-date="{{ petition_project.current_status.suspension_date|date:"c" }}"
+                             data-original-due-date="{{ petition_project.current_status.original_due_date|date:"c" }}">
+                    </div>
+                  {% endif %}
 
                   <button type="button"
                           class="fr-btn fr-btn--secondary"
@@ -70,18 +72,16 @@
 
           </div>
 
-          <p>
-            <strong>Échéance avant la suspension</strong>
-            <br />
-            {% if petition_project.current_status.original_due_date %}
+          {% if petition_project.current_status.original_due_date %}
+            <p>
+              <strong>Échéance avant la suspension</strong>
+              <br />
               <span class="due-date fr-text--sm">
                 <span class="fr-icon-timer-line fr-icon--sm"></span>
                 {{ petition_project.current_status.original_due_date|date:"DATE_FORMAT" }}
               </span>
-            {% else %}
-              <abbr title="Non disponible">ND</abbr>
-            {% endif %}
-          </p>
+            </p>
+          {% endif %}
 
           <p>
             <strong>Date de la suspension</strong>
@@ -231,13 +231,16 @@
 {% block extra_js %}
   {{ block.super }}
   <script defer src="{% static 'js/libs/sync_new_due_date.js' %}"></script>
-  <script>
+
+  {% if resume_processing_form and petition_project.current_status.original_due_date %}
+    <script>
     window.addEventListener("load", function() {
       let receipt_date_input = document.getElementById("id_info_receipt_date");
       let due_date_input = document.getElementById("id_new_due_date");
       new DueDateInput(due_date_input, receipt_date_input);
     });
-  </script>
+    </script>
+  {% endif %}
 
   <script>
     window.addEventListener('load', function () {
