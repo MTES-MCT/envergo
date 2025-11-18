@@ -72,6 +72,15 @@
 
           </div>
 
+          <p>
+            <strong>Date de la suspension</strong>
+            <br />
+            <span class="due-date fr-text--sm">
+              <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
+              {{ petition_project.current_status.suspension_date|date:"DATE_FORMAT" }}
+            </span>
+          </p>
+
           {% if petition_project.current_status.original_due_date %}
             <p>
               <strong>Échéance avant la suspension</strong>
@@ -82,15 +91,6 @@
               </span>
             </p>
           {% endif %}
-
-          <p>
-            <strong>Date de la suspension</strong>
-            <br />
-            <span class="due-date fr-text--sm">
-              <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
-              {{ petition_project.current_status.suspension_date|date:"DATE_FORMAT" }}
-            </span>
-          </p>
 
         {% else %}
 
