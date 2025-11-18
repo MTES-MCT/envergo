@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from envergo.petitions.models import PetitionProject, StatusLog
 from envergo.utils.fields import ProjectStageField
@@ -191,10 +192,9 @@ def three_months_from_now():
     return res
 
 
-def rai_message():
+def request_for_info_message():
+    """Format the default text for request for information message."""
     date = three_months_from_now()
-    from django.utils.formats import date_format
-
     date_fmt = date_format(date, "d F Y")
     message = dedent(
         f"""
@@ -231,7 +231,7 @@ class RequestAdditionalInfoForm(forms.Form):
         les compléments et l'informer de la suspension du délai en attendant sa réponse.
         Une fois envoyé, vous pourrez le retrouver dans la messagerie.
         """,
-        initial=rai_message,
+        initial=request_for_info_message,
     )
 
 
