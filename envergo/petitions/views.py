@@ -1194,7 +1194,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 if ds_response is None or ds_response.get("errors") is not None:
                     # We raise an exception to make sure the data model transaction
                     # is aborted
-                    raise RuntimeError("DS message not sent")
+                    raise DemarchesSimplifieesError("DS message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1240,7 +1240,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             res = HttpResponseRedirect(self.get_success_url())
             return res
 
-        except RuntimeError:
+        except DemarchesSimplifieesError:
             error_message = """Le message n'a pas pu être envoyé.
             Merci de ré-essayer dans quelques minutes.
             Si le problème persiste, contacter le support en indiquant l'identifiant du dossier.
