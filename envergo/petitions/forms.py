@@ -202,7 +202,7 @@ def rai_message():
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
 
-        Vous avez jusqu'au ~{date_fmt}~ pour les fournir.
+        Vous avez jusqu'au {date_fmt} pour les fournir.
 
         ***Liste des compléments à fournir***
 
