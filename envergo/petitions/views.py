@@ -1241,6 +1241,8 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         status = project.current_status
 
         # Update model data
+        # Compute the new due date, that is the original due date + number of interruption days
+        # Note: if you modify this rule, you must apply the same update in the sync_new_due_date.js file
         status.info_receipt_date = form.cleaned_data["info_receipt_date"]
         interruption_days = status.info_receipt_date - status.suspension_date
         if status.original_due_date:
