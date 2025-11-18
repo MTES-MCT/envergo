@@ -191,7 +191,8 @@ def three_months_from_now():
     return res
 
 
-def rai_message():
+def request_for_info_message():
+    """Format the default text for request for information message."""
     date = three_months_from_now()
     from django.utils.formats import date_format
 
@@ -231,7 +232,7 @@ class RequestAdditionalInfoForm(forms.Form):
         les compléments et l'informer de la suspension du délai en attendant sa réponse.
         Une fois envoyé, vous pourrez le retrouver dans la messagerie.
         """,
-        initial=rai_message,
+        initial=request_for_info_message,
     )
 
 
