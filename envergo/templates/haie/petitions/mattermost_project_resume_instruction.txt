@@ -1,11 +1,10 @@
-### L'instruction d'un dossier a repris suite à la réception de pièces complémentaires
+### Reprise d'instruction
 
-Référence du projet : [{{reference}}]({{admin_url}})
+**Département :** {{ department }}
+**Référence du projet :** [{{reference}}]({{admin_url}})
 
-Actions nécessaires :
+Actions nécessaires :
 
-* [examiner le contexte et la cohérence du changement]({{procedure_url}});
-
-* préciser certains points avec l'instructeur à l'initiative du changement (si nécessaire)
-
-* envoyer manuellement un email de notification du changement au demandeur (si nécessaire).
+ - [examiner le contexte et la cohérence du changement]({{procedure_url}});
+ - préciser certains points avec l'instructeur à l'initiative du changement (si nécessaire)
+ - envoyer manuellement un email de notification du changement au demandeur (si nécessaire).
