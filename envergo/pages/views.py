@@ -6,16 +6,14 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.http import HttpResponseRedirect, HttpResponseServerError, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
-from django.views import View
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
-from django_ratelimit.core import _get_ip
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.analytics.utils import log_event
@@ -278,21 +276,6 @@ class NewsFeed(Feed):
         base_url = reverse("faq_news")
         item_url = f"{base_url}#news-item-{item.id}"
         return item_url
-
-
-class DebugView(View):
-
-    def get(self, request, *args, **kwargs):
-        return JsonResponse(
-            {
-                "ip": _get_ip(request),
-                "limited": getattr(request, "limited", False),
-                "REMOTE_ADDR": request.META.get("REMOTE_ADDR"),
-                "X-Real-IP": request.META.get("HTTP_X_REAL_IP"),
-                "X-Forwarded-For": request.META.get("HTTP_X_FORWARDED_FOR"),
-                "Headers": {k: v for k, v in request.META.items() if "HTTP_" in k},
-            }
-        )
 
 
 @requires_csrf_token
