@@ -138,7 +138,5 @@ class Migration(migrations.Migration):
         return project_state
 
     def unapply(self, project_state, schema_editor=None, collect_sql=False):
-        # revert state only
-        for op in reversed(self.operations):
-            op.state_backwards(self.app_label, project_state)
+        # do nothing
         return project_state
