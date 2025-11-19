@@ -8,6 +8,7 @@ from envergo.geodata.views import ParcelsExport
 from envergo.pages.models import AmenagementSitemap
 from envergo.pages.views import (
     AvailabilityInfo,
+    DebugView,
     GeometriciansView,
     HomeAmenagementView,
     NewsFeed,
@@ -102,6 +103,11 @@ urlpatterns = [
                     _("available-departments/"),
                     AvailabilityInfo.as_view(),
                     name="faq_availability_info",
+                ),
+                path(
+                    "debug/",
+                    DebugView.as_view(),
+                    name="debug_to_be_deleted",
                 ),
             ]
         ),
