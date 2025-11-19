@@ -109,6 +109,9 @@
   {% endwith %}
 
 {% endblock %}
+
+{% block after-content %}{% endblock %}
+
 {% block extra_js %}
   <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
   <script>
