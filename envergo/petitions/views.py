@@ -1060,10 +1060,11 @@ class PetitionProjectInstructorProcedureView(
             }
         )
 
-        if (
-            self.has_edit_permission(self.request.user, self.object)
-            and not obj.current_status.is_closed
-        ):
+        # Request for additional information is only relevant when the project is
+        # in the "instruction" phase
+        if self.has_edit_permission(
+            self.request.user, self.object
+        ) and obj.current_stage.startswith("instruction"):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
             context.update(
