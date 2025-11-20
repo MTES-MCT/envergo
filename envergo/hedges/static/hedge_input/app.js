@@ -214,11 +214,11 @@ class Hedge {
     }
     this.additionalData = additionalData;
 
-    this.updateLength();
+    this.updateProperties();
     if (mode !== READ_ONLY_MODE) {
-      this.polyline.on('editable:vertex:new', this.updateLength.bind(this));
-      this.polyline.on('editable:vertex:deleted', this.updateLength.bind(this));
-      this.polyline.on('editable:vertex:dragend', this.updateLength.bind(this));
+      this.polyline.on('editable:vertex:new', this.updateProperties.bind(this));
+      this.polyline.on('editable:vertex:deleted', this.updateProperties.bind(this));
+      this.polyline.on('editable:vertex:dragend', this.updateProperties.bind(this));
     } else {
       this.polyline.disableEdit();
     }
@@ -263,9 +263,17 @@ class Hedge {
     return latLngsLength(this.latLngs);
   }
 
-  updateLength() {
+  updateProperties() {
     this.latLngs = this.polyline.getLatLngs();
     this.length = this.calculateLength();
+
+    // Polyline box was only updated when expended, not shrinked
+    // So we have to update it everytime
+    // https://github.com/Leaflet/Leaflet.Editable/issues/110
+    this.polyline._bounds = new L.LatLngBounds();
+    this.latLngs.forEach((latLng) => {
+      this.polyline._bounds.extend(latLng);
+    });
   }
 
   handleMouseOver() {
