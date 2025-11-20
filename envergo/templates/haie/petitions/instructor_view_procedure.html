@@ -36,7 +36,7 @@
               </div>
 
               <div id="resume-form" class="fr-collapse">
-                <h4>Reprendre l'instruction</h4>
+                <h4 class="fr-mt-2w">→ Reprendre l'instruction</h4>
 
                 <form method="post"
                       action="{% url 'petition_project_instructor_request_info_view' petition_project.reference %}"
@@ -47,7 +47,7 @@
                   {% if petition_project.current_status.original_due_date %}
                     <div class="fr-input-group">
                       <label for="" class="fr-label">
-                        <span class="label-content fr-text--bold">Nouvelle échéance d'instructions</span>
+                        <span class="label-content fr-text--bold">Nouvelle échéance d'instruction</span>
                         <span class="fr-text--light">(calcul auto)</span>
                       </label>
 
@@ -103,6 +103,18 @@
 
         {% include "haie/petitions/stage_objectives/"|add:petition_project.current_stage|add:".html" %}
       </div>
+
+      {% if is_department_instructor and not request_info_form and not petition_project.is_paused %}
+        <button type="button"
+                class="fr-btn fr-btn--secondary fr-mb-3w disabled"
+                disabled="disabled"
+                title="bla"
+                aria-describedby="disabled-rai-btn-tooltip">Demander des compléments</button>
+        <span class="fr-tooltip fr-placement"
+              id="disabled-rai-btn-tooltip"
+              role="tooltip">Disponible uniquement pendant les étapes d'instruction.</span>
+
+      {% endif %}
 
       {% if request_info_form and not petition_project.is_paused %}
         <button type="button"
