@@ -6,7 +6,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.http import HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils.formats import date_format
@@ -297,4 +297,12 @@ def server_error(request, template_name=ERROR_500_TEMPLATE_NAME):
         )
     return HttpResponseServerError(
         template.render({"base_template": request.base_template})
+    )
+
+
+def rate_limited(request):
+    """429 error handler."""
+    template = loader.get_template("429.html")
+    return HttpResponse(
+        template.render({"base_template": request.base_template}), status=429
     )

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Trop de demandes (erreur 429){% endblock %}
+
+{% block article %}
+  <h1>Trop de demandes (erreur 429)</h1>
+
+  <p class="fr-text--lead">Trop de demandes – Veuillez réessayer ultérieurement</p>
+  <p>
+    Vous avez effectué un nombre important de requêtes dans un délai très court.
+    Pour garantir la qualité de service et la sécurité de la plateforme, votre accès est temporairement limité.
+  </p>
+  <p>Merci de réessayer dans quelques instants.</p>
+  <p>
+    Si vous pensez qu'il s'agit d'une erreur,
+    <a href="{% url 'contact_us' %}">n'hésitez pas à nous contacter.</a>
+  </p>
+{% endblock %}

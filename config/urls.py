@@ -6,12 +6,12 @@ from django.utils.translation import gettext_lazy as _
 from django.views import defaults as default_views
 
 from envergo.analytics.views import CSPReportView
-from envergo.pages.views import server_error
+from envergo.pages.views import rate_limited, server_error
 from envergo.urlmappings.views import UrlMappingRedirect
 
 # customize error pages to handle multi-site
 handler500 = server_error
-
+handler429 = rate_limited
 
 urlpatterns = [
     path("anymail/", include("anymail.urls")),

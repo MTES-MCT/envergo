@@ -283,3 +283,5 @@ SECURE_CSP_REPORT_ONLY = {
     ],
     "report-uri": "/csp/reports/",
 }
+
+RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
