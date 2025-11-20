@@ -23,7 +23,16 @@ def test_ratelimit(client):
         in response.content.decode()
     )
 
-    # WHEN the user makes a GET request to the form endpoint
+    # WHEN the user makes a GET request to a moulinette endpoint
     response = client.get(url)
+    # THEN the request should be rate limited
+    assert response.status_code == 429
+    assert (
+        "Trop de demandes – Veuillez réessayer ultérieurement"
+        in response.content.decode()
+    )
+
+    # WHEN the user makes a GET request to a non moulinette endpoint
+    response = client.get("/")
     # THEN the request should be successful
     assert response.status_code == 200
