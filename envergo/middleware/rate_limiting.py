@@ -6,6 +6,8 @@ from django.utils.translation import gettext as _
 from django_ratelimit import UNSAFE
 from django_ratelimit.core import _get_ip, is_ratelimited
 
+from config.urls import handler429
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,6 +58,6 @@ class RateLimitingMiddleware:
                         ),
                     },
                 )
-                return render(request, "429.html", status=429)
+                return handler429(request)
 
         return self.get_response(request)
