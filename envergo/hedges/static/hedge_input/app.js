@@ -514,8 +514,11 @@ createApp({
 
     // Center the map around all existing hedges
     const zoomOut = (animate = true) => {
+      let allHedges = hedges[TO_REMOVE].hedges;
+      if (mode !== REMOVAL_MODE) {
+        allHedges = allHedges.concat(hedges[TO_PLANT].hedges);
+      }
       // The concat method does not modify the original arrays
-      let allHedges = hedges[TO_REMOVE].hedges.concat(hedges[TO_PLANT].hedges);
       if (allHedges.length > 0) {
         const group = new L.featureGroup(allHedges.map(p => p.polyline));
         map.fitBounds(group.getBounds(), { ...fitBoundsOptions, animate: animate, padding: [50, 50] });
