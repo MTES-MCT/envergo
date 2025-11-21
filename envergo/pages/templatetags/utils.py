@@ -1,3 +1,5 @@
+import re
+
 from django import template
 from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
@@ -8,7 +10,10 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.template.defaultfilters import stringfilter
 from django.utils.dateparse import parse_datetime
+from django.utils.html import urlize as _urlize
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -173,3 +178,16 @@ def choice_default_label(model, field_name):
     else:
         default = field.default
     return dict(field.choices).get(default, default)
+
+
+@register.filter(is_safe=True, needs_autoescape=True)
+@stringfilter
+def urlize_html(value, blank=True, autoescape=True):
+    """Convert URLs in plain text into clickable links."""
+    # Remove existing tag a before urlize
+    clean = re.compile("</?a.*?>")
+    result = re.sub(clean, "", value)
+    result = _urlize(result, nofollow=True, autoescape=autoescape)
+    if blank:
+        result = result.replace("<a", '<a target="_blank"')
+    return mark_safe(result)
