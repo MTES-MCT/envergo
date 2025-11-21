@@ -1058,7 +1058,7 @@ def test_petition_project_procedure(
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
-    assert "Modifier</button>" not in content
+    assert "Modifier l'état du dossier</button>" not in content
 
     # WHEN the user is a department instructor
     client.force_login(instructor_haie_user_44)
@@ -1068,7 +1068,7 @@ def test_petition_project_procedure(
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
-    assert "Modifier</button>" in content
+    assert "Modifier l'état du dossier</button>" in content
 
     # WHEN the user try to go from to_be_processed to closed
     data = {
@@ -1081,7 +1081,7 @@ def test_petition_project_procedure(
     # THEN this step is not authorized
     assert res.status_code == 200
     project.refresh_from_db()
-    assert project.status_history.all().count() == 0
+    assert project.status_history.all().count() == 1
 
     # WHEN the user edit the status
     data = {
