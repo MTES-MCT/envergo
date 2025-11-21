@@ -53,6 +53,7 @@ from envergo.petitions.models import (
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
+    LatestMessagerieAccess,
     PetitionProject,
     StatusLog,
 )
@@ -887,6 +888,17 @@ class PetitionProjectInstructorMessagerieView(
     event_category = "message"
     event_action = "lecture"
     form_class = PetitionProjectInstructorMessageForm
+
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+        if res.status_code == 200:
+            LatestMessagerieAccess.objects.update_or_create(
+                user=request.user,
+                project=self.object,
+                defaults={"access": timezone.now()},
+            )
+
+        return res
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
