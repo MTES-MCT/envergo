@@ -77,6 +77,12 @@ def ep_criteria(france_map):  # noqa
     return criteria
 
 
+@pytest.fixture(autouse=True)
+def fake_settings(settings):
+    settings.ENVERGO_HAIE_DOMAIN = "testserver"
+    settings.ENVERGO_AMENAGEMENT_DOMAIN = "otherserver"
+
+
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
@@ -169,7 +175,6 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("requests.post")
 def test_petition_project_detail(mock_post, client, site):
     """Test consultation view"""
@@ -228,7 +233,6 @@ def test_petition_project_detail(mock_post, client, site):
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     inactive_haie_user_44,
@@ -322,7 +326,6 @@ def test_petition_project_instructor_view_requires_authentication(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -361,7 +364,6 @@ def test_petition_project_instructor_notes_view(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -456,7 +458,6 @@ def test_petition_project_instructor_view_reglementation_pages(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -491,7 +492,6 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -586,7 +586,6 @@ def test_petition_project_instructor_messagerie_ds(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_list(
     inactive_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
 ):
@@ -654,7 +653,6 @@ def test_petition_project_list(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
@@ -675,7 +673,6 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_invitation_token(
     client, haie_user, instructor_haie_user_44, site
 ):
@@ -728,7 +725,6 @@ def test_petition_project_invitation_token(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_accept_invitation(client, haie_user, site):
     """Test accepting an invitation token for a petition project"""
     ConfigHaieFactory()
@@ -800,7 +796,6 @@ def test_petition_project_accept_invitation(client, haie_user, site):
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_notes_form(
     client, haie_user, instructor_haie_user_44, site
 ):
@@ -871,8 +866,6 @@ def test_petition_project_instructor_notes_form(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 def test_petition_project_alternative(client, haie_user, instructor_haie_user_44, site):
     """Test alternative flow for petition project"""
     # GIVEN a petition project
@@ -964,9 +957,6 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_instructor_view_with_hedges_outside_department(
     client, instructor_haie_user_44
 ):
@@ -1021,7 +1011,6 @@ def test_instructor_view_with_hedges_outside_department(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("envergo.petitions.views.notify")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
@@ -1121,7 +1110,6 @@ def test_petition_project_procedure(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, site):
     """Test follow up flow for petition project"""
     # GIVEN a petition project
@@ -1199,7 +1187,6 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
     """Test the buttons to toggle follow up are on the pages"""
     # GIVEN a petition project
@@ -1228,7 +1215,6 @@ def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_invited_instructor_cannot_see_send_message_button(
     client, instructor_haie_user_44, haie_user
 ):
@@ -1253,7 +1239,6 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -1324,7 +1309,6 @@ def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44,
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_request_for_info(
@@ -1364,7 +1348,6 @@ def test_petition_project_request_for_info(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_resume_instruction(
@@ -1405,3 +1388,7 @@ def test_petition_project_resume_instruction(
     project.current_status.refresh_from_db()
     assert project.is_paused is False
     assert project.current_status.due_date == next_month
+
+
+def test_messagerie_access(client, instructor_haie_user_44):
+    pass
