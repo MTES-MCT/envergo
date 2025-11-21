@@ -4,6 +4,7 @@ from django.test import override_settings
 
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.pages.templatetags.utils import urlize_html
 
 pytestmark = pytest.mark.django_db
 
@@ -54,3 +55,22 @@ def test_petition_department_list(
     assert "Paramétrage" in content
     assert 'href="/simulateur/parametrage/44"' in content
     assert 'href="/simulateur/parametrage/34"' in content
+
+
+def test_urlize_html():
+    """Test urlize_html filter"""
+    expected_result = 'voici un lien <a target="_blank" href="https://exemple.com" rel="nofollow">https://exemple.com</a>'  # noqa
+
+    # Given a text message with a link
+    message = "voici un lien https://exemple.com"
+    # When message is urlized
+    result = urlize_html(message)
+    # Then result is expected_result
+    assert result == expected_result
+
+    # Given a html message with a link
+    message = 'voici un lien <a href="https://exemple.com" rel="nofollow">https://exemple.com</a>'
+    # When message is urlized
+    result = urlize_html(message)
+    # Then result is expected_result
+    assert result == expected_result

@@ -6,7 +6,7 @@ from django.template import Context, Template
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import ConfigHaieFactory
-from envergo.petitions.templatetags.petitions import display_due_date, urlize_html
+from envergo.petitions.templatetags.petitions import display_due_date
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     GET_DOSSIER_FAKE_RESPONSE,
@@ -130,22 +130,3 @@ def test_display_ds_field(mock_post):
         not in content
     )
     assert "La motivation" not in content
-
-
-def test_urlize_html():
-    """Test urlize_html filter"""
-    expected_result = 'voici un lien <a target="_blank" href="https://exemple.com" rel="nofollow">https://exemple.com</a>'  # noqa
-
-    # Given a text message with a link
-    message = "voici un lien https://exemple.com"
-    # When message is urlized
-    result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
-
-    # Given a html message with a link
-    message = 'voici un lien <a href="https://exemple.com" rel="nofollow">https://exemple.com</a>'
-    # When message is urlized
-    result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
