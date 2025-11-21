@@ -38,4 +38,3 @@ bs4
 gql
 requests-toolbelt
 dacite
-django-autocomplete-light
