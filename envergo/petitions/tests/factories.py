@@ -9,7 +9,12 @@ from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.petitions.demarches_simplifiees.client import (
     DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH,
 )
-from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
+from envergo.petitions.models import (
+    DOSSIER_STATES,
+    InvitationToken,
+    PetitionProject,
+    StatusLog,
+)
 from envergo.users.tests.factories import UserFactory
 
 DEMARCHES_SIMPLIFIEES_FAKE = {
@@ -91,6 +96,10 @@ class PetitionProjectFactory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
     demarches_simplifiees_state = DOSSIER_STATES.draft
+    status = factory.RelatedFactory(
+        "envergo.petitions.tests.factories.StatusLogFactory",
+        factory_related_name="petition_project",
+    )
 
 
 class PetitionProject34Factory(DjangoModelFactory):
@@ -105,6 +114,13 @@ class PetitionProject34Factory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059676
     demarches_simplifiees_state = DOSSIER_STATES.draft
+
+
+class StatusLogFactory(DjangoModelFactory):
+    class Meta:
+        model = StatusLog
+
+    petition_project = factory.SubFactory(PetitionProjectFactory)
 
 
 class InvitationTokenFactory(DjangoModelFactory):
