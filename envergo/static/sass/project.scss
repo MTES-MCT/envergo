@@ -2387,8 +2387,9 @@ section#actions-to-take {
         display: inline;
       }
 
-      .action-learn-more-link,
-      &__list {
+      hr,
+      &__list,
+      .action-learn-more-link {
         display: none;
       }
 
