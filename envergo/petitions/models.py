@@ -140,6 +140,10 @@ class PetitionProject(models.Model):
         blank=True,
         verbose_name="Instructeurs suivant le projet",
     )
+    latest_petitioner_msg = models.DateTimeField(
+        verbose_name="Date du dernier message pétitionnaire",
+        default=datetime(2000, 1, 1),
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -578,3 +582,17 @@ class StatusLog(models.Model):
     @property
     def is_closed(self):
         return self.stage == STAGES.closed
+
+
+class LatestMessagerieAccess(models.Model):
+    user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, verbose_name="Accès par"
+    )
+    project = models.ForeignKey(
+        PetitionProject, on_delete=models.CASCADE, verbose_name="Projet"
+    )
+    access = models.DateTimeField("Dernier accès messagerie", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Dernier accès messagerie"
+        verbose_name_plural = "Derniers accès messagerie"
