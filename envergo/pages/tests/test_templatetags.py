@@ -59,18 +59,19 @@ def test_petition_department_list(
 
 def test_urlize_html():
     """Test urlize_html filter"""
-    expected_result = 'voici un lien <a target="_blank" href="https://exemple.com" rel="nofollow">https://exemple.com</a>'  # noqa
 
     # Given a text message with a link
     message = "voici un lien https://exemple.com"
+    expected_result = 'voici un lien <a target="_blank" href="https://exemple.com" rel="nofollow">https://exemple.com</a>'  # noqa
     # When message is urlized
     result = urlize_html(message)
     # Then result is expected_result
     assert result == expected_result
 
-    # Given a html message with a link
-    message = 'voici un lien <a href="https://exemple.com" rel="nofollow">https://exemple.com</a>'
+    # Given a html message with a link and another tag
+    message = 'voici un lien <a href="https://exemple.com" rel="nofollow">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa
+    expected_result_with_tags = 'voici un lien <a target="_blank" href="https://exemple.com" rel="nofollow">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa
     # When message is urlized
     result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
+    # Then result is expected_result_with_tags
+    assert result == expected_result_with_tags
