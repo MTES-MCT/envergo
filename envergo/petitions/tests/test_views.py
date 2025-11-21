@@ -23,7 +23,11 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
-from envergo.petitions.models import DOSSIER_STATES, InvitationToken
+from envergo.petitions.models import (
+    DOSSIER_STATES,
+    InvitationToken,
+    LatestMessagerieAccess,
+)
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -1274,7 +1278,6 @@ def test_petition_invited_instructor_cannot_send_message(
 
 
 @pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44, site):
     """Only department admin can see the "request additional info" button"""
@@ -1390,5 +1393,39 @@ def test_petition_project_resume_instruction(
     assert project.current_status.due_date == next_month
 
 
-def test_messagerie_access(client, instructor_haie_user_44):
-    pass
+def test_messagerie_access(client, instructor_haie_user_44, haie_user):
+
+    qs = LatestMessagerieAccess.objects.all()
+    assert qs.count() == 0
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # User is not instructor
+    client.force_login(haie_user)
+    res = client.get(messagerie_url)
+    assert res.status_code == 403
+    assert qs.count() == 0
+
+    # Logged user accessed it's messagerie
+    client.force_login(instructor_haie_user_44)
+    res = client.get(messagerie_url)
+    assert res.status_code == 200
+    assert qs.count() == 1
+
+    # Access was logged
+    access = qs[0]
+    assert access.user == instructor_haie_user_44
+    assert access.project == project
+    assert access.access.timestamp() == pytest.approx(
+        timezone.now().timestamp(), abs=100
+    )
+
+    # Another access does not create new access object
+    res = client.get(messagerie_url)
+    assert res.status_code == 200
+    assert qs.count() == 1
