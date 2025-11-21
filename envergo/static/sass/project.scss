@@ -2340,6 +2340,10 @@ section#actions-to-take {
     }
   }
 
+  .action-target {
+    display: none;
+  }
+
   div.action-wrapper:not(:last-of-type) {
     margin-bottom: 1rem;
   }
@@ -2387,8 +2391,14 @@ section#actions-to-take {
         display: inline;
       }
 
+      .action-learn-more-link,
       &__list {
+        display: none;
+      }
+
+      .action-section {
         display: block;
+        color: var(--text-active-blue-france);
       }
 
       &__panel {
