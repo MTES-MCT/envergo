@@ -97,6 +97,7 @@ REGULATIONS = Choices(
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
     ("reserves_naturelles", "Réserves naturelles"),
+    ("regime_unique_haie", "Régime unique haie"),
 )
 
 
@@ -1004,6 +1005,11 @@ class ConfigHaie(ConfigBase):
         default=False,
         help_text="Le régime unique s'applique dans ce département",
     )
+    single_procedure_settings = models.JSONField(
+        blank=True,
+        null=False,
+        default=dict,
+    )
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
@@ -1229,6 +1235,38 @@ class ConfigHaie(ConfigBase):
                 check=Q(demarche_simplifiee_number__isnull=True)
                 | Q(demarches_simplifiees_project_url_id__isnull=False),
                 name="project_url_id_required_if_demarche_number",
+            ),
+            CheckConstraint(
+                name="single_procedure_requires_coeff_compensation",
+                violation_error_message="Les paramètres de régime unique doivent comporter des coefficients de "
+                "compensation numérique pour chaque type de haies (degradee, buissonnante, "
+                "arbustive et mixte).",
+                check=Q(single_procedure=False)
+                | (
+                    Q(single_procedure_settings__has_key="coeff_compensation")
+                    & Q(
+                        single_procedure_settings__coeff_compensation__has_key="degradee"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__degradee__regex=r"^\d+(\.\d+)?$"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__has_key="buissonnante"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__buissonnante__regex=r"^\d+(\.\d+)?$"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__has_key="arbustive"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__arbustive__regex=r"^\d+(\.\d+)?$"
+                    )
+                    & Q(single_procedure_settings__coeff_compensation__has_key="mixte")
+                    & Q(
+                        single_procedure_settings__coeff_compensation__mixte__regex=r"^\d+(\.\d+)?$"
+                    )
+                ),
             ),
         ]
 
@@ -2155,6 +2193,7 @@ class MoulinetteHaie(Moulinette):
         "alignement_arbres",
         "urbanisme_haie",
         "reserves_naturelles",
+        "regime_unique_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
