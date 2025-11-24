@@ -84,6 +84,7 @@ def test_display_ds_field(mock_post):
     assert "La motivation" in content
 
     # Given config haie with no display fields
+    config_haie = petition_project.get_moulinette().config
     config_haie.demarches_simplifiees_display_fields = {}
     config_haie.save()
     # When I want to display the same content
@@ -100,6 +101,7 @@ def test_display_ds_field(mock_post):
     assert "La motivation" not in content
 
     # Given config haie with display fields not existing id
+    config_haie = petition_project.get_moulinette().config
     config_haie.demarches_simplifiees_display_fields = {"motivation": "id_imaginaire"}
     config_haie.save()
     # When I want to display the same content
