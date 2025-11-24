@@ -70,7 +70,7 @@ from envergo.petitions.services import (
 )
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
-from envergo.utils.urls import extract_param_from_url, update_qs
+from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -564,7 +564,9 @@ class PetitionProjectDetail(DetailView):
         context["plantation_url"] = plantation_url
 
         current_url = self.request.build_absolute_uri()
-        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-simu"})
+        share_btn_url = update_qs(
+            remove_mtm_params(current_url), {"mtm_campaign": "share-simu"}
+        )
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         moulinette_params["edit"] = ["true"]
