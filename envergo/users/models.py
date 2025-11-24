@@ -76,10 +76,23 @@ class User(AbstractUser):
         return f"{self.name}"
 
     def is_instructor_guh(self):
+        """Returns if user is instructor on its departments"""
         return self.is_superuser or all(
             (
                 self.is_active,
                 self.access_haie,
+                self.is_instructor,
+                self.departments.exists(),
+            )
+        )
+
+    def is_invited_guh(self):
+        """Returns if user is invited on its departments"""
+        return all(
+            (
+                self.is_active,
+                self.access_haie,
+                not self.is_instructor,
                 self.departments.exists() or self.invitation_tokens.exists(),
             )
         )
