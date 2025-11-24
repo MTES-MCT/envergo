@@ -17,6 +17,7 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
 class RegimeUniqueHaie(PlantationConditionMixin, CriterionEvaluator):
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
+    plantation_conditions = []
 
     RESULT_MATRIX = {
         "non_concerne": RESULTS.non_concerne,
