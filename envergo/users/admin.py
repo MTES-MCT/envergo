@@ -80,6 +80,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "is_instructor",
                     "groups",
                     "departments",
                     "followed_petition_projects",
