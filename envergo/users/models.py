@@ -69,7 +69,7 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.name}"
 
-    def is_instructor(self):
+    def is_instructor_guh(self):
         return self.is_superuser or all(
             (
                 self.is_active,
