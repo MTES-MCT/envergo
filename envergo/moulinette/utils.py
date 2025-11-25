@@ -3,6 +3,8 @@ from pathlib import Path
 
 from django.conf import settings
 from django.http import QueryDict
+from django.template import engines
+from django.utils._os import safe_join
 
 
 def compute_surfaces(data: QueryDict):
@@ -79,11 +81,10 @@ def get_template_choices(template_subdir=None, extension=".html"):
     templates = set()
 
     # Loop over all TEMPLATE_DIRS
-    for engine in settings.TEMPLATES:
-        dirs = engine.get("DIRS", [])
-        for base_dir in dirs:
+    for engine in engines.all():
+        for base_dir in engine.template_dirs:
             scan_dir = (
-                os.path.join(base_dir, template_subdir) if template_subdir else base_dir
+                safe_join(base_dir, template_subdir) if template_subdir else base_dir
             )
             if not os.path.exists(scan_dir):
                 continue
@@ -91,7 +92,7 @@ def get_template_choices(template_subdir=None, extension=".html"):
                 for file in files:
                     if file.endswith(extension):
                         # Make template path relative to base_dir
-                        rel_path = os.path.relpath(os.path.join(root, file), base_dir)
+                        rel_path = os.path.relpath(safe_join(root, file), base_dir)
                         # Use forward slashes for Django template loader
                         rel_path = rel_path.replace(os.path.sep, "/")
                         templates.add(rel_path)
