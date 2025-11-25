@@ -1,0 +1,29 @@
+<p>
+  L'évaluation des incidences (EIN) doit être :
+
+  {% if not moulinette.natura2000.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
+
+    si le projet est soumis à la Loi sur l'eau, jointe au dossier Loi sur l'eau ; sinon, déposée directement à la
+    DDT(M).
+
+  {% elif moulinette.natura2000.autorisation_urba_needed or moulinette.loi_sur_leau.result == 'soumis' or moulinette.loi_sur_leau.result == 'action_requise' %}
+
+    {% if moulinette.natura2000.autorisation_urba_needed %}jointe à la demande de PA, PC ou à la DP ;{% endif %}
+
+    {% if moulinette.loi_sur_leau.result == 'soumis' %}
+      jointe au dossier Loi sur l'eau.
+    {% elif moulinette.loi_sur_leau.result == 'action_requise' %}
+      jointe au dossier Loi sur l'eau si le projet y est soumis.
+    {% endif %}
+
+  {% else %}
+
+    déposée à la DDT(M) pour instruction.
+
+  {% endif %}
+
+  <br />
+  <a title="Voir le détail de la réglementation « Natura 2000 »"
+     href="#regulation_natura2000"
+     class="fr-link fr-text--sm action-learn-more-link">En savoir plus</a>
+</p>
