@@ -706,6 +706,21 @@ div#instructor-view-side-menu {
 
 .project-inner-content {
   max-width: 42em;
+
+  &.paused {
+    #due-date-container {
+      color: var(--text-mention-grey);
+
+      .alt-light {
+        display: inline-block;
+        min-width: 24rem;
+
+        b {
+          color: var(--text-title-grey);
+        }
+      }
+    }
+  }
 }
 
 #form-group-instructor_free_mention .label-content {
@@ -955,4 +970,8 @@ div#project-header-container {
 
 #id_stage.fr-select.fr-input--error {
   box-shadow: inset 0 -2px 0 0 var(--border-plain-error);
+}
+
+button.hide-expanded[aria-expanded="true"] {
+  display: none;
 }

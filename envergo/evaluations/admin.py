@@ -25,7 +25,6 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
-    EvaluationAction,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -719,14 +718,3 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
-
-
-@admin.register(EvaluationAction)
-class EvaluationAction(admin.ModelAdmin):
-
-    list_display = [
-        "slug",
-        "type",
-        "target",
-        "order",
-    ]
