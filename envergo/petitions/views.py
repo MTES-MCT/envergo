@@ -616,6 +616,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                     queryset=StatusLog.objects.all().order_by("-created_at"),
                 )
             )
+            .prefetch_related(
+                Prefetch(
+                    "messagerie_accesses",
+                    queryset=LatestMessagerieAccess.objects.filter(user=current_user),
+                )
+            )
             .annotate(
                 followed_up=Exists(
                     PetitionProject.followed_by.through.objects.filter(
@@ -697,6 +703,14 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                 """L'accès à l'API démarches simplifiées n'est pas activée.
                 Les données proviennent d'un dossier factice.""",
             )
+
+        latest_access = self.object.messagerie_accesses.all().first()
+        context["has_unread_messages"] = any(
+            (
+                latest_access is None,
+                latest_access.access < self.object.latest_petitioner_msg,
+            )
+        )
 
         return context
 
