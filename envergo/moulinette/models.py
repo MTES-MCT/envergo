@@ -2556,8 +2556,8 @@ def get_moulinette_class_from_url(url):
 class ActionToTake(models.Model):
     """Actions to take listed in an evaluation and debug page
 
-    Actions to take are displayed in an evaluation if :
-    - ACTIONS_TO_TAKE_MATRIX is setted in a related Regulation or Criterion evaluator class
+    Actions to take are displayed in an evaluation if:
+    - ACTIONS_TO_TAKE_MATRIX is set in a related Regulation or Criterion evaluator class
     - Display actions to take is True in Evaluation object
     """
 
