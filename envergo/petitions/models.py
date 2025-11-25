@@ -586,10 +586,16 @@ class StatusLog(models.Model):
 
 class LatestMessagerieAccess(models.Model):
     user = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE, verbose_name="Accès par"
+        "users.User",
+        on_delete=models.CASCADE,
+        verbose_name="Accès par",
+        related_name="messagerie_accesses",
     )
     project = models.ForeignKey(
-        PetitionProject, on_delete=models.CASCADE, verbose_name="Projet"
+        PetitionProject,
+        on_delete=models.CASCADE,
+        verbose_name="Projet",
+        related_name="messagerie_accesses",
     )
     access = models.DateTimeField("Dernier accès messagerie", default=timezone.now)
 
