@@ -115,7 +115,7 @@ class ProcedureForm(forms.ModelForm):
             "update_comment",
         ]
         help_texts = {
-            "update_comment": "Commentaire interne expliquant le contexte et les raisons du changement.",
+            "update_comment": "Commentaire interne. Aucun message ne sera envoyé au demandeur.",
         }
         labels = {
             "due_date": "Échéance de l'étape",
