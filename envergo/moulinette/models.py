@@ -983,6 +983,7 @@ class ConfigHaie(ConfigBase):
         help_text="Le régime unique s'applique dans ce département",
     )
     single_procedure_settings = models.JSONField(
+        "Paramètres du régime unique",
         blank=True,
         null=False,
         default=dict,
