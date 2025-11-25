@@ -40,7 +40,7 @@ from envergo.evaluations.models import (
     RESULT_CASCADE,
     RESULTS,
     TAG_STYLES_BY_RESULT,
-    EvaluationAction,
+    USER_TYPES,
     TagStyleEnum,
 )
 from envergo.geodata.models import Department, Zone
@@ -194,6 +194,29 @@ def _check_results_groups_matrices():
 
 
 _check_results_groups_matrices()
+
+
+ACTIONS_TO_TAKE = Choices(
+    (
+        "mention_arrete_lse",
+        "Mentionner dans l’arrêté le différé de réalisation des travaux",
+    ),
+    ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
+    ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
+    ("etude_zh_lse", "LSE > Réaliser un inventaire zones humides"),
+    ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
+    ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
+    ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
+    ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
+    ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
+    ("etude_zh_n2000", "Natura 2000 > Réaliser un inventaire zones humides"),
+    ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
+    (
+        "pc_cas_par_cas",
+        "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
+    ),
+    ("pc_ein", "L’évaluation des incidences Natura 2000"),
+)
 
 
 def get_map_factory_class_names():
@@ -1889,12 +1912,12 @@ class Moulinette(ABC):
             for criterion in regulation.criteria.all():
                 actions_to_take.update(criterion.actions_to_take)
 
-        actions = EvaluationAction.objects.filter(slug__in=actions_to_take).all()
+        actions = ActionToTake.objects.filter(slug__in=actions_to_take).all()
         result = defaultdict(list)
         for action in actions:
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
-        return result
+        return dict(result)
 
 
 class MoulinetteAmenagement(Moulinette):
@@ -2488,3 +2511,55 @@ def get_moulinette_class_from_url(url):
     else:
         raise RuntimeError("Cannot find the moulinette to use")
     return cls
+
+
+class ActionToTake(models.Model):
+    """Actions to take listed in an evaluation and debug page
+
+    Actions to take are displayed in an evaluation if:
+    - ACTIONS_TO_TAKE_MATRIX is set in a related Regulation or Criterion evaluator class
+    - Display actions to take is True in Evaluation object
+    """
+
+    slug = models.CharField(
+        "Référence de l'action",
+        max_length=50,
+        choices=ACTIONS_TO_TAKE,
+        unique=True,
+    )
+    type = models.CharField(
+        "Type d'action",
+        max_length=20,
+        choices=Choices(
+            ("action", "Action"),
+            ("pc", "Pièce complémentaire"),
+        ),
+    )
+    target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
+    order = models.PositiveIntegerField("Ordre", default=1)
+
+    label = models.TextField(
+        verbose_name="Titre affiché",
+        help_text="Texte de niveau 1",
+    )
+    details = models.CharField(
+        verbose_name="Détails",
+        max_length=255,
+        help_text="Texte de niveau 2, choisir le template correspondant.",
+    )
+
+    documents_to_attach = ArrayField(
+        models.CharField(max_length=255),
+        verbose_name="référence des pièces complémentaires",
+        help_text="Valeurs séparées par des virgules sans espace",
+        blank=True,
+        default=list,
+    )
+
+    def __str__(self):
+        return self.get_slug_display()
+
+    class Meta:
+        verbose_name = "Action à mener"
+        verbose_name_plural = "Actions à mener"
+        ordering = ["order"]
