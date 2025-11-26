@@ -69,8 +69,18 @@ def test_urlize_html():
     assert result == expected_result
 
     # Given a html message with a link and another tag
-    message = 'voici un lien <a href="https://exemple.com" rel="nofollow">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa
+    message = 'voici un lien <a href="https://exemple.com">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa
     expected_result_with_tags = 'voici un lien <a target="_blank" href="https://exemple.com" rel="nofollow">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa
+    # When message is urlized
+    result = urlize_html(message)
+    # Then result is expected_result_with_tags
+    assert result == expected_result_with_tags
+
+    # Given a html message with a link and target="_blank"
+    message = (
+        'voici un lien <a href="www.exemple.com" target="_blank">coucou</a>.'  # noqa
+    )
+    expected_result_with_tags = 'voici un lien <a target="_blank" href="http://www.exemple.com" rel="nofollow">www.exemple.com</a>.'  # noqa
     # When message is urlized
     result = urlize_html(message)
     # Then result is expected_result_with_tags
