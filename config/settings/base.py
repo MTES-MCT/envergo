@@ -146,7 +146,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
-    "envergo.middleware.rate_limiting.RateLimitingMiddleware",
     "envergo.analytics.middleware.HandleMtmValues",
 ]
 
@@ -482,5 +481,3 @@ FILE_UPLOAD_HANDLERS = [
 SECURE_CSP = {}
 
 SECURE_CSP_REPORT_ONLY = {}
-
-RATELIMIT_RATE = "100/m"
