@@ -409,6 +409,20 @@ class PetitionProject(models.Model):
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 
+    @cached_property
+    def has_unread_messages(self):
+        """Check if the current user has received unread messages.
+
+        Note: the `latest_access` property MUST be added with an annotation
+        in the queryset
+        """
+
+        has_unread_messages = (
+            self.latest_access is None
+            or self.latest_access < self.latest_petitioner_msg
+        )
+        return has_unread_messages
+
 
 def one_month_from_now():
     return timezone.now() + timedelta(days=30)
