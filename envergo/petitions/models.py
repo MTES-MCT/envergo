@@ -616,3 +616,8 @@ class LatestMessagerieAccess(models.Model):
     class Meta:
         verbose_name = "Dernier accès messagerie"
         verbose_name_plural = "Derniers accès messagerie"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"], name="access_unique_constraint"
+            )
+        ]
