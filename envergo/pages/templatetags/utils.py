@@ -184,8 +184,8 @@ def urlize_html(value, blank=True):
     """Convert URLs in plain text into clickable links."""
     # Remove existing tag a before urlize
     soup = BeautifulSoup(value, "html.parser")
-    if soup.a:
-        soup.a.replaceWith(soup.a["href"])
+    for a in soup.findAll("a"):
+        a.replaceWith(a["href"])
     result = _urlize(str(soup), nofollow=True, autoescape=False)
     if blank:
         result = result.replace("<a", '<a target="_blank"')
