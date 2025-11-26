@@ -40,7 +40,7 @@
          aria-labelledby="actions-petitioner-tab-0"
          tabindex="0">
 
-      <h3 class="fr-h4 action-section">Porteur de projet</h3>
+      <h3 class="fr-h4 action-section-title">Porteur de projet</h3>
       {% if moulinette.actions_to_take.petitioner %}
         {% for action in moulinette.actions_to_take.petitioner %}
           <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
@@ -59,9 +59,8 @@
          role="tabpanel"
          aria-labelledby="actions-instructor-tab-1"
          tabindex="0">
-      <h3 class="fr-h4 action-section">Instruction urbanisme</h3>
+      <h3 class="fr-h4 action-section-title">Instruction urbanisme</h3>
       {% if moulinette.actions_to_take.pc %}
-
         <section class="action-to-take fr-mb-2w">
           <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
                   aria-expanded="false"
