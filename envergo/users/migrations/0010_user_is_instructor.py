@@ -32,8 +32,8 @@ class Migration(migrations.Migration):
             name="is_instructor",
             field=models.BooleanField(
                 default=False,
-                help_text="Instructeur pour tous les départements qui lui sont assignés. Si cette case n'est pas cochée, la personne a le statut d'invitée.",
-                verbose_name="Instructor",
+                help_text="Personne en charge de l'instruction pour tous les départements qui lui sont assignés.\n        Si cette case n'est pas cochée, la personne a le statut d'invitée.",
+                verbose_name="En charge de l'instruction",
             ),
         ),
         migrations.RunPython(set_default_is_instructor, migrations.RunPython.noop),
