@@ -48,9 +48,9 @@ class User(AbstractUser):
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
     is_instructor = models.BooleanField(
-        _("Instructor"),
+        "En charge de l'instruction",
         default=False,
-        help_text="""Instructeur pour tous les départements qui lui sont assignés.
+        help_text="""Personne en charge de l'instruction pour tous les départements qui lui sont assignés.
         Si cette case n'est pas cochée, la personne a le statut d'invitée.""",
     )
     departments = models.ManyToManyField(
