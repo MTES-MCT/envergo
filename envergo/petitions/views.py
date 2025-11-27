@@ -127,7 +127,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                 Q(department__in=user_departments)
                 | Q(invitation_tokens__user_id=current_user.id)
             ).distinct()
-        if not current_user.is_superuser:
+        elif not current_user.is_superuser:
             queryset = queryset.none()
 
         return queryset
