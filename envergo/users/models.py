@@ -47,10 +47,10 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
-    is_instructor = models.BooleanField(
-        "En charge de l'instruction",
+    is_instructor_for_departments = models.BooleanField(
+        "En charge de l'instruction sur les départements",
         default=False,
-        help_text="""Personne en charge de l'instruction pour tous les départements qui lui sont assignés.
+        help_text="""Donne accès aux actions instructeur sur tous les dossiers des départements autorisés pour ce user.
         Si cette case n'est pas cochée, la personne a le statut d'invitée.""",
     )
     departments = models.ManyToManyField(
@@ -81,7 +81,7 @@ class User(AbstractUser):
             (
                 self.is_active,
                 self.access_haie,
-                self.is_instructor,
+                self.is_instructor_for_departments,
                 self.departments.exists(),
             )
         )
@@ -92,7 +92,7 @@ class User(AbstractUser):
             (
                 self.is_active,
                 self.access_haie,
-                not self.is_instructor,
+                not self.is_instructor_for_departments,
                 self.departments.exists() or self.invitation_tokens.exists(),
             )
         )
