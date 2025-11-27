@@ -16,7 +16,7 @@
       <div id="slim-menu" class="fr-header__tools fr-nav">
         <div class="fr-header__tools-links">
           <ul class="fr-nav__list">
-            {% if user.is_instructor_guh %}
+            {% if user.is_instructor_guh or user.is_invited_guh %}
               <li class="fr-nav__item">
                 <button id="faq-dropdown-btn"
                         class="fr-nav__btn"
