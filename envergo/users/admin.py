@@ -119,7 +119,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "access_haie",
         "is_superuser",
         "is_staff",
-        "is_instructor",
+        "is_instructor_for_departments",
     ]
 
     filter_horizontal = (
@@ -165,7 +165,7 @@ class UserAdmin(auth_admin.UserAdmin):
         boolean=True,
     )
     def is_instructor_col(self, obj):
-        return obj.is_instructor
+        return obj.is_instructor_for_departments
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name == "departments":
