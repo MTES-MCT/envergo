@@ -16,7 +16,7 @@ def set_default_is_instructor(apps, schema_editor):
     for user in User.objects.filter(access_haie=True, is_active=True).filter(
         q_is_staff | q_has_departments
     ):
-        user.is_instructor = True
+        user.is_instructor_for_departments = True
         user.save()
 
 
@@ -29,11 +29,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="user",
-            name="is_instructor",
+            name="is_instructor_for_departments",
             field=models.BooleanField(
                 default=False,
-                help_text="Personne en charge de l'instruction pour tous les départements qui lui sont assignés.\n        Si cette case n'est pas cochée, la personne a le statut d'invitée.",
-                verbose_name="En charge de l'instruction",
+                help_text="Donne accès aux actions instructeur sur tous les dossiers des départements autorisés pour ce user.\n        Si cette case n'est pas cochée, la personne a le statut d'invitée.",
+                verbose_name="En charge de l'instruction sur les départements",
             ),
         ),
         migrations.RunPython(set_default_is_instructor, migrations.RunPython.noop),
