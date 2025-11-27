@@ -1372,7 +1372,9 @@ def test_petition_project_resume_instruction(
     assert project.current_status.due_date == next_month
 
 
-def test_messagerie_access(client, instructor_haie_user_44, haie_user):
+def test_messagerie_access_stores_access_date(
+    client, instructor_haie_user_44, haie_user
+):
 
     qs = LatestMessagerieAccess.objects.all()
     assert qs.count() == 0
@@ -1408,3 +1410,55 @@ def test_messagerie_access(client, instructor_haie_user_44, haie_user):
     res = client.get(messagerie_url)
     assert res.status_code == 200
     assert qs.count() == 1
+
+
+def test_project_list_unread_pill(client, instructor_haie_user_44):
+    ConfigHaieFactory()
+
+    read_msg = '<td class="messagerie-col read">'
+    unread_msg = '<td class="messagerie-col unread">'
+
+    today = date.today()
+    last_week = today - timedelta(days=7)
+    last_month = today - timedelta(days=30)
+    project = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
+        latest_petitioner_msg=None,
+    )
+    client.force_login(instructor_haie_user_44)
+    url = reverse("petition_project_list")
+
+    # The messagerie was never accessed, there is no message in the project
+    qs = LatestMessagerieAccess.objects.all()
+    assert qs.count() == 0
+
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
+
+    # The messagerie was never accessed, there is existing message in the project
+    project.latest_petitioner_msg = last_week
+    project.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg not in res.content.decode()
+    assert unread_msg in res.content.decode()
+
+    # The messagerie was accessed before the latest message
+    access = LatestMessagerieAccess.objects.create(
+        project=project, user=instructor_haie_user_44, access=last_month
+    )
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg not in res.content.decode()
+    assert unread_msg in res.content.decode()
+
+    # The messagerie was accessed after the latest message
+    access.access = today
+    access.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()

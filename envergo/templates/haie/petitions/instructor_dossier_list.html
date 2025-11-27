@@ -99,7 +99,7 @@
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{% decision_badge project.current_decision True %}</td>
-                    <td class="messagerie-col{% if project.has_unread_messages %} unread{% endif %} ">
+                    <td class="messagerie-col {{ project.has_unread_messages|yesno:"unread,read" }}">
                       {% if project.has_unread_messages %}
                         <span class="fr-icon-mail-fill fr-icon--sm"></span>
                         <span style="font-size: 150%;" class="fr-ml-1v">●</span>
