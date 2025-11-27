@@ -720,20 +720,20 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         context = super().get_context_data()
         department = self.department
         context["department"] = self.department
-        department_basic_users = (
+        department_basic_members = (
             department.members.filter(is_superuser=False)
             .filter(is_staff=False)
             .order_by("email")
         )
-        departement_members = {
+        departement_members_dict = {
             "instructors_emails": [],
             "invited_emails": [],
         }
-        for user in department_basic_users:
+        for user in department_basic_members:
             if user.is_instructor_guh():
-                departement_members["instructors_emails"].append(user.email)
+                departement_members_dict["instructors_emails"].append(user.email)
             elif user.is_invited_guh():
-                departement_members["invited_emails"].append(user.email)
-        context["department_members"] = departement_members
+                departement_members_dict["invited_emails"].append(user.email)
+        context["department_members"] = departement_members_dict
 
         return context
