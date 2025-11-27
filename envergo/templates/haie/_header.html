@@ -65,7 +65,7 @@
             <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Dossiers</a>
           </li>
         {% endif %}
-        {% if user.is_instructor_guh %}
+        {% if user.is_instructor_guh or user.is_invited_guh %}
           <li class="fr-nav__item">
             <button class="fr-nav__btn" aria-expanded="false" aria-controls="faq_menu">Questions fréquentes</button>
             <div class="fr-collapse fr-menu" id="faq_menu">
