@@ -141,8 +141,7 @@ class PetitionProject(models.Model):
         verbose_name="Instructeurs suivant le projet",
     )
     latest_petitioner_msg = models.DateTimeField(
-        verbose_name="Date du dernier message pétitionnaire",
-        default=datetime(2000, 1, 1),
+        verbose_name="Date du dernier message pétitionnaire", null=True, default=None
     )
 
     # Meta fields
@@ -417,7 +416,7 @@ class PetitionProject(models.Model):
         in the queryset
         """
 
-        has_unread_messages = (
+        has_unread_messages = self.latest_petitioner_msg is not None and (
             self.latest_access is None
             or self.latest_access < self.latest_petitioner_msg
         )
