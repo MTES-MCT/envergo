@@ -121,13 +121,16 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
 
-        if current_user.access_haie:
+        if current_user.is_superuser:
+            # don't filter the queryset
+            pass
+        elif current_user.access_haie:
             user_departments = current_user.departments.defer("geometry").all()
             queryset = queryset.filter(
                 Q(department__in=user_departments)
                 | Q(invitation_tokens__user_id=current_user.id)
             ).distinct()
-        elif not current_user.is_superuser:
+        else:
             queryset = queryset.none()
 
         return queryset
