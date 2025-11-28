@@ -18,7 +18,6 @@ updates:
       default-days: 7
       semver-major-days: 60
       semver-minor-days: 30
-      semver-patch-days: 7
 
   # Update python eggs
   - package-ecosystem: "pip"
@@ -32,4 +31,3 @@ updates:
       default-days: 7
       semver-major-days: 60
       semver-minor-days: 30
-      semver-patch-days: 7
