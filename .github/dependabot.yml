@@ -26,7 +26,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "tuesday"
-      time: "04:00"
+      time: "02:00"
       timezone: "Europe/Paris"
     cooldown:
       default-days: 7
