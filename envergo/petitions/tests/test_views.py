@@ -1443,8 +1443,8 @@ def test_project_list_unread_pill(client, instructor_haie_user_44):
     project.save()
     res = client.get(url)
     assert res.status_code == 200
-    assert read_msg not in res.content.decode()
-    assert unread_msg in res.content.decode()
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
 
     # The messagerie was accessed before the latest message
     access = LatestMessagerieAccess.objects.create(
@@ -1458,6 +1458,45 @@ def test_project_list_unread_pill(client, instructor_haie_user_44):
     # The messagerie was accessed after the latest message
     access.access = today
     access.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
+
+
+def test_invited_instructors_wont_see_unread_pills(client, haie_user):
+    ConfigHaieFactory()
+
+    read_msg = '<td class="messagerie-col read">'
+    unread_msg = '<td class="messagerie-col unread">'
+
+    today = date.today()
+    last_week = today - timedelta(days=7)
+    last_month = today - timedelta(days=30)
+    project = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
+        latest_petitioner_msg=None,
+    )
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    url = reverse("petition_project_list")
+
+    # The messagerie was never accessed, there is no message in the project
+    qs = LatestMessagerieAccess.objects.all()
+    assert qs.count() == 0
+
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
+
+    # The messagerie was accessed before the latest message
+    project.latest_petitioner_msg = last_week
+    project.save()
+    LatestMessagerieAccess.objects.create(
+        project=project, user=haie_user, access=last_month
+    )
     res = client.get(url)
     assert res.status_code == 200
     assert read_msg in res.content.decode()

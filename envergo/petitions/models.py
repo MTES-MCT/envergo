@@ -345,7 +345,9 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
-        self.latest_petitioner_msg = get_latest_petitioner_msg()
+        if "instructeurs" in dossier and "messages" in dossier:
+            self.latest_petitioner_msg = get_latest_petitioner_msg()
+
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
 
@@ -432,9 +434,10 @@ class PetitionProject(models.Model):
         in the queryset
         """
 
-        has_unread_messages = self.latest_petitioner_msg is not None and (
-            self.latest_access is None
-            or self.latest_access < self.latest_petitioner_msg
+        has_unread_messages = (
+            self.latest_petitioner_msg is not None
+            and self.latest_access is not None
+            and self.latest_access < self.latest_petitioner_msg
         )
         return has_unread_messages
 
