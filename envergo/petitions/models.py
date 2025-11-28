@@ -141,7 +141,10 @@ class PetitionProject(models.Model):
         verbose_name="Instructeurs suivant le projet",
     )
     latest_petitioner_msg = models.DateTimeField(
-        verbose_name="Date du dernier message pétitionnaire", null=True, default=None
+        verbose_name="Date du dernier message pétitionnaire",
+        null=True,
+        blank=True,
+        default=None,
     )
 
     # Meta fields
@@ -245,6 +248,18 @@ class PetitionProject(models.Model):
 
             return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
+        def get_latest_petitioner_msg():
+            emails = [instructeur["email"] for instructeur in dossier["instructeurs"]]
+            dates = sorted(
+                [
+                    datetime.fromisoformat(msg["createdAt"])
+                    for msg in dossier["messages"]
+                    if msg["email"] in emails
+                ],
+                reverse=True,
+            )
+            return dates[0] if len(dates) else None
+
         logger.info(f"Synchronizing file {self.reference} with DS")
 
         if not self.is_dossier_submitted:
@@ -330,6 +345,7 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
+        self.latest_petitioner_msg = get_latest_petitioner_msg()
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
 
