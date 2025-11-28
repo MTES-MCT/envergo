@@ -67,7 +67,7 @@ $ docker compose run --rm django python manage.py migrate
 Pour avoir accès aux fichiers `static` depuis le serveur de debug :
 
 ```bash
-$ npm install
+$ npm ci
 $ npm run build
 $ docker compose run --rm django python manage.py collectstatic
 
