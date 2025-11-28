@@ -260,3 +260,9 @@ def display_ds_field(context, field_name):
     if not item:
         return {}
     return {"item": item}
+
+
+@register.filter
+def has_edit_permission(user, project):
+    """Check if the user can edit the project."""
+    return project.has_user_as_department_instructor(user)
