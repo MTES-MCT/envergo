@@ -25,7 +25,7 @@ echo "Installing npm dev dependencies for assets generation."
 npm ci --dev
 
 # This is required because we disabled all npm scripts in .npmrc
-node node_modules/optipng-bin/lib/install.jsgit
+node node_modules/optipng-bin/lib/install.js
 npm run build
 
 echo "Uninstall dev dependencies to prevent bloating /staticfiles"
