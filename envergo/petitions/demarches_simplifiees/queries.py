@@ -313,6 +313,13 @@ fragment DossierFragment on Dossier {
   champs @include(if: $includeChamps) {
     ...ChampFragment
   }
+  messages @include(if: $includeMessages) {
+    ...MessageFragment
+  }
+  instructeurs {
+    email
+    id
+  }
   demarche {
     title
     number
@@ -346,6 +353,7 @@ query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeT
 
 GET_DOSSIERS_FOR_DEMARCHE_QUERY = (
     DOSSIER_FRAGMENT
+    + MESSAGE_FRAGMENT
     + """
 query getDossiersForDemarche(
    $demarcheNumber: Int!,
@@ -353,6 +361,7 @@ query getDossiersForDemarche(
    $after: String,
    $includeChamps: Boolean = true,
    $includeTraitements: Boolean = false,
+   $includeMessages: Boolean = true,
    )
 {
    demarche(number: $demarcheNumber)
