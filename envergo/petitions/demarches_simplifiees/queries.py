@@ -267,6 +267,7 @@ DOSSIER_FRAGMENT = (
         + COMMUNE_FRAGMENT
         + RNF_FRAGMENT
         + ENGAGEMENT_JURIDIQUE_FRAGMENT
+        + MESSAGE_FRAGMENT
     )
     + """
 fragment DossierFragment on Dossier {
@@ -343,7 +344,13 @@ fragment DossierFragment on Dossier {
 GET_DOSSIER_QUERY = (
     DOSSIER_FRAGMENT
     + """
-query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+query getDossier(
+    $dossierNumber: Int!,
+    $includeChamps: Boolean = true,
+    $includeTraitements: Boolean = false,
+    $includeMessages: Boolean = false
+  )
+{
   dossier(number: $dossierNumber) {
    ...DossierFragment
   }
@@ -353,7 +360,6 @@ query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeT
 
 GET_DOSSIERS_FOR_DEMARCHE_QUERY = (
     DOSSIER_FRAGMENT
-    + MESSAGE_FRAGMENT
     + """
 query getDossiersForDemarche(
    $demarcheNumber: Int!,
@@ -453,7 +459,8 @@ DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION = (
 mutation (
 $input: DossierRepasserEnConstructionInput!,
  $includeChamps: Boolean = true,
-  $includeTraitements: Boolean = false
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
   ) {
   dossierRepasserEnConstruction(input: $input) {
     dossier {
@@ -473,7 +480,8 @@ DOSSIER_PASSER_EN_INSTRUCTION_MUTATION = (
 mutation (
 $input: DossierPasserEnInstructionInput!,
  $includeChamps: Boolean = true,
-  $includeTraitements: Boolean = false
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
   ) {
   dossierPasserEnInstruction(input: $input) {
     dossier {
@@ -493,7 +501,8 @@ DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION = (
 mutation (
 $input: DossierRepasserEnInstructionInput!,
  $includeChamps: Boolean = true,
-  $includeTraitements: Boolean = false
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
   ) {
   dossierRepasserEnInstruction(input: $input) {
     dossier {
@@ -510,7 +519,12 @@ $input: DossierRepasserEnInstructionInput!,
 DOSSIER_ACCEPTER_MUTATION = (
     DOSSIER_FRAGMENT
     + """
-mutation ($input: DossierAccepterInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+mutation (
+  $input: DossierAccepterInput!,
+  $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
+) {
   dossierAccepter(input: $input) {
     dossier {
     ...DossierFragment
