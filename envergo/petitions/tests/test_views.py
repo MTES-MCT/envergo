@@ -764,7 +764,7 @@ def test_petition_project_list_filters(
 
     # WHEN I search on my projects
     client.force_login(haie_instructor_44_instructor1)
-    response = client.get(f"{project_list_url}?f=mes_projets")
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
 
     # Then project list is filtered on user followed projects
@@ -774,7 +774,7 @@ def test_petition_project_list_filters(
     assert project_44_no_instructor.reference not in content
 
     # WHEN I search on projects unfollowed by any instructor
-    response = client.get(f"{project_list_url}?f=projets_sans_instructeur")
+    response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
     content = response.content.decode()
 
     # Then project list is filtered on user followed projects
@@ -785,7 +785,7 @@ def test_petition_project_list_filters(
 
     # WHEN I search on my projects for instructor2
     client.force_login(haie_instructor_44_instructor2)
-    response = client.get(f"{project_list_url}?f=mes_projets")
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
 
     # Then project list is filtered on user followed projects
