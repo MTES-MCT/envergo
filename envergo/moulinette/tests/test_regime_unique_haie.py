@@ -90,7 +90,17 @@ def moulinette_data(type_haie):
 def test_moulinette_evaluation_single_procedure(
     moulinette_data, expected_result, expected_result_code
 ):
-    ConfigHaieFactory(single_procedure=True)
+    ConfigHaieFactory(
+        single_procedure=True,
+        single_procedure_settings={
+            "coeff_compensation": {
+                "mixte": 1.5,
+                "degradee": 1.5,
+                "arbustive": 1.5,
+                "buissonnante": 1.5,
+            }
+        },
+    )
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
@@ -123,7 +133,18 @@ def test_moulinette_evaluation_droit_constant(
     [("mixte", "non_active"), ("alignement", "non_active")],
 )
 def test_moulinette_evaluation_non_active(moulinette_data, expected_result):
-    ConfigHaieFactory(regulations_available=[], single_procedure=True)
+    ConfigHaieFactory(
+        regulations_available=[],
+        single_procedure=True,
+        single_procedure_settings={
+            "coeff_compensation": {
+                "mixte": 1.5,
+                "degradee": 1.5,
+                "arbustive": 1.5,
+                "buissonnante": 1.5,
+            }
+        },
+    )
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result
 
@@ -134,6 +155,16 @@ def test_moulinette_evaluation_non_active(moulinette_data, expected_result):
 )
 @pytest.mark.disable_regime_haie_criterion
 def test_moulinette_evaluation_non_disponible(moulinette_data, expected_result):
-    ConfigHaieFactory(single_procedure=True)
+    ConfigHaieFactory(
+        single_procedure=True,
+        single_procedure_settings={
+            "coeff_compensation": {
+                "mixte": 1.5,
+                "degradee": 1.5,
+                "arbustive": 1.5,
+                "buissonnante": 1.5,
+            }
+        },
+    )
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result
