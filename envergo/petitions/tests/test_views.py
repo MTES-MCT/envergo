@@ -654,6 +654,66 @@ def test_petition_project_list(
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_list_filters(
+    instructor_haie_user_44, haie_user, admin_user, client, site
+):
+    """Test filters on project list"""
+
+    project_list_url = reverse("petition_project_list")
+    # Given config haie on 44
+    config_haie_44 = ConfigHaieFactory()
+    department_44 = config_haie_44.department
+
+    # Given a haie instructor : user with right to this department and `is_instructor_for_departments` True
+    haie_instructor_44_instructor1 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=True,
+    )
+    haie_instructor_44_instructor1.departments.add(department_44)
+
+    # Create three projects non draft
+    today = date.today()
+    last_month = today - timedelta(days=30)
+    project_44_followed_by_instructor1 = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
+    project_44_followed_by_instructor2 = PetitionProjectFactory(
+        reference="ACB132",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_no_instructor = PetitionProjectFactory(
+        reference="ABC124",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
+    )
+
+    # WHEN I search on my projects
+    client.force_login(haie_instructor_44_instructor1)
+    response = client.get(f"{project_list_url}?f=mes_projets")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+    # WHEN I search on projects unfollowed by any instructor
+    response = client.get(f"{project_list_url}?f=projets_sans_instructeur")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_no_instructor.reference in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
