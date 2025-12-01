@@ -650,6 +650,7 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference not in content
+    assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -1058,7 +1059,7 @@ def test_petition_project_procedure(
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
-    assert "Modifier</button>" not in content
+    assert "Modifier l'état du dossier</button>" not in content
 
     # WHEN the user is a department instructor
     client.force_login(instructor_haie_user_44)
@@ -1068,7 +1069,7 @@ def test_petition_project_procedure(
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Procédure</h2>" in content
-    assert "Modifier</button>" in content
+    assert "Modifier l'état du dossier</button>" in content
 
     # WHEN the user try to go from to_be_processed to closed
     data = {
@@ -1081,7 +1082,7 @@ def test_petition_project_procedure(
     # THEN this step is not authorized
     assert res.status_code == 200
     project.refresh_from_db()
-    assert project.status_history.all().count() == 0
+    assert project.status_history.all().count() == 1
 
     # WHEN the user edit the status
     data = {
@@ -1245,6 +1246,10 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client.force_login(haie_user)
     res = client.get(messagerie_url)
     assert "Nouveau message</button>" not in res.content.decode()
+    assert (
+        '<span><span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule</span>'
+        in res.content.decode()
+    )
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -1281,3 +1286,122 @@ def test_petition_invited_instructor_cannot_send_message(
     }
     res = client.post(messagerie_url, message_data, follow=True)
     assert res.status_code == 403
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44, site):
+    """Only department admin can see the "request additional info" button"""
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory()
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN the user is an invited instructor
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.get(status_url)
+
+    # THEN the page is displayed but the edition button is not there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Demander des compléments" not in content
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(status_url)
+
+    # THEN the page is displayed and the edition button is there
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Procédure</h2>" in content
+    assert "Demander des compléments" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.views.send_message_dossier_ds")
+def test_petition_project_request_for_info(
+    mock_ds_msg, client, instructor_haie_user_44, site
+):
+    """Instructors can request for additional info."""
+
+    client.force_login(instructor_haie_user_44)
+    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    today = date.today()
+    next_month = today + timedelta(days=30)
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory(status__due_date=today)
+    assert project.due_date == today
+    assert project.is_paused is False
+
+    # Request for additional info
+    rai_url = reverse(
+        "petition_project_instructor_request_info_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "response_due_date": next_month,
+        "request_message": "Test",
+    }
+    res = client.post(rai_url, form_data, follow=True)
+    assert res.status_code == 200
+    assert "Le message au demandeur a bien été envoyé." in res.content.decode()
+
+    project.refresh_from_db()
+    project.current_status.refresh_from_db()
+    assert project.is_paused is True
+    assert project.current_status.due_date == next_month
+    assert project.current_status.original_due_date == today
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.views.send_message_dossier_ds")
+def test_petition_project_resume_instruction(
+    mock_ds_msg, client, instructor_haie_user_44, site
+):
+    """Instructors can resume_instruction."""
+
+    client.force_login(instructor_haie_user_44)
+    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    today = date.today()
+    last_month = today - timedelta(days=30)
+    next_month = today + timedelta(days=30)
+
+    ConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__suspension_date=last_month,
+        status__original_due_date=today,
+        status__due_date=next_month,
+        status__response_due_date=next_month,
+    )
+    assert project.is_paused is True
+    assert project.due_date == next_month
+
+    # Request for additional info
+    rai_url = reverse(
+        "petition_project_instructor_request_info_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "info_receipt_date": today,
+    }
+    res = client.post(rai_url, form_data, follow=True)
+    assert res.status_code == 200
+    assert "L'instruction du dossier a repris." in res.content.decode()
+
+    project.refresh_from_db()
+    project.current_status.refresh_from_db()
+    assert project.is_paused is False
+    assert project.current_status.due_date == next_month

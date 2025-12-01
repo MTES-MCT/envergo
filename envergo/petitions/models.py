@@ -13,6 +13,7 @@ from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
@@ -162,6 +163,30 @@ class PetitionProject(models.Model):
                 self.department = None
         super().save(*args, **kwargs)
 
+    @cached_property
+    def current_status(self):
+        # Make sure the `status_history` is prefetched with the correct ordering
+        log = self.status_history.first()
+        return log
+
+    @property
+    def current_stage(self):
+        return (
+            self.current_status.stage if self.current_status else STAGES.to_be_processed
+        )
+
+    @property
+    def current_decision(self):
+        return self.current_status.decision if self.current_status else DECISIONS.unset
+
+    @property
+    def due_date(self):
+        return self.current_status.due_date if self.current_status else None
+
+    @property
+    def is_paused(self):
+        return self.current_status.is_paused if self.current_status else False
+
     def get_department_code(self):
         """Get department from moulinette url"""
         return extract_param_from_url(self.moulinette_url, "department")
@@ -307,11 +332,12 @@ class PetitionProject(models.Model):
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
-        moulinette_data = self._parse_moulinette_data()
-        moulinette_data["haies"] = self.hedge_data
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
-        return moulinette
+        if not hasattr(self, "_moulinette"):
+            moulinette_data = self._parse_moulinette_data()
+            moulinette_data["haies"] = self.hedge_data
+            form_data = {"initial": moulinette_data, "data": moulinette_data}
+            self._moulinette = MoulinetteHaie(form_data)
+        return self._moulinette
 
     def get_triage_form(self):
         """Recreate triage form from moulinette url"""
@@ -433,6 +459,24 @@ class InvitationToken(models.Model):
         return self.user_id is None and self.valid_until >= timezone.now()
 
 
+# Some data constraints checks
+
+# Check that all request for info suspension data is set
+q_suspended = Q(suspension_date__isnull=False) & Q(response_due_date__isnull=False)
+
+# Check that no single field is set
+q_not_suspended = (
+    Q(suspension_date__isnull=True)
+    & Q(response_due_date__isnull=True)
+    & Q(original_due_date__isnull=True)
+)
+
+# Check that the receipt date is only set if the project was suspended
+q_receipt_date = Q(info_receipt_date__isnull=True) | (
+    Q(info_receipt_date__isnull=False) & q_suspended
+)
+
+
 class StatusLog(models.Model):
     """A petition project status (stage + decision) change log entry."""
 
@@ -477,6 +521,31 @@ class StatusLog(models.Model):
         blank=True,
     )
 
+    # "Request for additional information" related fields
+    suspension_date = models.DateField(
+        "Date de suspension pour demande d'information complémentaire",
+        null=True,
+        blank=True,
+    )
+    response_due_date = models.DateField(
+        "Échéance pour l'envoi de pièces complémentaires",
+        null=True,
+        blank=True,
+    )
+    original_due_date = models.DateField(
+        "Date de prochaine échéance avant suspension", null=True, blank=True
+    )
+    suspended_by = models.ForeignKey(
+        "users.User",
+        related_name="suspended_logs",
+        on_delete=models.SET_NULL,
+        verbose_name="Auteur de la demande d'informations complémentaires",
+        null=True,
+    )
+    info_receipt_date = models.DateField(
+        "Date de réception des pièces complémentaires", null=True, blank=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(
         "Date de saisie du changement de statut", default=timezone.now
@@ -489,5 +558,23 @@ class StatusLog(models.Model):
             models.CheckConstraint(
                 check=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
                 name="forbid_closed_with_unset_decision",
-            )
+            ),
+            models.CheckConstraint(
+                check=q_suspended | q_not_suspended,
+                name="suspension_data_is_consistent",
+            ),
+            models.CheckConstraint(
+                check=q_receipt_date, name="receipt_date_data_is_consistent"
+            ),
         ]
+        ordering = ["-created_at"]
+
+    @property
+    def is_paused(self):
+        """Are we currently waiting for additional info?"""
+
+        return self.suspension_date is not None and self.info_receipt_date is None
+
+    @property
+    def is_closed(self):
+        return self.stage == STAGES.closed

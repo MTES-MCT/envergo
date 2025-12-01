@@ -17,7 +17,10 @@
           <span class="fr-icon-arrow-up-s-line fr-icon--sm"></span></span>
         {% endif %}
       </button>
-      <div class="fr-collapse" id="action-{{ action.slug }}">
-        <p class="fr-ml-5w fr-my-1w">{% render_action_to_take_details action.details %}</p>
+      <div class="fr-collapse action-details-container"
+           id="action-{{ action.slug }}">
+        {% if action.details %}
+          <p class="fr-ml-5w fr-my-1w">{% include action.details %}</p>
+        {% endif %}
       </div>
     </section>
