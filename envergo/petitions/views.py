@@ -148,7 +148,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             instructors_users_qs = User.objects.filter(
                 is_instructor_for_departments=True
             )
-            queryset = queryset.exclude(followed_by___in=instructors_users_qs)
+            queryset = queryset.exclude(followed_by__in=instructors_users_qs)
 
         return queryset
 
