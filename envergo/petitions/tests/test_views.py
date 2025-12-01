@@ -664,7 +664,14 @@ def test_petition_project_list_filters(
     config_haie_44 = ConfigHaieFactory()
     department_44 = config_haie_44.department
 
-    # Given a haie instructor : user with right to this department and `is_instructor_for_departments` True
+    # Given two haie instructors and haie invited on department 44
+    haie_instructor_44_invited = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=False,
+    )
+    haie_instructor_44_invited.departments.add(department_44)
     haie_instructor_44_instructor1 = UserFactory(
         is_active=True,
         access_amenagement=False,
@@ -694,8 +701,14 @@ def test_petition_project_list_filters(
         demarches_simplifiees_date_depot=today,
     )
     project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
+    project_44_followed_by_invited = PetitionProjectFactory(
+        reference="XYZ123",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
+    )
+    project_44_followed_by_invited.followed_by.add(haie_instructor_44_invited)
     project_44_no_instructor = PetitionProjectFactory(
-        reference="ABC124",
+        reference="XYZ456",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=last_month,
     )
@@ -708,6 +721,7 @@ def test_petition_project_list_filters(
     # Then project list is filtered on user followed projects
     assert project_44_followed_by_instructor1.reference in content
     assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference not in content
     assert project_44_no_instructor.reference not in content
 
     # WHEN I search on projects unfollowed by any instructor
@@ -717,7 +731,19 @@ def test_petition_project_list_filters(
     # Then project list is filtered on user followed projects
     assert project_44_followed_by_instructor1.reference not in content
     assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference in content
     assert project_44_no_instructor.reference in content
+
+    # WHEN I search on my projects for instructor2
+    client.force_login(haie_instructor_44_instructor2)
+    response = client.get(f"{project_list_url}?f=mes_projets")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_no_instructor.reference not in content
 
 
 @pytest.mark.urls("config.urls_haie")
