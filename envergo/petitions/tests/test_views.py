@@ -739,7 +739,6 @@ def test_petition_project_list_filters(
 
     # Create three projects non draft
     today = date.today()
-    last_month = today - timedelta(days=30)
     project_44_followed_by_instructor1 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=today,
@@ -754,13 +753,13 @@ def test_petition_project_list_filters(
     project_44_followed_by_invited = PetitionProjectFactory(
         reference="XYZ123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=last_month,
+        demarches_simplifiees_date_depot=today,
     )
     project_44_followed_by_invited.followed_by.add(haie_instructor_44_invited)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ456",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=last_month,
+        demarches_simplifiees_date_depot=today,
     )
 
     # WHEN I search on my projects
