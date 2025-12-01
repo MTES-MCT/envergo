@@ -116,6 +116,14 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = self.queryset.none()
 
+        # Filter on request GET params
+        request_filters = self.request.GET.getlist("f", [])
+        if "mes_projets" in request_filters:
+            queryset = queryset.filter(followed_by=current_user)
+
+        if "projets_sans_instructeur" in request_filters:
+            queryset = queryset.filter(followed_by__isnull=True)
+
         queryset = queryset.annotate(
             followed_up=Exists(
                 PetitionProject.followed_by.through.objects.filter(

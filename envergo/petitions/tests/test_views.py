@@ -672,6 +672,13 @@ def test_petition_project_list_filters(
         is_instructor_for_departments=True,
     )
     haie_instructor_44_instructor1.departments.add(department_44)
+    haie_instructor_44_instructor2 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=True,
+    )
+    haie_instructor_44_instructor2.departments.add(department_44)
 
     # Create three projects non draft
     today = date.today()
@@ -686,6 +693,7 @@ def test_petition_project_list_filters(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=today,
     )
+    project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
     project_44_no_instructor = PetitionProjectFactory(
         reference="ABC124",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
