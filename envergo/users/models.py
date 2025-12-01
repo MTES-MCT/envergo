@@ -47,6 +47,12 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
+    is_instructor_for_departments = models.BooleanField(
+        "En charge de l'instruction sur les départements",
+        default=False,
+        help_text="""Donne accès aux actions instructeur sur tous les dossiers des départements autorisés pour ce user.
+        Si cette case n'est pas cochée, la personne a le statut d'invitée.""",
+    )
     departments = models.ManyToManyField(
         "geodata.Department",
         verbose_name=_("Departements"),
@@ -69,11 +75,24 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.name}"
 
-    def is_instructor(self):
+    def is_instructor_guh(self):
+        """Returns if user is instructor on its departments"""
         return self.is_superuser or all(
             (
                 self.is_active,
                 self.access_haie,
+                self.is_instructor_for_departments,
+                self.departments.exists(),
+            )
+        )
+
+    def is_invited_guh(self):
+        """Returns if user is invited on its departments"""
+        return all(
+            (
+                self.is_active,
+                self.access_haie,
+                not self.is_instructor_for_departments,
                 self.departments.exists() or self.invitation_tokens.exists(),
             )
         )
