@@ -906,7 +906,12 @@ class PetitionProjectInstructorMessagerieView(
 
     def get(self, request, *args, **kwargs):
         res = super().get(request, *args, **kwargs)
-        if res.status_code == 200:
+
+        # Invited instructors do not see the "unread message" notification pill
+        # Hence, we only log messagerie accesses for instructors with edit permissions
+        if res.status_code == 200 and self.has_edit_permission(
+            request.user, self.object
+        ):
             LatestMessagerieAccess.objects.update_or_create(
                 user=request.user,
                 project=self.object,
