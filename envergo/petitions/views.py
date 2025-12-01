@@ -13,7 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Exists, OuterRef, Prefetch, Q
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -53,6 +53,7 @@ from envergo.petitions.models import (
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
+    LatestMessagerieAccess,
     PetitionProject,
     StatusLog,
 )
@@ -81,19 +82,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
-    queryset = (
-        PetitionProject.objects.exclude(
-            demarches_simplifiees_state__exact=DOSSIER_STATES.draft
-        )
-        .select_related("hedge_data", "department__confighaie")
-        .prefetch_related(
-            Prefetch(
-                "status_history",
-                queryset=StatusLog.objects.all().order_by("-created_at"),
-            )
-        )
-        .order_by("-demarches_simplifiees_date_depot", "-created_at")
-    )
     paginate_by = 30
 
     def get_queryset(self):
@@ -105,25 +93,46 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         - none object if user is not instructor or not superuser
         """
         current_user = self.request.user
+
+        messagerie_access_qs = LatestMessagerieAccess.objects.filter(
+            user=current_user
+        ).filter(project=OuterRef("pk"))
+
+        queryset = (
+            PetitionProject.objects.exclude(
+                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+            )
+            .select_related("hedge_data", "department__confighaie")
+            .prefetch_related(
+                Prefetch(
+                    "status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+            .annotate(latest_access=Subquery(messagerie_access_qs.values("access")))
+            .annotate(
+                followed_up=Exists(
+                    PetitionProject.followed_by.through.objects.filter(
+                        petitionproject_id=OuterRef("pk"),
+                        user_id=current_user.pk,
+                    )
+                )
+            )
+            .order_by("-demarches_simplifiees_date_depot", "-created_at")
+        )
+
         if current_user.is_superuser:
-            queryset = self.queryset
+            # don't filter the queryset
+            pass
         elif current_user.access_haie:
             user_departments = current_user.departments.defer("geometry").all()
-            queryset = self.queryset.filter(
+            queryset = queryset.filter(
                 Q(department__in=user_departments)
                 | Q(invitation_tokens__user_id=current_user.id)
             ).distinct()
         else:
-            queryset = self.queryset.none()
+            queryset = queryset.none()
 
-        queryset = queryset.annotate(
-            followed_up=Exists(
-                PetitionProject.followed_by.through.objects.filter(
-                    petitionproject_id=OuterRef("pk"),
-                    user_id=current_user.pk,
-                )
-            )
-        )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -607,6 +616,10 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
     def get_queryset(self):
         current_user = self.request.user
+        messagerie_access_qs = LatestMessagerieAccess.objects.filter(
+            user=current_user
+        ).filter(project=OuterRef("pk"))
+
         queryset = (
             PetitionProject.objects.all()
             .prefetch_related(
@@ -615,6 +628,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                     queryset=StatusLog.objects.all().order_by("-created_at"),
                 )
             )
+            .annotate(latest_access=Subquery(messagerie_access_qs.values("access")))
             .annotate(
                 followed_up=Exists(
                     PetitionProject.followed_by.through.objects.filter(
@@ -696,6 +710,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                 """L'accès à l'API démarches simplifiées n'est pas activée.
                 Les données proviennent d'un dossier factice.""",
             )
+
+        context["has_unread_messages"] = self.object.has_unread_messages
 
         return context
 
@@ -887,6 +903,22 @@ class PetitionProjectInstructorMessagerieView(
     event_category = "message"
     event_action = "lecture"
     form_class = PetitionProjectInstructorMessageForm
+
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+
+        # Invited instructors do not see the "unread message" notification pill
+        # Hence, we only log messagerie accesses for instructors with edit permissions
+        if res.status_code == 200 and self.has_edit_permission(
+            request.user, self.object
+        ):
+            LatestMessagerieAccess.objects.update_or_create(
+                user=request.user,
+                project=self.object,
+                defaults={"access": timezone.now()},
+            )
+
+        return res
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
