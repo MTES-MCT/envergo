@@ -28,26 +28,38 @@
       </div>
     {% endif %}
 
-    <p>Filtre des dossiers</p>
-    <div>
-      <ul class="fr-btns-group fr-btns-group--left fr-btns-group--inline">
-        <li>
-          <a href='{% url "petition_project_list" %}'
-             target="_self"
-             class="fr-btn fr-btn--secondary">Tous les dossiers</a>
-        </li>
-        <li>
-          <a href='{% url "petition_project_list" %}?f=mes_dossiers'
-             target="_self"
-             class="fr-btn fr-btn--tertiary">Mes dossiers suivis</a>
-        </li>
-        <li>
-          <a href='{% url "petition_project_list" %}?f=dossiers_sans_instructeur'
-             target="_self"
-             class="fr-btn fr-btn--tertiary">Dossiers sans instructeur</a>
-        </li>
-      </ul>
-    </div>
+    <form method="get">
+      <fieldset class="fr-segmented">
+        <legend class="fr-segmented__legend">Filtre des dossiers</legend>
+        <div class="fr-segmented__elements">
+          <div class="fr-segmented__element">
+            <input value="all"
+                   checked
+                   type="radio"
+                   id="segmented-1-1"
+                   name="segmented-dossiers">
+            <label class="fr-label" for="segmented-1-1">Tous les dossiers</label>
+          </div>
+          <div class="fr-segmented__element">
+            <input value="suivis"
+                   type="radio"
+                   id="segmented-1-2"
+                   name="segmented-dossiers">
+            <label class="fr-label" for="segmented-1-2">Mes dossiers suivis</label>
+          </div>
+          <div class="fr-segmented__element">
+            <input value="sans_instructeurs"
+                   type="radio"
+                   id="segmented-1-3"
+                   name="segmented-dossiers">
+            <label class="fr-label" for="segmented-1-3">Dossiers sans instructeur</label>
+          </div>
+        </div>
+      </fieldset>
+      <input class="fr-sr-only" type="submit" value="Filtrer">
+    </form>
+    <!--
+          <a href='{% url "petition_project_list" %}' <a href='{% url "petition_project_list" %}?f=mes_dossiers' <a href='{% url "petition_project_list" %}?f=dossiers_sans_instructeur' -->
     <div class="fr-table--lg fr-table project-list__table">
       <div class="fr-table__wrapper">
         <div class="fr-table__container">
