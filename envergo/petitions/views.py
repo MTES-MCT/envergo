@@ -576,11 +576,11 @@ class PetitionProjectDetail(DetailView):
         share_btn_url = update_qs(
             remove_mtm_params(current_url), {"mtm_campaign": "share-simu"}
         )
+
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
-        moulinette_params["edit"] = ["true"]
-        result_url = reverse("moulinette_result")
-        edit_url = update_qs(result_url, moulinette_params)
+        form_url = reverse("moulinette_form")
+        edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
