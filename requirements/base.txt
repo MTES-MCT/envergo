@@ -148,7 +148,7 @@ psycopg-binary==3.2.9
     # via psycopg
 pycparser==2.22
     # via cffi
-pyproj==3.7.1
+pyproj==3.7.2
     # via -r base.in
 pyproject-hooks==1.2.0
     # via
