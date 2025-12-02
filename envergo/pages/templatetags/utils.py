@@ -188,5 +188,5 @@ def urlize_html(value, blank=True):
         a.replaceWith(a["href"])
     result = _urlize(str(soup), nofollow=True, autoescape=False)
     if blank:
-        result = result.replace("<a", '<a target="_blank"')
+        result = result.replace("<a", '<a target="_blank" rel="noopener"')
     return result
