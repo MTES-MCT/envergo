@@ -170,6 +170,11 @@ jobs:
         run: wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
       - name: Run Playwright tests for amenagement
         run: npm run e2e-haie
+      - name: Dump Docker logs on failure
+        if: failure()
+        run: |
+          echo "=== Django logs ==="
+          docker compose logs django || true
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
@@ -177,3 +182,4 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
