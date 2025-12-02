@@ -12,7 +12,9 @@
     Actions à mener
   </h2>
   <div class="fr-tabs">
-    <ul class="fr-tabs__list" role="tablist" aria-label="Actions à mener">
+    <ul class="fr-tabs__list fr-no-print"
+        role="tablist"
+        aria-label="Actions à mener">
       <li role="presentation">
         <button type="button"
                 id="actions-petitioner-tab-0"
@@ -38,6 +40,7 @@
          aria-labelledby="actions-petitioner-tab-0"
          tabindex="0">
 
+      <h3 class="fr-h4 action-section-title">Porteur de projet</h3>
       {% if moulinette.actions_to_take.petitioner %}
         {% for action in moulinette.actions_to_take.petitioner %}
           <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
@@ -56,6 +59,7 @@
          role="tabpanel"
          aria-labelledby="actions-instructor-tab-1"
          tabindex="0">
+      <h3 class="fr-h4 action-section-title">Instruction urbanisme</h3>
       {% if moulinette.actions_to_take.pc %}
         <section class="action-to-take fr-mb-2w">
           <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
