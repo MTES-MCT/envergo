@@ -107,7 +107,7 @@ faker==37.5.3
     # via -r base.in
 fiona==1.10.1
     # via -r base.in
-gql==3.5.3
+gql==4.0.0
     # via -r base.in
 graphql-core==3.2.6
     # via gql

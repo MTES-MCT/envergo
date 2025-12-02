@@ -149,7 +149,7 @@ faker==37.5.3
     # via -r base.txt
 fiona==1.10.1
     # via -r base.txt
-gql==3.5.3
+gql==4.0.0
     # via -r base.txt
 graphql-core==3.2.6
     # via
