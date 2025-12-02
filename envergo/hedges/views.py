@@ -11,6 +11,7 @@ from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
+from envergo.decorators.csp import csp_override, csp_report_only_override
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
@@ -18,6 +19,20 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
 
+# VueJS, in the full build, uses the `eval` js method to compile it's templates
+# This make it incompatible with csp unless we allow "unsafe-eval", which makes csp
+# pretty much useless.
+# To fix the problem, we should use the runtime vue build that requires that all templates are pre-compiled into
+# render functions
+# A temporary fix is to disable csp for this page, which is not ideal.
+@method_decorator(
+    csp_override(config={}),
+    name="get",
+)
+@method_decorator(
+    csp_report_only_override(config={}),
+    name="get",
+)
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
