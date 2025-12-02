@@ -175,7 +175,7 @@ django-stubs==5.2.2
     # via -r local.in
 django-stubs-ext==5.2.2
     # via django-stubs
-djhtml==3.0.8
+djhtml==3.0.10
     # via -r local.in
 djlint==1.36.4
     # via -r local.in
