@@ -358,16 +358,19 @@ class PetitionProject(models.Model):
             (
                 user.is_active,
                 user.access_haie,
+                user.is_instructor_for_departments,
                 user.departments.filter(id=department.id).exists(),
             )
         )
 
     def has_user_as_invited_instructor(self, user):
+        department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
-                user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+                user.invitation_tokens.filter(petition_project_id=self.pk).exists()
+                or user.departments.filter(id=department.id).exists(),
             )
         )
 
