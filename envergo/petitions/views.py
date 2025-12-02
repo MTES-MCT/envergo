@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import shutil
@@ -1015,6 +1016,23 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
         return reverse(
             "petition_project_instructor_messagerie_view", kwargs=self.kwargs
         )
+
+
+class PetitionProjectInstructorMessagerieMarkUnreadView(
+    BasePetitionProjectInstructorView, View
+):
+    """View for petition project instructor page with demarche simplifiées messagerie"""
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.has_edit_permission(request.user, self.object):
+            old_date = datetime.datetime(1985, 10, 1, tzinfo=datetime.UTC)
+            LatestMessagerieAccess.objects.filter(
+                project=self.object, user=request.user
+            ).update(access=old_date)
+
+        url = reverse("petition_project_instructor_view", args=[self.object.reference])
+        return HttpResponseRedirect(url)
 
 
 class PetitionProjectInstructorAlternativeView(
