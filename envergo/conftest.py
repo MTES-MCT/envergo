@@ -43,12 +43,27 @@ def inactive_haie_user_44() -> User:
 
 
 @pytest.fixture
+def invited_haie_user_44() -> User:
+    """Haie user with dept 44"""
+    invited_haie_user_44 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=False,
+    )
+    department_44 = DepartmentFactory.create()
+    invited_haie_user_44.departments.add(department_44)
+    return invited_haie_user_44
+
+
+@pytest.fixture
 def instructor_haie_user_44() -> User:
     """Haie user with dept 44"""
     instructor_haie_user_44 = UserFactory(
         is_active=True,
         access_amenagement=False,
         access_haie=True,
+        is_instructor_for_departments=True,
     )
     department_44 = DepartmentFactory.create()
     instructor_haie_user_44.departments.add(department_44)

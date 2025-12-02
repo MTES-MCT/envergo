@@ -238,6 +238,7 @@ def test_petition_project_detail(mock_post, client, site):
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     inactive_haie_user_44,
+    haie_user_44,
     instructor_haie_user_44,
     admin_user,
     site,
@@ -295,6 +296,16 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 403
 
     # Simulate instructor user with department 44
+    request.user = haie_user_44
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 200
+    assert response.status_code == 200
+
+    # Simulate instructor user with department 44
     request.user = instructor_haie_user_44
     response = PetitionProjectInstructorView.as_view()(
         request,
@@ -332,7 +343,7 @@ def test_petition_project_instructor_view_requires_authentication(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_notes_view(
-    mock_post, instructor_haie_user_44, client, site
+    mock_post, haie_user_44, instructor_haie_user_44, client, site
 ):
     """
     Test petition project instructor notes view
@@ -349,18 +360,34 @@ def test_petition_project_instructor_notes_view(
         kwargs={"reference": project.reference},
     )
 
-    # Check that the response status code is 200
-    client.force_login(instructor_haie_user_44)
+    # Given user is instructor on department
+    client.force_login(haie_user_44)
+    # Then response status code is 200
     response = client.get(instructor_notes_url)
     assert response.status_code == 200
+    # And user cannot post a new note
+    response = client.post(
+        instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
+    )
+    assert response.url == instructor_notes_url
+    project.refresh_from_db()
+    assert "Note mineure : Fa dièse" not in project.instructor_free_mention
 
-    # Submit notes
+    # Given user is instructor on department
+    client.force_login(instructor_haie_user_44)
+    # Then response status code is 200
+    response = client.get(instructor_notes_url)
+    assert response.status_code == 200
+    # And user can post a new note
     assert not Event.objects.filter(category="dossier", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
-
+    project.refresh_from_db()
+    assert "Note mineure : Fa dièse" in project.instructor_free_mention
+    assert "Note mineure : Fa dièse" in response.content.decode()
+    # And a new SQL event is created
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
 
 
