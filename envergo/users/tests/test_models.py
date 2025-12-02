@@ -1,17 +1,23 @@
 import pytest
 
-from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
 
 def test_users_instructor_or_invited(
-    user, haie_user, instructor_haie_user_44, inactive_haie_user_44
+    user,
+    haie_user,
+    inactive_haie_user_44,
+    invited_haie_user_44,
+    instructor_haie_user_44,
 ):
     """Test is_instructor_guh, is_invited_guh methods on User model"""
-    # Given a Department
-    department_44 = DepartmentFactory.create()
+
+    # Given haie_user, with no department and `is_instructor_for_departments` False
+    # Then this user is not invited_guh nor instructor_guh
+    assert haie_user.is_invited_guh() is False
+    assert haie_user.is_instructor_guh() is False
 
     # When a haie user is created without right to this department and `is_instructor_for_departments` True
     haie_user_no_department = UserFactory(
@@ -24,26 +30,12 @@ def test_users_instructor_or_invited(
     assert haie_user_no_department.is_invited_guh() is False
     assert haie_user_no_department.is_instructor_guh() is False
 
-    # When a haie user is created with right to this department and `is_instructor_for_departments` False
-    instructor_haie_user_44_not_instructor = UserFactory(
-        is_active=True,
-        access_amenagement=False,
-        access_haie=True,
-        is_instructor_for_departments=False,
-    )
-    instructor_haie_user_44_not_instructor.departments.add(department_44)
+    # Given invited_haie_user_44, with right to department 44 and `is_instructor_for_departments` False
     # Then this user is only invited_guh
-    assert instructor_haie_user_44_not_instructor.is_invited_guh() is True
-    assert instructor_haie_user_44_not_instructor.is_instructor_guh() is False
+    assert invited_haie_user_44.is_invited_guh() is True
+    assert invited_haie_user_44.is_instructor_guh() is False
 
-    # When a haie user is created with right to this department and `is_instructor_for_departments` True
-    instructor_haie_user_44_instructor = UserFactory(
-        is_active=True,
-        access_amenagement=False,
-        access_haie=True,
-        is_instructor_for_departments=True,
-    )
-    instructor_haie_user_44_instructor.departments.add(department_44)
+    # Given instructor_haie_user_44, with right to department 44 and `is_instructor_for_departments` True
     # Then this user is instructor_guh
-    assert instructor_haie_user_44_instructor.is_invited_guh() is False
-    assert instructor_haie_user_44_instructor.is_instructor_guh() is True
+    assert instructor_haie_user_44.is_invited_guh() is False
+    assert instructor_haie_user_44.is_instructor_guh() is True
