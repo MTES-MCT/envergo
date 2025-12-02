@@ -417,10 +417,18 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "department",
                     "is_activated",
-                    "single_procedure",
                     "regulations_available",
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",
+                ],
+            },
+        ),
+        (
+            "Régime unique",
+            {
+                "fields": [
+                    "single_procedure",
+                    "single_procedure_settings",
                 ],
             },
         ),
