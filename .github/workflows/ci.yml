@@ -175,6 +175,10 @@ jobs:
         run: |
           echo "=== Django logs ==="
           docker compose logs django || true
+          echo "=== Node logs ==="
+          docker compose logs node || true
+          echo "=== Postgres logs ==="
+          docker compose logs postgres || true
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
