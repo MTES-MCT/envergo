@@ -169,7 +169,7 @@ jobs:
       - name: Wait for services to be ready
         run: wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 --tries 10 http://localhost:3000/
       - name: Run Playwright tests for amenagement
-        run: npm run e2e-haie
+        run: npm run e2e-amenagement
       - name: Dump Docker logs on failure
         if: failure()
         run: |
