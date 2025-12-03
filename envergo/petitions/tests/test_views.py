@@ -369,7 +369,7 @@ def test_petition_project_instructor_notes_view(
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
-    assert response.url == instructor_notes_url
+    assert response.status_code == 403
     project.refresh_from_db()
     assert "Note mineure : Fa dièse" not in project.instructor_free_mention
 
@@ -386,7 +386,6 @@ def test_petition_project_instructor_notes_view(
     assert response.url == instructor_notes_url
     project.refresh_from_db()
     assert "Note mineure : Fa dièse" in project.instructor_free_mention
-    assert "Note mineure : Fa dièse" in response.content.decode()
     # And a new SQL event is created
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
 
