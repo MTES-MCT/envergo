@@ -373,29 +373,45 @@ class PetitionProject(models.Model):
         moulinette_data = raw_data.dict()
         return moulinette_data
 
-    def has_user_as_department_instructor(self, user):
+    def user_has_view_permission(self, user):
+        """User has view permission on project, according to
+        - superuser
+        - user with access haie and invitation token
+        - user with access haie and right to project department
+        """
+        department = self.department
+        return (
+            user.is_superuser
+            or all(
+                (
+                    user.is_active,
+                    user.access_haie,
+                    user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+                )
+            )
+            or all(
+                (
+                    user.is_active,
+                    user.access_haie,
+                    user.departments.filter(id=department.id).exists(),
+                )
+            )
+        )
+
+    def user_has_edit_permission(self, user):
+        """User has edit permission on project, according to
+        - superuser
+        - user with access haie, is instructor for department
+        """
         department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
+                user.is_instructor_for_departments,
                 user.departments.filter(id=department.id).exists(),
             )
         )
-
-    def has_user_as_invited_instructor(self, user):
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
-            )
-        )
-
-    def has_user_as_instructor(self, user):
-        return self.has_user_as_invited_instructor(
-            user
-        ) or self.has_user_as_department_instructor(user)
 
     @property
     def demarches_simplifiees_petitioner_url(self) -> str | None:
