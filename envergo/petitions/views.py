@@ -901,8 +901,8 @@ class PetitionProjectInstructorMessagerieView(
             )
 
         # Invited instructors cannot send messages
-        context["has_send_message_permission"] = (
-            self.object.has_user_as_department_instructor(self.request.user)
+        context["has_send_message_permission"] = self.object.user_has_edit_permission(
+            self.request.user
         )
 
         return context
@@ -930,7 +930,7 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
         self.object = self.get_object()
 
         # Invited instructors cannot send messages
-        if not self.object.has_user_as_department_instructor(self.request.user):
+        if not self.object.user_has_edit_permission(self.request.user):
             return TemplateResponse(
                 request=self.request, template="haie/petitions/403.html", status=403
             )
@@ -1368,7 +1368,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
 
     def post(self, request, *args, **kwargs):
         project = self.get_object()
-        if project.has_user_as_department_instructor(request.user):
+        if project.user_has_edit_permission(request.user):
             token = InvitationToken.objects.create(
                 created_by=request.user,
                 petition_project=project,
