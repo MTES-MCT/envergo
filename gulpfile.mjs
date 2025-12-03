@@ -146,7 +146,7 @@ function watchPaths() {
 }
 
 // Generate all assets
-const build = parallel(styles, scripts, imgCompression);
+const build = parallel(styles, scripts);//, imgCompression);
 
 // Set up dev environment
 const dev = parallel(initBrowserSync, watchPaths);
