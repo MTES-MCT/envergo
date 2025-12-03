@@ -615,6 +615,14 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_action = None
     context_object_name = "petition_project"
 
+    def has_view_permission(self, user, object):
+        """Check if user has view permission on object (keep for backward compatibily)"""
+        return object.user_has_view_permission(user)
+
+    def has_edit_permission(self, user, object):
+        """Check if user has edit permission on object (keep for backward compatibily)"""
+        return object.user_has_edit_permission(user)
+
     def get_queryset(self):
         current_user = self.request.user
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
