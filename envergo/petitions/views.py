@@ -697,8 +697,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
-        context["is_department_instructor"] = (
-            self.object.has_user_as_department_instructor(self.request.user)
+        context["is_department_instructor"] = self.object.user_has_edit_permission(
+            self.request.user
         )
 
         matomo_custom_path = self.request.path.replace(
@@ -736,7 +736,7 @@ class BasePetitionProjectInstructorView(
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_view_permission(request.user, self.object):
+        if not self.object.user_has_view_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -746,23 +746,13 @@ class BasePetitionProjectInstructorView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_edit_permission(request.user, self.object):
+        if not self.object.user_has_edit_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
         res = super().post(request, *args, **kwargs)
         return res
-
-    def has_view_permission(self, user, object):
-        """Check that the current user has permission to access the project."""
-
-        return object.has_user_as_instructor(user)
-
-    def has_edit_permission(self, user, object):
-        """Authorize edition only for department instructors"""
-
-        return object.has_user_as_department_instructor(user)
 
     def log_event_action(self, request):
         if not self.event_action:
@@ -1131,8 +1121,8 @@ class PetitionProjectInstructorProcedureView(
 
         # Request for additional information is only relevant when the project is
         # in the "instruction" phase
-        if self.has_edit_permission(
-            self.request.user, self.object
+        if self.object.user_has_edit_permission(
+            self.request.user
         ) and obj.current_stage.startswith("instruction"):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
@@ -1523,7 +1513,7 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
 def toggle_follow_project(request, reference):
     """Toggle follow/unfollow a petition project"""
     project = get_object_or_404(PetitionProject, reference=reference)
-    if not project.has_user_as_instructor(request.user):
+    if not project.user_has_view_permission(request.user):
         return TemplateResponse(
             request=request, template="haie/petitions/403.html", status=403
         )
