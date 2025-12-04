@@ -1030,6 +1030,9 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 ):
     """View for petition project instructor page with demarche simplifiées messagerie"""
 
+    event_category = "message"
+    event_action = "marquage_non_lu"
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.has_edit_permission(request.user, self.object):
@@ -1037,6 +1040,9 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
             LatestMessagerieAccess.objects.filter(
                 project=self.object, user=request.user
             ).update(access=old_date)
+
+            breakpoint()
+            self.log_event_action(self.request)
 
         url = reverse("petition_project_instructor_view", args=[self.object.reference])
         return HttpResponseRedirect(url)
