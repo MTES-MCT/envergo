@@ -1485,13 +1485,27 @@ def test_project_list_unread_pill(client, instructor_haie_user_44):
     assert read_msg in res.content.decode()
     assert unread_msg not in res.content.decode()
 
-    # The messagerie was never accessed, there is existing message in the project
+    # The messagerie was never accessed,
+    # there is an existing message in the project before the user joined in
     project.latest_petitioner_msg = last_week
     project.save()
+    instructor_haie_user_44.date_joined = today
+    instructor_haie_user_44.save()
     res = client.get(url)
     assert res.status_code == 200
     assert read_msg in res.content.decode()
     assert unread_msg not in res.content.decode()
+
+    # The messagerie was never accessed,
+    # there is an existing message in the project after the user joined in
+    project.latest_petitioner_msg = last_week
+    project.save()
+    instructor_haie_user_44.date_joined = last_month
+    instructor_haie_user_44.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg not in res.content.decode()
+    assert unread_msg in res.content.decode()
 
     # The messagerie was accessed before the latest message
     access = LatestMessagerieAccess.objects.create(

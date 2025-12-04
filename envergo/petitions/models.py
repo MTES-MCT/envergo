@@ -633,9 +633,6 @@ class StatusLog(models.Model):
 
 
 class LatestMessagerieAccess(models.Model):
-    event_category = "message"
-    event_action = "marquage_non_lu"
-
     user = models.ForeignKey(
         "users.User",
         on_delete=models.CASCADE,
