@@ -72,7 +72,15 @@
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_messagerie_view' %}aria-current="page"{% endif %}>
-                      Messagerie</a>
+                        Messagerie
+                        {% if has_unread_messages %}
+                          <span style="color: var(--blue-france-sun-113-625);
+                                       font-size: 150%;
+                                       position: relative;
+                                       top: -0.0625rem"
+                                class="fr-ml-1w">●</span>
+                        {% endif %}
+                      </a>
                     </li>
                   {% endwith %}
                 </ul>
