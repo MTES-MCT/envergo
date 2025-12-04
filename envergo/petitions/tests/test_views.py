@@ -1247,7 +1247,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     res = client.get(messagerie_url)
     assert "Nouveau message</button>" not in res.content.decode()
     assert (
-        '<span><span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule</span>'
+        '<span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule'
         in res.content.decode()
     )
 
