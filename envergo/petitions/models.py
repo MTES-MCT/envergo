@@ -442,6 +442,34 @@ class PetitionProject(models.Model):
         return has_unread_messages
 
 
+USER_TYPE = Choices(
+    ("petitioner", "Demandeur"),
+    ("instructor", "Instructeur"),
+)
+
+
+class Simulation(models.Model):
+    project = models.ForeignKey(
+        PetitionProject, verbose_name="Simulation", on_delete=models.CASCADE
+    )
+    is_active = models.BooleanField("Active ?", default=False)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
+    source = models.CharField("Auteur", choices=USER_TYPE)
+
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "Simulation"
+        verbose_name_plural = "Simulations"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "is_active"],
+                condition=Q(is_active=True),
+                name="single_active_simulation",
+            )
+        ]
+
+
 def one_month_from_now():
     return timezone.now() + timedelta(days=30)
 
