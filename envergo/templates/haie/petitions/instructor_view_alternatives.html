@@ -21,38 +21,17 @@
       {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
     </section>
+
+    <section>
+      <div class="alt fr-p-3w">
+        <h2>Ajouter une simulation alternative</h2>
+        <form method="post" action="">
+          {% csrf_token %}
+          {% include '_form_snippet.html' with form=form %}
+          <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
+        </form>
+      </div>
+
+    </section>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-  {{ block.super }}
-  <script>
-    window.addEventListener('load', function () {
-      const alternativeBtn = document.getElementById('alternative-simulation-link');
-      alternativeBtn.addEventListener('click', function (evt) {
-        // Block the navigation for sending an analytics event before
-        evt.preventDefault();
-        const href = alternativeBtn.href;
-
-        let url = EVENTS_URL;
-        let token = CSRF_TOKEN;
-        let headers = {"X-CSRFToken": token};
-        let data = new FormData();
-        data.append("category", "projet");
-        data.append("action", "simulation_alt");
-        data.append("metadata", JSON.stringify({
-          "reference": "{{ petition_project.reference }}"
-        }));
-        fetch(url, {
-          headers: headers, body: data, method: 'POST'
-        }).catch(error => {
-          console.warn('Tracking failed:', error);
-          // We still want to navigate even on failure
-        }).finally(() => {
-          // Proceed with navigation manually
-          window.open(href, '_blank');
-        });
-      });
-    });
-  </script>
 {% endblock %}
