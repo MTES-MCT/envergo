@@ -237,6 +237,24 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     return mark_safe(date_part + days_left_part)
 
 
+@register.simple_tag
+def display_pause(response_due_date):
+    days_left = (response_due_date - date.today()).days
+    if days_left >= 7:
+        icon_class = ""
+    elif days_left >= 0:
+        icon_class = "orange"
+    else:
+        icon_class = "red"
+
+    return mark_safe(
+        f"""<span class="due-date fr-text--sm">
+                <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
+                Attente de compléments
+              </span><br/>"""
+    )
+
+
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
 def display_ds_field(context, field_name):
     """Include tag to display a field from démarches simplifiées
