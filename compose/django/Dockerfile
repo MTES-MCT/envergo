@@ -77,4 +77,7 @@ RUN chmod +x /start
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
 
+# This is required because we disabled all npm scripts in .npmrc
+RUN node node_modules/optipng-bin/lib/install.js
+
 ENTRYPOINT ["/entrypoint"]
