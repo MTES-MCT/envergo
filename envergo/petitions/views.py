@@ -1064,16 +1064,9 @@ class PetitionProjectInstructorAlternativeView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        parsed_moulinette_url = urlparse(self.object.moulinette_url)
-        qs_dict = parse_qs(parsed_moulinette_url.query)
-        flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
-        flat_qs["alternative"] = "true"
-        alternative_form_url = (
-            f"{reverse("moulinette_form")}?{urlencode(flat_qs, doseq=True)}"
-        )
-
-        context["alternative_form_url"] = alternative_form_url
+        context["simulations"] = Simulation.objects.filter(
+            project=self.object
+        ).order_by("created_at")
         return context
 
 
