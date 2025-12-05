@@ -58,6 +58,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    Simulation,
     StatusLog,
 )
 from envergo.petitions.services import (
@@ -226,6 +227,12 @@ class PetitionProjectCreate(FormView):
                 petition_project.save()
 
                 StatusLog.objects.create(petition_project=petition_project)
+
+                Simulation.objects.create(
+                    project=petition_project,
+                    is_active=True,
+                    moulinette_url=petition_project.moulinette_url,
+                )
 
                 log_event(
                     "demande",
