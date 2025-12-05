@@ -55,7 +55,7 @@ instruction_urlpatterns = [
         name="petition_project_instructor_notes_view",
     ),
     path(
-        "alternative/",
+        "alternatives/",
         PetitionProjectInstructorAlternativeView.as_view(),
         name="petition_project_instructor_alternative_view",
     ),
