@@ -96,12 +96,12 @@ function vendorScripts() {
 }
 
 // Image compression
-// async function imgCompression() {
-//   const imagemin = (await import("gulp-imagemin")).default;
-//   return src(`${paths.images}/*.{png,svg,jpg}`, { encoding: false })
-//     .pipe(imagemin()) // Compresses PNG, JPEG, SVG images.
-//     .pipe(dest(paths.images));
-// }
+async function imgCompression() {
+  const imagemin = (await import("gulp-imagemin")).default;
+  return src(`${paths.images}/*.{png,svg,jpg}`, { encoding: false })
+    .pipe(imagemin()) // Compresses PNG, JPEG, SVG images.
+    .pipe(dest(paths.images));
+}
 
 
 // Run django server
@@ -146,7 +146,7 @@ function watchPaths() {
 }
 
 // Generate all assets
-const build = parallel(styles, scripts);//, imgCompression);
+const build = parallel(styles, scripts, imgCompression);
 
 // Set up dev environment
 const dev = parallel(initBrowserSync, watchPaths);

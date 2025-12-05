@@ -76,5 +76,6 @@ RUN chmod +x /start
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
+RUN node node_modules/optipng-bin/lib/install.js
 
 ENTRYPOINT ["/entrypoint"]
