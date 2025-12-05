@@ -1059,7 +1059,7 @@ class PetitionProjectInstructorAlternativeView(
 ):
     """View for creating an alternative of a petition project by the instructor"""
 
-    template_name = "haie/petitions/instructor_view_alternative.html"
+    template_name = "haie/petitions/instructor_view_alternatives.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
