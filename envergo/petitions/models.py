@@ -455,6 +455,7 @@ class Simulation(models.Model):
     is_active = models.BooleanField("Active ?", default=False)
     moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
     source = models.CharField("Auteur", choices=USER_TYPE, default=USER_TYPE.petitioner)
+    comment = models.TextField("Commentaire")
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
