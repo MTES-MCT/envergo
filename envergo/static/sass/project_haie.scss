@@ -953,11 +953,13 @@ div#project-header-container {
 .due-date {
   color: var(--text-mention-grey);
 
-  span.fr-icon-hourglass-2-fill {
+  span.fr-icon-hourglass-2-fill,
+  span.orange {
     color: var(--orange-terre-battue-main-645);
   }
 
-  span.fr-icon-warning-fill {
+  span.fr-icon-warning-fill,
+  span.red {
     color: var(--artwork-minor-red-marianne);
   }
 }

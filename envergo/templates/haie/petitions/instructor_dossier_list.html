@@ -84,7 +84,13 @@
                     <td>
                       <div>{% stage_badge project.current_stage %}</div>
                       {% if project.current_stage != "closed" %}
-                        <div>{% display_due_date project.due_date False True %}</div>
+                        <div>
+                          {% if project.is_paused %}
+                            {% display_pause project.current_status.response_due_date %}
+                          {% else %}
+                            {% display_due_date project.due_date False True %}
+                          {% endif %}
+                        </div>
                       {% endif %}
                     </td>
                     <td>
