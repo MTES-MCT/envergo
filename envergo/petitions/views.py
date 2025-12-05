@@ -50,6 +50,7 @@ from envergo.petitions.forms import (
     ProcedureForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
+    SimulationForm,
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -199,6 +200,7 @@ class PetitionProjectCreate(FormView):
                     project=petition_project,
                     is_active=True,
                     moulinette_url=petition_project.moulinette_url,
+                    comment="Simulation initiale",
                 )
 
                 log_event(
@@ -1056,11 +1058,12 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
 
 class PetitionProjectInstructorAlternativeView(
-    BasePetitionProjectInstructorView, DetailView
+    BasePetitionProjectInstructorView, FormView
 ):
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternatives.html"
+    form_class = SimulationForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1068,6 +1071,19 @@ class PetitionProjectInstructorAlternativeView(
             project=self.object
         ).order_by("created_at")
         return context
+
+    def form_valid(self, form):
+        simulation = form.save(commit=False)
+        simulation.project = self.object
+        simulation.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        url = reverse(
+            "petition_project_instructor_alternative_view", args=[self.object.reference]
+        )
+        return url
 
 
 class PetitionProjectInstructorProcedureView(
