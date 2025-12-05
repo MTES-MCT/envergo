@@ -21,5 +21,17 @@
       {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
     </section>
+
+    <section>
+      <div class="alt fr-p-3w">
+        <h2>Ajouter une simulation alternative</h2>
+        <form method="post" action="">
+          {% csrf_token %}
+          {% include '_form_snippet.html' with form=form %}
+          <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
+        </form>
+      </div>
+
+    </section>
   </div>
 {% endblock %}
