@@ -1,4 +1,3 @@
-import re
 import uuid
 from datetime import date
 from typing import Literal
@@ -6,9 +5,7 @@ from typing import Literal
 from django import template
 from django.template import TemplateDoesNotExist
 from django.template.defaultfilters import date as date_filter
-from django.template.defaultfilters import stringfilter
 from django.template.loader import render_to_string
-from django.utils.html import urlize as _urlize
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
