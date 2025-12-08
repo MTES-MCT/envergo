@@ -21,7 +21,12 @@ window.addEventListener('load', function () {
       // We still want to navigate even on failure
     }).finally(() => {
       // Proceed with navigation manually
-      window.open(link.href, link.target);
+      if(link.target) {
+        window.open(link.href, link.target);
+      }
+      else{
+        window.location = link.href
+      }
     });
   }));
 });
