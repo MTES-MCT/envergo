@@ -4,7 +4,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 from envergo.contrib.sites.tests.factories import SiteFactory
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.tests.factories import PetitionProjectFactory
 
 pytestmark = pytest.mark.django_db
@@ -38,7 +38,7 @@ def test_hedge_input_without_config_should_have_default_hedge_properties_form(cl
 @pytest.mark.urls("config.urls_haie")
 def test_hedge_input_with_config_should_have_set_hedge_properties_form(client):
     """When dept. contact info is not set, eval is unavailable."""
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesAisneForm",
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
     )
@@ -73,7 +73,7 @@ def test_hedge_input_with_config_should_have_set_hedge_properties_form(client):
 @pytest.mark.urls("config.urls_haie")
 def test_hedge_input_conditions_url(client):
     """Test url to get condition."""
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesAisneForm",
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
     )
