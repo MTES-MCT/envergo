@@ -1018,3 +1018,20 @@ div#project-header-container {
 button.hide-expanded[aria-expanded="true"] {
   display: none;
 }
+
+#alternative-simulations-table {
+  .actions {
+    a {
+      text-decoration: none;
+      background-image: none;
+
+      &::after {
+        display: none;
+      }
+    }
+
+    [class^="fr-icon-"] {
+      color: var(--text-title-blue-france);
+    }
+  }
+}
