@@ -36,7 +36,10 @@
                      title="Lancer cette simulation (nouvel onglet)">
                     <span class="fr-icon-play-circle-line" aria-hidden="true"></span>
                   </a>
-                  <span class="fr-icon-link" aria-hidden="true"></span>
+
+                  <button data-clipboard-text="{{ simulation.form_url }}"
+                          class="clipboard btn--copy-to-clipboard fr-icon-link"></button>
+
                   <span class="fr-icon-eye-line" aria-hidden="true"></span>
                   <span class="fr-icon-delete-line" aria-hidden="true"></span>
 
