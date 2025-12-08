@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from django import template
 from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
@@ -8,7 +9,9 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.template.defaultfilters import stringfilter
 from django.utils.dateparse import parse_datetime
+from django.utils.html import urlize as _urlize
 
 register = template.Library()
 
@@ -173,3 +176,17 @@ def choice_default_label(model, field_name):
     else:
         default = field.default
     return dict(field.choices).get(default, default)
+
+
+@register.filter(is_safe=True)
+@stringfilter
+def urlize_html(value, blank=True):
+    """Convert URLs in plain text into clickable links."""
+    # Remove existing tag a before urlize
+    soup = BeautifulSoup(value, "html.parser")
+    for a in soup.findAll("a"):
+        a.replaceWith(a["href"])
+    result = _urlize(str(soup), nofollow=True, autoescape=False)
+    if blank:
+        result = result.replace("<a", '<a target="_blank" rel="noopener"')
+    return result
