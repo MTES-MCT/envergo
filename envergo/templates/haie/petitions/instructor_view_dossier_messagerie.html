@@ -49,7 +49,12 @@
           <div class="fr-mt-2w">
             {% for pj in message.attachments %}
               <div class="fr-download">
-                <a class="fr-link ds-message__pj" target="_blank" href="{{ pj.url }}">
+                <a class="fr-link ds-message__pj"
+                   target="_blank"
+                   href="{{ pj.url }}"
+                   data-sql-event-category="message"
+                   data-sql-event-action="lecture_pj"
+                   data-sql-event-metadata='{ "reference":"{{ petition_project.reference }}", "message_id":"{{ message.id }}", "message_sender":"{% ds_sender_category message.email ds_sender_emails_categories %}" }'>
                   <span class="fr-sr-only">Télécharger le fichier</span>
                   {{ pj.filename }}
                   <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
