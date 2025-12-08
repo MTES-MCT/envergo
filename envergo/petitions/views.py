@@ -1041,7 +1041,6 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
                 project=self.object, user=request.user
             ).update(access=old_date)
 
-            breakpoint()
             self.log_event_action(self.request)
 
         url = reverse("petition_project_instructor_view", args=[self.object.reference])
