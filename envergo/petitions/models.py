@@ -24,6 +24,7 @@ from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
@@ -478,6 +479,15 @@ class Simulation(models.Model):
                 name="single_active_simulation",
             )
         ]
+
+    @property
+    def form_url(self):
+        """Return the moulinette form url with the simulation parameters."""
+        m_url = MoulinetteUrl(self.moulinette_url)
+        qt = m_url.querydict
+        f_url = reverse("moulinette_form")
+        url = f"{f_url}?{qt.urlencode()}"
+        return url
 
 
 def one_month_from_now():
