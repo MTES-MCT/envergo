@@ -51,6 +51,12 @@ from envergo.users.tests.factories import UserFactory
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
 
 
+@pytest.fixture(autouse=True)
+def fake_haie_settings(settings):
+    settings.ENVERGO_HAIE_DOMAIN = "testserver"
+    settings.ENVERGO_AMENAGEMENT_DOMAIN = "otherserver"
+
+
 @pytest.fixture()
 def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
     regulation = RegulationFactory(regulation="conditionnalite_pac")
@@ -79,12 +85,6 @@ def ep_criteria(france_map):  # noqa
         ),
     ]
     return criteria
-
-
-@pytest.fixture(autouse=True)
-def fake_settings(settings):
-    settings.ENVERGO_HAIE_DOMAIN = "testserver"
-    settings.ENVERGO_AMENAGEMENT_DOMAIN = "otherserver"
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
