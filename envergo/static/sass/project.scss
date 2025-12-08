@@ -2340,6 +2340,10 @@ section#actions-to-take {
     }
   }
 
+  .action-section-title {
+    display: none;
+  }
+
   div.action-wrapper:not(:last-of-type) {
     margin-bottom: 1rem;
   }
@@ -2364,6 +2368,52 @@ section#actions-to-take {
       font-size: 0.875rem;
       line-height: 1.5rem;
       margin: var(--text-spacing);
+    }
+  }
+
+  // Display all tabs for print
+  @media only print {
+    background-color: inherit;
+    padding: 0;
+
+    .fr-tabs {
+      display: block;
+      overflow: inherit;
+      position: static;
+      height: auto;
+
+      &::before {
+        content: "";
+        display: inline;
+      }
+
+      hr,
+      &__list,
+      .action-learn-more-link {
+        display: none;
+      }
+
+      .action-section-title {
+        display: block;
+        color: var(--text-active-blue-france);
+      }
+
+      &__panel {
+        position: static;
+        padding: 1rem;
+
+        &:not(.fr-tabs__panel--selected) {
+          visibility: visible;
+        }
+
+        &--direction-end {
+          transform: translate(0);
+        }
+      }
+
+      section#actions-to-take hr {
+        margin: 0;
+      }
     }
   }
 }
