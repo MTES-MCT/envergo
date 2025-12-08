@@ -44,7 +44,7 @@
           "id": "Q29tbWVudGFpcmUtNTUxMzcxMjc=",
           "createdAt": "2025-04-02T11:01:37+02:00",
           "email": "instructeur@guh.gouv.fr",
-          "body": "Il manque les infos de la PAC",
+          "body": "Il manque les infos de la PAC, avec <a href='https://example.com'>un lien</a>",
           "attachments": []
         },
         {
