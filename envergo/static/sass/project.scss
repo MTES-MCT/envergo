@@ -19,6 +19,10 @@ html.nojs .js {
   display: none !important;
 }
 
+html.noclipboard .clipboard {
+  display: none !important;
+}
+
 // Make sure the :target element is not hidden behind the sticky header
 // Note: not all pages have a sticky header, but fortunately, right now,
 // all pages with target links do.
