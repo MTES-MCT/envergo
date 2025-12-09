@@ -1112,7 +1112,8 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             try:
                 update_demarches_simplifiees_status(self.object, new_ds_status)
-            except DemarchesSimplifieesError:
+            except DemarchesSimplifieesError as e:
+                logger.error(e)
                 form.add_error(
                     None,
                     mark_safe(
@@ -1197,7 +1198,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 if ds_response is None or ds_response.get("errors") is not None:
                     # We raise an exception to make sure the data model transaction
                     # is aborted
-                    raise DemarchesSimplifieesError("DS message not sent")
+                    raise DemarchesSimplifieesError(message="DS message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
