@@ -15,7 +15,7 @@ def evaluator_instructor_view_context_getter(cls):
 
 def get_instructor_view_context(
     evaluator: CriterionEvaluator, petition_project, moulinette
-) -> tuple[str, dict]:
+):
     """
     Retrieve instructor information for a given evaluator using a Class-based Dispatch Registry.
 
@@ -44,6 +44,5 @@ def get_instructor_view_context(
         return _evaluator_instructors_information_registry[cls](
             evaluator, petition_project, moulinette
         )
-    raise NotImplementedError(
-        f"No instructors_information_getter registered for evaluator {cls.__name__}"
-    )
+    # if there is no specific function registered for this evaluator class, return an empty context
+    return {}

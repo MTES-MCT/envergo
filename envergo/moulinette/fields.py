@@ -7,6 +7,7 @@ from envergo.moulinette.regulations import (  # noqa
     CriterionEvaluator,
     RegulationEvaluator,
     alignementarbres,
+    code_rural_haie,
     conditionnalitepac,
     ep,
     evalenv,

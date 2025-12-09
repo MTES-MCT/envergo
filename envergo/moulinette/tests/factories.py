@@ -79,6 +79,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "natura2000_haie",
         "alignement_arbres",
         "reserves_naturelles",
+        "code_rural_haie",
         "regime_unique_haie",
     ]
     demarche_simplifiee_number = 123456
