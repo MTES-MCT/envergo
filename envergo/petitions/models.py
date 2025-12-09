@@ -140,6 +140,12 @@ class PetitionProject(models.Model):
         blank=True,
         verbose_name="Instructeurs suivant le projet",
     )
+    latest_petitioner_msg = models.DateTimeField(
+        verbose_name="Date du dernier message pétitionnaire",
+        null=True,
+        blank=True,
+        default=None,
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -242,6 +248,18 @@ class PetitionProject(models.Model):
 
             return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
+        def get_latest_petitioner_msg():
+            emails = [instructeur["email"] for instructeur in dossier["instructeurs"]]
+            dates = sorted(
+                [
+                    datetime.fromisoformat(msg["createdAt"])
+                    for msg in dossier["messages"]
+                    if msg["email"] in emails
+                ],
+                reverse=True,
+            )
+            return dates[0] if len(dates) else None
+
         logger.info(f"Synchronizing file {self.reference} with DS")
 
         if not self.is_dossier_submitted:
@@ -327,6 +345,9 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
+        if "instructeurs" in dossier and "messages" in dossier:
+            self.latest_petitioner_msg = get_latest_petitioner_msg()
+
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
 
@@ -404,6 +425,21 @@ class PetitionProject(models.Model):
         """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
+
+    @cached_property
+    def has_unread_messages(self):
+        """Check if the current user has received unread messages.
+
+        Note: the `latest_access` property MUST be added with an annotation
+        in the queryset
+        """
+
+        has_unread_messages = (
+            self.latest_petitioner_msg is not None
+            and self.latest_access is not None
+            and self.latest_access < self.latest_petitioner_msg
+        )
+        return has_unread_messages
 
 
 def one_month_from_now():
@@ -578,3 +614,28 @@ class StatusLog(models.Model):
     @property
     def is_closed(self):
         return self.stage == STAGES.closed
+
+
+class LatestMessagerieAccess(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        verbose_name="Accès par",
+        related_name="messagerie_accesses",
+    )
+    project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        verbose_name="Projet",
+        related_name="messagerie_accesses",
+    )
+    access = models.DateTimeField("Dernier accès messagerie", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Dernier accès messagerie"
+        verbose_name_plural = "Derniers accès messagerie"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"], name="access_unique_constraint"
+            )
+        ]
