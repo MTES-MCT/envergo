@@ -9,6 +9,7 @@ from envergo.petitions.views import (
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorDossierDSView,
+    PetitionProjectInstructorMessagerieMarkUnreadView,
     PetitionProjectInstructorMessagerieView,
     PetitionProjectInstructorNotesView,
     PetitionProjectInstructorProcedureView,
@@ -42,6 +43,11 @@ instruction_urlpatterns = [
         "messagerie/",
         PetitionProjectInstructorMessagerieView.as_view(),
         name="petition_project_instructor_messagerie_view",
+    ),
+    path(
+        "messagerie/marquer-nonlu/",
+        PetitionProjectInstructorMessagerieMarkUnreadView.as_view(),
+        name="petition_project_instructor_messagerie_mark_unread_view",
     ),
     path(
         "notes/",
