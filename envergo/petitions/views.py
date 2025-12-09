@@ -1110,7 +1110,10 @@ class PetitionProjectInstructorAlternativeEdit(
 
         action = kwargs["action"]
         if action == "activate":
-            pass
+            with transaction.atomic():
+                simulation_qs.update(is_active=False)
+                simulation.is_active = True
+                simulation.save()
 
         # The main active simulation cannot be deleted
         elif action == "delete" and simulation.can_be_deleted():
