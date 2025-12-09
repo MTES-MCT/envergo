@@ -1108,10 +1108,17 @@ class PetitionProjectInstructorAlternativeView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         context["simulations"] = (
             Simulation.objects.filter(project=self.object)
-            .order_by("created_at")
             .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+            .order_by("created_at")
         )
         return context
 
@@ -1143,14 +1150,24 @@ class PetitionProjectInstructorAlternativeEdit(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        simulation_qs = Simulation.objects.filter(project=self.object)
+        simulation_qs = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+        )
+
         try:
             simulation = simulation_qs.get(pk=kwargs["simulation_id"])
         except Simulation.DoesNotExist:
             raise Http404()
 
         action = kwargs["action"]
-        if action == "activate":
+        if action == "activate" and simulation.can_be_activated():
             with transaction.atomic():
                 simulation_qs.update(is_active=False)
                 simulation.is_active = True
