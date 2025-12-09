@@ -272,7 +272,7 @@ class PetitionProject(models.Model):
                 Event.objects.order_by("-date_created")
                 .filter(
                     metadata__reference=self.reference,
-                    category="dossier",
+                    category="demande",
                     event="creation",
                 )
                 .first()
