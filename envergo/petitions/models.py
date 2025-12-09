@@ -480,6 +480,9 @@ class Simulation(models.Model):
     def can_be_deleted(self):
         return not (self.is_initial or self.is_active)
 
+    def can_be_activated(self):
+        return not self.project.current_status.is_closed
+
     def custom_url(self, view_name):
         """Generate an url with the given parameters."""
 
