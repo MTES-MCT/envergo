@@ -198,6 +198,7 @@ class PetitionProjectCreate(FormView):
 
                 Simulation.objects.create(
                     project=petition_project,
+                    is_initial=True,
                     is_active=True,
                     moulinette_url=petition_project.moulinette_url,
                     comment="Simulation initiale",
@@ -1066,15 +1067,54 @@ class PetitionProjectInstructorAlternativeView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["simulations"] = Simulation.objects.filter(
-            project=self.object
-        ).order_by("created_at")
+        context["simulations"] = (
+            Simulation.objects.filter(project=self.object)
+            .order_by("created_at")
+            .select_related("project")
+        )
         return context
 
     def form_valid(self, form):
         simulation = form.save(commit=False)
         simulation.project = self.object
         simulation.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        url = reverse(
+            "petition_project_instructor_alternative_view", args=[self.object.reference]
+        )
+        return url
+
+
+class PetitionProjectInstructorAlternativeEdit(
+    BasePetitionProjectInstructorView, FormView
+):
+    """View for creating an alternative of a petition project by the instructor"""
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.has_edit_permission(request.user, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+
+        simulation_qs = Simulation.objects.filter(project=self.object)
+        try:
+            simulation = simulation_qs.get(pk=kwargs["simulation_id"])
+        except Simulation.DoesNotExist:
+            raise Http404()
+
+        action = kwargs["action"]
+        if action == "activate":
+            pass
+
+        # The main active simulation cannot be deleted
+        elif action == "delete" and simulation.can_be_deleted():
+            simulation.delete()
 
         return HttpResponseRedirect(self.get_success_url())
 
