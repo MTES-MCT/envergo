@@ -1379,7 +1379,7 @@ def test_messagerie_access_stores_access_date(
     qs = LatestMessagerieAccess.objects.all()
     assert qs.count() == 0
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1413,7 +1413,7 @@ def test_messagerie_access_stores_access_date(
 
 
 def test_project_list_unread_pill(client, instructor_haie_user_44):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     read_msg = '<td class="messagerie-col read">'
     unread_msg = '<td class="messagerie-col unread">'
