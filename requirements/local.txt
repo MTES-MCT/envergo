@@ -100,7 +100,7 @@ cligj==0.7.2
     #   fiona
 colorama==0.4.6
     # via djlint
-coverage==7.10.2
+coverage==7.11.0
     # via
     #   -r local.in
     #   django-coverage-plugin
