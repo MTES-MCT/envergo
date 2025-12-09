@@ -983,7 +983,22 @@ button.hide-expanded[aria-expanded="true"] {
 }
 
 #alternative-simulations-table {
-  .actions {
+  form {
+    display: inline;
+    margin: 0;
+  }
+
+  .status-col {
+    .fr-badge + form {
+      margin-left: 0.25rem;
+    }
+  }
+
+  .actions-col {
+    .action + .action {
+      margin-left: 0.25rem;
+    }
+
     a {
       text-decoration: none;
       background-image: none;
@@ -995,11 +1010,6 @@ button.hide-expanded[aria-expanded="true"] {
 
     [class^="fr-icon-"]:not(:disabled) {
       color: var(--text-title-blue-france);
-    }
-
-    form {
-      display: inline;
-      margin: 0;
     }
 
     button {
