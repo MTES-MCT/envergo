@@ -17,8 +17,8 @@ from envergo.moulinette.models import (
 )
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -130,7 +130,7 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
 
 
 def test_moulinette_haie_has_specific_behavior():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     site = SiteFactory()
     site.domain = "haie.beta.gouv.fr"
     MoulinetteClass = get_moulinette_class_from_site(site)

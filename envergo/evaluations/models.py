@@ -176,6 +176,7 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
     "declaration": TagStyleEnum.Green,
     "autorisation": TagStyleEnum.LightRed,
+    "hors_regime_unique": TagStyleEnum.Grey,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:

@@ -19,8 +19,8 @@ from envergo.geodata.tests.factories import Department34Factory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 from envergo.petitions.models import DOSSIER_STATES, InvitationToken
@@ -92,7 +92,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    config = ConfigHaieFactory()
+    config = DCConfigHaieFactory()
     config.demarche_simplifiee_pre_fill_config.append(
         {"id": "abc", "value": "plantation_adequate"}
     )
@@ -142,7 +142,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -179,7 +179,7 @@ def test_petition_project_detail(mock_post, client, site):
 
     mock_post.return_value = mock_response
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -241,7 +241,7 @@ def test_petition_project_instructor_view_requires_authentication(
     User must be authenticated, haie user, and project department must be in user departments permissions
     """
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
@@ -335,7 +335,7 @@ def test_petition_project_instructor_notes_view(
     """
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -379,7 +379,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -467,7 +467,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     """Test if dossier data is in template"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -501,7 +501,7 @@ def test_petition_project_instructor_messagerie_ds(
 ):
     """Test messagerie view"""
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -591,8 +591,8 @@ def test_petition_project_list(
     inactive_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
 ):
 
-    ConfigHaieFactory()
-    ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    DCConfigHaieFactory()
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # Create two projects non draft, one in 34 and one in 44
     today = date.today()
     last_month = today - timedelta(days=30)
@@ -658,7 +658,7 @@ def test_petition_project_list(
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     geopkg_url = reverse(
         "petition_project_hedge_data_export",
@@ -681,7 +681,7 @@ def test_petition_project_invitation_token(
 ):
     """Test invitation token creation for petition project"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     invitation_token_url = reverse(
         "petition_project_invitation_token",
@@ -731,7 +731,7 @@ def test_petition_project_invitation_token(
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_accept_invitation(client, haie_user, site):
     """Test accepting an invitation token for a petition project"""
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     invitation = InvitationTokenFactory()
     accept_invitation_url = reverse(
         "petition_project_accept_invitation",
@@ -807,7 +807,7 @@ def test_petition_project_instructor_notes_form(
     """Post instruction note as different users"""
 
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     instructor_notes_form_url = reverse(
         "petition_project_instructor_notes_view",
@@ -876,7 +876,7 @@ def test_petition_project_instructor_notes_form(
 def test_petition_project_alternative(client, haie_user, instructor_haie_user_44, site):
     """Test alternative flow for petition project"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     alternative_url = reverse(
         "petition_project_instructor_alternative_view",
@@ -974,7 +974,7 @@ def test_instructor_view_with_hedges_outside_department(
     # GIVEN a moulinette with at least an hedge to remove outside the department
 
     client.force_login(instructor_haie_user_44)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -1029,7 +1029,7 @@ def test_petition_project_procedure(
 ):
     """Test procedure flow for petition project"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1125,7 +1125,7 @@ def test_petition_project_procedure(
 def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, site):
     """Test follow up flow for petition project"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     toggle_follow_url = reverse(
         "petition_project_toggle_follow",
@@ -1203,7 +1203,7 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
 def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
     """Test the buttons to toggle follow up are on the pages"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1233,7 +1233,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client, instructor_haie_user_44, haie_user
 ):
     client.force_login(instructor_haie_user_44)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1262,7 +1262,7 @@ def test_petition_invited_instructor_cannot_send_message(
     mock_ds_query_execute, client, instructor_haie_user_44, haie_user
 ):
     client.force_login(instructor_haie_user_44)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1294,7 +1294,7 @@ def test_petition_invited_instructor_cannot_send_message(
 def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44, site):
     """Only department admin can see the "request additional info" button"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1338,7 +1338,7 @@ def test_petition_project_request_for_info(
     today = date.today()
     next_month = today + timedelta(days=30)
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory(status__due_date=today)
     assert project.due_date == today
     assert project.is_paused is False
@@ -1379,7 +1379,7 @@ def test_petition_project_resume_instruction(
     last_month = today - timedelta(days=30)
     next_month = today + timedelta(days=30)
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory(
         status__suspension_date=last_month,
         status__original_due_date=today,
