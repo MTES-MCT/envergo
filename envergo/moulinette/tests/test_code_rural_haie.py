@@ -4,8 +4,8 @@ from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 
@@ -71,7 +71,7 @@ def moulinette_data():
 
 
 def test_moulinette_evaluation(moulinette_data):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.code_rural_haie.result == "a_verifier"
 
