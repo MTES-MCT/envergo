@@ -1,3 +1,10 @@
+/**
+ * Script facilitating the addition of an analytics SQL event when clicking on a link
+ *
+ * Simply add the data-sql-event-category, data-sql-event-action and data-sql-event-metadata attributes for the event
+ * to be created. Navigation then continues as usual.
+ */
+
 window.addEventListener('load', function () {
   // Track click on links and buttons
   const links = document.querySelectorAll('[data-sql-event-category]');

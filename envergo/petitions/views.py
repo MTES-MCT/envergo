@@ -195,7 +195,7 @@ class PetitionProjectCreate(FormView):
                 StatusLog.objects.create(petition_project=petition_project)
 
                 log_event(
-                    "dossier",
+                    "demande",
                     "creation",
                     self.request,
                     **petition_project.get_log_event_data(),
@@ -525,7 +525,7 @@ class PetitionProjectDetail(DetailView):
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
         if not request.session.pop("auto_redirection", False):
             log_event(
-                "projet",
+                "simulateur",
                 "consultation",
                 self.request,
                 **self.object.get_log_event_data(),
@@ -615,7 +615,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    event_category = "projet"
+    event_category = "dossier"
     event_action = None
     context_object_name = "petition_project"
 
@@ -788,7 +788,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
-    event_action = "consultation_i"
+    event_action = "consultation"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -888,7 +888,7 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
     def form_valid(self, form):
         res = super().form_valid(form)
         log_event(
-            "projet",
+            "dossier",
             "edition_notes",
             self.request,
             reference=self.object.reference,
@@ -1195,8 +1195,8 @@ class PetitionProjectInstructorProcedureView(
 
         transaction.on_commit(
             lambda: log_event(
-                "projet",
-                "modification_statut",
+                "dossier",
+                "modification_etat",
                 self.request,
                 reference=self.object.reference,
                 etape_i=previous_stage,
@@ -1293,7 +1293,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
 
             # Log analytics event
             log_event(
-                "projet",
+                "dossier",
                 "suspension_delai",
                 self.request,
                 switch="on",
@@ -1358,7 +1358,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
 
         # Log analytics event
         log_event(
-            "projet",
+            "dossier",
             "suspension_delai",
             self.request,
             switch="off",
@@ -1459,7 +1459,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
             )
             log_event(
-                "projet",
+                "dossier",
                 "invitation",
                 self.request,
                 reference=project.reference,
@@ -1537,7 +1537,7 @@ def toggle_follow_project(request, reference):
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
 
     log_event(
-        "projet",
+        "dossier",
         "suivi",
         request,
         reference=project.reference,
