@@ -254,3 +254,54 @@ def test_evaluation_email_with_empty_recipients(admin_client, evaluation, mailou
     res = admin_client.post(url, data=data, follow=True)
     assert len(mailoutbox) == 0
     assert "Vous devez spécifier au moins un destinataire" in res.content.decode()
+
+
+def test_display_published_version_message(evaluation, admin_client, admin_user):
+    # GIVEN an evaluation with a version not published
+    url = reverse("admin:evaluations_evaluation_change", args=[evaluation.pk])
+    # WHEN i display the evaluation admin page
+    res = admin_client.get(url)
+    content = res.content.decode()
+    # THEN I see a message indicating the version is not published
+    assert "❗️ Publier" in content
+    assert "La dernière version n&#x27;est pas publiée." in content
+
+    # GIVEN the version is published
+    version = evaluation.versions.first()
+    version.published = True
+    version.save()
+    # WHEN I display the evaluation admin page
+    res = admin_client.get(url)
+    content = res.content.decode()
+    # THEN The button is indicating that the version is published
+    assert "✅ Publié" in content
+
+    # GIVEN an outdated version
+    evaluation.is_icpe = True
+    evaluation.save()
+
+    # WHEN I display the evaluation admin page
+    res = admin_client.get(url)
+    content = res.content.decode()
+    # THEN There is a message indicating that the version is outdated
+    assert "❗️ Publier" in content
+    assert "La dernière version enregistrée de cet avis" in content
+    assert "a pas encore été publiée. Dernière publication :" in content
+
+    # GIVEN an updated version
+    version.published = False
+    version.save()
+    version = evaluation.create_version(admin_user, "v1.0")
+    version.published = True
+    version.save()
+    res = admin_client.get(url)
+    content = res.content.decode()
+    assert "✅ Publié" in content
+
+    # WHEN I edit the evaluation but that do not impact the AR itself
+    evaluation.send_eval_to_project_owner = not evaluation.send_eval_to_project_owner
+    evaluation.save()
+    res = admin_client.get(url)
+    content = res.content.decode()
+    # THEN There is no message indicating that the version is outdated
+    assert "✅ Publié" in content
