@@ -32,42 +32,13 @@
            class="fr-btn"
            href="{{ alternative_form_url }}"
            target="_blank"
-           rel="noopener external">Faire une simulation
-        alternative</a>
+           rel="noopener external"
+           data-sql-event-category="projet"
+           data-sql-event-action="simulation_alt"
+           data-sql-event-metadata='{ "reference": "{{ petition_project.reference }}" }'>
+          Faire une simulation alternative
+        </a>
       </p>
     </section>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-  {{ block.super }}
-  <script>
-    window.addEventListener('load', function () {
-      const alternativeBtn = document.getElementById('alternative-simulation-link');
-      alternativeBtn.addEventListener('click', function (evt) {
-        // Block the navigation for sending an analytics event before
-        evt.preventDefault();
-        const href = alternativeBtn.href;
-
-        let url = EVENTS_URL;
-        let token = CSRF_TOKEN;
-        let headers = {"X-CSRFToken": token};
-        let data = new FormData();
-        data.append("category", "dossier");
-        data.append("action", "simulation_alt");
-        data.append("metadata", JSON.stringify({
-          "reference": "{{ petition_project.reference }}"
-        }));
-        fetch(url, {
-          headers: headers, body: data, method: 'POST'
-        }).catch(error => {
-          console.warn('Tracking failed:', error);
-          // We still want to navigate even on failure
-        }).finally(() => {
-          // Proceed with navigation manually
-          window.open(href, '_blank');
-        });
-      });
-    });
-  </script>
 {% endblock %}

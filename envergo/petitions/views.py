@@ -968,7 +968,12 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
                 self.event_category,
                 "envoi",
                 self.request,
-                **self.object.get_log_event_data(),
+                reference=self.object.reference,
+                piece_jointe=(
+                    len(attachments)
+                    if isinstance(attachments, list)
+                    else 1 if attachments else 0
+                ),
                 **get_matomo_tags(self.request),
             )
 

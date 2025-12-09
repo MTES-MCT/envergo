@@ -564,7 +564,8 @@ def test_petition_project_instructor_messagerie_ds(
     # THEN I receive ok response and an event is created
     content = response.content.decode()
     assert "Le message a bien été envoyé au demandeur." in content
-    assert Event.objects.filter(category="message", event="envoi").exists()
+    envoi_event = Event.objects.filter(category="message", event="envoi").get()
+    assert envoi_event.metadata["piece_jointe"] == 1
 
     # GIVEN a message and doc attachment unauthorized extension
     attachment = SimpleUploadedFile(
