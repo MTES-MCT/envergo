@@ -486,6 +486,9 @@ class Simulation(models.Model):
             ),
         ]
 
+    def can_be_deleted(self):
+        return not (self.is_initial or self.is_active)
+
     def custom_url(self, view_name):
         """Generate an url with the given parameters."""
 

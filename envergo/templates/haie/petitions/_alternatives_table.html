@@ -40,9 +40,29 @@
                   <button data-clipboard-text="{{ simulation.form_url }}"
                           class="clipboard btn--copy-to-clipboard fr-icon-link"></button>
 
-                  <span class="fr-icon-eye-line" aria-hidden="true"></span>
-                  <span class="fr-icon-delete-line" aria-hidden="true"></span>
+                  <a href="{{ simulation.result_url }}"
+                     target="_blank"
+                     rel="noopener"
+                     title="Voir le résultat de cette simulation (nouvel onglet)">
+                    <span type="submit" class="fr-icon-eye-line"></span>
+                  </a>
 
+                  {% if simulation.can_be_deleted %}
+                    <form method="post"
+                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "delete" %}">
+                      {% csrf_token %}
+
+                      <button type="submit"
+                              class="fr-icon-delete-line"
+                              title="Supprimer la simulation"></button>
+                    </form>
+                  {% else %}
+                    <button type="button"
+                            disabled="disabled"
+                            class="fr-icon-delete-line"
+                            title="Supprimer la simulation"></button>
+
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}
