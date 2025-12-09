@@ -7,6 +7,7 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
+    PetitionProjectInstructorAlternativeEdit,
     PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorDossierDSView,
     PetitionProjectInstructorMessagerieMarkUnreadView,
@@ -58,6 +59,11 @@ instruction_urlpatterns = [
         "alternatives/",
         PetitionProjectInstructorAlternativeView.as_view(),
         name="petition_project_instructor_alternative_view",
+    ),
+    path(
+        "alternatives/<int:simulation_id>/<str:action>/",
+        PetitionProjectInstructorAlternativeEdit.as_view(),
+        name="petition_project_instructor_alternative_edit",
     ),
     path(
         "procedure/",
