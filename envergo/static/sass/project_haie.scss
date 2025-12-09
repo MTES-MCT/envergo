@@ -1030,8 +1030,17 @@ button.hide-expanded[aria-expanded="true"] {
       }
     }
 
-    [class^="fr-icon-"] {
+    [class^="fr-icon-"]:not(:disabled) {
       color: var(--text-title-blue-france);
+    }
+
+    form {
+      display: inline;
+      margin: 0;
+    }
+
+    button {
+      padding: 0;
     }
   }
 }
