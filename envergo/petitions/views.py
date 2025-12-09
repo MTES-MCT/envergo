@@ -1133,6 +1133,10 @@ class PetitionProjectInstructorAlternativeEdit(
                 simulation.is_active = True
                 simulation.save()
 
+                project = simulation.project
+                project.moulinette_url = simulation.moulinette_url
+                project.save()
+
         # The main active simulation cannot be deleted
         elif action == "delete" and simulation.can_be_deleted():
             simulation.delete()
