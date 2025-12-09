@@ -4,9 +4,10 @@ from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -90,7 +91,7 @@ def moulinette_data(type_haie):
 def test_moulinette_evaluation_single_procedure(
     moulinette_data, expected_result, expected_result_code
 ):
-    ConfigHaieFactory(single_procedure=True)
+    RUConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
@@ -109,7 +110,7 @@ def test_moulinette_evaluation_single_procedure(
 def test_moulinette_evaluation_droit_constant(
     moulinette_data, expected_result, expected_result_code
 ):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
@@ -123,7 +124,7 @@ def test_moulinette_evaluation_droit_constant(
     [("mixte", "non_active"), ("alignement", "non_active")],
 )
 def test_moulinette_evaluation_non_active(moulinette_data, expected_result):
-    ConfigHaieFactory(regulations_available=[], single_procedure=True)
+    RUConfigHaieFactory(regulations_available=[])
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result
 
@@ -134,6 +135,6 @@ def test_moulinette_evaluation_non_active(moulinette_data, expected_result):
 )
 @pytest.mark.disable_regime_haie_criterion
 def test_moulinette_evaluation_non_disponible(moulinette_data, expected_result):
-    ConfigHaieFactory(single_procedure=True)
+    RUConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.regime_unique_haie.result == expected_result

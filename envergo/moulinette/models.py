@@ -97,8 +97,8 @@ REGULATIONS = Choices(
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
     ("reserves_naturelles", "Réserves naturelles"),
-    ("regime_unique_haie", "Régime unique haie"),
     ("code_rural_haie", "Code rural"),
+    ("regime_unique_haie", "Régime unique haie"),
 )
 
 
@@ -2195,8 +2195,8 @@ class MoulinetteHaie(Moulinette):
         "alignement_arbres",
         "urbanisme_haie",
         "reserves_naturelles",
-        "regime_unique_haie",
         "code_rural_haie",
+        "regime_unique_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"

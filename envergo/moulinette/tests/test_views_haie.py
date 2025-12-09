@@ -12,8 +12,8 @@ from envergo.geodata.conftest import (  # noqa
 )
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 
@@ -51,7 +51,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
 def test_triage(client):
-    ConfigHaieFactory(department_doctrine_html="<h2>Doctrine du département</h2>")
+    DCConfigHaieFactory(department_doctrine_html="<h2>Doctrine du département</h2>")
 
     url = reverse("triage")
     params = "department=44"
@@ -69,7 +69,7 @@ def test_triage(client):
 )
 def test_triage_result(client):
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         department_doctrine_html="<h2>Doctrine du département</h2>",
         hedge_maintenance_html="<h2>kikoo</h2>",
     )
@@ -107,7 +107,7 @@ def test_triage_result(client):
 )
 def test_moulinette_form_with_invalid_triage(client):
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         department_doctrine_html="<h2>Doctrine du département</h2>",
         hedge_maintenance_html="<h2>kikoo</h2>",
     )
@@ -129,7 +129,7 @@ def test_debug_result(client):
     """WIP: Test for debug page.
     Missing fixtures criteria ep and pac for MoulinetteHaie"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     haies = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
     )
@@ -159,7 +159,7 @@ def test_debug_result(client):
 )
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_p_view_with_R_gt_0(mock_R, client):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory()
     data = {
         "element": "haie",
@@ -187,7 +187,7 @@ def test_result_p_view_with_R_gt_0(mock_R, client):
 )
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_p_view_with_R_eq_0(mock_R, client):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory()
     data = {
         "element": "haie",
@@ -215,7 +215,7 @@ def test_result_p_view_with_R_eq_0(mock_R, client):
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
 def test_result_p_view_non_soumis_with_r_gt_0(client):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedge_lt5m = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -247,7 +247,7 @@ def test_result_p_view_non_soumis_with_r_gt_0(client):
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
 def test_moulinette_post_form_error(client):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     url = reverse("moulinette_form")
     data = {
         "foo": "bar",
@@ -291,7 +291,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     """Test if a warning is displayed on result pages when hedges to remove are outside department"""
 
     # GIVEN a moulinette with at least an hedge to remove outside the department
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -358,7 +358,7 @@ def test_confighaie_settings_view(
     admin_user,
 ):
     """Test config haie settings view"""
-    ConfigHaieFactory(department=loire_atlantique_department)
+    DCConfigHaieFactory(department=loire_atlantique_department)
     admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
