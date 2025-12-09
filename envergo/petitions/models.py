@@ -462,6 +462,7 @@ class Simulation(models.Model):
     project = models.ForeignKey(
         PetitionProject, verbose_name="Simulation", on_delete=models.CASCADE
     )
+    is_initial = models.BooleanField("Initiale ?", default=False)
     is_active = models.BooleanField("Active ?", default=False)
     moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
     source = models.CharField("Auteur", choices=USER_TYPE, default=USER_TYPE.petitioner)
@@ -477,16 +478,36 @@ class Simulation(models.Model):
                 fields=["project", "is_active"],
                 condition=Q(is_active=True),
                 name="single_active_simulation",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["project", "is_initial"],
+                condition=Q(is_initial=True),
+                name="single_initial_simulation",
+            ),
         ]
+
+    def custom_url(self, view_name):
+        """Generate an url with the given parameters."""
+
+        m_url = MoulinetteUrl(self.moulinette_url)
+        qt = m_url.querydict
+        f_url = reverse(view_name)
+        url = f"{f_url}?{qt.urlencode()}"
+        return url
 
     @property
     def form_url(self):
         """Return the moulinette form url with the simulation parameters."""
-        m_url = MoulinetteUrl(self.moulinette_url)
-        qt = m_url.querydict
-        f_url = reverse("moulinette_form")
-        url = f"{f_url}?{qt.urlencode()}"
+        return self.custom_url("moulinette_form")
+
+    @property
+    def result_url(self):
+        """Return the result form url with the simulation parameters."""
+
+        if self.is_active:
+            url = reverse("petition_project", args=[self.project.reference])
+        else:
+            url = self.custom_url("moulinette_result_plantation")
         return url
 
 
