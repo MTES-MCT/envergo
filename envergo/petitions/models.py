@@ -292,7 +292,7 @@ class PetitionProject(models.Model):
             user = User(is_staff=False)
 
             log_event_raw(
-                "dossier",
+                "demande",
                 "depot",
                 visitor_id,
                 user,

@@ -53,7 +53,7 @@
         let token = CSRF_TOKEN;
         let headers = {"X-CSRFToken": token};
         let data = new FormData();
-        data.append("category", "projet");
+        data.append("category", "dossier");
         data.append("action", "simulation_alt");
         data.append("metadata", JSON.stringify({
           "reference": "{{ petition_project.reference }}"
