@@ -4,8 +4,8 @@ from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 
@@ -74,7 +74,7 @@ def ep_criteria(france_map):  # noqa
 def test_moulinette_droit_constant():
     """When not in the single procedure case, returns the default result."""
 
-    ConfigHaieFactory(single_procedure=False)
+    DCConfigHaieFactory(single_procedure=False)
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -106,7 +106,17 @@ def test_moulinette_droit_constant():
 def test_moulinette_result_alignement():
     """Hedges with 100% "alignement d'arbres" are outside the unique procedure."""
 
-    ConfigHaieFactory(single_procedure=True)
+    DCConfigHaieFactory(
+        single_procedure=True,
+        single_procedure_settings={
+            "coeff_compensation": {
+                "mixte": 1.5,
+                "degradee": 1.5,
+                "arbustive": 1.5,
+                "buissonnante": 1.5,
+            }
+        },
+    )
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -136,7 +146,17 @@ def test_moulinette_result_alignement():
 
 
 def test_moulinette_result_non_alignement():
-    ConfigHaieFactory(single_procedure=True)
+    DCConfigHaieFactory(
+        single_procedure=True,
+        single_procedure_settings={
+            "coeff_compensation": {
+                "mixte": 1.5,
+                "degradee": 1.5,
+                "arbustive": 1.5,
+                "buissonnante": 1.5,
+            }
+        },
+    )
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -168,7 +188,7 @@ def test_moulinette_result_non_alignement():
 
 
 def test_moulinette_result_interdit():
-    config = ConfigHaieFactory(single_procedure=False)
+    config = DCConfigHaieFactory(single_procedure=False)
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -199,12 +219,30 @@ def test_moulinette_result_interdit():
     assert moulinette.result == "interdit"
 
     config.single_procedure = True
+    config.single_procedure_settings = {
+        "coeff_compensation": {
+            "mixte": 1.5,
+            "degradee": 1.5,
+            "arbustive": 1.5,
+            "buissonnante": 1.5,
+        }
+    }
     config.save()
     assert moulinette.result == "interdit"
 
 
 def test_moulinette_result_autorisation(ep_criteria):
-    ConfigHaieFactory(single_procedure=True)
+    DCConfigHaieFactory(
+        single_procedure=True,
+        single_procedure_settings={
+            "coeff_compensation": {
+                "mixte": 1.5,
+                "degradee": 1.5,
+                "arbustive": 1.5,
+                "buissonnante": 1.5,
+            }
+        },
+    )
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(

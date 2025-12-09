@@ -5,7 +5,7 @@ import pytest
 from django.template import Context, Template
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.templatetags.petitions import display_due_date
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
@@ -60,7 +60,7 @@ def test_display_ds_field(mock_post):
     """Test display DS field template tag"""
 
     # Given a config haie with a DS display field
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
         demarches_simplifiees_display_fields={"motivation": "Q2hhbXAtNDUzNDE0Ng=="},
@@ -94,7 +94,7 @@ def test_display_empty_ds_fields(mock_post):
     """Test display DS field template tag"""
 
     # Given a config haie with empty DS display fields
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
         demarches_simplifiees_display_fields={},
@@ -126,7 +126,7 @@ def test_display_empty_ds_fields(mock_post):
 )
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
         demarches_simplifiees_display_fields={"motivation": "id_imaginaire"},
@@ -158,7 +158,7 @@ def test_display_ds_field_invalid_field_id(mock_post):
 )
 def test_display_ds_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
         demarches_simplifiees_display_fields={"motivation": "Q2hhbXAtNDUzNDE0Ng=="},

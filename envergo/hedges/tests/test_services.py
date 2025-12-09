@@ -5,8 +5,8 @@ from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -71,7 +71,7 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
     ep_criteria, alignementarbres_criteria, n2000_criteria
 ):
     # GIVEN two regulations, one activated, one not activated, and one without activated perimeter on a department
-    ConfigHaieFactory(regulations_available=["alignement_arbres", "natura2000_haie"])
+    DCConfigHaieFactory(regulations_available=["alignement_arbres", "natura2000_haie"])
     hedges = HedgeDataFactory(
         data=[
             {

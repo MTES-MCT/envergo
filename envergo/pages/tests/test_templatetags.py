@@ -3,7 +3,7 @@ import pytest
 from django.test import override_settings
 
 from envergo.geodata.tests.factories import Department34Factory
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.pages.templatetags.utils import urlize_html
 
 pytestmark = pytest.mark.django_db
@@ -15,8 +15,8 @@ def test_petition_department_list(
     inactive_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
 ):
 
-    ConfigHaieFactory()
-    ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    DCConfigHaieFactory()
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
 
     # GIVEN an anonymous visitor
 
