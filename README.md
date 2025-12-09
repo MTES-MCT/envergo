@@ -67,7 +67,7 @@ $ docker compose run --rm django python manage.py migrate
 Pour avoir accès aux fichiers `static` depuis le serveur de debug :
 
 ```bash
-$ npm install
+$ npm ci
 $ npm run build
 $ docker compose run --rm django python manage.py collectstatic
 
@@ -287,10 +287,10 @@ $ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py mi
 $ docker compose run -e POSTGRES_DB=envergo-test --rm django python manage.py loaddata e2e/fixtures/db_seed.json
 ```
 
-Vous devez ensuite installer Playwright avec les commandes suivantes:
+Ensuite, installez les dépendances Node du projet (dont Playwright) et les navigateurs Playwright :
 ```bash
-$ npm install @playwright/test
-$ npx playwright install
+$ npm ci
+$ npm run playwright:install
 ```
 
 #### Lancer les tests
@@ -311,14 +311,14 @@ Enfin vous pouvez lancer les tests avec l'une des commandes suivantes :
 
 Pour aménagement :
 ```bash
-$ TEST_DIR='./e2e/amenagement' npx playwright test --ui # pour lancer les tests dans un navigateur
-$ TEST_DIR='./e2e/amenagement' npx playwright test # pour lancer les tests dans un shell
+$ npm run e2e-amenagement:ui # pour lancer les tests dans un navigateur
+$ npm run e2e-amenagement # pour lancer les tests dans un shell
 ```
 
 Pour le GUH :
 ```bash
-$ TEST_DIR='./e2e/haie' npx playwright test --ui # pour lancer les tests dans un navigateur
-$ TEST_DIR='./e2e/haie' npx playwright test # pour lancer les tests dans un shell
+$ npm run e2e-haie:ui # pour lancer les tests dans un navigateur
+$ npm run e2e-haie # pour lancer les tests dans un shell
 ```
 
 ## Recette et déploiement

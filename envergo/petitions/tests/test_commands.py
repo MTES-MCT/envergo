@@ -5,7 +5,7 @@ import pytest
 from django.core.management import call_command
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import ConfigHaieFactory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -18,7 +18,7 @@ pytestmark = pytest.mark.django_db
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
     PetitionProjectFactory()
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
     assert (
         len(
@@ -111,7 +111,7 @@ def test_dossier_submission_admin_alert(
 
     mock_post.side_effect = [mock_response_1, mock_response_2]
     project = PetitionProjectFactory()
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
 
     args, kwargs = mock_notify_model.call_args_list[0]

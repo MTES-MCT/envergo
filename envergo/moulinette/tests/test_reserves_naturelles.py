@@ -4,8 +4,8 @@ from envergo.geodata.conftest import bizous_town_center  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -111,7 +111,7 @@ def moulinette_data(lat1, lng1, lat2, lng2, plan_gestion):
 def test_moulinette_evaluation(
     moulinette_data, expected_result, expected_lenght_resnat
 ):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.reserves_naturelles.result == expected_result
 

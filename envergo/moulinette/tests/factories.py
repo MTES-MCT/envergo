@@ -66,7 +66,7 @@ class PerimeterFactory(DjangoModelFactory):
         self.regulations.add(*extracted)
 
 
-class ConfigHaieFactory(DjangoModelFactory):
+class DCConfigHaieFactory(DjangoModelFactory):
     class Meta:
         model = ConfigHaie
 
@@ -79,6 +79,8 @@ class ConfigHaieFactory(DjangoModelFactory):
         "natura2000_haie",
         "alignement_arbres",
         "reserves_naturelles",
+        "code_rural_haie",
+        "regime_unique_haie",
     ]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [
@@ -100,3 +102,15 @@ class ConfigHaieFactory(DjangoModelFactory):
         {"id": "654", "value": "url_moulinette"},
     ]
     demarches_simplifiees_project_url_id = "ABC123"
+
+
+class RUConfigHaieFactory(DCConfigHaieFactory):
+    single_procedure = True
+    single_procedure_settings = {
+        "coeff_compensation": {
+            "mixte": 1.5,
+            "degradee": 1.5,
+            "arbustive": 1.5,
+            "buissonnante": 1.5,
+        }
+    }

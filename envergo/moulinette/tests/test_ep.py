@@ -10,8 +10,8 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import get_hedge_compensation_details
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 
@@ -60,7 +60,7 @@ def zonage_normandie(france_map):  # noqa
 
 
 def test_ep_is_soumis(ep_criteria):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
     )
@@ -91,7 +91,7 @@ def test_ep_is_soumis(ep_criteria):  # noqa
 
 
 def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
         latLngs=[
@@ -126,7 +126,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
 
 
 def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
         latLngs=[
@@ -161,7 +161,7 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
 
 
 def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
         latLngs=[
@@ -210,7 +210,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
 
 
 def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
         latLngs=[
@@ -261,7 +261,7 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
 def test_ep_normandie_dispense_coupe_a_blanc(
     ep_normandie_criterion, zonage_normandie
 ):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
         latLngs=[
@@ -300,7 +300,7 @@ def test_ep_normandie_dispense_coupe_a_blanc(
 def test_ep_normandie_interdit_remplacement(
     ep_normandie_criterion, zonage_normandie
 ):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
         latLngs=[
@@ -339,7 +339,7 @@ def test_ep_normandie_interdit_remplacement(
 def test_ep_normandie_derogation_simplifiee(
     ep_normandie_criterion, zonage_normandie
 ):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
         latLngs=[
@@ -385,7 +385,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
             )
         ],
     )
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_gt20m = HedgeFactory(
         latLngs=[
@@ -435,7 +435,7 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
         activation_map=france_map,
         activation_mode="department_centroid",
     ),
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
         latLngs=[
@@ -476,7 +476,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
         activation_map=france_map,
         activation_mode="department_centroid",
     ),
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt20m_1 = HedgeFactory(
         latLngs=[
@@ -512,7 +512,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
 def test_min_length_condition_normandie(
     ep_normandie_criterion, zonage_normandie
 ):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     hedge_lt10m_1 = HedgeFactory(
         latLngs=[
@@ -575,7 +575,7 @@ def test_min_length_condition_normandie(
 def test_replantation_coefficient_normandie(
     ep_normandie_criterion, params: tuple[str, float]
 ):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedge_type, r = params
     MapFactory(
         name="Zonage Normandie",
