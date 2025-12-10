@@ -730,7 +730,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             "invited_emails": [],
         }
         for user in department_members:
-            if user.is_instructor():
+            if user.is_instructor:
                 departement_members_dict["instructors_emails"].append(user.email)
             else:
                 departement_members_dict["invited_emails"].append(user.email)
