@@ -27,39 +27,23 @@
         </p>
       </div>
     {% endif %}
-
-    <form method="get">
-      <fieldset class="fr-segmented">
-        <legend class="fr-segmented__legend">Filtre des dossiers</legend>
-        <div class="fr-segmented__elements">
-          <div class="fr-segmented__element">
-            <input value="all"
-                   checked
-                   type="radio"
-                   id="segmented-1-1"
-                   name="segmented-dossiers">
-            <label class="fr-label" for="segmented-1-1">Tous les dossiers</label>
-          </div>
-          <div class="fr-segmented__element">
-            <input value="suivis"
-                   type="radio"
-                   id="segmented-1-2"
-                   name="segmented-dossiers">
-            <label class="fr-label" for="segmented-1-2">Mes dossiers suivis</label>
-          </div>
-          <div class="fr-segmented__element">
-            <input value="sans_instructeurs"
-                   type="radio"
-                   id="segmented-1-3"
-                   name="segmented-dossiers">
-            <label class="fr-label" for="segmented-1-3">Dossiers sans instructeur</label>
-          </div>
+    <fieldset class="fr-segmented">
+      <legend class="fr-segmented__legend">Filtre des dossiers</legend>
+      <div class="fr-segmented__elements">
+        <div class="fr-segmented__element">
+          <a href="{% url 'petition_project_list' %}"
+             {% if request.GET.f is None %}class="active"{% endif %}>Tous les dossiers</a>
         </div>
-      </fieldset>
-      <input class="fr-sr-only" type="submit" value="Filtrer">
-    </form>
-    <!--
-          {% url "petition_project_list" %}?f=mes_dossiers f=dossiers_sans_instructeur -->
+        <div class="fr-segmented__element">
+          <a href="{% url 'petition_project_list' %}?f=mes_dossiers"
+             {% if 'mes_dossiers' in request.GET.f %}class="active"{% endif %}>Mes dossiers suivis</a>
+        </div>
+        <div class="fr-segmented__element">
+          <a href="{% url 'petition_project_list' %}?f=dossiers_sans_instructeur"
+             {% if 'dossiers_sans_instructeur' in request.GET.f %}class="active"{% endif %}>Dossiers sans instructeur</a>
+        </div>
+      </div>
+    </fieldset>
     <div class="fr-table--lg fr-table project-list__table">
       <div class="fr-table__wrapper">
         <div class="fr-table__container">
