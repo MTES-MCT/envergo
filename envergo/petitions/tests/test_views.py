@@ -178,8 +178,6 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     assert dossier_number is None
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("requests.post")
 def test_petition_project_detail(mock_post, client, site):
     """Test consultation view"""
@@ -237,8 +235,6 @@ def test_petition_project_detail(mock_post, client, site):
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     inactive_haie_user_44,
@@ -342,8 +338,6 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -702,8 +696,6 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_list_filters(
     instructor_haie_user_44, haie_user, admin_user, client, site
 ):
@@ -711,7 +703,7 @@ def test_petition_project_list_filters(
 
     project_list_url = reverse("petition_project_list")
     # Given config haie on 44
-    config_haie_44 = ConfigHaieFactory()
+    config_haie_44 = DCConfigHaieFactory()
     department_44 = config_haie_44.department
 
     # Given two haie instructors and haie invited on department 44
