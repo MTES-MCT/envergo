@@ -408,7 +408,7 @@ class PetitionProject(models.Model):
             (
                 user.is_active,
                 user.access_haie,
-                user.is_instructor_for_departments,
+                user.is_instructor,
                 user.departments.filter(id=department.id).exists(),
             )
         )
