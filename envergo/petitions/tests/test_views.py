@@ -178,6 +178,8 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     assert dossier_number is None
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("requests.post")
 def test_petition_project_detail(mock_post, client, site):
     """Test consultation view"""
@@ -235,6 +237,8 @@ def test_petition_project_detail(mock_post, client, site):
     )
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     inactive_haie_user_44,
@@ -338,6 +342,8 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -697,6 +703,101 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_petition_project_list_filters(
+    instructor_haie_user_44, haie_user, admin_user, client, site
+):
+    """Test filters on project list"""
+
+    project_list_url = reverse("petition_project_list")
+    # Given config haie on 44
+    config_haie_44 = ConfigHaieFactory()
+    department_44 = config_haie_44.department
+
+    # Given two haie instructors and haie invited on department 44
+    haie_instructor_44_invited = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=False,
+    )
+    haie_instructor_44_invited.departments.add(department_44)
+    haie_instructor_44_instructor1 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=True,
+    )
+    haie_instructor_44_instructor1.departments.add(department_44)
+    haie_instructor_44_instructor2 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor_for_departments=True,
+    )
+    haie_instructor_44_instructor2.departments.add(department_44)
+
+    # Create three projects non draft
+    today = date.today()
+    project_44_followed_by_instructor1 = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
+    project_44_followed_by_instructor2 = PetitionProjectFactory(
+        reference="ACB132",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
+    project_44_followed_by_invited = PetitionProjectFactory(
+        reference="XYZ123",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_invited.followed_by.add(haie_instructor_44_invited)
+    project_44_no_instructor = PetitionProjectFactory(
+        reference="XYZ456",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+
+    # WHEN I search on my projects
+    client.force_login(haie_instructor_44_instructor1)
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+    # WHEN I search on projects unfollowed by any instructor
+    response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference in content
+    assert project_44_no_instructor.reference in content
+
+    # WHEN I search on my projects for instructor2
+    client.force_login(haie_instructor_44_instructor2)
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
