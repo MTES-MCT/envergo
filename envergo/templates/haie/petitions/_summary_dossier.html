@@ -37,7 +37,7 @@
         </li>
       </ul>
     </div>
-    <div class="fr-col-12 fr-col-sm-4 fr-pb-2w">
+    <div class="fr-col-12 fr-col-sm-4 fr-pb-2w fr-text--sm">
       {% if user|has_edit_permission:petition_project %}
         <div>{% stage_badge petition_project.current_stage %}</div>
         {% if petition_project.current_decision != "unset" %}
