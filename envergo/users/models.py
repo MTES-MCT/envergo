@@ -47,7 +47,7 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
-    is_instructor_for_departments = models.BooleanField(
+    is_instructor = models.BooleanField(
         "En charge de l'instruction sur les départements",
         default=False,
         help_text="""Donne accès aux actions instructeur sur tous les dossiers des départements autorisés pour ce user.
@@ -81,7 +81,7 @@ class User(AbstractUser):
             (
                 self.is_active,
                 self.access_haie,
-                self.is_instructor_for_departments,
+                self.is_instructor,
                 self.departments.exists(),
             )
         )
@@ -92,7 +92,7 @@ class User(AbstractUser):
             (
                 self.is_active,
                 self.access_haie,
-                not self.is_instructor_for_departments,
+                not self.is_instructor,
                 self.departments.exists() or self.invitation_tokens.exists(),
             )
         )
