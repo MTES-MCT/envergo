@@ -561,7 +561,7 @@ def test_eval_detail_shows_version_content(client):
     assert "<h1>Avis réglementaire</h1>" not in res.content.decode()
 
 
-def test_only_published_versions_are_shown(client):
+def test_only_published_versions_are_shown(client, moulinette_config):
     """Unpublished versions are not displayed."""
 
     version = VersionFactory(content="This is a version", published=False)
@@ -571,6 +571,9 @@ def test_only_published_versions_are_shown(client):
     assert res.status_code == 200
     assert "This is a version" not in res.content.decode()
     assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+    # assert a visit event is created with the complete result in it
+    event = Event.objects.get(category="evaluation", event="visit")
+    assert event.metadata.get("main_result")
 
 
 def test_eval_detail_shows_latest_published_version_content(client):
