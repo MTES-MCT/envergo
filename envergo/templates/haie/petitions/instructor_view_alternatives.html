@@ -25,29 +25,33 @@
 
       {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
-      <div class="form-actions">
-        <button type="button"
-                class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
-                aria-expanded="false"
-                aria-controls="add-alternative">Ajouter une simulation</button>
-      </div>
-    </section>
-
-    <section id="add-alternative" class="fr-collapse">
-      <div class="alt fr-p-3w">
-        <h2>Ajouter une simulation alternative</h2>
-        <form method="post" action="">
-          {% csrf_token %}
-          {% include '_form_snippet.html' with form=form %}
+      {% if has_edit_permission %}
+        <div class="form-actions">
           <button type="button"
-                  class="fr-btn fr-btn--secondary fr-mr-1w"
+                  class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
                   aria-expanded="false"
-                  aria-controls="add-alternative">Annuler</button>
-
-          <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
-        </form>
-      </div>
+                  aria-controls="add-alternative">Ajouter une simulation</button>
+        </div>
+      {% endif %}
     </section>
+
+    {% if has_edit_permission %}
+      <section id="add-alternative" class="fr-collapse">
+        <div class="alt fr-p-3w">
+          <h2>Ajouter une simulation alternative</h2>
+          <form method="post" action="">
+            {% csrf_token %}
+            {% include '_form_snippet.html' with form=form %}
+            <button type="button"
+                    class="fr-btn fr-btn--secondary fr-mr-1w"
+                    aria-expanded="false"
+                    aria-controls="add-alternative">Annuler</button>
+
+            <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
+          </form>
+        </div>
+      </section>
+    {% endif %}
 
     <section id="how-to">
       <h2>Comment faire une simulation alternative ?</h2>
