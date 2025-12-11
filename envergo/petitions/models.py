@@ -373,7 +373,7 @@ class PetitionProject(models.Model):
         moulinette_data = raw_data.dict()
         return moulinette_data
 
-    def user_has_view_permission(self, user):
+    def has_view_permission(self, user):
         """User has view permission on project, according to
         - superuser
         - user with access haie and invitation token
@@ -391,7 +391,7 @@ class PetitionProject(models.Model):
             )
         )
 
-    def user_has_edit_permission(self, user):
+    def has_change_permission(self, user):
         """User has edit permission on project, according to
         - superuser
         - user with access haie, is instructor for department
