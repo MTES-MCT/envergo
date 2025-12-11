@@ -161,7 +161,7 @@
 
   {% if paginator.count %}
     <h3 class="fr-mt-6w">Historique des changements</h3>
-    <div class="fr-table  procedure-history__table">
+    <div class="fr-table fr-table--multiline  procedure-history__table">
       <div class="fr-table__wrapper">
         <div class="fr-table__container">
           <div class="fr-table__content">
@@ -172,11 +172,9 @@
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">Date / heure de la saisie</th>
-                  <th scope="col">Date effective</th>
+                  <th scope="col">Date</th>
                   <th scope="col">Auteur</th>
-                  <th scope="col">Étape / Décision départ</th>
-                  <th scope="col">Étape / Décision arrivée</th>
+                  <th scope="col">Modification</th>
                   <th scope="col">Commentaire</th>
                 </tr>
               </thead>
@@ -184,38 +182,49 @@
                 {% for log in object_list %}
                   <tr class="project">
                     <td>{{ log.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-                    <td>{{ log.status_date|date:"SHORT_DATE_FORMAT" }}</td>
+                    <td>{{ log.created_by }}</td>
                     <td>
-                      <span class="described-by-tooltip"
-                            aria-describedby="email-tooltip-{{ forloop.counter }}">{{ log.created_by.email }}</span>
-                      <span class="fr-tooltip fr-placement"
-                            role="tooltip"
-                            id="email-tooltip-{{ forloop.counter }}">{{ log.created_by.email }}</span>
-                    </td>
-                    <td>
-                      {% if log.previous_log %}
-                        {{ log.previous_log.get_stage_display }}
-                        {% if log.previous_log.decision != "unset" %}
-                          <br />
-                          {{ log.previous_log.get_decision_display }}
-                        {% endif %}
-                      {% else %}
-                        {{ log|choice_default_label:"stage" }}
-                      {% endif %}
-                    </td>
-                    <td>
-                      {{ log.get_stage_display }}
-                      {% if log.decision != "unset" %}
+                      {% if log.type == "status_change" %}
+                        <b>Changement d'état</b>
                         <br />
-                        {{ log.get_decision_display }}
+                        {{ STAGES|get_choice_label:log.stage }}
+                        {% if log.due_date %}
+                          <br />
+                          Échéance le {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                        {% endif %}
+                        {% if log.decision != "unset" %}
+                          <br />
+                          Décision : {{ DECISIONS|get_choice_label:log.decision }}
+                        {% endif %}
+                      {% elif log.type == "suspension" %}
+                        <b>Demande de compléments. Suspension de l'instruction </b>
+                      {% elif log.type == "resumption" %}
+                        <b>Complément reçus. Reprise de l'instruction</b>
                       {% endif %}
                     </td>
                     <td>
-                      <span class="described-by-tooltip"
-                            aria-describedby="comment-tooltip-{{ forloop.counter }}">{{ log.update_comment }}</span>
-                      <span class="fr-tooltip fr-placement"
-                            role="tooltip"
-                            id="comment-tooltip-{{ forloop.counter }}">{{ log.update_comment }}</span>
+                      {% if log.status_date %}
+                        Changement effectif le {{ log.status_date|date:"SHORT_DATE_FORMAT" }}
+                        <br />
+                      {% endif %}
+                      {% if log.update_comment %}
+
+                        {% if log.update_comment|length > 200 %}
+                          <div>
+                            {{ log.update_comment|slice:"0:200" }}<span class="ellipsis">…</span>
+                            <div class="more fr-collapse" id="comment-{{ forloop.counter }}">{{ log.update_comment|slice:"200:" }}</div>
+                            <button class="read-more-btn fr-btn fr-btn--tertiary-no-outline"
+                                    aria-expanded="false"
+                                    aria-controls="comment-{{ forloop.counter }}">
+                              <span class="fr-sr-only">Voir ou masquer les détails</span>
+                              <span aria-hidden="true" class="concealed-label">Voir plus ▼</span>
+                              <span aria-hidden="true" class="expanded-label">Voir moins ▲</span>
+                            </button>
+                          </div>
+                        {% else %}
+                          {{ log.update_comment }}
+                        {% endif %}
+                      {% endif %}
                     </td>
                   </tr>
                 {% endfor %}
