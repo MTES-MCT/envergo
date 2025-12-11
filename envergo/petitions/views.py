@@ -142,7 +142,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         # Filter on request GET params
         request_filters = self.request.GET.getlist("f", [])
         if "mes_dossiers" in request_filters:
-            queryset = queryset.filter(followed_by=current_user)
+            queryset = queryset.filter(followed_up=True)
 
         if "dossiers_sans_instructeur" in request_filters:
             instructors_users_qs = User.objects.filter(is_instructor=True).exclude(
