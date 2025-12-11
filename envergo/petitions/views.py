@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlencode, urlparse
+from zoneinfo import ZoneInfo
 
 import fiona
 import requests
@@ -52,6 +53,7 @@ from envergo.petitions.forms import (
     ResumeProcessingForm,
 )
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
@@ -1089,6 +1091,54 @@ class PetitionProjectInstructorProcedureView(
         return initial
 
     def get_context_data(self, **kwargs):
+
+        def extract_entries(log):
+            entries = [
+                {
+                    "type": "status_change",
+                    "created_at": log.created_at,
+                    "status_date": log.status_date,
+                    "created_by": (
+                        None
+                        if not log.created_by
+                        else (
+                            log.created_by.email
+                            if not log.created_by.is_staff
+                            else "Admin Envergo"
+                        )
+                    ),
+                    "update_comment": log.update_comment,
+                    "stage": log.stage,
+                    "decision": log.decision,
+                    "due_date": log.due_date,
+                }
+            ]
+            if log.suspension_date:
+                entries.insert(
+                    0,
+                    {
+                        "type": "suspension",
+                        "created_at": datetime.datetime.combine(
+                            log.suspension_date, datetime.time.min
+                        ).replace(tzinfo=ZoneInfo("UTC")),
+                        "response_due_date": log.response_due_date,
+                    },
+                )
+            if log.info_receipt_date:
+                entries.insert(
+                    0,
+                    {
+                        "type": "resumption",
+                        "created_at": datetime.datetime.combine(
+                            log.suspension_date, datetime.time.min
+                        ).replace(tzinfo=ZoneInfo("UTC")),
+                        "due_date": log.due_date,
+                    },
+                )
+                entries[0]["due_date"] = log.original_due_date
+
+            return entries
+
         context = super().get_context_data(**kwargs)
         obj = self.object
         history_qs = obj.status_history.select_related("created_by").order_by(
@@ -1103,20 +1153,11 @@ class PetitionProjectInstructorProcedureView(
             page_obj = paginator.page(1)
         except EmptyPage:
             page_obj = paginator.page(paginator.num_pages)
-
-        # Prefetch previous log in the current page
-        start = max(
-            page_obj.start_index() - 2, 0
-        )  # -1 for 0 index, -1 to get previous log
+        start = page_obj.start_index() - 1
         end = page_obj.end_index()
-        logs = list(history_qs[start:end])
-        for i, log in enumerate(logs):
-            log.previous_log = logs[i + 1] if i + 1 < len(logs) else None
-
-        # Drop the extra item (first one) if it's not part of this page
-        if page_obj.number > 1:
-            logs = logs[1:]
-
+        logs = [
+            entry for log in history_qs[start:end] for entry in extract_entries(log)
+        ]
         context.update(
             {
                 "object_list": logs,
@@ -1124,6 +1165,7 @@ class PetitionProjectInstructorProcedureView(
                 "page_obj": page_obj,
                 "is_paginated": paginator.num_pages > 1,
                 "STAGES": STAGES,
+                "DECISIONS": DECISIONS,
             }
         )
 
