@@ -58,15 +58,11 @@
                   </a>
 
                   {% if simulation.can_be_deleted %}
-                    <form method="post"
-                          class="action"
-                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "delete" %}">
-                      {% csrf_token %}
-
-                      <button type="submit"
-                              class="fr-icon-delete-line"
-                              title="Supprimer la simulation"></button>
-                    </form>
+                    <button type="button"
+                            aria-controls="simulation-delete-modal-{{ simulation.id }}"
+                            data-fr-opened="false"
+                            class="fr-icon-delete-line"
+                            title="Supprimer la simulation"></button>
                   {% else %}
                     <button type="button"
                             disabled="disabled"
