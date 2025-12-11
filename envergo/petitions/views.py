@@ -1114,7 +1114,7 @@ class PetitionProjectInstructorProcedureView(
                         else (
                             log.created_by.email
                             if not log.created_by.is_staff
-                            else "Admin Envergo"
+                            else "Administrateur"
                         )
                     ),
                     "update_comment": log.update_comment,
@@ -1252,6 +1252,7 @@ class PetitionProjectInstructorProcedureView(
                 self.request,
                 reference=self.object.reference,
                 etape_i=previous_stage,
+                department=self.object.get_department_code(),
                 etape_f=log.stage,
                 decision_i=previous_decision,
                 decision_f=log.decision,
