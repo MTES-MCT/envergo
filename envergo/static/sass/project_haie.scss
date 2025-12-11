@@ -1011,3 +1011,39 @@ div#project-header-container {
 button.hide-expanded[aria-expanded="true"] {
   display: none;
 }
+
+#alternative-simulations-table {
+  form {
+    display: inline;
+    margin: 0;
+  }
+
+  .status-col {
+    .fr-badge + form {
+      margin-left: 0.25rem;
+    }
+  }
+
+  .actions-col {
+    .action + .action {
+      margin-left: 0.25rem;
+    }
+
+    a {
+      text-decoration: none;
+      background-image: none;
+
+      &::after {
+        display: none;
+      }
+    }
+
+    [class^="fr-icon-"]:not(:disabled) {
+      color: var(--text-title-blue-france);
+    }
+
+    button {
+      padding: 0;
+    }
+  }
+}
