@@ -620,11 +620,11 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     context_object_name = "petition_project"
 
     def has_view_permission(self, request, object):
-        """Check if user has view permission on object (keep for backward compatibily)"""
+        """Check if request has view permission on object"""
         return object.has_view_permission(request.user)
 
     def has_change_permission(self, request, object):
-        """Check if user has edit permission on object (keep for backward compatibily)"""
+        """Check if request has edit permission on object"""
         return object.has_change_permission(request.user)
 
     def get_queryset(self):
