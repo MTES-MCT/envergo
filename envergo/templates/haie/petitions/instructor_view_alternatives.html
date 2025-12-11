@@ -117,9 +117,62 @@
   </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_body %}
   {{ block.super }}
-  <script>window.COPY_DISABLED_MESSAGE = "";</script>
-  <script>window.SUCCESSFUL_COPY_MESSAGE = "✓";</script>
-  <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
-{% endblock %}
+  {% for simulation in simulations %}
+    <dialog id="simulation-activate-modal-{{ simulation.id }}"
+            class="fr-modal"
+            aria-labelledby="simulation-activate-modal-title-{{ simulation.id }}"
+            aria-modal="true">
+      <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+            <div class="fr-modal__body fr-pt-5w">
+              <div class="fr-modal__content">
+                <h2 id="simulation-activate-modal-title-{{ simulation.id }}"
+                    class="fr-modal__title">
+                  <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                  Activer cette simulation ?
+                </h2>
+                <p>
+                  le dossier sera mis à jour, les haies à détruire et à planter seront modifiées, les résultats du simulateur également.
+                </p>
+
+                <p>
+                  Les services consultés verront uniquement ce dossier mis à jour. La simulation actuellement active restera disponible dans la liste.
+                </p>
+              </div>
+
+              <div class="fr-modal__footer">
+                <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
+                  <li>
+                    <form method="post"
+                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "activate" %}">
+                      {% csrf_token %}
+
+                      <button type="submit" class="fr-btn fr-btn--icon-left">Activer</button>
+                    </form>
+                  </li>
+                  <li>
+                    <button type="button"
+                            class="fr-btn fr-btn--icon-left fr-btn--secondary"
+                            aria-controls="simulation-activate-modal-{{ simulation.id }}">Annuler</button>
+                    <li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </dialog>
+      {% endfor %}
+
+    {% endblock %}
+
+    {% block extra_js %}
+      {{ block.super }}
+      <script>window.COPY_DISABLED_MESSAGE = "";</script>
+      <script>window.SUCCESSFUL_COPY_MESSAGE = "✓";</script>
+      <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
+    {% endblock %}
