@@ -374,32 +374,25 @@ class PetitionProject(models.Model):
         moulinette_data = raw_data.dict()
         return moulinette_data
 
-    def user_has_view_permission(self, user):
+    def has_view_permission(self, user):
         """User has view permission on project, according to
         - superuser
         - user with access haie and invitation token
         - user with access haie and right to project department
         """
         department = self.department
-        return (
-            user.is_superuser
-            or all(
+        return user.is_superuser or all(
+            (
+                user.is_active,
+                user.access_haie,
                 (
-                    user.is_active,
-                    user.access_haie,
-                    user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
-                )
-            )
-            or all(
-                (
-                    user.is_active,
-                    user.access_haie,
-                    user.departments.filter(id=department.id).exists(),
-                )
+                    user.invitation_tokens.filter(petition_project_id=self.pk).exists()
+                    or user.departments.filter(id=department.id).exists()
+                ),
             )
         )
 
-    def user_has_edit_permission(self, user):
+    def has_change_permission(self, user):
         """User has edit permission on project, according to
         - superuser
         - user with access haie, is instructor for department

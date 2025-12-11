@@ -283,4 +283,4 @@ def display_ds_field(context, field_name):
 @register.filter
 def has_edit_permission(user, project):
     """Check if the user can edit the project."""
-    return project.user_has_edit_permission(user)
+    return project.has_change_permission(user)
