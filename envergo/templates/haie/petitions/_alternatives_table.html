@@ -45,7 +45,8 @@
                     <span class="fr-icon-play-circle-line" aria-hidden="true"></span>
                   </a>
 
-                  <button data-clipboard-text="{{ simulation.form_url }}"
+                  <button title="Copier le lien vers cette simulation"
+                          data-clipboard-text="{{ base_url }}{{ simulation.form_url }}"
                           class="action clipboard btn--copy-to-clipboard fr-icon-link"></button>
 
                   <a href="{{ simulation.result_url }}"
