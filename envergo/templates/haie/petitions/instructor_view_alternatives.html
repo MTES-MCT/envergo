@@ -25,7 +25,7 @@
 
       {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
-      {% if has_edit_permission %}
+      {% if has_change_permission %}
         <div class="form-actions">
           <button type="button"
                   class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
@@ -35,7 +35,7 @@
       {% endif %}
     </section>
 
-    {% if has_edit_permission %}
+    {% if has_change_permission %}
       <section id="add-alternative" class="fr-collapse">
         <div class="alt fr-p-3w">
           <h2>Ajouter une simulation alternative</h2>
