@@ -1127,6 +1127,9 @@ class PetitionProjectInstructorAlternativeView(
             )
             .order_by("created_at")
         )
+
+        context["base_url"] = self.request.build_absolute_uri("/")
+
         return context
 
     def form_valid(self, form):
