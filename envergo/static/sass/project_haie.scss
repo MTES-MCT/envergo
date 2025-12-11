@@ -1024,6 +1024,13 @@ button.hide-expanded[aria-expanded="true"] {
     }
   }
 
+  .comment-col {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
   .actions-col {
     .action + .action {
       margin-left: 0.25rem;
@@ -1038,7 +1045,8 @@ button.hide-expanded[aria-expanded="true"] {
       }
     }
 
-    [class^="fr-icon-"]:not(:disabled) {
+    a:not(:disabled),
+    button:not(:disabled) {
       color: var(--text-title-blue-france);
     }
 
