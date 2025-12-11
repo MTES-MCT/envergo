@@ -1096,7 +1096,7 @@ class PetitionProjectInstructorProcedureView(
                     "created_at": log.created_at,
                     "status_date": log.status_date,
                     "created_by": (
-                        None
+                        ""
                         if not log.created_by
                         else (
                             log.created_by.email
