@@ -17,7 +17,7 @@ class MoulinetteUrl:
     @property
     def querydict(self):
         url = urlparse(self.url)
-        qd = QueryDict(url.query)
+        qd = QueryDict(url.query, mutable=True)
         return qd
 
     @property

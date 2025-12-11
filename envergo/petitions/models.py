@@ -495,11 +495,12 @@ class Simulation(models.Model):
     def can_be_activated(self):
         return not self.project.current_status.is_closed
 
-    def custom_url(self, view_name):
+    def custom_url(self, view_name, **kwargs):
         """Generate an url with the given parameters."""
 
         m_url = MoulinetteUrl(self.moulinette_url)
         qt = m_url.querydict
+        qt.update(kwargs)
         f_url = reverse(view_name)
         url = f"{f_url}?{qt.urlencode()}"
         return url
@@ -507,7 +508,7 @@ class Simulation(models.Model):
     @property
     def form_url(self):
         """Return the moulinette form url with the simulation parameters."""
-        return self.custom_url("moulinette_form")
+        return self.custom_url("moulinette_form", alternative=True)
 
     @property
     def result_url(self):
@@ -516,7 +517,7 @@ class Simulation(models.Model):
         if self.is_active:
             url = reverse("petition_project", args=[self.project.reference])
         else:
-            url = self.custom_url("moulinette_result_plantation")
+            url = self.custom_url("moulinette_result_plantation", alternative=True)
         return url
 
 
