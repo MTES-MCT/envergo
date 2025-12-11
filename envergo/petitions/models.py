@@ -460,7 +460,10 @@ USER_TYPE = Choices(
 
 class Simulation(models.Model):
     project = models.ForeignKey(
-        PetitionProject, verbose_name="Simulation", on_delete=models.CASCADE
+        PetitionProject,
+        verbose_name="Simulation",
+        on_delete=models.CASCADE,
+        related_name="simulations",
     )
     is_initial = models.BooleanField("Initiale ?", default=False)
     is_active = models.BooleanField("Active ?", default=False)
