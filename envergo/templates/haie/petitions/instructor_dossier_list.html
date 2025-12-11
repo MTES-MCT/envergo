@@ -11,7 +11,7 @@
 {% block content %}
   <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
-    {% if project_number <= 0 %}
+    {% if list_without_filter_is_empty %}
       <div class="fr-alert fr-alert--info">
         <h3 class="fr-alert__title">Aucun dossier n’est accessible pour le moment</h3>
         <p>Vous n’avez actuellement accès à aucun dossier.</p>

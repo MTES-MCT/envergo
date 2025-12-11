@@ -87,6 +87,21 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
 
+    def filter_queryset_user(self, qs, user):
+        """Add filters according to user status to the queryset"""
+        if user.is_superuser:
+            # don't filter the queryset
+            pass
+        elif user.access_haie:
+            user_departments = user.departments.defer("geometry").all()
+            qs = qs.filter(
+                Q(department__in=user_departments)
+                | Q(invitation_tokens__user_id=user.id)
+            ).distinct()
+        else:
+            qs = qs.none()
+        return qs
+
     def get_queryset(self):
         """Override queryset filtering projects from user departments
 
@@ -127,17 +142,8 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
 
-        if current_user.is_superuser:
-            # don't filter the queryset
-            pass
-        elif current_user.access_haie:
-            user_departments = current_user.departments.defer("geometry").all()
-            queryset = queryset.filter(
-                Q(department__in=user_departments)
-                | Q(invitation_tokens__user_id=current_user.id)
-            ).distinct()
-        else:
-            queryset = queryset.none()
+        # Filter on current user status
+        queryset = self.filter_queryset_user(queryset, current_user)
 
         # Filter on request GET params
         request_filters = self.request.GET.getlist("f", [])
@@ -155,6 +161,20 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Check if object_list without filter is empty when filters are in querystring
+        context["list_without_filter_is_empty"] = False
+        if not context["object_list"]:
+            request_filters = self.request.GET.getlist("f", [])
+            if request_filters:
+                queryset = PetitionProject.objects.exclude(
+                    demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+                )
+                queryset = self.filter_queryset_user(queryset, self.request.user)
+                context["total_without_filter_not_empty"] = queryset.exists()
+            else:
+                context["total_without_filter_not_empty"] = True
+
+        # Add city and organization to each obj
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
