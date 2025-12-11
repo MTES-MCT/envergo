@@ -10,115 +10,113 @@
 
 {% block project_content %}
 
-  <div class="project-inner-content">
-    <section class="fr-mt-3w fr-mb-5w">
-      <h2>Simulations alternatives</h2>
-      <p>
-        Si la simulation transmise par le pétitionnaire comporte une erreur manifeste (par exemple : type de haie inadapté, absence de sélection des options « Proximité d’une mare » ou « Présence d’arbres à cavité »), il est possible de la reprendre, de la modifier et de vérifier si cela impacte les résultats obtenus.
-      </p>
+  <section class="fr-mt-3w fr-mb-5w">
+    <h2>Simulations alternatives</h2>
+    <p>
+      Si la simulation transmise par le pétitionnaire comporte une erreur manifeste (par exemple : type de haie inadapté, absence de sélection des options « Proximité d’une mare » ou « Présence d’arbres à cavité »), il est possible de la reprendre, de la modifier et de vérifier si cela impacte les résultats obtenus.
+    </p>
 
-      <p>Le lien de la simulation alternative peut être enregistré et activé pour modifier le dossier.</p>
+    <p>Le lien de la simulation alternative peut être enregistré et activé pour modifier le dossier.</p>
 
-      <p>
-        <a href="#how-to">Comment faire une simulation alternative ?</a>
-      </p>
+    <p>
+      <a href="#how-to">Comment faire une simulation alternative ?</a>
+    </p>
 
-      {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
-
-      {% if has_change_permission %}
-        <div class="form-actions">
-          <button type="button"
-                  class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
-                  aria-expanded="false"
-                  aria-controls="add-alternative">Ajouter une simulation</button>
-        </div>
-      {% endif %}
-    </section>
+    {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
     {% if has_change_permission %}
-      <section id="add-alternative" class="fr-collapse">
-        <div class="alt fr-p-3w">
-          <h2>Ajouter une simulation alternative</h2>
-          <form method="post" action="">
-            {% csrf_token %}
-            {% include '_form_snippet.html' with form=form %}
-            <button type="button"
-                    class="fr-btn fr-btn--secondary fr-mr-1w"
-                    aria-expanded="false"
-                    aria-controls="add-alternative">Annuler</button>
+      <div class="form-actions">
+        <button type="button"
+                class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
+                aria-expanded="false"
+                aria-controls="add-alternative">Ajouter une simulation</button>
+      </div>
+    {% endif %}
+  </section>
 
-            <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
-          </form>
+  {% if has_change_permission %}
+    <section id="add-alternative" class="fr-collapse">
+      <div class="alt fr-p-3w">
+        <h2>Ajouter une simulation alternative</h2>
+        <form method="post" action="">
+          {% csrf_token %}
+          {% include '_form_snippet.html' with form=form %}
+          <button type="button"
+                  class="fr-btn fr-btn--secondary fr-mr-1w"
+                  aria-expanded="false"
+                  aria-controls="add-alternative">Annuler</button>
+
+          <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
+        </form>
+      </div>
+    </section>
+  {% endif %}
+
+  <section id="how-to" class="fr-mt-5w">
+    <h2>Comment faire une simulation alternative ?</h2>
+
+    <div class="fr-accordions-group" data-fr-group="true">
+      <section class="fr-accordion">
+        <h3 class="fr-accordion__title">
+          <button type="button"
+                  class="fr-accordion__btn"
+                  aria-expanded="false"
+                  aria-controls="how-to-corriger">Vous souhaitez corriger la simulation du demandeur</button>
+        </h3>
+        <div id="how-to-corriger" class="fr-collapse">
+          <p>
+            Si la simulation transmise par le pétitionnaire comporte une erreur manifeste que vous souhaitez corriger avant de la transmettre au demandeur.
+          </p>
+
+          <ol>
+            <li>
+              Cliquez sur <span class="fr-icon-play-circle-line" aria-hidden="true"></span> <strong>démarrer une nouvelle simulation alternative</strong> dans le tableau
+            </li>
+            <li>Dans le nouvel onglet ouvert, modifiez les critères que vous souhaitez corriger</li>
+            <li>
+              <p>
+                Si vous souhaitez faire valider la simulation par le demandeur, copiez le lien de la simulation et transmettez-le au demandeur via la messagerie.
+              </p>
+
+              <p>Si envoi au demandeur, il peut soit :</p>
+
+              <ul>
+                <li>valider directement votre simulation alternative par réponse à votre message ;</li>
+                <li>modifier la simulation et vous renvoyer le lien de sa nouvelle simulation.</li>
+              </ul>
+            </li>
+
+            <li>
+              Copiez le lien de la simulation alternative et <span class="fr-icon-add-line" aria-hidden="true"></span> <strong>Ajoutez une simulation</strong> pour l’activer et mettre à jour le dossier.
+            </li>
+          </ol>
+
+        </div>
+
+        <h3 class="fr-accordion__title">
+          <button type="button"
+                  class="fr-accordion__btn"
+                  aria-expanded="false"
+                  aria-controls="how-to-faire-corriger">
+            Vous souhaitez faire corriger la simulation par le demandeur
+          </button>
+        </h3>
+        <div id="how-to-faire-corriger" class="fr-collapse">
+          <p>Vous souhaitez que le demandeur modifie lui-même les critères de sa simulation.</p>
+
+          <ol>
+            <li>copiez le lien de la simulation à modifier par le demandeur ;</li>
+            <li>envoyez lui par mail une fois les modifications effectuées.</li>
+          </ol>
+
+          <p>
+            Le demandeur devra vous transmettre le lien de la simulation modifiée, il vous faudra alors copier ce lien pour <span class="fr-icon-add-line" aria-hidden="true"></span> <strong>Ajouter une nouvelle simulation</strong> et l’activer pour mettre a jour le dossier.
+          </p>
         </div>
       </section>
-    {% endif %}
+    </div>
 
-    <section id="how-to">
-      <h2>Comment faire une simulation alternative ?</h2>
-
-      <div class="fr-accordions-group" data-fr-group="true">
-        <section class="fr-accordion">
-          <h3 class="fr-accordion__title">
-            <button type="button"
-                    class="fr-accordion__btn"
-                    aria-expanded="false"
-                    aria-controls="how-to-corriger">Vous souhaitez corriger la simulation du demandeur</button>
-          </h3>
-          <div id="how-to-corriger" class="fr-collapse">
-            <p>
-              Si la simulation transmise par le pétitionnaire comporte une erreur manifeste que vous souhaitez corriger avant de la transmettre au demandeur.
-            </p>
-
-            <ol>
-              <li>
-                Cliquez sur <span class="fr-icon-play-circle-line" aria-hidden="true"></span> <strong>démarrer une nouvelle simulation alternative</strong> dans le tableau
-              </li>
-              <li>Dans le nouvel onglet ouvert, modifiez les critères que vous souhaitez corriger</li>
-              <li>
-                <p>
-                  Si vous souhaitez faire valider la simulation par le demandeur, copiez le lien de la simulation et transmettez-le au demandeur via la messagerie.
-                </p>
-
-                <p>Si envoi au demandeur, il peut soit :</p>
-
-                <ul>
-                  <li>valider directement votre simulation alternative par réponse à votre message ;</li>
-                  <li>modifier la simulation et vous renvoyer le lien de sa nouvelle simulation.</li>
-                </ul>
-              </li>
-
-              <li>
-                Copiez le lien de la simulation alternative et <span class="fr-icon-add-line" aria-hidden="true"></span> <strong>Ajoutez une simulation</strong> pour l’activer et mettre à jour le dossier.
-              </li>
-            </ol>
-
-          </div>
-
-          <h3 class="fr-accordion__title">
-            <button type="button"
-                    class="fr-accordion__btn"
-                    aria-expanded="false"
-                    aria-controls="how-to-faire-corriger">
-              Vous souhaitez faire corriger la simulation par le demandeur
-            </button>
-          </h3>
-          <div id="how-to-faire-corriger" class="fr-collapse">
-            <p>Vous souhaitez que le demandeur modifie lui-même les critères de sa simulation.</p>
-
-            <ol>
-              <li>copiez le lien de la simulation à modifier par le demandeur ;</li>
-              <li>envoyez lui par mail une fois les modifications effectuées.</li>
-            </ol>
-
-            <p>
-              Le demandeur devra vous transmettre le lien de la simulation modifiée, il vous faudra alors copier ce lien pour <span class="fr-icon-add-line" aria-hidden="true"></span> <strong>Ajouter une nouvelle simulation</strong> et l’activer pour mettre a jour le dossier.
-            </p>
-          </div>
-        </section>
-      </div>
-
-    </section>
-  </div>
+  </section>
 {% endblock %}
 
 {% block extra_body %}
