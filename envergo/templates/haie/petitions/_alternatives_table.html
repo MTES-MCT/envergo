@@ -28,12 +28,10 @@
                     <p class="fr-badge">Inactive</p>
 
                     {% if simulation.can_be_activated %}
-                      <form method="post"
-                            action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "activate" %}">
-                        {% csrf_token %}
-
-                        <button type="submit" class="fr-btn fr-btn--sm fr-btn--secondary">Activer</button>
-                      </form>
+                      <button type="button"
+                              class="fr-btn fr-btn--sm fr-btn--secondary"
+                              data-fr-opened="false"
+                              aria-controls="simulation-activate-modal-{{ simulation.id }}">Activer</button>
                     {% endif %}
 
                   {% endif %}
