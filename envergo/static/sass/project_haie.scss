@@ -1045,7 +1045,8 @@ button.hide-expanded[aria-expanded="true"] {
       }
     }
 
-    [class^="fr-icon-"]:not(:disabled) {
+    a:not(:disabled),
+    button:not(:disabled) {
       color: var(--text-title-blue-france);
     }
 
