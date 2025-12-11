@@ -812,6 +812,13 @@ class BasePetitionProjectInstructorView(
         res = super().post(request, *args, **kwargs)
         return res
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["has_edit_permission"] = self.object.user_has_edit_permission(
+            self.request.user
+        )
+        return context
+
     def log_event_action(self, request):
         if not self.event_action:
             return
@@ -1139,7 +1146,7 @@ class PetitionProjectInstructorAlternativeView(
 class PetitionProjectInstructorAlternativeEdit(
     BasePetitionProjectInstructorView, FormView
 ):
-    """View for creating an alternative of a petition project by the instructor"""
+    """View for updating alternative simulations."""
 
     http_method_names = ["post"]
 
