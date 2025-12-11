@@ -11,7 +11,7 @@
 {% block content %}
   <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
-    {% if project_number <= 0 %}
+    {% if list_without_filter_is_empty %}
       <div class="fr-alert fr-alert--info">
         <h3 class="fr-alert__title">Aucun dossier n’est accessible pour le moment</h3>
         <p>Vous n’avez actuellement accès à aucun dossier.</p>
@@ -32,14 +32,17 @@
       <div class="fr-segmented__elements">
         <div class="fr-segmented__element">
           <a href="{% url 'petition_project_list' %}"
+             onclick="_paq.push(['trackEvent', 'ProjectList', 'Filter', 'FollowedOff']);"
              {% if request.GET.f is None %}class="active"{% endif %}>Tous les dossiers</a>
         </div>
         <div class="fr-segmented__element">
           <a href="{% url 'petition_project_list' %}?f=mes_dossiers"
+             onclick="_paq.push(['trackEvent', 'ProjectList', 'Filter', 'FollowedByMe']);"
              {% if 'mes_dossiers' in request.GET.f %}class="active"{% endif %}>Mes dossiers suivis</a>
         </div>
         <div class="fr-segmented__element">
           <a href="{% url 'petition_project_list' %}?f=dossiers_sans_instructeur"
+             onclick="_paq.push(['trackEvent', 'ProjectList', 'Filter', 'FollowedByNobody']);"
              {% if 'dossiers_sans_instructeur' in request.GET.f %}class="active"{% endif %}>Dossiers sans instructeur</a>
         </div>
       </div>
