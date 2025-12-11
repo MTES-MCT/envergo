@@ -145,7 +145,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = queryset.filter(followed_by=current_user)
 
         if "dossiers_sans_instructeur" in request_filters:
-            instructors_users_qs = User.objects.filter(is_instructor=True)
+            instructors_users_qs = User.objects.filter(is_instructor=True).exclude(
+                is_superuser=True
+            )
             queryset = queryset.exclude(followed_by__in=instructors_users_qs)
 
         return queryset
