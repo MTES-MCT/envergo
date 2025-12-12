@@ -628,6 +628,8 @@ class PetitionProjectDetail(DetailView):
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
+
+        moulinette_params["alternative"] = True
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url

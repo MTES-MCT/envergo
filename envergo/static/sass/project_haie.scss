@@ -950,8 +950,13 @@ div.title-with-link-container {
 div#alternative-notice {
   filter: drop-shadow(var(--raised-shadow));
 
+  .fr-notice__body {
+    display: block;
+  }
+
   p {
-    margin: auto;
+    //margin: auto;
+    --text-spacing: 0 0 8px 0;
   }
 }
 
