@@ -406,6 +406,15 @@ class PetitionProject(models.Model):
             )
         )
 
+    def get_following_instructors(self):
+        """Get instructor following"""
+        following_instructors = (
+            self.followed_by.filter(is_superuser=False)
+            .filter(is_instructor=True)
+            .intersection(self.department.members.all())
+        )
+        return following_instructors
+
     @property
     def demarches_simplifiees_petitioner_url(self) -> str | None:
         """
