@@ -698,7 +698,7 @@ def test_petition_project_list(
 
 
 def test_petition_project_list_filters(
-    invited_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
+    haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
 ):
     """Test filters on project list"""
 
@@ -743,7 +743,7 @@ def test_petition_project_list_filters(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=today,
     )
-    project_44_followed_by_invited.followed_by.add(invited_haie_user_44)
+    project_44_followed_by_invited.followed_by.add(haie_user_44)
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
@@ -756,7 +756,32 @@ def test_petition_project_list_filters(
         demarches_simplifiees_date_depot=today,
     )
 
-    # WHEN I search on my projects
+    # GIVEN haie user has no project
+    # WHEN base user search on my projects
+    client.force_login(haie_user)
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+    # THEN alert "aucun dossier" is displayed
+    assert "Aucun dossier n'est accessible" in content
+
+    # GIVEN haie user is invited on one project
+    InvitationTokenFactory(
+        user=haie_user, petition_project=haie_instructor_44_instructor1
+    )
+    # WHEN base user search on my projects
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+    # THEN alert "aucun dossier" is not displayed, only a table
+    assert "Aucun dossier n'est accessible" not in content
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_followed_by_superuser.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+    # WHEN Instructor 1 search on my projects
     client.force_login(haie_instructor_44_instructor1)
     response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
@@ -768,7 +793,7 @@ def test_petition_project_list_filters(
     assert project_44_followed_by_superuser.reference not in content
     assert project_44_no_instructor.reference not in content
 
-    # WHEN I search on projects followed by no instructor
+    # WHEN Instructor 1 search on projects followed by no instructor
     response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
     content = response.content.decode()
 
