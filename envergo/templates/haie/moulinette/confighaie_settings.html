@@ -1,5 +1,9 @@
 {% extends 'haie/base.html' %}
 
+{% block title %}
+  Paramétrage {{ department }}
+{% endblock title %}
+
 {% block content %}
   <div class="fr-grid-row fr-mb-3w">
     <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-9">
@@ -18,17 +22,33 @@
 
       <h2>Comptes</h2>
 
-      <p class="fr-mb-1w">
-        <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
-      </p>
+      <div>
+        <p class="fr-mb-1w">
+          <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
+        </p>
 
-      {% if department_members_emails %}
-        <ul>
-          {% for member in department_members_emails %}<li>{{ member.email }}</li>{% endfor %}
-        </ul>
-      {% else %}
-        <p>Pas de compte instructeur pour ce département.</p>
-      {% endif %}
+        {% if department_members.instructors_emails %}
+          <ul>
+            {% for member_email in department_members.instructors_emails %}<li>{{ member_email }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p>Pas de compte instructeur pour ce département.</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <p class="fr-mb-1w">
+          <strong>Liste des comptes ayant les droits invités sur le département :</strong>
+        </p>
+        {% if department_members.invited_emails %}
+          <ul>
+            {% for member_email in department_members.invited_emails %}<li>{{ member_email }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p>Pas de compte invité pour ce département.</p>
+        {% endif %}
+      </div>
+
     </div>
   </div>
 {% endblock %}
