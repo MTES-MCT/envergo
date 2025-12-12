@@ -166,17 +166,14 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         # Check if object_list without filter is empty when filters are in querystring
-        context["list_without_filter_is_empty"] = False
-        if not context["object_list"]:
-            request_filters = self.request.GET.getlist("f", [])
-            if request_filters:
-                queryset = PetitionProject.objects.exclude(
-                    demarches_simplifiees_state__exact=DOSSIER_STATES.draft
-                )
-                queryset = self.filter_queryset_user(queryset, self.request.user)
-                context["total_without_filter_not_empty"] = queryset.exists()
-            else:
-                context["total_without_filter_not_empty"] = True
+        if context["object_list"]:
+            context["user_can_view_one_petition_project"] = True
+        else:
+            queryset = PetitionProject.objects.exclude(
+                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+            )
+            queryset = self.filter_queryset_user(queryset, self.request.user)
+            context["user_can_view_one_petition_project"] = queryset.exists()
 
         # Add city and organization to each obj
         for obj in context["object_list"]:

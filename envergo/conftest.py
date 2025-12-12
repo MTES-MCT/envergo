@@ -31,7 +31,7 @@ def haie_user() -> User:
 
 @pytest.fixture
 def inactive_haie_user_44() -> User:
-    """Haie user with dept 44"""
+    """Inactive haie user with dept 44"""
     haie_user_44 = UserFactory(
         access_amenagement=False,
         access_haie=True,
@@ -43,7 +43,7 @@ def inactive_haie_user_44() -> User:
 
 
 @pytest.fixture
-def invited_haie_user_44() -> User:
+def haie_user_44() -> User:
     """Haie user with dept 44"""
     invited_haie_user_44 = UserFactory(
         is_active=True,
@@ -57,8 +57,8 @@ def invited_haie_user_44() -> User:
 
 
 @pytest.fixture
-def instructor_haie_user_44() -> User:
-    """Haie user with dept 44"""
+def haie_instructor_44() -> User:
+    """Haie user with dept 44 and is_instructor True"""
     instructor_haie_user_44 = UserFactory(
         is_active=True,
         access_amenagement=False,
