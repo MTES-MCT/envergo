@@ -1115,6 +1115,15 @@ class PetitionProjectInstructorProcedureView(
                     0,
                     {
                         "type": "suspension",
+                        "created_by": (
+                            ""
+                            if not log.suspended_by
+                            else (
+                                log.suspended_by.email
+                                if not log.suspended_by.is_staff
+                                else "Administrateur"
+                            )
+                        ),
                         "created_at": datetime.datetime.combine(
                             log.suspension_date, datetime.time.min
                         ).replace(tzinfo=ZoneInfo("UTC")),
