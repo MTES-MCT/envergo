@@ -816,8 +816,8 @@ class BasePetitionProjectInstructorView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["has_change_permission"] = self.has_edit_permission(
-            self.request.user, self.object
+        context["has_change_permission"] = self.has_change_permission(
+            self.request, self.object
         )
         return context
 

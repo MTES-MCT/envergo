@@ -1568,7 +1568,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg not in res.content.decode()
 
 
-def test_alternatives_list_permission(client, haie_user, instructor_haie_user_44, site):
+def test_alternatives_list_permission(client, haie_user, haie_instructor_44, site):
     """Test alternative flow for petition project"""
 
     # GIVEN a petition project
@@ -1594,7 +1594,7 @@ def test_alternatives_list_permission(client, haie_user, instructor_haie_user_44
     assert response.status_code == 403
 
     # WHEN the user is a department instructor
-    client.force_login(instructor_haie_user_44)
+    client.force_login(haie_instructor_44)
     response = client.get(alternative_url)
 
     # THEN the page is displayed
@@ -1603,7 +1603,7 @@ def test_alternatives_list_permission(client, haie_user, instructor_haie_user_44
     assert "<h2>Simulations alternatives</h2>" in content
 
 
-def test_alternatives_list_shows_data(client, instructor_haie_user_44):
+def test_alternatives_list_shows_data(client, haie_instructor_44):
 
     # GIVEN a petition project
     DCConfigHaieFactory()
@@ -1629,7 +1629,7 @@ def test_alternatives_list_shows_data(client, instructor_haie_user_44):
     assert project.simulations.all().count() == 4
 
     # WHEN the user is a department instructor
-    client.force_login(instructor_haie_user_44)
+    client.force_login(haie_instructor_44)
     response = client.get(alternative_url)
 
     assert response.status_code == 200
@@ -1641,7 +1641,7 @@ def test_alternatives_list_shows_data(client, instructor_haie_user_44):
     assert "Simulation test" not in content
 
 
-def test_alternative_edit_permission(client, haie_user, instructor_haie_user_44):
+def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
     DCConfigHaieFactory()
     project = PetitionProjectFactory(reference="ABC123")
     s2 = SimulationFactory(project=project, comment="Simulation 2")
@@ -1666,13 +1666,13 @@ def test_alternative_edit_permission(client, haie_user, instructor_haie_user_44)
     assert res.status_code == 403
 
     # Instructors can update alternatives
-    client.force_login(instructor_haie_user_44)
+    client.force_login(haie_instructor_44)
     res = client.post(activate_url)
     assert res.status_code == 302
     assert res.url == "/projet/ABC123/instruction/alternatives/"
 
 
-def test_alternative_activate(client, instructor_haie_user_44):
+def test_alternative_activate(client, haie_instructor_44):
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -1695,7 +1695,7 @@ def test_alternative_activate(client, instructor_haie_user_44):
         },
     )
 
-    client.force_login(instructor_haie_user_44)
+    client.force_login(haie_instructor_44)
     response = client.post(activate_url)
     assert response.status_code == 302
 
@@ -1708,7 +1708,7 @@ def test_alternative_activate(client, instructor_haie_user_44):
     assert s2.is_active
 
 
-def test_alternative_delete(client, instructor_haie_user_44):
+def test_alternative_delete(client, haie_instructor_44):
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -1722,7 +1722,7 @@ def test_alternative_delete(client, instructor_haie_user_44):
     s2.is_active = True
     s2.save()
 
-    client.force_login(instructor_haie_user_44)
+    client.force_login(haie_instructor_44)
 
     # Initial simulation cannot be deleted
     delete_url = reverse(
