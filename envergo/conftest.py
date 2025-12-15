@@ -43,7 +43,7 @@ def inactive_haie_user_44() -> User:
 
 
 @pytest.fixture
-def invited_haie_user_44() -> User:
+def haie_user_44() -> User:
     """Haie user with dept 44"""
     invited_haie_user_44 = UserFactory(
         is_active=True,

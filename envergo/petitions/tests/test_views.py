@@ -521,7 +521,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_messagerie_ds(
-    mock_ds_query_execute, invited_haie_user_44, instructor_haie_user_44, client, site
+    mock_ds_query_execute, haie_user_44, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
 
@@ -539,7 +539,7 @@ def test_petition_project_instructor_messagerie_ds(
     # Test dossier get messages
 
     # GIVEN an invited haie user 44
-    client.force_login(invited_haie_user_44)
+    client.force_login(haie_user_44)
     # WHEN I get messagerie page
     assert not Event.objects.filter(category="message", event="lecture").exists()
     mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
