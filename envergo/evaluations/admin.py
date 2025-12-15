@@ -193,8 +193,10 @@ class EvaluationAdmin(admin.ModelAdmin):
                 level=messages.WARNING,
             )
             published = False
-        elif latest_version.created_at < obj.updated_at:
-
+        elif (
+            latest_version.created_at < obj.updated_at
+            and latest_version.content != obj.render_content()
+        ):
             local_updated_at = localtime(obj.updated_at)
             local_published_at = localtime(latest_version.created_at)
             msg = f"""
