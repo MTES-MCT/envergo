@@ -5,13 +5,27 @@
 {% block before-title-content %}
   {{ block.super }}
   {% if is_alternative %}
-    <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
-      <li>
-        <button id="copy-btn"
-                class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-link btn--copy-to-clipboard btn--shorten-url"
-                data-clipboard-text="{{ current_url | safe }}">Copier le lien de cette page</button>
-      </li>
-    </ul>
+    {% if user.is_instructor %}
+      <p>
+        Copiez le lien pour le partager au demandeur ou ajouter une simulation alternative à l’espace d’instruction (vous pourrez l’activer pour mettre a jour le dossier).
+      </p>
+      <p>
+        <button title="Copier le lien"
+                data-clipboard-text="{{ current_url | safe }}"
+                class="action btn--copy-to-clipboard fr-icon-link"></button>
+      </p>
+    {% elif user.is_authenticated %}
+    {% else %}
+      <p>
+        Copiez le lien et collez-le dans un message de la messagerie Démarche numérique afin de transmettre la nouvelle simulation au Guichet unique de la haie.
+      </p>
+      <p>
+        <button title="Copier le lien"
+                data-clipboard-text="{{ current_url | safe }}"
+                class="action btn--copy-to-clipboard fr-icon-link"></button>
+      </p>
+
+    {% endif %}
   {% endif %}
 {% endblock %}
 
@@ -35,20 +49,7 @@
     <div id="alternative-notice" class="fr-notice fr-notice--info">
       <div class="fr-container">
         <div class="fr-notice__body">
-          {% if user.is_instructor %}
-            <p>
-              <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-              <b>Simulation alternative</b> pour ce dossier.
-            </p>
-            <p>
-              Copiez le lien pour le partager au demandeur ou ajouter une simulation alternative à l’espace d’instruction (vous pourrez l’activer pour mettre a jour le dossier).
-            </p>
-            <p>
-              <button title="Copier le lien"
-                      data-clipboard-text="{{ current_url | safe }}"
-                      class="action btn--copy-to-clipboard fr-icon-link"></button>
-            </p>
-          {% elif user.is_authenticated %}
+          {% if user.is_instructor or user.is_authenticated %}
             <p>
               <span class="fr-icon-edit-fill" aria-hidden="true"></span>
               <b>Simulation alternative</b> pour ce dossier.
@@ -58,16 +59,6 @@
               <span class="fr-icon-edit-fill" aria-hidden="true"></span>
               <b>Simulation alternative</b> à la simulation initiale.
             </p>
-
-            <p>
-              Copiez le lien et collez-le dans un message de la messagerie Démarche numérique afin de transmettre la nouvelle simulation au Guichet unique de la haie.
-            </p>
-            <p>
-              <button title="Copier le lien"
-                      data-clipboard-text="{{ current_url | safe }}"
-                      class="action btn--copy-to-clipboard fr-icon-link"></button>
-            </p>
-
           {% endif %}
         </div>
       </div>
