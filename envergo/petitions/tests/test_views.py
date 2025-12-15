@@ -1639,3 +1639,70 @@ def test_alternatives_list_shows_data(client, instructor_haie_user_44):
     assert "Simulation gloubi-boulga" in content
     assert "Simulation schmilblick" in content
     assert "Simulation test" not in content
+
+
+def test_alternative_edit_permission(client, haie_user, instructor_haie_user_44):
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s2.id,
+            "action": "activate",
+        },
+    )
+
+    # Redirect to login
+    res = client.post(activate_url)
+    assert res.status_code == 302
+    assert res.url.startswith("/comptes/connexion")
+
+    # Non-instructors cannot update alternatives
+    client.force_login(haie_user)
+    res = client.post(activate_url)
+    assert res.status_code == 403
+
+    # Instructors can update alternatives
+    client.force_login(instructor_haie_user_44)
+    res = client.post(activate_url)
+    assert res.status_code == 302
+    assert res.url == "/projet/ABC1230/instruction/alternatives/"
+
+
+def test_alternative_activate(client, haie_user, instructor_haie_user_44):
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    SimulationFactory(project=project, comment="Simulation 2")
+
+    s1 = project.simulations.all()[0]
+    assert s1.is_initial
+    assert s1.is_active
+
+    s2 = project.simulations.all()[1]
+    assert not s2.is_initial
+    assert not s2.is_active
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s2.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(instructor_haie_user_44)
+    response = client.post(activate_url)
+    assert response.status_code == 302
+
+    s1.refresh_from_db()
+    assert s1.is_initial
+    assert not s1.is_active
+
+    s2.refresh_from_db()
+    assert not s2.is_initial
+    assert s2.is_active
