@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
@@ -115,6 +116,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
+        followers_qs = User.objects.filter(is_superuser=False).filter(
+            followed_petition_projects=OuterRef("pk")
+        )
 
         queryset = (
             PetitionProject.objects.exclude(
@@ -131,6 +135,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             .annotate(
                 latest_access=Coalesce("messagerie_access", current_user.date_joined)
             )
+            .annotate(followers=ArraySubquery(followers_qs.values("email")))
             .annotate(
                 followed_up=Exists(
                     PetitionProject.followed_by.through.objects.filter(
@@ -141,7 +146,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             )
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
-
         # Filter on current user status
         queryset = self.filter_queryset_user(queryset, current_user)
 
