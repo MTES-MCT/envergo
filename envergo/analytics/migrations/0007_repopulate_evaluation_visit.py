@@ -3,23 +3,21 @@
 from django.db import migrations
 from tqdm import tqdm
 
-from envergo.evaluations.models import params_from_url
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.moulinette.models import MoulinetteAmenagement
 
 
 def repopulate_evaluation_visit(apps, schema_editor):
     Event = apps.get_model("analytics", "Event")
-    qs = (
-        Event.objects
-        .filter(category="evaluation", event="visit", date_created__gte="2025-10-27")
-        .exclude(metadata__has_key="main_result")
-    )
+    qs = Event.objects.filter(
+        category="evaluation", event="visit", date_created__gte="2025-10-27"
+    ).exclude(metadata__has_key="main_result")
     total = qs.count()
     batch_size = 10
     i = 0
     with tqdm(total=total) as pbar:
         while i < total:
-            models = qs[i: i + batch_size].iterator()  # noqa
+            models = qs[i : i + batch_size].iterator()  # noqa
             to_update = []
             for event in models:
 
@@ -27,17 +25,17 @@ def repopulate_evaluation_visit(apps, schema_editor):
                 if reference is None:
                     continue
 
-                evaluation = apps.get_model("evaluations", "Evaluation").objects.filter(reference=reference).first()
+                evaluation = (
+                    apps.get_model("evaluations", "Evaluation")
+                    .objects.filter(reference=reference)
+                    .first()
+                )
                 if evaluation is None:
                     continue
 
-                data = params_from_url(evaluation.moulinette_url)
+                data = MoulinetteUrl(evaluation.moulinette_url).params
                 moulinette_data = {"initial": data, "data": data}
-                moulinette = (
-                    MoulinetteAmenagement(
-                        moulinette_data
-                    )
-                )
+                moulinette = MoulinetteAmenagement(moulinette_data)
                 if moulinette is None:
                     continue
 
