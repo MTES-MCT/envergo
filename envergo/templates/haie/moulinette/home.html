@@ -6,11 +6,13 @@
   {{ block.super }}
   {% if is_alternative %}
     <div id="alternative-notice" class="fr-notice fr-notice--info">
-      <div class="fr-notice__body">
-        <p>
-          <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-          <span><b>Simulation alternative</b> à la simulation initiale</span>
-        </p>
+      <div class="fr-container">
+        <div class="fr-notice__body">
+          <p>
+            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
+            <b>Nouvelle simulation alternative</b> pour ce dossier.
+          </p>
+        </div>
       </div>
     </div>
   {% endif %}

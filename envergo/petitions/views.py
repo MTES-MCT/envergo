@@ -626,6 +626,8 @@ class PetitionProjectDetail(DetailView):
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
+
+        moulinette_params["alternative"] = True
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
@@ -805,8 +807,8 @@ class BasePetitionProjectInstructorView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["has_change_permission"] = self.object.has_change_permission(
-            self.request.user
+        context["has_change_permission"] = self.has_change_permission(
+            self.request, self.object
         )
         return context
 
@@ -1119,7 +1121,7 @@ class PetitionProjectInstructorAlternativeView(
             .order_by("created_at")
         )
 
-        context["base_url"] = self.request.build_absolute_uri("/")
+        context["base_url"] = self.request.build_absolute_uri("")
 
         return context
 
