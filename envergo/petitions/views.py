@@ -1157,7 +1157,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_edit_permission(request.user, self.object):
+        if not self.has_change_permission(request, self.object):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
