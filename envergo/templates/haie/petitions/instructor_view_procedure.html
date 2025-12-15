@@ -197,9 +197,9 @@
                           Décision : {{ DECISIONS|get_choice_label:log.decision }}
                         {% endif %}
                       {% elif log.type == "suspension" %}
-                        <b>Demande de compléments. Suspension de l'instruction </b>
+                        <b>Demande de compléments</b>
                       {% elif log.type == "resumption" %}
-                        <b>Complément reçus. Reprise de l'instruction</b>
+                        <b>Complément reçus</b>
                       {% endif %}
                     </td>
                     <td>
@@ -208,11 +208,10 @@
                         <br />
                       {% endif %}
                       {% if log.update_comment %}
-
-                        {% if log.update_comment|length > 200 %}
+                        {% if log.update_comment|length > 50 %}
                           <div>
-                            {{ log.update_comment|slice:"0:200" }}<span class="ellipsis">…</span>
-                            <div class="more fr-collapse" id="comment-{{ forloop.counter }}">{{ log.update_comment|slice:"200:" }}</div>
+                            {{ log.update_comment|slice:"0:50" }}<span class="ellipsis">…</span>
+                            <div class="more fr-collapse" id="comment-{{ forloop.counter }}">{{ log.update_comment|slice:"50:" }}</div>
                             <button class="read-more-btn fr-btn fr-btn--tertiary-no-outline"
                                     aria-expanded="false"
                                     aria-controls="comment-{{ forloop.counter }}">
@@ -224,6 +223,11 @@
                         {% else %}
                           {{ log.update_comment }}
                         {% endif %}
+                      {% endif %}
+                      {% if log.type == "suspension" %}
+                        Suspension de l’instruction, message envoyé au demandeur.
+                      {% elif log.type == "resumption" %}
+                        Reprise de l’instruction, date d'échéance ajustée.
                       {% endif %}
                     </td>
                   </tr>
