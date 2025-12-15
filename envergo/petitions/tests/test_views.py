@@ -351,13 +351,13 @@ def test_petition_project_instructor_notes_view(
     assert response.status_code == 200
 
     # Submit notes
-    assert not Event.objects.filter(category="projet", event="edition_notes").exists()
+    assert not Event.objects.filter(category="dossier", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
 
-    assert Event.objects.filter(category="projet", event="edition_notes").exists()
+    assert Event.objects.filter(category="dossier", event="edition_notes").exists()
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -723,7 +723,7 @@ def test_petition_project_invitation_token(
     assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
-    event = Event.objects.get(category="projet", event="invitation")
+    event = Event.objects.get(category="dossier", event="invitation")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["department"] == "44"
 
@@ -1100,7 +1100,7 @@ def test_petition_project_procedure(
     last_status = project.status_history.all().order_by("-created_at").first()
     assert last_status.stage == "preparing_decision"
     assert last_status.decision == "dropped"
-    event = Event.objects.get(category="projet", event="modification_statut")
+    event = Event.objects.get(category="dossier", event="modification_etat")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["etape_f"] == "preparing_decision"
     assert event.metadata["decision_f"] == "dropped"
@@ -1163,7 +1163,7 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
     assert response.status_code == 200
     haie_user.refresh_from_db()
     assert haie_user.followed_petition_projects.get(id=project.id)
-    event = Event.objects.get(category="projet", event="suivi")
+    event = Event.objects.get(category="dossier", event="suivi")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["switch"] == "on"
     assert event.metadata["view"] == "detail"
@@ -1176,7 +1176,7 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
     assert response.status_code == 200
     instructor_haie_user_44.refresh_from_db()
     assert instructor_haie_user_44.followed_petition_projects.get(id=project.id)
-    assert Event.objects.filter(category="projet", event="suivi").count() == 2
+    assert Event.objects.filter(category="dossier", event="suivi").count() == 2
 
     # WHEN I switch off the follow up
     data = {
@@ -1192,8 +1192,8 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
         id=project.id
     ).exists()
 
-    assert Event.objects.filter(category="projet", event="suivi").count() == 3
-    event = Event.objects.filter(category="projet", event="suivi").last()
+    assert Event.objects.filter(category="dossier", event="suivi").count() == 3
+    event = Event.objects.filter(category="dossier", event="suivi").last()
     assert event.metadata["reference"] == project.reference
     assert event.metadata["switch"] == "off"
     assert event.metadata["view"] == "liste"
