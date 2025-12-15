@@ -1643,7 +1643,7 @@ def test_alternatives_list_shows_data(client, instructor_haie_user_44):
 
 def test_alternative_edit_permission(client, haie_user, instructor_haie_user_44):
     DCConfigHaieFactory()
-    project = PetitionProjectFactory()
+    project = PetitionProjectFactory(reference="ABC123")
     s2 = SimulationFactory(project=project, comment="Simulation 2")
 
     activate_url = reverse(
@@ -1669,10 +1669,10 @@ def test_alternative_edit_permission(client, haie_user, instructor_haie_user_44)
     client.force_login(instructor_haie_user_44)
     res = client.post(activate_url)
     assert res.status_code == 302
-    assert res.url == "/projet/ABC1230/instruction/alternatives/"
+    assert res.url == "/projet/ABC123/instruction/alternatives/"
 
 
-def test_alternative_activate(client, haie_user, instructor_haie_user_44):
+def test_alternative_activate(client, instructor_haie_user_44):
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -1706,3 +1706,61 @@ def test_alternative_activate(client, haie_user, instructor_haie_user_44):
     s2.refresh_from_db()
     assert not s2.is_initial
     assert s2.is_active
+
+
+def test_alternative_delete(client, instructor_haie_user_44):
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+    s3 = SimulationFactory(project=project, comment="Simulation 3")
+
+    s1 = project.simulations.all()[0]
+    s1.is_active = False
+    s1.save()
+
+    s2.is_active = True
+    s2.save()
+
+    client.force_login(instructor_haie_user_44)
+
+    # Initial simulation cannot be deleted
+    delete_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s1.id,
+            "action": "delete",
+        },
+    )
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert project.simulations.all().count() == 3
+
+    # Active simulation cannot be deleted
+    delete_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s2.id,
+            "action": "delete",
+        },
+    )
+
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert project.simulations.all().count() == 3
+
+    # Others simulations can be deleted
+    delete_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s3.id,
+            "action": "delete",
+        },
+    )
+
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert project.simulations.all().count() == 2
