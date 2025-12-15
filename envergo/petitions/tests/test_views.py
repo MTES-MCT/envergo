@@ -812,8 +812,6 @@ def test_petition_project_list_filters(
     assert project_44_no_instructor.reference not in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
