@@ -32,17 +32,23 @@
         <div class="fr-segmented__elements">
           <div class="fr-segmented__element">
             <a href="{% url 'petition_project_list' %}"
-               onclick="_paq.push(['trackEvent', 'ProjectList', 'Filter', 'FollowedOff']);"
+               data-event-category="ProjectList"
+               data-event-action="Filter"
+               data-event-name="FollowedOff"
                {% if request.GET.f is None %}class="active"{% endif %}>Tous les dossiers</a>
           </div>
           <div class="fr-segmented__element">
             <a href="{% url 'petition_project_list' %}?f=mes_dossiers"
-               onclick="_paq.push(['trackEvent', 'ProjectList', 'Filter', 'FollowedByMe']);"
+               data-event-category="ProjectList"
+               data-event-action="Filter"
+               data-event-name="FollowedByMe"
                {% if 'mes_dossiers' in request.GET.f %}class="active"{% endif %}>Mes dossiers suivis</a>
           </div>
           <div class="fr-segmented__element">
             <a href="{% url 'petition_project_list' %}?f=dossiers_sans_instructeur"
-               onclick="_paq.push(['trackEvent', 'ProjectList', 'Filter', 'FollowedByNobody']);"
+               data-event-category="ProjectList"
+               data-event-action="Filter"
+               data-event-name="FollowedByNobody"
                {% if 'dossiers_sans_instructeur' in request.GET.f %}class="active"{% endif %}>Dossiers sans instructeur</a>
           </div>
         </div>
@@ -158,6 +164,7 @@
 
 {% block extra_js %}
   <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
+  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
   <script>
     window.addEventListener('load', function () {
       document.querySelectorAll("#table-dossier-list tbody tr").forEach(row => {
