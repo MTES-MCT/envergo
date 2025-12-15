@@ -238,6 +238,7 @@ def test_petition_project_detail(mock_post, client, site):
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     inactive_haie_user_44,
+    haie_user_44,
     instructor_haie_user_44,
     admin_user,
     site,
@@ -295,6 +296,16 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 403
 
     # Simulate instructor user with department 44
+    request.user = haie_user_44
+    response = PetitionProjectInstructorView.as_view()(
+        request,
+        reference=project.reference,
+    )
+
+    # Check that the response status code is 200
+    assert response.status_code == 200
+
+    # Simulate instructor user with department 44
     request.user = instructor_haie_user_44
     response = PetitionProjectInstructorView.as_view()(
         request,
@@ -332,7 +343,7 @@ def test_petition_project_instructor_view_requires_authentication(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_notes_view(
-    mock_post, instructor_haie_user_44, client, site
+    mock_post, haie_user_44, instructor_haie_user_44, client, site
 ):
     """
     Test petition project instructor notes view
@@ -349,18 +360,33 @@ def test_petition_project_instructor_notes_view(
         kwargs={"reference": project.reference},
     )
 
-    # Check that the response status code is 200
-    client.force_login(instructor_haie_user_44)
+    # Given user is instructor on department
+    client.force_login(haie_user_44)
+    # Then response status code is 200
     response = client.get(instructor_notes_url)
     assert response.status_code == 200
+    # And user cannot post a new note
+    response = client.post(
+        instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
+    )
+    assert response.status_code == 403
+    project.refresh_from_db()
+    assert "Note mineure : Fa dièse" not in project.instructor_free_mention
 
-    # Submit notes
+    # Given user is instructor on department
+    client.force_login(instructor_haie_user_44)
+    # Then response status code is 200
+    response = client.get(instructor_notes_url)
+    assert response.status_code == 200
+    # And user can post a new note
     assert not Event.objects.filter(category="dossier", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
-
+    project.refresh_from_db()
+    assert "Note mineure : Fa dièse" in project.instructor_free_mention
+    # And a new SQL event is created
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
 
 
@@ -495,7 +521,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_petition_project_instructor_messagerie_ds(
-    mock_ds_query_execute, instructor_haie_user_44, client, site
+    mock_ds_query_execute, haie_user_44, instructor_haie_user_44, client, site
 ):
     """Test messagerie view"""
 
@@ -510,22 +536,43 @@ def test_petition_project_instructor_messagerie_ds(
         kwargs={"reference": project.reference},
     )
 
-    client.force_login(instructor_haie_user_44)
-
     # Test dossier get messages
+
+    # GIVEN an invited haie user 44
+    client.force_login(haie_user_44)
+    # WHEN I get messagerie page
     assert not Event.objects.filter(category="message", event="lecture").exists()
     mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
+    # THEN I can access to messagerie page
     assert response.status_code == 200
-
+    # AND an event is created
+    assert Event.objects.filter(category="message", event="lecture").exists()
+    # AND I can read messages
     content = response.content.decode()
     assert "<h2>Messagerie</h2>" in content
     assert "Il manque les infos de la PAC" in content
     assert "mer. 2 avril 2025 11h01" in content
     assert "8 messages" in content
     assert "Coriandrum_sativum" in content
+    # AND nouveau message is not in page
+    assert "Nouveau message</button>" not in content
 
-    assert Event.objects.filter(category="message", event="lecture").exists()
+    # GIVEN an instructor haie user 44
+    client.force_login(instructor_haie_user_44)
+    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    response = client.get(instructor_messagerie_url)
+    # THEN I can access to messagerie page
+    assert response.status_code == 200
+    # AND I can read messages
+    content = response.content.decode()
+    assert "<h2>Messagerie</h2>" in content
+    assert "Il manque les infos de la PAC" in content
+    assert "mer. 2 avril 2025 11h01" in content
+    assert "8 messages" in content
+    assert "Coriandrum_sativum" in content
+    # AND nouveau message is in page
+    assert "Nouveau message" in content
 
     # Test if dossier has zero messages
     mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE["data"]
