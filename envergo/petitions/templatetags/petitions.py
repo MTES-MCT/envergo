@@ -158,9 +158,11 @@ def stage_badge(stage, is_small=True):
 
     color = color_map.get(stage, None)
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
+    badge_color_class = f"fr-badge--{color}" if color else ""
+    badge_size_class = "fr-badge--sm fr-ml-n1v" if is_small else "badge--lg fr-ml-n3v"
 
     return mark_safe(
-        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''}  {'fr-badge--sm fr-ml-n1v' if is_small else 'badge--lg fr-ml-n3v'}">  # noqa E501
+        f"""<p class="fr-badge {badge_color_class}  {badge_size_class}">
               {label}
             </p>"""
     )
