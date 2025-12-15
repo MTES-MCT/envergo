@@ -725,7 +725,6 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             department.members.filter(is_superuser=False)
             .filter(is_staff=False)
             .order_by("email")
-            .values("email")
         )
         departement_members_dict = {
             "instructors_emails": [],
