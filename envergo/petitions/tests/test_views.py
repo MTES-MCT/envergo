@@ -40,6 +40,7 @@ from envergo.petitions.tests.factories import (
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
+    SimulationFactory,
 )
 from envergo.petitions.views import (
     PetitionProjectCreate,
@@ -124,7 +125,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     hedge_data = HedgeDataFactory()
     hedge_data.data = [hedge_to_plant.toDict()]
 
-    petition_project = PetitionProjectFactory(hedge_data=hedge_data)
+    petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
     demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
         petition_project
     )
@@ -1041,96 +1042,6 @@ def test_petition_project_instructor_notes_form(
     )
 
 
-def test_petition_project_alternative(client, haie_user, haie_instructor_44, site):
-    """Test alternative flow for petition project"""
-    # GIVEN a petition project
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-    alternative_url = reverse(
-        "petition_project_instructor_alternative_view",
-        kwargs={"reference": project.reference},
-    )
-
-    # WHEN We try to fetch the alternative page by no user is logged in
-    response = client.get(alternative_url)
-
-    # THEN we should be redirected to the login page
-    assert response.status_code == 302
-    assert "/comptes/connexion/?next=" in response.url
-
-    # WHEN the user is not an instructor
-    client.force_login(haie_user)
-    response = client.get(alternative_url)
-
-    # THEN we should be redirected to a 403 error page
-    assert response.status_code == 403
-
-    # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
-    response = client.get(alternative_url)
-
-    # THEN the page is displayed
-    assert response.status_code == 200
-    content = response.content.decode()
-    assert "<h2>Simulation alternative</h2>" in content
-
-    # Find all href attributes in the HTML
-    hrefs = re.findall(r'href="([^"]+)"', content)
-
-    alternative_url = None
-    for raw_href in hrefs:
-        href = html.unescape(raw_href)
-        parsed_url = urlparse(href)
-        qs = parse_qs(parsed_url.query)
-        if qs.get("alternative") == ["true"]:
-            # Found the first matching href
-            assert href.startswith("/")
-            alternative_url = href
-            break
-    else:
-        assert False, "No href with alternative=true found"
-
-    # WHEN the user create an alternative
-    res = client.get(alternative_url)
-
-    # THEN the alternative form is displayed
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<b>Simulation alternative</b> à la simulation initiale" in content
-    assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/pre-rempli/?alternative=true";'
-        in content
-    )
-
-    # WHEN the user visit the result page of an alternative
-    result_url = alternative_url.replace("/formulaire", "/resultat")
-    res = client.get(result_url, follow=True)
-    # THEN the result page is displayed
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<b>Simulation alternative</b> à la simulation initiale" in content
-    assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat/?alternative=true";'
-        in content
-    )
-    assert "Partager cette page par email" not in content
-
-    # WHEN the user visit the result plantation page of an alternative
-    result_url = alternative_url.replace("/formulaire", "/resultat-plantation")
-    res = client.get(result_url, follow=True)
-    # THEN the result page is displayed
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<b>Simulation alternative</b> à la simulation initiale" in content
-    assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat-plantation/?alternative=true";'
-        in content
-    )
-    assert "Partager cette page par email" not in content
-    assert "La demande d'autorisation est prête à être complétée" not in content
-    assert "Copier le lien de cette page" in content
-
-
 def test_instructor_view_with_hedges_outside_department(client, haie_instructor_44):
     """Test if a warning is displayed when some hedges are outside department"""
     # GIVEN a moulinette with at least an hedge to remove outside the department
@@ -1655,3 +1566,76 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert res.status_code == 200
     assert read_msg in res.content.decode()
     assert unread_msg not in res.content.decode()
+
+
+def test_alternatives_list_permission(client, haie_user, instructor_haie_user_44, site):
+    """Test alternative flow for petition project"""
+
+    # GIVEN a petition project
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the alternative page by no user is logged in
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(alternative_url)
+
+    # THEN the page is displayed
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulations alternatives</h2>" in content
+
+
+def test_alternatives_list_shows_data(client, instructor_haie_user_44):
+
+    # GIVEN a petition project
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # Let's make sure the factory setup works as intended
+    assert project.simulations.all().count() == 1
+    alternative = project.simulations.all()[0]
+    assert alternative.is_initial
+    assert alternative.is_active
+    assert alternative.moulinette_url == project.moulinette_url
+
+    SimulationFactory(project=project, comment="Simulation schtroumpf")
+    SimulationFactory(project=project, comment="Simulation gloubi-boulga")
+    SimulationFactory(project=project, comment="Simulation schmilblick")
+
+    SimulationFactory(comment="Simulation test")
+
+    assert project.simulations.all().count() == 4
+
+    # WHEN the user is a department instructor
+    client.force_login(instructor_haie_user_44)
+    response = client.get(alternative_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulations alternatives</h2>" in content
+    assert "Simulation schtroumpf" in content
+    assert "Simulation gloubi-boulga" in content
+    assert "Simulation schmilblick" in content
+    assert "Simulation test" not in content

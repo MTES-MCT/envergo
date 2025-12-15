@@ -13,6 +13,7 @@ from envergo.petitions.models import (
     DOSSIER_STATES,
     InvitationToken,
     PetitionProject,
+    Simulation,
     StatusLog,
 )
 from envergo.users.tests.factories import UserFactory
@@ -86,7 +87,7 @@ class PetitionProjectFactory(DjangoModelFactory):
     class Meta:
         model = PetitionProject
 
-    reference = "ABC123"
+    reference = factory.Sequence(lambda n: f"ABC123{n}")
     moulinette_url = factory.LazyAttribute(
         lambda obj: (
             "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
@@ -99,6 +100,12 @@ class PetitionProjectFactory(DjangoModelFactory):
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
         factory_related_name="petition_project",
+    )
+    simulation = factory.RelatedFactory(
+        "envergo.petitions.tests.factories.SimulationFactory",
+        factory_related_name="project",
+        is_initial=True,
+        is_active=True,
     )
 
 
@@ -121,6 +128,15 @@ class StatusLogFactory(DjangoModelFactory):
         model = StatusLog
 
     petition_project = factory.SubFactory(PetitionProjectFactory)
+
+
+class SimulationFactory(DjangoModelFactory):
+    class Meta:
+        model = Simulation
+
+    project = factory.SubFactory(PetitionProjectFactory)
+    moulinette_url = factory.SelfAttribute("project.moulinette_url")
+    comment = factory.Sequence(lambda n: f"Simulation alternative {n}")
 
 
 class InvitationTokenFactory(DjangoModelFactory):
