@@ -907,14 +907,14 @@ def test_petition_project_accept_invitation(client, haie_user, site):
     assert invitation.user is None
 
     # valid token
-    another_user = UserFactory(access_amenagement=False, access_haie=True)
+    another_user = UserFactory(is_haie_user=True)
     client.force_login(another_user)
     client.get(accept_invitation_url)
     invitation.refresh_from_db()
     assert invitation.user == another_user
 
     # already used token
-    another_user_again = UserFactory(access_amenagement=False, access_haie=True)
+    another_user_again = UserFactory(is_haie_user=True)
     client.force_login(another_user_again)
     response = client.get(accept_invitation_url)
     invitation.refresh_from_db()
