@@ -57,6 +57,9 @@
                     à détruire
                   </th>
                   <th scope="col">Décision</th>
+                  <th scope="col">
+                    <span title="Messagerie" class="fr-icon-mail-line fr-icon--sm"></span>
+                  </th>
                   <th scope="col">Suivi</th>
                 </tr>
               </thead>
@@ -81,7 +84,13 @@
                     <td>
                       <div>{% stage_badge project.current_stage %}</div>
                       {% if project.current_stage != "closed" %}
-                        <div>{% display_due_date project.due_date False True %}</div>
+                        <div>
+                          {% if project.is_paused %}
+                            {% display_pause project.current_status.response_due_date %}
+                          {% else %}
+                            {% display_due_date project.due_date False True %}
+                          {% endif %}
+                        </div>
                       {% endif %}
                     </td>
                     <td>
@@ -96,6 +105,14 @@
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{% decision_badge project.current_decision True %}</td>
+                    <td class="messagerie-col {{ project.has_unread_messages|yesno:"unread,read" }}">
+                      {% if project.has_unread_messages %}
+                        <span class="fr-icon-mail-fill fr-icon--sm"></span>
+                        <span style="font-size: 150%;" class="fr-ml-1v">●</span>
+                      {% else %}
+                        <span class="fr-icon-mail-line fr-icon--sm"></span>
+                      {% endif %}
+                    </td>
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>

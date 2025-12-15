@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import shutil
@@ -13,7 +14,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
-from django.db.models import Exists, OuterRef, Prefetch, Q
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
+from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -53,6 +55,7 @@ from envergo.petitions.models import (
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
+    LatestMessagerieAccess,
     PetitionProject,
     StatusLog,
 )
@@ -81,19 +84,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
-    queryset = (
-        PetitionProject.objects.exclude(
-            demarches_simplifiees_state__exact=DOSSIER_STATES.draft
-        )
-        .select_related("hedge_data", "department__confighaie")
-        .prefetch_related(
-            Prefetch(
-                "status_history",
-                queryset=StatusLog.objects.all().order_by("-created_at"),
-            )
-        )
-        .order_by("-demarches_simplifiees_date_depot", "-created_at")
-    )
     paginate_by = 30
 
     def get_queryset(self):
@@ -105,25 +95,49 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         - none object if user is not instructor or not superuser
         """
         current_user = self.request.user
+
+        messagerie_access_qs = LatestMessagerieAccess.objects.filter(
+            user=current_user
+        ).filter(project=OuterRef("pk"))
+
+        queryset = (
+            PetitionProject.objects.exclude(
+                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+            )
+            .select_related("hedge_data", "department__confighaie")
+            .prefetch_related(
+                Prefetch(
+                    "status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+            .annotate(messagerie_access=Subquery(messagerie_access_qs.values("access")))
+            .annotate(
+                latest_access=Coalesce("messagerie_access", current_user.date_joined)
+            )
+            .annotate(
+                followed_up=Exists(
+                    PetitionProject.followed_by.through.objects.filter(
+                        petitionproject_id=OuterRef("pk"),
+                        user_id=current_user.pk,
+                    )
+                )
+            )
+            .order_by("-demarches_simplifiees_date_depot", "-created_at")
+        )
+
         if current_user.is_superuser:
-            queryset = self.queryset
+            # don't filter the queryset
+            pass
         elif current_user.access_haie:
             user_departments = current_user.departments.defer("geometry").all()
-            queryset = self.queryset.filter(
+            queryset = queryset.filter(
                 Q(department__in=user_departments)
                 | Q(invitation_tokens__user_id=current_user.id)
             ).distinct()
         else:
-            queryset = self.queryset.none()
+            queryset = queryset.none()
 
-        queryset = queryset.annotate(
-            followed_up=Exists(
-                PetitionProject.followed_by.through.objects.filter(
-                    petitionproject_id=OuterRef("pk"),
-                    user_id=current_user.pk,
-                )
-            )
-        )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -181,7 +195,7 @@ class PetitionProjectCreate(FormView):
                 StatusLog.objects.create(petition_project=petition_project)
 
                 log_event(
-                    "dossier",
+                    "demande",
                     "creation",
                     self.request,
                     **petition_project.get_log_event_data(),
@@ -511,7 +525,7 @@ class PetitionProjectDetail(DetailView):
         # Log the consultation event only if it is not after an automatic redirection due to dossier creation
         if not request.session.pop("auto_redirection", False):
             log_event(
-                "projet",
+                "simulateur",
                 "consultation",
                 self.request,
                 **self.object.get_log_event_data(),
@@ -601,12 +615,16 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
     slug_field = "reference"
     slug_url_kwarg = "reference"
-    event_category = "projet"
+    event_category = "dossier"
     event_action = None
     context_object_name = "petition_project"
 
     def get_queryset(self):
         current_user = self.request.user
+        messagerie_access_qs = LatestMessagerieAccess.objects.filter(
+            user=current_user
+        ).filter(project=OuterRef("pk"))
+
         queryset = (
             PetitionProject.objects.all()
             .prefetch_related(
@@ -614,6 +632,10 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                     "status_history",
                     queryset=StatusLog.objects.all().order_by("-created_at"),
                 )
+            )
+            .annotate(messagerie_access=Subquery(messagerie_access_qs.values("access")))
+            .annotate(
+                latest_access=Coalesce("messagerie_access", current_user.date_joined)
             )
             .annotate(
                 followed_up=Exists(
@@ -697,6 +719,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                 Les données proviennent d'un dossier factice.""",
             )
 
+        context["has_unread_messages"] = self.object.has_unread_messages
+
         return context
 
 
@@ -766,7 +790,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view.html"
-    event_action = "consultation_i"
+    event_action = "consultation"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -866,7 +890,7 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
     def form_valid(self, form):
         res = super().form_valid(form)
         log_event(
-            "projet",
+            "dossier",
             "edition_notes",
             self.request,
             reference=self.object.reference,
@@ -887,6 +911,22 @@ class PetitionProjectInstructorMessagerieView(
     event_category = "message"
     event_action = "lecture"
     form_class = PetitionProjectInstructorMessageForm
+
+    def get(self, request, *args, **kwargs):
+        res = super().get(request, *args, **kwargs)
+
+        # Invited instructors do not see the "unread message" notification pill
+        # Hence, we only log messagerie accesses for instructors with edit permissions
+        if res.status_code == 200 and self.has_edit_permission(
+            request.user, self.object
+        ):
+            LatestMessagerieAccess.objects.update_or_create(
+                user=request.user,
+                project=self.object,
+                defaults={"access": timezone.now()},
+            )
+
+        return res
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -968,7 +1008,12 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
                 self.event_category,
                 "envoi",
                 self.request,
-                **self.object.get_log_event_data(),
+                reference=self.object.reference,
+                piece_jointe=(
+                    len(attachments)
+                    if isinstance(attachments, list)
+                    else 1 if attachments else 0
+                ),
                 **get_matomo_tags(self.request),
             )
 
@@ -983,6 +1028,28 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
         return reverse(
             "petition_project_instructor_messagerie_view", kwargs=self.kwargs
         )
+
+
+class PetitionProjectInstructorMessagerieMarkUnreadView(
+    BasePetitionProjectInstructorView, View
+):
+    """View for petition project instructor page with demarche simplifiées messagerie"""
+
+    event_category = "message"
+    event_action = "marquage_non_lu"
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.has_edit_permission(request.user, self.object):
+            old_date = datetime.datetime(1985, 10, 1, tzinfo=datetime.UTC)
+            LatestMessagerieAccess.objects.filter(
+                project=self.object, user=request.user
+            ).update(access=old_date)
+
+            self.log_event_action(self.request)
+
+        url = reverse("petition_project_instructor_view", args=[self.object.reference])
+        return HttpResponseRedirect(url)
 
 
 class PetitionProjectInstructorAlternativeView(
@@ -1112,7 +1179,8 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             try:
                 update_demarches_simplifiees_status(self.object, new_ds_status)
-            except DemarchesSimplifieesError:
+            except DemarchesSimplifieesError as e:
+                logger.error(e)
                 form.add_error(
                     None,
                     mark_safe(
@@ -1129,8 +1197,8 @@ class PetitionProjectInstructorProcedureView(
 
         transaction.on_commit(
             lambda: log_event(
-                "projet",
-                "modification_statut",
+                "dossier",
+                "modification_etat",
                 self.request,
                 reference=self.object.reference,
                 etape_i=previous_stage,
@@ -1197,7 +1265,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 if ds_response is None or ds_response.get("errors") is not None:
                     # We raise an exception to make sure the data model transaction
                     # is aborted
-                    raise DemarchesSimplifieesError("DS message not sent")
+                    raise DemarchesSimplifieesError(message="DS message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1227,7 +1295,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
 
             # Log analytics event
             log_event(
-                "projet",
+                "dossier",
                 "suspension_delai",
                 self.request,
                 switch="on",
@@ -1292,7 +1360,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
 
         # Log analytics event
         log_event(
-            "projet",
+            "dossier",
             "suspension_delai",
             self.request,
             switch="off",
@@ -1393,7 +1461,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
             )
             log_event(
-                "projet",
+                "dossier",
                 "invitation",
                 self.request,
                 reference=project.reference,
@@ -1471,7 +1539,7 @@ def toggle_follow_project(request, reference):
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
 
     log_event(
-        "projet",
+        "dossier",
         "suivi",
         request,
         reference=project.reference,

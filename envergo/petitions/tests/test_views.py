@@ -19,11 +19,15 @@ from envergo.geodata.tests.factories import Department34Factory
 from envergo.hedges.models import TO_PLANT
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.petitions.models import DOSSIER_STATES, InvitationToken
+from envergo.petitions.models import (
+    DOSSIER_STATES,
+    InvitationToken,
+    LatestMessagerieAccess,
+)
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -44,7 +48,13 @@ from envergo.petitions.views import (
 )
 from envergo.users.tests.factories import UserFactory
 
-pytestmark = pytest.mark.django_db
+pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
+
+
+@pytest.fixture(autouse=True)
+def fake_haie_settings(settings):
+    settings.ENVERGO_HAIE_DOMAIN = "testserver"
+    settings.ENVERGO_AMENAGEMENT_DOMAIN = "otherserver"
 
 
 @pytest.fixture()
@@ -92,7 +102,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    config = ConfigHaieFactory()
+    config = DCConfigHaieFactory()
     config.demarche_simplifiee_pre_fill_config.append(
         {"id": "abc", "value": "plantation_adequate"}
     )
@@ -142,7 +152,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -168,8 +178,6 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     assert dossier_number is None
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("requests.post")
 def test_petition_project_detail(mock_post, client, site):
     """Test consultation view"""
@@ -179,7 +187,7 @@ def test_petition_project_detail(mock_post, client, site):
 
     mock_post.return_value = mock_response
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -227,8 +235,6 @@ def test_petition_project_detail(mock_post, client, site):
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
     inactive_haie_user_44,
@@ -241,7 +247,7 @@ def test_petition_project_instructor_view_requires_authentication(
     User must be authenticated, haie user, and project department must be in user departments permissions
     """
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
@@ -321,8 +327,6 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -335,7 +339,7 @@ def test_petition_project_instructor_notes_view(
     """
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -351,17 +355,15 @@ def test_petition_project_instructor_notes_view(
     assert response.status_code == 200
 
     # Submit notes
-    assert not Event.objects.filter(category="projet", event="edition_notes").exists()
+    assert not Event.objects.filter(category="dossier", event="edition_notes").exists()
     response = client.post(
         instructor_notes_url, {"instructor_free_mention": "Note mineure : Fa dièse"}
     )
     assert response.url == instructor_notes_url
 
-    assert Event.objects.filter(category="projet", event="edition_notes").exists()
+    assert Event.objects.filter(category="dossier", event="edition_notes").exists()
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -379,7 +381,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -455,8 +457,6 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert project.onagre_number == "1234567"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -467,7 +467,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     """Test if dossier data is in template"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -490,8 +490,6 @@ def test_petition_project_instructor_display_dossier_ds_info(
     assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -501,7 +499,7 @@ def test_petition_project_instructor_messagerie_ds(
 ):
     """Test messagerie view"""
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -564,7 +562,8 @@ def test_petition_project_instructor_messagerie_ds(
     # THEN I receive ok response and an event is created
     content = response.content.decode()
     assert "Le message a bien été envoyé au demandeur." in content
-    assert Event.objects.filter(category="message", event="envoi").exists()
+    envoi_event = Event.objects.filter(category="message", event="envoi").get()
+    assert envoi_event.metadata["piece_jointe"] == 1
 
     # GIVEN a message and doc attachment unauthorized extension
     attachment = SimpleUploadedFile(
@@ -585,14 +584,12 @@ def test_petition_project_instructor_messagerie_ds(
     )  # noqa
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_list(
     inactive_haie_user_44, instructor_haie_user_44, haie_user, admin_user, client, site
 ):
 
-    ConfigHaieFactory()
-    ConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    DCConfigHaieFactory()
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # Create two projects non draft, one in 34 and one in 44
     today = date.today()
     last_month = today - timedelta(days=30)
@@ -653,12 +650,10 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     geopkg_url = reverse(
         "petition_project_hedge_data_export",
@@ -674,14 +669,12 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
     # TODO: check the features
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_invitation_token(
     client, haie_user, instructor_haie_user_44, site
 ):
     """Test invitation token creation for petition project"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     invitation_token_url = reverse(
         "petition_project_invitation_token",
@@ -722,16 +715,14 @@ def test_petition_project_invitation_token(
     assert token.created_by == instructor_haie_user_44
     assert token.petition_project == project
     assert token.token in response.json()["invitation_url"]
-    event = Event.objects.get(category="projet", event="invitation")
+    event = Event.objects.get(category="dossier", event="invitation")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["department"] == "44"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_accept_invitation(client, haie_user, site):
     """Test accepting an invitation token for a petition project"""
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     invitation = InvitationTokenFactory()
     accept_invitation_url = reverse(
         "petition_project_accept_invitation",
@@ -799,15 +790,13 @@ def test_petition_project_accept_invitation(client, haie_user, site):
     assert response.status_code == 403
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_instructor_notes_form(
     client, haie_user, instructor_haie_user_44, site
 ):
     """Post instruction note as different users"""
 
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     instructor_notes_form_url = reverse(
         "petition_project_instructor_notes_view",
@@ -870,13 +859,10 @@ def test_petition_project_instructor_notes_form(
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
 def test_petition_project_alternative(client, haie_user, instructor_haie_user_44, site):
     """Test alternative flow for petition project"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     alternative_url = reverse(
         "petition_project_instructor_alternative_view",
@@ -963,10 +949,6 @@ def test_petition_project_alternative(client, haie_user, instructor_haie_user_44
     assert "Copier le lien de cette page" in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_instructor_view_with_hedges_outside_department(
     client, instructor_haie_user_44
 ):
@@ -974,7 +956,7 @@ def test_instructor_view_with_hedges_outside_department(
     # GIVEN a moulinette with at least an hedge to remove outside the department
 
     client.force_login(instructor_haie_user_44)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -1020,8 +1002,6 @@ def test_instructor_view_with_hedges_outside_department(
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @patch("envergo.petitions.views.notify")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
@@ -1029,7 +1009,7 @@ def test_petition_project_procedure(
 ):
     """Test procedure flow for petition project"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1099,7 +1079,7 @@ def test_petition_project_procedure(
     last_status = project.status_history.all().order_by("-created_at").first()
     assert last_status.stage == "preparing_decision"
     assert last_status.decision == "dropped"
-    event = Event.objects.get(category="projet", event="modification_statut")
+    event = Event.objects.get(category="dossier", event="modification_etat")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["etape_f"] == "preparing_decision"
     assert event.metadata["decision_f"] == "dropped"
@@ -1120,12 +1100,10 @@ def test_petition_project_procedure(
     assert res.status_code == 403
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, site):
     """Test follow up flow for petition project"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     toggle_follow_url = reverse(
         "petition_project_toggle_follow",
@@ -1162,7 +1140,7 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
     assert response.status_code == 200
     haie_user.refresh_from_db()
     assert haie_user.followed_petition_projects.get(id=project.id)
-    event = Event.objects.get(category="projet", event="suivi")
+    event = Event.objects.get(category="dossier", event="suivi")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["switch"] == "on"
     assert event.metadata["view"] == "detail"
@@ -1175,7 +1153,7 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
     assert response.status_code == 200
     instructor_haie_user_44.refresh_from_db()
     assert instructor_haie_user_44.followed_petition_projects.get(id=project.id)
-    assert Event.objects.filter(category="projet", event="suivi").count() == 2
+    assert Event.objects.filter(category="dossier", event="suivi").count() == 2
 
     # WHEN I switch off the follow up
     data = {
@@ -1191,19 +1169,17 @@ def test_petition_project_follow_up(client, haie_user, instructor_haie_user_44, 
         id=project.id
     ).exists()
 
-    assert Event.objects.filter(category="projet", event="suivi").count() == 3
-    event = Event.objects.filter(category="projet", event="suivi").last()
+    assert Event.objects.filter(category="dossier", event="suivi").count() == 3
+    event = Event.objects.filter(category="dossier", event="suivi").last()
     assert event.metadata["reference"] == project.reference
     assert event.metadata["switch"] == "off"
     assert event.metadata["view"] == "liste"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
     """Test the buttons to toggle follow up are on the pages"""
     # GIVEN a petition project
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1227,13 +1203,11 @@ def test_petition_project_follow_buttons(client, instructor_haie_user_44, site):
     assert 'type="submit">Ne plus suivre</button>' in response.content.decode()
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 def test_petition_invited_instructor_cannot_see_send_message_button(
     client, instructor_haie_user_44, haie_user
 ):
     client.force_login(instructor_haie_user_44)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1252,8 +1226,6 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -1262,7 +1234,7 @@ def test_petition_invited_instructor_cannot_send_message(
     mock_ds_query_execute, client, instructor_haie_user_44, haie_user
 ):
     client.force_login(instructor_haie_user_44)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1288,13 +1260,11 @@ def test_petition_invited_instructor_cannot_send_message(
     assert res.status_code == 403
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44, site):
     """Only department admin can see the "request additional info" button"""
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1323,8 +1293,6 @@ def test_petition_project_rai_button(client, haie_user, instructor_haie_user_44,
     assert "Demander des compléments" in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_request_for_info(
@@ -1338,7 +1306,7 @@ def test_petition_project_request_for_info(
     today = date.today()
     next_month = today + timedelta(days=30)
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory(status__due_date=today)
     assert project.due_date == today
     assert project.is_paused is False
@@ -1363,8 +1331,6 @@ def test_petition_project_request_for_info(
     assert project.current_status.original_due_date == today
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_resume_instruction(
@@ -1379,7 +1345,7 @@ def test_petition_project_resume_instruction(
     last_month = today - timedelta(days=30)
     next_month = today + timedelta(days=30)
 
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory(
         status__suspension_date=last_month,
         status__original_due_date=today,
@@ -1405,3 +1371,109 @@ def test_petition_project_resume_instruction(
     project.current_status.refresh_from_db()
     assert project.is_paused is False
     assert project.current_status.due_date == next_month
+
+
+def test_messagerie_access_stores_access_date(
+    client, instructor_haie_user_44, haie_user
+):
+
+    qs = LatestMessagerieAccess.objects.all()
+    assert qs.count() == 0
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    messagerie_url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # User is not instructor
+    client.force_login(haie_user)
+    res = client.get(messagerie_url)
+    assert res.status_code == 403
+    assert qs.count() == 0
+
+    # Logged user accessed it's messagerie
+    client.force_login(instructor_haie_user_44)
+    res = client.get(messagerie_url)
+    assert res.status_code == 200
+    assert qs.count() == 1
+
+    # Access was logged
+    access = qs[0]
+    assert access.user == instructor_haie_user_44
+    assert access.project == project
+    assert access.access.timestamp() == pytest.approx(
+        timezone.now().timestamp(), abs=100
+    )
+
+    # Another access does not create new access object
+    res = client.get(messagerie_url)
+    assert res.status_code == 200
+    assert qs.count() == 1
+
+
+def test_project_list_unread_pill(client, instructor_haie_user_44):
+    DCConfigHaieFactory()
+
+    read_msg = '<td class="messagerie-col read">'
+    unread_msg = '<td class="messagerie-col unread">'
+
+    today = date.today()
+    last_week = today - timedelta(days=7)
+    last_month = today - timedelta(days=30)
+    project = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=last_month,
+        latest_petitioner_msg=None,
+    )
+    client.force_login(instructor_haie_user_44)
+    url = reverse("petition_project_list")
+
+    # The messagerie was never accessed, there is no message in the project
+    qs = LatestMessagerieAccess.objects.all()
+    assert qs.count() == 0
+
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
+
+    # The messagerie was never accessed,
+    # there is an existing message in the project before the user joined in
+    project.latest_petitioner_msg = last_week
+    project.save()
+    instructor_haie_user_44.date_joined = today
+    instructor_haie_user_44.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
+
+    # The messagerie was never accessed,
+    # there is an existing message in the project after the user joined in
+    project.latest_petitioner_msg = last_week
+    project.save()
+    instructor_haie_user_44.date_joined = last_month
+    instructor_haie_user_44.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg not in res.content.decode()
+    assert unread_msg in res.content.decode()
+
+    # The messagerie was accessed before the latest message
+    access = LatestMessagerieAccess.objects.create(
+        project=project, user=instructor_haie_user_44, access=last_month
+    )
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg not in res.content.decode()
+    assert unread_msg in res.content.decode()
+
+    # The messagerie was accessed after the latest message
+    access.access = today
+    access.save()
+    res = client.get(url)
+    assert res.status_code == 200
+    assert read_msg in res.content.decode()
+    assert unread_msg not in res.content.decode()
