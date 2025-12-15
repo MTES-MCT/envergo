@@ -77,7 +77,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     dossier = get_demarches_simplifiees_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
-    assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
+    assert Event.objects.get(category="demande", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
     project_details = get_context_from_ds(petition_project, moulinette)
@@ -111,7 +111,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # GIVEN a new dossier in Draft status With an existing creation event
     petition_project = PetitionProjectFactory(reference="DEF456")
     Event.objects.create(
-        category="dossier",
+        category="demande",
         event="creation",
         session_key="a given user",
         metadata={"reference": "DEF456"},
@@ -123,7 +123,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
     # THEN an event is created with the same session key as the creation event
     assert Event.objects.get(
-        category="dossier", event="depot", session_key="a given user"
+        category="demande", event="depot", session_key="a given user"
     )
     assert mock_post.call_count == 3
 
