@@ -1139,6 +1139,17 @@ class PetitionProjectInstructorAlternativeView(
         simulation.project = self.object
         simulation.save()
 
+        messages.success(self.request, "La simulation alternative a été ajoutée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="add",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
@@ -1189,9 +1200,31 @@ class PetitionProjectInstructorAlternativeEdit(
                 project.moulinette_url = simulation.moulinette_url
                 project.save()
 
+                messages.success(request, "La simulation alternative a été activée.")
+
+                log_event(
+                    "dossier",
+                    "simulation_alt",
+                    self.request,
+                    action="activate",
+                    **self.object.get_log_event_data(),
+                    **get_matomo_tags(self.request),
+                )
+
         # The main active simulation cannot be deleted
         elif action == "delete" and simulation.can_be_deleted():
             simulation.delete()
+
+            messages.success(request, "La simulation alternative a été supprimée.")
+
+            log_event(
+                "dossier",
+                "simulation_alt",
+                self.request,
+                action="delete",
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
 
         return HttpResponseRedirect(self.get_success_url())
 
