@@ -354,7 +354,7 @@ def test_confighaie_settings_view(
     client,
     loire_atlantique_department,  # noqa
     haie_user,
-    instructor_haie_user_44,
+    haie_instructor_44,
     admin_user,
 ):
     """Test config haie settings view"""
@@ -377,7 +377,7 @@ def test_confighaie_settings_view(
     assert response.status_code == 403
 
     # GIVEN a instructor user
-    client.force_login(instructor_haie_user_44)
+    client.force_login(haie_instructor_44)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN department config page is displayed
@@ -386,7 +386,7 @@ def test_confighaie_settings_view(
     assert "Département : Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
     assert haie_user.email not in content
-    assert instructor_haie_user_44.email in content
+    assert haie_instructor_44.email in content
     assert admin_user.email not in content
 
     # GIVEN an admin user

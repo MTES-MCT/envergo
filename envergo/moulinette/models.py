@@ -1426,7 +1426,7 @@ class Moulinette(ABC):
         """Get the main form with forced bound data.
 
         When we display the moulinette form, we show the main form with
-        initial values. But if the initial data would we valid data, then we
+        initial values. But if the initial data would be valid data, then we
         want to also display the additional forms.
 
         In that case, we force a form validation by creating a moulinette form
