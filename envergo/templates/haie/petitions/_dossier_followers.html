@@ -1,0 +1,12 @@
+<span class="dossier--followers">
+  {% if followers %}
+    <span aria-describedby="tooltip-followers"
+          class="has-followers fr-icon-user-{% if followers %}fill{% else %}line{% endif %} fr-icon--sm"
+          aria-hidden="true"></span>
+    <span class="fr-tooltip fr-placement" id="tooltip-followers" role="tooltip">
+      {% for follower in followers %}{{ follower }}{% endfor %}
+    </span>
+  {% else %}
+    <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
+  {% endif %}
+</span>

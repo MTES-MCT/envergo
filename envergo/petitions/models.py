@@ -411,9 +411,9 @@ class PetitionProject(models.Model):
         following_instructors = (
             self.followed_by.filter(is_superuser=False)
             .filter(is_instructor=True)
-            .intersection(self.department.members.all())
+            .intersection(self.department.defer("geometry").members.all())
         )
-        return following_instructors
+        return following_instructors.values("email")
 
     @property
     def demarches_simplifiees_petitioner_url(self) -> str | None:
