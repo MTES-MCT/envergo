@@ -116,8 +116,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = User.objects.filter(is_superuser=False).filter(
-            followed_petition_projects=OuterRef("pk")
+        followers_qs = (
+            User.objects.filter(is_superuser=False)
+            .filter(is_instructor=True)
+            .filter(followed_petition_projects=OuterRef("pk"))
         )
 
         queryset = (
