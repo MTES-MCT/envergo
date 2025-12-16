@@ -136,6 +136,17 @@ class LoginView(auth_views.LoginView):
         )  # remove the next param which can contain secrets or PII
         return context
 
+    def get_default_redirect_url(self):
+        """Return the appropriate redirect URL."""
+
+        site_literal = get_site_literal(self.request.site)
+        if site_literal == "amenagement":
+            url = settings.AMENAGEMENT_LOGIN_REDIRECT_URL
+        else:
+            url = settings.HAIE_LOGIN_REDIRECT_URL
+
+        return reverse(url)
+
 
 class NewsletterOptIn(FormView):
     form_class = NewsletterOptInForm
