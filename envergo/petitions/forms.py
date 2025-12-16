@@ -289,7 +289,7 @@ class SimulationForm(forms.ModelForm):
         moulinette_url = MoulinetteUrl(url)
         if not moulinette_url.is_valid():
             raise ValidationError(
-                "Il semble que l'url ne corresponde pas à une page de simulation valid.",
+                "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
             )
         return url
