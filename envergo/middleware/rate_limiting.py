@@ -1,7 +1,6 @@
 import logging
 
 from django.conf import settings
-from django.shortcuts import render
 from django.utils.translation import gettext as _
 from django_ratelimit import UNSAFE
 from django_ratelimit.core import _get_ip, is_ratelimited
@@ -35,7 +34,7 @@ class RateLimitingMiddleware:
                     "visitor_id": request.COOKIES.get(settings.VISITOR_COOKIE_NAME, ""),
                 },
             )
-            return render(request, "429.html", status=429)
+            return handler429(request)
 
         # Rate limit on GET requests for moulinette routes
         if request.method == "GET" and request.path.startswith(f'/{_("moulinette/")}'):
