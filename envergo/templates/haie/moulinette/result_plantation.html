@@ -54,28 +54,6 @@
   {% show_haie_plantation_liability_info plantation_evaluation %}
 {% endblock %}
 
-{% block project-result-top-bar %}
-  {% if is_alternative %}
-    <div id="alternative-notice" class="fr-notice fr-notice--info">
-      <div class="fr-container">
-        <div class="fr-notice__body">
-          {% if user.is_instructor or user.is_authenticated %}
-            <p>
-              <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-              <b>Simulation alternative</b> pour ce dossier.
-            </p>
-          {% else %}
-            <p>
-              <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-              <b>Simulation alternative</b> à la simulation initiale.
-            </p>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  {% endif %}
-{% endblock %}
-
 {% block extra_body %}
   {{ block.super }}
   {% include 'haie/moulinette/_init_dossier_on_demarches_simplifees.html' %}
