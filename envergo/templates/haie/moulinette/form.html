@@ -5,14 +5,17 @@
     <div id="moulinette" class="moulinette">
 
       {% if is_alternative %}
-        {% if user.is_instructor %}
-          <p>À la fin de la simulation, copiez le lien pour l'envoyer au demandeur ou l'ajouter au dossier.</p>
-        {% elif user.is_authenticated %}
-        {% else %}
-          <p>
-            Le Guichet unique de la haie vous invite a modifier votre simulation initiale, suivez les étapes jusqu'au bout. Vous obtiendrez un lien. <strong>Copiez le lien</strong> et collez-le dans un message de la messagerie Démarche numérique afin de transmettre la nouvelle simulation au Guichet unique de la haie.
-          </p>
-        {% endif %}
+        <div class="fr-alert fr-alert--info fr-mb-3w">
+          <h3 class="fr-alert__title">Nouvelle simulation alternative pour ce dossier</h3>
+          {% if user.is_instructor %}
+            <p>À la fin de la simulation, copiez le lien pour l'envoyer au demandeur ou l'ajouter au dossier.</p>
+          {% elif user.is_authenticated %}
+          {% else %}
+            <p>
+              Le Guichet unique de la haie vous invite a modifier votre simulation initiale, suivez les étapes jusqu'au bout. Vous obtiendrez un lien. <strong>Copiez le lien</strong> et collez-le dans un message de la messagerie Démarche numérique afin de transmettre la nouvelle simulation au Guichet unique de la haie.
+            </p>
+          {% endif %}
+        </div>
       {% endif %}
 
       <h2 id="moulinette-title">Projet de destruction de haies ou alignements d'arbres</h2>
