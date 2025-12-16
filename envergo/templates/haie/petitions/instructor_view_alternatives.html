@@ -10,6 +10,15 @@
 
 {% block project_content %}
 
+  {% if form.errors %}
+    <div class="fr-alert fr-alert--error fr-mb-3w">
+      <p class="fr-alert__title">Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs.</p>
+      <p>
+        Merci de <a href="#add-alternative">vérifier votre saisie ci-dessous</a> avant de réessayer.
+      </p>
+    </div>
+  {% endif %}
+
   <section class="fr-mt-3w fr-mb-5w">
     <h2>Simulations alternatives</h2>
     <p>
@@ -28,7 +37,7 @@
       <div class="form-actions">
         <button type="button"
                 class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
-                aria-expanded="false"
+                {% if form.errors %}aria-expanded="true" data-fr-opened="true" {% else %}aria-expanded="false" data-fr-opened="false" {% endif %}
                 aria-controls="add-alternative">Ajouter une simulation</button>
       </div>
     {% endif %}
