@@ -293,3 +293,5 @@ SECURE_CSP_REPORT_ONLY = {
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
     "report-uri": "/csp/reports/",
 }
+
+RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
