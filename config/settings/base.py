@@ -106,6 +106,8 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 LOGIN_REDIRECT_URL = "home"
+AMENAGEMENT_LOGIN_REDIRECT_URL = "home"
+HAIE_LOGIN_REDIRECT_URL = "petition_project_list"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "login"
 
