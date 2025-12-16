@@ -78,7 +78,7 @@ class MoulinetteMixin:
         Mainly, we want to ignore parameters set by different analytics systems
         because they are messing with the moulinette form processing.
         """
-        ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_"]
+        ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_", "zoom"]
         GET = self.request.GET.copy().dict()
         keys = GET.keys()
         for key in list(keys):
@@ -119,18 +119,28 @@ class MoulinetteMixin:
                 initial={"feedback": "Non", "moulinette_data": moulinette_data},
             )
 
+        # Is there a zoom value set in the url?
+        try:
+            zoom = int(self.request.GET.get("zoom"))
+            config = settings.LEAFLET_CONFIG
+            # Make sure the zoom level stays in bounds
+            zoom = max(zoom, config["MIN_ZOOM"])
+            zoom = min(zoom, config["MAX_ZOOM"])
+        except (ValueError, TypeError):
+            zoom = None
+
         # Should we center the map on the given coordinates, or zoom out on
         # the entire country?
         if "lng" in context and "lat" in context:
             lng, lat = context["lng"], context["lat"]
             context["display_marker"] = True
             context["center_map"] = [lng, lat]
-            context["default_zoom"] = 16
+            context["default_zoom"] = zoom or 16
         else:
             # By default, show all metropolitan france in map
             context["display_marker"] = False
             context["center_map"] = [1.7000, 47.000]
-            context["default_zoom"] = 5
+            context["default_zoom"] = zoom or 5
 
         context["is_map_static"] = False
         context["visitor_id"] = self.request.COOKIES.get(
@@ -205,7 +215,7 @@ class MoulinetteMixin:
         # When a checkbox is left empty, browsers don't send a "false" value, they
         # send no value at all, meaning an existing value in the url will NOT
         # be overriden.
-        url_data = self.request.GET.copy().dict()
+        url_data = self.clean_request_get_parameters()
         data = {}
         fields = self.moulinette.get_prefixed_fields()
         for k, v in url_data.items():
