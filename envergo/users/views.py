@@ -80,8 +80,6 @@ class RegisterSuccess(AnonymousRequiredMixin, TemplateView):
 class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
     """Check token and authenticates user."""
 
-    template_name = "registration/activate_account.html"
-
     def get(self, request, *args, **kwargs):
         uidb64 = kwargs["uidb64"]
         try:
@@ -104,19 +102,29 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
                     user.access_haie = True
                 user.save()
 
+                messages.success(request, self.get_success_message())
+
                 if send_notification:
                     send_new_account_notification.delay(user.id)
 
-        return super().get(request, *args, **kwargs)
+        return HttpResponseRedirect(self.get_success_url())
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        matomo_custom_path = self.request.path.replace(kwargs["uidb64"], "+token+")
-        matomo_custom_path = matomo_custom_path.removesuffix(f"/{kwargs["token"]}/")
-        context["matomo_custom_url"] = update_url_with_matomo_params(
-            self.request.build_absolute_uri(matomo_custom_path), self.request
-        )
-        return context
+    def get_success_url(self):
+        return reverse("login")
+
+    def get_success_message(self):
+        site_literal = get_site_literal(self.request.site)
+        messages = {
+            "amenagement": """
+                <p><strong>Votre identité est confirmée.</strong></p>
+                <p>Connectez-vous pour accéder aux services EnvErgo.</p>
+            """,
+            "haie": """
+                <p><strong>Votre identité est confirmée.</strong></p>
+                <p>Connectez-vous pour accéder à la liste de vos dossiers.</p>
+            """,
+        }
+        return messages[site_literal]
 
 
 class LoginView(auth_views.LoginView):
