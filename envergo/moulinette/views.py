@@ -77,7 +77,7 @@ class MoulinetteMixin:
         Mainly, we want to ignore parameters set by different analytics systems
         because they are messing with the moulinette form processing.
         """
-        ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_"]
+        ignore_prefixes = ["mtm_", "utm_", "pk_", "piwik_", "matomo_", "zoom"]
         GET = self.request.GET.copy().dict()
         keys = GET.keys()
         for key in list(keys):
@@ -214,7 +214,7 @@ class MoulinetteMixin:
         # When a checkbox is left empty, browsers don't send a "false" value, they
         # send no value at all, meaning an existing value in the url will NOT
         # be overriden.
-        url_data = self.request.GET.copy().dict()
+        url_data = self.clean_request_get_parameters()
         data = {}
         fields = self.moulinette.get_prefixed_fields()
         for k, v in url_data.items():
