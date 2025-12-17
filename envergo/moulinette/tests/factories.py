@@ -81,6 +81,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "reserves_naturelles",
         "code_rural_haie",
         "regime_unique_haie",
+        "sites_proteges_haie",
     ]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [
