@@ -87,7 +87,7 @@
                   <th scope="col">
                     <span title="Messagerie" class="fr-icon-mail-line fr-icon--sm"></span>
                   </th>
-                  <th scope="col">Suivi</th>
+                  <th colspan="2" scope="col">Suivi</th>
                 </tr>
               </thead>
               <tbody>
@@ -142,6 +142,7 @@
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>
+                    <td>{% include 'haie/petitions/_dossier_followers.html' with followers=project.followers %}</td>
                   </tr>
                 {% endfor %}
               </tbody>

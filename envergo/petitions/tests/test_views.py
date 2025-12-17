@@ -1,8 +1,5 @@
-import html
-import re
 from datetime import date, timedelta
 from unittest.mock import ANY, Mock, patch
-from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
@@ -638,7 +635,7 @@ def test_petition_project_list(
 
     DCConfigHaieFactory()
     DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
-    # Create two projects non draft, one in 34 and one in 44
+    # GIVEN two projects non draft, one in 34 and one in 44
     today = date.today()
     last_month = today - timedelta(days=30)
     project_34 = PetitionProject34Factory(
@@ -649,38 +646,38 @@ def test_petition_project_list(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=last_month,
     )
-    response = client.get(reverse("petition_project_list"))
 
-    # Check that the response is a redirect to the login page
+    # WHEN visitor acesses to project list
+    response = client.get(reverse("petition_project_list"))
+    # THEN response is a redirect to the login page
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
-    # Simulate an authenticated inactive user
+    # WHEN an inactive user acesses to project list
     client.force_login(inactive_haie_user_44)
     response = client.get(reverse("petition_project_list"))
-
+    # THEN response is a redirect to the login page
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
-    # Simulate an authenticated user instructor
+    # WHEN an instructor on 44 acesses to project list
     client.force_login(haie_instructor_44)
     response = client.get(reverse("petition_project_list"))
-
-    # Check that the response status code is 200 (ok)
+    # THEN response status code is 200 (ok)
     assert response.status_code == 200
-
-    # Check only project 44 is present
+    # AND only project 44 is present
     content = response.content.decode()
     assert project_34.reference not in content
     assert project_44.reference in content
 
+    # WHEN an admin user acesses to project list
     client.force_login(admin_user)
     response = client.get(reverse("petition_project_list"))
-    # Check all project are present
+    # THEN all project are present
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference in content
-    # ensure ordering is correct (most recent first)
+    # AND ordering is correct (most recent first)
     assert content.index(project_34.reference) < content.index(project_44.reference)
 
     # GIVEN a user with access to haie, no departments but an invitation token
@@ -695,6 +692,7 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference not in content
+    # AND the project is read only
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
@@ -708,25 +706,15 @@ def test_petition_project_list_filters(
     config_haie_44 = DCConfigHaieFactory()
     department_44 = config_haie_44.department
 
-    # Given two haie instructors, haie user invited on department 44 `invited_haie_user_44` and admin user instructor
-    haie_instructor_44_instructor1 = UserFactory(
-        is_active=True,
-        access_amenagement=False,
-        access_haie=True,
-        is_instructor=True,
-    )
+    # Given two haie instructors, haie user, `haie_user_44` and admin user instructor
+    haie_instructor_44_instructor1 = UserFactory(is_haie_instructor=True)
     haie_instructor_44_instructor1.departments.add(department_44)
-    haie_instructor_44_instructor2 = UserFactory(
-        is_active=True,
-        access_amenagement=False,
-        access_haie=True,
-        is_instructor=True,
-    )
+    haie_instructor_44_instructor2 = UserFactory(is_haie_instructor=True)
     haie_instructor_44_instructor2.departments.add(department_44)
     admin_user.is_instructor = True
     admin_user.save()
 
-    # Create three projects non draft
+    # GIVEN projects non draft followed by users and instructors
     today = date.today()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
@@ -745,6 +733,15 @@ def test_petition_project_list_filters(
         demarches_simplifiees_date_depot=today,
     )
     project_44_followed_by_invited.followed_by.add(haie_user_44)
+    project_44_followed_by_invited_and_instructor2 = PetitionProjectFactory(
+        reference="XYZ456",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
+    project_44_followed_by_invited_and_instructor2.followed_by.add(
+        haie_instructor_44_instructor2
+    )
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
@@ -752,24 +749,24 @@ def test_petition_project_list_filters(
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
     project_44_no_instructor = PetitionProjectFactory(
-        reference="XYZ456",
+        reference="XYZ789",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=today,
     )
 
-    # GIVEN haie user has no project
-    # WHEN base user search on my projects
+    # AS haie user with no project
     client.force_login(haie_user)
+    # WHEN I search on my projects
     response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
     # THEN alert "aucun dossier" is displayed
     assert "Aucun dossier n’est accessible pour le moment" in content
 
-    # GIVEN haie user is invited on one project
+    # AS haie user invited on one project
     InvitationTokenFactory(
         user=haie_user, petition_project=project_44_followed_by_instructor1
     )
-    # WHEN base user search on my projects
+    # WHEN I search on my projects
     response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
     # THEN alert "aucun dossier" is not displayed, only a table
@@ -777,19 +774,20 @@ def test_petition_project_list_filters(
     # AND followed by me project list is empty
     assert response.context["object_list"].count() == 0
 
-    # WHEN Instructor 1 search on my projects
+    # AS Instructor 1 on 44
     client.force_login(haie_instructor_44_instructor1)
+    # WHEN I search on my projects
     response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
 
-    # Then project list is filtered on user followed projects
+    # THEN project list is filtered on user followed projects
     assert project_44_followed_by_instructor1.reference in content
     assert project_44_followed_by_instructor2.reference not in content
     assert project_44_followed_by_invited.reference not in content
     assert project_44_followed_by_superuser.reference not in content
     assert project_44_no_instructor.reference not in content
 
-    # WHEN Instructor 1 search on projects followed by no instructor
+    # WHEN I search on projects followed by no instructor
     response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
     content = response.content.decode()
 
@@ -800,8 +798,9 @@ def test_petition_project_list_filters(
     assert project_44_followed_by_superuser.reference in content
     assert project_44_no_instructor.reference in content
 
-    # WHEN I search on my projects for instructor2
+    # AS Instructor 2 on 44
     client.force_login(haie_instructor_44_instructor2)
+    # WHEN I search on my projects
     response = client.get(f"{project_list_url}?f=mes_dossiers")
     content = response.content.decode()
 
@@ -811,6 +810,26 @@ def test_petition_project_list_filters(
     assert project_44_followed_by_invited.reference not in content
     assert project_44_followed_by_superuser.reference not in content
     assert project_44_no_instructor.reference not in content
+
+    # AS admin user
+    client.force_login(admin_user)
+    # WHEN I visit project list page
+    response = client.get(project_list_url)
+    # THEN followers are in project
+    projects_followers = dict(
+        response.context["object_list"].values_list("reference", "followers")
+    )
+    # Project followed by only superuser has no follower
+    assert projects_followers[project_44_followed_by_superuser.reference] == []
+    # Project followed by instructor1 has only instructor1 as follower
+    assert projects_followers[project_44_followed_by_instructor1.reference] == [
+        haie_instructor_44_instructor1.email
+    ]
+    # Project followed by haie user and instructor2 has only instructor2 as follower
+    assert projects_followers[
+        project_44_followed_by_invited_and_instructor2.reference
+    ] == [haie_instructor_44_instructor2.email]
+    content = response.content.decode()
 
 
 def test_petition_project_dl_geopkg(client, haie_user, site):

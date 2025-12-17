@@ -729,6 +729,14 @@ div#instructor-view-side-menu {
   }
 }
 
+/* Instructor followers */
+
+.dossier--followers {
+  .has-followers {
+    color: var(--text-active-blue-france);
+  }
+}
+
 /**
  * Page instructor
  */
@@ -948,7 +956,7 @@ div#alternative-notice {
   }
 
   p {
-    //margin: auto;
+    // margin: auto;
     --text-spacing: 0 0 8px 0;
   }
 }
