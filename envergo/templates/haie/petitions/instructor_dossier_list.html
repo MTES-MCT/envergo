@@ -142,7 +142,9 @@
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
                     </td>
-                    <td>{% include 'haie/petitions/_dossier_followers.html' with followers=project.followers %}</td>
+                    <td>
+                      {% include 'haie/petitions/_dossier_followers.html' with reference=project.reference followers=project.followers %}
+                    </td>
                   </tr>
                 {% endfor %}
               </tbody>
