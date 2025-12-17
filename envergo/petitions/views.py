@@ -105,6 +105,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             User.objects.filter(is_superuser=False)
             .filter(is_instructor=True)
             .filter(followed_petition_projects=OuterRef("pk"))
+            .filter(departments=OuterRef("department"))
         )
 
         queryset = (
@@ -663,6 +664,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
+        followers_qs = (
+            User.objects.filter(is_superuser=False)
+            .filter(is_instructor=True)
+            .filter(followed_petition_projects=OuterRef("pk"))
+            .filter(departments=OuterRef("department"))
+        )
 
         queryset = (
             PetitionProject.objects.all()
@@ -676,6 +683,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             .annotate(
                 latest_access=Coalesce("messagerie_access", current_user.date_joined)
             )
+            .annotate(followers=ArraySubquery(followers_qs.values("email")))
             .annotate(
                 followed_up=Exists(
                     PetitionProject.followed_by.through.objects.filter(
