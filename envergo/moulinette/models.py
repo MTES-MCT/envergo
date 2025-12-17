@@ -84,6 +84,10 @@ STAKES = Choices(
 ACTIVATION_MODES = Choices(
     ("department_centroid", "Centroïde du département dans la carte"),
     ("hedges_intersection", "Intersection de la carte et des haies à détruire"),
+    (
+        "all_hedges_intersection",
+        "Intersection de la carte et des haies (à la fois à détruire et à planter)",
+    ),
 )
 
 REGULATIONS = Choices(
@@ -2400,30 +2404,66 @@ class MoulinetteHaie(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        """Fetch the perimeters that are intersecting the hedges to remove.
+        """Fetch the perimeters depending on their criteria activation mode."""
+        dept_centroid = self.department.centroid
 
-        Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
-        """
+        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
         hedges_to_remove = (
             self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
+        intersect_hedges_to_remove, intersect_hedges, intersect_department_centroid = (
+            Criterion.objects.none(),
+            Criterion.objects.none(),
+            Criterion.objects.none(),
+        )
+
         if hedges_to_remove:
-            zone_subquery = self.get_zone_subquery(hedges_to_remove)
-            perimeters = (
-                Perimeter.objects.annotate(
-                    distance=Value(
-                        0, output_field=IntegerField()
-                    )  # We use an exists subquery that check for intersection so the distance is 0
-                )
-                .annotate(geometry=F("activation_map__geometry"))
-                .filter(Exists(zone_subquery))
-                .order_by("id")
-                .distinct("id")
+            to_remove_zone_subquery = self.get_zone_subquery(
+                hedges_to_remove, "perimeter__"
             )
-        else:
-            # if there is no hedge to remove in the project
-            # no perimeters can be activated as we do not know where the project will be.
-            perimeters = Perimeter.objects.none()
+            intersect_hedges_to_remove = Criterion.objects.filter(
+                regulation=OuterRef("regulations"),
+                perimeter=OuterRef("pk"),
+                activation_mode="hedges_intersection",
+            ).filter(Exists(to_remove_zone_subquery))
+
+        if hedges:
+            all_zone_subquery = self.get_zone_subquery(hedges, "perimeter__")
+            intersect_hedges = Criterion.objects.filter(
+                regulation=OuterRef("regulations"),
+                perimeter=OuterRef("pk"),
+                activation_mode="all_hedges_intersection",
+            ).filter(Exists(all_zone_subquery))
+
+        if dept_centroid:
+            dept_zone_subquery = Zone.objects.filter(
+                map_id=OuterRef("perimeter__activation_map_id"),
+                geometry__intersects=dept_centroid,
+            ).values("id")
+            intersect_department_centroid = Criterion.objects.filter(
+                regulation=OuterRef("regulations"),
+                perimeter=OuterRef("pk"),
+                activation_mode="department_centroid",
+            ).filter(Exists(dept_zone_subquery))
+
+        perimeters = (
+            Perimeter.objects.annotate(
+                distance=Value(
+                    0, output_field=IntegerField()
+                )  # We use an exists subquery that check for intersection so the distance is 0
+            )
+            .annotate(geometry=F("activation_map__geometry"))
+            .annotate(
+                has_valid_criterion=(
+                    Exists(intersect_hedges_to_remove)
+                    | Exists(intersect_hedges)
+                    | Exists(intersect_department_centroid)
+                )
+            )
+            .filter(has_valid_criterion=True)
+            .order_by("id")
+            .distinct("id")
+        )
 
         return perimeters
 
@@ -2438,6 +2478,7 @@ class MoulinetteHaie(Moulinette):
         hedges_to_remove = (
             self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
         )
+        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
 
         # Filter for department_centroid activation mode
         subquery = Zone.objects.filter(
@@ -2455,22 +2496,40 @@ class MoulinetteHaie(Moulinette):
         # Filter for hedges_intersection activation mode
         hedges_intersection_criteria = super().get_criteria().none()
         if hedges_to_remove:
-            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+            to_remove_zone_subquery = self.get_zone_subquery(hedges_to_remove)
             hedges_intersection_criteria = (
                 super()
                 .get_criteria()
-                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
+                .filter(
+                    Exists(to_remove_zone_subquery),
+                    activation_mode="hedges_intersection",
+                )
             )
 
-        return department_centroid_criteria | hedges_intersection_criteria
+        all_hedges_intersection_criteria = super().get_criteria().none()
+        if hedges:
+            all_zone_subquery = self.get_zone_subquery(hedges)
+            all_hedges_intersection_criteria = (
+                super()
+                .get_criteria()
+                .filter(
+                    Exists(all_zone_subquery), activation_mode="all_hedges_intersection"
+                )
+            )
 
-    def get_zone_subquery(self, hedges_to_remove):
+        return (
+            department_centroid_criteria
+            | hedges_intersection_criteria
+            | all_hedges_intersection_criteria
+        )
+
+    def get_zone_subquery(self, hedges, prefix=""):
         query = Q()
-        for hedge in hedges_to_remove:
+        for hedge in hedges:
             query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
-            Q(map_id=OuterRef("activation_map_id")) & query
+            Q(map_id=OuterRef(f"{prefix}activation_map_id")) & query
         ).values("id")
         return zone_subquery
 
