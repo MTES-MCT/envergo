@@ -8,7 +8,10 @@
           role="tooltip">
       Suivi par :
       <br>
-      {% for follower in followers %}{{ follower }}{% endfor %}
+      {% for follower in followers %}
+        {{ follower }}
+        {% if not forloop.last %}<br>{% endif %}
+      {% endfor %}
     </span>
   {% else %}
     <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
