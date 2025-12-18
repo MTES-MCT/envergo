@@ -590,6 +590,13 @@ class StatusLog(models.Model):
     info_receipt_date = models.DateField(
         "Date de réception des pièces complémentaires", null=True, blank=True
     )
+    resumed_by = models.ForeignKey(
+        "users.User",
+        related_name="resumed_logs",
+        on_delete=models.SET_NULL,
+        verbose_name="Auteur de la reprise de la procédure suite à la réception d'informations complémentaires",
+        null=True,
+    )
 
     # Meta fields
     created_at = models.DateTimeField(
