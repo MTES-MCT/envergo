@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlencode, urlparse
+from zoneinfo import ZoneInfo
 
 import fiona
 import requests
@@ -52,6 +53,7 @@ from envergo.petitions.forms import (
     ResumeProcessingForm,
 )
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
@@ -1087,6 +1089,79 @@ class PetitionProjectInstructorProcedureView(
         return initial
 
     def get_context_data(self, **kwargs):
+
+        def extract_entries(log):
+            """The history table display an entry for each status change, suspension and resumption for requesting info
+
+            As the suspension and resumption are not a single StatusLog model but attributes of it, this method will
+            map a StatusLog into one or more entries for the history table.
+            """
+            entries = [
+                {
+                    "type": "status_change",
+                    "created_at": log.created_at,
+                    "status_date": log.status_date,
+                    "created_by": (
+                        ""
+                        if not log.created_by
+                        else (
+                            log.created_by.email
+                            if not log.created_by.is_staff
+                            else "Administrateur"
+                        )
+                    ),
+                    "update_comment": log.update_comment,
+                    "stage": log.stage,
+                    "decision": log.decision,
+                    "due_date": log.due_date,
+                }
+            ]
+            if log.suspension_date:
+                # this log object is storing a suspension, we add an entry
+                entries.insert(
+                    0,
+                    {
+                        "type": "suspension",
+                        "created_by": (
+                            ""
+                            if not log.suspended_by
+                            else (
+                                log.suspended_by.email
+                                if not log.suspended_by.is_staff
+                                else "Administrateur"
+                            )
+                        ),
+                        "created_at": datetime.datetime.combine(
+                            log.suspension_date, datetime.time.min
+                        ).replace(tzinfo=ZoneInfo("UTC")),
+                        "response_due_date": log.response_due_date,
+                    },
+                )
+            if log.info_receipt_date:
+                # this log object is storing a resumption, we add an entry
+                entries.insert(
+                    0,
+                    {
+                        "type": "resumption",
+                        "created_by": (
+                            ""
+                            if not log.resumed_by
+                            else (
+                                log.resumed_by.email
+                                if not log.resumed_by.is_staff
+                                else "Administrateur"
+                            )
+                        ),
+                        "created_at": datetime.datetime.combine(
+                            log.info_receipt_date, datetime.time.min
+                        ).replace(tzinfo=ZoneInfo("UTC")),
+                        "due_date": log.due_date,
+                    },
+                )
+                entries[0]["due_date"] = log.original_due_date
+
+            return entries
+
         context = super().get_context_data(**kwargs)
         obj = self.object
         history_qs = obj.status_history.select_related("created_by").order_by(
@@ -1101,20 +1176,11 @@ class PetitionProjectInstructorProcedureView(
             page_obj = paginator.page(1)
         except EmptyPage:
             page_obj = paginator.page(paginator.num_pages)
-
-        # Prefetch previous log in the current page
-        start = max(
-            page_obj.start_index() - 2, 0
-        )  # -1 for 0 index, -1 to get previous log
+        start = page_obj.start_index() - 1
         end = page_obj.end_index()
-        logs = list(history_qs[start:end])
-        for i, log in enumerate(logs):
-            log.previous_log = logs[i + 1] if i + 1 < len(logs) else None
-
-        # Drop the extra item (first one) if it's not part of this page
-        if page_obj.number > 1:
-            logs = logs[1:]
-
+        logs = [
+            entry for log in history_qs[start:end] for entry in extract_entries(log)
+        ]
         context.update(
             {
                 "object_list": logs,
@@ -1122,6 +1188,7 @@ class PetitionProjectInstructorProcedureView(
                 "page_obj": page_obj,
                 "is_paginated": paginator.num_pages > 1,
                 "STAGES": STAGES,
+                "DECISIONS": DECISIONS,
             }
         )
 
@@ -1198,6 +1265,7 @@ class PetitionProjectInstructorProcedureView(
                 self.request,
                 reference=self.object.reference,
                 etape_i=previous_stage,
+                department=self.object.get_department_code(),
                 etape_f=log.stage,
                 decision_i=previous_decision,
                 decision_f=log.decision,
@@ -1331,6 +1399,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             status.due_date = status.original_due_date + interruption_days
         else:
             status.due_date = None
+        status.resumed_by = self.request.user
         status.save()
 
         # Send Mattermost notification
