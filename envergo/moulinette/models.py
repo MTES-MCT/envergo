@@ -1380,13 +1380,12 @@ class Moulinette(ABC):
 
     def __init__(self, form_kwargs):
         self.catalog = MoulinetteCatalog()
-
+        # Maybe here department should be evaluated if existing
         if "initial" in form_kwargs:
             form_kwargs["initial"].update(compute_surfaces(form_kwargs["initial"]))
         if "data" in form_kwargs:
             form_kwargs["data"].update(compute_surfaces(form_kwargs["data"]))
         self.form_kwargs = form_kwargs
-
         self.catalog = self.get_catalog_data()
         if self.bound_main_form.is_valid():
             if self.config and self.config.id and hasattr(self.config, "templates"):
