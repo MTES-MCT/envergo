@@ -247,6 +247,7 @@ class PetitionProjectCreate(FormView):
                     "creation",
                     self.request,
                     **petition_project.get_log_event_data(),
+                    user_type=User.get_type(self.request.user),
                     **get_matomo_tags(self.request),
                 )
 
@@ -577,6 +578,7 @@ class PetitionProjectDetail(DetailView):
                 "consultation",
                 self.request,
                 **self.object.get_log_event_data(),
+                user_type=User.get_type(self.request.user),
                 **get_matomo_tags(self.request),
             )
 
@@ -844,6 +846,7 @@ class BasePetitionProjectInstructorView(
                 self.event_action,
                 self.request,
                 **self.get_log_event_data(),
+                user_type=User.get_type(request.user),
                 **get_matomo_tags(self.request),
             )
 
