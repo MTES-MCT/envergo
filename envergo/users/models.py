@@ -74,3 +74,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
+
+    @classmethod
+    def get_type(cls, user):
+        if not user or not user.is_authenticated:
+            return "anonymous"
+        if user.is_superuser or user.is_staff:
+            return "administrator"
+        elif user.is_instructor:
+            return "instructor"
+        else:
+            return "guest"

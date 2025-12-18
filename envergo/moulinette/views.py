@@ -24,6 +24,7 @@ from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.users.models import User
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
 
@@ -251,6 +252,10 @@ class MoulinetteMixin:
         return url_with_params
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
+        if not moulinette.is_triage_valid():
+            super().log_moulinette_event(moulinette, context)
+            return
+
         export = moulinette.summary()
         export.update(kwargs)
         export["url"] = self.request.build_absolute_uri()
@@ -268,6 +273,7 @@ class MoulinetteMixin:
             action,
             self.request,
             **export,
+            user_type=User.get_type(self.request.user),
         )
 
 
@@ -323,6 +329,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             self.request,
             data=form.data,
             errors=form_errors,
+            user_type=User.get_type(self.request.user),
         )
         return self.render_to_response(context)
 
@@ -518,20 +525,18 @@ class BaseMoulinetteResult(FormView):
         return res
 
     def log_moulinette_event(self, moulinette, context):
-        if moulinette.is_triage_valid():
-            super().log_moulinette_event(moulinette, context)
-        else:
-            # TODO Why is matomo param cleanup only happens here?
-            # Matomo parameters are stored in session, but some might remain in the url.
-            # We need to prevent duplicate values
-            params = get_matomo_tags(self.request)
-            params.update(self.request.GET.dict())
-            log_event(
-                "simulateur",
-                "soumission_autre",
-                self.request,
-                **params,
-            )
+        # TODO Why is matomo param cleanup only happens here?
+        # Matomo parameters are stored in session, but some might remain in the url.
+        # We need to prevent duplicate values
+        params = get_matomo_tags(self.request)
+        params.update(self.request.GET.dict())
+        log_event(
+            "simulateur",
+            "soumission_autre",
+            self.request,
+            **params,
+            user_type=User.get_type(self.request.user),
+        )
 
 
 class MoulinetteAmenagementResult(
@@ -648,13 +653,19 @@ class Triage(MoulinetteMixin, FormView):
         if not self.moulinette.department:
             return HttpResponseRedirect(reverse("home"))
 
+        event_params = {
+            "department": self.moulinette.department.department,
+            "user_type": User.get_type(request.user),
+        }
+        is_alternative = bool(request.GET.get("alternative", False))
+        if is_alternative:
+            event_params["alternative"] = "true"
+
         log_event(
             "simulateur",
             "localisation",
             self.request,
-            **{
-                "department": self.moulinette.department.department,
-            },
+            **event_params,
             **get_matomo_tags(self.request),
         )
         return self.render_to_response(self.get_context_data())
