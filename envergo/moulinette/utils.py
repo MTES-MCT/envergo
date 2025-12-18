@@ -7,12 +7,14 @@ from django.http import QueryDict
 from django.template import engines
 from django.utils._os import safe_join
 
+from envergo.urlmappings.utils import unfold_url
+
 
 class MoulinetteUrl:
     """A url with valid moulinette simulation parameters."""
 
     def __init__(self, url):
-        self.url = url
+        self.url = unfold_url(url)
 
     @property
     def querydict(self):
