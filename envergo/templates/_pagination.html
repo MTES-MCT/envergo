@@ -28,7 +28,7 @@
            title="Page suivante">Page suivante</a>
       </li>
       <li>
-        <a href="{% querystring page=page_obj.num_pages %}"
+        <a href="{% querystring page=page_obj.paginator.num_pages %}"
            class="fr-pagination__link fr-pagination__link--last"
            title="Dernière page">Dernière page</a>
       </li>
