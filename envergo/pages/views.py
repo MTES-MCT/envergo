@@ -21,6 +21,7 @@ from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
+from envergo.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +80,8 @@ class HomeHaieView(TemplateView):
                 "simulateur",
                 "localisation",
                 self.request,
-                **{
-                    "department": department.department,
-                },
+                department=department.department,
+                user_type=User.get_type(request.user),
             )
         return self.render_to_response(context)
 

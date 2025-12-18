@@ -201,6 +201,9 @@ def test_petition_project_detail(mock_post, client, site):
     response = client.get(petition_project_url)
     assert response.status_code == 200
     assert "moulinette" in response.context
+    assert Event.objects.get(
+        category="simulateur", event="consultation", metadata__user_type="anonymous"
+    )
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
     assert response.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" in response.content.decode()
@@ -977,6 +980,9 @@ def test_petition_project_alternative(client, haie_user, haie_instructor_44, sit
         in content
     )
     assert "Partager cette page par email" not in content
+    assert Event.objects.get(
+        category="simulateur", event="soumission_d", metadata__alternative="true"
+    )
 
     # WHEN the user visit the result plantation page of an alternative
     result_url = alternative_url.replace("/formulaire", "/resultat-plantation")
@@ -992,6 +998,9 @@ def test_petition_project_alternative(client, haie_user, haie_instructor_44, sit
     assert "Partager cette page par email" not in content
     assert "La demande d'autorisation est prête à être complétée" not in content
     assert "Copier le lien de cette page" in content
+    assert Event.objects.get(
+        category="simulateur", event="soumission_p", metadata__alternative="true"
+    )
 
 
 def test_instructor_view_with_hedges_outside_department(client, haie_instructor_44):
