@@ -540,7 +540,12 @@ mutation (
 DOSSIER_REFUSER_MUTATION = (
     DOSSIER_FRAGMENT
     + """
-mutation ($input: DossierRefuserInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+mutation (
+  $input: DossierRefuserInput!,
+  $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
+) {
   dossierRefuser(input: $input) {
     dossier {
     ...DossierFragment
@@ -556,7 +561,12 @@ mutation ($input: DossierRefuserInput!, $includeChamps: Boolean = true, $include
 DOSSIER_CLASSER_SANS_SUITE_MUTATION = (
     DOSSIER_FRAGMENT
     + """
-mutation ($input: DossierClasserSansSuiteInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+mutation (
+  $input: DossierClasserSansSuiteInput!,
+  $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
+) {
   dossierClasserSansSuite(input: $input) {
     dossier {
     ...DossierFragment

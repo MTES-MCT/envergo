@@ -216,7 +216,7 @@ pycparser==2.22
     # via
     #   -r base.txt
     #   cffi
-pyproj==3.7.1
+pyproj==3.7.2
     # via -r base.txt
 pyproject-hooks==1.2.0
     # via
