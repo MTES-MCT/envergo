@@ -1259,6 +1259,11 @@ class PetitionProjectInstructorProcedureView(
     def get_context_data(self, **kwargs):
 
         def extract_entries(log):
+            """The history table display an entry for each status change, suspension and resumption for requesting info
+
+            As the suspension and resumption are not a single StatusLog model but attributes of it, this method will
+            map a StatusLog into one or more entries for the history table.
+            """
             entries = [
                 {
                     "type": "status_change",
@@ -1280,6 +1285,7 @@ class PetitionProjectInstructorProcedureView(
                 }
             ]
             if log.suspension_date:
+                # this log object is storing a suspension, we add an entry
                 entries.insert(
                     0,
                     {
@@ -1300,12 +1306,22 @@ class PetitionProjectInstructorProcedureView(
                     },
                 )
             if log.info_receipt_date:
+                # this log object is storing a resumption, we add an entry
                 entries.insert(
                     0,
                     {
                         "type": "resumption",
+                        "created_by": (
+                            ""
+                            if not log.resumed_by
+                            else (
+                                log.resumed_by.email
+                                if not log.resumed_by.is_staff
+                                else "Administrateur"
+                            )
+                        ),
                         "created_at": datetime.datetime.combine(
-                            log.suspension_date, datetime.time.min
+                            log.info_receipt_date, datetime.time.min
                         ).replace(tzinfo=ZoneInfo("UTC")),
                         "due_date": log.due_date,
                     },
@@ -1551,6 +1567,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             status.due_date = status.original_due_date + interruption_days
         else:
             status.due_date = None
+        status.resumed_by = self.request.user
         status.save()
 
         # Send Mattermost notification
