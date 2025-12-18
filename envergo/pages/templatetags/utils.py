@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Iterable, Mapping
 
 from bs4 import BeautifulSoup
@@ -15,6 +16,7 @@ from django.http import QueryDict
 from django.template.base import TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
 from django.utils.dateparse import parse_datetime
+from django.utils.deprecation import RemovedInDjango51Warning
 from django.utils.html import urlize as _urlize
 
 register = template.Library()
@@ -239,6 +241,11 @@ def querystring(context, *args, **kwargs):
         {% querystring my_query_dict my_dict foo=3 bar=None %}
     """
 
+    warnings.warn(
+        "This template tag is a copy of querystring template tag implemented in django 5.1."
+        "Remove this when update.",
+        category=RemovedInDjango51Warning,
+    )
     if not args:
         args = [context.request.GET]
     params = QueryDict(mutable=True)
