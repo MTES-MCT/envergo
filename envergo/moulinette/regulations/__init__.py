@@ -267,18 +267,24 @@ class HedgesCentricMapFactory(MapFactory):
                     for hedge in haies.hedges_to_plant()
                 ]
 
-                hedges_to_remove = MapPolygon(
-                    hedges_to_remove_geometries,
-                    "#f00",
-                    "Haies à détruire",
-                    class_name="hedge to-remove",
-                )
-                hedges_to_plant = MapPolygon(
-                    hedges_to_plant_geometries,
-                    "#0f0",
-                    "Haies à planter",
-                    class_name="hedge to-plant",
-                )
+                if hedges_to_remove_geometries:
+                    hedges_to_remove = MapPolygon(
+                        hedges_to_remove_geometries,
+                        "#f00",
+                        "Haies à détruire",
+                        class_name="hedge to-remove",
+                    )
+                    polygons.append(hedges_to_remove)
+
+                if hedges_to_plant_geometries:
+                    hedges_to_plant = MapPolygon(
+                        hedges_to_plant_geometries,
+                        "#0f0",
+                        "Haies à planter",
+                        class_name="hedge to-plant",
+                    )
+                    polygons.append(hedges_to_plant)
+
                 hedges = MapPolygon(
                     hedges_to_remove_geometries + hedges_to_plant_geometries,
                     "",
@@ -286,11 +292,7 @@ class HedgesCentricMapFactory(MapFactory):
                     class_name="",
                 )
 
-                polygons.append(hedges_to_remove)
-
-                polygons.append(hedges_to_plant)
-
-                map = Map(
+                return Map(
                     type="regulation",
                     center=self.regulation.moulinette.get_map_center(),
                     entries=polygons,
@@ -301,7 +303,6 @@ class HedgesCentricMapFactory(MapFactory):
                     ratio_classes="ratio-2x1 ratio-sm-4x5",
                     fixed=False,
                 )
-                return map
 
         return None
 
