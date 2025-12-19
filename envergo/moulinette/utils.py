@@ -46,6 +46,9 @@ class MoulinetteUrl:
         moulinette = self.get_moulinette()
         return moulinette and moulinette.is_valid()
 
+    def __getitem__(self, key):
+        return self.querydict[key]
+
 
 def get_moulinette_class_from_site(site):
     """Return the correct Moulinette class depending on the current site."""
