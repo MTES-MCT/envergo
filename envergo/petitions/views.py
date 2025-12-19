@@ -42,6 +42,7 @@ from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
@@ -1198,6 +1199,8 @@ class PetitionProjectInstructorAlternativeEdit(
 
                 project = simulation.project
                 project.moulinette_url = simulation.moulinette_url
+                url = MoulinetteUrl(project.moulinette_url)
+                project.hedge_data_id = url["haies"]
                 project.save()
 
                 messages.success(request, "La simulation alternative a été activée.")
