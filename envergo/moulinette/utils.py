@@ -1,10 +1,80 @@
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import QueryDict
 from django.template import engines
 from django.utils._os import safe_join
+
+from envergo.urlmappings.utils import unfold_url
+
+
+class MoulinetteUrl:
+    """A url with valid moulinette simulation parameters."""
+
+    def __init__(self, url):
+        self.url = unfold_url(url)
+
+    @property
+    def querydict(self):
+        url = urlparse(self.url)
+        qd = QueryDict(url.query, mutable=True)
+        return qd
+
+    @property
+    def params(self):
+        return self.querydict.dict()
+
+    def get_moulinette(self):
+        try:
+            MoulinetteClass = get_moulinette_class_from_url(self.url)
+            data = self.params
+            moulinette_data = {"initial": data, "data": data}
+            moulinette = MoulinetteClass(moulinette_data)
+            return moulinette
+        except RuntimeError:
+            moulinette = None
+
+        return moulinette
+
+    def is_valid(self):
+        """Check if the moulinette url is valid.
+
+        A moulinette url is valid if it can create a valid Moulinette with a valid url.
+        """
+        moulinette = self.get_moulinette()
+        return moulinette and moulinette.is_valid()
+
+    def __getitem__(self, key):
+        return self.querydict[key]
+
+
+def get_moulinette_class_from_site(site):
+    """Return the correct Moulinette class depending on the current site."""
+    from envergo.moulinette.models import MoulinetteAmenagement, MoulinetteHaie
+
+    domain_class = {
+        settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
+        settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
+    }
+    cls = domain_class.get(site.domain, None)
+    if cls is None:
+        raise RuntimeError(f"Unknown site for domain {site.domain}")
+    return cls
+
+
+def get_moulinette_class_from_url(url):
+    """Return the correct Moulinette class depending on the current site."""
+    from envergo.moulinette.models import MoulinetteAmenagement, MoulinetteHaie
+
+    if "envergo" in url:
+        cls = MoulinetteAmenagement
+    elif "haie" in url:
+        cls = MoulinetteHaie
+    else:
+        raise RuntimeError("Cannot find the moulinette to use")
+    return cls
 
 
 def compute_surfaces(data: QueryDict):

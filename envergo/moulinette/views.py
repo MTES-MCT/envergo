@@ -22,7 +22,8 @@ from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, get_moulinette_class_from_site
+from envergo.moulinette.models import ConfigHaie
+from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 

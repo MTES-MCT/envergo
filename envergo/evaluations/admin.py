@@ -32,7 +32,7 @@ from envergo.evaluations.models import (
     RequestFile,
     generate_reference,
 )
-from envergo.moulinette.models import get_moulinette_class_from_url
+from envergo.moulinette.utils import get_moulinette_class_from_url
 from envergo.utils.fields import NoIdnEmailField
 
 logger = logging.getLogger(__name__)

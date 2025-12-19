@@ -41,6 +41,7 @@ from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
@@ -50,6 +51,7 @@ from envergo.petitions.forms import (
     ProcedureForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
+    SimulationForm,
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -57,6 +59,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    Simulation,
     StatusLog,
 )
 from envergo.petitions.services import (
@@ -193,6 +196,14 @@ class PetitionProjectCreate(FormView):
                 petition_project.save()
 
                 StatusLog.objects.create(petition_project=petition_project)
+
+                Simulation.objects.create(
+                    project=petition_project,
+                    is_initial=True,
+                    is_active=True,
+                    moulinette_url=petition_project.moulinette_url,
+                    comment="Simulation initiale",
+                )
 
                 log_event(
                     "demande",
@@ -585,6 +596,8 @@ class PetitionProjectDetail(DetailView):
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
+
+        moulinette_params["alternative"] = True
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
@@ -761,6 +774,13 @@ class BasePetitionProjectInstructorView(
 
         res = super().post(request, *args, **kwargs)
         return res
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["has_change_permission"] = self.has_change_permission(
+            self.request, self.object
+        )
+        return context
 
     def log_event_action(self, request):
         if not self.event_action:
@@ -1049,25 +1069,133 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
 
 class PetitionProjectInstructorAlternativeView(
-    BasePetitionProjectInstructorView, DetailView
+    BasePetitionProjectInstructorView, FormView
 ):
     """View for creating an alternative of a petition project by the instructor"""
 
-    template_name = "haie/petitions/instructor_view_alternative.html"
+    template_name = "haie/petitions/instructor_view_alternatives.html"
+    form_class = SimulationForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        parsed_moulinette_url = urlparse(self.object.moulinette_url)
-        qs_dict = parse_qs(parsed_moulinette_url.query)
-        flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
-        flat_qs["alternative"] = "true"
-        alternative_form_url = (
-            f"{reverse("moulinette_form")}?{urlencode(flat_qs, doseq=True)}"
+        context["simulations"] = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+            .order_by("created_at")
         )
 
-        context["alternative_form_url"] = alternative_form_url
+        context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
+
         return context
+
+    def form_valid(self, form):
+        simulation = form.save(commit=False)
+        simulation.project = self.object
+        simulation.save()
+
+        messages.success(self.request, "La simulation alternative a été ajoutée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="add",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        url = reverse(
+            "petition_project_instructor_alternative_view", args=[self.object.reference]
+        )
+        return url
+
+
+class PetitionProjectInstructorAlternativeEdit(
+    BasePetitionProjectInstructorView, FormView
+):
+    """View for updating alternative simulations."""
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.has_change_permission(request, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+
+        simulation_qs = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+        )
+
+        try:
+            simulation = simulation_qs.get(pk=kwargs["simulation_id"])
+        except Simulation.DoesNotExist:
+            raise Http404()
+
+        action = kwargs["action"]
+        if action == "activate" and simulation.can_be_activated():
+            with transaction.atomic():
+                simulation_qs.update(is_active=False)
+                simulation.is_active = True
+                simulation.save()
+
+                project = simulation.project
+                project.moulinette_url = simulation.moulinette_url
+                url = MoulinetteUrl(project.moulinette_url)
+                project.hedge_data_id = url["haies"]
+                project.save()
+
+                messages.success(request, "La simulation alternative a été activée.")
+
+                log_event(
+                    "dossier",
+                    "simulation_alt",
+                    self.request,
+                    action="activate",
+                    **self.object.get_log_event_data(),
+                    **get_matomo_tags(self.request),
+                )
+
+        # The main active simulation cannot be deleted
+        elif action == "delete" and simulation.can_be_deleted():
+            simulation.delete()
+
+            messages.success(request, "La simulation alternative a été supprimée.")
+
+            log_event(
+                "dossier",
+                "simulation_alt",
+                self.request,
+                action="delete",
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        url = reverse(
+            "petition_project_instructor_alternative_view", args=[self.object.reference]
+        )
+        return url
 
 
 class PetitionProjectInstructorProcedureView(
