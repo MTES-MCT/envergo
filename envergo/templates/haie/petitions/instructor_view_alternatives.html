@@ -19,7 +19,7 @@
     </div>
   {% endif %}
 
-  <section class="fr-mt-3w fr-mb-5w">
+  <section class="fr-mt-3w fr-mb-5w project-inner-content">
     <h2>Simulations alternatives</h2>
 
     {% if has_change_permission %}
@@ -38,6 +38,9 @@
       </p>
     {% endif %}
 
+  </section>
+
+  <section class="fr-mt-3w fr-mb-5w">
     {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
     {% if has_change_permission %}
@@ -68,9 +71,9 @@
     </section>
   {% endif %}
 
-  {% if has_change_permission %}
 
-    <section id="how-to" class="fr-mt-5w">
+  {% if has_change_permission %}
+    <section id="how-to" class="fr-mt-5w project-inner-content">
       <h2>Comment faire une simulation alternative ?</h2>
 
       <div class="fr-accordions-group" data-fr-group="true">
