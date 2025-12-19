@@ -151,6 +151,7 @@ MIDDLEWARE = [
     "envergo.middleware.rate_limiting.RateLimitingMiddleware",
     "envergo.analytics.middleware.HandleMtmValues",
     "envergo.petitions.middleware.StoreInvitationToken",
+    "envergo.petitions.middleware.ActivateInvitationMiddleware",
 ]
 
 # STATIC
