@@ -868,9 +868,15 @@ div#invitation-token-email-wrapper {
   background-color: var(--background-contrast-grey);
   padding: 1rem 2rem;
   font-size: 0.875rem;
+  --text-spacing: 0 0 1rem;
+  --xl-block: 0;
 
   p {
     font-size: 0.875rem;
+  }
+
+  ul {
+    margin-bottom: 1rem;
   }
 
   .fr-btn.fr-btn--tertiary {
