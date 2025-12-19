@@ -90,7 +90,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
-    paginate_by = 5
+    paginate_by = 30
 
     def filter_queryset_user(self, qs, user):
         """Add filters according to user status to the queryset"""
