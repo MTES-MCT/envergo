@@ -1627,14 +1627,13 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 created_by=request.user,
                 petition_project=project,
             )
+            url = reverse("petition_project_instructor_view", args=[project.reference])
             invitation_url = update_qs(
-                self.request.build_absolute_uri(
-                    reverse(
-                        "petition_project_accept_invitation",
-                        kwargs={"reference": project.reference, "token": token.token},
-                    )
-                ),
-                {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+                self.request.build_absolute_uri(url),
+                {
+                    "mtm_campaign": INVITATION_TOKEN_MATOMO_TAG,
+                    "invitation_token": token.token,
+                },
             )
             log_event(
                 "dossier",
@@ -1654,6 +1653,7 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
             )
 
 
+# TODO Delete this obsolete view
 class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
     """Accept an invitation to a petition project"""
 
@@ -1663,6 +1663,8 @@ class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, Vie
 
     def dispatch(self, request, *args, **kwargs):
         project = self.get_object()
+
+        # TODO Why is this made a request variable?
         self.request.invitation = InvitationToken.objects.filter(
             petition_project=project, token=kwargs.get("token")
         ).first()
