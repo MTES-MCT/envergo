@@ -150,6 +150,7 @@ MIDDLEWARE = [
     "envergo.analytics.middleware.SetVisitorIdCookie",
     "envergo.middleware.rate_limiting.RateLimitingMiddleware",
     "envergo.analytics.middleware.HandleMtmValues",
+    "envergo.petitions.middleware.StoreInvitationToken",
 ]
 
 # STATIC
@@ -486,3 +487,5 @@ SECURE_CSP = {}
 SECURE_CSP_REPORT_ONLY = {}
 
 RATELIMIT_RATE = "100/m"
+
+INVITATION_TOKEN_COOKIE_NAME = "invitation_token"
