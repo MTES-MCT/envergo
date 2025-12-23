@@ -75,7 +75,7 @@ django==4.2.27
     #   django-otp
     #   django-phonenumber-field
     #   django-redis
-django-allauth==65.10.0
+django-allauth==65.13.1
     # via -r base.in
 django-anymail[sendinblue]==13.0.1
     # via -r base.in
@@ -197,10 +197,7 @@ text-unidecode==1.3
 tqdm==4.67.1
     # via -r base.in
 typing-extensions==4.14.1
-    # via
-    #   anyio
-    #   beautifulsoup4
-    #   psycopg
+    # via beautifulsoup4
 tzdata==2025.2
     # via
     #   faker
