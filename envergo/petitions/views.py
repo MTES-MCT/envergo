@@ -17,7 +17,13 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
-from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -1228,6 +1234,10 @@ class PetitionProjectInstructorAlternativeEdit(
                 **self.object.get_log_event_data(),
                 **get_matomo_tags(self.request),
             )
+
+        else:
+            # This should not happen unless someone manually forges an invalid URL
+            raise HttpResponseForbidden("Action non disponible")
 
         return HttpResponseRedirect(self.get_success_url())
 
