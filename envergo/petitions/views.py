@@ -71,7 +71,6 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarches_simplifiees_status,
 )
-from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
@@ -151,11 +150,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = queryset.filter(followed_up=True)
 
         if "dossiers_sans_instructeur" in request_filters:
-            instructors_users_qs = User.objects.filter(is_instructor=True).exclude(
-                is_superuser=True
+            is_instructor = Q(followed_by__is_instructor=True) & Q(
+                followed_by__is_superuser=False
             )
-            is_instructor = Q(followed_by__is_instructor=True) & Q(followed_by__is_superuser=False)
-            queryset = queryset.filter(is_instructor)
+            queryset = queryset.exclude(is_instructor)
 
         return queryset
 
