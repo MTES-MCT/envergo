@@ -160,7 +160,7 @@ def test_invalid_department_result(client):
     full_url = f"{url}?{params}"
     res = client.get(full_url)
     assert res.status_code == 302
-    assert res.url.startswith("/simulateur/formulaire/")
+    assert res.url.startswith("/simulateur/triage/")
 
 
 @pytest.mark.urls("config.urls_haie")
