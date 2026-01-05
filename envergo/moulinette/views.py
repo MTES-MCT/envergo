@@ -264,7 +264,18 @@ class MoulinetteMixin:
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         if not moulinette.is_triage_valid():
-            super().log_moulinette_event(moulinette, context)
+            # TODO Why is matomo param cleanup only happens here?
+            # Matomo parameters are stored in session, but some might remain in the url.
+            # We need to prevent duplicate values
+            params = get_matomo_tags(self.request)
+            params.update(self.request.GET.dict())
+            log_event(
+                "simulateur",
+                "soumission_autre",
+                self.request,
+                **params,
+                user_type=User.get_type(self.request.user),
+            )
             return
 
         export = moulinette.summary()
@@ -534,20 +545,6 @@ class BaseMoulinetteResult(FormView):
             self.log_moulinette_event(moulinette, context)
 
         return res
-
-    def log_moulinette_event(self, moulinette, context):
-        # TODO Why is matomo param cleanup only happens here?
-        # Matomo parameters are stored in session, but some might remain in the url.
-        # We need to prevent duplicate values
-        params = get_matomo_tags(self.request)
-        params.update(self.request.GET.dict())
-        log_event(
-            "simulateur",
-            "soumission_autre",
-            self.request,
-            **params,
-            user_type=User.get_type(self.request.user),
-        )
 
 
 class MoulinetteAmenagementResult(
