@@ -103,11 +103,11 @@ def test_triage_result(client):
     # GIVEN a invalid department code
     params = "department=00&element=haie&travaux=destruction"
     full_url = f"{url}?{params}"
-    res = client.get(full_url, follow=True)
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "Département : Inconnu" in content
-    assert "<h2>kikoo</h2>" not in content
+    # WHEN visit triage form
+    res = client.get(full_url)
+    # THEN redirect to homepage
+    assert res.status_code == 302
+    assert res.url == "/#simulateur"
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -154,13 +154,13 @@ def test_invalid_department_result(client):
         "haies": str(haies.id),
         "department": "00",
     }
-    # THEN result page redirect to form simulator
+    # THEN result page redirect to home simulator
     url = reverse("moulinette_result")
     params = urlencode(data)
     full_url = f"{url}?{params}"
     res = client.get(full_url)
     assert res.status_code == 302
-    assert res.url.startswith("/simulateur/triage/")
+    assert res.url == "/#simulateur"
 
 
 @pytest.mark.urls("config.urls_haie")
