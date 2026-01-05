@@ -792,7 +792,7 @@ def test_petition_project_list_filters(
     response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
     content = response.content.decode()
 
-    # Then project list is filtered on project followed by no instructor, excluding admin users
+    # THEN project list is filtered on project followed by no instructor, excluding admin users
     assert project_44_followed_by_instructor1.reference not in content
     assert project_44_followed_by_instructor2.reference not in content
     assert project_44_followed_by_invited.reference in content

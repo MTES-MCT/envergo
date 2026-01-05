@@ -85,6 +85,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
+    not_filtered_queryset = None
 
     def filter_queryset_user(self, qs, user):
         """Add filters according to user status to the queryset"""
@@ -144,6 +145,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         # Filter on current user status
         queryset = self.filter_queryset_user(queryset, current_user)
 
+        # Store not_filtered_queryset, needed to check if there is at least one project in it
+        self.not_filtered_queryset = queryset
+
         # Filter on request GET params
         request_filters = self.request.GET.getlist("f", [])
         if "mes_dossiers" in request_filters:
@@ -164,11 +168,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         if context["object_list"]:
             context["user_can_view_one_petition_project"] = True
         else:
-            queryset = PetitionProject.objects.exclude(
-                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+            context["user_can_view_one_petition_project"] = (
+                self.not_filtered_queryset.exists()
             )
-            queryset = self.filter_queryset_user(queryset, self.request.user)
-            context["user_can_view_one_petition_project"] = queryset.exists()
 
         # Add city and organization to each obj
         for obj in context["object_list"]:
