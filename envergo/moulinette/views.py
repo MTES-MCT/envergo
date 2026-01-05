@@ -520,8 +520,11 @@ class BaseMoulinetteResult(FormView):
 
         # Triage is required and triage form is invalid
         if triage_form and not triage_form.is_valid():
-            redirect_url = reverse("triage")
-            redirect_url = update_qs(redirect_url, request.GET)
+            if "department" in triage_form.errors:
+                redirect_url = f"{reverse("home")}#simulateur"
+            else:
+                redirect_url = reverse("triage")
+                redirect_url = update_qs(redirect_url, request.GET)
 
         # Moulinette is invalid and there is no triage to do (amenagement) or the triage is valid (haie)
         # so just redirect to the form
