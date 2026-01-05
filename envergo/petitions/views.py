@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import tempfile
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlparse
 
 import fiona
 import requests
