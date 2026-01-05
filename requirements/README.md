@@ -29,6 +29,8 @@ docker compose build
 
 ```bash
 pip-compile -P <package_name> base.in
+pip-compile -P <package_name> local.in
+pip-compile -P <package_name> production.in
 ```
 
 Then run pip-sync / dc build
