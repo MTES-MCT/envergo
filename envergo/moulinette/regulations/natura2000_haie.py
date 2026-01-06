@@ -66,9 +66,6 @@ class Natura2000Haie(CriterionEvaluator):
         # Aggregate them into a single polygon
         multipolygon = qs["geom"]
 
-        # Other conversion options throw a cryptic numpy error, so…
-        geom = shapely.from_wkt(multipolygon.wkt)
-
         n2000_hors_aa = {}
         l_n2000_hors_aa = 0.0
 
@@ -78,20 +75,24 @@ class Natura2000Haie(CriterionEvaluator):
         # Use the geodesic length
         geod = Geod(ellps="WGS84")
 
-        # Intersect every hedge.
-        for h in hors_alignement:
-            intersect = h.geometry.intersection(geom)
-            length = geod.geometry_length(intersect)
-            if length > 0.0:
-                n2000_hors_aa[h.id] = ceil(length)
-                l_n2000_hors_aa += length
+        # multipolygon is None if there is only hedges to plant that are intersecting the perimeter
+        if multipolygon:
+            # Other conversion options throw a cryptic numpy error, so…
+            geom = shapely.from_wkt(multipolygon.wkt)
+            # Intersect every hedge.
+            for h in hors_alignement:
+                intersect = h.geometry.intersection(geom)
+                length = geod.geometry_length(intersect)
+                if length > 0.0:
+                    n2000_hors_aa[h.id] = ceil(length)
+                    l_n2000_hors_aa += length
 
-        for h in alignement:
-            intersect = h.geometry.intersection(geom)
-            length = geod.geometry_length(intersect)
-            if length > 0.0:
-                n2000_aa[h.id] = ceil(length)
-                l_n2000_aa += length
+            for h in alignement:
+                intersect = h.geometry.intersection(geom)
+                length = geod.geometry_length(intersect)
+                if length > 0.0:
+                    n2000_aa[h.id] = ceil(length)
+                    l_n2000_aa += length
 
         data = {}
         data["n2000_hors_aa"] = n2000_hors_aa
