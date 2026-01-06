@@ -292,4 +292,4 @@ class SimulationForm(forms.ModelForm):
                 "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
             )
-        return url
+        return moulinette_url.url
