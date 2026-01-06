@@ -146,7 +146,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             )
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
-
         # Filter on current user status
         if current_user.is_superuser:
             # don't filter the queryset
