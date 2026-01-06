@@ -18,6 +18,9 @@
           <ul class="fr-nav__list">
             {% if user.is_authenticated %}
               <li class="fr-nav__item">
+                <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Dossiers</a>
+              </li>
+              <li class="fr-nav__item">
                 <button id="faq-dropdown-btn"
                         class="fr-nav__btn"
                         aria-expanded="false"

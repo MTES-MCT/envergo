@@ -14,8 +14,8 @@ from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.regulations import HedgeDensityMixin
+from envergo.moulinette.utils import get_moulinette_class_from_site
 
 register = template.Library()
 

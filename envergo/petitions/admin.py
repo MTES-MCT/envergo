@@ -4,7 +4,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import DEPARTMENT_CHOICES
-from envergo.petitions.models import InvitationToken, PetitionProject
+from envergo.petitions.models import InvitationToken, PetitionProject, Simulation
 from envergo.users.models import User
 from envergo.utils.widgets import JSONWidget
 
@@ -142,3 +142,9 @@ class InvitationTokenAdmin(admin.ModelAdmin):
         return created_by.email if created_by else ""
 
     created_by_list.short_description = "Compte invitant"
+
+
+@admin.register(Simulation)
+class SimulationAdmin(admin.ModelAdmin):
+    list_display = ["project", "is_initial", "is_active", "source", "created_at"]
+    search_fields = ["project__reference"]

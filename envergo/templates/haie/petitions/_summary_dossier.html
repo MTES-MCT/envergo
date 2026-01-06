@@ -6,6 +6,9 @@
       <div id="project-header-container">
         <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
         {% include 'haie/petitions/_follow_form.html' with reference=petition_project.reference followed_up=petition_project.followed_up %}
+        <div class="fr-px-2w fr-py-1v">
+          {% include 'haie/petitions/_dossier_followers.html' with reference=petition_project.reference followers=petition_project.followers %}
+        </div>
       </div>
       <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
         <li>

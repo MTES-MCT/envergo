@@ -19,6 +19,10 @@ html.nojs .js {
   display: none !important;
 }
 
+html.noclipboard .clipboard {
+  display: none !important;
+}
+
 // Make sure the :target element is not hidden behind the sticky header
 // Note: not all pages have a sticky header, but fortunately, right now,
 // all pages with target links do.
@@ -1573,8 +1577,12 @@ footer {
 
     @media (width >= 62em) {
       .fr-header__body-row {
-        padding: 0.75rem 0;
+        padding: 0;
         line-height: 1rem;
+      }
+
+      .fr-header__service {
+        padding: 0.625rem 1rem;
       }
 
       img {
@@ -2420,4 +2428,8 @@ section#actions-to-take {
 
 .alt-light {
   background-color: var(--yellow-tournesol-975-75);
+}
+
+.form-actions {
+  text-align: right;
 }

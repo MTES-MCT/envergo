@@ -2530,31 +2530,6 @@ class MoulinetteHaie(Moulinette):
         )
 
 
-def get_moulinette_class_from_site(site):
-    """Return the correct Moulinette class depending on the current site."""
-
-    domain_class = {
-        settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
-        settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
-    }
-    cls = domain_class.get(site.domain, None)
-    if cls is None:
-        raise RuntimeError(f"Unknown site for domain {site.domain}")
-    return cls
-
-
-def get_moulinette_class_from_url(url):
-    """Return the correct Moulinette class depending on the current site."""
-
-    if "envergo" in url:
-        cls = MoulinetteAmenagement
-    elif "haie" in url:
-        cls = MoulinetteHaie
-    else:
-        raise RuntimeError("Cannot find the moulinette to use")
-    return cls
-
-
 class ActionToTake(models.Model):
     """Actions to take listed in an evaluation and debug page
 
