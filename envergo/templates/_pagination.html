@@ -1,14 +1,16 @@
+{% load utils %}
+
 <nav role="navigation" class="fr-pagination" aria-label="Pagination">
   <ul class="fr-pagination__list">
     {% if page_obj.has_previous %}
       <li>
-        <a href="?page=1"
+        <a href="{% querystring page=1 %}"
            class="fr-pagination__link fr-pagination__link--first"
            aria-disabled="true"
            role="link">Première page</a>
       </li>
       <li>
-        <a href="?page={{ page_obj.previous_page_number }}"
+        <a href="{% querystring page=page_obj.previous_page_number %}"
            class="fr-pagination__link fr-pagination__link--prev fr-pagination__link--lg-label"
            title="Page précédente">Page précédente</a>
       </li>
@@ -21,12 +23,12 @@
 
     {% if page_obj.has_next %}
       <li>
-        <a href="?page={{ page_obj.next_page_number }}"
+        <a href="{% querystring page=page_obj.next_page_number %}"
            class="fr-pagination__link fr-pagination__link--next fr-pagination__link--lg-label"
            title="Page suivante">Page suivante</a>
       </li>
       <li>
-        <a href="?page={{ page_obj.paginator.num_pages }}"
+        <a href="{% querystring page=page_obj.paginator.num_pages %}"
            class="fr-pagination__link fr-pagination__link--last"
            title="Dernière page">Dernière page</a>
       </li>

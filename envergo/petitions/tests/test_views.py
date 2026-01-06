@@ -697,6 +697,121 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
+def test_petition_project_list_filters(
+    haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
+):
+    """Test filters on project list"""
+
+    project_list_url = reverse("petition_project_list")
+    # Given config haie on 44
+    config_haie_44 = DCConfigHaieFactory()
+    department_44 = config_haie_44.department
+
+    # Given two haie instructors, haie user invited on department 44 `invited_haie_user_44` and admin user instructor
+    haie_instructor_44_instructor1 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor=True,
+    )
+    haie_instructor_44_instructor1.departments.add(department_44)
+    haie_instructor_44_instructor2 = UserFactory(
+        is_active=True,
+        access_amenagement=False,
+        access_haie=True,
+        is_instructor=True,
+    )
+    haie_instructor_44_instructor2.departments.add(department_44)
+    admin_user.is_instructor = True
+    admin_user.save()
+
+    # Create three projects non draft
+    today = date.today()
+    project_44_followed_by_instructor1 = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
+    project_44_followed_by_instructor2 = PetitionProjectFactory(
+        reference="ACB132",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
+    project_44_followed_by_invited = PetitionProjectFactory(
+        reference="XYZ123",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_invited.followed_by.add(haie_user_44)
+    project_44_followed_by_superuser = PetitionProjectFactory(
+        reference="ADM123",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_superuser.followed_by.add(admin_user)
+    project_44_no_instructor = PetitionProjectFactory(
+        reference="XYZ456",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+
+    # GIVEN haie user has no project
+    # WHEN base user search on my projects
+    client.force_login(haie_user)
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+    # THEN alert "aucun dossier" is displayed
+    assert "Aucun dossier n’est accessible pour le moment" in content
+
+    # GIVEN haie user is invited on one project
+    InvitationTokenFactory(
+        user=haie_user, petition_project=project_44_followed_by_instructor1
+    )
+    # WHEN base user search on my projects
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+    # THEN alert "aucun dossier" is not displayed, only a table
+    assert "Aucun dossier n’est accessible pour le moment" not in content
+    # AND followed by me project list is empty
+    assert response.context["object_list"].count() == 0
+
+    # WHEN Instructor 1 search on my projects
+    client.force_login(haie_instructor_44_instructor1)
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_followed_by_superuser.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+    # WHEN Instructor 1 search on projects followed by no instructor
+    response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
+    content = response.content.decode()
+
+    # THEN project list is filtered on project followed by no instructor, excluding admin users
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference in content
+    assert project_44_followed_by_superuser.reference in content
+    assert project_44_no_instructor.reference in content
+
+    # WHEN I search on my projects for instructor2
+    client.force_login(haie_instructor_44_instructor2)
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_followed_by_superuser.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 

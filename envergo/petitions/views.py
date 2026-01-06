@@ -85,6 +85,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
+    not_filtered_queryset = None
 
     def get_queryset(self):
         """Override queryset filtering projects from user departments
@@ -126,6 +127,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
 
+        # Filter on current user status
         if current_user.is_superuser:
             # don't filter the queryset
             pass
@@ -138,11 +140,34 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = queryset.none()
 
+        # Store not_filtered_queryset, needed to check if there is at least one project in it
+        self.not_filtered_queryset = queryset
+
+        # Filter on request GET params
+        request_filters = self.request.GET.getlist("f", [])
+        if "mes_dossiers" in request_filters:
+            queryset = queryset.filter(followed_up=True)
+
+        if "dossiers_sans_instructeur" in request_filters:
+            is_instructor = Q(followed_by__is_instructor=True) & Q(
+                followed_by__is_superuser=False
+            )
+            queryset = queryset.exclude(is_instructor)
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Check if object_list without filter is empty when filters are in querystring
+        if context["object_list"]:
+            context["user_can_view_one_petition_project"] = True
+        else:
+            context["user_can_view_one_petition_project"] = (
+                self.not_filtered_queryset.exists()
+            )
+
+        # Add city and organization to each obj
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
