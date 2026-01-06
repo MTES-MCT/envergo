@@ -87,21 +87,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     paginate_by = 30
     not_filtered_queryset = None
 
-    def filter_queryset_user(self, qs, user):
-        """Add filters according to user status to the queryset"""
-        if user.is_superuser:
-            # don't filter the queryset
-            pass
-        elif user.access_haie:
-            user_departments = user.departments.defer("geometry").all()
-            qs = qs.filter(
-                Q(department__in=user_departments)
-                | Q(invitation_tokens__user_id=user.id)
-            ).distinct()
-        else:
-            qs = qs.none()
-        return qs
-
     def get_queryset(self):
         """Override queryset filtering projects from user departments
 
@@ -143,7 +128,17 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         )
 
         # Filter on current user status
-        queryset = self.filter_queryset_user(queryset, current_user)
+        if current_user.is_superuser:
+            # don't filter the queryset
+            pass
+        elif current_user.access_haie:
+            user_departments = current_user.departments.defer("geometry").all()
+            queryset = queryset.filter(
+                Q(department__in=user_departments)
+                | Q(invitation_tokens__user_id=current_user.id)
+            ).distinct()
+        else:
+            queryset = queryset.none()
 
         # Store not_filtered_queryset, needed to check if there is at least one project in it
         self.not_filtered_queryset = queryset
