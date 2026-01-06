@@ -62,6 +62,15 @@ def test_triage(client):
     content = res.content.decode()
     assert "<h2>Doctrine du département</h2>" in content
 
+    # GIVEN an invalid department code
+    params = "department=00"
+    full_url = f"{url}?{params}"
+    # WHEN visit triage form
+    res = client.get(full_url)
+    # THEN redirect to homepage
+    assert res.status_code == 302
+    assert res.url == "/#simulateur"
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(
@@ -100,7 +109,7 @@ def test_triage_result(client):
     assert res.status_code == 302
     assert res["Location"].startswith("/simulateur/formulaire/")
 
-    # GIVEN a invalid department code
+    # GIVEN an invalid department code
     params = "department=00&element=haie&travaux=destruction"
     full_url = f"{url}?{params}"
     # WHEN visit triage form

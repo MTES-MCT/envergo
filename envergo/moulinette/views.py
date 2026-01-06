@@ -649,7 +649,7 @@ class Triage(MoulinetteMixin, FormView):
         """This page should always have a department to be displayed."""
 
         if not self.moulinette.department:
-            return HttpResponseRedirect(reverse("home"))
+            return HttpResponseRedirect(f"{reverse("home")}#simulateur")
 
         log_event(
             "simulateur",
