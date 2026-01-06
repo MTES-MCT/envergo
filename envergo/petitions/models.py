@@ -459,6 +459,8 @@ USER_TYPE = Choices(
 
 
 class Simulation(models.Model):
+    """A single alternative set of simulation parameters for a given project."""
+
     project = models.ForeignKey(
         PetitionProject,
         verbose_name="Simulation",
