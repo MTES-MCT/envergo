@@ -98,21 +98,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
-
-    def filter_queryset_user(self, qs, user):
-        """Add filters according to user status to the queryset"""
-        if user.is_superuser:
-            # don't filter the queryset
-            pass
-        elif user.access_haie:
-            user_departments = user.departments.defer("geometry").all()
-            qs = qs.filter(
-                Q(department__in=user_departments)
-                | Q(invitation_tokens__user_id=user.id)
-            ).distinct()
-        else:
-            qs = qs.none()
-        return qs
+    not_filtered_queryset = None
 
     def get_queryset(self):
         """Override queryset filtering projects from user departments
@@ -160,8 +146,22 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             )
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
+
         # Filter on current user status
-        queryset = self.filter_queryset_user(queryset, current_user)
+        if current_user.is_superuser:
+            # don't filter the queryset
+            pass
+        elif current_user.access_haie:
+            user_departments = current_user.departments.defer("geometry").all()
+            queryset = queryset.filter(
+                Q(department__in=user_departments)
+                | Q(invitation_tokens__user_id=current_user.id)
+            ).distinct()
+        else:
+            queryset = queryset.none()
+
+        # Store not_filtered_queryset, needed to check if there is at least one project in it
+        self.not_filtered_queryset = queryset
 
         # Filter on request GET params
         request_filters = self.request.GET.getlist("f", [])
@@ -169,10 +169,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = queryset.filter(followed_up=True)
 
         if "dossiers_sans_instructeur" in request_filters:
-            instructors_users_qs = User.objects.filter(is_instructor=True).exclude(
-                is_superuser=True
+            is_instructor = Q(followed_by__is_instructor=True) & Q(
+                followed_by__is_superuser=False
             )
-            queryset = queryset.exclude(followed_by__in=instructors_users_qs)
+            queryset = queryset.exclude(is_instructor)
 
         return queryset
 
@@ -183,11 +183,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         if context["object_list"]:
             context["user_can_view_one_petition_project"] = True
         else:
-            queryset = PetitionProject.objects.exclude(
-                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+            context["user_can_view_one_petition_project"] = (
+                self.not_filtered_queryset.exists()
             )
-            queryset = self.filter_queryset_user(queryset, self.request.user)
-            context["user_can_view_one_petition_project"] = queryset.exists()
 
         # Add city and organization to each obj
         for obj in context["object_list"]:
