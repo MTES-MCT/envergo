@@ -158,11 +158,13 @@ def stage_badge(stage, is_small=True):
 
     color = color_map.get(stage, None)
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
+    badge_color_class = f"fr-badge--{color}" if color else ""
+    badge_size_class = "fr-badge--sm fr-ml-n1v" if is_small else "badge--lg fr-ml-n3v"
 
     return mark_safe(
-        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''}  {'fr-badge--sm' if is_small else 'badge--lg'}">
-                          {label}
-                        </p>"""
+        f"""<p class="fr-badge {badge_color_class}  {badge_size_class}">
+              {label}
+            </p>"""
     )
 
 
@@ -283,4 +285,4 @@ def display_ds_field(context, field_name):
 @register.filter
 def has_edit_permission(user, project):
     """Check if the user can edit the project."""
-    return project.has_user_as_department_instructor(user)
+    return project.has_change_permission(user)

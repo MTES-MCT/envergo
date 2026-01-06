@@ -147,6 +147,13 @@ class EvaluationDetail(
 
         return moulinette_data
 
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        return {
+            "initial": self.get_initial(),
+            "data": self.get_form_data(),
+        }
+
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
 
