@@ -49,20 +49,18 @@ html.saisie {
 }
 
 .hedge {
+  stroke-width: 6px;
+  filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
+    drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
+
   &.to-remove {
     stroke: #f00;
-    stroke-width: 6px;
     stroke-dasharray: 12 10;
     stroke-linecap: square;
-    filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
-      drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
   }
 
   &.to-plant {
-    stroke-width: 6px;
     stroke: #0f0;
-    filter: drop-shadow(#fff 1px 1px 0) drop-shadow(#fff -1px 1px 0)
-      drop-shadow(#fff 1px -1px 0) drop-shadow(#fff -1px -1px 0);
   }
 }
 

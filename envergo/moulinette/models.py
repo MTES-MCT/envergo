@@ -2360,6 +2360,9 @@ class MoulinetteHaie(Moulinette):
                 pass
 
         context["hedge_data"] = hedge_data
+        context["regulations_with_perimeters_intersected_by_hedges_to_plant_only"] = (
+            self.regulations_with_perimeters_intersected_by_hedges_to_plant_only
+        )
 
         return context
 
@@ -2402,7 +2405,7 @@ class MoulinetteHaie(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        """Fetch the perimeters that are intersecting at least one hedge (either to remove ot to plant)
+        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant)
 
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
@@ -2462,13 +2465,13 @@ class MoulinetteHaie(Moulinette):
 
         return department_centroid_criteria | hedges_intersection_criteria
 
-    def get_zone_subquery(self, hedges, prefix=""):
+    def get_zone_subquery(self, hedges):
         query = Q()
         for hedge in hedges:
             query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
-            Q(map_id=OuterRef(f"{prefix}activation_map_id")) & query
+            Q(map_id=OuterRef("activation_map_id")) & query
         ).values("id")
         return zone_subquery
 
@@ -2528,6 +2531,35 @@ class MoulinetteHaie(Moulinette):
             for regulation in self.regulations
             for criterion in regulation.criteria.all()
         )
+
+    @cached_property
+    def regulations_with_perimeters_intersected_by_hedges_to_plant_only(self):
+        """Fetch all the regulation that have at least one perimeter intersected by hedge to plant only
+
+        For each regulation, return the list of intersective hedges to plant.
+        """
+
+        regulations = defaultdict(set)
+        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
+        if not hedges:
+            return regulations
+
+        for regulation in self.regulations:
+            for perimeter in regulation.perimeters.all():
+                intersects_hedge_to_remove = False
+                intersective_hedge_to_plant = set()
+                for hedge in hedges:
+                    if perimeter.activation_map.geometry.intersects(
+                        hedge.geos_geometry
+                    ):
+                        if hedge.type == TO_REMOVE:
+                            intersects_hedge_to_remove = True
+                        elif hedge.type == TO_PLANT:
+                            intersective_hedge_to_plant.add(hedge)
+                if intersective_hedge_to_plant and not intersects_hedge_to_remove:
+                    regulations[regulation].update(intersective_hedge_to_plant)
+
+        return dict(regulations)
 
 
 class ActionToTake(models.Model):
