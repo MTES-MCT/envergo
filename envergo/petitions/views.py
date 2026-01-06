@@ -34,6 +34,7 @@ from shapely.ops import transform
 
 from envergo.analytics.utils import (
     get_matomo_tags,
+    get_user_type,
     log_event,
     update_url_with_matomo_params,
 )
@@ -71,7 +72,6 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarches_simplifiees_status,
 )
-from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
@@ -200,7 +200,7 @@ class PetitionProjectCreate(FormView):
                     "creation",
                     self.request,
                     **petition_project.get_log_event_data(),
-                    user_type=User.get_type(self.request.user),
+                    user_type=get_user_type(self.request.user),
                     **get_matomo_tags(self.request),
                 )
 
@@ -531,7 +531,7 @@ class PetitionProjectDetail(DetailView):
                 "consultation",
                 self.request,
                 **self.object.get_log_event_data(),
-                user_type=User.get_type(self.request.user),
+                user_type=get_user_type(self.request.user),
                 **get_matomo_tags(self.request),
             )
 
@@ -783,7 +783,7 @@ class BasePetitionProjectInstructorView(
                 self.event_action,
                 self.request,
                 **self.get_log_event_data(),
-                user_type=User.get_type(request.user),
+                user_type=get_user_type(request.user),
                 **get_matomo_tags(self.request),
             )
 

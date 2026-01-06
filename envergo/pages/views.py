@@ -16,12 +16,11 @@ from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
-from envergo.analytics.utils import log_event
+from envergo.analytics.utils import get_user_type, log_event
 from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
-from envergo.users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ class HomeHaieView(TemplateView):
                 "localisation",
                 self.request,
                 department=department.department,
-                user_type=User.get_type(request.user),
+                user_type=get_user_type(request.user),
             )
         return self.render_to_response(context)
 
