@@ -2403,7 +2403,7 @@ class MoulinetteHaie(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        """Fetch the perimeters that are intersecting at least one hedge (either to remove ot to plant)
+        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant)
 
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
@@ -2463,13 +2463,13 @@ class MoulinetteHaie(Moulinette):
 
         return department_centroid_criteria | hedges_intersection_criteria
 
-    def get_zone_subquery(self, hedges, prefix=""):
+    def get_zone_subquery(self, hedges):
         query = Q()
         for hedge in hedges:
             query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
-            Q(map_id=OuterRef(f"{prefix}activation_map_id")) & query
+            Q(map_id=OuterRef("activation_map_id")) & query
         ).values("id")
         return zone_subquery
 
