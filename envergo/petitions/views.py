@@ -84,6 +84,7 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarches_simplifiees_status,
 )
+from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
