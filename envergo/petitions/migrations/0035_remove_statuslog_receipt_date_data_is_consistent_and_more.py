@@ -3,7 +3,20 @@
 from django.db import migrations, models
 
 
+def fix_missing_resumed_by(apps, schema_editor):
+    """Set resumed_by for logs that have info_receipt_date but no resumed_by."""
+    StatusLog = apps.get_model("petitions", "StatusLog")
+    User = apps.get_model("users", "User")
+
+    user = User.objects.get(name="Pierre-Yves Dezaunay")
+    StatusLog.objects.filter(
+        info_receipt_date__isnull=False,
+        resumed_by__isnull=True,
+    ).update(resumed_by=user)
+
+
 class Migration(migrations.Migration):
+    atomic = False
 
     dependencies = [
         ("petitions", "0034_merge_20260107_0633"),
@@ -14,6 +27,7 @@ class Migration(migrations.Migration):
             model_name="statuslog",
             name="receipt_date_data_is_consistent",
         ),
+        migrations.RunPython(fix_missing_resumed_by, migrations.RunPython.noop),
         migrations.AddConstraint(
             model_name="statuslog",
             constraint=models.CheckConstraint(
