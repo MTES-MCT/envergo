@@ -1281,9 +1281,17 @@ class PetitionProjectInstructorProcedureView(
             As the suspension and resumption are not a single StatusLog model but attributes of it, this method will
             map a StatusLog into one or more entries for the history table.
             """
+            TYPE_CHOICES = [
+                ("status_change", "Changement d'état"),
+                ("suspension", "Demande de compléments"),
+                ("resumption", "Complément reçus"),
+            ]
+            TYPE_LABELS = dict(TYPE_CHOICES)
+
             entries = [
                 {
                     "type": "status_change",
+                    "type_display": TYPE_LABELS["status_change"],
                     "created_at": log.created_at,
                     "status_date": log.status_date,
                     "created_by": (
@@ -1307,6 +1315,7 @@ class PetitionProjectInstructorProcedureView(
                     0,
                     {
                         "type": "suspension",
+                        "type_display": TYPE_LABELS["suspension"],
                         "created_by": (
                             ""
                             if not log.suspended_by
@@ -1320,6 +1329,7 @@ class PetitionProjectInstructorProcedureView(
                             log.suspension_date, datetime.time.min
                         ).replace(tzinfo=ZoneInfo("UTC")),
                         "response_due_date": log.response_due_date,
+                        "update_comment": "Suspension de l’instruction, message envoyé au demandeur.",
                     },
                 )
             if log.info_receipt_date:
@@ -1328,6 +1338,7 @@ class PetitionProjectInstructorProcedureView(
                     0,
                     {
                         "type": "resumption",
+                        "type_display": TYPE_LABELS["resumption"],
                         "created_by": (
                             ""
                             if not log.resumed_by
@@ -1341,6 +1352,7 @@ class PetitionProjectInstructorProcedureView(
                             log.info_receipt_date, datetime.time.min
                         ).replace(tzinfo=ZoneInfo("UTC")),
                         "due_date": log.due_date,
+                        "update_comment": "Reprise de l’instruction, date d'échéance ajustée.",
                     },
                 )
                 entries[0]["due_date"] = log.original_due_date
