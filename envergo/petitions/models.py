@@ -588,9 +588,9 @@ q_not_suspended = (
     & Q(original_due_date__isnull=True)
 )
 
-# Check that the receipt date is only set if the project was suspended
-q_receipt_date = Q(info_receipt_date__isnull=True) | (
-    Q(info_receipt_date__isnull=False) & q_suspended
+# Check that the receipt date is only set if the project was suspended and the resumption author is set
+q_receipt_date = Q(info_receipt_date__isnull=True) & Q(resumed_by__isnull=True) | (
+    Q(info_receipt_date__isnull=False) & Q(resumed_by__isnull=False) & q_suspended
 )
 
 
