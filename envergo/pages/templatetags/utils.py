@@ -271,3 +271,21 @@ def querystring(context, *args, **kwargs):
                 params[key] = value
     query_string = params.urlencode() if params else ""
     return f"?{query_string}"
+
+
+@register.inclusion_tag("_truncated_comment.html")
+def truncated_comment(text, uid, limit=50):
+    """
+    Display a truncated comment with DSFR-compatible expand/collapse.
+    """
+    if not text:
+        return {"text": None}
+
+    return {
+        "text": text,
+        "limit": limit,
+        "uid": uid,
+        "is_truncated": len(text) > limit,
+        "head": text[:limit],
+        "tail": text[limit:],
+    }

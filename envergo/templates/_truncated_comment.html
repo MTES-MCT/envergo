@@ -1,0 +1,19 @@
+{% if text %}
+  {% if is_truncated %}
+    <div>
+      {{ head }}<span class="ellipsis">…</span>
+
+      <div class="more fr-collapse" id="comment-{{ uid }}">{{ tail }}</div>
+
+      <button class="read-more-btn fr-btn fr-btn--tertiary-no-outline"
+              aria-expanded="false"
+              aria-controls="comment-{{ uid }}">
+        <span class="fr-sr-only">Voir ou masquer les détails</span>
+        <span aria-hidden="true" class="concealed-label">Voir plus ▼</span>
+        <span aria-hidden="true" class="expanded-label">Voir moins ▲</span>
+      </button>
+    </div>
+  {% else %}
+    {{ text }}
+  {% endif %}
+{% endif %}

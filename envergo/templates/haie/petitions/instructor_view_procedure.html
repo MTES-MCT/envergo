@@ -168,7 +168,7 @@
             <table>
               <caption class="fr-mt-1w fr-mb-0">
                 {{ paginator.count }}
-                changement{{ paginator.count|pluralize }}
+                changement{{ paginator.count|pluralize }} d'état
               </caption>
               <thead>
                 <tr>
@@ -184,8 +184,8 @@
                     <td>{{ log.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
                     <td>{{ log.created_by }}</td>
                     <td>
+                      <b>{{ log.type_display }}</b>
                       {% if log.type == "status_change" %}
-                        <b>Changement d'état</b>
                         <br />
                         {{ STAGES|get_choice_label:log.stage }}
                         {% if log.due_date %}
@@ -196,10 +196,6 @@
                           <br />
                           Décision : {{ DECISIONS|get_choice_label:log.decision }}
                         {% endif %}
-                      {% elif log.type == "suspension" %}
-                        <b>Demande de compléments</b>
-                      {% elif log.type == "resumption" %}
-                        <b>Complément reçus</b>
                       {% endif %}
                     </td>
                     <td>
@@ -207,28 +203,7 @@
                         Changement effectif le {{ log.status_date|date:"SHORT_DATE_FORMAT" }}
                         <br />
                       {% endif %}
-                      {% if log.update_comment %}
-                        {% if log.update_comment|length > 50 %}
-                          <div>
-                            {{ log.update_comment|slice:"0:50" }}<span class="ellipsis">…</span>
-                            <div class="more fr-collapse" id="comment-{{ forloop.counter }}">{{ log.update_comment|slice:"50:" }}</div>
-                            <button class="read-more-btn fr-btn fr-btn--tertiary-no-outline"
-                                    aria-expanded="false"
-                                    aria-controls="comment-{{ forloop.counter }}">
-                              <span class="fr-sr-only">Voir ou masquer les détails</span>
-                              <span aria-hidden="true" class="concealed-label">Voir plus ▼</span>
-                              <span aria-hidden="true" class="expanded-label">Voir moins ▲</span>
-                            </button>
-                          </div>
-                        {% else %}
-                          {{ log.update_comment }}
-                        {% endif %}
-                      {% endif %}
-                      {% if log.type == "suspension" %}
-                        Suspension de l’instruction, message envoyé au demandeur.
-                      {% elif log.type == "resumption" %}
-                        Reprise de l’instruction, date d'échéance ajustée.
-                      {% endif %}
+                      {% truncated_comment log.update_comment forloop.counter 60 %}
                     </td>
                   </tr>
                 {% endfor %}
