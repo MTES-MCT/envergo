@@ -1,8 +1,5 @@
-import html
-import re
 from datetime import date, timedelta
 from unittest.mock import ANY, Mock, patch
-from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
