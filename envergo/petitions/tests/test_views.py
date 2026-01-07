@@ -1731,7 +1731,7 @@ def test_alternative_delete(client, haie_instructor_44):
         },
     )
     response = client.post(delete_url)
-    assert response.status_code == 302
+    assert response.status_code == 403
     assert project.simulations.all().count() == 3
 
     # Active simulation cannot be deleted
@@ -1745,7 +1745,7 @@ def test_alternative_delete(client, haie_instructor_44):
     )
 
     response = client.post(delete_url)
-    assert response.status_code == 302
+    assert response.status_code == 403
     assert project.simulations.all().count() == 3
 
     # Others simulations can be deleted
