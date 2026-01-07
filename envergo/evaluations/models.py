@@ -3,7 +3,7 @@ import secrets
 import uuid
 from enum import Enum
 from os.path import splitext
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
@@ -14,7 +14,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
-from django.http import HttpRequest, QueryDict
+from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -25,6 +25,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.utils.markdown import markdown_to_html
 from envergo.utils.tools import get_base_url
 from envergo.utils.urls import remove_mtm_params, update_qs
@@ -64,14 +65,6 @@ def generate_reference():
     reference = "".join(secrets.choice(alphabet) for i in range(length))
 
     return reference
-
-
-def params_from_url(url):
-    """Extract query string from url and return a dict."""
-
-    url = urlparse(url)
-    params = QueryDict(url.query)
-    return params.dict()
 
 
 PROBABILITIES = Choices(
@@ -320,7 +313,7 @@ class Evaluation(models.Model):
     def save(self, *args, **kwargs):
         self.details_html = markdown_to_html(self.details_md)
         self.rr_mention_html = markdown_to_html(self.rr_mention_md)
-        self.moulinette_data = params_from_url(self.moulinette_url)
+        self.moulinette_data = MoulinetteUrl(self.moulinette_url).params
         super().save(*args, **kwargs)
 
     @property
@@ -332,7 +325,7 @@ class Evaluation(models.Model):
     @cached_property
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
-        return params_from_url(self.moulinette_url)
+        return MoulinetteUrl(self.moulinette_url).params
 
     def get_moulinette_config(self):
         params = self.moulinette_params
@@ -410,7 +403,7 @@ class Evaluation(models.Model):
         )
 
         emulated_request = HttpRequest()
-        emulated_request.GET = QueryDict(urlparse(self.moulinette_url).query)
+        emulated_request.GET = MoulinetteUrl(self.moulinette_url).querydict
 
         context = {
             "evaluation": self,
@@ -758,7 +751,7 @@ class Request(models.Model):
     @cached_property
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
-        return params_from_url(self.moulinette_url)
+        return MoulinetteUrl(self.moulinette_url).params
 
     def is_from_instructor(self):
         """Shortcut property"""

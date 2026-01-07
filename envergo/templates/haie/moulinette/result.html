@@ -11,6 +11,24 @@
   </p>
 {% endblock %}
 
+{% block before-title-content %}
+  {{ block.super }}
+  {% if is_alternative %}
+    <div class="fr-alert fr-alert--info fr-mb-3w">
+      <h3 class="fr-alert__title">Nouvelle simulation alternative pour ce dossier</h3>
+
+      {% if user.is_instructor %}
+        <p>À la fin de la simulation, copiez le lien pour l'envoyer au demandeur ou l'ajouter au dossier.</p>
+      {% elif user.is_authenticated %}
+      {% else %}
+        <p>
+          Le Guichet unique de la haie vous invite à modifier votre projet. À la fin de la nouvelle simulation, vous obtiendrez un lien à renvoyer à l’administration via la messagerie Démarche numérique.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
+
 {% block main_form_field %}
   {% if field.name == "haies" %}
     <li>{{ field|display_remove_only_haies_field }}</li>

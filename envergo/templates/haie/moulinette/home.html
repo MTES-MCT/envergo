@@ -2,20 +2,6 @@
 
 {% load static %}
 
-{% block top-bar %}
-  {{ block.super }}
-  {% if is_alternative %}
-    <div id="alternative-notice" class="fr-notice fr-notice--info">
-      <div class="fr-notice__body">
-        <p>
-          <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-          <span><b>Simulation alternative</b> à la simulation initiale</span>
-        </p>
-      </div>
-    </div>
-  {% endif %}
-{% endblock %}
-
 {% block extra_body %}
   {% include 'haie/moulinette/_department_doctrine_modal.html' %}
 {% endblock %}

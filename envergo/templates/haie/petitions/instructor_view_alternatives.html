@@ -1,0 +1,242 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load moulinette %}
+{% load utils %}
+{% load petitions %}
+
+{% load static %}
+
+{% block title %}Instruction du dossier – Simulations alternatives{% endblock %}
+
+{% block project_content %}
+
+  {% if form.errors %}
+    <div class="fr-alert fr-alert--error fr-mb-3w">
+      <p class="fr-alert__title">Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs.</p>
+      <p>
+        Merci de <a href="#add-alternative">vérifier votre saisie ci-dessous</a> avant de réessayer.
+      </p>
+    </div>
+  {% endif %}
+
+  <section class="fr-mt-3w fr-mb-5w project-inner-content">
+    <h2>Simulations alternatives</h2>
+
+    {% if has_change_permission %}
+      <p>
+        Si la simulation transmise par le pétitionnaire comporte une erreur manifeste (par exemple : type de haie inadapté, absence de sélection des options « Proximité d’une mare » ou « Présence d’arbres à cavité »), il est possible de la reprendre, de la modifier et de vérifier si cela impacte les résultats obtenus.
+      </p>
+
+      <p>Le lien de la simulation alternative peut être enregistré et activé pour modifier le dossier.</p>
+
+      <p>
+        <a href="#how-to">Comment faire une simulation alternative ?</a>
+      </p>
+    {% else %}
+      <p>
+        Au cours de la procédure, le service coordinateur peut avoir enregistré des simulations alternatives au projet initial. La simulation active est celle qui est utilisée par le portail pour déterminer les réglementations concernées par le projet.
+      </p>
+    {% endif %}
+
+  </section>
+
+  <section class="fr-mt-3w fr-mb-5w">
+    {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
+
+    {% if has_change_permission %}
+      <div class="form-actions">
+        <button type="button"
+                class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
+                {% if form.errors %}aria-expanded="true" data-fr-opened="true" {% else %}aria-expanded="false" data-fr-opened="false" {% endif %}
+                aria-controls="add-alternative">Ajouter une simulation</button>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if has_change_permission %}
+    <section id="add-alternative" class="fr-collapse">
+      <div class="alt fr-p-3w">
+        <h2>Ajouter une simulation alternative</h2>
+        <form method="post" action="">
+          {% csrf_token %}
+          {% include '_form_snippet.html' with form=form %}
+          <button type="button"
+                  class="fr-btn fr-btn--secondary fr-mr-1w"
+                  aria-expanded="false"
+                  aria-controls="add-alternative">Annuler</button>
+
+          <button class="fr-btn fr-btn--primary" type="submit">Ajouter</button>
+        </form>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if has_change_permission %}
+    <section id="how-to" class="fr-mt-5w project-inner-content">
+      <h2>Comment faire une simulation alternative ?</h2>
+
+      <div class="fr-accordions-group" data-fr-group="true">
+        <section class="fr-accordion">
+          <h3 class="fr-accordion__title">
+            <button type="button"
+                    class="fr-accordion__btn"
+                    aria-expanded="false"
+                    aria-controls="how-to-corriger">Vous souhaitez corriger la simulation du demandeur</button>
+          </h3>
+          <div id="how-to-corriger" class="fr-collapse">
+            <p>
+              Si la simulation transmise par le pétitionnaire comporte une erreur manifeste que vous souhaitez corriger avant de la transmettre au demandeur.
+            </p>
+
+            <ol>
+              <li>
+                Cliquez sur <span class="fr-icon-play-circle-line" aria-hidden="true"></span> <strong>démarrer une nouvelle simulation alternative</strong> dans le tableau
+              </li>
+              <li>Dans le nouvel onglet ouvert, modifiez les critères que vous souhaitez corriger</li>
+              <li>
+                <p>
+                  Si vous souhaitez faire valider la simulation par le demandeur, copiez le lien de la simulation et transmettez-le au demandeur via la messagerie.
+                </p>
+
+                <p>Si envoi au demandeur, il peut soit :</p>
+
+                <ul>
+                  <li>valider directement votre simulation alternative par réponse à votre message ;</li>
+                  <li>modifier la simulation et vous renvoyer le lien de sa nouvelle simulation.</li>
+                </ul>
+              </li>
+
+              <li>
+                Copiez le lien de la simulation alternative et <span class="fr-icon-add-line" aria-hidden="true"></span> <strong>Ajoutez une simulation</strong> pour l’activer et mettre à jour le dossier.
+              </li>
+            </ol>
+
+          </div>
+
+          <h3 class="fr-accordion__title">
+            <button type="button"
+                    class="fr-accordion__btn"
+                    aria-expanded="false"
+                    aria-controls="how-to-faire-corriger">
+              Vous souhaitez faire corriger la simulation par le demandeur
+            </button>
+          </h3>
+          <div id="how-to-faire-corriger" class="fr-collapse">
+            <p>Vous souhaitez que le demandeur modifie lui-même les critères de sa simulation.</p>
+
+            <ol>
+              <li>copiez le lien de la simulation à modifier par le demandeur ;</li>
+              <li>envoyez lui par mail une fois les modifications effectuées.</li>
+            </ol>
+
+            <p>
+              Le demandeur devra vous transmettre le lien de la simulation modifiée, il vous faudra alors copier ce lien pour <span class="fr-icon-add-line" aria-hidden="true"></span> <strong>Ajouter une nouvelle simulation</strong> et l’activer pour mettre a jour le dossier.
+            </p>
+          </div>
+        </section>
+      </div>
+
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block extra_body %}
+  {{ block.super }}
+  {% for simulation in simulations %}
+    <dialog id="simulation-activate-modal-{{ simulation.id }}"
+            class="fr-modal"
+            aria-labelledby="simulation-activate-modal-title-{{ simulation.id }}"
+            aria-modal="true">
+      <div class="fr-container fr-container--fluid fr-container-md">
+        <div class="fr-grid-row fr-grid-row--center">
+          <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+            <div class="fr-modal__body fr-pt-5w">
+              <div class="fr-modal__content">
+                <h2 id="simulation-activate-modal-title-{{ simulation.id }}"
+                    class="fr-modal__title">
+                  <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                  Activer cette simulation ?
+                </h2>
+                <p>
+                  le dossier sera mis à jour, les haies à détruire et à planter seront modifiées, les résultats du simulateur également.
+                </p>
+
+                <p>
+                  Les services consultés verront uniquement ce dossier mis à jour. La simulation actuellement active restera disponible dans la liste.
+                </p>
+              </div>
+
+              <div class="fr-modal__footer">
+                <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
+                  <li>
+                    <form method="post"
+                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "activate" %}">
+                      {% csrf_token %}
+
+                      <button type="submit" class="fr-btn fr-btn--icon-left">Activer</button>
+                    </form>
+                  </li>
+                  <li>
+                    <button type="button"
+                            class="fr-btn fr-btn--icon-left fr-btn--secondary"
+                            aria-controls="simulation-activate-modal-{{ simulation.id }}">Annuler</button>
+                    <li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </dialog>
+
+        <dialog id="simulation-delete-modal-{{ simulation.id }}"
+                class="fr-modal"
+                aria-labelledby="simulation-delete-modal-title-{{ simulation.id }}"
+                aria-modal="true">
+          <div class="fr-container fr-container--fluid fr-container-md">
+            <div class="fr-grid-row fr-grid-row--center">
+              <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
+                <div class="fr-modal__body fr-pt-5w">
+                  <div class="fr-modal__content">
+                    <h2 id="simulation-delete-modal-title-{{ simulation.id }}"
+                        class="fr-modal__title">
+                      <span class="fr-icon-arrow-right-line fr-icon--lg" aria-hidden="true"></span>
+                      Supprimer cette simulation ?
+                    </h2>
+                    <p>La simulation sera définitivement supprimée.</p>
+                  </div>
+
+                  <div class="fr-modal__footer">
+                    <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
+                      <li>
+                        <form method="post"
+                              action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "delete" %}">
+                          {% csrf_token %}
+
+                          <button type="submit" class="fr-btn fr-btn--icon-left">Supprimer</button>
+                        </form>
+                      </li>
+                      <li>
+                        <button type="button"
+                                class="fr-btn fr-btn--icon-left fr-btn--secondary"
+                                aria-controls="simulation-delete-modal-{{ simulation.id }}">Annuler</button>
+                        <li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </dialog>
+          {% endfor %}
+
+        {% endblock %}
+
+        {% block extra_js %}
+          {{ block.super }}
+          <script>window.COPY_DISABLED_MESSAGE = "";</script>
+          <script>window.SUCCESSFUL_COPY_MESSAGE = "✓";</script>
+          <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
+        {% endblock %}

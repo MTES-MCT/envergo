@@ -24,6 +24,7 @@ from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
@@ -449,6 +450,77 @@ class PetitionProject(models.Model):
             and self.latest_access < self.latest_petitioner_msg
         )
         return has_unread_messages
+
+
+USER_TYPE = Choices(
+    ("petitioner", "Demandeur"),
+    ("instructor", "Instructeur"),
+)
+
+
+class Simulation(models.Model):
+    """A single alternative set of simulation parameters for a given project."""
+
+    project = models.ForeignKey(
+        PetitionProject,
+        verbose_name="Simulation",
+        on_delete=models.CASCADE,
+        related_name="simulations",
+    )
+    is_initial = models.BooleanField("Initiale ?", default=False)
+    is_active = models.BooleanField("Active ?", default=False)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
+    source = models.CharField("Auteur", choices=USER_TYPE, default=USER_TYPE.petitioner)
+    comment = models.TextField("Commentaire")
+
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "Simulation"
+        verbose_name_plural = "Simulations"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "is_active"],
+                condition=Q(is_active=True),
+                name="single_active_simulation",
+            ),
+            models.UniqueConstraint(
+                fields=["project", "is_initial"],
+                condition=Q(is_initial=True),
+                name="single_initial_simulation",
+            ),
+        ]
+
+    def can_be_deleted(self):
+        return not (self.is_initial or self.is_active)
+
+    def can_be_activated(self):
+        return not self.project.current_status.is_closed
+
+    def custom_url(self, view_name, **kwargs):
+        """Generate an url with the given parameters."""
+
+        m_url = MoulinetteUrl(self.moulinette_url)
+        qt = m_url.querydict
+        qt.update(kwargs)
+        f_url = reverse(view_name)
+        url = f"{f_url}?{qt.urlencode()}"
+        return url
+
+    @property
+    def form_url(self):
+        """Return the moulinette form url with the simulation parameters."""
+        return self.custom_url("moulinette_form", alternative=True)
+
+    @property
+    def result_url(self):
+        """Return the result form url with the simulation parameters."""
+
+        if self.is_active:
+            url = reverse("petition_project", args=[self.project.reference])
+        else:
+            url = self.custom_url("moulinette_result_plantation", alternative=True)
+        return url
 
 
 def one_month_from_now():

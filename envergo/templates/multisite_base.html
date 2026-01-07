@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="fr"
       data-fr-scheme="system"
-      class="nojs {% block html-classes %}{% endblock %}">
+      class="nojs noclipboard {% block html-classes %}{% endblock %}">
 
   <head>
     <meta charset="utf-8">
@@ -73,6 +73,10 @@
       let html = document.documentElement;
       html.classList.remove('nojs');
       html.classList.add('js');
+
+      if (navigator.clipboard) {
+        html.classList.remove('noclipboard');
+      }
     </script>
 
     <script>

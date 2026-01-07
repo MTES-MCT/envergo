@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 import tempfile
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
 import fiona
@@ -12,12 +12,19 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
-from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
@@ -42,6 +49,7 @@ from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
@@ -51,6 +59,7 @@ from envergo.petitions.forms import (
     ProcedureForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
+    SimulationForm,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -59,6 +68,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
     PetitionProject,
+    Simulation,
     StatusLog,
 )
 from envergo.petitions.services import (
@@ -73,6 +83,7 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarches_simplifiees_status,
 )
+from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
@@ -87,6 +98,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
+    not_filtered_queryset = None
 
     def get_queryset(self):
         """Override queryset filtering projects from user departments
@@ -101,6 +113,12 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
+        followers_qs = (
+            User.objects.filter(is_superuser=False)
+            .filter(is_instructor=True)
+            .filter(followed_petition_projects=OuterRef("pk"))
+            .filter(departments=OuterRef("department"))
+        )
 
         queryset = (
             PetitionProject.objects.exclude(
@@ -117,6 +135,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             .annotate(
                 latest_access=Coalesce("messagerie_access", current_user.date_joined)
             )
+            .annotate(followers=ArraySubquery(followers_qs.values("email")))
             .annotate(
                 followed_up=Exists(
                     PetitionProject.followed_by.through.objects.filter(
@@ -127,7 +146,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             )
             .order_by("-demarches_simplifiees_date_depot", "-created_at")
         )
-
+        # Filter on current user status
         if current_user.is_superuser:
             # don't filter the queryset
             pass
@@ -140,11 +159,34 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = queryset.none()
 
+        # Store not_filtered_queryset, needed to check if there is at least one project in it
+        self.not_filtered_queryset = queryset
+
+        # Filter on request GET params
+        request_filters = self.request.GET.getlist("f", [])
+        if "mes_dossiers" in request_filters:
+            queryset = queryset.filter(followed_up=True)
+
+        if "dossiers_sans_instructeur" in request_filters:
+            is_instructor = Q(followed_by__is_instructor=True) & Q(
+                followed_by__is_superuser=False
+            )
+            queryset = queryset.exclude(is_instructor)
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        # Check if object_list without filter is empty when filters are in querystring
+        if context["object_list"]:
+            context["user_can_view_one_petition_project"] = True
+        else:
+            context["user_can_view_one_petition_project"] = (
+                self.not_filtered_queryset.exists()
+            )
+
+        # Add city and organization to each obj
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
@@ -195,6 +237,14 @@ class PetitionProjectCreate(FormView):
                 petition_project.save()
 
                 StatusLog.objects.create(petition_project=petition_project)
+
+                Simulation.objects.create(
+                    project=petition_project,
+                    is_initial=True,
+                    is_active=True,
+                    moulinette_url=petition_project.moulinette_url,
+                    comment="Simulation initiale",
+                )
 
                 log_event(
                     "demande",
@@ -587,6 +637,8 @@ class PetitionProjectDetail(DetailView):
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
+
+        moulinette_params["alternative"] = True
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
@@ -634,6 +686,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
+        followers_qs = (
+            User.objects.filter(is_superuser=False)
+            .filter(is_instructor=True)
+            .filter(followed_petition_projects=OuterRef("pk"))
+            .filter(departments=OuterRef("department"))
+        )
 
         queryset = (
             PetitionProject.objects.all()
@@ -647,6 +705,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             .annotate(
                 latest_access=Coalesce("messagerie_access", current_user.date_joined)
             )
+            .annotate(followers=ArraySubquery(followers_qs.values("email")))
             .annotate(
                 followed_up=Exists(
                     PetitionProject.followed_by.through.objects.filter(
@@ -763,6 +822,13 @@ class BasePetitionProjectInstructorView(
 
         res = super().post(request, *args, **kwargs)
         return res
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["has_change_permission"] = self.has_change_permission(
+            self.request, self.object
+        )
+        return context
 
     def log_event_action(self, request):
         if not self.event_action:
@@ -1051,25 +1117,137 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
 
 class PetitionProjectInstructorAlternativeView(
-    BasePetitionProjectInstructorView, DetailView
+    BasePetitionProjectInstructorView, FormView
 ):
     """View for creating an alternative of a petition project by the instructor"""
 
-    template_name = "haie/petitions/instructor_view_alternative.html"
+    template_name = "haie/petitions/instructor_view_alternatives.html"
+    form_class = SimulationForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        parsed_moulinette_url = urlparse(self.object.moulinette_url)
-        qs_dict = parse_qs(parsed_moulinette_url.query)
-        flat_qs = {k: v[0] if len(v) == 1 else v for k, v in qs_dict.items()}
-        flat_qs["alternative"] = "true"
-        alternative_form_url = (
-            f"{reverse("moulinette_form")}?{urlencode(flat_qs, doseq=True)}"
+        context["simulations"] = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+            .order_by("created_at")
         )
 
-        context["alternative_form_url"] = alternative_form_url
+        context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
+
         return context
+
+    def form_valid(self, form):
+        simulation = form.save(commit=False)
+        simulation.project = self.object
+        simulation.save()
+
+        messages.success(self.request, "La simulation alternative a été ajoutée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="add",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        url = reverse(
+            "petition_project_instructor_alternative_view", args=[self.object.reference]
+        )
+        return url
+
+
+class PetitionProjectInstructorAlternativeEdit(
+    BasePetitionProjectInstructorView, FormView
+):
+    """View for updating alternative simulations."""
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.has_change_permission(request, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+
+        simulation_qs = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+        )
+
+        try:
+            simulation = simulation_qs.get(pk=kwargs["simulation_id"])
+        except Simulation.DoesNotExist:
+            raise Http404()
+
+        action = kwargs["action"]
+        if action == "activate" and simulation.can_be_activated():
+            with transaction.atomic():
+                simulation_qs.update(is_active=False)
+                simulation.is_active = True
+                simulation.save()
+
+                project = simulation.project
+                project.moulinette_url = simulation.moulinette_url
+                url = MoulinetteUrl(project.moulinette_url)
+                project.hedge_data_id = url["haies"]
+                project.save()
+
+                messages.success(request, "La simulation alternative a été activée.")
+
+                log_event(
+                    "dossier",
+                    "simulation_alt",
+                    self.request,
+                    action="activate",
+                    **self.object.get_log_event_data(),
+                    **get_matomo_tags(self.request),
+                )
+
+        # The main active simulation cannot be deleted
+        elif action == "delete" and simulation.can_be_deleted():
+            simulation.delete()
+
+            messages.success(request, "La simulation alternative a été supprimée.")
+
+            log_event(
+                "dossier",
+                "simulation_alt",
+                self.request,
+                action="delete",
+                **self.object.get_log_event_data(),
+                **get_matomo_tags(self.request),
+            )
+
+        else:
+            # This should not happen unless someone manually forges an invalid URL
+            raise HttpResponseForbidden("Action non disponible")
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        url = reverse(
+            "petition_project_instructor_alternative_view", args=[self.object.reference]
+        )
+        return url
 
 
 class PetitionProjectInstructorProcedureView(

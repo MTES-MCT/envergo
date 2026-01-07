@@ -1,0 +1,84 @@
+<div class="fr-table fr-table--sm fr-mb-3w">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table id="alternative-simulations-table">
+          <caption>
+            Liste des simulations
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Auteur</th>
+              <th scope="col">Commentaire</th>
+              <th scope="col">Statut</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for simulation in simulations %}
+              <tr>
+                <td>{{ simulation.created_at|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ simulation.get_source_display }}</td>
+                <td class="comment-col">{{ simulation.comment }}</td>
+                <td class="status-col">
+                  {% if simulation.is_active %}
+                    <p class="fr-badge fr-badge--sm fr-badge--success">Active</p>
+                  {% else %}
+                    <p class="fr-badge fr-badge--sm">Inactive</p>
+                    {% if simulation.can_be_activated and has_change_permission %}
+                      <button type="button"
+                              class="fr-btn fr-btn--sm fr-btn--secondary"
+                              data-fr-opened="false"
+                              aria-controls="simulation-activate-modal-{{ simulation.id }}">Activer</button>
+                    {% endif %}
+
+                  {% endif %}
+                </td>
+
+                <td class="actions-col">
+                  <a href="{{ simulation.form_url }}"
+                     class="action"
+                     target="_blank"
+                     rel="noopener"
+                     title="Lancer cette simulation (nouvel onglet)"
+                     data-sql-event-category="dossier"
+                     data-sql-event-action="simulation_alt"
+                     data-sql-event-metadata='{"reference": "{{ object.reference }}", "action": "start"}'>
+                    <span class="fr-icon-play-circle-line" aria-hidden="true"></span>
+                  </a>
+
+                  <button title="Copier le lien vers cette simulation"
+                          data-clipboard-text="{{ base_url }}{{ simulation.form_url }}"
+                          class="action clipboard btn--copy-to-clipboard fr-icon-link"></button>
+
+                  <a href="{{ simulation.result_url }}"
+                     class="action"
+                     target="_blank"
+                     rel="noopener"
+                     title="Voir le résultat de cette simulation (nouvel onglet)">
+                    <span type="submit" class="fr-icon-eye-line"></span>
+                  </a>
+
+                  {% if simulation.can_be_deleted and has_change_permission %}
+                    <button type="button"
+                            aria-controls="simulation-delete-modal-{{ simulation.id }}"
+                            data-fr-opened="false"
+                            class="action fr-icon-delete-line"
+                            title="Supprimer la simulation"></button>
+                  {% else %}
+                    <button type="button"
+                            disabled="disabled"
+                            class="action fr-icon-delete-line"
+                            title="Supprimer la simulation"></button>
+
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

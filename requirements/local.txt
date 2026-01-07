@@ -116,7 +116,7 @@ dill==0.4.0
     # via pylint
 distlib==0.4.0
     # via virtualenv
-django==4.2.23
+django==4.2.27
     # via
     #   -r base.txt
     #   django-allauth
@@ -445,10 +445,12 @@ types-pyyaml==6.0.12.20250516
 typing-extensions==4.14.1
     # via
     #   -r base.txt
+    #   anyio
     #   beautifulsoup4
     #   django-stubs
     #   django-stubs-ext
     #   mypy
+    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt
