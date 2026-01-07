@@ -6,7 +6,6 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
-from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
