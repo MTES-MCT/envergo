@@ -48,24 +48,23 @@
     </ul>
 
     <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-play-line spinner-link"
-      href="{{ edit_url }}">Démarrer une simulation alternative</a>
+       href="{{ edit_url }}">Démarrer une simulation alternative</a>
   {% elif user.is_authenticated %}
   {% else %}
-     <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
+    <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
 
-     <p>
-        Cette simulation n’est plus modifiable car elle a été pris en compte dans votre dossier.
-        <br />
-        <strong>Vous pouvez dupliquer cette version</strong>, la modifier comme vous le souhaitez puis recréer un dossier pour déposer votre demande.
-      </p>
+    <p>
+      Cette simulation n’est plus modifiable car elle a été pris en compte dans votre dossier.
+      <br />
+      <strong>Vous pouvez dupliquer cette version</strong>, la modifier comme vous le souhaitez puis recréer un dossier pour déposer votre demande.
+    </p>
 
-      <a class="fr-btn fr-btn--secondary spinner-link"
-        href="{{ edit_url }}">Dupliquer cette simulation</a>
+    <a class="fr-btn fr-btn--secondary spinner-link" href="{{ edit_url }}">Dupliquer cette simulation</a>
 
-      <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
+    <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
 
-      <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
-        href="{% url 'contact_us' %}">Contacter le guichet unique</a>
+    <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+       href="{% url 'contact_us' %}">Contacter le guichet unique</a>
   {% endif %}
 
   <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
