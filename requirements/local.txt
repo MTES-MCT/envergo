@@ -145,7 +145,7 @@ django-appconf==1.1.0
     #   django-compressor
 django-braces==1.17.0
     # via -r base.txt
-django-compressor==4.5.1
+django-compressor==4.6.0
     # via -r base.txt
 django-coverage-plugin==3.1.1
     # via -r local.in
@@ -378,7 +378,7 @@ qrcode==8.2
     # via
     #   -r base.txt
     #   django-otp
-rcssmin==1.1.2
+rcssmin==1.2.2
     # via
     #   -r base.txt
     #   django-compressor
@@ -395,7 +395,7 @@ requests==2.32.4
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via -r base.txt
-rjsmin==1.2.2
+rjsmin==1.2.5
     # via
     #   -r base.txt
     #   django-compressor
