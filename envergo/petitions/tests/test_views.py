@@ -233,6 +233,7 @@ def test_petition_project_detail(mock_post, client, site):
     )
 
     # THEN I should not see instructor info for simulations
+    assert "Vous souhaitez modifier votre simulation ?" in response.content.decode()
     assert (
         "Vous souhaitez faire une simulation alternative ?"
         not in response.content.decode()
