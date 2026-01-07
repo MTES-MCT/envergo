@@ -1245,7 +1245,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
         else:
             # This should not happen unless someone manually forges an invalid URL
-            raise HttpResponseForbidden("Action non disponible")
+            return HttpResponseForbidden("Action non disponible")
 
         return HttpResponseRedirect(self.get_success_url())
 
