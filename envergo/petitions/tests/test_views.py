@@ -232,6 +232,12 @@ def test_petition_project_detail(mock_post, client, site):
         "Le projet est hors du département sélectionné" not in response.content.decode()
     )
 
+    # THEN I should not see instructor info for simulations
+    assert (
+        "Vous souhaitez faire une simulation alternative ?"
+        not in response.content.decode()
+    )
+
 
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
