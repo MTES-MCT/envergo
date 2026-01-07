@@ -7,12 +7,15 @@ def fix_missing_resumed_by(apps, schema_editor):
     """Set resumed_by for logs that have info_receipt_date but no resumed_by."""
     StatusLog = apps.get_model("petitions", "StatusLog")
     User = apps.get_model("users", "User")
-
-    user = User.objects.get(name="Pierre-Yves Dezaunay")
-    StatusLog.objects.filter(
+    qs = StatusLog.objects.filter(
         info_receipt_date__isnull=False,
         resumed_by__isnull=True,
-    ).update(resumed_by=user)
+    )
+    if qs.count() == 0:
+        return
+
+    user = User.objects.get(id=1)
+    qs.update(resumed_by=user)
 
 
 class Migration(migrations.Migration):
