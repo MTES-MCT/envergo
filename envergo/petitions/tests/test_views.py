@@ -1,8 +1,5 @@
-import html
-import re
 from datetime import date, timedelta
 from unittest.mock import ANY, Mock, patch
-from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
@@ -40,6 +37,7 @@ from envergo.petitions.tests.factories import (
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
+    SimulationFactory,
 )
 from envergo.petitions.views import (
     PetitionProjectCreate,
@@ -124,7 +122,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     hedge_data = HedgeDataFactory()
     hedge_data.data = [hedge_to_plant.toDict()]
 
-    petition_project = PetitionProjectFactory(hedge_data=hedge_data)
+    petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
     demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
         petition_project
     )
@@ -640,7 +638,7 @@ def test_petition_project_list(
 
     DCConfigHaieFactory()
     DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
-    # Create two projects non draft, one in 34 and one in 44
+    # GIVEN two projects non draft, one in 34 and one in 44
     today = date.today()
     last_month = today - timedelta(days=30)
     project_34 = PetitionProject34Factory(
@@ -651,38 +649,38 @@ def test_petition_project_list(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=last_month,
     )
-    response = client.get(reverse("petition_project_list"))
 
-    # Check that the response is a redirect to the login page
+    # WHEN visitor acesses to project list
+    response = client.get(reverse("petition_project_list"))
+    # THEN response is a redirect to the login page
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
-    # Simulate an authenticated inactive user
+    # WHEN an inactive user acesses to project list
     client.force_login(inactive_haie_user_44)
     response = client.get(reverse("petition_project_list"))
-
+    # THEN response is a redirect to the login page
     assert response.status_code == 302
     assert response.url.startswith(reverse("login"))
 
-    # Simulate an authenticated user instructor
+    # WHEN an instructor on 44 acesses to project list
     client.force_login(haie_instructor_44)
     response = client.get(reverse("petition_project_list"))
-
-    # Check that the response status code is 200 (ok)
+    # THEN response status code is 200 (ok)
     assert response.status_code == 200
-
-    # Check only project 44 is present
+    # AND only project 44 is present
     content = response.content.decode()
     assert project_34.reference not in content
     assert project_44.reference in content
 
+    # WHEN an admin user acesses to project list
     client.force_login(admin_user)
     response = client.get(reverse("petition_project_list"))
-    # Check all project are present
+    # THEN all project are present
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference in content
-    # ensure ordering is correct (most recent first)
+    # AND ordering is correct (most recent first)
     assert content.index(project_34.reference) < content.index(project_44.reference)
 
     # GIVEN a user with access to haie, no departments but an invitation token
@@ -697,7 +695,144 @@ def test_petition_project_list(
     content = response.content.decode()
     assert project_34.reference in content
     assert project_44.reference not in content
+    # AND the project is read only
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
+
+
+def test_petition_project_list_filters(
+    haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
+):
+    """Test filters on project list"""
+
+    project_list_url = reverse("petition_project_list")
+    # Given config haie on 44
+    config_haie_44 = DCConfigHaieFactory()
+    department_44 = config_haie_44.department
+
+    # Given two haie instructors, haie user, `haie_user_44` and admin user instructor
+    haie_instructor_44_instructor1 = UserFactory(is_haie_instructor=True)
+    haie_instructor_44_instructor1.departments.add(department_44)
+    haie_instructor_44_instructor2 = UserFactory(is_haie_instructor=True)
+    haie_instructor_44_instructor2.departments.add(department_44)
+    admin_user.is_instructor = True
+    admin_user.save()
+
+    # GIVEN projects non draft followed by users and instructors
+    today = date.today()
+    project_44_followed_by_instructor1 = PetitionProjectFactory(
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
+    project_44_followed_by_instructor2 = PetitionProjectFactory(
+        reference="ACB132",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
+    project_44_followed_by_invited = PetitionProjectFactory(
+        reference="XYZ123",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_invited.followed_by.add(haie_user_44)
+    project_44_followed_by_invited_and_instructor2 = PetitionProjectFactory(
+        reference="XYZ456",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
+    project_44_followed_by_invited_and_instructor2.followed_by.add(
+        haie_instructor_44_instructor2
+    )
+    project_44_followed_by_superuser = PetitionProjectFactory(
+        reference="ADM123",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+    project_44_followed_by_superuser.followed_by.add(admin_user)
+    project_44_no_instructor = PetitionProjectFactory(
+        reference="XYZ789",
+        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        demarches_simplifiees_date_depot=today,
+    )
+
+    # AS haie user with no project
+    client.force_login(haie_user)
+    # WHEN I search on my projects
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+    # THEN alert "aucun dossier" is displayed
+    assert "Aucun dossier n’est accessible pour le moment" in content
+
+    # AS haie user invited on one project
+    InvitationTokenFactory(
+        user=haie_user, petition_project=project_44_followed_by_instructor1
+    )
+    # WHEN I search on my projects
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+    # THEN alert "aucun dossier" is not displayed, only a table
+    assert "Aucun dossier n’est accessible pour le moment" not in content
+    # AND followed by me project list is empty
+    assert response.context["object_list"].count() == 0
+
+    # AS Instructor 1 on 44
+    client.force_login(haie_instructor_44_instructor1)
+    # WHEN I search on my projects
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+
+    # THEN project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_followed_by_superuser.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+    # WHEN I search on projects followed by no instructor
+    response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
+    content = response.content.decode()
+
+    # THEN project list is filtered on project followed by no instructor, excluding admin users
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference not in content
+    assert project_44_followed_by_invited.reference in content
+    assert project_44_followed_by_superuser.reference in content
+    assert project_44_no_instructor.reference in content
+
+    # AS Instructor 2 on 44
+    client.force_login(haie_instructor_44_instructor2)
+    # WHEN I search on my projects
+    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    content = response.content.decode()
+
+    # Then project list is filtered on user followed projects
+    assert project_44_followed_by_instructor1.reference not in content
+    assert project_44_followed_by_instructor2.reference in content
+    assert project_44_followed_by_invited.reference not in content
+    assert project_44_followed_by_superuser.reference not in content
+    assert project_44_no_instructor.reference not in content
+
+    # AS admin user
+    client.force_login(admin_user)
+    # WHEN I visit project list page
+    response = client.get(project_list_url)
+    # THEN followers are in project
+    projects_followers = dict(
+        response.context["object_list"].values_list("reference", "followers")
+    )
+    # Project followed by only superuser has no follower
+    assert projects_followers[project_44_followed_by_superuser.reference] == []
+    # Project followed by instructor1 has only instructor1 as follower
+    assert projects_followers[project_44_followed_by_instructor1.reference] == [
+        haie_instructor_44_instructor1.email
+    ]
+    # Project followed by haie user and instructor2 has only instructor2 as follower
+    assert projects_followers[
+        project_44_followed_by_invited_and_instructor2.reference
+    ] == [haie_instructor_44_instructor2.email]
+    content = response.content.decode()
 
 
 def test_petition_project_dl_geopkg(client, haie_user, site):
@@ -904,102 +1039,6 @@ def test_petition_project_instructor_notes_form(
     assert (
         project.instructor_free_mention
         == "Coupez moi ces vieux chênes tétard et mettez moi du thuya à la place"
-    )
-
-
-def test_petition_project_alternative(client, haie_user, haie_instructor_44, site):
-    """Test alternative flow for petition project"""
-    # GIVEN a petition project
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-    alternative_url = reverse(
-        "petition_project_instructor_alternative_view",
-        kwargs={"reference": project.reference},
-    )
-
-    # WHEN We try to fetch the alternative page by no user is logged in
-    response = client.get(alternative_url)
-
-    # THEN we should be redirected to the login page
-    assert response.status_code == 302
-    assert "/comptes/connexion/?next=" in response.url
-
-    # WHEN the user is not an instructor
-    client.force_login(haie_user)
-    response = client.get(alternative_url)
-
-    # THEN we should be redirected to a 403 error page
-    assert response.status_code == 403
-
-    # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
-    response = client.get(alternative_url)
-
-    # THEN the page is displayed
-    assert response.status_code == 200
-    content = response.content.decode()
-    assert "<h2>Simulation alternative</h2>" in content
-
-    # Find all href attributes in the HTML
-    hrefs = re.findall(r'href="([^"]+)"', content)
-
-    alternative_url = None
-    for raw_href in hrefs:
-        href = html.unescape(raw_href)
-        parsed_url = urlparse(href)
-        qs = parse_qs(parsed_url.query)
-        if qs.get("alternative") == ["true"]:
-            # Found the first matching href
-            assert href.startswith("/")
-            alternative_url = href
-            break
-    else:
-        assert False, "No href with alternative=true found"
-
-    # WHEN the user create an alternative
-    res = client.get(alternative_url)
-
-    # THEN the alternative form is displayed
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<b>Simulation alternative</b> à la simulation initiale" in content
-    assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/formulaire/pre-rempli/?alternative=true";'
-        in content
-    )
-
-    # WHEN the user visit the result page of an alternative
-    result_url = alternative_url.replace("/formulaire", "/resultat")
-    res = client.get(result_url, follow=True)
-    # THEN the result page is displayed
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<b>Simulation alternative</b> à la simulation initiale" in content
-    assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat/?alternative=true";'
-        in content
-    )
-    assert "Partager cette page par email" not in content
-    assert Event.objects.get(
-        category="simulateur", event="soumission_d", metadata__alternative="true"
-    )
-
-    # WHEN the user visit the result plantation page of an alternative
-    result_url = alternative_url.replace("/formulaire", "/resultat-plantation")
-    res = client.get(result_url, follow=True)
-    # THEN the result page is displayed
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "<b>Simulation alternative</b> à la simulation initiale" in content
-    assert (
-        'var MATOMO_CUSTOM_URL = "http://testserver/simulateur/resultat-plantation/?alternative=true";'
-        in content
-    )
-    assert "Partager cette page par email" not in content
-    assert "La demande d'autorisation est prête à être complétée" not in content
-    assert "Copier le lien de cette page" in content
-    assert Event.objects.get(
-        category="simulateur", event="soumission_p", metadata__alternative="true"
     )
 
 
@@ -1527,3 +1566,201 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert res.status_code == 200
     assert read_msg in res.content.decode()
     assert unread_msg not in res.content.decode()
+
+
+def test_alternatives_list_permission(client, haie_user, haie_instructor_44, site):
+    """Test alternative flow for petition project"""
+
+    # GIVEN a petition project
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # WHEN We try to fetch the alternative page by no user is logged in
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to the login page
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+    # WHEN the user is not an instructor
+    client.force_login(haie_user)
+    response = client.get(alternative_url)
+
+    # THEN we should be redirected to a 403 error page
+    assert response.status_code == 403
+
+    # WHEN the user is a department instructor
+    client.force_login(haie_instructor_44)
+    response = client.get(alternative_url)
+
+    # THEN the page is displayed
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulations alternatives</h2>" in content
+
+
+def test_alternatives_list_shows_data(client, haie_instructor_44):
+
+    # GIVEN a petition project
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # Let's make sure the factory setup works as intended
+    assert project.simulations.all().count() == 1
+    alternative = project.simulations.all()[0]
+    assert alternative.is_initial
+    assert alternative.is_active
+    assert alternative.moulinette_url == project.moulinette_url
+
+    SimulationFactory(project=project, comment="Simulation schtroumpf")
+    SimulationFactory(project=project, comment="Simulation gloubi-boulga")
+    SimulationFactory(project=project, comment="Simulation schmilblick")
+
+    SimulationFactory(comment="Simulation test")
+
+    assert project.simulations.all().count() == 4
+
+    # WHEN the user is a department instructor
+    client.force_login(haie_instructor_44)
+    response = client.get(alternative_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<h2>Simulations alternatives</h2>" in content
+    assert "Simulation schtroumpf" in content
+    assert "Simulation gloubi-boulga" in content
+    assert "Simulation schmilblick" in content
+    assert "Simulation test" not in content
+
+
+def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(reference="ABC123")
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s2.id,
+            "action": "activate",
+        },
+    )
+
+    # Redirect to login
+    res = client.post(activate_url)
+    assert res.status_code == 302
+    assert res.url.startswith("/comptes/connexion")
+
+    # Non-instructors cannot update alternatives
+    client.force_login(haie_user)
+    res = client.post(activate_url)
+    assert res.status_code == 403
+
+    # Instructors can update alternatives
+    client.force_login(haie_instructor_44)
+    res = client.post(activate_url)
+    assert res.status_code == 302
+    assert res.url == "/projet/ABC123/instruction/alternatives/"
+
+
+def test_alternative_activate(client, haie_instructor_44):
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    SimulationFactory(project=project, comment="Simulation 2")
+
+    s1 = project.simulations.all()[0]
+    assert s1.is_initial
+    assert s1.is_active
+
+    s2 = project.simulations.all()[1]
+    assert not s2.is_initial
+    assert not s2.is_active
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s2.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url)
+    assert response.status_code == 302
+
+    s1.refresh_from_db()
+    assert s1.is_initial
+    assert not s1.is_active
+
+    s2.refresh_from_db()
+    assert not s2.is_initial
+    assert s2.is_active
+
+
+def test_alternative_delete(client, haie_instructor_44):
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+    s3 = SimulationFactory(project=project, comment="Simulation 3")
+
+    s1 = project.simulations.all()[0]
+    s1.is_active = False
+    s1.save()
+
+    s2.is_active = True
+    s2.save()
+
+    client.force_login(haie_instructor_44)
+
+    # Initial simulation cannot be deleted
+    delete_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s1.id,
+            "action": "delete",
+        },
+    )
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert project.simulations.all().count() == 3
+
+    # Active simulation cannot be deleted
+    delete_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s2.id,
+            "action": "delete",
+        },
+    )
+
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert project.simulations.all().count() == 3
+
+    # Others simulations can be deleted
+    delete_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": s3.id,
+            "action": "delete",
+        },
+    )
+
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert project.simulations.all().count() == 2

@@ -97,7 +97,7 @@ cligj==0.7.2
     #   fiona
 dacite==1.9.2
     # via -r base.txt
-django==4.2.23
+django==4.2.27
     # via
     #   -r base.txt
     #   django-allauth
@@ -292,7 +292,9 @@ tqdm==4.67.1
 typing-extensions==4.14.1
     # via
     #   -r base.txt
+    #   anyio
     #   beautifulsoup4
+    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt
