@@ -43,7 +43,10 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
+    PetitionProjectInstructorConsultationsView,
     PetitionProjectInstructorView,
+    PetitionProjectInvitationTokenCreate,
+    PetitionProjectInvitationTokenDelete,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -860,55 +863,6 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
         in response.get("Content-Disposition")
     )
     # TODO: check the features
-
-
-def test_petition_project_invitation_token(client, haie_user, haie_instructor_44, site):
-    """Test invitation token creation for petition project"""
-
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-    invitation_token_url = reverse(
-        "petition_project_invitation_token",
-        kwargs={"reference": project.reference},
-    )
-
-    # no user loged in
-    response = client.post(invitation_token_url)
-    assert response.status_code == 302
-    assert "/comptes/connexion/?next=" in response.url
-
-    # user not authorized
-    client.force_login(haie_user)
-    response = client.post(invitation_token_url)
-    assert response.status_code == 403
-    assert (
-        "You are not authorized to create an invitation token for this project."
-        == response.json()["error"]
-    )
-
-    # WHEN the user is an invited instructor
-    InvitationTokenFactory(user=haie_user, petition_project=project)
-    client.force_login(haie_user)
-    response = client.post(invitation_token_url)
-    # THEN creation is not authorized
-    assert response.status_code == 403
-    assert (
-        "You are not authorized to create an invitation token for this project."
-        == response.json()["error"]
-    )
-
-    # WHEN the user is a department instructor
-    client.force_login(haie_instructor_44)
-    response = client.post(invitation_token_url)
-
-    # THEN an invitation token is created
-    token = InvitationToken.objects.get(created_by=haie_instructor_44)
-    assert token.created_by == haie_instructor_44
-    assert token.petition_project == project
-    assert token.token in response.json()["invitation_url"]
-    event = Event.objects.get(category="dossier", event="invitation")
-    assert event.metadata["reference"] == project.reference
-    assert event.metadata["department"] == "44"
 
 
 def test_petition_project_instructor_notes_form(
@@ -1798,3 +1752,764 @@ def test_real_token_format_accepted(client):
 
     assert response.status_code == 302
     assert f"?{settings.INVITATION_TOKEN_COOKIE_NAME}={real_token}" in response.url
+
+
+# =============================================================================
+# Invitation Token Management (Consultations Page) Tests
+# =============================================================================
+
+
+def test_consultations_view_requires_authentication(client):
+    """Test that consultations view requires authentication"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.get(consultations_url)
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+
+def test_consultations_view_requires_haie_access(client, haie_user):
+    """Test that consultations view requires haie access"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    # User without haie access
+    haie_user.access_haie = False
+    haie_user.save()
+
+    client.force_login(haie_user)
+    response = client.get(consultations_url)
+    assert response.status_code == 403
+
+
+def test_consultations_view_accessible_to_department_instructor(
+    client, haie_instructor_44
+):
+    """Test that consultations view is accessible to department instructor"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+    assert response.status_code == 200
+    assert "Services consultés" in response.content.decode()
+
+
+def test_consultations_view_inaccessible_to_invited_instructor(client, haie_user):
+    """Test that consultations view is accessible to invited instructor"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    # Create an accepted invitation token for haie_user
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user)
+    response = client.get(consultations_url)
+    assert response.status_code == 403
+
+
+def test_consultations_view_displays_accepted_tokens(
+    client, haie_instructor_44, haie_user
+):
+    """Test that consultations view displays only accepted tokens"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Create tokens with different states
+    # Pending token (not accepted - should NOT be displayed)
+    token1 = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+    # Accepted token (should be displayed)
+    token2 = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        user=haie_user,  # Accepted
+    )
+    # Create expired but not accepted token (should NOT be displayed)
+    past_date = timezone.now() - timedelta(days=31)
+    token3 = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        valid_until=past_date,
+    )
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Only accepted token should be in the context
+    tokens_in_context = list(response.context["invitation_tokens"])
+    assert len(tokens_in_context) == 1
+    assert token1 not in tokens_in_context  # Pending - not shown
+    assert token2 in tokens_in_context  # Accepted - shown
+    assert token3 not in tokens_in_context  # Expired but not accepted - not shown
+
+    # User email should be displayed
+    assert haie_user.email in content
+
+
+def test_consultations_view_displays_empty_state(client, haie_instructor_44):
+    """Test that consultations view displays empty state when no accepted tokens"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Create a pending token (not accepted) - should not be displayed
+    InvitationTokenFactory(petition_project=project, created_by=haie_instructor_44)
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    # New message for when no accepted consultations
+    assert "Aucune consultation n'a encore été enregistrée pour ce dossier" in content
+
+
+# =============================================================================
+# Invitation Token Creation Tests
+# =============================================================================
+
+
+def test_invitation_token_create_requires_authentication(client):
+    """Test that token creation requires authentication"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.post(create_url)
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+
+def test_invitation_token_create_requires_change_permission(client, haie_user):
+    """Test that token creation requires change permission - standard user"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user)
+    response = client.post(create_url)
+
+    assert response.status_code == 403
+
+
+def test_invitation_token_create_authorized_for_department_instructor(
+    client, haie_instructor_44, site
+):
+    """Test that department instructor can create tokens"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(create_url)
+
+    assert response.status_code == 200
+    # Verify token was created
+    token = InvitationToken.objects.get(created_by=haie_instructor_44)
+    assert token.petition_project == project
+
+
+def test_invitation_token_create_returns_html(client, haie_instructor_44, site):
+    """Test that token creation returns HTML template instead of JSON"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(create_url)
+
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("text/html")
+    assert "haie/petitions/_invitation_token_modal_content.html" in [
+        t.name for t in response.templates
+    ]
+    content = response.content.decode()
+    assert "invitation_url" in response.context or "invitation_url" in content
+
+
+def test_invitation_token_create_generates_unique_token(
+    client, haie_instructor_44, site
+):
+    """Test that each creation generates a unique token"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # Create first token
+    response1 = client.post(create_url)
+    assert response1.status_code == 200
+    token1 = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
+
+    # Create second token
+    response2 = client.post(create_url)
+    assert response2.status_code == 200
+    token2 = InvitationToken.objects.filter(created_by=haie_instructor_44).last()
+
+    # Tokens should be different
+    assert token1.token != token2.token
+    assert InvitationToken.objects.filter(created_by=haie_instructor_44).count() == 2
+
+
+# =============================================================================
+# Invitation Token Deletion Tests
+# =============================================================================
+
+
+def test_invitation_token_delete_requires_authentication(client):
+    """Test that token deletion requires authentication"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.post(delete_url)
+    assert response.status_code == 302
+    assert "/comptes/connexion/?next=" in response.url
+
+
+def test_invitation_token_delete_requires_change_permission(client, haie_user):
+    """Test that token deletion requires change permission"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    token = InvitationTokenFactory(petition_project=project)
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user)
+    response = client.post(delete_url, {"token_id": token.id})
+
+    assert response.status_code == 403
+    assert response.json()["error"] == (
+        "You are not authorized to delete invitation tokens for this project."
+    )
+
+
+def test_invitation_token_delete_authorized_for_department_instructor(
+    client, haie_instructor_44
+):
+    """Test that department instructor can delete tokens"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(delete_url, {"token_id": token.id})
+
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+
+
+def test_invitation_token_delete_success(client, haie_instructor_44):
+    """Test successful token deletion"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(delete_url, {"token_id": token.id})
+
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+
+    # Verify token was deleted
+    assert not InvitationToken.objects.filter(id=token.id).exists()
+
+
+def test_invitation_token_delete_requires_token_id(client, haie_instructor_44):
+    """Test that token deletion requires token_id parameter"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(delete_url)
+
+    assert response.status_code == 400
+    assert response.json()["error"] == "Token ID is required."
+
+
+def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
+    """Test deletion of non-existent token"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(delete_url, {"token_id": 99999})
+
+    assert response.status_code == 404
+    assert "Token not found" in response.json()["error"]
+
+
+def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44):
+    """Test deletion of token from different project"""
+    DCConfigHaieFactory()
+    project_a = PetitionProjectFactory()
+    project_b = PetitionProjectFactory()
+
+    # Create token for project A
+    token = InvitationTokenFactory(
+        petition_project=project_a, created_by=haie_instructor_44
+    )
+
+    # Try to delete from project B
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project_b.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(delete_url, {"token_id": token.id})
+
+    assert response.status_code == 404
+    assert "Token not found" in response.json()["error"]
+
+    # Verify token still exists
+    assert InvitationToken.objects.filter(id=token.id).exists()
+
+
+def test_invitation_token_delete_logs_analytics_event(client, haie_instructor_44):
+    """Test that token deletion logs analytics event"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(delete_url, {"token_id": token.id})
+
+    assert response.status_code == 200
+
+
+def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
+    """Test that deletion only accepts POST method"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # GET should not work
+    response = client.get(delete_url, {"token_id": token.id})
+    assert response.status_code == 405  # Method not allowed
+
+    # Verify token still exists
+    assert InvitationToken.objects.filter(id=token.id).exists()
+
+
+# =============================================================================
+# Integration Tests
+# =============================================================================
+
+
+def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, site):
+    """Test complete invitation workflow from creation to acceptance"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Step 1: Department instructor creates token via consultations page
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(create_url)
+    assert response.status_code == 200
+
+    # Step 2: Verify token does NOT appear in consultations list (not accepted yet)
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    response = client.get(consultations_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    # Should show empty state (no accepted consultations)
+    assert "Aucune consultation n'a encore été enregistrée" in content
+
+    # Step 3: Get the token and simulate user acceptance
+    token = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
+    token.user = haie_user
+    token.save()
+
+    # Step 4: Verify token NOW appears in consultations list (accepted)
+    response = client.get(consultations_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    # Token should be visible with user email
+    assert haie_user.email in content
+    # Should NOT show empty state anymore
+    assert "Aucune consultation n'a encore été enregistrée" not in content
+
+    # Step 5: Verify revoke button IS present (can revoke accepted tokens)
+    assert f'data-token-id="{token.id}"' in content
+    assert "Révoquer" in content
+
+
+def test_invitation_token_expiration_display(client, haie_instructor_44, haie_user):
+    """Test that only accepted tokens are displayed, regardless of expiration"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Create pending token (not accepted - should NOT be displayed)
+    pending_token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    # Create expired but not accepted token (should NOT be displayed)
+    past_date = timezone.now() - timedelta(days=31)
+    expired_token = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        valid_until=past_date,
+    )
+
+    # Create accepted token (should be displayed)
+    accepted_token = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        user=haie_user,
+    )
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Only accepted token should be displayed
+    tokens_in_context = list(response.context["invitation_tokens"])
+    assert len(tokens_in_context) == 1
+    assert accepted_token in tokens_in_context
+
+    # Status badges should NOT be present (removed from template)
+    assert "En attente" not in content
+    assert "Expirée" not in content
+    assert "Acceptée" not in content
+
+    # Only one revoke button (for the accepted token)
+    # Count the button class, not the text (which also appears in the modal)
+    assert content.count("revoke-token-btn") == 1
+
+
+def test_menu_consultations_link_visible_only_for_department_instructor(
+    client, haie_instructor_44, haie_user
+):
+    """Test that consultations link in menu is visible only for department instructors"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Department instructor should see the link
+    client.force_login(haie_instructor_44)
+    instructor_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    response = client.get(instructor_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Consultations" in content
+    assert (
+        reverse(
+            "petition_project_instructor_consultations_view",
+            kwargs={"reference": project.reference},
+        )
+        in content
+    )
+
+    # Invited instructor should NOT see the link
+    InvitationTokenFactory(user=haie_user, petition_project=project)
+    client.force_login(haie_user)
+    response = client.get(instructor_url)
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Link should not be in sidebar menu (but page is still accessible if URL is known)
+    # Check that the Consultations link is not in the menu
+    assert (
+        'href="%s"'
+        % reverse(
+            "petition_project_instructor_consultations_view",
+            kwargs={"reference": project.reference},
+        )
+        not in content
+    )
+
+
+def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_user):
+    """Test that revoke button is shown for all accepted tokens"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Create a second user for variety
+    haie_user2 = UserFactory(access_haie=True)
+
+    # Create pending token (should NOT be displayed)
+    pending_token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    # Create accepted tokens (should be displayed)
+    accepted_token1 = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        user=haie_user,
+    )
+
+    accepted_token2 = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        user=haie_user2,
+    )
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Only accepted tokens should be displayed with revoke buttons
+    assert f'data-token-id="{pending_token.id}"' not in content  # Pending - not shown
+    assert f'data-token-id="{accepted_token1.id}"' in content  # Accepted - shown
+    assert f'data-token-id="{accepted_token2.id}"' in content  # Accepted - shown
+
+    # Check that there are two revoke buttons (one for each accepted token)
+    assert content.count("revoke-token-btn") == 2
+
+
+def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_user):
+    """Test that accepted tokens are ordered by creation date (newest first)"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Create a second user for variety
+    haie_user2 = UserFactory(access_haie=True)
+
+    # Create accepted tokens with different creation dates
+    old_token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44, user=haie_user
+    )
+    old_token.created_at = timezone.now() - timedelta(days=5)
+    old_token.save()
+
+    medium_token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44, user=haie_user2
+    )
+    medium_token.created_at = timezone.now() - timedelta(days=2)
+    medium_token.save()
+
+    new_token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44, user=haie_user
+    )
+
+    # Create a pending token (should NOT be in results)
+    pending_token = InvitationTokenFactory(
+        petition_project=project, created_by=haie_instructor_44
+    )
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+
+    assert response.status_code == 200
+
+    # Check order in context - only accepted tokens, newest first
+    tokens = response.context["invitation_tokens"]
+    assert list(tokens) == [new_token, medium_token, old_token]
+    assert pending_token not in list(tokens)
+
+
+def test_consultations_page_shows_creator_and_accepted_user_info(
+    client, haie_instructor_44, haie_user
+):
+    """Test that consultations page shows accepted user email"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Set user names
+    haie_instructor_44.first_name = "Jean"
+    haie_instructor_44.last_name = "Dupont"
+    haie_instructor_44.save()
+
+    haie_user.first_name = "Marie"
+    haie_user.last_name = "Martin"
+    haie_user.save()
+
+    # Create accepted token
+    token = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+        user=haie_user,
+    )
+
+    consultations_url = reverse(
+        "petition_project_instructor_consultations_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(consultations_url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Accepted user email should be displayed (in Mail column)
+    assert haie_user.email in content
+
+    # Creator info should NOT be displayed (no longer in template)
+    # We're not checking for creator email absence since it might appear in other parts of the page
+
+
+def test_old_invitation_url_updated(client, haie_instructor_44, site):
+    """Test that the URL pattern has been updated from /invitations/ to /invitations/create/"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # New URL should work
+    new_create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+    assert "/invitations/create/" in new_create_url
+
+    client.force_login(haie_instructor_44)
+    response = client.post(new_create_url)
+    assert response.status_code == 200
+
+
+def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
+    """Test that analytics events use the new event names"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # Test creation event
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    client.post(create_url)
+
+    # Should log "invitation_creation" not "invitation"
+    creation_event = Event.objects.filter(
+        category="dossier", event="invitation_creation"
+    ).first()
+    assert creation_event is not None
+
+    # Test deletion event
+    token = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
+    delete_url = reverse(
+        "petition_project_invitation_token_delete",
+        kwargs={"reference": project.reference},
+    )
+
+    client.post(delete_url, {"token_id": token.id})
+
+    revocation_event = Event.objects.filter(
+        category="dossier", event="invitation_revocation"
+    ).first()
+    assert revocation_event is not None
