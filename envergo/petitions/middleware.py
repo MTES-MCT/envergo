@@ -17,7 +17,7 @@ class HandleInvitationTokenMiddleware:
         url_token = request.GET.get(settings.INVITATION_TOKEN_COOKIE_NAME)
         cookie_token = request.COOKIES.get(settings.INVITATION_TOKEN_COOKIE_NAME)
 
-        # User is authenticated. We look for invitation tokens in session
+        # User is authenticated. We look for invitation tokens in url
         # or in session data.
         if request.user.is_authenticated:
             if url_token:
