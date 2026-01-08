@@ -1653,49 +1653,6 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
             )
 
 
-# TODO Delete this obsolete view
-class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
-    """Accept an invitation to a petition project"""
-
-    model = PetitionProject
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
-
-    def dispatch(self, request, *args, **kwargs):
-        project = self.get_object()
-
-        # TODO Why is this made a request variable?
-        self.request.invitation = InvitationToken.objects.filter(
-            petition_project=project, token=kwargs.get("token")
-        ).first()
-
-        if not self.request.invitation or not self.request.invitation.is_valid():
-            return TemplateResponse(
-                request=request,
-                template="haie/petitions/invalid_invitation_token.html",
-                status=403,
-            )
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        """Accept the invitation and redirect to the instructor view of the petition project"""
-
-        # the token should not be consumed by its own creator
-        if self.request.invitation.created_by != request.user:
-            self.request.invitation.user = request.user
-            self.request.invitation.save()
-
-        return redirect(
-            reverse(
-                "petition_project_instructor_view",
-                kwargs={
-                    "reference": self.request.invitation.petition_project.reference
-                },
-            )
-        )
-
-
 @login_required
 @require_POST
 def toggle_follow_project(request, reference):
