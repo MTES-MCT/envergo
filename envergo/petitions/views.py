@@ -1650,43 +1650,95 @@ class PetitionProjectHedgeDataExport(DetailView):
         return response
 
 
-class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View):
-    """Create an invitation token for a petition project"""
+class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
+    """Create an invitation token and return modal HTML with the invitation content"""
 
-    model = PetitionProject
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
+    http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
+        super().post(request, *args, **kwargs)
+
+        project = self.object
+        token = InvitationToken.objects.create(
+            created_by=request.user,
+            petition_project=project,
+        )
+        url = reverse("petition_project_instructor_view", args=[project.reference])
+        invitation_url = update_qs(
+            self.request.build_absolute_uri(url),
+            {
+                "mtm_campaign": INVITATION_TOKEN_MATOMO_TAG,
+                "invitation_token": token.token,
+            },
+        )
+        log_event(
+            "dossier",
+            "invitation_creation",
+            self.request,
+            reference=project.reference,
+            department=project.get_department_code(),
+            **get_matomo_tags(self.request),
+        )
+        # Return rendered modal HTML instead of JSON
+        invitation_contact_url = update_qs(
+            self.request.build_absolute_uri(
+                reverse(
+                    "contact_us",
+                )
+            ),
+            {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+        )
+        return TemplateResponse(
+            request=request,
+            template="haie/petitions/_invitation_token_modal_content.html",
+            context={
+                "invitation_url": invitation_url,
+                "invitation_contact_url": invitation_contact_url,
+            },
+        )
+
+
+class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
+    """Delete (revoke) an invitation token"""
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+
         project = self.get_object()
-        if project.has_change_permission(request.user):
-            token = InvitationToken.objects.create(
-                created_by=request.user,
-                petition_project=project,
-            )
-            url = reverse("petition_project_instructor_view", args=[project.reference])
-            invitation_url = update_qs(
-                self.request.build_absolute_uri(url),
+        if not project.has_change_permission(request.user):
+            return JsonResponse(
                 {
-                    "mtm_campaign": INVITATION_TOKEN_MATOMO_TAG,
-                    "invitation_token": token.token,
+                    "error": "You are not authorized to delete invitation tokens for this project."
                 },
+                status=403,
             )
+
+        token_id = request.POST.get("token_id")
+        if not token_id:
+            return JsonResponse(
+                {"error": "Token ID is required."},
+                status=400,
+            )
+
+        try:
+            token = InvitationToken.objects.get(id=token_id, petition_project=project)
+            token.delete()
+
             log_event(
                 "dossier",
-                "invitation",
+                "invitation_revocation",
                 self.request,
                 reference=project.reference,
                 department=project.get_department_code(),
                 **get_matomo_tags(self.request),
             )
-            return JsonResponse({"invitation_url": invitation_url})
-        else:
+
+            return JsonResponse({"success": True})
+        except InvitationToken.DoesNotExist:
             return JsonResponse(
-                {
-                    "error": "You are not authorized to create an invitation token for this project."
-                },
-                status=403,
+                {"error": "Token not found or does not belong to this project."},
+                status=404,
             )
 
 
