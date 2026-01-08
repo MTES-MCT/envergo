@@ -2,7 +2,6 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from envergo.petitions.views import (
-    PetitionProjectAcceptInvitation,
     PetitionProjectAutoRedirection,
     PetitionProjectCreate,
     PetitionProjectDetail,
@@ -128,11 +127,6 @@ urlpatterns = [
         "<slug:reference>/invitations/",
         PetitionProjectInvitationToken.as_view(),
         name="petition_project_invitation_token",
-    ),
-    path(
-        "<slug:reference>/invitations/<slug:token>/",
-        PetitionProjectAcceptInvitation.as_view(),
-        name="petition_project_accept_invitation",
     ),
     path(
         "<slug:reference>/suivi/",
