@@ -2558,7 +2558,10 @@ class MoulinetteHaie(Moulinette):
                 if intersective_hedge_to_plant and not intersects_hedge_to_remove:
                     regulations[regulation].update(intersective_hedge_to_plant)
 
-        return dict(regulations)
+        return {
+            key: sorted(values, key=lambda obj: obj.id)
+            for key, values in regulations.items()
+        }
 
 
 class ActionToTake(models.Model):

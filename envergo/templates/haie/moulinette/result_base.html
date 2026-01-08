@@ -58,9 +58,9 @@
       </p>
     </div>
   {% endif %}
-
-  {% include 'haie/moulinette/_sensitive_areas.html' %}
-
+  {% block sensitive_areas %}
+    {% include 'haie/moulinette/_sensitive_areas.html' %}
+  {% endblock %}
   {% block result_header %}{% endblock %}
 
   {% for result, regulations in moulinette.get_regulations_by_group.items %}
