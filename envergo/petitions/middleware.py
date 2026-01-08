@@ -45,7 +45,18 @@ class HandleInvitationTokenMiddleware:
         return response
 
     def store_token(self, request, response, token):
-        """Store the given token in session."""
+        """Store the given token in session.
+
+        Note : le cookie respecte les contraintes imposées par la CNIL
+        peut donc être exempté de consentement.
+
+        > En ce qui concerne les traceurs non soumis au consentement,
+        on peut évoquer […] les traceurs destinés à l’authentification auprès d’un
+        service…
+
+        https://www.cnil.fr/fr/cookies-et-autres-traceurs/que-dit-la-loi
+
+        """
 
         lifetime = timedelta(30 * 13)  # 13 months
         response.set_cookie(
