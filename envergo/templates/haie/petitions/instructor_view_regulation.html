@@ -19,10 +19,12 @@
         <section class="instruction-infos fr-callout fr-callout--blue-cumulus">
           <h2 class="fr-h5">Indications pour l'instruction</h2>
           {% instructor_view_part "instruction_guidelines" regulation petition_project moulinette %}
-          <p class="fr-mb-1w">Pour partager le dossier et demander un avis :</p>
-          <button class="fr-btn fr-mt-0 fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
-                  data-fr-opened="false"
-                  aria-controls="invitation-token-modal">Inviter une personne à consulter le dossier</button>
+          <p class="fr-mb-1w">
+            Pour partager le dossier et demander un avis,
+            <a href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}">
+              consultez la page dédiée aux consultations
+            </a>.
+          </p>
         </section>
       {% endif %}
 
@@ -91,7 +93,74 @@
 
       </section>
     </section>
-  </div>
+  {% endif %}
+
+  <section class="fr-mb-4w">
+    <h2 class="fr-mt-4w">Informations saisies par le demandeur</h2>
+    {% include "haie/petitions/_regulation_form.html" %}
+  </section>
+
+  {% if regulation.has_key_elements_template %}
+    <section id="section-plantation-evaluation">
+      <h2 class="fr-h4">Éléments clés</h2>
+      {% instructor_view_part "key_elements" regulation petition_project moulinette %}
+    </section>
+  {% endif %}
+
+  <section class="fr-mb-6w">
+    <h2 class="fr-mt-3w fr-h4">Formulaire complet et pièces jointes</h2>
+
+    <a class="fr-btn fr-icon-arrow-right-line fr-btn--icon-right"
+       href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le dossier complet</a>
+
+  </section>
+
+  <section>
+    <div class="title-with-link-container">
+      <h2 class="fr-mr-8w">Réponse du simulateur</h2>
+      <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
+         href="{% url 'petition_project' petition_project.reference %}">Voir la réponse complète</a>
+    </div>
+
+    <p class="fr-mb-3w">
+      <em>Avant de déposer son dossier et de remplir le formulaire complet,
+        le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
+      Voici la réponse du simulateur qui lui a été affichée pour la réglementation « {{ regulation.title }} » :</em>
+    </p>
+    <div class="fr-ml-5w">{% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}</div>
+
+    {% if regulation.has_instructor_result_details_template %}
+      <h3 class="fr-h4">Détails du résultat de la simulation</h3>
+      {% instructor_view_part "instructor_result_details" regulation petition_project moulinette %}
+    {% endif %}
+
+    {% regulation_has_condition_to_display plantation_evaluation regulation as has_condition_to_display %}
+    {% if has_condition_to_display %}
+      <section id="section-plantation-evaluation">
+        <h3>Acceptabilité de la plantation</h3>
+        <p class="fr-mb-3w">
+          <em>Le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
+            Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation proposée.
+          Voici ce qui a été affiché au demandeur pour la réglementation « {{ regulation.title }} » :</em>
+        </p>
+        <div id="hedge-conditions" class="fr-ml-5w">
+          {% regulation_plantation_conditions plantation_evaluation regulation %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if regulation.has_plantation_condition_details_template and regulation.result != "non_soumis" %}
+      <section class="fr-mb-5w">
+        <h4>Précisions sur le calcul d'acceptabilité de la plantation</h4>
+        {% for criterion in regulation.criteria.all %}
+          {% instructor_view_part "plantation_condition_details" regulation petition_project moulinette criterion %}
+        {% endfor %}
+      </section>
+    {% endif %}
+
+  </section>
+</section>
+</div>
 {% endblock %}
 
 {% block extra_css %}
