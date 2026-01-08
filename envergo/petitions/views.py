@@ -1128,6 +1128,10 @@ class PetitionProjectInstructorConsultationsView(
     template_name = "haie/petitions/instructor_view_consultations.html"
     event_action = "consultation_tokens"
 
+    def has_view_permission(self, request, object):
+        """Only department administratons can see this page"""
+        return object.has_change_permission(request.user)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -1717,8 +1721,11 @@ class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
         # have a `post` method
         self.object = self.get_object()
         if not self.has_change_permission(request, self.object):
-            return TemplateResponse(
-                request=request, template="haie/petitions/403.html", status=403
+            return JsonResponse(
+                {
+                    "error": "You are not authorized to delete invitation tokens for this project."
+                },
+                status=403,
             )
 
         project = self.object
