@@ -82,7 +82,10 @@ STAKES = Choices(
 
 ACTIVATION_MODES = Choices(
     ("department_centroid", "Centroïde du département dans la carte"),
-    ("hedges_intersection", "Intersection de la carte et des haies à détruire"),
+    (
+        "hedges_intersection",
+        "Intersection de la carte et des haies (à la fois à détruire et à planter)",
+    ),
 )
 
 REGULATIONS = Choices(
@@ -98,6 +101,7 @@ REGULATIONS = Choices(
     ("reserves_naturelles", "Réserves naturelles"),
     ("code_rural_haie", "Code rural"),
     ("regime_unique_haie", "Régime unique haie"),
+    ("sites_proteges_haie", "Sites protégés"),
 )
 
 
@@ -2195,6 +2199,7 @@ class MoulinetteHaie(Moulinette):
         "reserves_naturelles",
         "code_rural_haie",
         "regime_unique_haie",
+        "sites_proteges_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
@@ -2396,15 +2401,13 @@ class MoulinetteHaie(Moulinette):
         return regulations
 
     def get_perimeters(self):
-        """Fetch the perimeters that are intersecting the hedges to remove.
+        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant)
 
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
-        hedges_to_remove = (
-            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
-        )
-        if hedges_to_remove:
-            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
+        if hedges:
+            zone_subquery = self.get_zone_subquery(hedges)
             perimeters = (
                 Perimeter.objects.annotate(
                     distance=Value(
@@ -2417,7 +2420,7 @@ class MoulinetteHaie(Moulinette):
                 .distinct("id")
             )
         else:
-            # if there is no hedge to remove in the project
+            # if there is no hedge in the project
             # no perimeters can be activated as we do not know where the project will be.
             perimeters = Perimeter.objects.none()
 
@@ -2431,9 +2434,7 @@ class MoulinetteHaie(Moulinette):
          * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
         """
         dept_centroid = self.department.centroid
-        hedges_to_remove = (
-            self.catalog["haies"].hedges_to_remove() if "haies" in self.catalog else []
-        )
+        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
 
         # Filter for department_centroid activation mode
         subquery = Zone.objects.filter(
@@ -2450,8 +2451,8 @@ class MoulinetteHaie(Moulinette):
 
         # Filter for hedges_intersection activation mode
         hedges_intersection_criteria = super().get_criteria().none()
-        if hedges_to_remove:
-            zone_subquery = self.get_zone_subquery(hedges_to_remove)
+        if hedges:
+            zone_subquery = self.get_zone_subquery(hedges)
             hedges_intersection_criteria = (
                 super()
                 .get_criteria()
@@ -2460,9 +2461,9 @@ class MoulinetteHaie(Moulinette):
 
         return department_centroid_criteria | hedges_intersection_criteria
 
-    def get_zone_subquery(self, hedges_to_remove):
+    def get_zone_subquery(self, hedges):
         query = Q()
-        for hedge in hedges_to_remove:
+        for hedge in hedges:
             query |= Q(geometry__intersects=hedge.geos_geometry)
 
         zone_subquery = Zone.objects.filter(
