@@ -7,7 +7,11 @@ from envergo.petitions.models import InvitationToken
 
 
 class HandleInvitationTokenMiddleware:
-    """Store invitation tokens in session."""
+    """Handle invitation tokens.
+
+    Store invitations token in session if the user is not logged in.
+    Process the invitation if it is valid.
+    """
 
     def __init__(self, get_response):
         self.get_response = get_response
