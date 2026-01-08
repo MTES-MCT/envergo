@@ -756,12 +756,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         plantation_url = update_qs(plantation_url, {"source": "instruction"})
         context["plantation_url"] = plantation_url
-        context["invitation_token_url"] = self.request.build_absolute_uri(
-            reverse(
-                "petition_project_invitation_token",
-                kwargs={"reference": self.object.reference},
-            )
-        )
         context["invitation_register_url"] = update_qs(
             self.request.build_absolute_uri(
                 reverse(
@@ -1124,6 +1118,40 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
         url = reverse("petition_project_instructor_view", args=[self.object.reference])
         return HttpResponseRedirect(url)
+
+
+class PetitionProjectInstructorConsultationsView(
+    BasePetitionProjectInstructorView, DetailView
+):
+    """View for managing invitation tokens (consultations)"""
+
+    template_name = "haie/petitions/instructor_view_consultations.html"
+    event_action = "consultation_tokens"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get only accepted tokens (those with a user)
+        tokens = (
+            InvitationToken.objects.filter(
+                petition_project=self.object, user__isnull=False
+            )
+            .select_related("user")
+            .order_by("-created_at")
+        )
+
+        context["public_url"] = self.request.build_absolute_uri(
+            reverse("petition_project", args=[self.object.reference])
+        )
+        context["invitation_tokens"] = tokens
+        context["invitation_token_create_url"] = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_invitation_token_create",
+                kwargs={"reference": self.object.reference},
+            )
+        )
+
+        return context
 
 
 class PetitionProjectInstructorAlternativeView(
