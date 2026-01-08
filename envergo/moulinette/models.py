@@ -6,7 +6,6 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
-from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
@@ -2559,7 +2558,10 @@ class MoulinetteHaie(Moulinette):
                 if intersective_hedge_to_plant and not intersects_hedge_to_remove:
                     regulations[regulation].update(intersective_hedge_to_plant)
 
-        return dict(regulations)
+        return {
+            key: sorted(values, key=lambda obj: obj.id)
+            for key, values in regulations.items()
+        }
 
 
 class ActionToTake(models.Model):

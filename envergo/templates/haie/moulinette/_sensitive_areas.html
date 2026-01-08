@@ -1,5 +1,7 @@
+{% load petitions %}
+
 {% if regulations_with_perimeters_intersected_by_hedges_to_plant_only %}
-  <div class="fr-alert fr-alert--warning">
+  <div class="fr-alert fr-alert--warning fr-my-3w">
     <h3 class="fr-alert__title">La plantation se situe en zone sensible ou en site protégé</h3>
     {% if moulinette.config.single_procedure %}
       <p>
@@ -17,13 +19,9 @@
     <ul>
       {% for regulation, hedges in regulations_with_perimeters_intersected_by_hedges_to_plant_only.items %}
         <li>
-          {{ regulation.title }} :
-          {% for hedge in hedges %}
-            {{ hedge.id }}
-            {% if not forloop.last %},{% endif %}
-          {% endfor %}
-          (<a href="#regulation_{{ regulation.slug }}"
-   title="Voir le détail de la réglementation « {{ regulation }} »">voir détail</a>)
+          {{ regulation.title }} (<a href="#regulation_{{ regulation.slug }}"
+   title="Voir le détail de la réglementation « {{ regulation }} »">voir détail</a>) :
+          {{ hedges|join_ids }}
         </li>
       {% endfor %}
     </ul>
