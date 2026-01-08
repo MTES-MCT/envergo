@@ -98,23 +98,45 @@
             "text/html": new Blob([htmlEmail.trim()], { type: "text/html" })
           })
         ]).then(() => {
-          let btnText = copyButton.innerText;
-          copyButton.innerText = "Message copié !";
+          // Close modal immediately after copy
+          const closeButton = this.modal.querySelector('.fr-link--close');
+          if (closeButton) {
+            closeButton.click();
+          }
 
-          // Close modal after copy
-          setTimeout(() => {
-            const closeButton = this.modal.querySelector('.fr-link--close');
-            if (closeButton) {
-              closeButton.click();
-            }
-            copyButton.innerText = btnText;
-          }, 1500);
+          // Show success message
+          this.showSuccessMessage();
         });
       });
     } else if (copyButton) {
       copyButton.innerText = "Impossible de copier le message";
       copyButton.disabled = true;
     }
+  };
+
+  InvitationTokenConsultations.prototype.showSuccessMessage = function () {
+    const container = document.getElementById('copy-success-message-container');
+    if (!container) return;
+
+    // Create success message
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'fr-alert fr-alert--success fr-mb-3w';
+    alertDiv.innerHTML = `
+      <p class="fr-alert__title">Le message a été copié</p>
+    `;
+
+    // Insert message
+    container.innerHTML = '';
+    container.appendChild(alertDiv);
+
+    // Remove message after 5 seconds
+    setTimeout(() => {
+      alertDiv.style.transition = 'opacity 0.5s';
+      alertDiv.style.opacity = '0';
+      setTimeout(() => {
+        container.innerHTML = '';
+      }, 500);
+    }, 5000);
   };
 
   InvitationTokenConsultations.prototype.displayError = function () {
