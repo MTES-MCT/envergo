@@ -82,6 +82,15 @@
                         {% endif %}
                       </a>
                     </li>
+                    {% if is_department_instructor %}
+                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_consultations_view' %} fr-sidemenu__item--active{% endif %}">
+                        <a class="fr-sidemenu__link"
+                           href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}"
+                           {% if url_name == 'petition_project_instructor_consultations_view' %}aria-current="page"{% endif %}>
+                          Consultations
+                        </a>
+                      </li>
+                    {% endif %}
                   {% endwith %}
                 </ul>
                 <ul class="fr-sidemenu__list fr-btns-group fr-btns-group--icon-left fr-px-2w fr-px-md-0 fr-mt-2w">
@@ -96,15 +105,6 @@
                        title="Dossier dans Démarches Simplifiées"
                        href="{% url 'petition_project_hedge_data_export' petition_project.reference %}">Télécharger les haies (SIG)</a>
                   </li>
-                  {% if is_department_instructor %}
-                    <li>
-                      <button class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
-                              data-fr-opened="false"
-                              aria-controls="invitation-token-modal">
-                        Inviter une personne à consulter le dossier
-                      </button>
-                    </li>
-                  {% endif %}
                 </ul>
               </div>
             </div>
@@ -131,13 +131,10 @@
 {% block after-content %}{% endblock %}
 
 {% block extra_body %}
-  {% include 'haie/petitions/_invitation_token_modal.html' %}
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
-  <script>const INVITATION_TOKEN_URL = '{{ invitation_token_url }}';</script>
-  <script defer src="{% static 'js/libs/invitation_token_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
   <script defer
