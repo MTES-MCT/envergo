@@ -1656,7 +1656,14 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        super().post(request, *args, **kwargs)
+
+        # We don't call super() because we only inherit frow `View`, which does not
+        # have a `post` method
+        self.object = self.get_object()
+        if not self.has_change_permission(request, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
 
         project = self.object
         token = InvitationToken.objects.create(
@@ -1704,6 +1711,16 @@ class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
+
+        # We don't call super() because we only inherit frow `View`, which does not
+        # have a `post` method
+        self.object = self.get_object()
+        if not self.has_change_permission(request, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+
+        project = self.object
 
         project = self.get_object()
         if not project.has_change_permission(request.user):
