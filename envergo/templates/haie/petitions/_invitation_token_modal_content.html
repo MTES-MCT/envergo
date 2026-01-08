@@ -1,0 +1,75 @@
+<p>Copiez-collez le message ci-dessous dans un e-mail adressé à votre destinataire.</p>
+
+<div id="invitation-token-email-wrapper" class="fr-mb-3w">
+  <div id="invitation-token-email-html">
+    <p>Bonjour,</p>
+    <p>
+      Le guichet unique de la haie de la DDT(M), en charge de l'instruction des projets de destruction de haies, a reçu
+      une nouvelle demande.
+      Nous vous invitons à consulter le dossier et à nous transmettre votre avis par retour d'email en répondant aux deux
+      questions suivantes :
+    </p>
+
+    <ul>
+      <li>Les haies concernées relèvent-elles de la réglementation dont vous avez la charge ?</li>
+      <li>Quelles prescriptions recommandez-vous le cas échéant ?</li>
+    </ul>
+
+    <p>
+      <b>🔐 <a id="accept-invitation-url" href="{{ invitation_url }}">👉 Cliquez sur ce lien pour accéder au dossier</a></b>
+    </p>
+
+    <p>
+      En cas de difficulté d'accès ou de problème avec votre compte, n'hésitez pas à
+      <a href="{{ invitation_contact_url }}">contacter notre support</a>.
+    </p>
+
+    <p>Pour toute question sur le dossier, vous pouvez nous les poser directement par retour d'email.</p>
+
+    <p>Merci par avance pour votre retour.</p>
+    <p>Bien cordialement,</p>
+    <p>
+      <b>Le guichet unique de la haie de la DDT(M)</b>
+    </p>
+  </div>
+</div>
+
+<pre id="invitation-token-email-text">Bonjour,
+
+Le guichet unique de la haie de la DDT(M), en charge de l'instruction des projets de destruction de haies, a reçu une nouvelle demande. Nous vous invitons à consulter le dossier et à nous transmettre votre avis par retour d'email en répondant aux deux questions suivantes :
+
+- Les haies concernées relèvent-elles de la réglementation dont vous avez la charge ?
+- Quelles prescriptions recommandez-vous le cas échéant ?
+
+🔐 Cliquez sur le lien suivant pour accéder au dossier :
+
+    👉 <span id="accept-invitation-url-text">{{ invitation_url }}</span>
+
+En cas de difficulté d'accès ou de problème avec votre compte, n'hésitez pas à contacter notre support : {{ invitation_contact_url }}
+
+Pour toute question sur le projet, vous pouvez nous les poser directement par retour d'email.
+
+Merci par avance pour votre retour.
+
+Bien cordialement,
+
+Le guichet unique de la haie de la DDT(M)
+</pre>
+
+<p class="text-center fr-mt-2w">
+  <button id="copy-invitation-token-btn"
+          class="copy-invitation-token-btn fr-btn">
+    Copier le message dans le presse-papier
+  </button>
+</p>
+
+<p>
+  Ce message contient un lien d'invitation.
+  Il permet au destinataire de consulter ce dossier après s'être connecté
+  ou avoir créé son compte.
+</p>
+
+<p>
+  Important : vous ne pouvez inviter qu'<strong>une seule personne à la fois</strong>,
+  car le lien d'invitation contenu dans le message est à usage unique.
+</p>
