@@ -440,3 +440,10 @@ class TriageFormHaie(forms.Form):
         required=True,
         display_label="Travaux envisagés :",
     )
+
+    def clean_department(self):
+        """Check if department exists"""
+        data = self.cleaned_data["department"]
+        if data not in dict(DEPARTMENT_CHOICES).keys():
+            raise ValidationError("Choisissez un departement existant")
+        return data

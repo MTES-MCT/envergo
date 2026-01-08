@@ -1384,13 +1384,12 @@ class Moulinette(ABC):
 
     def __init__(self, form_kwargs):
         self.catalog = MoulinetteCatalog()
-
+        # Maybe here department should be evaluated if existing
         if "initial" in form_kwargs:
             form_kwargs["initial"].update(compute_surfaces(form_kwargs["initial"]))
         if "data" in form_kwargs:
             form_kwargs["data"].update(compute_surfaces(form_kwargs["data"]))
         self.form_kwargs = form_kwargs
-
         self.catalog = self.get_catalog_data()
         if self.bound_main_form.is_valid():
             if self.config and self.config.id and hasattr(self.config, "templates"):
@@ -2561,31 +2560,6 @@ class MoulinetteHaie(Moulinette):
                     regulations[regulation].update(intersective_hedge_to_plant)
 
         return dict(regulations)
-
-
-def get_moulinette_class_from_site(site):
-    """Return the correct Moulinette class depending on the current site."""
-
-    domain_class = {
-        settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
-        settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
-    }
-    cls = domain_class.get(site.domain, None)
-    if cls is None:
-        raise RuntimeError(f"Unknown site for domain {site.domain}")
-    return cls
-
-
-def get_moulinette_class_from_url(url):
-    """Return the correct Moulinette class depending on the current site."""
-
-    if "envergo" in url:
-        cls = MoulinetteAmenagement
-    elif "haie" in url:
-        cls = MoulinetteHaie
-    else:
-        raise RuntimeError("Cannot find the moulinette to use")
-    return cls
 
 
 class ActionToTake(models.Model):
