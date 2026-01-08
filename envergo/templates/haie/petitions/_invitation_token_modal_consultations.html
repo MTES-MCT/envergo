@@ -1,0 +1,37 @@
+<dialog aria-labelledby="invitation-token-modal-title"
+        role="dialog"
+        id="invitation-token-modal"
+        class="fr-modal fr-modal-lg">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale"
+                    aria-controls="invitation-token-modal">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="invitation-token-modal-title" class="fr-modal__title">
+              Inviter une personne à consulter le dossier
+            </h2>
+
+            <div id="invitation-token-modal-loading" class="fr-hint-text">
+              Création de l'invitation en cours…
+            </div>
+
+            <div id="invitation-token-modal-error"
+                 class="fr-alert fr-alert--error fr-mb-2w">
+              <h3 class="fr-alert__title">Nous n'avons pas pu créer l'invitation.</h3>
+              <p>Veuillez réessayer ultérieurement.</p>
+            </div>
+
+            <div id="invitation-token-modal-content">
+              {# Content will be loaded dynamically from server #}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
