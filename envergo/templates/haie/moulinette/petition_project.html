@@ -49,8 +49,7 @@
 
     <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-play-line spinner-link"
        href="{{ edit_url }}">Démarrer une simulation alternative</a>
-  {% elif user.is_authenticated %}
-  {% else %}
+  {% elif not user.is_authenticated %}
     <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
 
     <p>
