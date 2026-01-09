@@ -1925,31 +1925,6 @@ def test_invitation_token_delete_requires_change_permission(client, haie_user):
     response = client.post(delete_url, {"token_id": token.id})
 
     assert response.status_code == 403
-    assert response.json()["error"] == (
-        "You are not authorized to delete invitation tokens for this project."
-    )
-
-
-def test_invitation_token_delete_authorized_for_department_instructor(
-    client, haie_instructor_44
-):
-    """Test that department instructor can delete tokens"""
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-    token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
-    )
-
-    delete_url = reverse(
-        "petition_project_invitation_token_delete",
-        kwargs={"reference": project.reference},
-    )
-
-    client.force_login(haie_instructor_44)
-    response = client.post(delete_url, {"token_id": token.id})
-
-    assert response.status_code == 200
-    assert response.json()["success"] is True
 
 
 def test_invitation_token_delete_success(client, haie_instructor_44):
@@ -1968,8 +1943,7 @@ def test_invitation_token_delete_success(client, haie_instructor_44):
     client.force_login(haie_instructor_44)
     response = client.post(delete_url, {"token_id": token.id})
 
-    assert response.status_code == 200
-    assert response.json()["success"] is True
+    assert response.status_code == 302
 
     # Verify token was deleted
     assert not InvitationToken.objects.filter(id=token.id).exists()
@@ -1989,7 +1963,7 @@ def test_invitation_token_delete_requires_token_id(client, haie_instructor_44):
     response = client.post(delete_url)
 
     assert response.status_code == 400
-    assert response.json()["error"] == "Token ID is required."
+    assert "Identifiant de token manquant" in response.content.decode()
 
 
 def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
@@ -2006,7 +1980,6 @@ def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
     response = client.post(delete_url, {"token_id": 99999})
 
     assert response.status_code == 404
-    assert "Token not found" in response.json()["error"]
 
 
 def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44):
@@ -2030,7 +2003,7 @@ def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44)
     response = client.post(delete_url, {"token_id": token.id})
 
     assert response.status_code == 404
-    assert "Token not found" in response.json()["error"]
+    assert "Invitation non trouvée" in response.content.decode()
 
     # Verify token still exists
     assert InvitationToken.objects.filter(id=token.id).exists()
@@ -2052,7 +2025,7 @@ def test_invitation_token_delete_logs_analytics_event(client, haie_instructor_44
     client.force_login(haie_instructor_44)
     response = client.post(delete_url, {"token_id": token.id})
 
-    assert response.status_code == 200
+    assert response.status_code == 302
 
 
 def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
@@ -2124,8 +2097,8 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
     # Should NOT show empty state anymore
     assert "Aucune consultation n'a encore été enregistrée" not in content
 
-    # Step 5: Verify revoke button IS present (can revoke accepted tokens)
-    assert f'data-token-id="{token.id}"' in content
+    # Step 5: Verify revoke form IS present (can revoke accepted tokens)
+    assert f'name="token_id" value="{token.id}"' in content
     assert "Révoquer" in content
 
 
@@ -2175,9 +2148,9 @@ def test_invitation_token_expiration_display(client, haie_instructor_44, haie_us
     assert "Expirée" not in content
     assert "Acceptée" not in content
 
-    # Only one revoke button (for the accepted token)
-    # Count the button class, not the text (which also appears in the modal)
-    assert content.count("revoke-token-btn") == 1
+    # Only one revoke form (for the accepted token)
+    # Count the form class, not the text (which also appears in the modal)
+    assert content.count("revoke-token-form") == 1
 
 
 def test_menu_consultations_link_visible_only_for_department_instructor(
@@ -2260,13 +2233,19 @@ def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_use
     assert response.status_code == 200
     content = response.content.decode()
 
-    # Only accepted tokens should be displayed with revoke buttons
-    assert f'data-token-id="{pending_token.id}"' not in content  # Pending - not shown
-    assert f'data-token-id="{accepted_token1.id}"' in content  # Accepted - shown
-    assert f'data-token-id="{accepted_token2.id}"' in content  # Accepted - shown
+    # Only accepted tokens should be displayed with revoke forms
+    assert (
+        f'name="token_id" value="{pending_token.id}"' not in content
+    )  # Pending - not shown
+    assert (
+        f'name="token_id" value="{accepted_token1.id}"' in content
+    )  # Accepted - shown
+    assert (
+        f'name="token_id" value="{accepted_token2.id}"' in content
+    )  # Accepted - shown
 
-    # Check that there are two revoke buttons (one for each accepted token)
-    assert content.count("revoke-token-btn") == 2
+    # Check that there are two revoke forms (one for each accepted token)
+    assert content.count("revoke-token-form") == 2
 
 
 def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_user):

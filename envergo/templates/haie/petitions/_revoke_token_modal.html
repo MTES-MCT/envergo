@@ -14,19 +14,30 @@
           <div class="fr-modal__content">
             <h2 id="revoke-token-modal-title" class="fr-modal__title">Révoquer l'accès</h2>
             <p>
-              Êtes-vous sûr de vouloir révoquer cet accès ?
+              Êtes-vous sûr de vouloir révoquer cet accès ?
               L'accès au dossier sera définitivement révoqué.
             </p>
+
+            <form method="POST"
+                  id="revoke-token-modal-form"
+                  action="{% url 'petition_project_invitation_token_delete' petition_project.reference %}">
+              {% csrf_token %}
+              <input type="hidden" name="token_id" id="revoke-token-modal-id" value="">
+            </form>
           </div>
+
           <div class="fr-modal__footer">
+
             <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
               <li>
-                <button class="fr-btn fr-btn--secondary" aria-controls="revoke-token-modal">Annuler</button>
+                <button type="button"
+                        class="fr-btn fr-btn--secondary"
+                        aria-controls="revoke-token-modal">Annuler</button>
               </li>
               <li>
-                <button id="confirm-revoke-btn"
-                        class="fr-btn fr-btn--primary"
-                        data-token-id="">Confirmer la révocation</button>
+                <button type="submit"
+                        form="revoke-token-modal-form"
+                        class="fr-btn fr-btn--primary">Confirmer la révocation</button>
               </li>
             </ul>
           </div>

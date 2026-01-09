@@ -42,7 +42,7 @@
                     <tr>
                       <th scope="col">Date</th>
                       <th scope="col">Mail</th>
-                      {% if is_department_instructor %}<th scope="col">Actions</th>{% endif %}
+                      <th scope="col">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -50,15 +50,15 @@
                       <tr>
                         <td>{{ token.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
                         <td>{{ token.user.email }}</td>
-                        {% if is_department_instructor %}
-                          <td>
-                            <button type="button"
-                                    class="fr-btn fr-btn--sm fr-btn--tertiary revoke-token-btn"
-                                    data-token-id="{{ token.id }}"
-                                    data-fr-opened="false"
-                                    aria-controls="revoke-token-modal">Révoquer l'accès</button>
-                          </td>
-                        {% endif %}
+                        <td>
+                          <form method="POST"
+                                action="{% url 'petition_project_invitation_token_delete' petition_project.reference %}"
+                                class="revoke-token-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="token_id" value="{{ token.id }}">
+                            <button type="submit" class="fr-btn fr-btn--sm fr-btn--tertiary">Révoquer l'accès</button>
+                          </form>
+                        </td>
                       </tr>
                     {% endfor %}
                   </tbody>
@@ -102,9 +102,6 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>
-    const INVITATION_TOKEN_CREATE_URL = '{{ invitation_token_create_url }}';
-    const INVITATION_TOKEN_DELETE_URL = '{% url "petition_project_invitation_token_delete" petition_project.reference %}';
-  </script>
+  <script>const INVITATION_TOKEN_CREATE_URL = '{{ invitation_token_create_url }}';</script>
   <script defer src="{% static 'js/libs/invitation_token_consultations.js' %}"></script>
 {% endblock %}
