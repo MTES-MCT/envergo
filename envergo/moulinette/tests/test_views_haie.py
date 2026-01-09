@@ -61,6 +61,9 @@ def test_triage(client):
     assert res.status_code == 200
     content = res.content.decode()
     assert "<h2>Doctrine du département</h2>" in content
+    assert Event.objects.get(
+        category="simulateur", event="localisation", metadata__user_type="anonymous"
+    )
 
     # GIVEN an invalid department code
     params = "department=00"
@@ -92,6 +95,9 @@ def test_triage_result(client):
     content = res.content.decode()
     assert "Votre projet n'est pas encore pris en compte par le simulateur" in content
     assert "<h2>kikoo</h2>" in content
+    assert Event.objects.get(
+        category="simulateur", event="soumission_autre", metadata__user_type="anonymous"
+    )
 
     params = "department=44&element=bosquet&travaux=entretien"
     full_url = f"{url}?{params}"
@@ -209,7 +215,7 @@ def test_debug_result(client):
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
 @patch("envergo.hedges.services.get_replantation_coefficient")
-def test_result_p_view_with_R_gt_0(mock_R, client):
+def test_result_d_view_with_R_gt_0(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
     data = {
@@ -230,6 +236,9 @@ def test_result_p_view_with_R_gt_0(mock_R, client):
     res = client.get(f"{url}?{query}")
 
     assert "Déposer une demande sans plantation" not in res.content.decode()
+    assert Event.objects.get(
+        category="simulateur", event="soumission_d", metadata__user_type="anonymous"
+    )
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -237,7 +246,7 @@ def test_result_p_view_with_R_gt_0(mock_R, client):
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
 @patch("envergo.hedges.services.get_replantation_coefficient")
-def test_result_p_view_with_R_eq_0(mock_R, client):
+def test_result_d_view_with_R_eq_0(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
     data = {
@@ -265,7 +274,7 @@ def test_result_p_view_with_R_eq_0(mock_R, client):
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
-def test_result_p_view_non_soumis_with_r_gt_0(client):
+def test_result_d_view_non_soumis_with_r_gt_0(client):
     DCConfigHaieFactory()
     hedge_lt5m = HedgeFactory(
         latLngs=[
@@ -297,6 +306,36 @@ def test_result_p_view_non_soumis_with_r_gt_0(client):
 @override_settings(
     ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
 )
+@patch("envergo.hedges.services.get_replantation_coefficient")
+def test_result_p_view(mock_R, client):
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory()
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result_plantation")
+    query = urlencode(data)
+    mock_R.return_value = 0.0
+    client.get(f"{url}?{query}")
+
+    assert Event.objects.get(
+        category="simulateur", event="soumission_p", metadata__user_type="anonymous"
+    )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
 def test_moulinette_post_form_error(client):
     DCConfigHaieFactory()
     url = reverse("moulinette_form")
@@ -311,7 +350,9 @@ def test_moulinette_post_form_error(client):
     assert res.status_code == 200
     assert HOME_TITLE in res.content.decode()
     assert FORM_ERROR in res.content.decode()
-    error_event = Event.objects.filter(category="erreur", event="formulaire-simu").get()
+    error_event = Event.objects.get(
+        category="erreur", event="formulaire-simu", metadata__user_type="anonymous"
+    )
     assert "errors" in error_event.metadata
     assert error_event.metadata["errors"] == {
         "haies": [
