@@ -1,4 +1,5 @@
 name: Backup S3 Production Bucket
+permissions: {}
 
 on:
   workflow_dispatch:

@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.parse import urlparse
 
 from django.http import JsonResponse, QueryDict
@@ -17,6 +18,8 @@ from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
+
+logger = logging.getLogger(__name__)
 
 
 # VueJS, in the full build, uses the `eval` js method to compile it's templates
@@ -169,7 +172,8 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({"error": "An internal error has occurred"}, status=500)
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         return
@@ -199,7 +203,8 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({"error": "An internal error has occurred"}, status=500)
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         return
