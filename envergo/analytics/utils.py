@@ -1,3 +1,4 @@
+import ipaddress
 import logging
 import socket
 from datetime import timedelta
@@ -31,6 +32,11 @@ def is_request_from_a_bot(request):
     if request_ip is None:
         return False
 
+    try:
+        ipaddress.ip_address(request_ip)
+    except ValueError:
+        return False
+
     # Find domain corresponding to ip
     socket.setdefaulttimeout(3)
     try:
@@ -38,7 +44,7 @@ def is_request_from_a_bot(request):
     except OSError:
         return False
 
-    logger.info(f"Request from ip {request_ip}, found matching domain {host}")
+    logger.info("Request from ip %s, found matching domain %r", request_ip, host)
 
     # Does the request's domain matches a known bot domain?
     for bot_domain in bot_domains:
