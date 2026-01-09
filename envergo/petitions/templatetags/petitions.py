@@ -41,6 +41,7 @@ def instructor_view_part(
         "plantation_condition_details",
         "key_elements",
         "instruction_guidelines",
+        "consultation",
     ],
     regulation,
     project,
