@@ -1273,6 +1273,13 @@ class PetitionProjectInstructorProcedureView(
         ).order_by("-created_at")
         return super().get(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object_list = self.object.status_history.select_related(
+            "created_by"
+        ).order_by("-created_at")
+        return super().post(request, *args, **kwargs)
+
     def get_initial(self):
         initial = super().get_initial()
         initial["stage"] = self.object.current_stage
