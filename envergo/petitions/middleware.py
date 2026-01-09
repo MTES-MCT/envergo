@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
+from django.urls import reverse
 
 from envergo.petitions.models import InvitationToken
 
@@ -72,11 +73,14 @@ class HandleInvitationTokenMiddleware:
             samesite=settings.SESSION_COOKIE_SAMESITE,
         )
 
+        register_url = reverse("register")
+
         messages.info(
             request,
-            """
+            f"""
             Pour accéder au dossier en tant qu’invité,
-            connectez-vous ou créez un compte sur le Guichet Unique de la Haie.
+            connectez-vous ou <a href="{register_url}">créez un compte</a>
+            sur le portail du Guichet Unique de la Haie.
             """,
         )
 
