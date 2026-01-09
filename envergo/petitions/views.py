@@ -900,15 +900,11 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context["google_maps_url"] = get_google_maps_centered_url(hedge_data)
 
         regulation_slug = self.kwargs.get("regulation")
-        if regulation_slug:
-            try:
-                current_regulation = context["moulinette"].regulations.get(
-                    regulation=regulation_slug
-                )
-            except Regulation.DoesNotExist:
-                raise Http404()
+        regulation = context["moulinette"].get_regulation(regulation_slug)
+        if regulation is None:
+            raise Http404()
 
-            context["current_regulation"] = current_regulation
+        context["regulation"] = regulation
         return context
 
     def get_form_class(self):
