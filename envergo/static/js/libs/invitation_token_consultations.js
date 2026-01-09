@@ -14,8 +14,7 @@
     this.modal = document.getElementById('invitation-token-modal');
     this.generateBtn = document.getElementById('generate-invitation-btn');
     this.revokeModal = document.getElementById('revoke-token-modal');
-    this.revokeButtons = document.querySelectorAll('.revoke-token-btn');
-    this.confirmRevokeBtn = document.getElementById('confirm-revoke-btn');
+    this.revokeForms = document.querySelectorAll('.revoke-token-form');
 
     if (this.modal) {
       this.modalLoader = this.modal.querySelector("#invitation-token-modal-loading");
@@ -38,18 +37,24 @@
       this.generateBtn.addEventListener('click', this.generateToken.bind(this));
     }
 
-    // Revoke token buttons
-    this.revokeButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        const tokenId = e.currentTarget.dataset.tokenId;
-        this.confirmRevokeBtn.dataset.tokenId = tokenId;
+    // Intercept revoke form submissions for progressive enhancement
+    this.revokeForms.forEach(form => {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault(); // Prevent direct submission
+
+        // Copy the token_id to the modal form
+        const tokenId = form.querySelector('input[name="token_id"]').value;
+        const modalInput = document.getElementById('revoke-token-modal-id');
+        if (modalInput) {
+          modalInput.value = tokenId;
+        }
+
+        // Open the modal using DSFR API
+        if (this.revokeModal && window.dsfr) {
+          window.dsfr(this.revokeModal).modal.disclose();
+        }
       });
     });
-
-    // Confirm revoke button
-    if (this.confirmRevokeBtn) {
-      this.confirmRevokeBtn.addEventListener('click', this.revokeToken.bind(this));
-    }
   };
 
   InvitationTokenConsultations.prototype.generateToken = function () {
@@ -143,38 +148,6 @@
     this.modalLoader.style.display = "none";
     this.modalError.style.display = "inherit";
     this.modalContent.style.display = "none";
-  };
-
-  InvitationTokenConsultations.prototype.revokeToken = function () {
-    const tokenId = this.confirmRevokeBtn.dataset.tokenId;
-
-    fetch(INVITATION_TOKEN_DELETE_URL, {
-      method: 'POST',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRFToken': CSRF_TOKEN,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `token_id=${encodeURIComponent(tokenId)}`
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Close modal
-          const closeButton = this.revokeModal.querySelector('.fr-link--close');
-          if (closeButton) {
-            closeButton.click();
-          }
-          // Reload page to show updated list
-          window.location.reload();
-        } else {
-          alert('Erreur lors de la révocation : ' + (data.error || 'Erreur inconnue'));
-        }
-      })
-      .catch(error => {
-        console.error('Error revoking token:', error);
-        alert('Erreur lors de la révocation de l\'invitation.');
-      });
   };
 
 })(this);
