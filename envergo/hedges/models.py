@@ -396,6 +396,8 @@ class HedgeData(models.Model):
         Returns:
             bool: True if there are hedges outside the department geometry, False otherwise.
         """
+        if not department:
+            return True
         department_geom = GEOSGeometry(department.geometry.wkt)
         for hedge in self.hedges():
             if not department_geom.intersects(hedge.geos_geometry):

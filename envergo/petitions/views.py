@@ -97,7 +97,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
-    not_filtered_queryset = None
 
     def get_queryset(self):
         """Override queryset filtering projects from user departments
@@ -158,10 +157,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = queryset.none()
 
-        # Store not_filtered_queryset, needed to check if there is at least one project in it
-        self.not_filtered_queryset = queryset
+        return queryset
 
-        # Filter on request GET params
+    def filter_results(self, queryset):
+        """Filter queryset on request GET params"""
         request_filters = self.request.GET.getlist("f", [])
         if "mes_dossiers" in request_filters:
             queryset = queryset.filter(followed_up=True)
@@ -175,15 +174,18 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         return queryset
 
     def get_context_data(self, **kwargs):
+        """Filter results and add info on each object"""
+        all_results = self.object_list
+        filtered_results = self.filter_results(all_results)
+        kwargs["object_list"] = filtered_results
+
         context = super().get_context_data(**kwargs)
 
-        # Check if object_list without filter is empty when filters are in querystring
-        if context["object_list"]:
+        # Check if all results is empty when filters are in querystring
+        if filtered_results:
             context["user_can_view_one_petition_project"] = True
         else:
-            context["user_can_view_one_petition_project"] = (
-                self.not_filtered_queryset.exists()
-            )
+            context["user_can_view_one_petition_project"] = all_results.exists()
 
         # Add city and organization to each obj
         for obj in context["object_list"]:
@@ -1241,7 +1243,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
         else:
             # This should not happen unless someone manually forges an invalid URL
-            raise HttpResponseForbidden("Action non disponible")
+            return HttpResponseForbidden("Action non disponible")
 
         return HttpResponseRedirect(self.get_success_url())
 

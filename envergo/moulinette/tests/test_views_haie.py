@@ -65,6 +65,15 @@ def test_triage(client):
         category="simulateur", event="localisation", metadata__user_type="anonymous"
     )
 
+    # GIVEN an invalid department code
+    params = "department=00"
+    full_url = f"{url}?{params}"
+    # WHEN visit triage form
+    res = client.get(full_url)
+    # THEN redirect to homepage
+    assert res.status_code == 302
+    assert res.url == "/#simulateur"
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(
@@ -106,6 +115,15 @@ def test_triage_result(client):
     assert res.status_code == 302
     assert res["Location"].startswith("/simulateur/formulaire/")
 
+    # GIVEN an invalid department code
+    params = "department=00&element=haie&travaux=destruction"
+    full_url = f"{url}?{params}"
+    # WHEN visit triage form
+    res = client.get(full_url)
+    # THEN redirect to homepage
+    assert res.status_code == 302
+    assert res.url == "/#simulateur"
+
 
 @pytest.mark.urls("config.urls_haie")
 @override_settings(
@@ -125,6 +143,39 @@ def test_moulinette_form_with_invalid_triage(client):
 
     assert len(res.redirect_chain) == 1
     assert res.redirect_chain[0][0].startswith("/simulateur/triage/")
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_invalid_department_result(client):
+    """Test simulation with querystring not valid department"""
+
+    # GIVEN config haie and haies
+    DCConfigHaieFactory()
+    haies = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+    )
+
+    # WHEN data has invalid department
+    data = {
+        "profil": "autre",
+        "element": "haie",
+        "motif": "amelioration_ecologique",
+        "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "travaux": "destruction",
+        "haies": str(haies.id),
+        "department": "00",
+    }
+    # THEN result page redirect to home simulator
+    url = reverse("moulinette_result")
+    params = urlencode(data)
+    full_url = f"{url}?{params}"
+    res = client.get(full_url)
+    assert res.status_code == 302
+    assert res.url == "/#simulateur"
 
 
 @pytest.mark.urls("config.urls_haie")

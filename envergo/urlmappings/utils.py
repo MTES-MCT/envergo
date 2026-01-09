@@ -10,7 +10,7 @@ def unfold_url(url):
 
     If the given url is not a valid short url, returns the original url.
     """
-    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"  # pragma: allowlist secret
     length = settings.URLMAPPING_KEY_LENGTH
     pattern = rf"(?P<key>[{alphabet}]{{{length}}})/$"
     res = re.search(pattern, url)
