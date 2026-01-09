@@ -232,6 +232,13 @@ def test_petition_project_detail(mock_post, client, site):
         "Le projet est hors du département sélectionné" not in response.content.decode()
     )
 
+    # THEN I should not see instructor info for simulations
+    assert "Vous souhaitez modifier votre simulation ?" in response.content.decode()
+    assert (
+        "Vous souhaitez faire une simulation alternative ?"
+        not in response.content.decode()
+    )
+
 
 def test_petition_project_instructor_view_requires_authentication(
     haie_user,
@@ -1731,7 +1738,7 @@ def test_alternative_delete(client, haie_instructor_44):
         },
     )
     response = client.post(delete_url)
-    assert response.status_code == 302
+    assert response.status_code == 403
     assert project.simulations.all().count() == 3
 
     # Active simulation cannot be deleted
@@ -1745,7 +1752,7 @@ def test_alternative_delete(client, haie_instructor_44):
     )
 
     response = client.post(delete_url)
-    assert response.status_code == 302
+    assert response.status_code == 403
     assert project.simulations.all().count() == 3
 
     # Others simulations can be deleted
