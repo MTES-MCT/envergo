@@ -20,6 +20,7 @@ class HandleInvitationTokenMiddleware:
 
         url_token = request.GET.get(settings.INVITATION_TOKEN_COOKIE_NAME)
         cookie_token = request.COOKIES.get(settings.INVITATION_TOKEN_COOKIE_NAME)
+        delete_cookie_token = False
 
         # User is authenticated. We look for invitation tokens in url
         # or in session data.
@@ -29,12 +30,13 @@ class HandleInvitationTokenMiddleware:
 
             if cookie_token:
                 self.process_token(request, cookie_token)
+                delete_cookie_token = True
 
         # We process the invitation to prevent a 403 on the requested url
         response = self.get_response(request)
 
         # Clear the cookie token if it exists
-        if request.user.is_authenticated and cookie_token:
+        if delete_cookie_token:
             self.clear_token(response)
 
         # User is not authenticated and an invitation token is found in
