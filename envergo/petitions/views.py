@@ -22,7 +22,9 @@ from django.db.models.functions import Coalesce
 from django.http import (
     Http404,
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseForbidden,
+    HttpResponseNotFound,
     HttpResponseRedirect,
     JsonResponse,
 )
@@ -1715,56 +1717,44 @@ class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
 
     http_method_names = ["post"]
 
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_consultations_view",
+            kwargs={"reference": self.object.reference},
+        )
+
     def post(self, request, *args, **kwargs):
 
-        # We don't call super() because we only inherit frow `View`, which does not
+        # We don't call super() because we only inherit from `View`, which does not
         # have a `post` method
         self.object = self.get_object()
         if not self.has_change_permission(request, self.object):
-            return JsonResponse(
-                {
-                    "error": "You are not authorized to delete invitation tokens for this project."
-                },
-                status=403,
+            return HttpResponseForbidden(
+                "Vous n'avez pas la permission de révoquer une invitation"
             )
 
         project = self.object
-
-        project = self.get_object()
-        if not project.has_change_permission(request.user):
-            return JsonResponse(
-                {
-                    "error": "You are not authorized to delete invitation tokens for this project."
-                },
-                status=403,
-            )
-
         token_id = request.POST.get("token_id")
         if not token_id:
-            return JsonResponse(
-                {"error": "Token ID is required."},
-                status=400,
-            )
+            return HttpResponseBadRequest("Identifiant de token manquant.")
 
         try:
             token = InvitationToken.objects.get(id=token_id, petition_project=project)
-            token.delete()
-
-            log_event(
-                "dossier",
-                "invitation_revocation",
-                self.request,
-                reference=project.reference,
-                department=project.get_department_code(),
-                **get_matomo_tags(self.request),
-            )
-
-            return JsonResponse({"success": True})
         except InvitationToken.DoesNotExist:
-            return JsonResponse(
-                {"error": "Token not found or does not belong to this project."},
-                status=404,
-            )
+            return HttpResponseNotFound("Invitation non trouvée")
+
+        token.delete()
+        log_event(
+            "dossier",
+            "invitation_revocation",
+            self.request,
+            reference=project.reference,
+            department=project.get_department_code(),
+            **get_matomo_tags(self.request),
+        )
+
+        messages.success(request, "L'accès a été révoqué avec succès.")
+        return redirect(self.get_success_url())
 
 
 class PetitionProjectAcceptInvitation(RedirectView):
