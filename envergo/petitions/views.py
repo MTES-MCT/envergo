@@ -33,7 +33,13 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, FormView, ListView, UpdateView
+from django.views.generic import (
+    DetailView,
+    FormView,
+    ListView,
+    RedirectView,
+    UpdateView,
+)
 from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
@@ -1652,6 +1658,23 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 },
                 status=403,
             )
+
+
+class PetitionProjectAcceptInvitation(RedirectView):
+    """Accept an invitation to a petition project.
+
+    This is a legacy view that was responsible for accepting invitations. It is now
+    obsolete so it was changed to a simple redirection so as to not break existing
+    tokens.
+
+    """
+
+    def get_redirect_url(self, *args, **kwargs):
+        reference = kwargs.get("reference")
+        token = kwargs.get("token")
+        url = reverse("petition_project", args=[reference])
+        url_with_token = f"{url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={token}"
+        return url_with_token
 
 
 @login_required
