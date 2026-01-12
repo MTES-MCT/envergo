@@ -38,6 +38,9 @@
     "IS_REVIEW_APP": {
       "value": "True"
     },
+    "DJANGO_ADMIN_OTP_REQUIRED": {
+      "value": "False"
+    },
     "DJANGO_AWS_S3_ENDPOINT_URL": {
       "value": "https://envergo-stage.s3.fr-par.scw.cloud"
     },
@@ -53,6 +56,9 @@
     "DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID": {
       "value": ""
     },
+    "DJANGO_EMAIL_BACKEND": {
+     "value": "django.core.mail.backends.console.EmailBackend"
+    },
     "DJANGO_NOTION_SECRET": {
       "value": ""
     },
@@ -67,9 +73,6 @@
     },
     "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK": {
       "value": ""
-    },
-    "DJANGO_ADMIN_OTP_REQUIRED": {
-      "value": "False"
     }
   },
   "scripts": {
