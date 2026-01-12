@@ -905,6 +905,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
             raise Http404()
 
         context["regulation"] = regulation
+        context["current_regulation"] = regulation
         return context
 
     def get_form_class(self):
