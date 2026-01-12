@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlparse
+from zoneinfo import ZoneInfo
 
 import fiona
 import requests
@@ -13,7 +14,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -35,6 +35,7 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, UpdateView
 from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.list import MultipleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
 from shapely.ops import transform
@@ -62,6 +63,7 @@ from envergo.petitions.forms import (
     SimulationForm,
 )
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     STAGES,
     InvitationToken,
@@ -1255,13 +1257,27 @@ class PetitionProjectInstructorAlternativeEdit(
 
 
 class PetitionProjectInstructorProcedureView(
-    BasePetitionProjectInstructorView, FormView
+    BasePetitionProjectInstructorView, MultipleObjectMixin, FormView
 ):
     """View for display and edit the petition project procedure by the instructor"""
 
     form_class = ProcedureForm
     template_name = "haie/petitions/instructor_view_procedure.html"
     paginate_by = 10
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object_list = self.object.status_history.select_related(
+            "created_by"
+        ).order_by("-created_at")
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object_list = self.object.status_history.select_related(
+            "created_by"
+        ).order_by("-created_at")
+        return super().post(request, *args, **kwargs)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -1271,41 +1287,101 @@ class PetitionProjectInstructorProcedureView(
         return initial
 
     def get_context_data(self, **kwargs):
+
+        def extract_entries(log):
+            """The history table display an entry for each status change, suspension and resumption for requesting info
+
+            As the suspension and resumption are not a single StatusLog model but attributes of it, this method will
+            map a StatusLog into one or more entries for the history table.
+            """
+            TYPE_CHOICES = [
+                ("status_change", "Changement d'état"),
+                ("suspension", "Demande de compléments"),
+                ("resumption", "Complément reçus"),
+            ]
+            TYPE_LABELS = dict(TYPE_CHOICES)
+
+            entries = [
+                {
+                    "type": "status_change",
+                    "type_display": TYPE_LABELS["status_change"],
+                    "created_at": log.created_at,
+                    "status_date": log.status_date,
+                    "created_by": (
+                        ""
+                        if not log.created_by
+                        else (
+                            log.created_by.email
+                            if not log.created_by.is_staff
+                            else "Administrateur"
+                        )
+                    ),
+                    "update_comment": log.update_comment,
+                    "stage": log.stage,
+                    "decision": log.decision,
+                    "due_date": log.due_date,
+                }
+            ]
+            if log.suspension_date:
+                # this log object is storing a suspension, we add an entry
+                entries.insert(
+                    0,
+                    {
+                        "type": "suspension",
+                        "type_display": TYPE_LABELS["suspension"],
+                        "created_by": (
+                            ""
+                            if not log.suspended_by
+                            else (
+                                log.suspended_by.email
+                                if not log.suspended_by.is_staff
+                                else "Administrateur"
+                            )
+                        ),
+                        "created_at": datetime.datetime.combine(
+                            log.suspension_date, datetime.time.min
+                        ).replace(tzinfo=ZoneInfo("UTC")),
+                        "response_due_date": log.response_due_date,
+                        "update_comment": "Suspension de l’instruction, message envoyé au demandeur.",
+                    },
+                )
+            if log.info_receipt_date:
+                # this log object is storing a resumption, we add an entry
+                entries.insert(
+                    0,
+                    {
+                        "type": "resumption",
+                        "type_display": TYPE_LABELS["resumption"],
+                        "created_by": (
+                            ""
+                            if not log.resumed_by
+                            else (
+                                log.resumed_by.email
+                                if not log.resumed_by.is_staff
+                                else "Administrateur"
+                            )
+                        ),
+                        "created_at": datetime.datetime.combine(
+                            log.info_receipt_date, datetime.time.min
+                        ).replace(tzinfo=ZoneInfo("UTC")),
+                        "due_date": log.due_date,
+                        "update_comment": "Reprise de l’instruction, date d'échéance ajustée.",
+                    },
+                )
+                entries[0]["due_date"] = log.original_due_date
+
+            return entries
+
         context = super().get_context_data(**kwargs)
-        obj = self.object
-        history_qs = obj.status_history.select_related("created_by").order_by(
-            "-created_at"
+        paginator, page_obj, page_qs, has_other_pages = self.paginate_queryset(
+            self.object_list, self.paginate_by
         )
-        paginator = Paginator(history_qs, self.paginate_by)
-
-        page_number = self.request.GET.get("page")
-        try:
-            page_obj = paginator.page(page_number)
-        except PageNotAnInteger:
-            page_obj = paginator.page(1)
-        except EmptyPage:
-            page_obj = paginator.page(paginator.num_pages)
-
-        # Prefetch previous log in the current page
-        start = max(
-            page_obj.start_index() - 2, 0
-        )  # -1 for 0 index, -1 to get previous log
-        end = page_obj.end_index()
-        logs = list(history_qs[start:end])
-        for i, log in enumerate(logs):
-            log.previous_log = logs[i + 1] if i + 1 < len(logs) else None
-
-        # Drop the extra item (first one) if it's not part of this page
-        if page_obj.number > 1:
-            logs = logs[1:]
-
+        logs = [entry for log in page_qs for entry in extract_entries(log)]
         context.update(
             {
                 "object_list": logs,
-                "paginator": paginator,
-                "page_obj": page_obj,
-                "is_paginated": paginator.num_pages > 1,
                 "STAGES": STAGES,
+                "DECISIONS": DECISIONS,
             }
         )
 
@@ -1313,7 +1389,7 @@ class PetitionProjectInstructorProcedureView(
         # in the "instruction" phase
         if self.has_change_permission(
             self.request, self.object
-        ) and obj.current_stage.startswith("instruction"):
+        ) and self.object.current_stage.startswith("instruction"):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
             context.update(
@@ -1382,6 +1458,7 @@ class PetitionProjectInstructorProcedureView(
                 self.request,
                 reference=self.object.reference,
                 etape_i=previous_stage,
+                department=self.object.get_department_code(),
                 etape_f=log.stage,
                 decision_i=previous_decision,
                 decision_f=log.decision,
@@ -1515,6 +1592,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             status.due_date = status.original_due_date + interruption_days
         else:
             status.due_date = None
+        status.resumed_by = self.request.user
         status.save()
 
         # Send Mattermost notification
