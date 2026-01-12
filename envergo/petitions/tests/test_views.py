@@ -1708,7 +1708,9 @@ def test_valid_token_format_redirects(client):
     """Test that a token with valid format allows redirection."""
     project = PetitionProjectFactory()
     # Valid token format: 43 characters, URL-safe base64 (A-Z, a-z, 0-9, -, _)
-    valid_token = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm0123"
+    valid_token = (
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm0123"  # pragma: allowlist secret
+    )
 
     url = reverse(
         "petition_project_accept_invitation",
@@ -1724,7 +1726,9 @@ def test_valid_token_with_dash_and_underscore_redirects(client):
     """Test that tokens with dash and underscore characters are accepted."""
     project = PetitionProjectFactory()
     # Token with dash and underscore (valid URL-safe base64 characters)
-    valid_token = "Df_3qsiW0GMAVnZVjxoocydbx5a1iaRdkmnJmHIWU4k"
+    valid_token = (
+        "Df_3qsiW0GMAVnZVjxoocydbx5a1iaRdkmnJmHIWU4k"  # pragma: allowlist secret
+    )
 
     url = reverse(
         "petition_project_accept_invitation",
