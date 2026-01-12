@@ -199,6 +199,9 @@ def test_petition_project_detail(mock_post, client, site):
     response = client.get(petition_project_url)
     assert response.status_code == 200
     assert "moulinette" in response.context
+    assert Event.objects.get(
+        category="simulateur", event="consultation", metadata__user_type="anonymous"
+    )
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
     assert response.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" in response.content.decode()
