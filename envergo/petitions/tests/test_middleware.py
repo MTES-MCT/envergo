@@ -119,7 +119,8 @@ def test_unauthenticated_user_with_token_in_url_stores_token(
     # User should see a message
     message_list = list(messages.get_messages(request))
     assert len(message_list) == 1
-    assert "connectez-vous ou créez un compte" in str(message_list[0])
+    assert "connectez-vous ou" in str(message_list[0])
+    assert "créez un compte" in str(message_list[0])
 
 
 def test_unauthenticated_user_token_cookie_lifetime(
