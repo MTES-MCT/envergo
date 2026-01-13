@@ -2026,6 +2026,11 @@ main.demos {
   font-size: inherit;
 }
 
+// Prevent the button to wrap when joined to an input
+.fr-input-wrap--addon button {
+  white-space: nowrap;
+}
+
 // Fix issues with the leaflet icon detection
 // This is code copied from the https://github.com/ghybs/leaflet-defaulticon-compatibility plugin
 .leaflet-default-icon-icon {

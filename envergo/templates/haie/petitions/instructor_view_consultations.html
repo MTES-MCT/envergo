@@ -1,0 +1,107 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load static %}
+
+{% block title %}Instruction du dossier – Services consultés{% endblock %}
+
+{% block project_view_title %}<h1>Services consultés</h1>{% endblock %}
+
+{% block project_content %}
+  <div class="project-inner-content">
+    <section class="fr-my-3w">
+      <h2>Demander un avis</h2>
+
+      <p>
+        Générez le message type contenant le lien d’accès unique. Copiez ensuite le message et collez-le dans un e-mail envoyé à votre destinataire. Le lien contenu dans ce message est <strong>personnel et valable une seule fois pour une seule personne</strong>.
+      </p>
+
+      <p>
+        Pour partager la simulation avec une personne extérieure (par ex. le technicien bocager qui a juste besoin d'un aperçu du projet), vous pouvez juste lui partager le lien publique de la simulation.
+      </p>
+
+      <div id="copy-success-message-container"></div>
+
+      <button id="generate-invitation-btn"
+              class="fr-btn fr-btn--icon-left fr-icon-user-add-line fr-mb-4w"
+              data-fr-opened="false"
+              aria-controls="invitation-token-modal">Générer le message et le jeton d'accès</button>
+
+      {% if invitation_tokens %}
+        <h2>Services ayant accédé au dossier</h2>
+
+        <p>
+          Les invités qui apparaissent dans cette liste ont accédé au moins une fois au dossier. Si la liste n'est pas complète, vérifiez que votre email d'invitation a bien été envoyé.
+        </p>
+
+        <div class="fr-table">
+          <div class="fr-table__wrapper">
+            <div class="fr-table__container">
+              <div class="fr-table__content">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Date</th>
+                      <th scope="col">Mail</th>
+                      <th scope="col">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for token in invitation_tokens %}
+                      <tr>
+                        <td>{{ token.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                        <td>{{ token.user.email }}</td>
+                        <td>
+                          <form method="POST"
+                                action="{% url 'petition_project_invitation_token_delete' petition_project.reference %}"
+                                class="revoke-token-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="token_id" value="{{ token.id }}">
+                            <button type="submit" class="fr-btn fr-btn--sm fr-btn--tertiary">Révoquer l'accès</button>
+                          </form>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="fr-callout">
+          <p class="fr-callout__text">Aucune consultation n'a encore été enregistrée pour ce dossier.</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <h2>Partager le lien public de la simulation</h2>
+
+    <p>
+      Copiez ce lien public pour le communiquer à toute personne externe n’ayant pas accès au Guichet unique de la haie (par exemple le technicien bocager).
+    </p>
+
+    <p>
+      <div class="fr-input-group">
+        <div class="fr-input-wrap fr-input-wrap--addon">
+          <input class="fr-input" type="text" value="{{ public_url }}" />
+          <button type="button"
+                  class="fr-btn btn--copy-to-clipboard"
+                  data-clipboard-text="{{ public_url }}">Copier le lien</button>
+        </div>
+      </div>
+    </p>
+
+  </div>
+{% endblock %}
+
+{% block extra_body %}
+  {{ block.super }}
+  {% include 'haie/petitions/_invitation_token_modal_consultations.html' %}
+  {% include 'haie/petitions/_revoke_token_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>const INVITATION_TOKEN_CREATE_URL = '{{ invitation_token_create_url }}';</script>
+  <script defer src="{% static 'js/libs/invitation_token_consultations.js' %}"></script>
+{% endblock %}
