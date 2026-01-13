@@ -445,18 +445,16 @@ types-pyyaml==6.0.12.20250516
 typing-extensions==4.14.1
     # via
     #   -r base.txt
-    #   anyio
     #   beautifulsoup4
     #   django-stubs
     #   django-stubs-ext
     #   mypy
-    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt
     #   faker
     #   kombu
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -r base.txt
     #   django-anymail
