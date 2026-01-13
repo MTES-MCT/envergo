@@ -7,8 +7,10 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
+    PetitionProjectInstructorAlternativeEdit,
     PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorDossierDSView,
+    PetitionProjectInstructorMessagerieMarkUnreadView,
     PetitionProjectInstructorMessagerieView,
     PetitionProjectInstructorNotesView,
     PetitionProjectInstructorProcedureView,
@@ -44,14 +46,24 @@ instruction_urlpatterns = [
         name="petition_project_instructor_messagerie_view",
     ),
     path(
+        "messagerie/marquer-nonlu/",
+        PetitionProjectInstructorMessagerieMarkUnreadView.as_view(),
+        name="petition_project_instructor_messagerie_mark_unread_view",
+    ),
+    path(
         "notes/",
         PetitionProjectInstructorNotesView.as_view(),
         name="petition_project_instructor_notes_view",
     ),
     path(
-        "alternative/",
+        "alternatives/",
         PetitionProjectInstructorAlternativeView.as_view(),
         name="petition_project_instructor_alternative_view",
+    ),
+    path(
+        "alternatives/<int:simulation_id>/<str:action>/",
+        PetitionProjectInstructorAlternativeEdit.as_view(),
+        name="petition_project_instructor_alternative_edit",
     ),
     path(
         "procedure/",

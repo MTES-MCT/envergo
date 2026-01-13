@@ -60,7 +60,7 @@ cligj==0.7.2
     # via fiona
 dacite==1.9.2
     # via -r base.in
-django==4.2.23
+django==4.2.27
     # via
     #   -r base.in
     #   django-allauth
@@ -148,7 +148,7 @@ psycopg-binary==3.2.9
     # via psycopg
 pycparser==2.22
     # via cffi
-pyproj==3.7.1
+pyproj==3.7.2
     # via -r base.in
 pyproject-hooks==1.2.0
     # via
@@ -197,7 +197,10 @@ text-unidecode==1.3
 tqdm==4.67.1
     # via -r base.in
 typing-extensions==4.14.1
-    # via beautifulsoup4
+    # via
+    #   anyio
+    #   beautifulsoup4
+    #   psycopg
 tzdata==2025.2
     # via
     #   faker

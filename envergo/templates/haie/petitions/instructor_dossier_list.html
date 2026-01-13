@@ -11,7 +11,7 @@
 {% block content %}
   <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
-    {% if project_number <= 0 %}
+    {% if not user_can_view_one_petition_project %}
       <div class="fr-alert fr-alert--info">
         <h3 class="fr-alert__title">Aucun dossier n’est accessible pour le moment</h3>
         <p>Vous n’avez actuellement accès à aucun dossier.</p>
@@ -26,6 +26,33 @@
           <a href="{% url 'contact_us' %}">l’équipe du Guichet unique de la haie.</a>
         </p>
       </div>
+    {% else %}
+      <fieldset class="fr-segmented">
+        <legend class="fr-segmented__legend">Filtre des dossiers</legend>
+        <div class="fr-segmented__elements">
+          <div class="fr-segmented__element">
+            <a href="{% url 'petition_project_list' %}"
+               data-event-category="ProjectList"
+               data-event-action="Filter"
+               data-event-name="FollowedOff"
+               {% if request.GET.f is None %}class="active"{% endif %}>Tous les dossiers</a>
+          </div>
+          <div class="fr-segmented__element">
+            <a href="{% url 'petition_project_list' %}?f=mes_dossiers"
+               data-event-category="ProjectList"
+               data-event-action="Filter"
+               data-event-name="FollowedByMe"
+               {% if 'mes_dossiers' in request.GET.f %}class="active"{% endif %}>Mes dossiers suivis</a>
+          </div>
+          <div class="fr-segmented__element">
+            <a href="{% url 'petition_project_list' %}?f=dossiers_sans_instructeur"
+               data-event-category="ProjectList"
+               data-event-action="Filter"
+               data-event-name="FollowedByNobody"
+               {% if 'dossiers_sans_instructeur' in request.GET.f %}class="active"{% endif %}>Dossiers sans instructeur</a>
+          </div>
+        </div>
+      </fieldset>
     {% endif %}
 
     <div class="fr-table--lg fr-table project-list__table">
@@ -57,24 +84,39 @@
                     à détruire
                   </th>
                   <th scope="col">Décision</th>
-                  <th scope="col">Suivi</th>
+                  <th scope="col">
+                    <span title="Messagerie" class="fr-icon-mail-line fr-icon--sm"></span>
+                  </th>
+                  <th colspan="2" scope="col">Suivi</th>
                 </tr>
               </thead>
               <tbody>
                 {% for project in object_list %}
-
                   <tr class="project">
                     <td>
                       <div>
                         <a href="{% url 'petition_project_instructor_view' project.reference %}"
                            class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
+                        {% if not user|has_edit_permission:project %}
+                          <span class="fr-icon-eye-line fr-icon--sm"
+                                aria-describedby="read-only-tooltip-{{ project.reference }}"></span>
+                          <span class="fr-tooltip fr-placement"
+                                id="read-only-tooltip-{{ project.reference }}"
+                                role="tooltip">Lecture seule</span>
+                        {% endif %}
                       </div>
                       <div>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
                     <td>
                       <div>{% stage_badge project.current_stage %}</div>
                       {% if project.current_stage != "closed" %}
-                        <div>{% display_due_date project.due_date False True %}</div>
+                        <div>
+                          {% if project.is_paused %}
+                            {% display_pause project.current_status.response_due_date %}
+                          {% else %}
+                            {% display_due_date project.due_date False True %}
+                          {% endif %}
+                        </div>
                       {% endif %}
                     </td>
                     <td>
@@ -89,8 +131,19 @@
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{% decision_badge project.current_decision True %}</td>
+                    <td class="messagerie-col {{ project.has_unread_messages|yesno:"unread,read" }}">
+                      {% if project.has_unread_messages %}
+                        <span class="fr-icon-mail-fill fr-icon--sm"></span>
+                        <span style="font-size: 150%;" class="fr-ml-1v">●</span>
+                      {% else %}
+                        <span class="fr-icon-mail-line fr-icon--sm"></span>
+                      {% endif %}
+                    </td>
                     <td>
                       {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
+                    </td>
+                    <td>
+                      {% include 'haie/petitions/_dossier_followers.html' with reference=project.reference followers=project.followers %}
                     </td>
                   </tr>
                 {% endfor %}
@@ -106,14 +159,15 @@
         </div>
       {% endif %}
     </div>
-  {% endwith %}
 
+  {% endwith %}
 {% endblock %}
 
 {% block after-content %}{% endblock %}
 
 {% block extra_js %}
   <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
+  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
   <script>
     window.addEventListener('load', function () {
       document.querySelectorAll("#table-dossier-list tbody tr").forEach(row => {

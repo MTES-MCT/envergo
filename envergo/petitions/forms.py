@@ -8,7 +8,8 @@ from django.forms.fields import FileField
 from django.utils import timezone
 from django.utils.formats import date_format
 
-from envergo.petitions.models import PetitionProject, StatusLog
+from envergo.moulinette.utils import MoulinetteUrl
+from envergo.petitions.models import PetitionProject, Simulation, StatusLog
 from envergo.utils.fields import ProjectStageField
 
 
@@ -83,6 +84,9 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 
     message_body = forms.CharField(
         label="Votre message",
+        help_text="""Au format HTML ou texte simple.
+            <br>À noter que les liens seront cliquables s'ils commencent par "https://" ou "www".
+        """,
         widget=forms.Textarea(
             attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
         ),
@@ -115,7 +119,7 @@ class ProcedureForm(forms.ModelForm):
             "update_comment",
         ]
         help_texts = {
-            "update_comment": "Commentaire interne expliquant le contexte et les raisons du changement.",
+            "update_comment": "Commentaire interne. Aucun message ne sera envoyé au demandeur.",
         }
         labels = {
             "due_date": "Échéance de l'étape",
@@ -250,3 +254,42 @@ class ResumeProcessingForm(forms.Form):
         initial=today_formatted,
         widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
     )
+
+
+USER_TYPE = (
+    ("petitioner", "Demandeur"),
+    ("instructor", "Instructeur"),
+)
+
+
+class SimulationForm(forms.ModelForm):
+    moulinette_url = forms.URLField(
+        label="Lien vers la simulation",
+        help_text="Collez ici le lien de la page de simulation alternative",
+        required=True,
+    )
+    source = forms.ChoiceField(
+        label="Auteur",
+        choices=USER_TYPE,
+        widget=forms.RadioSelect,
+        help_text="Qui est à l'origine de la simulation alternative ?",
+    )
+    comment = forms.CharField(
+        label="Commentaire",
+        widget=forms.Textarea(attrs={"rows": "3"}),
+        max_length=2048,
+    )
+
+    class Meta:
+        model = Simulation
+        fields = ["moulinette_url", "source", "comment"]
+
+    def clean_moulinette_url(self):
+        url = self.cleaned_data["moulinette_url"]
+        moulinette_url = MoulinetteUrl(url)
+        if not moulinette_url.is_valid():
+            raise ValidationError(
+                "Il semble que l'url ne corresponde pas à une page de simulation valide.",
+                code="invalid_moulinette",
+            )
+        return moulinette_url.url

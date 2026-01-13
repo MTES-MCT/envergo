@@ -66,13 +66,21 @@
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_alternative_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_alternative_view' %}aria-current="page"{% endif %}>
-                      Simulation alternative</a>
+                      Simulations alternatives</a>
                     </li>
                     <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_messagerie_view' %} fr-sidemenu__item--active{% endif %}">
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_messagerie_view' %}aria-current="page"{% endif %}>
-                      Messagerie</a>
+                        Messagerie
+                        {% if has_unread_messages %}
+                          <span style="color: var(--blue-france-sun-113-625);
+                                       font-size: 150%;
+                                       position: relative;
+                                       top: -0.0625rem"
+                                class="fr-ml-1w">●</span>
+                        {% endif %}
+                      </a>
                     </li>
                   {% endwith %}
                 </ul>
@@ -132,6 +140,8 @@
   <script defer src="{% static 'js/libs/invitation_token_modal.js' %}"></script>
   <script defer src="{% static 'js/libs/hedges_input.js' %}"></script>
   <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
+  <script defer
+          src="{% static 'js/libs/data_sql_event_attributes_analytics.js' %}"></script>
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     window.addEventListener("load", function() {

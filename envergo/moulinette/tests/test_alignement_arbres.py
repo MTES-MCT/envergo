@@ -4,8 +4,8 @@ from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 
@@ -95,7 +95,7 @@ def moulinette_data(type_haie, bord_voie, motif):
 def test_moulinette_evaluation(
     moulinette_data, expected_result_code, expected_result, expected_r
 ):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.alignement_arbres.result == expected_result
     assert (

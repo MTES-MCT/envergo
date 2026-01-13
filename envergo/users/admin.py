@@ -80,6 +80,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
+                    "is_instructor",
                     "groups",
                     "departments",
                     "followed_petition_projects",
@@ -106,6 +107,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "access_haie_col",
         "is_staff_col",
         "superuser_col",
+        "is_instructor_col",
     ]
     readonly_fields = ["last_login", "date_joined"]
     inlines = [InvitationTokenInline]
@@ -117,6 +119,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "access_haie",
         "is_superuser",
         "is_staff",
+        "is_instructor",
     ]
 
     filter_horizontal = (
@@ -155,6 +158,14 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     def access_haie_col(self, obj):
         return obj.access_haie
+
+    @admin.display(
+        ordering="access_haie",
+        description="Instruct.",
+        boolean=True,
+    )
+    def is_instructor_col(self, obj):
+        return obj.is_instructor
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name == "departments":

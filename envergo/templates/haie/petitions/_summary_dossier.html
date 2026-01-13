@@ -6,6 +6,9 @@
       <div id="project-header-container">
         <h1 class="fr-h3">Dossier n° {{ petition_project.demarches_simplifiees_dossier_number|format_ds_number }}</h1>
         {% include 'haie/petitions/_follow_form.html' with reference=petition_project.reference followed_up=petition_project.followed_up %}
+        <div class="fr-px-2w fr-py-1v">
+          {% include 'haie/petitions/_dossier_followers.html' with reference=petition_project.reference followers=petition_project.followers %}
+        </div>
       </div>
       <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
         <li>
@@ -37,23 +40,33 @@
         </li>
       </ul>
     </div>
-    <div class="fr-col-12 fr-col-sm-4 fr-pb-2w">
-      <div>{% stage_badge petition_project.current_stage %}</div>
-      {% if petition_project.current_decision != "unset" %}
-        <div>{% decision_badge petition_project.current_decision %}</div>
-      {% endif %}
-      {% if petition_project.current_stage != "closed" %}
-        <div class="fr-mt-2v">
-          <div>
-            <strong>Prochaine échéance :</strong>
+    <div class="fr-col-12 fr-col-sm-4 fr-pb-2w fr-text--sm">
+      {% if user|has_edit_permission:petition_project %}
+        <div>{% stage_badge petition_project.current_stage %}</div>
+        {% if petition_project.current_decision != "unset" %}
+          <div>{% decision_badge petition_project.current_decision %}</div>
+        {% endif %}
+        {% if petition_project.current_stage != "closed" %}
+          <div class="fr-mt-2v">
+            <div>
+              <strong>Prochaine échéance :</strong>
+            </div>
+            <div>
+              {% if petition_project.is_paused %}
+                {% display_pause petition_project.current_status.response_due_date %}
+              {% else %}
+                {% display_due_date petition_project.due_date False %}
+              {% endif %}
+            </div>
           </div>
-          <div>{% display_due_date petition_project.due_date False %}</div>
-        </div>
-      {% endif %}
-      {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
-        <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
-           href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
-           {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
+        {% endif %}
+        {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
+          <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
+             href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
+             {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
+        {% endif %}
+      {% else %}
+        <span class="fr-text--sm"><span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule</span>
       {% endif %}
     </div>
   </div>

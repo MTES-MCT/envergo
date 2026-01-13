@@ -262,7 +262,23 @@ SECURE_CSP = {}
 
 SECURE_CSP_REPORT_ONLY = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
+    "script-src": [
+        CSP.SELF,
+        CSP.UNSAFE_INLINE,
+        "https://*.crisp.chat",
+        "https://sentry.incubateur.net",
+        "https://browser.sentry-cdn.com",
+        "https://*.data.gouv.fr",
+        "https://*.beta.gouv.fr",
+    ],
+    "connect-src": [
+        CSP.SELF,
+        "https://*.data.gouv.fr",  # Address autocomplete api
+        "https://*.beta.gouv.fr",  # Stats
+        "https://sentry.incubateur.net",
+        "https://*.crisp.chat",
+        "wss://*.relay.crisp.chat",
+    ],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "img-src": [
         CSP.SELF,
@@ -275,11 +291,7 @@ SECURE_CSP_REPORT_ONLY = {
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
     "frame-src": [CSP.SELF, "https://*.crisp.chat"],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
-    "connect-src": [
-        CSP.SELF,
-        "https://*.data.gouv.fr",  # Address autocomplete api
-        "https://*.crisp.chat",
-        "wss://*.relay.crisp.chat",
-    ],
     "report-uri": "/csp/reports/",
 }
+
+RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"

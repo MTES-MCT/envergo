@@ -100,7 +100,7 @@ cligj==0.7.2
     #   fiona
 colorama==0.4.6
     # via djlint
-coverage==7.10.2
+coverage==7.11.0
     # via
     #   -r local.in
     #   django-coverage-plugin
@@ -116,7 +116,7 @@ dill==0.4.0
     # via pylint
 distlib==0.4.0
     # via virtualenv
-django==4.2.23
+django==4.2.27
     # via
     #   -r base.txt
     #   django-allauth
@@ -175,7 +175,7 @@ django-stubs==5.2.2
     # via -r local.in
 django-stubs-ext==5.2.2
     # via django-stubs
-djhtml==3.0.8
+djhtml==3.0.10
     # via -r local.in
 djlint==1.36.4
     # via -r local.in
@@ -342,7 +342,7 @@ pylint-django==2.6.1
     # via -r local.in
 pylint-plugin-utils==0.9.0
     # via pylint-django
-pyproj==3.7.1
+pyproj==3.7.2
     # via -r base.txt
 pyproject-hooks==1.2.0
     # via
@@ -445,10 +445,12 @@ types-pyyaml==6.0.12.20250516
 typing-extensions==4.14.1
     # via
     #   -r base.txt
+    #   anyio
     #   beautifulsoup4
     #   django-stubs
     #   django-stubs-ext
     #   mypy
+    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt

@@ -421,6 +421,93 @@
           "checked": true
         }
       ],
+      "messages": [
+        {
+          "id": "Q29tbWVudGFpcmUtNTQ1OTM5MzM=",
+          "createdAt": "2025-03-21T11:08:34+01:00",
+          "email": "contact@demarches-simplifiees.fr",
+          "body": "<p>[Votre dossier nº 23178443 a bien été déposé (Guichet unique de la haie – Aisne (02) / TEST)]</p><div> Bonjour, <br><br>\n</div><div>Votre dossier nº 23178443 <strong>a bien été déposé</strong>. Si besoin est, vous pouvez encore y apporter des modifications.<br><br>Vous pouvez retrouver votre simulation au lien suivant :<br>http://haie.local:8000/projet/AT9ZK7/consultation/<br><br>\n</div><div>Cordialement, <br>Le guichet unique de la haie de l'Aisne</div>",
+          "attachments": []
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTUwODU1MzQ=",
+          "createdAt": "2025-04-01T14:43:34+02:00",
+          "email": "contact@demarches-simplifiees.fr",
+          "body": "<p>[Votre dossier nº 23178443 va être examiné (Guichet unique de la haie – Aisne (02) / TEST)]</p><div>Bonjour, <br><br>\n</div><div>Votre dossier nº 23178443 a bien été reçu et <strong>pris en charge</strong>. Il va maintenant être examiné par le service. <br><br>\n</div><div> Cordialement, <br>  <br><br>\n</div>",
+          "attachments": []
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTUwODU1NjE=",
+          "createdAt": "2025-04-01T14:43:52+02:00",
+          "email": "hedy.lamarr@example.com",
+          "body": "Bonjour,\r\nCeci est un message.",
+          "attachments": []
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTUxMzcxMjc=",
+          "createdAt": "2025-04-02T11:01:37+02:00",
+          "email": "instructeur@guh.gouv.fr",
+          "body": "Il manque les infos de la PAC",
+          "attachments": []
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTUxMzcyOTg=",
+          "createdAt": "2025-04-02T11:03:24+02:00",
+          "email": "contact@demarches-simplifiees.fr",
+          "body": "<p>[Votre dossier nº 23178443 va être examiné (Guichet unique de la haie – Aisne (02) / TEST)]</p><div>Bonjour, <br><br>\n</div><div>Votre dossier nº 23178443 a bien été reçu et <strong>pris en charge</strong>. Il va maintenant être examiné par le service. <br><br>\n</div><div> Cordialement, <br>  <br><br>\n</div>",
+          "attachments": []
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTk3NjkwODU=",
+          "createdAt": "2025-07-17T17:20:25+02:00",
+          "email": "instructeur@guh.gouv.fr",
+          "body": "Bonjour,\r\nIl manque une pièce jointe.\r\nMerci",
+          "attachments": []
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTk3NjkyOTc=",
+          "createdAt": "2025-07-17T17:25:13+02:00",
+          "email": "hedy.lamarr@example.com",
+          "body": "Ah oui une pièce jointe comme ça.",
+          "attachments": [
+            {
+              "__typename": "File",
+              "filename": "Coriandrum_sativum_-_Köhler–s_Medizinal-Pflanzen-193.jpg",
+              "contentType": "image/jpeg",
+              "checksum": "N7HE6+uqUm+8o+K+XXFiTA==",
+              "byteSize": "165286",
+              "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Coriandrum_sativum_-_K%C3%B6hler%E2%80%93s_Medizinal-Pflanzen",
+              "createdAt": "2025-07-17T17:25:13+02:00"
+            }
+          ]
+        },
+        {
+          "id": "Q29tbWVudGFpcmUtNTk3NzA2MDA=",
+          "createdAt": "2025-07-17T17:57:38+02:00",
+          "email": "hedy.lamarr@example.com",
+          "body": "Nouveau message !!\r\n\r\nAvec deux pièces jointes.",
+          "attachments": [
+            {
+              "__typename": "File",
+              "filename": "licences_libres_affiche.pdf",
+              "contentType": "application/pdf",
+              "checksum": "ya1XQHlWcNxCNteewnjQRg==",
+              "byteSize": "817604",
+              "url": "http://media.april.org/docs/affiche_copyleft/licences_libres_affiche.pdf",
+              "createdAt": "2025-07-17T17:57:39+02:00"
+            },
+            {
+              "__typename": "File",
+              "filename": "essayez_la_liberte_web.pdf",
+              "contentType": "application/pdf",
+              "checksum": "V/y1jfKsorMlhbetJOo5Bg==",
+              "byteSize": "320631",
+              "url": "http://media.april.org/docs/affiche_essayez_la_liberte/essayez_la_liberte_web.pdf",
+              "createdAt": "2025-07-17T17:57:39+02:00"
+            }
+          ]
+        }
+      ],
       "demarche": {
         "title": "Guichet unique de la haie – Aisne (02) / TEST",
         "number": 115910,

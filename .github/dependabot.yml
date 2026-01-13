@@ -5,3 +5,29 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+
+  # Update npm packages
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "04:00"
+      timezone: "Europe/Paris"
+    cooldown:
+      default-days: 7
+      semver-major-days: 60
+      semver-minor-days: 30
+
+  # Update python eggs
+  - package-ecosystem: "pip"
+    directory: "/requirements"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "02:00"
+      timezone: "Europe/Paris"
+    cooldown:
+      default-days: 7
+      semver-major-days: 60
+      semver-minor-days: 30

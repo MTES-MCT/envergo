@@ -11,4 +11,12 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(CSPReport)
 class CSPReportAdmin(admin.ModelAdmin):
-    list_display = ["date_created", "site", "session_key"]
+    list_display = ["date_created", "site", "directive_col", "blocked_uri"]
+
+    @admin.display(description="Directive")
+    def directive_col(self, obj):
+        return obj.content["csp-report"]["violated-directive"]
+
+    @admin.display(description="Uri")
+    def blocked_uri(self, obj):
+        return obj.content["csp-report"]["blocked-uri"]

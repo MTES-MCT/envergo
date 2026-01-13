@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.parse import urlparse
 
 from django.http import JsonResponse, QueryDict
@@ -11,13 +12,30 @@ from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
+from envergo.decorators.csp import csp_override, csp_report_only_override
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
+logger = logging.getLogger(__name__)
 
+
+# VueJS, in the full build, uses the `eval` js method to compile it's templates
+# This make it incompatible with csp unless we allow "unsafe-eval", which makes csp
+# pretty much useless.
+# To fix the problem, we should use the runtime vue build that requires that all templates are pre-compiled into
+# render functions
+# A temporary fix is to disable csp for this page, which is not ideal.
+@method_decorator(
+    csp_override(config={}),
+    name="get",
+)
+@method_decorator(
+    csp_report_only_override(config={}),
+    name="get",
+)
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
@@ -154,7 +172,8 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({"error": "An internal error has occurred"}, status=500)
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         return
@@ -184,7 +203,8 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({"error": "An internal error has occurred"}, status=500)
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         return

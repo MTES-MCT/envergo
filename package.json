@@ -41,6 +41,11 @@
   ],
   "scripts": {
     "dev": "gulp",
-    "build": "gulp build"
+    "build": "gulp build",
+    "e2e-haie": "TEST_DIR='./e2e/haie' playwright test",
+    "e2e-haie:ui": "TEST_DIR='./e2e/haie' playwright test --ui",
+    "e2e-amenagement": "TEST_DIR='./e2e/amenagement' playwright test",
+    "e2e-amenagement:ui": "TEST_DIR='./e2e/amenagement' playwright test --ui",
+    "playwright:install": "playwright install --with-deps"
   }
 }

@@ -4,8 +4,8 @@ from envergo.geodata.conftest import bizous_town_center  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -101,7 +101,7 @@ def moulinette_data(lat1, lng1, lat2, lng2):
     ],
 )
 def test_moulinette_evaluation(moulinette_data, expected_result):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.natura2000_haie.result == expected_result
     if expected_result != "non_concerne":
@@ -128,7 +128,7 @@ def test_moulinette_evaluation(moulinette_data, expected_result):
     ],
 )
 def test_moulinette_evaluation_alignement(moulinette_data, expected_result):
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = moulinette_data["data"]["haies"]
     hedges.data[0]["additionalData"]["type_haie"] = "alignement"
     hedges.save()

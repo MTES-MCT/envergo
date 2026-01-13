@@ -8,19 +8,17 @@ from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement
-from envergo.moulinette.models import (
-    ConfigHaie,
-    MoulinetteAmenagement,
-    MoulinetteHaie,
-    get_moulinette_class_from_site,
-    get_moulinette_class_from_url,
-)
+from envergo.moulinette.models import ConfigHaie, MoulinetteAmenagement, MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+)
+from envergo.moulinette.utils import (
+    get_moulinette_class_from_site,
+    get_moulinette_class_from_url,
 )
 
 pytestmark = pytest.mark.django_db
@@ -130,7 +128,7 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
 
 
 def test_moulinette_haie_has_specific_behavior():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     site = SiteFactory()
     site.domain = "haie.beta.gouv.fr"
     MoulinetteClass = get_moulinette_class_from_site(site)

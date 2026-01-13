@@ -24,6 +24,7 @@ from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
@@ -140,6 +141,12 @@ class PetitionProject(models.Model):
         blank=True,
         verbose_name="Instructeurs suivant le projet",
     )
+    latest_petitioner_msg = models.DateTimeField(
+        verbose_name="Date du dernier message pétitionnaire",
+        null=True,
+        blank=True,
+        default=None,
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -242,6 +249,18 @@ class PetitionProject(models.Model):
 
             return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
+        def get_latest_petitioner_msg():
+            emails = [instructeur["email"] for instructeur in dossier["instructeurs"]]
+            dates = sorted(
+                [
+                    datetime.fromisoformat(msg["createdAt"])
+                    for msg in dossier["messages"]
+                    if msg["email"] in emails
+                ],
+                reverse=True,
+            )
+            return dates[0] if len(dates) else None
+
         logger.info(f"Synchronizing file {self.reference} with DS")
 
         if not self.is_dossier_submitted:
@@ -272,7 +291,7 @@ class PetitionProject(models.Model):
                 Event.objects.order_by("-date_created")
                 .filter(
                     metadata__reference=self.reference,
-                    category="dossier",
+                    category="demande",
                     event="creation",
                 )
                 .first()
@@ -292,7 +311,7 @@ class PetitionProject(models.Model):
             user = User(is_staff=False)
 
             log_event_raw(
-                "dossier",
+                "demande",
                 "depot",
                 visitor_id,
                 user,
@@ -327,6 +346,9 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
+        if "instructeurs" in dossier and "messages" in dossier:
+            self.latest_petitioner_msg = get_latest_petitioner_msg()
+
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
         self.save()
 
@@ -352,29 +374,38 @@ class PetitionProject(models.Model):
         moulinette_data = raw_data.dict()
         return moulinette_data
 
-    def has_user_as_department_instructor(self, user):
+    def has_view_permission(self, user):
+        """User has view permission on project, according to
+        - superuser
+        - user with access haie and invitation token
+        - user with access haie and right to project department
+        """
         department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
-                user.departments.filter(id=department.id).exists(),
+                (
+                    user.invitation_tokens.filter(petition_project_id=self.pk).exists()
+                    or user.departments.filter(id=department.id).exists()
+                ),
             )
         )
 
-    def has_user_as_invited_instructor(self, user):
+    def has_change_permission(self, user):
+        """User has edit permission on project, according to
+        - superuser
+        - user with access haie, is instructor for department
+        """
+        department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
-                user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+                user.is_instructor,
+                user.departments.filter(id=department.id).exists(),
             )
         )
-
-    def has_user_as_instructor(self, user):
-        return self.has_user_as_invited_instructor(
-            user
-        ) or self.has_user_as_department_instructor(user)
 
     @property
     def demarches_simplifiees_petitioner_url(self) -> str | None:
@@ -404,6 +435,92 @@ class PetitionProject(models.Model):
         """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
+
+    @cached_property
+    def has_unread_messages(self):
+        """Check if the current user has received unread messages.
+
+        Note: the `latest_access` property MUST be added with an annotation
+        in the queryset
+        """
+
+        has_unread_messages = (
+            self.latest_petitioner_msg is not None
+            and self.latest_access is not None
+            and self.latest_access < self.latest_petitioner_msg
+        )
+        return has_unread_messages
+
+
+USER_TYPE = Choices(
+    ("petitioner", "Demandeur"),
+    ("instructor", "Instructeur"),
+)
+
+
+class Simulation(models.Model):
+    """A single alternative set of simulation parameters for a given project."""
+
+    project = models.ForeignKey(
+        PetitionProject,
+        verbose_name="Simulation",
+        on_delete=models.CASCADE,
+        related_name="simulations",
+    )
+    is_initial = models.BooleanField("Initiale ?", default=False)
+    is_active = models.BooleanField("Active ?", default=False)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
+    source = models.CharField("Auteur", choices=USER_TYPE, default=USER_TYPE.petitioner)
+    comment = models.TextField("Commentaire")
+
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "Simulation"
+        verbose_name_plural = "Simulations"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "is_active"],
+                condition=Q(is_active=True),
+                name="single_active_simulation",
+            ),
+            models.UniqueConstraint(
+                fields=["project", "is_initial"],
+                condition=Q(is_initial=True),
+                name="single_initial_simulation",
+            ),
+        ]
+
+    def can_be_deleted(self):
+        return not (self.is_initial or self.is_active)
+
+    def can_be_activated(self):
+        return not self.project.current_status.is_closed
+
+    def custom_url(self, view_name, **kwargs):
+        """Generate an url with the given parameters."""
+
+        m_url = MoulinetteUrl(self.moulinette_url)
+        qt = m_url.querydict
+        qt.update(kwargs)
+        f_url = reverse(view_name)
+        url = f"{f_url}?{qt.urlencode()}"
+        return url
+
+    @property
+    def form_url(self):
+        """Return the moulinette form url with the simulation parameters."""
+        return self.custom_url("moulinette_form", alternative=True)
+
+    @property
+    def result_url(self):
+        """Return the result form url with the simulation parameters."""
+
+        if self.is_active:
+            url = reverse("petition_project", args=[self.project.reference])
+        else:
+            url = self.custom_url("moulinette_result_plantation", alternative=True)
+        return url
 
 
 def one_month_from_now():
@@ -454,9 +571,16 @@ class InvitationToken(models.Model):
         verbose_name = "Jeton d'invitation"
         verbose_name_plural = "Jetons d'invitation"
 
-    def is_valid(self):
+    def is_valid(self, user):
         """Check if the token is still valid."""
-        return self.user_id is None and self.valid_until >= timezone.now()
+
+        return all(
+            (
+                self.user_id is None,
+                self.created_by != user,
+                self.valid_until >= timezone.now(),
+            )
+        )
 
 
 # Some data constraints checks
@@ -578,3 +702,28 @@ class StatusLog(models.Model):
     @property
     def is_closed(self):
         return self.stage == STAGES.closed
+
+
+class LatestMessagerieAccess(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        verbose_name="Accès par",
+        related_name="messagerie_accesses",
+    )
+    project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        verbose_name="Projet",
+        related_name="messagerie_accesses",
+    )
+    access = models.DateTimeField("Dernier accès messagerie", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Dernier accès messagerie"
+        verbose_name_plural = "Derniers accès messagerie"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"], name="access_unique_constraint"
+            )
+        ]

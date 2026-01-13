@@ -14,8 +14,8 @@ from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.regulations import HedgeDensityMixin
+from envergo.moulinette.utils import get_moulinette_class_from_site
 
 register = template.Library()
 
@@ -343,17 +343,3 @@ def display_remove_only_haies_field(field):
 @register.simple_tag
 def humanize_motif(motif):
     return dict(MOTIF_CHOICES).get(motif, "Motif non défini")
-
-
-@register.simple_tag(takes_context=True)
-def render_action_to_take_details(context, details):
-    """
-    Render action details that may contain template tags.
-    """
-    try:
-        template_context = Context(context.flatten())
-        template_obj = Template(details)
-        return template_obj.render(template_context)
-    except Exception:
-        """To avoid error on action detail render, return action details without rendering."""
-        return details

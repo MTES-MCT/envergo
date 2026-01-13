@@ -1,3 +1,7 @@
+import warnings
+from collections.abc import Iterable, Mapping
+
+from bs4 import BeautifulSoup
 from django import template
 from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
@@ -8,7 +12,12 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.http import QueryDict
+from django.template.base import TemplateSyntaxError
+from django.template.defaultfilters import stringfilter
 from django.utils.dateparse import parse_datetime
+from django.utils.deprecation import RemovedInDjango51Warning
+from django.utils.html import urlize as _urlize
 
 register = template.Library()
 
@@ -173,3 +182,92 @@ def choice_default_label(model, field_name):
     else:
         default = field.default
     return dict(field.choices).get(default, default)
+
+
+@register.filter(is_safe=True)
+@stringfilter
+def urlize_html(value, blank=True):
+    """Convert URLs in plain text into clickable links."""
+    # Remove existing tag a before urlize
+    soup = BeautifulSoup(value, "html.parser")
+    for a in soup.findAll("a"):
+        a.replaceWith(a["href"])
+    result = _urlize(str(soup), nofollow=True, autoescape=False)
+    if blank:
+        result = result.replace("<a", '<a target="_blank" rel="noopener"')
+    return result
+
+
+@register.simple_tag(name="querystring", takes_context=True)
+def querystring(context, *args, **kwargs):
+    """
+    Copy from django 5.1 querystring builtin templatetag
+    https://github.com/django/django/blob/4702b36120ea4c736d3f6b5595496f96e0021e46/django/template/defaulttags.py#L1286
+
+    Build a query string using `args` and `kwargs` arguments.
+
+    This tag constructs a new query string by adding, removing, or modifying
+    parameters from the given positional and keyword arguments. Positional
+    arguments must be mappings (such as `QueryDict` or `dict`), and
+    `request.GET` is used as the starting point if `args` is empty.
+
+    Keyword arguments are treated as an extra, final mapping. These mappings
+    are processed sequentially, with later arguments taking precedence.
+
+    Passing `None` as a value removes the corresponding key from the result.
+    For iterable values, `None` entries are ignored, but if all values are
+    `None`, the key is removed.
+
+    A query string prefixed with `?` is returned.
+
+    Raise TemplateSyntaxError if a positional argument is not a mapping or if
+    keys are not strings.
+
+    For example::
+
+        {# Set a parameter on top of `request.GET` #}
+        {% querystring foo=3 %}
+
+        {# Remove a key from `request.GET` #}
+        {% querystring foo=None %}
+
+        {# Use with pagination #}
+        {% querystring page=page_obj.next_page_number %}
+
+        {# Use a custom ``QueryDict`` #}
+        {% querystring my_query_dict foo=3 %}
+
+        {# Use multiple positional and keyword arguments #}
+        {% querystring my_query_dict my_dict foo=3 bar=None %}
+    """
+
+    warnings.warn(
+        "This template tag is a copy of querystring template tag implemented in django 5.1."
+        "Remove this when update.",
+        category=RemovedInDjango51Warning,
+    )
+    if not args:
+        args = [context.request.GET]
+    params = QueryDict(mutable=True)
+    for d in [*args, kwargs]:
+        if not isinstance(d, Mapping):
+            raise TemplateSyntaxError(
+                "querystring requires mappings for positional arguments (got "
+                "%r instead)." % d
+            )
+        items = d.lists() if isinstance(d, QueryDict) else d.items()
+        for key, value in items:
+            if not isinstance(key, str):
+                raise TemplateSyntaxError(
+                    "querystring requires strings for mapping keys (got %r "
+                    "instead)." % key
+                )
+            if value is None:
+                params.pop(key, None)
+            elif isinstance(value, Iterable) and not isinstance(value, str):
+                # Drop None values; if no values remain, the key is removed.
+                params.setlist(key, [v for v in value if v is not None])
+            else:
+                params[key] = value
+    query_string = params.urlencode() if params else ""
+    return f"?{query_string}"

@@ -106,6 +106,8 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = "users.User"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-redirect-url
 LOGIN_REDIRECT_URL = "home"
+AMENAGEMENT_LOGIN_REDIRECT_URL = "home"
+HAIE_LOGIN_REDIRECT_URL = "petition_project_list"
 # https://docs.djangoproject.com/en/dev/ref/settings/#login-url
 LOGIN_URL = "login"
 
@@ -146,7 +148,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
+    "envergo.middleware.rate_limiting.RateLimitingMiddleware",
     "envergo.analytics.middleware.HandleMtmValues",
+    "envergo.petitions.middleware.HandleInvitationTokenMiddleware",
 ]
 
 # STATIC
@@ -481,3 +485,7 @@ FILE_UPLOAD_HANDLERS = [
 SECURE_CSP = {}
 
 SECURE_CSP_REPORT_ONLY = {}
+
+RATELIMIT_RATE = "100/m"
+
+INVITATION_TOKEN_COOKIE_NAME = "invitation_token"

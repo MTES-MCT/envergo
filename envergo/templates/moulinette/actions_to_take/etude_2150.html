@@ -1,0 +1,13 @@
+<p>
+  {% if moulinette.loi_sur_leau.result == 'action_requise' %}
+    Si le projet intercepte les eaux pluviales d'une surface de plus de 1 ha et les rejette dans le milieu naturel, il
+    est soumis à déclaration Loi sur l’eau.
+  {% elif moulinette.loi_sur_leau.result == 'soumis' %}
+    L'étude doit figurer dans le dossier Loi sur l'eau.
+  {% endif %}
+
+  <br />
+  <a title="Voir le détail de la réglementation « Loi sur l'eau »"
+     href="#{% if moulinette.loi_sur_leau.ecoulement_avec_bv %}criterion-loi_sur_leau__ecoulement_avec_bv{% else %}criterion-loi_sur_leau__ecoulement_sans_bv{% endif %}"
+     class="fr-link fr-text--sm action-learn-more-link">En savoir plus</a>
+</p>

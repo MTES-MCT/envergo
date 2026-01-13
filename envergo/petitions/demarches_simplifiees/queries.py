@@ -267,6 +267,7 @@ DOSSIER_FRAGMENT = (
         + COMMUNE_FRAGMENT
         + RNF_FRAGMENT
         + ENGAGEMENT_JURIDIQUE_FRAGMENT
+        + MESSAGE_FRAGMENT
     )
     + """
 fragment DossierFragment on Dossier {
@@ -313,6 +314,13 @@ fragment DossierFragment on Dossier {
   champs @include(if: $includeChamps) {
     ...ChampFragment
   }
+  messages @include(if: $includeMessages) {
+    ...MessageFragment
+  }
+  instructeurs {
+    email
+    id
+  }
   demarche {
     title
     number
@@ -336,7 +344,13 @@ fragment DossierFragment on Dossier {
 GET_DOSSIER_QUERY = (
     DOSSIER_FRAGMENT
     + """
-query getDossier($dossierNumber: Int!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+query getDossier(
+    $dossierNumber: Int!,
+    $includeChamps: Boolean = true,
+    $includeTraitements: Boolean = false,
+    $includeMessages: Boolean = false
+  )
+{
   dossier(number: $dossierNumber) {
    ...DossierFragment
   }
@@ -353,6 +367,7 @@ query getDossiersForDemarche(
    $after: String,
    $includeChamps: Boolean = true,
    $includeTraitements: Boolean = false,
+   $includeMessages: Boolean = true,
    )
 {
    demarche(number: $demarcheNumber)
@@ -444,7 +459,8 @@ DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION = (
 mutation (
 $input: DossierRepasserEnConstructionInput!,
  $includeChamps: Boolean = true,
-  $includeTraitements: Boolean = false
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
   ) {
   dossierRepasserEnConstruction(input: $input) {
     dossier {
@@ -464,7 +480,8 @@ DOSSIER_PASSER_EN_INSTRUCTION_MUTATION = (
 mutation (
 $input: DossierPasserEnInstructionInput!,
  $includeChamps: Boolean = true,
-  $includeTraitements: Boolean = false
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
   ) {
   dossierPasserEnInstruction(input: $input) {
     dossier {
@@ -484,7 +501,8 @@ DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION = (
 mutation (
 $input: DossierRepasserEnInstructionInput!,
  $includeChamps: Boolean = true,
-  $includeTraitements: Boolean = false
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
   ) {
   dossierRepasserEnInstruction(input: $input) {
     dossier {
@@ -501,7 +519,12 @@ $input: DossierRepasserEnInstructionInput!,
 DOSSIER_ACCEPTER_MUTATION = (
     DOSSIER_FRAGMENT
     + """
-mutation ($input: DossierAccepterInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+mutation (
+  $input: DossierAccepterInput!,
+  $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
+) {
   dossierAccepter(input: $input) {
     dossier {
     ...DossierFragment
@@ -517,7 +540,12 @@ mutation ($input: DossierAccepterInput!, $includeChamps: Boolean = true, $includ
 DOSSIER_REFUSER_MUTATION = (
     DOSSIER_FRAGMENT
     + """
-mutation ($input: DossierRefuserInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+mutation (
+  $input: DossierRefuserInput!,
+  $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
+) {
   dossierRefuser(input: $input) {
     dossier {
     ...DossierFragment
@@ -533,7 +561,12 @@ mutation ($input: DossierRefuserInput!, $includeChamps: Boolean = true, $include
 DOSSIER_CLASSER_SANS_SUITE_MUTATION = (
     DOSSIER_FRAGMENT
     + """
-mutation ($input: DossierClasserSansSuiteInput!, $includeChamps: Boolean = true, $includeTraitements: Boolean = false) {
+mutation (
+  $input: DossierClasserSansSuiteInput!,
+  $includeChamps: Boolean = true,
+  $includeTraitements: Boolean = false,
+  $includeMessages: Boolean = false
+) {
   dossierClasserSansSuite(input: $input) {
     dossier {
     ...DossierFragment

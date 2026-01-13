@@ -25,7 +25,6 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
-    EvaluationAction,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -33,7 +32,7 @@ from envergo.evaluations.models import (
     RequestFile,
     generate_reference,
 )
-from envergo.moulinette.models import get_moulinette_class_from_url
+from envergo.moulinette.utils import get_moulinette_class_from_url
 from envergo.utils.fields import NoIdnEmailField
 
 logger = logging.getLogger(__name__)
@@ -194,8 +193,10 @@ class EvaluationAdmin(admin.ModelAdmin):
                 level=messages.WARNING,
             )
             published = False
-        elif latest_version.created_at < obj.updated_at:
-
+        elif (
+            latest_version.created_at < obj.updated_at
+            and latest_version.content != obj.render_content()
+        ):
             local_updated_at = localtime(obj.updated_at)
             local_published_at = localtime(latest_version.created_at)
             msg = f"""
@@ -719,14 +720,3 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
-
-
-@admin.register(EvaluationAction)
-class EvaluationAction(admin.ModelAdmin):
-
-    list_display = [
-        "slug",
-        "type",
-        "target",
-        "order",
-    ]

@@ -6,8 +6,8 @@ from envergo.geodata.conftest import herault_map, loire_atlantique_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import Criterion, MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 
@@ -46,7 +46,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 
 
 def test_conditionnalite_pac_only_for_agri_pac():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
     )
@@ -85,7 +85,7 @@ def test_bcae8_impossible_case():
 
     This data configuration is prevented by the form validation.
     """
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -107,7 +107,7 @@ def test_bcae8_impossible_case():
 
 
 def test_bcae8_not_activated(herault_map):  # noqa
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -141,7 +141,7 @@ def test_bcae8_not_activated(herault_map):  # noqa
 
 
 def test_bcae8_small_dispense_petit():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -173,7 +173,7 @@ def test_bcae8_small_dispense_petit():
 
 
 def test_bcae8_small_dispense_petit_2():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True}),
@@ -209,7 +209,7 @@ def test_bcae8_small_dispense_petit_2():
 
 
 def test_bcae8_small_interdit_transfert_parcelles():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -239,7 +239,7 @@ def test_bcae8_small_interdit_transfert_parcelles():
 
 
 def test_bcae8_small_interdit_amelioration_culture():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -269,7 +269,7 @@ def test_bcae8_small_interdit_amelioration_culture():
 
 
 def test_bcae8_small_soumis_chemin_acces():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -295,7 +295,7 @@ def test_bcae8_small_soumis_chemin_acces():
 
 
 def test_bcae8_small_interdit_chemin_acces():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=11, additionalData={"sur_parcelle_pac": True})]
     )
@@ -320,7 +320,7 @@ def test_bcae8_small_interdit_chemin_acces():
 
 
 def test_bcae8_multi_chemin_acces():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(length=9, additionalData={"sur_parcelle_pac": True}),
@@ -355,7 +355,7 @@ def test_bcae8_multi_chemin_acces():
 
 
 def test_bcae8_small_interdit_securite():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -379,7 +379,7 @@ def test_bcae8_small_interdit_securite():
 
 
 def test_bcae8_small_soumis_amenagement():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -405,7 +405,7 @@ def test_bcae8_small_soumis_amenagement():
 
 
 def test_bcae8_small_interdit_amenagement():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -431,7 +431,7 @@ def test_bcae8_small_interdit_amenagement():
 
 
 def test_bcae8_small_interdit_embellissement():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
@@ -455,7 +455,7 @@ def test_bcae8_small_interdit_embellissement():
 
 
 def test_bcae8_big_soumis_remplacement():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -485,7 +485,7 @@ def test_bcae8_big_soumis_remplacement():
 
 
 def test_bcae8_big_soumis_transfer_parcelles():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -516,7 +516,7 @@ def test_bcae8_big_soumis_transfer_parcelles():
 
 
 def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -547,7 +547,7 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
 
 
 def test_bcae8_big_interdit_amelioration_culture():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -574,7 +574,7 @@ def test_bcae8_big_interdit_amelioration_culture():
 
 
 def test_bcae8_big_interdit_embellissement():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -598,7 +598,7 @@ def test_bcae8_big_interdit_embellissement():
 
 
 def test_bcae8_big_soumis_fosse():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -625,7 +625,7 @@ def test_bcae8_big_soumis_fosse():
 
 
 def test_bcae8_big_soumis_incendie():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -652,7 +652,7 @@ def test_bcae8_big_soumis_incendie():
 
 
 def test_bcae8_big_soumis_maladie():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -679,7 +679,7 @@ def test_bcae8_big_soumis_maladie():
 
 
 def test_bcae8_big_interdit_autre():
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
@@ -703,7 +703,7 @@ def test_bcae8_big_interdit_autre():
 
 def test_bcae8_batiment_exploitation():
     # GIVEN a project of amenagement on PAC land
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )

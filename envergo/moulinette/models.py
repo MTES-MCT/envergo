@@ -6,7 +6,6 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
-from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
@@ -40,7 +39,7 @@ from envergo.evaluations.models import (
     RESULT_CASCADE,
     RESULTS,
     TAG_STYLES_BY_RESULT,
-    EvaluationAction,
+    USER_TYPES,
     TagStyleEnum,
 )
 from envergo.geodata.models import Department, Zone
@@ -97,6 +96,8 @@ REGULATIONS = Choices(
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
     ("reserves_naturelles", "Réserves naturelles"),
+    ("code_rural_haie", "Code rural"),
+    ("regime_unique_haie", "Régime unique haie"),
 )
 
 
@@ -194,6 +195,29 @@ def _check_results_groups_matrices():
 
 
 _check_results_groups_matrices()
+
+
+ACTIONS_TO_TAKE = Choices(
+    (
+        "mention_arrete_lse",
+        "Mentionner dans l’arrêté le différé de réalisation des travaux",
+    ),
+    ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
+    ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
+    ("etude_zh_lse", "LSE > Réaliser un inventaire zones humides"),
+    ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
+    ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
+    ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
+    ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
+    ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
+    ("etude_zh_n2000", "Natura 2000 > Réaliser un inventaire zones humides"),
+    ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
+    (
+        "pc_cas_par_cas",
+        "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
+    ),
+    ("pc_ein", "L’évaluation des incidences Natura 2000"),
+)
 
 
 def get_map_factory_class_names():
@@ -981,6 +1005,12 @@ class ConfigHaie(ConfigBase):
         default=False,
         help_text="Le régime unique s'applique dans ce département",
     )
+    single_procedure_settings = models.JSONField(
+        "Paramètres du régime unique",
+        blank=True,
+        null=False,
+        default=dict,
+    )
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
@@ -1207,6 +1237,38 @@ class ConfigHaie(ConfigBase):
                 | Q(demarches_simplifiees_project_url_id__isnull=False),
                 name="project_url_id_required_if_demarche_number",
             ),
+            CheckConstraint(
+                name="single_procedure_requires_coeff_compensation",
+                violation_error_message="Les paramètres de régime unique doivent comporter des coefficients de "
+                "compensation numérique pour chaque type de haies (degradee, buissonnante, "
+                "arbustive et mixte).",
+                check=Q(single_procedure=False)
+                | (
+                    Q(single_procedure_settings__has_key="coeff_compensation")
+                    & Q(
+                        single_procedure_settings__coeff_compensation__has_key="degradee"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__degradee__regex=r"^\d+(\.\d+)?$"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__has_key="buissonnante"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__buissonnante__regex=r"^\d+(\.\d+)?$"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__has_key="arbustive"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__arbustive__regex=r"^\d+(\.\d+)?$"
+                    )
+                    & Q(single_procedure_settings__coeff_compensation__has_key="mixte")
+                    & Q(
+                        single_procedure_settings__coeff_compensation__mixte__regex=r"^\d+(\.\d+)?$"
+                    )
+                ),
+            ),
         ]
 
 
@@ -1317,13 +1379,12 @@ class Moulinette(ABC):
 
     def __init__(self, form_kwargs):
         self.catalog = MoulinetteCatalog()
-
+        # Maybe here department should be evaluated if existing
         if "initial" in form_kwargs:
             form_kwargs["initial"].update(compute_surfaces(form_kwargs["initial"]))
         if "data" in form_kwargs:
             form_kwargs["data"].update(compute_surfaces(form_kwargs["data"]))
         self.form_kwargs = form_kwargs
-
         self.catalog = self.get_catalog_data()
         if self.bound_main_form.is_valid():
             if self.config and self.config.id and hasattr(self.config, "templates"):
@@ -1363,7 +1424,7 @@ class Moulinette(ABC):
         """Get the main form with forced bound data.
 
         When we display the moulinette form, we show the main form with
-        initial values. But if the initial data would we valid data, then we
+        initial values. But if the initial data would be valid data, then we
         want to also display the additional forms.
 
         In that case, we force a form validation by creating a moulinette form
@@ -1889,12 +1950,12 @@ class Moulinette(ABC):
             for criterion in regulation.criteria.all():
                 actions_to_take.update(criterion.actions_to_take)
 
-        actions = EvaluationAction.objects.filter(slug__in=actions_to_take).all()
+        actions = ActionToTake.objects.filter(slug__in=actions_to_take).all()
         result = defaultdict(list)
         for action in actions:
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
-        return result
+        return dict(result)
 
 
 class MoulinetteAmenagement(Moulinette):
@@ -2132,6 +2193,8 @@ class MoulinetteHaie(Moulinette):
         "alignement_arbres",
         "urbanisme_haie",
         "reserves_naturelles",
+        "code_rural_haie",
+        "regime_unique_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
@@ -2465,26 +2528,53 @@ class MoulinetteHaie(Moulinette):
         )
 
 
-def get_moulinette_class_from_site(site):
-    """Return the correct Moulinette class depending on the current site."""
+class ActionToTake(models.Model):
+    """Actions to take listed in an evaluation and debug page
 
-    domain_class = {
-        settings.ENVERGO_AMENAGEMENT_DOMAIN: MoulinetteAmenagement,
-        settings.ENVERGO_HAIE_DOMAIN: MoulinetteHaie,
-    }
-    cls = domain_class.get(site.domain, None)
-    if cls is None:
-        raise RuntimeError(f"Unknown site for domain {site.domain}")
-    return cls
+    Actions to take are displayed in an evaluation if:
+    - ACTIONS_TO_TAKE_MATRIX is set in a related Regulation or Criterion evaluator class
+    - Display actions to take is True in Evaluation object
+    """
 
+    slug = models.CharField(
+        "Référence de l'action",
+        max_length=50,
+        choices=ACTIONS_TO_TAKE,
+        unique=True,
+    )
+    type = models.CharField(
+        "Type d'action",
+        max_length=20,
+        choices=Choices(
+            ("action", "Action"),
+            ("pc", "Pièce complémentaire"),
+        ),
+    )
+    target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
+    order = models.PositiveIntegerField("Ordre", default=1)
 
-def get_moulinette_class_from_url(url):
-    """Return the correct Moulinette class depending on the current site."""
+    label = models.TextField(
+        verbose_name="Titre affiché",
+        help_text="Texte de niveau 1",
+    )
+    details = models.CharField(
+        verbose_name="Détails",
+        max_length=255,
+        help_text="Texte de niveau 2, choisir le template correspondant.",
+    )
 
-    if "envergo" in url:
-        cls = MoulinetteAmenagement
-    elif "haie" in url:
-        cls = MoulinetteHaie
-    else:
-        raise RuntimeError("Cannot find the moulinette to use")
-    return cls
+    documents_to_attach = ArrayField(
+        models.CharField(max_length=255),
+        verbose_name="référence des pièces complémentaires",
+        help_text="Valeurs séparées par des virgules sans espace",
+        blank=True,
+        default=list,
+    )
+
+    def __str__(self):
+        return self.get_slug_display()
+
+    class Meta:
+        verbose_name = "Action à mener"
+        verbose_name_plural = "Actions à mener"
+        ordering = ["order"]
