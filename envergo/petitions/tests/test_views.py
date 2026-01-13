@@ -2275,7 +2275,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
     response = client.get(instructor_url)
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Consultations" in content
+    assert "Services consultés" in content
     assert (
         reverse(
             "petition_project_instructor_consultations_view",
