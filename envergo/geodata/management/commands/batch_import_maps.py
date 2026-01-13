@@ -1,11 +1,14 @@
 import csv
 import pathlib
+from logging import getLogger
 
 from django.core.files import File as DjangoFile
 from django.core.management.base import BaseCommand
 
 from envergo.geodata.models import Map
 from envergo.geodata.utils import count_features
+
+logger = getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -19,10 +22,20 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("csv_file", type=pathlib.Path, nargs=1)
         parser.add_argument("data_dir", type=pathlib.Path, nargs=1)
+        parser.add_argument(
+            "--purge", action="store_true", help="Purge all existing hedges maps"
+        )
 
     def handle(self, *args, **options):
         csv_path = options["csv_file"][0]
         dir_path = options["data_dir"][0]
+
+        if options["purge"]:
+            qs = Map.objects.filter(map_type="haies")
+            self.stdout.write(f"Purging existing {qs.count()} maps")
+            qs.delete()
+
+        self.stdout.write("Starting to import maps.")
 
         with open(csv_path, "r") as f:
             reader = csv.DictReader(f)
@@ -43,4 +56,5 @@ class Command(BaseCommand):
                 data_type="certain",  # dedans
                 expected_geometries=count_features(map_file),
             )
+            self.stdout.write(f"Importing map {csv_row["file"]}")
             map.file.save(csv_row["file"], map_file)
