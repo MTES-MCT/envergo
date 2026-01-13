@@ -155,11 +155,11 @@ class MoulinetteTemplateInline(admin.StackedInline):
 class CriterionAdmin(admin.ModelAdmin):
     list_display = [
         "backend_title",
-        "is_optional",
         "regulation",
         "perimeter_list",
         "activation_map_column",
         "activation_distance_column",
+        "validity_dates_column",
         "evaluator_column",
         "weight",
     ]
@@ -212,6 +212,18 @@ class CriterionAdmin(admin.ModelAdmin):
         content = truncatechars(obj.activation_map.name, 45)
         html = f"<a href='{url}'>{content}</a>"
         return mark_safe(html)
+
+    @admin.display(ordering="validity_date_start", description="Dates")
+    def validity_dates_column(self, obj):
+        date_start_display = (
+            obj.validity_date_start.strftime("%d/%m/%y")
+            if obj.validity_date_start
+            else ""
+        )
+        date_end_display = (
+            obj.validity_date_end.strftime("%d/%m/%y") if obj.validity_date_end else ""
+        )
+        return f"{date_start_display}-{date_end_display}"
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
