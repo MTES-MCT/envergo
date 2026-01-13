@@ -59,6 +59,11 @@ def instructor_view_part(
                     regulation_criterion.get_evaluator(), project, moulinette
                 )
             )
+        regulation_evaluator = regulation.get_evaluator()
+        if regulation_evaluator:
+            context_dict.update(
+                get_instructor_view_context(regulation_evaluator, project, moulinette)
+            )
     else:
         template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
         context_dict.update(

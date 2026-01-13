@@ -1,37 +1,71 @@
-{% load moulinette %}
-
-<ul class="instructor-view-list">
-
-  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur site Natura 2000" value=l_n2000_hors_aa|default:0.0|floatformat:"0g" unit="m" comment="Hors linéaires déclarés comme « alignements d'arbres ».<br /> Uniquement sur les sites où l'arrachage de haies est soumis à EIN." %}
-
-  {% if l_n2000_hors_aa > 0 %}
-    <li>
-      <span><b>Détail :</b></span>
-
-      <span>
-        {# djlint:off #}
-        {% for hedge_id, length in n2000_hors_aa.items %}
-          {{ hedge_id }} ({{ length|floatformat:"0g" }} m){% if not forloop.last %},{% endif %}
-        {% endfor %}
-        {# djlint:on #}
-      </span>
-    </li>
-  {% endif %}
-
-  {% include "haie/petitions/_item.html" with label="Total linéaire d'alignements d'arbres à détruire sur site Natura 2000" value=l_n2000_aa|default:0.0|floatformat:"0g" unit="m" %}
-
-  {% if l_n2000_aa > 0 %}
-    <li>
-      <span><b>Détail :</b></span>
-
-      <span>
-        {# djlint:off #}
-        {% for hedge_id, length in n2000_aa.items %}
-          {{ hedge_id }} ({{ length|floatformat:"0g" }} m){% if not forloop.last %},{% endif %}
-        {% endfor %}
-        {# djlint:on #}
-      </span>
-    </li>
-
-  {% endif %}
-</ul>
+<div class="fr-table fr-table--multiline">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <thead>
+            <tr>
+              <th class="fr-cell--fixed" role="columnheader">Type</th>
+              <th>À détruire, sur site protégé</th>
+              <th>Détail</th>
+              <th>À planter, sur site protégé</th>
+              <th>Détail</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-row-key="1">
+              <th class="fr-cell--fixed" scope="row">Haie mixte (type 5)</th>
+              <td>{{ sites_proteges_hedges.mixte.TO_REMOVE.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.mixte.TO_REMOVE.ids|join:", "|default:"-" }}</td>
+              <td>{{ sites_proteges_hedges.mixte.TO_PLANT.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.mixte.TO_PLANT.ids|join:", "|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="2">
+              <th class="fr-cell--fixed" scope="row">Haie arbustive (type 3)</th>
+              <td>{{ sites_proteges_hedges.arbustive.TO_REMOVE.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.arbustive.TO_REMOVE.ids|join:", "|default:"-" }}</td>
+              <td>{{ sites_proteges_hedges.arbustive.TO_PLANT.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.arbustive.TO_PLANT.ids|join:", "|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="3">
+              <th class="fr-cell--fixed" scope="row">Haie buissonnante basse (type 2)</th>
+              <td>{{ sites_proteges_hedges.buissonnante.TO_REMOVE.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.buissonnante.TO_REMOVE.ids|join:", "|default:"-" }}</td>
+              <td>{{ sites_proteges_hedges.buissonnante.TO_PLANT.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.buissonnante.TO_PLANT.ids|join:", "|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="4">
+              <th class="fr-cell--fixed" scope="row">Haie dégradée (type 1)</th>
+              <td>{{ sites_proteges_hedges.degradee.TO_REMOVE.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.degradee.TO_REMOVE.ids|join:", "|default:"-" }}</td>
+              <td>Non applicable</td>
+              <td>Non applicable</td>
+            </tr>
+            <tr data-row-key="4">
+              <th class="fr-cell--fixed" scope="row">Total haie régime unique</th>
+              <td>
+                <b> {{ sites_proteges_hedges.total.TO_REMOVE.length|floatformat:"0g" }} m </b>
+              </td>
+              <td>
+                <b> {{ sites_proteges_hedges.total.TO_REMOVE.ids|join:", "|default:"-" }} </b>
+              </td>
+              <td>
+                <b> {{ sites_proteges_hedges.total.TO_PLANT.length|floatformat:"0g" }} m </b>
+              </td>
+              <td>
+                <b> {{ sites_proteges_hedges.total.TO_PLANT.ids|join:", "|default:"-" }} </b>
+              </td>
+            </tr>
+            <tr data-row-key="4">
+              <th class="fr-cell--fixed" scope="row">Alignement d'arbres (type 4)</th>
+              <td>{{ sites_proteges_hedges.alignement.TO_REMOVE.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.alignement.TO_REMOVE.ids|join:", "|default:"-" }}</td>
+              <td>{{ sites_proteges_hedges.alignement.TO_PLANT.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.alignement.TO_PLANT.ids|join:", "|default:"-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
