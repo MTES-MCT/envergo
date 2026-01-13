@@ -83,7 +83,7 @@ django-appconf==1.1.0
     # via django-compressor
 django-braces==1.17.0
     # via -r base.in
-django-compressor==4.5.1
+django-compressor==4.6.0
     # via -r base.in
 django-crispy-forms==2.4
     # via -r base.in
@@ -164,7 +164,7 @@ pytz==2025.2
     # via -r base.in
 qrcode==8.2
     # via django-otp
-rcssmin==1.1.2
+rcssmin==1.2.2
     # via
     #   -r base.in
     #   django-compressor
@@ -178,7 +178,7 @@ requests==2.32.4
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via -r base.in
-rjsmin==1.2.2
+rjsmin==1.2.5
     # via django-compressor
 scipy==1.16.1
     # via -r base.in
