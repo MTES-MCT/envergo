@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 class Command(BaseCommand):
     help = """Trigger the import of all hedges maps.
 
-    This is meant to be used after the "batch_process_map" has been run.
+    This is meant to be used after the "batch_import_map" has been run.
     """
 
     def handle(self, *args, **options):
