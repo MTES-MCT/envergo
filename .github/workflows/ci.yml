@@ -1,4 +1,6 @@
 name: CI
+permissions:
+  actions: read
 
 # Enable Buildkit and let compose use it to speed up image building
 env:

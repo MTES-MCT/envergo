@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import re
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlparse
@@ -13,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
+from django.core.exceptions import SuspiciousOperation
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
@@ -33,7 +35,13 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.views.generic import DetailView, FormView, ListView, UpdateView
+from django.views.generic import (
+    DetailView,
+    FormView,
+    ListView,
+    RedirectView,
+    UpdateView,
+)
 from django.views.generic.detail import SingleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
@@ -41,13 +49,14 @@ from shapely.ops import transform
 
 from envergo.analytics.utils import (
     get_matomo_tags,
+    get_user_type,
     log_event,
     update_url_with_matomo_params,
 )
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
-from envergo.moulinette.models import ConfigHaie, MoulinetteHaie, Regulation
+from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
@@ -96,7 +105,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
-    not_filtered_queryset = None
 
     def get_queryset(self):
         """Override queryset filtering projects from user departments
@@ -157,10 +165,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = queryset.none()
 
-        # Store not_filtered_queryset, needed to check if there is at least one project in it
-        self.not_filtered_queryset = queryset
+        return queryset
 
-        # Filter on request GET params
+    def filter_results(self, queryset):
+        """Filter queryset on request GET params"""
         request_filters = self.request.GET.getlist("f", [])
         if "mes_dossiers" in request_filters:
             queryset = queryset.filter(followed_up=True)
@@ -174,15 +182,18 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         return queryset
 
     def get_context_data(self, **kwargs):
+        """Filter results and add info on each object"""
+        all_results = self.object_list
+        filtered_results = self.filter_results(all_results)
+        kwargs["object_list"] = filtered_results
+
         context = super().get_context_data(**kwargs)
 
-        # Check if object_list without filter is empty when filters are in querystring
-        if context["object_list"]:
+        # Check if all results is empty when filters are in querystring
+        if filtered_results:
             context["user_can_view_one_petition_project"] = True
         else:
-            context["user_can_view_one_petition_project"] = (
-                self.not_filtered_queryset.exists()
-            )
+            context["user_can_view_one_petition_project"] = all_results.exists()
 
         # Add city and organization to each obj
         for obj in context["object_list"]:
@@ -249,6 +260,7 @@ class PetitionProjectCreate(FormView):
                     "creation",
                     self.request,
                     **petition_project.get_log_event_data(),
+                    user_type=get_user_type(self.request.user),
                     **get_matomo_tags(self.request),
                 )
 
@@ -579,6 +591,7 @@ class PetitionProjectDetail(DetailView):
                 "consultation",
                 self.request,
                 **self.object.get_log_event_data(),
+                user_type=get_user_type(self.request.user),
                 **get_matomo_tags(self.request),
             )
 
@@ -846,6 +859,7 @@ class BasePetitionProjectInstructorView(
                 self.event_action,
                 self.request,
                 **self.get_log_event_data(),
+                user_type=get_user_type(request.user),
                 **get_matomo_tags(self.request),
             )
 
@@ -894,15 +908,12 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context["google_maps_url"] = get_google_maps_centered_url(hedge_data)
 
         regulation_slug = self.kwargs.get("regulation")
-        if regulation_slug:
-            try:
-                current_regulation = context["moulinette"].regulations.get(
-                    regulation=regulation_slug
-                )
-            except Regulation.DoesNotExist:
-                raise Http404()
+        regulation = context["moulinette"].get_regulation(regulation_slug)
+        if regulation is None:
+            raise Http404()
 
-            context["current_regulation"] = current_regulation
+        context["regulation"] = regulation
+        context["current_regulation"] = regulation
         return context
 
     def get_form_class(self):
@@ -1237,7 +1248,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
         else:
             # This should not happen unless someone manually forges an invalid URL
-            raise HttpResponseForbidden("Action non disponible")
+            return HttpResponseForbidden("Action non disponible")
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -1625,14 +1636,13 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
                 created_by=request.user,
                 petition_project=project,
             )
+            url = reverse("petition_project_instructor_view", args=[project.reference])
             invitation_url = update_qs(
-                self.request.build_absolute_uri(
-                    reverse(
-                        "petition_project_accept_invitation",
-                        kwargs={"reference": project.reference, "token": token.token},
-                    )
-                ),
-                {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+                self.request.build_absolute_uri(url),
+                {
+                    "mtm_campaign": INVITATION_TOKEN_MATOMO_TAG,
+                    "invitation_token": token.token,
+                },
             )
             log_event(
                 "dossier",
@@ -1652,44 +1662,31 @@ class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View
             )
 
 
-class PetitionProjectAcceptInvitation(SingleObjectMixin, LoginRequiredMixin, View):
-    """Accept an invitation to a petition project"""
+class PetitionProjectAcceptInvitation(RedirectView):
+    """Accept an invitation to a petition project.
 
-    model = PetitionProject
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
+    This is a legacy view that was responsible for accepting invitations. It is now
+    obsolete so it was changed to a simple redirection so as to not break existing
+    tokens.
 
-    def dispatch(self, request, *args, **kwargs):
-        project = self.get_object()
-        self.request.invitation = InvitationToken.objects.filter(
-            petition_project=project, token=kwargs.get("token")
-        ).first()
+    """
 
-        if not self.request.invitation or not self.request.invitation.is_valid():
-            return TemplateResponse(
-                request=request,
-                template="haie/petitions/invalid_invitation_token.html",
-                status=403,
-            )
+    # Regex for tokens generated by secrets.token_urlsafe(32)
+    # 32 bytes encoded in URL-safe base64 = 43 characters (A-Z, a-z, 0-9, -, _)
+    # We validate the token to prevent phishing attempts, since we use a user-provided
+    # value to build the redirection url
+    TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{43}$")
 
-        return super().dispatch(request, *args, **kwargs)
+    def get_redirect_url(self, *args, **kwargs):
+        reference = kwargs.get("reference")
+        token = kwargs.get("token")
 
-    def get(self, request, *args, **kwargs):
-        """Accept the invitation and redirect to the instructor view of the petition project"""
+        if not token or not self.TOKEN_PATTERN.match(token):
+            raise SuspiciousOperation("Invalid invitation token format")
 
-        # the token should not be consumed by its own creator
-        if self.request.invitation.created_by != request.user:
-            self.request.invitation.user = request.user
-            self.request.invitation.save()
-
-        return redirect(
-            reverse(
-                "petition_project_instructor_view",
-                kwargs={
-                    "reference": self.request.invitation.petition_project.reference
-                },
-            )
-        )
+        url = reverse("petition_project", args=[reference])
+        url_with_token = f"{url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={token}"
+        return url_with_token
 
 
 @login_required

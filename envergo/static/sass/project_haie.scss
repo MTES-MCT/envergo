@@ -869,8 +869,15 @@ div#invitation-token-email-wrapper {
   padding: 1rem 2rem;
   font-size: 0.875rem;
 
+  --text-spacing: 0 0 1rem;
+  --xl-block: 0;
+
   p {
     font-size: 0.875rem;
+  }
+
+  ul {
+    margin-bottom: 1rem;
   }
 
   .fr-btn.fr-btn--tertiary {
@@ -955,7 +962,7 @@ div#alternative-notice {
   }
 
   p {
-    //margin: auto;
+    // margin: auto;
     --text-spacing: 0 0 8px 0;
   }
 }

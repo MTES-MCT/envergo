@@ -1577,8 +1577,14 @@ footer {
 
     @media (width >= 62em) {
       .fr-header__body-row {
+        // padding 0 because this class is used in both Envergo and Haie Header-Slim
         padding: 0;
         line-height: 1rem;
+      }
+
+      .fr-btns-group {
+        // padding 0.5 for fr-btns-group in Envergo Slim-Header
+        padding: 0.5rem 0;
       }
 
       .fr-header__service {
