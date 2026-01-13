@@ -22,7 +22,9 @@ from django.db.models.functions import Coalesce
 from django.http import (
     Http404,
     HttpResponse,
+    HttpResponseBadRequest,
     HttpResponseForbidden,
+    HttpResponseNotFound,
     HttpResponseRedirect,
     JsonResponse,
 )
@@ -758,12 +760,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         plantation_url = update_qs(plantation_url, {"source": "instruction"})
         context["plantation_url"] = plantation_url
-        context["invitation_token_url"] = self.request.build_absolute_uri(
-            reverse(
-                "petition_project_invitation_token",
-                kwargs={"reference": self.object.reference},
-            )
-        )
         context["invitation_register_url"] = update_qs(
             self.request.build_absolute_uri(
                 reverse(
@@ -1126,6 +1122,44 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
         url = reverse("petition_project_instructor_view", args=[self.object.reference])
         return HttpResponseRedirect(url)
+
+
+class PetitionProjectInstructorConsultationsView(
+    BasePetitionProjectInstructorView, DetailView
+):
+    """View for managing invitation tokens (consultations)"""
+
+    template_name = "haie/petitions/instructor_view_consultations.html"
+    event_action = "consultation_tokens"
+
+    def has_view_permission(self, request, object):
+        """Only department administratons can see this page"""
+        return object.has_change_permission(request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get only accepted tokens (those with a user)
+        tokens = (
+            InvitationToken.objects.filter(
+                petition_project=self.object, user__isnull=False
+            )
+            .select_related("user")
+            .order_by("-created_at")
+        )
+
+        context["public_url"] = self.request.build_absolute_uri(
+            reverse("petition_project", args=[self.object.reference])
+        )
+        context["invitation_tokens"] = tokens
+        context["invitation_token_create_url"] = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_invitation_token_create",
+                kwargs={"reference": self.object.reference},
+            )
+        )
+
+        return context
 
 
 class PetitionProjectInstructorAlternativeView(
@@ -1701,44 +1735,104 @@ class PetitionProjectHedgeDataExport(DetailView):
         return response
 
 
-class PetitionProjectInvitationToken(SingleObjectMixin, LoginRequiredMixin, View):
-    """Create an invitation token for a petition project"""
+class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
+    """Create an invitation token and return modal HTML with the invitation content"""
 
-    model = PetitionProject
-    slug_field = "reference"
-    slug_url_kwarg = "reference"
+    http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        project = self.get_object()
-        if project.has_change_permission(request.user):
-            token = InvitationToken.objects.create(
-                created_by=request.user,
-                petition_project=project,
+
+        # We don't call super() because we only inherit frow `View`, which does not
+        # have a `post` method
+        self.object = self.get_object()
+        if not self.has_change_permission(request, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
             )
-            url = reverse("petition_project_instructor_view", args=[project.reference])
-            invitation_url = update_qs(
-                self.request.build_absolute_uri(url),
-                {
-                    "mtm_campaign": INVITATION_TOKEN_MATOMO_TAG,
-                    "invitation_token": token.token,
-                },
+
+        project = self.object
+        token = InvitationToken.objects.create(
+            created_by=request.user,
+            petition_project=project,
+        )
+        url = reverse("petition_project_instructor_view", args=[project.reference])
+        invitation_url = update_qs(
+            self.request.build_absolute_uri(url),
+            {
+                "mtm_campaign": INVITATION_TOKEN_MATOMO_TAG,
+                "invitation_token": token.token,
+            },
+        )
+        log_event(
+            "dossier",
+            "invitation_creation",
+            self.request,
+            reference=project.reference,
+            department=project.get_department_code(),
+            **get_matomo_tags(self.request),
+        )
+        # Return rendered modal HTML instead of JSON
+        invitation_contact_url = update_qs(
+            self.request.build_absolute_uri(
+                reverse(
+                    "contact_us",
+                )
+            ),
+            {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
+        )
+        return TemplateResponse(
+            request=request,
+            template="haie/petitions/_invitation_token_modal_content.html",
+            context={
+                "invitation_url": invitation_url,
+                "invitation_contact_url": invitation_contact_url,
+            },
+        )
+
+
+class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
+    """Delete (revoke) an invitation token"""
+
+    http_method_names = ["post"]
+
+    def get_success_url(self):
+        return reverse(
+            "petition_project_instructor_consultations_view",
+            kwargs={"reference": self.object.reference},
+        )
+
+    def post(self, request, *args, **kwargs):
+
+        # We don't call super() because we only inherit from `View`, which does not
+        # have a `post` method
+        self.object = self.get_object()
+        if not self.has_change_permission(request, self.object):
+            return HttpResponseForbidden(
+                "Vous n'avez pas la permission de révoquer une invitation"
             )
-            log_event(
-                "dossier",
-                "invitation",
-                self.request,
-                reference=project.reference,
-                department=project.get_department_code(),
-                **get_matomo_tags(self.request),
-            )
-            return JsonResponse({"invitation_url": invitation_url})
-        else:
-            return JsonResponse(
-                {
-                    "error": "You are not authorized to create an invitation token for this project."
-                },
-                status=403,
-            )
+
+        project = self.object
+        token_id = request.POST.get("token_id")
+        if not token_id:
+            return HttpResponseBadRequest("Identifiant de token manquant.")
+
+        try:
+            token = InvitationToken.objects.get(id=token_id, petition_project=project)
+        except InvitationToken.DoesNotExist:
+            return HttpResponseNotFound("Invitation non trouvée")
+
+        token.delete()
+        log_event(
+            "dossier",
+            "invitation_revocation",
+            self.request,
+            reference=project.reference,
+            department=project.get_department_code(),
+            **get_matomo_tags(self.request),
+        )
+
+        messages.success(request, "L'accès a été révoqué avec succès.")
+        return redirect(self.get_success_url())
 
 
 class PetitionProjectAcceptInvitation(RedirectView):
