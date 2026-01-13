@@ -650,6 +650,10 @@ class Criterion(models.Model):
     evaluator_settings = models.JSONField(
         _("Evaluator settings"), default=dict, blank=True
     )
+    validity_date_start = models.DateField(
+        _("Validity date start"), default="", blank=True
+    )
+    validity_date_end = models.DateField(_("Validity date end"), default="", blank=True)
     is_optional = models.BooleanField(
         _("Is optional"),
         default=False,
