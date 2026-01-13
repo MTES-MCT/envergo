@@ -292,15 +292,13 @@ tqdm==4.67.1
 typing-extensions==4.14.1
     # via
     #   -r base.txt
-    #   anyio
     #   beautifulsoup4
-    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt
     #   faker
     #   kombu
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -r base.txt
     #   botocore
