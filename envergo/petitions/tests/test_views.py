@@ -43,10 +43,7 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
-    PetitionProjectInstructorConsultationsView,
     PetitionProjectInstructorView,
-    PetitionProjectInvitationTokenCreate,
-    PetitionProjectInvitationTokenDelete,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -2215,13 +2212,11 @@ def test_invitation_token_expiration_display(client, haie_instructor_44, haie_us
     project = PetitionProjectFactory()
 
     # Create pending token (not accepted - should NOT be displayed)
-    pending_token = InvitationTokenFactory(
-        petition_project=project, created_by=haie_instructor_44
-    )
+    InvitationTokenFactory(petition_project=project, created_by=haie_instructor_44)
 
     # Create expired but not accepted token (should NOT be displayed)
     past_date = timezone.now() - timedelta(days=31)
-    expired_token = InvitationTokenFactory(
+    InvitationTokenFactory(
         petition_project=project,
         created_by=haie_instructor_44,
         valid_until=past_date,
@@ -2418,7 +2413,7 @@ def test_consultations_page_shows_creator_and_accepted_user_info(
     haie_user.save()
 
     # Create accepted token
-    token = InvitationTokenFactory(
+    InvitationTokenFactory(
         petition_project=project,
         created_by=haie_instructor_44,
         user=haie_user,
