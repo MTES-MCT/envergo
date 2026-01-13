@@ -651,9 +651,9 @@ class Criterion(models.Model):
         _("Evaluator settings"), default=dict, blank=True
     )
     validity_date_start = models.DateField(
-        _("Validity date start"), default="", blank=True
+        _("Validity date start"), blank=True, null=True
     )
-    validity_date_end = models.DateField(_("Validity date end"), default="", blank=True)
+    validity_date_end = models.DateField(_("Validity date end"), blank=True, null=True)
     is_optional = models.BooleanField(
         _("Is optional"),
         default=False,
