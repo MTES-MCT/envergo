@@ -965,7 +965,6 @@ div#alternative-notice {
   }
 
   p {
-    // margin: auto;
     --text-spacing: 0 0 8px 0;
   }
 }
@@ -1076,4 +1075,8 @@ button.hide-expanded[aria-expanded="true"] {
       padding: 0;
     }
   }
+}
+
+#sites-proteges-hedges-table .fr-text {
+  font-weight: normal;
 }

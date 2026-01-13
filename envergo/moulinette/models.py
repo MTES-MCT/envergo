@@ -607,6 +607,10 @@ class Regulation(models.Model):
 
         return actions_to_take
 
+    def get_evaluator(self):
+        """Return the evaluator instance."""
+        return self._evaluator
+
 
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
@@ -2359,9 +2363,12 @@ class MoulinetteHaie(Moulinette):
                 pass
 
         context["hedge_data"] = hedge_data
-        context["regulations_with_perimeters_intersected_by_hedges_to_plant_only"] = (
-            self.regulations_with_perimeters_intersected_by_hedges_to_plant_only
-        )
+        context["hedges_to_plant_intersecting_regulations_perimeter"] = {
+            regulation: hedges[TO_PLANT]
+            for regulation, perimeters in self.hedges_intersecting_regulations_perimeter.items()
+            for perimeter, hedges in perimeters.items()
+            if TO_PLANT in hedges and TO_REMOVE not in hedges
+        }
 
         return context
 
@@ -2532,35 +2539,56 @@ class MoulinetteHaie(Moulinette):
         )
 
     @cached_property
-    def regulations_with_perimeters_intersected_by_hedges_to_plant_only(self):
-        """Fetch all the regulation that have at least one perimeter intersected by hedge to plant only
+    def hedges_intersecting_regulations_perimeter(self):
+        """Return for each regulation the hedges intersecting its perimeters.
 
-        For each regulation, return the list of intersective hedges to plant.
+        Return:
+            dict: sets of hedges intersecting perimeters by type, by perimeter and by regulation
+            {
+            regulation:{
+                    perimeter:{
+                        hedge_type: sorted list of hedges
+                    }
+                }
+            }
         """
+        regulations_dd = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
-        regulations = defaultdict(set)
         hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
         if not hedges:
-            return regulations
+            return {}
 
-        for regulation in self.regulations:
+        regulations = self.regulations.prefetch_related("perimeters__activation_map")
+
+        perimeter_to_regulations = defaultdict(set)
+        for regulation in regulations:
             for perimeter in regulation.perimeters.all():
-                intersects_hedge_to_remove = False
-                intersective_hedge_to_plant = set()
-                for hedge in hedges:
-                    if perimeter.activation_map.geometry.intersects(
-                        hedge.geos_geometry
-                    ):
-                        if hedge.type == TO_REMOVE:
-                            intersects_hedge_to_remove = True
-                        elif hedge.type == TO_PLANT:
-                            intersective_hedge_to_plant.add(hedge)
-                if intersective_hedge_to_plant and not intersects_hedge_to_remove:
-                    regulations[regulation].update(intersective_hedge_to_plant)
+                perimeter_to_regulations[perimeter].add(regulation)
+
+        perimeter_geoms = {
+            perimeter: perimeter.activation_map.geometry
+            for perimeter in perimeter_to_regulations
+        }
+
+        for hedge in hedges:
+            hedge_geom = hedge.geos_geometry
+
+            for perimeter, perimeter_geom in perimeter_geoms.items():
+                if not perimeter_geom.intersects(hedge_geom):
+                    continue
+
+                for regulation in perimeter_to_regulations[perimeter]:
+                    regulations_dd[regulation][perimeter][hedge.type].add(hedge)
 
         return {
-            key: sorted(values, key=lambda obj: obj.id)
-            for key, values in regulations.items()
+            regulation: {
+                perimeter: {
+                    hedge_type: sorted(hedges, key=lambda h: h.id)
+                    for hedge_type, hedges in by_type.items()
+                }
+                for perimeter, by_type in perimeters.items()
+            }
+            for regulation, perimeters in regulations_dd.items()
         }
 
 
