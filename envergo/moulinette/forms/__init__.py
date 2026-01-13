@@ -256,7 +256,13 @@ ELEMENT_CHOICES = (
     ("bosquet", "Bosquets"),
     (
         "autre",
-        "Autre",
+         mark_safe(
+            """Autre<br />
+<span class="fr-hint-text">
+    Arbres isolés, bandes boisées, lisières forestières, fourrés, etc.
+</span>
+                    """
+        ),
     ),
 )
 
@@ -281,7 +287,7 @@ entretien sévère et récurrent ; etc.
         mark_safe(
             """Entretien<br />
 <span class="fr-hint-text">
-    Intervention qui permet la repousse durable de la végétation :
+    Intervention qui permet la repousse de la végétation :
     élagage, taille, coupe à blanc sur une essence capable de recéper
     (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
     target="_blank" rel="noopener">voir liste</a>), etc.
@@ -291,7 +297,13 @@ entretien sévère et récurrent ; etc.
     ),
     (
         "autre",
-        "Autre",
+        mark_safe(
+            """Autre<br />
+<span class="fr-hint-text">
+    Plantation d’une nouvelle haie sans destruction préalable, mise en défens, travaux de restauration écologique, travaux de revégétalisation, etc.
+</span>
+                    """
+        ),
     ),
 )
 
