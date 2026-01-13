@@ -1,4 +1,4 @@
-<div class="fr-table fr-table--multiline">
+<div class="fr-table fr-table--multiline" id="sites-proteges-hedges-table">
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
       <div class="fr-table__content">
@@ -14,28 +14,36 @@
           </thead>
           <tbody>
             <tr data-row-key="1">
-              <th class="fr-cell--fixed" scope="row">Haie mixte (type 5)</th>
+              <th class="fr-cell--fixed" scope="row">
+                Haie mixte <span class="fr-text">(type 5)</span>
+              </th>
               <td>{{ sites_proteges_hedges.mixte.TO_REMOVE.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.mixte.TO_REMOVE.ids|join:", "|default:"-" }}</td>
               <td>{{ sites_proteges_hedges.mixte.TO_PLANT.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.mixte.TO_PLANT.ids|join:", "|default:"-" }}</td>
             </tr>
             <tr data-row-key="2">
-              <th class="fr-cell--fixed" scope="row">Haie arbustive (type 3)</th>
+              <th class="fr-cell--fixed" scope="row">
+                Haie arbustive <span class="fr-text">(type 3)</span>
+              </th>
               <td>{{ sites_proteges_hedges.arbustive.TO_REMOVE.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.arbustive.TO_REMOVE.ids|join:", "|default:"-" }}</td>
               <td>{{ sites_proteges_hedges.arbustive.TO_PLANT.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.arbustive.TO_PLANT.ids|join:", "|default:"-" }}</td>
             </tr>
             <tr data-row-key="3">
-              <th class="fr-cell--fixed" scope="row">Haie buissonnante basse (type 2)</th>
+              <th class="fr-cell--fixed" scope="row">
+                Haie buissonnante basse <span class="fr-text">(type 2)</span>
+              </th>
               <td>{{ sites_proteges_hedges.buissonnante.TO_REMOVE.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.buissonnante.TO_REMOVE.ids|join:", "|default:"-" }}</td>
               <td>{{ sites_proteges_hedges.buissonnante.TO_PLANT.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.buissonnante.TO_PLANT.ids|join:", "|default:"-" }}</td>
             </tr>
             <tr data-row-key="4">
-              <th class="fr-cell--fixed" scope="row">Haie dégradée (type 1)</th>
+              <th class="fr-cell--fixed" scope="row">
+                Haie dégradée <span class="fr-text">(type 1)</span>
+              </th>
               <td>{{ sites_proteges_hedges.degradee.TO_REMOVE.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.degradee.TO_REMOVE.ids|join:", "|default:"-" }}</td>
               <td>Non applicable</td>
@@ -57,7 +65,9 @@
               </td>
             </tr>
             <tr data-row-key="4">
-              <th class="fr-cell--fixed" scope="row">Alignement d'arbres (type 4)</th>
+              <th class="fr-cell--fixed" scope="row">
+                Alignement d'arbres <span class="fr-text">(type 4)</span>
+              </th>
               <td>{{ sites_proteges_hedges.alignement.TO_REMOVE.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.alignement.TO_REMOVE.ids|join:", "|default:"-" }}</td>
               <td>{{ sites_proteges_hedges.alignement.TO_PLANT.length|floatformat:"0g" }} m</td>
