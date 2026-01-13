@@ -12,7 +12,10 @@ logger = getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = """Upload une série de cartes
+    help = """Upload une série de cartes listée dans un CSV.
+
+    This is a one-shot script whose single purpose is to upload all hedges maps all
+    at once.
 
     The csv file must feature those columns:
 
