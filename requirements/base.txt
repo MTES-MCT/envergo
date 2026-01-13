@@ -75,7 +75,7 @@ django==4.2.27
     #   django-otp
     #   django-phonenumber-field
     #   django-redis
-django-allauth==65.10.0
+django-allauth==65.13.1
     # via -r base.in
 django-anymail[sendinblue]==13.0.1
     # via -r base.in
