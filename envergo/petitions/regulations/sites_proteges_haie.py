@@ -37,8 +37,9 @@ def sites_proteges_haie_get_instructor_view_context(
             hedges_by_type[hedge.hedge_type][hedge.type]["ids"].append(hedge.id)
             hedges_by_type[hedge.hedge_type][hedge.type]["length"] += hedge.length
 
-            hedges_by_type["total"][hedge.type]["ids"].append(hedge.id)
-            hedges_by_type["total"][hedge.type]["length"] += hedge.length
+            if hedge.hedge_type != "alignement":
+                hedges_by_type["total"][hedge.type]["ids"].append(hedge.id)
+                hedges_by_type["total"][hedge.type]["length"] += hedge.length
 
     for row, _ in rows:
         hedges_by_type[row][TO_PLANT]["ids"].sort()
