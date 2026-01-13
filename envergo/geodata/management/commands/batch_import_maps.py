@@ -25,6 +25,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--purge", action="store_true", help="Purge all existing hedges maps"
         )
+        parser.add_argument(
+            "--no-input",
+            action="store_true",
+            help="Skip confirmation prompt for purge",
+        )
 
     def handle(self, *args, **options):
         csv_path = options["csv_file"][0]
@@ -32,7 +37,16 @@ class Command(BaseCommand):
 
         if options["purge"]:
             qs = Map.objects.filter(map_type="haies")
-            self.stdout.write(f"Purging existing {qs.count()} maps")
+            count = qs.count()
+            if not options["no_input"]:
+                self.stdout.write(
+                    self.style.WARNING(f"This will delete {count} existing maps.")
+                )
+                confirm = input("Are you sure you want to continue? [y/N] ")
+                if confirm.lower() != "y":
+                    self.stdout.write("Operation cancelled.")
+                    return
+            self.stdout.write(f"Purging existing {count} maps")
             qs.delete()
 
         self.stdout.write("Starting to import maps.")
