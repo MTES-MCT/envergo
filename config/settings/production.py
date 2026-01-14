@@ -225,9 +225,9 @@ CELERY_CACHE_BACKEND = "django-cache"
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID")
+SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID", default="")
 
-TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
+TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID", default="")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 
