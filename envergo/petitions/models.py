@@ -60,6 +60,12 @@ DECISIONS = Choices(
     ("dropped", "Classé sans suite"),
 )
 
+LOG_TYPES = Choices(
+    ("status_change", "Changement d'état"),
+    ("suspension", "Demande de compléments"),
+    ("resumption", "Compléments reçus"),
+)
+
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
 
@@ -172,9 +178,18 @@ class PetitionProject(models.Model):
 
     @cached_property
     def current_status(self):
-        # Make sure the `status_history` is prefetched with the correct ordering
-        log = self.status_history.first()
-        return log
+        """Get the latest status_change log."""
+        return self.status_history.filter(type=LOG_TYPES.status_change).first()
+
+    @cached_property
+    def latest_suspension(self):
+        """Get the latest suspension log."""
+        return self.status_history.filter(type=LOG_TYPES.suspension).first()
+
+    @cached_property
+    def latest_resumption(self):
+        """Get the latest resumption log."""
+        return self.status_history.filter(type=LOG_TYPES.resumption).first()
 
     @property
     def current_stage(self):
@@ -188,11 +203,31 @@ class PetitionProject(models.Model):
 
     @property
     def due_date(self):
-        return self.current_status.due_date if self.current_status else None
+        status = self.current_status
+        resumption = self.latest_resumption
+        if resumption and status:
+            return (
+                resumption.due_date
+                if resumption.created_at > status.created_at
+                else status.due_date
+            )
+        elif status:
+            return status.due_date
+        elif resumption:
+            return resumption.due_date
+        else:
+            return None
 
     @property
     def is_paused(self):
-        return self.current_status.is_paused if self.current_status else False
+        """Check if there's an unresolved suspension."""
+        suspension = self.latest_suspension
+        if not suspension:
+            return False
+        resumption = self.latest_resumption
+        if not resumption:
+            return True
+        return suspension.created_at > resumption.created_at
 
     def get_department_code(self):
         """Get department from moulinette url"""
@@ -579,29 +614,40 @@ class InvitationToken(models.Model):
 # Some data constraints checks
 
 # Check that all request for info suspension data is set
-q_suspended = Q(suspension_date__isnull=False) & Q(response_due_date__isnull=False)
+q_suspended = Q(type=LOG_TYPES.suspension) & Q(response_due_date__isnull=False)
 
 # Check that no single field is set
 q_not_suspended = (
-    Q(suspension_date__isnull=True)
+    Q(type=LOG_TYPES.status_change)
     & Q(response_due_date__isnull=True)
     & Q(original_due_date__isnull=True)
+    & Q(info_receipt_date__isnull=True)
 )
 
-# Check that the receipt date is only set if the project was suspended and the resumption author is set
-q_receipt_date = Q(info_receipt_date__isnull=True) & Q(resumed_by__isnull=True) | (
-    Q(info_receipt_date__isnull=False) & Q(resumed_by__isnull=False) & q_suspended
-)
+# Check that the receipt date is only set if the project is resumed
+q_resumed = Q(type=LOG_TYPES.resumption) & Q(info_receipt_date__isnull=False)
 
 
 class StatusLog(models.Model):
-    """A petition project status (stage + decision) change log entry."""
+    """A petition project status log entry.
+
+    Each entry represents one of:
+    - status_change: A change in stage and/or decision
+    - suspension: A request for additional information (pauses the process)
+    - resumption: Receipt of additional information (resumes the process)
+    """
 
     petition_project = models.ForeignKey(
         PetitionProject,
         on_delete=models.CASCADE,
         related_name="status_history",
         verbose_name="Projet",
+    )
+    type = models.CharField(
+        "Type de log",
+        max_length=20,
+        choices=LOG_TYPES,
+        default=LOG_TYPES.status_change,
     )
     created_by = models.ForeignKey(
         "users.User",
@@ -639,11 +685,6 @@ class StatusLog(models.Model):
     )
 
     # "Request for additional information" related fields
-    suspension_date = models.DateField(
-        "Date de suspension pour demande d'information complémentaire",
-        null=True,
-        blank=True,
-    )
     response_due_date = models.DateField(
         "Échéance pour l'envoi de pièces complémentaires",
         null=True,
@@ -652,22 +693,8 @@ class StatusLog(models.Model):
     original_due_date = models.DateField(
         "Date de prochaine échéance avant suspension", null=True, blank=True
     )
-    suspended_by = models.ForeignKey(
-        "users.User",
-        related_name="suspended_logs",
-        on_delete=models.SET_NULL,
-        verbose_name="Auteur de la demande d'informations complémentaires",
-        null=True,
-    )
     info_receipt_date = models.DateField(
         "Date de réception des pièces complémentaires", null=True, blank=True
-    )
-    resumed_by = models.ForeignKey(
-        "users.User",
-        related_name="resumed_logs",
-        on_delete=models.SET_NULL,
-        verbose_name="Auteur de la reprise de la procédure suite à la réception d'informations complémentaires",
-        null=True,
     )
 
     # Meta fields
@@ -684,20 +711,11 @@ class StatusLog(models.Model):
                 name="forbid_closed_with_unset_decision",
             ),
             models.CheckConstraint(
-                check=q_suspended | q_not_suspended,
+                check=q_suspended | q_not_suspended | q_resumed,
                 name="suspension_data_is_consistent",
-            ),
-            models.CheckConstraint(
-                check=q_receipt_date, name="receipt_date_data_is_consistent"
             ),
         ]
         ordering = ["-created_at"]
-
-    @property
-    def is_paused(self):
-        """Are we currently waiting for additional info?"""
-
-        return self.suspension_date is not None and self.info_receipt_date is None
 
     @property
     def is_closed(self):

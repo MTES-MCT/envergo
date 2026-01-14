@@ -286,3 +286,16 @@ def display_ds_field(context, field_name):
 def has_edit_permission(user, project):
     """Check if the user can edit the project."""
     return project.has_change_permission(user)
+
+
+@register.simple_tag
+def created_by_display(log):
+    user = getattr(log, "created_by", None)
+
+    if not user:
+        return ""
+
+    if getattr(user, "is_staff", False):
+        return "Administrateur"
+
+    return getattr(user, "email", "")

@@ -4,7 +4,6 @@ import os
 import shutil
 import tempfile
 from urllib.parse import parse_qs, urlparse
-from zoneinfo import ZoneInfo
 
 import fiona
 import requests
@@ -64,6 +63,7 @@ from envergo.petitions.forms import (
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
+    LOG_TYPES,
     STAGES,
     InvitationToken,
     LatestMessagerieAccess,
@@ -238,7 +238,10 @@ class PetitionProjectCreate(FormView):
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
                 petition_project.save()
 
-                StatusLog.objects.create(petition_project=petition_project)
+                StatusLog.objects.create(
+                    petition_project=petition_project,
+                    update_comment="Création initiale",
+                )
 
                 Simulation.objects.create(
                     project=petition_project,
@@ -1284,98 +1287,9 @@ class PetitionProjectInstructorProcedureView(
 
     def get_context_data(self, **kwargs):
 
-        def extract_entries(log):
-            """The history table display an entry for each status change, suspension and resumption for requesting info
-
-            As the suspension and resumption are not a single StatusLog model but attributes of it, this method will
-            map a StatusLog into one or more entries for the history table.
-            """
-            TYPE_CHOICES = [
-                ("status_change", "Changement d'état"),
-                ("suspension", "Demande de compléments"),
-                ("resumption", "Complément reçus"),
-            ]
-            TYPE_LABELS = dict(TYPE_CHOICES)
-
-            entries = [
-                {
-                    "type": "status_change",
-                    "type_display": TYPE_LABELS["status_change"],
-                    "created_at": log.created_at,
-                    "status_date": log.status_date,
-                    "created_by": (
-                        ""
-                        if not log.created_by
-                        else (
-                            log.created_by.email
-                            if not log.created_by.is_staff
-                            else "Administrateur"
-                        )
-                    ),
-                    "update_comment": log.update_comment,
-                    "stage": log.stage,
-                    "decision": log.decision,
-                    "due_date": log.due_date,
-                }
-            ]
-            if log.suspension_date:
-                # this log object is storing a suspension, we add an entry
-                entries.insert(
-                    0,
-                    {
-                        "type": "suspension",
-                        "type_display": TYPE_LABELS["suspension"],
-                        "created_by": (
-                            ""
-                            if not log.suspended_by
-                            else (
-                                log.suspended_by.email
-                                if not log.suspended_by.is_staff
-                                else "Administrateur"
-                            )
-                        ),
-                        "created_at": datetime.datetime.combine(
-                            log.suspension_date, datetime.time.min
-                        ).replace(tzinfo=ZoneInfo("UTC")),
-                        "response_due_date": log.response_due_date,
-                        "update_comment": "Suspension de l’instruction, message envoyé au demandeur.",
-                    },
-                )
-            if log.info_receipt_date:
-                # this log object is storing a resumption, we add an entry
-                entries.insert(
-                    0,
-                    {
-                        "type": "resumption",
-                        "type_display": TYPE_LABELS["resumption"],
-                        "created_by": (
-                            ""
-                            if not log.resumed_by
-                            else (
-                                log.resumed_by.email
-                                if not log.resumed_by.is_staff
-                                else "Administrateur"
-                            )
-                        ),
-                        "created_at": datetime.datetime.combine(
-                            log.info_receipt_date, datetime.time.min
-                        ).replace(tzinfo=ZoneInfo("UTC")),
-                        "due_date": log.due_date,
-                        "update_comment": "Reprise de l’instruction, date d'échéance ajustée.",
-                    },
-                )
-                entries[0]["due_date"] = log.original_due_date
-
-            return entries
-
         context = super().get_context_data(**kwargs)
-        paginator, page_obj, page_qs, has_other_pages = self.paginate_queryset(
-            self.object_list, self.paginate_by
-        )
-        logs = [entry for log in page_qs for entry in extract_entries(log)]
         context.update(
             {
-                "object_list": logs,
                 "STAGES": STAGES,
                 "DECISIONS": DECISIONS,
             }
@@ -1498,27 +1412,37 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor requested additional data."""
 
         project = self.object
-        status = project.current_status
+        current_status = project.current_status
 
         try:
             with transaction.atomic():
-                # Update data model
-                status.suspension_date = timezone.now().date()
-                status.info_receipt_date = None
-                status.original_due_date = status.due_date
-                status.response_due_date = form.cleaned_data["response_due_date"]
-                status.due_date = status.response_due_date
-                status.suspended_by = self.request.user
-                status.save()
+                # Create a new suspension log entry
+                StatusLog.objects.create(
+                    petition_project=project,
+                    type=LOG_TYPES.suspension,
+                    response_due_date=form.cleaned_data["response_due_date"],
+                    original_due_date=(
+                        current_status.due_date if current_status else None
+                    ),
+                    created_by=self.request.user,
+                    update_comment="Suspension de l’instruction, message envoyé au demandeur.",
+                )
 
                 # Send DS Message
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 
                 if ds_response is None or ds_response.get("errors") is not None:
-                    # We raise an exception to make sure the data model transaction
-                    # is aborted
-                    raise DemarchesSimplifieesError(message="DS message not sent")
+                    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+                        messages.info(
+                            self.request,
+                            """L'accès à l'API démarches simplifiées n'est pas activée.
+                            Le message n'est pas envoyé""",
+                        )
+                    else:
+                        # We raise an exception to make sure the data model transaction
+                        # is aborted
+                        raise DemarchesSimplifieesError(message="DS message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1577,19 +1501,26 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor received the requested additional info."""
 
         project = self.object
-        status = project.current_status
+        suspension = project.latest_suspension
 
-        # Update model data
         # Compute the new due date, that is the original due date + number of interruption days
         # Note: if you modify this rule, you must apply the same update in the sync_new_due_date.js file
-        status.info_receipt_date = form.cleaned_data["info_receipt_date"]
-        interruption_days = status.info_receipt_date - status.suspension_date
-        if status.original_due_date:
-            status.due_date = status.original_due_date + interruption_days
+        info_receipt_date = form.cleaned_data["info_receipt_date"]
+        interruption_days = info_receipt_date - suspension.created_at.date()
+        if suspension.original_due_date:
+            new_due_date = suspension.original_due_date + interruption_days
         else:
-            status.due_date = None
-        status.resumed_by = self.request.user
-        status.save()
+            new_due_date = None
+
+        # Create a new resumption log entry
+        StatusLog.objects.create(
+            petition_project=project,
+            type=LOG_TYPES.resumption,
+            info_receipt_date=info_receipt_date,
+            due_date=new_due_date,
+            created_by=self.request.user,
+            update_comment="Reprise de l’instruction, date d'échéance ajustée.",
+        )
 
         # Send Mattermost notification
         haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)

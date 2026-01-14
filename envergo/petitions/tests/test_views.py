@@ -22,6 +22,7 @@ from envergo.moulinette.tests.factories import (
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
+    LOG_TYPES,
     InvitationToken,
     LatestMessagerieAccess,
 )
@@ -38,6 +39,7 @@ from envergo.petitions.tests.factories import (
     PetitionProject34Factory,
     PetitionProjectFactory,
     SimulationFactory,
+    StatusLogFactory,
 )
 from envergo.petitions.views import (
     PetitionProjectCreate,
@@ -1420,10 +1422,10 @@ def test_petition_project_request_for_info(
     assert "Le message au demandeur a bien été envoyé." in res.content.decode()
 
     project.refresh_from_db()
-    project.current_status.refresh_from_db()
     assert project.is_paused is True
-    assert project.current_status.due_date == next_month
-    assert project.current_status.original_due_date == today
+    # Suspension fields are now on the suspension log, not current_status
+    assert project.latest_suspension.response_due_date == next_month
+    assert project.latest_suspension.original_due_date == today
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1441,16 +1443,18 @@ def test_petition_project_resume_instruction(
     next_month = today + timedelta(days=30)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(
-        status__suspension_date=last_month,
-        status__original_due_date=today,
-        status__due_date=next_month,
-        status__response_due_date=next_month,
+    project = PetitionProjectFactory(status__due_date=today)
+    # Create a suspension log separately
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        created_at=last_month,
+        original_due_date=today,
+        response_due_date=next_month,
     )
     assert project.is_paused is True
-    assert project.due_date == next_month
 
-    # Request for additional info
+    # Resume instruction
     rai_url = reverse(
         "petition_project_instructor_request_info_view",
         kwargs={"reference": project.reference},
@@ -1463,9 +1467,9 @@ def test_petition_project_resume_instruction(
     assert "L'instruction du dossier a repris." in res.content.decode()
 
     project.refresh_from_db()
-    project.current_status.refresh_from_db()
     assert project.is_paused is False
-    assert project.current_status.due_date == next_month
+    # The new due_date is computed on the resumption log
+    assert project.latest_resumption.due_date == next_month
 
 
 def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_user):
