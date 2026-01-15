@@ -130,11 +130,9 @@ ENV_NAME = env("ENV_NAME")
 IS_REVIEW_APP = env.bool("IS_REVIEW_APP", default=False)
 
 # Different settings between scalingo prod and review apps
-if ENV_NAME == "production":
-    EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-else:
-    # Send emails to stdout for logging purpose
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = env(
+    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
 
 ANYMAIL = {
     "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
@@ -227,9 +225,9 @@ CELERY_CACHE_BACKEND = "django-cache"
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID")
+SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID", default="")
 
-TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
+TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID", default="")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 
