@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from unittest.mock import ANY, Mock, patch
 
 import factory
@@ -9,6 +9,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
@@ -49,6 +50,14 @@ from envergo.petitions.views import (
 from envergo.users.tests.factories import UserFactory
 
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
+
+
+def clear_cached_properties(instance):
+    for attr in dir(instance):
+        if attr in instance.__dict__:
+            value = getattr(type(instance), attr, None)
+            if isinstance(value, cached_property):
+                del instance.__dict__[attr]
 
 
 @pytest.fixture(autouse=True)
@@ -1422,6 +1431,7 @@ def test_petition_project_request_for_info(
     assert "Le message au demandeur a bien été envoyé." in res.content.decode()
 
     project.refresh_from_db()
+    clear_cached_properties(project)
     assert project.is_paused is True
     # Suspension fields are now on the suspension log, not current_status
     assert project.latest_suspension.response_due_date == next_month
@@ -1448,7 +1458,10 @@ def test_petition_project_resume_instruction(
     StatusLogFactory(
         petition_project=project,
         type=LOG_TYPES.suspension,
-        created_at=last_month,
+        created_at=timezone.make_aware(
+            datetime.combine(last_month, time(hour=12)),
+            timezone.get_current_timezone(),
+        ),
         original_due_date=today,
         response_due_date=next_month,
     )
@@ -1467,9 +1480,10 @@ def test_petition_project_resume_instruction(
     assert "L'instruction du dossier a repris." in res.content.decode()
 
     project.refresh_from_db()
+    clear_cached_properties(project)
     assert project.is_paused is False
     # The new due_date is computed on the resumption log
-    assert project.latest_resumption.due_date == next_month
+    assert project.due_date == next_month
 
 
 def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_user):
