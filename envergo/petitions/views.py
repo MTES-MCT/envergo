@@ -1684,7 +1684,7 @@ class PetitionProjectAcceptInvitation(RedirectView):
         if not token or not self.TOKEN_PATTERN.match(token):
             raise SuspiciousOperation("Invalid invitation token format")
 
-        url = reverse("petition_project", args=[reference])
+        url = reverse("petition_project_instructor_view", args=[reference])
         url_with_token = f"{url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={token}"
         return url_with_token
 
