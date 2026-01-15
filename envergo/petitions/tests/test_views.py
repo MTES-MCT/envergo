@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from unittest.mock import ANY, Mock, patch
 
 import factory
@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
@@ -23,6 +24,7 @@ from envergo.moulinette.tests.factories import (
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
+    LOG_TYPES,
     InvitationToken,
     LatestMessagerieAccess,
 )
@@ -39,6 +41,7 @@ from envergo.petitions.tests.factories import (
     PetitionProject34Factory,
     PetitionProjectFactory,
     SimulationFactory,
+    StatusLogFactory,
 )
 from envergo.petitions.views import (
     PetitionProjectCreate,
@@ -48,6 +51,14 @@ from envergo.petitions.views import (
 from envergo.users.tests.factories import UserFactory
 
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
+
+
+def clear_cached_properties(instance):
+    for attr in dir(instance):
+        if attr in instance.__dict__:
+            value = getattr(type(instance), attr, None)
+            if isinstance(value, cached_property):
+                del instance.__dict__[attr]
 
 
 @pytest.fixture(autouse=True)
@@ -1305,10 +1316,11 @@ def test_petition_project_request_for_info(
     assert "Le message au demandeur a bien été envoyé." in res.content.decode()
 
     project.refresh_from_db()
-    project.current_status.refresh_from_db()
+    clear_cached_properties(project)
     assert project.is_paused is True
-    assert project.current_status.due_date == next_month
-    assert project.current_status.original_due_date == today
+    # Suspension fields are now on the suspension log, not current_status
+    assert project.latest_suspension.response_due_date == next_month
+    assert project.latest_suspension.original_due_date == today
 
 
 @pytest.mark.django_db(transaction=True)
@@ -1326,16 +1338,21 @@ def test_petition_project_resume_instruction(
     next_month = today + timedelta(days=30)
 
     DCConfigHaieFactory()
-    project = PetitionProjectFactory(
-        status__suspension_date=last_month,
-        status__original_due_date=today,
-        status__due_date=next_month,
-        status__response_due_date=next_month,
+    project = PetitionProjectFactory(status__due_date=today)
+    # Create a suspension log separately
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        created_at=timezone.make_aware(
+            datetime.combine(last_month, time(hour=12)),
+            timezone.get_current_timezone(),
+        ),
+        original_due_date=today,
+        response_due_date=next_month,
     )
     assert project.is_paused is True
-    assert project.due_date == next_month
 
-    # Request for additional info
+    # Resume instruction
     rai_url = reverse(
         "petition_project_instructor_request_info_view",
         kwargs={"reference": project.reference},
@@ -1348,9 +1365,10 @@ def test_petition_project_resume_instruction(
     assert "L'instruction du dossier a repris." in res.content.decode()
 
     project.refresh_from_db()
-    project.current_status.refresh_from_db()
+    clear_cached_properties(project)
     assert project.is_paused is False
-    assert project.current_status.due_date == next_month
+    # The new due_date is computed on the resumption log
+    assert project.due_date == next_month
 
 
 def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_user):

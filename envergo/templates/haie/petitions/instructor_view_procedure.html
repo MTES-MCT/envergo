@@ -44,7 +44,7 @@
                   {% csrf_token %}
                   {% include '_form_snippet.html' with form=resume_processing_form %}
 
-                  {% if petition_project.current_status.original_due_date %}
+                  {% if petition_project.latest_suspension.original_due_date %}
                     <div class="fr-input-group">
                       <label for="" class="fr-label">
                         <span class="label-content fr-text--bold">Nouvelle échéance d'instruction</span>
@@ -55,8 +55,8 @@
                              type="date"
                              disabled="disabled"
                              class="fr-input"
-                             data-suspension-date="{{ petition_project.current_status.suspension_date|date:"c" }}"
-                             data-original-due-date="{{ petition_project.current_status.original_due_date|date:"c" }}">
+                             data-suspension-date="{{ petition_project.latest_suspension.created_at.date|date:"c" }}"
+                             data-original-due-date="{{ petition_project.latest_suspension.original_due_date|date:"c" }}">
                     </div>
                   {% endif %}
 
@@ -77,17 +77,17 @@
             <br />
             <span class="due-date fr-text--sm">
               <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
-              {{ petition_project.current_status.suspension_date|date:"DATE_FORMAT" }}
+              {{ petition_project.latest_suspension.created_at|date:"DATE_FORMAT" }}
             </span>
           </p>
 
-          {% if petition_project.current_status.original_due_date %}
+          {% if petition_project.latest_suspension.original_due_date %}
             <p>
               <strong>Échéance d'instruction avant la suspension</strong>
               <br />
               <span class="due-date fr-text--sm">
                 <span class="fr-icon-timer-line fr-icon--sm"></span>
-                {{ petition_project.current_status.original_due_date|date:"DATE_FORMAT" }}
+                {{ petition_project.latest_suspension.original_due_date|date:"DATE_FORMAT" }}
               </span>
             </p>
           {% endif %}
@@ -168,7 +168,7 @@
             <table>
               <caption class="fr-mt-1w fr-mb-0">
                 {{ paginator.count }}
-                changement{{ paginator.count|pluralize }} d'état
+                changement{{ paginator.count|pluralize }}
               </caption>
               <thead>
                 <tr>
@@ -182,9 +182,9 @@
                 {% for log in object_list %}
                   <tr class="project">
                     <td>{{ log.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-                    <td>{{ log.created_by }}</td>
+                    <td>{% created_by_display log %}</td>
                     <td>
-                      <b>{{ log.type_display }}</b>
+                      <b>{{ log.get_type_display }}</b>
                       {% if log.type == "status_change" %}
                         <br />
                         {{ STAGES|get_choice_label:log.stage }}
@@ -199,7 +199,7 @@
                       {% endif %}
                     </td>
                     <td>
-                      {% if log.status_date %}
+                      {% if log.status_date and log.status_date != log.created_at.date %}
                         Changement effectif le {{ log.status_date|date:"SHORT_DATE_FORMAT" }}
                         <br />
                       {% endif %}
@@ -231,7 +231,7 @@
   {{ block.super }}
   <script defer src="{% static 'js/libs/sync_new_due_date.js' %}"></script>
 
-  {% if resume_processing_form and petition_project.current_status.original_due_date %}
+  {% if resume_processing_form and petition_project.latest_suspension.original_due_date %}
     <script>
     window.addEventListener("load", function() {
       let receipt_date_input = document.getElementById("id_info_receipt_date");

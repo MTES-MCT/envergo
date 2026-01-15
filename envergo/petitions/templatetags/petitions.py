@@ -297,3 +297,16 @@ def has_edit_permission(user, project):
 @register.filter
 def join_ids(objects):
     return ", ".join(str(o.id) for o in objects)
+
+
+@register.simple_tag
+def created_by_display(log):
+    user = getattr(log, "created_by", None)
+
+    if not user:
+        return ""
+
+    if getattr(user, "is_staff", False):
+        return "Administrateur"
+
+    return getattr(user, "email", "")

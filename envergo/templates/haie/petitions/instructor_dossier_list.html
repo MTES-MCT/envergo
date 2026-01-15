@@ -112,7 +112,7 @@
                       {% if project.current_stage != "closed" %}
                         <div>
                           {% if project.is_paused %}
-                            {% display_pause project.current_status.response_due_date %}
+                            {% display_pause project.latest_suspension.response_due_date %}
                           {% else %}
                             {% display_due_date project.due_date False True %}
                           {% endif %}

@@ -53,7 +53,7 @@
             </div>
             <div>
               {% if petition_project.is_paused %}
-                {% display_pause petition_project.current_status.response_due_date %}
+                {% display_pause petition_project.latest_suspension.response_due_date %}
               {% else %}
                 {% display_due_date petition_project.due_date False %}
               {% endif %}
