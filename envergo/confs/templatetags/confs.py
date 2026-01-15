@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 
 from envergo.confs.models import TopBar
 
@@ -11,13 +12,15 @@ def top_bar(context):
     if "request" not in context:
         return ""
 
+    data = {"is_active": False}
+    data.update({"ENV_NAME": settings.ENV_NAME})
+
     # Check if the top bar hiding cookie is set
     cookies = context["request"].COOKIES
     if "hide_top_bar" in cookies:
-        return {"is_active": False}
+        return data
 
     # Display the most recent of the top bar messages that is active for the current site
-    data = {"is_active": False}
     top_bar = (
         TopBar.objects.filter(is_active=True, site=context["request"].site)
         .order_by("-updated_at")
