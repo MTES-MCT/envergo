@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
+from datetime import date
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
@@ -631,6 +632,12 @@ class Criterion(models.Model):
         null=True,
         blank=True,
     )
+    validity_date_start = models.DateField(
+        "Date de début de validité", blank=True, null=True
+    )
+    validity_date_end = models.DateField(
+        "Date de fin de validité", blank=True, null=True
+    )
     activation_map = models.ForeignKey(
         "geodata.Map",
         verbose_name=_("Activation map"),
@@ -650,10 +657,6 @@ class Criterion(models.Model):
     evaluator_settings = models.JSONField(
         _("Evaluator settings"), default=dict, blank=True
     )
-    validity_date_start = models.DateField(
-        _("Validity date start"), blank=True, null=True
-    )
-    validity_date_end = models.DateField(_("Validity date end"), blank=True, null=True)
     is_optional = models.BooleanField(
         _("Is optional"),
         default=False,
@@ -1774,6 +1777,16 @@ class Moulinette(ABC):
             .prefetch_related("templates")
             .annotate(distance=Cast(0, IntegerField()))
             .order_by("weight", "id", "distance")
+            .filter(
+                (
+                    Q(validity_date_start__isnull=True)
+                    | Q(validity_date_start__lte=self.date)
+                ),
+                (
+                    Q(validity_date_end__isnull=True)
+                    | Q(validity_date_end__gt=self.date)
+                ),
+            )
         )
 
         return criteria
@@ -1960,6 +1973,11 @@ class Moulinette(ABC):
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
         return dict(result)
+
+    @property
+    def date(self):
+        """Date fo the simulation. Today by default."""
+        return self.data.get("date", date.today())
 
 
 class MoulinetteAmenagement(Moulinette):

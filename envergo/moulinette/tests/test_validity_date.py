@@ -35,7 +35,7 @@ def n2000_criteria(bizous_town_center):  # noqa
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
             validity_date_start="2025-01-01",
-            validity_date_end="2025-12-31",
+            validity_date_end="2026-01-01",
             evaluator_settings={"result": "soumis"},
         ),
         CriterionFactory(
@@ -106,18 +106,18 @@ def test_moulinette_validity_date_on_criteria(moulinette_data, expected_result):
     # WHEN moulinette data are evaluated
     moulinette = MoulinetteHaie(moulinette_data)
     # THEN only 2026 N2000 criteria is used
-    assert moulinette.get_criteria().count() == 1
+    assert "2026" in moulinette.get_criteria().get().title
 
     # GIVEN moulinette data with date in 2025
     moulinette_data["data"]["date"] = "2025-03-13"
     # WHEN moulinette data are evaluated
     moulinette = MoulinetteHaie(moulinette_data)
     # THEN only 2025 N2000 criteria is used
-    assert moulinette.get_criteria().count() == 1
+    assert "2025" in moulinette.get_criteria().get().title
 
     # GIVEN moulinette data with date in 2026
     moulinette_data["data"]["date"] = "2026-03-13"
     # WHEN moulinette data are evaluated
     moulinette = MoulinetteHaie(moulinette_data)
-    # THEN only 2025 N2000 criteria is used
-    assert moulinette.get_criteria().count() == 1
+    # THEN only 2026 N2000 criteria is used
+    assert "2026" in moulinette.get_criteria().get().title

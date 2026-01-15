@@ -14,14 +14,14 @@ class Migration(migrations.Migration):
             model_name="criterion",
             name="validity_date_end",
             field=models.DateField(
-                blank=True, null=True, verbose_name="Validity date end"
+                blank=True, null=True, verbose_name="Date de fin de validité"
             ),
         ),
         migrations.AddField(
             model_name="criterion",
             name="validity_date_start",
             field=models.DateField(
-                blank=True, null=True, verbose_name="Validity date start"
+                blank=True, null=True, verbose_name="Date de début de validité"
             ),
         ),
     ]

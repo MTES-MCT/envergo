@@ -216,14 +216,16 @@ class CriterionAdmin(admin.ModelAdmin):
     @admin.display(ordering="validity_date_start", description="Dates")
     def validity_dates_column(self, obj):
         date_start_display = (
-            obj.validity_date_start.strftime("%d/%m/%y")
+            obj.validity_date_start.strftime("%-d/%-m/%y")
             if obj.validity_date_start
-            else ""
+            else "…"
         )
         date_end_display = (
-            obj.validity_date_end.strftime("%d/%m/%y") if obj.validity_date_end else ""
+            obj.validity_date_end.strftime("%-d/%-m/%y")
+            if obj.validity_date_end
+            else "…"
         )
-        return f"{date_start_display}-{date_end_display}"
+        return f"{date_start_display} - {date_end_display}"
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
