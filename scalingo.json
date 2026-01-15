@@ -38,7 +38,7 @@
     "IS_REVIEW_APP": {
       "value": "True"
     },
-    "DJANGO_ADMIN_OTP_REQUIRED": {
+    "COMPRESS_ENABLED": {
       "value": "False"
     },
     "DJANGO_AWS_S3_ENDPOINT_URL": {
@@ -56,9 +56,6 @@
     "DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID": {
       "value": ""
     },
-    "DJANGO_EMAIL_BACKEND": {
-     "value": "django.core.mail.backends.console.EmailBackend"
-    },
     "DJANGO_NOTION_SECRET": {
       "value": ""
     },
@@ -73,6 +70,15 @@
     },
     "DJANGO_MAKE_COM_EVALUATION_EDITION_WEBHOOK": {
       "value": ""
+    },
+    "DJANGO_ADMIN_OTP_REQUIRED": {
+      "value": "False"
+    },
+    "DISABLE_COLLECTSTATIC": {
+      "value": "1"
+    },
+    "NPM_NO_BUILD": {
+      "value": "true"
     }
   },
   "scripts": {
