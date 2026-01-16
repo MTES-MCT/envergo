@@ -7,6 +7,7 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+from dateutil import parser
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
@@ -1977,7 +1978,13 @@ class Moulinette(ABC):
     @property
     def date(self):
         """Date fo the simulation. Today by default."""
-        return self.data.get("date", date.today())
+        date_str = self.data.get("date", None)
+        if date_str:
+            try:
+                return parser.isoparse(date_str).date()
+            except (ValueError, TypeError):
+                pass
+        return date.today()
 
 
 class MoulinetteAmenagement(Moulinette):
