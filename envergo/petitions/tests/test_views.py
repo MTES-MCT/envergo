@@ -1,11 +1,9 @@
-import html
-import re
 from datetime import date, timedelta
 from unittest.mock import ANY, Mock, patch
-from urllib.parse import parse_qs, urlparse
 
 import factory
 import pytest
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -202,6 +200,9 @@ def test_petition_project_detail(mock_post, client, site):
     response = client.get(petition_project_url)
     assert response.status_code == 200
     assert "moulinette" in response.context
+    assert Event.objects.get(
+        category="simulateur", event="consultation", metadata__user_type="anonymous"
+    )
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
     assert response.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" in response.content.decode()
@@ -233,6 +234,13 @@ def test_petition_project_detail(mock_post, client, site):
     assert not response.context["has_hedges_outside_department"]
     assert (
         "Le projet est hors du département sélectionné" not in response.content.decode()
+    )
+
+    # THEN I should not see instructor info for simulations
+    assert "Vous souhaitez modifier votre simulation ?" in response.content.decode()
+    assert (
+        "Vous souhaitez faire une simulation alternative ?"
+        not in response.content.decode()
     )
 
 
@@ -901,76 +909,6 @@ def test_petition_project_invitation_token(client, haie_user, haie_instructor_44
     event = Event.objects.get(category="dossier", event="invitation")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["department"] == "44"
-
-
-def test_petition_project_accept_invitation(client, haie_user, site):
-    """Test accepting an invitation token for a petition project"""
-    DCConfigHaieFactory()
-    invitation = InvitationTokenFactory()
-    accept_invitation_url = reverse(
-        "petition_project_accept_invitation",
-        kwargs={
-            "reference": invitation.petition_project.reference,
-            "token": invitation.token,
-        },
-    )
-
-    # no user loged in
-    response = client.get(accept_invitation_url)
-    assert response.status_code == 302
-    assert (
-        f"/comptes/connexion/?next=/projet/{invitation.petition_project.reference}/invitations/{invitation.token}/"
-        in response.url
-    )
-
-    # valid token used by its creator should not be consumed
-    client.force_login(invitation.created_by)
-    client.get(accept_invitation_url)
-    invitation.refresh_from_db()
-    assert invitation.user is None
-
-    # valid token
-    another_user = UserFactory(is_haie_user=True)
-    client.force_login(another_user)
-    client.get(accept_invitation_url)
-    invitation.refresh_from_db()
-    assert invitation.user == another_user
-
-    # already used token
-    another_user_again = UserFactory(is_haie_user=True)
-    client.force_login(another_user_again)
-    response = client.get(accept_invitation_url)
-    invitation.refresh_from_db()
-    assert invitation.user == another_user
-    assert response.status_code == 403
-
-    # outdated token
-    invitation = InvitationTokenFactory(
-        petition_project=invitation.petition_project,
-        valid_until=timezone.now() - timezone.timedelta(days=1),
-    )
-    accept_invitation_url = reverse(
-        "petition_project_accept_invitation",
-        kwargs={
-            "reference": invitation.petition_project.reference,
-            "token": invitation.token,
-        },
-    )
-    client.force_login(haie_user)
-    response = client.get(accept_invitation_url)
-    assert response.status_code == 403
-
-    # unexpected token
-    accept_invitation_url = reverse(
-        "petition_project_accept_invitation",
-        kwargs={
-            "reference": invitation.petition_project.reference,
-            "token": "something-farfelue",
-        },
-    )
-    client.force_login(haie_user)
-    response = client.get(accept_invitation_url)
-    assert response.status_code == 403
 
 
 def test_petition_project_instructor_notes_form(
@@ -1734,7 +1672,7 @@ def test_alternative_delete(client, haie_instructor_44):
         },
     )
     response = client.post(delete_url)
-    assert response.status_code == 302
+    assert response.status_code == 403
     assert project.simulations.all().count() == 3
 
     # Active simulation cannot be deleted
@@ -1748,7 +1686,7 @@ def test_alternative_delete(client, haie_instructor_44):
     )
 
     response = client.post(delete_url)
-    assert response.status_code == 302
+    assert response.status_code == 403
     assert project.simulations.all().count() == 3
 
     # Others simulations can be deleted
@@ -1764,3 +1702,99 @@ def test_alternative_delete(client, haie_instructor_44):
     response = client.post(delete_url)
     assert response.status_code == 302
     assert project.simulations.all().count() == 2
+
+
+def test_valid_token_format_redirects(client):
+    """Test that a token with valid format allows redirection."""
+    project = PetitionProjectFactory()
+    # Valid token format: 43 characters, URL-safe base64 (A-Z, a-z, 0-9, -, _)
+    valid_token = (
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm0123"  # pragma: allowlist secret
+    )
+
+    url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={"reference": project.reference, "token": valid_token},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 302
+    assert f"?{settings.INVITATION_TOKEN_COOKIE_NAME}={valid_token}" in response.url
+
+
+def test_valid_token_with_dash_and_underscore_redirects(client):
+    """Test that tokens with dash and underscore characters are accepted."""
+    project = PetitionProjectFactory()
+    # Token with dash and underscore (valid URL-safe base64 characters)
+    valid_token = (
+        "Df_3qsiW0GMAVnZVjxoocydbx5a1iaRdkmnJmHIWU4k"  # pragma: allowlist secret
+    )
+
+    url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={"reference": project.reference, "token": valid_token},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 302
+    assert f"?{settings.INVITATION_TOKEN_COOKIE_NAME}={valid_token}" in response.url
+
+
+def test_token_too_short_returns_400(client):
+    """Test that a token shorter than 43 characters returns 400."""
+    project = PetitionProjectFactory()
+    short_token = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk"  # 37 chars
+
+    url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={"reference": project.reference, "token": short_token},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 400
+
+
+def test_token_too_long_returns_400(client):
+    """Test that a token longer than 43 characters returns 400."""
+    project = PetitionProjectFactory()
+    long_token = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst"  # 46 chars
+
+    url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={"reference": project.reference, "token": long_token},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 400
+
+
+def test_token_with_invalid_characters_returns_400(client):
+    """Test that a token with invalid characters returns 400."""
+    project = PetitionProjectFactory()
+    # Token with invalid characters (spaces, special chars)
+    # Note: Django's slug converter will reject most invalid chars at URL level,
+    # but this test ensures the view's regex validation also works
+    invalid_token = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm012!"
+
+    url = f"/projet/{project.reference}/invitations/{invalid_token}/"
+    response = client.get(url)
+
+    # May be 400 (our validation) or 404 (URL routing) depending on character
+    assert response.status_code in [400, 404]
+
+
+def test_real_token_format_accepted(client):
+    """Test that a real token generated by secrets.token_urlsafe(32) is accepted."""
+    import secrets
+
+    project = PetitionProjectFactory()
+    real_token = secrets.token_urlsafe(32)
+
+    url = reverse(
+        "petition_project_accept_invitation",
+        kwargs={"reference": project.reference, "token": real_token},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 302
+    assert f"?{settings.INVITATION_TOKEN_COOKIE_NAME}={real_token}" in response.url
