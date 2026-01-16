@@ -20,6 +20,7 @@
       {% else %}
         <li>Département : {{ moulinette.department }}</li>
       {% endif %}
+      <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
     </ul>
 
     {% if moulinette.loi_sur_leau.ecoulement_avec_bv %}
