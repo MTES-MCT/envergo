@@ -1,11 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
+from datetime import date
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+from dateutil import parser
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
@@ -638,6 +640,12 @@ class Criterion(models.Model):
         related_name="criteria",
         null=True,
         blank=True,
+    )
+    validity_date_start = models.DateField(
+        "Date de début de validité", blank=True, null=True
+    )
+    validity_date_end = models.DateField(
+        "Date de fin de validité", blank=True, null=True
     )
     activation_map = models.ForeignKey(
         "geodata.Map",
@@ -1778,6 +1786,16 @@ class Moulinette(ABC):
             .prefetch_related("templates")
             .annotate(distance=Cast(0, IntegerField()))
             .order_by("weight", "id", "distance")
+            .filter(
+                (
+                    Q(validity_date_start__isnull=True)
+                    | Q(validity_date_start__lte=self.date)
+                ),
+                (
+                    Q(validity_date_end__isnull=True)
+                    | Q(validity_date_end__gt=self.date)
+                ),
+            )
         )
 
         return criteria
@@ -1964,6 +1982,17 @@ class Moulinette(ABC):
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
         return dict(result)
+
+    @property
+    def date(self):
+        """Date fo the simulation. Today by default."""
+        date_str = self.data.get("date", None)
+        if date_str:
+            try:
+                return parser.isoparse(date_str).date()
+            except (ValueError, TypeError):
+                pass
+        return date.today()
 
 
 class MoulinetteAmenagement(Moulinette):
