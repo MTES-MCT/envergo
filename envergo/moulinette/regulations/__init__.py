@@ -241,6 +241,72 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
         return None
 
 
+class HedgesCentricMapFactory(MapFactory):
+    """A factory that creates a map centered on the hedges (both to remove, and to plant)."""
+
+    @classmethod
+    def human_readable_name(cls):
+        return "Une carte centrée sur les haies, à la fois à détruire et à planter (GUH uniquement)"
+
+    def create_map(self) -> Map | None:
+        """Create a map centered on the hedges."""
+        polygons = self.create_perimeter_polygons()
+        if polygons:
+            haies = self.regulation.moulinette.catalog.get("haies")
+            if haies:
+                hedges_to_remove_geometries = [
+                    SimpleNamespace(
+                        geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                    )
+                    for hedge in haies.hedges_to_remove()
+                ]
+                hedges_to_plant_geometries = [
+                    SimpleNamespace(
+                        geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                    )
+                    for hedge in haies.hedges_to_plant()
+                ]
+
+                if hedges_to_remove_geometries:
+                    hedges_to_remove = MapPolygon(
+                        hedges_to_remove_geometries,
+                        "#f00",
+                        "Haies à détruire",
+                        class_name="hedge to-remove",
+                    )
+                    polygons.append(hedges_to_remove)
+
+                if hedges_to_plant_geometries:
+                    hedges_to_plant = MapPolygon(
+                        hedges_to_plant_geometries,
+                        "#0f0",
+                        "Haies à planter",
+                        class_name="hedge to-plant",
+                    )
+                    polygons.append(hedges_to_plant)
+
+                hedges = MapPolygon(
+                    hedges_to_remove_geometries + hedges_to_plant_geometries,
+                    "",
+                    "",
+                    class_name="",
+                )
+
+                return Map(
+                    type="regulation",
+                    center=self.regulation.moulinette.get_map_center(),
+                    entries=polygons,
+                    truncate=False,
+                    zoom_on_geometry=hedges,
+                    display_marker_at_center=False,
+                    zoom=None,
+                    ratio_classes="ratio-2x1 ratio-sm-4x5",
+                    fixed=False,
+                )
+
+        return None
+
+
 class RegulationEvaluator(ABC):
     """Evaluate a single regulation."""
 
