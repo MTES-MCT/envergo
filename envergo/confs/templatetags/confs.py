@@ -1,5 +1,4 @@
 from django import template
-from django.conf import settings
 
 from envergo.confs.models import TopBar
 
@@ -13,7 +12,6 @@ def top_bar(context):
         return ""
 
     data = {"is_active": False}
-    data.update({"ENV_NAME": settings.ENV_NAME})
 
     # Check if the top bar hiding cookie is set
     cookies = context["request"].COOKIES
