@@ -240,8 +240,8 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
 
 
 @register.simple_tag
-def display_pause(response_due_date):
-    days_left = (response_due_date - date.today()).days
+def display_pause(due_date):
+    days_left = (due_date - date.today()).days
     if days_left >= 7:
         icon_class = ""
     elif days_left >= 0:

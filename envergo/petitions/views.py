@@ -1429,7 +1429,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 StatusLog.objects.create(
                     petition_project=project,
                     type=LOG_TYPES.suspension,
-                    response_due_date=form.cleaned_data["response_due_date"],
+                    due_date=form.cleaned_data["due_date"],
                     original_due_date=(
                         current_status.due_date if current_status else None
                     ),

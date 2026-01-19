@@ -1357,7 +1357,7 @@ def test_petition_project_request_for_info(
         kwargs={"reference": project.reference},
     )
     form_data = {
-        "response_due_date": next_month,
+        "due_date": next_month,
         "request_message": "Test",
     }
     res = client.post(rai_url, form_data, follow=True)
@@ -1368,7 +1368,7 @@ def test_petition_project_request_for_info(
     clear_cached_properties(project)
     assert project.is_paused is True
     # Suspension fields are now on the suspension log, not current_status
-    assert project.latest_suspension.response_due_date == next_month
+    assert project.latest_suspension.due_date == next_month
     assert project.latest_suspension.original_due_date == today
 
 
@@ -1397,7 +1397,7 @@ def test_petition_project_resume_instruction(
             timezone.get_current_timezone(),
         ),
         original_due_date=today,
-        response_due_date=next_month,
+        due_date=next_month,
     )
     assert project.is_paused is True
 
