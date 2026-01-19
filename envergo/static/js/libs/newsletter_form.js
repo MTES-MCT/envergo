@@ -69,7 +69,7 @@
         return response.json();
       })
       .then(data => {
-        handleResponse(alert, data);
+        this.handleResponse(alert, data);
       })
       .catch(() => {
         alert.innerHTML = `<div class="fr-alert fr-alert--error fr-mb-2w">
