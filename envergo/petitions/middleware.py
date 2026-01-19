@@ -95,7 +95,10 @@ class HandleInvitationTokenMiddleware:
                 invitation.save()
 
                 messages.info(request, "Un dossier a été rattaché à votre compte.")
-            else:
+
+            # We don't display an error if the token was already accepted earlier
+            # by this user
+            elif invitation.user != request.user:
                 messages.warning(
                     request,
                     """
