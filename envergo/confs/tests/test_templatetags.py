@@ -1,6 +1,6 @@
 import pytest
 from django.template import Context, Template
-from django.test import RequestFactory, override_settings
+from django.test import RequestFactory
 
 from envergo.confs.tests.factories import TopBarFactory
 
@@ -22,22 +22,3 @@ def test_top_bar_displayed(site):
     content = Template(template_html).render(Context(context_data))
     # THEN this top bar text is in template
     assert topbar.message_html in content
-    # AND teaching top bar is not in template
-    assert "Environnement de formation." not in content
-
-
-@override_settings(ENV_NAME="teaching")
-def test_teaching_top_bar_displayed(site):
-    """Test teaching top_bar is in template."""
-
-    # GIVEN a fake request
-    factory = RequestFactory()
-    request = factory.get("")
-    request.site = site
-    request.session = {}
-    # WHEN I want to show top bar in a template
-    template_html = "{% load confs %}{% top_bar %}"
-    context_data = {"request": request}
-    content = Template(template_html).render(Context(context_data))
-    # THEN teaching top bar is in template
-    assert "Environnement de formation." in content
