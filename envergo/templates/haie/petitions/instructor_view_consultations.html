@@ -12,11 +12,7 @@
       <h2>Demander un avis</h2>
 
       <p>
-        Générez le message type contenant le lien d’accès unique. Copiez ensuite le message et collez-le dans un e-mail envoyé à votre destinataire. Le lien contenu dans ce message est <strong>personnel et valable une seule fois pour une seule personne</strong>.
-      </p>
-
-      <p>
-        Pour partager la simulation avec une personne extérieure (par ex. le technicien bocager qui a juste besoin d'un aperçu du projet), vous pouvez juste lui partager le lien publique de la simulation.
+        Les personnes invitées ont accès en lecture seule à l’intégralité des données du dossier, y compris les messages échangés et les notes d’instruction.
       </p>
 
       <div id="copy-success-message-container"></div>
@@ -26,52 +22,58 @@
               data-fr-opened="false"
               aria-controls="invitation-token-modal">Inviter une nouvelle personne</button>
 
-      {% if invitation_tokens %}
-        <h2>Services ayant accédé au dossier</h2>
+      <h2>Services ayant accédé au dossier</h2>
 
-        <p>
-          Les invités qui apparaissent dans cette liste ont accédé au moins une fois au dossier. Si la liste n'est pas complète, vérifiez que votre email d'invitation a bien été envoyé.
-        </p>
+      <p>
+        Les invités qui apparaissent dans cette liste ont accédé au moins une fois au dossier. Si la liste n'est pas complète, vérifiez que votre email d'invitation a bien été envoyé.
+      </p>
 
-        <div class="fr-table">
-          <div class="fr-table__wrapper">
-            <div class="fr-table__container">
-              <div class="fr-table__content">
-                <table>
-                  <thead>
+      <p>
+        <strong>Liste des personnes ayant accédé au dossier :</strong>
+      </p>
+
+      <div class="fr-table fr-mb-3w">
+        <div class="fr-table__wrapper">
+          <div class="fr-table__container">
+            <div class="fr-table__content">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Premier accès</th>
+                    <th scope="col">Compte invité</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for token in invitation_tokens %}
                     <tr>
-                      <th scope="col">Date</th>
-                      <th scope="col">Mail</th>
-                      <th scope="col">Actions</th>
+                      <td>{{ token.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                      <td>{{ token.user.email }}</td>
+                      <td>
+                        <form method="POST"
+                              action="{% url 'petition_project_invitation_token_delete' petition_project.reference %}"
+                              class="revoke-token-form">
+                          {% csrf_token %}
+                          <input type="hidden" name="token_id" value="{{ token.id }}">
+                          <button type="submit" class="fr-btn fr-btn--sm fr-btn--tertiary">Révoquer l'accès</button>
+                        </form>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {% for token in invitation_tokens %}
-                      <tr>
-                        <td>{{ token.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-                        <td>{{ token.user.email }}</td>
-                        <td>
-                          <form method="POST"
-                                action="{% url 'petition_project_invitation_token_delete' petition_project.reference %}"
-                                class="revoke-token-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="token_id" value="{{ token.id }}">
-                            <button type="submit" class="fr-btn fr-btn--sm fr-btn--tertiary">Révoquer l'accès</button>
-                          </form>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
+                  {% empty %}
+                    <tr>
+                      <td colspan="3">Aucun invité n'a encore consulté le dossier</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      {% else %}
-        <div class="fr-callout">
-          <p class="fr-callout__text">Aucune consultation n'a encore été enregistrée pour ce dossier.</p>
-        </div>
-      {% endif %}
+      </div>
+      <p>Seules les personnes ayant réellement accédé au dossier sont listées.</p>
+      <p>
+        <a href="{% url 'confighaie_settings' department.department %}#title-comptes">Voir la liste des personnes ayant accès à tous les dossiers du département.</a>
+      </p>
     </section>
 
   </div>
