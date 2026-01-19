@@ -58,7 +58,11 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
+from envergo.moulinette.regulations import (
+    HaieRegulationEvaluator,
+    HedgeDensityMixin,
+    MapFactory,
+)
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
 
@@ -2392,11 +2396,22 @@ class MoulinetteHaie(Moulinette):
                 pass
 
         context["hedge_data"] = hedge_data
+        # Fetch all the regulations that have perimeters intersected by hedges to plant but not hedges to remove
+        # For single procedure moulinette, filter the regulations that cannot switch the result to "autorisation"
         context["hedges_to_plant_intersecting_regulations_perimeter"] = {
             regulation: hedges[TO_PLANT]
             for regulation, perimeters in self.hedges_intersecting_regulations_perimeter.items()
             for perimeter, hedges in perimeters.items()
-            if TO_PLANT in hedges and TO_REMOVE not in hedges
+            if (
+                TO_PLANT in hedges
+                and TO_REMOVE not in hedges
+                and (
+                    not self.config.single_procedure
+                    or isinstance(regulation.get_evaluator(), HaieRegulationEvaluator)
+                    and "autorisation"
+                    in regulation.get_evaluator().PROCEDURE_TYPE_MATRIX.values()
+                )
+            )
         }
 
         return context
@@ -2587,23 +2602,23 @@ class MoulinetteHaie(Moulinette):
         if not hedges:
             return {}
 
-        regulations = self.regulations.prefetch_related("perimeters__activation_map")
+        regulations = self.regulations
 
         perimeter_to_regulations = defaultdict(set)
         for regulation in regulations:
             for perimeter in regulation.perimeters.all():
                 perimeter_to_regulations[perimeter].add(regulation)
 
-        perimeter_geoms = {
-            perimeter: perimeter.activation_map.geometry
+        perimeter_zones = {
+            perimeter: list(perimeter.activation_map.zones.all())
             for perimeter in perimeter_to_regulations
         }
 
         for hedge in hedges:
             hedge_geom = hedge.geos_geometry
 
-            for perimeter, perimeter_geom in perimeter_geoms.items():
-                if not perimeter_geom.intersects(hedge_geom):
+            for perimeter, zones in perimeter_zones.items():
+                if not any(zone.geometry.intersects(hedge_geom) for zone in zones):
                     continue
 
                 for regulation in perimeter_to_regulations[perimeter]:

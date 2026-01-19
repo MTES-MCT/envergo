@@ -6,9 +6,17 @@
           <thead>
             <tr>
               <th class="fr-cell--fixed" role="columnheader">Type</th>
-              <th>À détruire, sur site protégé</th>
+              <th>
+                À détruire,
+                <br />
+                sur site protégé
+              </th>
               <th>Détail</th>
-              <th>À planter, sur site protégé</th>
+              <th>
+                À planter,
+                <br />
+                sur site protégé
+              </th>
               <th>Détail</th>
             </tr>
           </thead>
@@ -46,23 +54,19 @@
               </th>
               <td>{{ sites_proteges_hedges.degradee.TO_REMOVE.length|floatformat:"0g" }} m</td>
               <td>{{ sites_proteges_hedges.degradee.TO_REMOVE.ids|join:", "|default:"-" }}</td>
-              <td>Non applicable</td>
-              <td>Non applicable</td>
+              <td>{{ sites_proteges_hedges.degradee.TO_PLANT.length|floatformat:"0g" }} m</td>
+              <td>{{ sites_proteges_hedges.degradee.TO_PLANT.ids|join:", "|default:"-" }}</td>
             </tr>
-            <tr data-row-key="4">
+            <tr data-row-key="4" class="total-row">
               <th class="fr-cell--fixed" scope="row">Total haie régime unique</th>
               <td>
                 <b> {{ sites_proteges_hedges.total.TO_REMOVE.length|floatformat:"0g" }} m </b>
               </td>
-              <td>
-                <b> {{ sites_proteges_hedges.total.TO_REMOVE.ids|join:", "|default:"-" }} </b>
-              </td>
+              <td></td>
               <td>
                 <b> {{ sites_proteges_hedges.total.TO_PLANT.length|floatformat:"0g" }} m </b>
               </td>
-              <td>
-                <b> {{ sites_proteges_hedges.total.TO_PLANT.ids|join:", "|default:"-" }} </b>
-              </td>
+              <td></td>
             </tr>
             <tr data-row-key="4">
               <th class="fr-cell--fixed" scope="row">
