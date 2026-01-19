@@ -151,11 +151,14 @@
   </div>
   {% if is_department_instructor %}
     <button class="fr-btn"
-            {% if petition_project.demarches_simplifiees_state == "draft" %}disabled{% endif %}
+            {% if petition_project.demarches_simplifiees_state == "draft" or petition_project.is_paused %}disabled{% endif %}
             data-fr-opened="{% if form.errors %}true{% else %}false{% endif %}"
             aria-controls="procedure-modal">Modifier l'état du dossier</button>
     {% if petition_project.demarches_simplifiees_state == "draft" %}
       <span class="fr-hint-text">Ce dossier n'a pas encore été déposé par le pétitionnaire.</span>
+    {% endif %}
+    {% if petition_project.is_paused %}
+      <span class="fr-hint-text">Impossible tant que le dossier est en attente de compléments.</span>
     {% endif %}
   {% endif %}
 
@@ -181,7 +184,11 @@
               <tbody>
                 {% for log in object_list %}
                   <tr class="project">
-                    <td>{{ log.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                    <td>
+                      {{ log.created_at|date:"SHORT_DATE_FORMAT" }}
+                      <br />
+                      {{ log.created_at|date:"TIME_FORMAT" }}
+                    </td>
                     <td>{% created_by_display log %}</td>
                     <td>
                       <b>{{ log.get_type_display }}</b>
@@ -196,6 +203,14 @@
                           <br />
                           Décision : {{ DECISIONS|get_choice_label:log.decision }}
                         {% endif %}
+                      {% elif log.type == "suspension" %}
+                        <br />
+                        Date limite : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                      {% elif log.type == "resumption" %}
+                        <br />
+                        Réception : {{ log.info_receipt_date|date:"SHORT_DATE_FORMAT" }}
+                        <br />
+                        Prochaine échéance : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
                       {% endif %}
                     </td>
                     <td>

@@ -1308,7 +1308,7 @@ def test_petition_project_request_for_info(
         kwargs={"reference": project.reference},
     )
     form_data = {
-        "response_due_date": next_month,
+        "due_date": next_month,
         "request_message": "Test",
     }
     res = client.post(rai_url, form_data, follow=True)
@@ -1319,7 +1319,7 @@ def test_petition_project_request_for_info(
     clear_cached_properties(project)
     assert project.is_paused is True
     # Suspension fields are now on the suspension log, not current_status
-    assert project.latest_suspension.response_due_date == next_month
+    assert project.latest_suspension.due_date == next_month
     assert project.latest_suspension.original_due_date == today
 
 
@@ -1348,9 +1348,30 @@ def test_petition_project_resume_instruction(
             timezone.get_current_timezone(),
         ),
         original_due_date=today,
-        response_due_date=next_month,
+        due_date=next_month,
     )
     assert project.is_paused is True
+
+    # WHEN the user try to change step while paused
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    data = {
+        "stage": "closed",
+        "decision": "dropped",
+        "update_comment": "aucun retour depuis 15 ans",
+        "status_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+
+    # THEN this step is not authorized
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.current_stage == "to_be_processed"
+    assert project.current_stage == "to_be_processed"
 
     # Resume instruction
     rai_url = reverse(

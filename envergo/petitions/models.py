@@ -203,6 +203,8 @@ class PetitionProject(models.Model):
 
     @property
     def due_date(self):
+        if self.is_paused:
+            return self.latest_suspension.due_date
         status = self.current_status
         resumption = self.latest_resumption
         if resumption and status:
@@ -634,12 +636,11 @@ class InvitationToken(models.Model):
 # Some data constraints checks
 
 # Check that all request for info suspension data is set
-q_suspended = Q(type=LOG_TYPES.suspension) & Q(response_due_date__isnull=False)
+q_suspended = Q(type=LOG_TYPES.suspension) & Q(due_date__isnull=False)
 
 # Check that no single field is set
 q_not_suspended = (
     Q(type=LOG_TYPES.status_change)
-    & Q(response_due_date__isnull=True)
     & Q(original_due_date__isnull=True)
     & Q(info_receipt_date__isnull=True)
 )
@@ -705,11 +706,6 @@ class StatusLog(models.Model):
     )
 
     # "Request for additional information" related fields
-    response_due_date = models.DateField(
-        "Échéance pour l'envoi de pièces complémentaires",
-        null=True,
-        blank=True,
-    )
     original_due_date = models.DateField(
         "Date de prochaine échéance avant suspension", null=True, blank=True
     )

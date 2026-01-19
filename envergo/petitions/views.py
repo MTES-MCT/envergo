@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -1378,6 +1378,16 @@ class PetitionProjectInstructorProcedureView(
             )
             notify(message, "haie")
 
+        if self.object.is_paused:
+            form.add_error(
+                None,
+                ValidationError(
+                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
+                    code="modification_while_paused",
+                ),
+            )
+            return self.form_invalid(form)
+
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
@@ -1464,7 +1474,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 StatusLog.objects.create(
                     petition_project=project,
                     type=LOG_TYPES.suspension,
-                    response_due_date=form.cleaned_data["response_due_date"],
+                    due_date=form.cleaned_data["due_date"],
                     original_due_date=(
                         current_status.due_date if current_status else None
                     ),
