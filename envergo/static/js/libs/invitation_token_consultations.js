@@ -127,7 +127,7 @@
     const alertDiv = document.createElement('div');
     alertDiv.className = 'fr-alert fr-alert--success fr-mb-3w';
     alertDiv.innerHTML = `
-      <p class="fr-alert__title">Le message a été copié</p>
+      <p>Le message a été copié</p>
     `;
 
     // Insert message
