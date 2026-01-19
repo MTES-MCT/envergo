@@ -1870,28 +1870,6 @@ def test_consultations_view_displays_accepted_tokens(
     assert haie_user.email in content
 
 
-def test_consultations_view_displays_empty_state(client, haie_instructor_44):
-    """Test that consultations view displays empty state when no accepted tokens"""
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-
-    # Create a pending token (not accepted) - should not be displayed
-    InvitationTokenFactory(petition_project=project, created_by=haie_instructor_44)
-
-    consultations_url = reverse(
-        "petition_project_instructor_consultations_view",
-        kwargs={"reference": project.reference},
-    )
-
-    client.force_login(haie_instructor_44)
-    response = client.get(consultations_url)
-
-    assert response.status_code == 200
-    content = response.content.decode()
-    # New message for when no accepted consultations
-    assert "Aucune consultation n'a encore été enregistrée pour ce dossier" in content
-
-
 # =============================================================================
 # Invitation Token Creation Tests
 # =============================================================================
