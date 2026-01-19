@@ -30,28 +30,41 @@
 {% endblock %}
 
 {% block result_header %}
-  <h3 class="fr-mt-4w">Vous souhaitez faire une simulation alternative ?</h3>
 
-  <p>Cette simulation n’est plus modifiable car elle a été prise en compte dans le dossier.</p>
+  {% if user.is_instructor %}
+    <h3 class="fr-mt-4w">Vous souhaitez faire une simulation alternative ?</h3>
 
-  <p>
-    <strong>Vous pouvez dupliquer cette version en démarrant une simulation alternative</strong>. Ceci permettra de :
-  </p>
+    <p>Cette simulation n’est plus modifiable car elle a été prise en compte dans le dossier.</p>
 
-  <ul>
-    <li>la modifier comme vous le souhaihtez ;</li>
-    <li>la sauvegarder dans votre espace d'instruction ;</li>
-    <li>l'envoyer au demandeur pour validation ou correction ;</li>
-    <li>l'activer pour mettre à jour le dossier.</li>
-  </ul>
+    <p>
+      <strong>Vous pouvez dupliquer cette version en démarrant une simulation alternative</strong>. Ceci permettra de :
+    </p>
 
-  <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-play-line spinner-link"
-     href="{{ edit_url }}">Démarrer une simulation alternative</a>
+    <ul>
+      <li>la modifier comme vous le souhaitez ;</li>
+      <li>la sauvegarder dans votre espace d'instruction ;</li>
+      <li>l'envoyer au demandeur pour validation ou correction ;</li>
+      <li>l'activer pour mettre à jour le dossier.</li>
+    </ul>
 
-  <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
+    <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-play-line spinner-link"
+       href="{{ edit_url }}">Démarrer une simulation alternative</a>
+  {% elif not user.is_authenticated %}
+    <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
 
-  <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
-     href="{% url 'contact_us' %}">Contacter le guichet unique</a>
+    <p>
+      Cette simulation n’est plus modifiable car elle a été pris en compte dans votre dossier.
+      <br />
+      <strong>Vous pouvez dupliquer cette version</strong>, la modifier comme vous le souhaitez puis recréer un dossier pour déposer votre demande.
+    </p>
+
+    <a class="fr-btn fr-btn--secondary spinner-link" href="{{ edit_url }}">Dupliquer cette simulation</a>
+
+    <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
+
+    <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+       href="{% url 'contact_us' %}">Contacter le guichet unique</a>
+  {% endif %}
 
   <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
   {{ block.super }}
