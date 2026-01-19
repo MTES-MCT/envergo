@@ -39,5 +39,5 @@ def test_teaching_top_bar_displayed(site):
     template_html = "{% load confs %}{% top_bar %}"
     context_data = {"request": request}
     content = Template(template_html).render(Context(context_data))
-    # THEN teaching top bar is not in template
+    # THEN teaching top bar is in template
     assert "Environnement de formation." in content
