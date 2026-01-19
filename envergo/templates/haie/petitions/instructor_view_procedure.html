@@ -151,11 +151,14 @@
   </div>
   {% if is_department_instructor %}
     <button class="fr-btn"
-            {% if petition_project.demarches_simplifiees_state == "draft" %}disabled{% endif %}
+            {% if petition_project.demarches_simplifiees_state == "draft" or petition_project.is_paused %}disabled{% endif %}
             data-fr-opened="{% if form.errors %}true{% else %}false{% endif %}"
             aria-controls="procedure-modal">Modifier l'état du dossier</button>
     {% if petition_project.demarches_simplifiees_state == "draft" %}
       <span class="fr-hint-text">Ce dossier n'a pas encore été déposé par le pétitionnaire.</span>
+    {% endif %}
+    {% if petition_project.is_paused %}
+      <span class="fr-hint-text">Impossible tant que le dossier est en attente de compléments.</span>
     {% endif %}
   {% endif %}
 

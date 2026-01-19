@@ -1401,6 +1401,27 @@ def test_petition_project_resume_instruction(
     )
     assert project.is_paused is True
 
+    # WHEN the user try to change step while paused
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+    data = {
+        "stage": "closed",
+        "decision": "dropped",
+        "update_comment": "aucun retour depuis 15 ans",
+        "status_date": "10/09/2025",
+    }
+    res = client.post(status_url, data, follow=True)
+
+    # THEN this step is not authorized
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.current_stage == "to_be_processed"
+    assert project.current_stage == "to_be_processed"
+
     # Resume instruction
     rai_url = reverse(
         "petition_project_instructor_request_info_view",
