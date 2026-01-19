@@ -885,11 +885,7 @@ div#invitation-token-email-wrapper {
   }
 }
 
-div#invitation-token-email-html {
-  background-color: var(--background-contrast-grey);
-  color: var(--text-mention-grey);
-}
-
+div#invitation-token-email-html,
 pre#invitation-token-email-text {
   display: none;
 }
