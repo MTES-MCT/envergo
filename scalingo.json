@@ -38,6 +38,9 @@
     "IS_REVIEW_APP": {
       "value": "True"
     },
+    "COMPRESS_ENABLED": {
+      "value": "False"
+    },
     "DJANGO_AWS_S3_ENDPOINT_URL": {
       "value": "https://envergo-stage.s3.fr-par.scw.cloud"
     },
@@ -70,6 +73,12 @@
     },
     "DJANGO_ADMIN_OTP_REQUIRED": {
       "value": "False"
+    },
+    "DISABLE_COLLECTSTATIC": {
+      "value": "1"
+    },
+    "NPM_NO_BUILD": {
+      "value": "true"
     }
   },
   "scripts": {
