@@ -74,3 +74,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
+
+    def is_involved_in_guh(self):
+        """Returns True if user has instructor right or if user has department or token"""
+        return any(
+            (
+                self.is_superuser,
+                self.is_instructor,
+                self.departments.defer("geometry").exists(),
+                self.invitation_tokens.exists(),
+            )
+        )
