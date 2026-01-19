@@ -69,7 +69,10 @@ class CeleryDebugStream:
         if msg.startswith("Processed"):
             match = re.findall(r"\d+", msg)
             nb_saved = int(match[1])
-            progress = int(nb_saved / self.expected_zones * 100)
+            if self.expected_zones > 0:
+                progress = int(nb_saved / self.expected_zones * 100)
+            else:
+                progress = 0
 
             # update task state
             task_msg = (
@@ -146,8 +149,10 @@ def extract_map(archive):
         # Local files also get an url, but its just unreachable
         elif hasattr(archive, "url") and archive.url.startswith("http"):
             yield archive.url
-        else:
+        elif hasattr(archive, "path"):
             yield archive.path
+        else:
+            yield archive.name
 
     else:
         raise ValueError(_("Unsupported file format"))
@@ -159,9 +164,9 @@ def count_features(map_file):
     with extract_map(map_file) as file:
         ds = DataSource(file)
         layer = ds[0]
-        nb_zones = len(layer)
+        nb_features = len(layer)
 
-    return nb_zones
+    return nb_features
 
 
 def process_geographic_file(map, lm, task):
@@ -192,7 +197,7 @@ def process_zones_file(map, map_file, task=None):
 
 def process_lines_file(map, map_file, task=None):
     logger.info("Instanciating custom LayerMapping")
-    mapping = {"geometry": "LINESTRING"}
+    mapping = {"geometry": "MULTILINESTRING"}
     extra = {"map": map}
     lm = CustomMapping(
         Line,

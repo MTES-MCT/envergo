@@ -606,9 +606,16 @@ class InvitationToken(models.Model):
         verbose_name = "Jeton d'invitation"
         verbose_name_plural = "Jetons d'invitation"
 
-    def is_valid(self):
+    def is_valid(self, user):
         """Check if the token is still valid."""
-        return self.user_id is None and self.valid_until >= timezone.now()
+
+        return all(
+            (
+                self.user_id is None,
+                self.created_by != user,
+                self.valid_until >= timezone.now(),
+            )
+        )
 
 
 # Some data constraints checks

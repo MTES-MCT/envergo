@@ -14,6 +14,7 @@ from django.views.generic import DetailView, FormView
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
     get_matomo_tags,
+    get_user_type,
     is_request_from_a_bot,
     log_event,
     update_url_with_matomo_params,
@@ -269,7 +270,12 @@ class MoulinetteMixin:
         if self.request.site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN:
             action = self.event_action_amenagement
         else:
-            action = self.event_action_haie
+            # if the triage is not valid, we log a "soumission_autre" action
+            action = (
+                self.event_action_haie
+                if moulinette.is_triage_valid()
+                else "soumission_autre"
+            )
 
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
@@ -279,6 +285,7 @@ class MoulinetteMixin:
             action,
             self.request,
             **export,
+            user_type=get_user_type(self.request.user),
         )
 
 
@@ -334,6 +341,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             self.request,
             data=form.data,
             errors=form_errors,
+            user_type=get_user_type(self.request.user),
         )
         return self.render_to_response(context)
 
@@ -531,22 +539,6 @@ class BaseMoulinetteResult(FormView):
 
         return res
 
-    def log_moulinette_event(self, moulinette, context):
-        if moulinette.is_triage_valid():
-            super().log_moulinette_event(moulinette, context)
-        else:
-            # TODO Why is matomo param cleanup only happens here?
-            # Matomo parameters are stored in session, but some might remain in the url.
-            # We need to prevent duplicate values
-            params = get_matomo_tags(self.request)
-            params.update(self.request.GET.dict())
-            log_event(
-                "simulateur",
-                "soumission_autre",
-                self.request,
-                **params,
-            )
-
 
 class MoulinetteAmenagementResult(
     MoulinetteResultMixin, MoulinetteMixin, BaseMoulinetteResult
@@ -662,13 +654,19 @@ class Triage(MoulinetteMixin, FormView):
         if not self.moulinette.department:
             return HttpResponseRedirect(f"{reverse("home")}#simulateur")
 
+        event_params = {
+            "department": self.moulinette.department.department,
+            "user_type": get_user_type(request.user),
+        }
+        is_alternative = bool(request.GET.get("alternative", False))
+        if is_alternative:
+            event_params["alternative"] = "true"
+
         log_event(
             "simulateur",
             "localisation",
             self.request,
-            **{
-                "department": self.moulinette.department.department,
-            },
+            **event_params,
             **get_matomo_tags(self.request),
         )
         return self.render_to_response(self.get_context_data())
