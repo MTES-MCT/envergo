@@ -271,3 +271,8 @@ def querystring(context, *args, **kwargs):
                 params[key] = value
     query_string = params.urlencode() if params else ""
     return f"?{query_string}"
+
+
+@register.filter
+def join_ids(objects):
+    return ", ".join(str(o.id) for o in objects)

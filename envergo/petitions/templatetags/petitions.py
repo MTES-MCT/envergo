@@ -291,8 +291,3 @@ def display_ds_field(context, field_name):
 def has_edit_permission(user, project):
     """Check if the user can edit the project."""
     return project.has_change_permission(user)
-
-
-@register.filter
-def join_ids(objects):
-    return ", ".join(str(o.id) for o in objects)
