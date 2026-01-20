@@ -351,6 +351,7 @@ VISITOR_COOKIE_NAME = "visitorid"
 
 # The max number of files that can be uploaded with a single evaluation request
 MAX_EVALREQ_FILES = 25
+MAX_EVALREQ_FILESIZE = 50
 
 TEST_EMAIL = "test@test.fr"
 

@@ -247,7 +247,7 @@ class WizardFilesForm(forms.ModelForm):
         help_text=f"""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
             Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
-            Maximum 20 Mo par fichier. <br>
+            Maximum {settings.MAX_EVALREQ_FILESIZE} Mo par fichier. <br>
         """,
     )
 
