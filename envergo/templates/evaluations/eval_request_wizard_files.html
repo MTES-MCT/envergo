@@ -66,6 +66,7 @@
     DROPZONE_FIELD = 'id-additional_files-dropzone';
     DROPZONE_UPLOAD_URL = '{% url "request_eval_wizard_step_3_upload" evalreq.reference %}';
     DROPZONE_MAX_FILES = {{ max_files }};
+    DROPZONE_MAX_FILESIZE = {{ max_filesize }};
   </script>
   {{ uploaded_files|json_script:'uploaded-files' }}
   <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>

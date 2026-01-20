@@ -528,6 +528,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
         context = super().get_context_data(**kwargs)
         context["max_files"] = settings.MAX_EVALREQ_FILES
+        context["max_filesize"] = settings.MAX_EVALREQ_FILESIZE
         context["uploaded_files"] = files
         context["request_submitted"] = self.object.submitted
         context["matomo_custom_url"] = update_url_with_matomo_params(
