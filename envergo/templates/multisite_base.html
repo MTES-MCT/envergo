@@ -195,7 +195,7 @@
     <main role="main" class="{% block main-classes %}{% endblock %}">
       {% block main %}
 
-        {% if ENV_NAME == "teaching" %}
+        {% if DISPLAY_TEACHING_TOPBAR %}
           <div id="top-bar-teaching" class="fr-notice fr-notice--warning">
             <div class="fr-container">
               <div class="fr-notice__body">
