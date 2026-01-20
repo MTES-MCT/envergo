@@ -2224,7 +2224,7 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
     assert response.status_code == 200
     content = response.content.decode()
     # Should show empty state (no accepted consultations)
-    assert "Aucune consultation n'a encore été enregistrée" in content
+    assert "Aucun invité n'a encore consulté le dossier" in content
 
     # Step 3: Get the token and simulate user acceptance
     token = InvitationToken.objects.filter(created_by=haie_instructor_44).first()
@@ -2238,7 +2238,7 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
     # Token should be visible with user email
     assert haie_user.email in content
     # Should NOT show empty state anymore
-    assert "Aucune consultation n'a encore été enregistrée" not in content
+    assert "Aucun invité n'a encore consulté le dossier" not in content
 
     # Step 5: Verify revoke form IS present (can revoke accepted tokens)
     assert f'name="token_id" value="{token.id}"' in content
