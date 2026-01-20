@@ -10,6 +10,13 @@ def cp_due_date(apps, schema_editor):
         suspension.due_date = suspension.response_due_date
         suspension.save()
 
+def back_to_response_due_date(apps, schema_editor):
+    StatusLog = apps.get_model("petitions", "StatusLog")
+    suspension_qs = StatusLog.objects.filter(type="suspension")
+    for suspension in suspension_qs:
+        suspension.response_due_date = suspension.due_date
+        suspension.save()
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -18,11 +25,11 @@ class Migration(migrations.Migration):
 
     operations = [
 
-        migrations.RunPython(cp_due_date, migrations.RunPython.noop),
         migrations.RemoveConstraint(
             model_name="statuslog",
             name="suspension_data_is_consistent",
         ),
+        migrations.RunPython(cp_due_date, back_to_response_due_date),
         migrations.AddConstraint(
             model_name="statuslog",
             constraint=models.CheckConstraint(
