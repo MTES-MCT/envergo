@@ -655,6 +655,8 @@ button#project-summary-hedge-input-open-btn {
 }
 
 div#project-specifications-instructor {
+  container-type: inline-size;
+
   i.optional-tag {
     display: none;
   }
@@ -964,7 +966,6 @@ div#alternative-notice {
   }
 
   p {
-    // margin: auto;
     --text-spacing: 0 0 8px 0;
   }
 }
@@ -1073,6 +1074,32 @@ button.hide-expanded[aria-expanded="true"] {
 
     button {
       padding: 0;
+    }
+  }
+}
+
+#sites-proteges-hedges-table {
+  width: calc(100cqw - 1rem);
+
+  @media (width >=48em) {
+    width: calc(100cqw - 5rem);
+  }
+
+  .fr-text {
+    font-weight: normal;
+  }
+
+  .total-row {
+    th {
+      background-size:
+        100% 2px,
+        1px 100%;
+    }
+
+    td {
+      background-size:
+        100% 2px,
+        0 100%;
     }
   }
 }

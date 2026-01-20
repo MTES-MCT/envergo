@@ -56,7 +56,11 @@ from envergo.moulinette.forms import (
     MoulinetteFormHaie,
     TriageFormHaie,
 )
-from envergo.moulinette.regulations import HedgeDensityMixin, MapFactory
+from envergo.moulinette.regulations import (
+    HaieRegulationEvaluator,
+    HedgeDensityMixin,
+    MapFactory,
+)
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
 
@@ -606,6 +610,10 @@ class Regulation(models.Model):
             actions_to_take = set()
 
         return actions_to_take
+
+    def get_evaluator(self):
+        """Return the evaluator instance."""
+        return self._evaluator
 
 
 class Criterion(models.Model):
@@ -2359,6 +2367,23 @@ class MoulinetteHaie(Moulinette):
                 pass
 
         context["hedge_data"] = hedge_data
+        # Fetch all the regulations that have perimeters intersected by hedges to plant but not hedges to remove
+        # For single procedure moulinette, filter the regulations that cannot switch the result to "autorisation"
+        context["hedges_to_plant_intersecting_regulations_perimeter"] = {
+            regulation: hedges[TO_PLANT]
+            for regulation, perimeters in self.hedges_intersecting_regulations_perimeter.items()
+            for perimeter, hedges in perimeters.items()
+            if (
+                TO_PLANT in hedges
+                and TO_REMOVE not in hedges
+                and (
+                    not self.config.single_procedure
+                    or isinstance(regulation.get_evaluator(), HaieRegulationEvaluator)
+                    and "autorisation"
+                    in regulation.get_evaluator().PROCEDURE_TYPE_MATRIX.values()
+                )
+            )
+        }
 
         return context
 
@@ -2527,6 +2552,59 @@ class MoulinetteHaie(Moulinette):
             for regulation in self.regulations
             for criterion in regulation.criteria.all()
         )
+
+    @cached_property
+    def hedges_intersecting_regulations_perimeter(self):
+        """Return for each regulation the hedges intersecting its perimeters.
+
+        Return:
+            dict: sets of hedges intersecting perimeters by type, by perimeter and by regulation
+            {
+            regulation:{
+                    perimeter:{
+                        hedge_type: sorted list of hedges
+                    }
+                }
+            }
+        """
+        regulations_dd = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
+
+        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
+        if not hedges:
+            return {}
+
+        regulations = self.regulations
+
+        perimeter_to_regulations = defaultdict(set)
+        for regulation in regulations:
+            for perimeter in regulation.perimeters.all():
+                perimeter_to_regulations[perimeter].add(regulation)
+
+        perimeter_zones = {
+            perimeter: list(perimeter.activation_map.zones.all())
+            for perimeter in perimeter_to_regulations
+        }
+
+        for hedge in hedges:
+            hedge_geom = hedge.geos_geometry
+
+            for perimeter, zones in perimeter_zones.items():
+                if not any(zone.geometry.intersects(hedge_geom) for zone in zones):
+                    continue
+
+                for regulation in perimeter_to_regulations[perimeter]:
+                    regulations_dd[regulation][perimeter][hedge.type].add(hedge)
+
+        return {
+            regulation: {
+                perimeter: {
+                    hedge_type: sorted(hedges, key=lambda h: h.id)
+                    for hedge_type, hedges in by_type.items()
+                }
+                for perimeter, by_type in perimeters.items()
+            }
+            for regulation, perimeters in regulations_dd.items()
+        }
 
 
 class ActionToTake(models.Model):

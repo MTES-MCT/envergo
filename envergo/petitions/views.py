@@ -663,6 +663,7 @@ class PetitionProjectDetail(DetailView):
         context["matomo_custom_url"] = update_url_with_matomo_params(
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
+        context = {**context, **moulinette.get_extra_context(self.request)}
 
         return context
 
