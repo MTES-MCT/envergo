@@ -58,11 +58,22 @@
   };
 
   InvitationTokenConsultations.prototype.generateToken = function () {
-    this.modalLoader.style.display = "inherit";
-    this.modalError.style.display = "none";
-    this.modalContent.style.display = "none";
+    // Save original button state
+    const originalText = this.generateBtn.textContent;
+    const originalClasses = this.generateBtn.className;
 
-    fetch(INVITATION_TOKEN_CREATE_URL, {
+    // Update button to loading state
+    this.generateBtn.disabled = true;
+    this.generateBtn.classList.remove('fr-icon-user-add-line');
+    this.generateBtn.classList.add('spinner');
+    this.generateBtn.classList.add('fr-icon-settings-5-line');
+    this.generateBtn.textContent = "Génération du message et du lien d'accès";
+
+    // Minimum delay of 2 seconds
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Fetch content
+    const fetchPromise = fetch(INVITATION_TOKEN_CREATE_URL, {
       method: 'POST',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
@@ -74,14 +85,27 @@
           throw new Error('Network error, token creation failed');
         }
         return response.text();
-      })
-      .then(html => {
+      });
+
+    // Wait for both the fetch and the minimum delay
+    // We add a minimal waiting delay to make it clear that we are
+    // doing hard an important work™
+    Promise.all([fetchPromise, minDelayPromise])
+      .then(([html]) => {
+        this.restoreButton(originalText, originalClasses);
         this.displayTokenModal(html);
       })
       .catch(error => {
         console.error('Error creating invitation token:', error);
+        this.restoreButton(originalText, originalClasses);
         this.displayError();
       });
+  };
+
+  InvitationTokenConsultations.prototype.restoreButton = function (originalText, originalClasses) {
+    this.generateBtn.disabled = false;
+    this.generateBtn.className = originalClasses;
+    this.generateBtn.textContent = originalText;
   };
 
   InvitationTokenConsultations.prototype.displayTokenModal = function (html) {
@@ -89,6 +113,11 @@
     this.modalError.style.display = "none";
     this.modalContent.innerHTML = html;
     this.modalContent.style.display = "inherit";
+
+    // Open modal via DSFR API
+    if (this.modal && window.dsfr) {
+      window.dsfr(this.modal).modal.disclose();
+    }
 
     // Set up copy button
     const copyButton = this.modalContent.querySelector("#copy-invitation-token-btn");
@@ -127,7 +156,7 @@
     const alertDiv = document.createElement('div');
     alertDiv.className = 'fr-alert fr-alert--success fr-mb-3w';
     alertDiv.innerHTML = `
-      <p class="fr-alert__title">Le message a été copié</p>
+      <p>Le message a été copié</p>
     `;
 
     // Insert message
@@ -148,6 +177,11 @@
     this.modalLoader.style.display = "none";
     this.modalError.style.display = "inherit";
     this.modalContent.style.display = "none";
+
+    // Open modal via DSFR API
+    if (this.modal && window.dsfr) {
+      window.dsfr(this.modal).modal.disclose();
+    }
   };
 
 })(this);
