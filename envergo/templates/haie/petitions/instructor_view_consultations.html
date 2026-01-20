@@ -9,7 +9,6 @@
 {% block project_content %}
   <div class="project-inner-content">
     <section class="fr-my-3w">
-      <h2>Demander un avis</h2>
 
       <p>
         Les personnes invitées ont accès en lecture seule à l’intégralité des données du dossier, y compris les messages échangés et les notes d’instruction.
@@ -19,12 +18,6 @@
 
       <button id="generate-invitation-btn"
               class="fr-btn fr-btn--icon-left fr-icon-user-add-line fr-mb-4w">Inviter une nouvelle personne</button>
-
-      <h2>Services ayant accédé au dossier</h2>
-
-      <p>
-        Les invités qui apparaissent dans cette liste ont accédé au moins une fois au dossier. Si la liste n'est pas complète, vérifiez que votre email d'invitation a bien été envoyé.
-      </p>
 
       <p>
         <strong>Liste des personnes ayant accédé au dossier :</strong>
@@ -68,8 +61,8 @@
           </div>
         </div>
       </div>
-      <p>Seules les personnes ayant réellement accédé au dossier sont listées.</p>
-      <p>
+      <p class="fr-hint-text">Seules les personnes ayant réellement accédé au dossier sont listées.</p>
+      <p class="fr-hint-text">
         <a href="{% url 'confighaie_settings' department.department %}#title-comptes">Voir la liste des personnes ayant accès à tous les dossiers du département.</a>
       </p>
     </section>
