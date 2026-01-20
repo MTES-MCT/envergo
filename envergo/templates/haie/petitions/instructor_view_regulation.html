@@ -18,11 +18,10 @@
       {% if regulation.has_instruction_guidelines_template %}
         <section class="instruction-infos fr-callout fr-callout--blue-cumulus">
           <h2 class="fr-h5">Indications pour l'instruction</h2>
+
           {% instructor_view_part "instruction_guidelines" regulation petition_project moulinette %}
-          <p class="fr-mb-1w">Pour partager le dossier et demander un avis :</p>
-          <button class="fr-btn fr-mt-0 fr-btn--secondary fr-btn--icon-left fr-icon-user-add-line invitation-token-modal-button"
-                  data-fr-opened="false"
-                  aria-controls="invitation-token-modal">Inviter une personne à consulter le dossier</button>
+
+          {% instructor_view_part "consultation" regulation petition_project moulinette %}
         </section>
       {% endif %}
 

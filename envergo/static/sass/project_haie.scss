@@ -48,13 +48,20 @@ html.saisie {
   }
 }
 
-.hedge.to-remove {
-  stroke: #f00;
+.hedge {
   stroke-width: 6px;
-  stroke-dasharray: 12 10;
-  stroke-linecap: square;
   filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
     drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
+
+  &.to-remove {
+    stroke: #f00;
+    stroke-dasharray: 12 10;
+    stroke-linecap: square;
+  }
+
+  &.to-plant {
+    stroke: #0f0;
+  }
 }
 
 div#app {
@@ -174,11 +181,6 @@ div#app {
     }
 
     .hedge.to-plant {
-      stroke: #0f0;
-      stroke-width: 6px;
-      filter: drop-shadow(#fff 1px 1px 0) drop-shadow(#fff -1px 1px 0)
-        drop-shadow(#fff 1px -1px 0) drop-shadow(#fff -1px -1px 0);
-
       &:hover,
       &.hovered {
         stroke-width: 8px;
@@ -653,6 +655,8 @@ button#project-summary-hedge-input-open-btn {
 }
 
 div#project-specifications-instructor {
+  container-type: inline-size;
+
   i.optional-tag {
     display: none;
   }
@@ -885,11 +889,7 @@ div#invitation-token-email-wrapper {
   }
 }
 
-div#invitation-token-email-html {
-  background-color: var(--background-contrast-grey);
-  color: var(--text-mention-grey);
-}
-
+div#invitation-token-email-html,
 pre#invitation-token-email-text {
   display: none;
 }
@@ -962,7 +962,6 @@ div#alternative-notice {
   }
 
   p {
-    // margin: auto;
     --text-spacing: 0 0 8px 0;
   }
 }
@@ -1071,6 +1070,32 @@ button.hide-expanded[aria-expanded="true"] {
 
     button {
       padding: 0;
+    }
+  }
+}
+
+#sites-proteges-hedges-table {
+  width: calc(100cqw - 1rem);
+
+  @media (width >=48em) {
+    width: calc(100cqw - 5rem);
+  }
+
+  .fr-text {
+    font-weight: normal;
+  }
+
+  .total-row {
+    th {
+      background-size:
+        100% 2px,
+        1px 100%;
+    }
+
+    td {
+      background-size:
+        100% 2px,
+        0 100%;
     }
   }
 }
