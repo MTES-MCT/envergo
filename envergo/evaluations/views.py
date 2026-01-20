@@ -572,6 +572,16 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
                     status=400,
                 )
 
+            # Make sure that the file size limit is respected
+            max_size_bytes = settings.MAX_EVALREQ_FILESIZE * 1024 * 1024
+            if file.size > max_size_bytes:
+                return JsonResponse(
+                    {
+                        "error": f"Ce fichier est trop volumineux. Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                    },
+                    status=400,
+                )
+
             evalreq = RequestFile.objects.create(
                 request=self.object,
                 file=file,
