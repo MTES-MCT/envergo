@@ -294,11 +294,6 @@ def has_edit_permission(user, project):
     return project.has_change_permission(user)
 
 
-@register.filter
-def join_ids(objects):
-    return ", ".join(str(o.id) for o in objects)
-
-
 @register.simple_tag
 def created_by_display(log):
     user = getattr(log, "created_by", None)
