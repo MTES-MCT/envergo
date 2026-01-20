@@ -82,7 +82,7 @@ class User(AbstractUser):
             return False
         elif self.is_superuser or self.is_instructor:
             return True
-        # Check if token or department exists for user, after fast test
+        # Check if token or department exists for user
         else:
             return any(
                 (
