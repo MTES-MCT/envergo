@@ -248,7 +248,10 @@
     window.addEventListener("load", function() {
       let receipt_date_input = document.getElementById("id_info_receipt_date");
       let due_date_input = document.getElementById("id_new_due_date");
-      new DueDateInput(due_date_input, receipt_date_input);
+      // due date input exists only if a due date was previously set
+      if(due_date_input) {
+        new DueDateInput(due_date_input, receipt_date_input);
+      }
     });
     </script>
   {% endif %}
