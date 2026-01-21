@@ -135,7 +135,7 @@ django==4.2.27
     #   django-redis
     #   django-stubs
     #   django-stubs-ext
-django-allauth==65.10.0
+django-allauth==65.13.1
     # via -r base.txt
 django-anymail[sendinblue]==13.0.1
     # via -r base.txt
