@@ -19,6 +19,8 @@ class ConfigAmenagementFactory(DjangoModelFactory):
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
     regulations_available = ["loi_sur_leau", "sage", "natura2000", "eval_env"]
+    valid_from = None
+    valid_until = None
 
 
 class MoulinetteTemplateFactory(DjangoModelFactory):
@@ -73,6 +75,8 @@ class DCConfigHaieFactory(DjangoModelFactory):
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
     single_procedure = False
+    valid_from = None
+    valid_until = None
     regulations_available = [
         "conditionnalite_pac",
         "ep",
