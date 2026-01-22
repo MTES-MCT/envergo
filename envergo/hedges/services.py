@@ -152,7 +152,7 @@ def create_density_map(
             [
                 SimpleNamespace(
                     geometry=MultiLineString(
-                        [hedge.geometry for hedge in hedges_5000],
+                        [hedge.geometry.merged for hedge in hedges_5000],
                         srid=EPSG_WGS84,
                     )
                 )
