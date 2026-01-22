@@ -102,6 +102,12 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
     lat = forms.DecimalField(
         label=_("Latitude"), required=True, max_digits=9, decimal_places=6
     )
+    simulation_date = forms.DateField(
+        label="Date de simulation",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}),
+        help_text="Par défaut : date du jour",
+    )
 
     def clean(self):
         data = super().clean()
@@ -353,6 +359,12 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             "required": """Aucune haie n’a été saisie. Cliquez sur le bouton ci-dessus pour
             localiser les haies à détruire."""
         },
+    )
+    simulation_date = forms.DateField(
+        label="Date de simulation",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}),
+        help_text="Par défaut : date du jour",
     )
 
     def __init__(self, *args, **kwargs):
