@@ -651,9 +651,13 @@ class Triage(MoulinetteMixin, FormView):
     template_name = "haie/moulinette/triage.html"
 
     def get(self, request, *args, **kwargs):
-        """This page should always have a department to be displayed."""
+        """This page requires a valid department to be displayed."""
 
         if not self.moulinette.department:
+            return HttpResponseRedirect(f"{reverse("home")}#simulateur")
+
+        config = self.moulinette.get_config()
+        if not config:
             return HttpResponseRedirect(f"{reverse("home")}#simulateur")
 
         event_params = {
