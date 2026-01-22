@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date
+from datetime import date, datetime
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
@@ -1068,11 +1068,6 @@ class ConfigBase(models.Model):
         other_end = other.valid_until
 
         # Two ranges [a, b) and [c, d) overlap if a < d and c < b
-        # With None representing infinity:
-        # - If self_end is None, it's always >= other_start
-        # - If other_end is None, it's always >= self_start
-        # - If self_start is None, it's always <= other_end
-        # - If other_start is None, it's always <= self_end
 
         # Check if self starts before other ends
         self_starts_before_other_ends = other_end is None or (
@@ -1563,6 +1558,29 @@ class Moulinette(ABC):
     @cached_property
     def config(self):
         return self.get_config()
+
+    @cached_property
+    def simulation_date(self):
+        return self.get_simulation_date()
+
+    def get_simulation_date(self):
+        """Get the simulation date from form data or default to today.
+
+        The simulation date determines which configuration is used for a given
+        department (when multiple configs exist with different validity periods).
+        """
+
+        data = self.form_kwargs.get("data", {})
+        initial = self.form_kwargs.get("initial", {})
+        date_str = data.get("simulation_date") or initial.get("simulation_date")
+
+        if date_str:
+            try:
+                return datetime.strptime(date_str, "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                pass
+
+        return timezone.now().date()
 
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
