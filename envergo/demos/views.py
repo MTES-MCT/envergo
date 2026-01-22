@@ -103,9 +103,8 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         hedges_5000_mls = []
         for hedge in hedges_5000:
             geom = hedge.geometry
-            if not geom:
-                continue
-            hedges_5000_mls.extend(geom)
+            if geom:
+                hedges_5000_mls.extend(geom)
 
         polygons = []
         polygons.append(
