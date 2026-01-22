@@ -984,20 +984,45 @@ class ConfigManager(models.Manager):
 
 
 class ConfigBase(models.Model):
-    department = models.OneToOneField(
+    department = models.ForeignKey(
         "geodata.Department",
         verbose_name=_("Department"),
         on_delete=models.PROTECT,
-        related_name="%(class)s",
+        related_name="%(class)ss",  # Plural: configamenagements, confighaies
     )
     is_activated = models.BooleanField(
         _("Is activated"),
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+    valid_from = models.DateField(
+        _("Valid from"),
+        null=True,
+        blank=True,
+        help_text=_("Start date (inclusive). Empty = no start limit."),
+    )
+    valid_until = models.DateField(
+        _("Valid until"),
+        null=True,
+        blank=True,
+        help_text=_("End date (exclusive). Empty = no end limit."),
+    )
+
+    objects = ConfigManager()
 
     class Meta:
         abstract = True
+        constraints = [
+            CheckConstraint(
+                check=Q(valid_from__isnull=True)
+                | Q(valid_until__isnull=True)
+                | Q(valid_from__lt=F("valid_until")),
+                name="%(class)s_valid_dates_order",
+                violation_error_message=_(
+                    "La date de début doit être antérieure à la date de fin."
+                ),
+            ),
+        ]
 
     def __str__(self):
         return self.department.get_department_display()
