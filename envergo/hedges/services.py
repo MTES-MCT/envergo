@@ -136,6 +136,15 @@ def create_density_map(
         if truncated_circle_5000
         else []
     )
+    hedges_5000_ml = []
+
+    for hedge in hedges_5000:
+        geom = hedge.geometry
+
+        if not geom:
+            continue
+
+        hedges_5000_ml.extend(geom)
 
     polygons = [
         MapPolygon(
@@ -152,7 +161,7 @@ def create_density_map(
             [
                 SimpleNamespace(
                     geometry=MultiLineString(
-                        [hedge.geometry.merged for hedge in hedges_5000],
+                        hedges_5000_ml,
                         srid=EPSG_WGS84,
                     )
                 )

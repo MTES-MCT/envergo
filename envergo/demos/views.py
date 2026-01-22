@@ -95,17 +95,23 @@ class HedgeDensity(LatLngDemoMixin, FormView):
             or density_5000["artifacts"]["circle"]
         )
 
-        hedges = Line.objects.filter(
+        hedges_5000 = Line.objects.filter(
             map__map_type=MAP_TYPES.haies,
             geometry__intersects=circle,
         )
+
+        hedges_5000_mls = []
+        for hedge in hedges_5000:
+            geom = hedge.geometry
+            if not geom:
+                continue
+            hedges_5000_mls.extend(geom)
+
         polygons = []
         polygons.append(
             {
                 "polygon": to_geojson(
-                    MultiLineString(
-                        [hedge.geometry.merged for hedge in hedges], srid=EPSG_WGS84
-                    )
+                    MultiLineString(hedges_5000_mls, srid=EPSG_WGS84)
                 ),
                 "color": "#f0f921",
                 "legend": "Haies",
