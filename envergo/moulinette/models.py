@@ -2341,16 +2341,16 @@ class MoulinetteAmenagement(Moulinette):
             return None
 
         lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("configamenagement")
-            .prefetch_related("configamenagement__templates")
-            .first()
-        )
+        department = Department.objects.filter(geometry__contains=lng_lat).first()
         return department
 
     def get_config(self):
-        return getattr(self.department, "configamenagement", None)
+        if not self.department:
+            return None
+        config = ConfigAmenagement.objects.get_valid_config(
+            self.department, self.simulation_date
+        ).prefetch_related("templates")
+        return config.first()
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
@@ -2412,7 +2412,11 @@ class MoulinetteHaie(Moulinette):
     triage_form_class = TriageFormHaie
 
     def get_config(self):
-        return getattr(self.department, "confighaie", None)
+        if not self.department:
+            return None
+        return ConfigHaie.objects.get_valid_config(
+            self.department, self.simulation_date
+        )
 
     @property
     def result(self):
@@ -2596,14 +2600,12 @@ class MoulinetteHaie(Moulinette):
         return data
 
     def get_department(self):
-
         dept = self.data.get("department", self.initial.get("department", None))
         if dept is None:
             return None
 
         qs = (
             Department.objects.defer("geometry")
-            .select_related("confighaie")
             .annotate(centroid=Centroid("geometry"))
             .filter(department=dept)
         )
