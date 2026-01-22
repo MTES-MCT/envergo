@@ -14,14 +14,14 @@
   <div>
     <h3>État du dossier</h3>
   </div>
-  <div class="project-inner-content{{ petition_project.is_paused|yesno:" paused," }}">
+  <div class="project-inner-content{{ petition_project.is_additional_information_requested|yesno:" paused," }}">
     <section class="fr-my-3w">
       <h4>Étape</h4>
-      <p>{% stage_badge petition_project.current_stage False %}</p>
+      <p>{% stage_badge petition_project.stage False %}</p>
 
       <div id="due-date-container" class="fr-mb-3w">
 
-        {% if petition_project.is_paused %}
+        {% if petition_project.is_additional_information_requested %}
           <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
             <b>En attente de compléments</b>
             <br />
@@ -94,17 +94,17 @@
 
         {% else %}
 
-          {% if petition_project.current_stage != "closed" %}
+          {% if petition_project.stage != "closed" %}
             <b>Échéance pour cette étape :</b>
             <br />
             {% display_due_date petition_project.due_date %}
           {% endif %}
         {% endif %}
 
-        {% include "haie/petitions/stage_objectives/"|add:petition_project.current_stage|add:".html" %}
+        {% include "haie/petitions/stage_objectives/"|add:petition_project.stage|add:".html" %}
       </div>
 
-      {% if is_department_instructor and not request_info_form and not petition_project.is_paused %}
+      {% if is_department_instructor and not request_info_form and not petition_project.is_additional_information_requested %}
         <button type="button"
                 class="fr-btn fr-btn--secondary fr-mb-3w disabled"
                 disabled="disabled"
@@ -115,7 +115,7 @@
 
       {% endif %}
 
-      {% if request_info_form and not petition_project.is_paused %}
+      {% if request_info_form and not petition_project.is_additional_information_requested %}
         <button type="button"
                 class="fr-btn fr-btn--secondary fr-mb-3w hide-expanded"
                 aria-expanded="false"
@@ -146,18 +146,18 @@
       {% endif %}
 
       <h4>Décision</h4>
-      <p>{% decision_badge petition_project.current_decision False %}</p>
+      <p>{% decision_badge petition_project.decision False %}</p>
     </section>
   </div>
   {% if is_department_instructor %}
     <button class="fr-btn"
-            {% if petition_project.demarches_simplifiees_state == "draft" or petition_project.is_paused %}disabled{% endif %}
+            {% if petition_project.demarches_simplifiees_state == "draft" or petition_project.is_additional_information_requested %}disabled{% endif %}
             data-fr-opened="{% if form.errors %}true{% else %}false{% endif %}"
             aria-controls="procedure-modal">Modifier l'état du dossier</button>
     {% if petition_project.demarches_simplifiees_state == "draft" %}
       <span class="fr-hint-text">Ce dossier n'a pas encore été déposé par le pétitionnaire.</span>
     {% endif %}
-    {% if petition_project.is_paused %}
+    {% if petition_project.is_additional_information_requested %}
       <span class="fr-hint-text">Impossible tant que le dossier est en attente de compléments.</span>
     {% endif %}
   {% endif %}

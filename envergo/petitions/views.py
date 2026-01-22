@@ -1324,8 +1324,8 @@ class PetitionProjectInstructorProcedureView(
 
     def get_initial(self):
         initial = super().get_initial()
-        initial["stage"] = self.object.current_stage
-        initial["decision"] = self.object.current_decision
+        initial["stage"] = self.object.stage
+        initial["decision"] = self.object.decision
 
         return initial
 
@@ -1343,7 +1343,7 @@ class PetitionProjectInstructorProcedureView(
         # in the "instruction" phase
         if self.has_change_permission(
             self.request, self.object
-        ) and self.object.current_stage.startswith("instruction"):
+        ) and self.object.stage.startswith("instruction"):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
             context.update(
@@ -1378,7 +1378,7 @@ class PetitionProjectInstructorProcedureView(
             )
             notify(message, "haie")
 
-        if self.object.is_paused:
+        if self.object.is_additional_information_requested:
             form.add_error(
                 None,
                 ValidationError(
@@ -1391,8 +1391,8 @@ class PetitionProjectInstructorProcedureView(
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
-        previous_stage = self.object.current_stage
-        previous_decision = self.object.current_decision
+        previous_stage = self.object.stage
+        previous_decision = self.object.decision
 
         previous_ds_status = self.object.demarches_simplifiees_state
         new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
@@ -1445,7 +1445,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
     http_method_names = ["post"]
 
     def get_form_class(self):
-        if self.object.is_paused:
+        if self.object.is_additional_information_requested:
             form_class = ResumeProcessingForm
         else:
             form_class = RequestAdditionalInfoForm
@@ -1466,7 +1466,6 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor requested additional data."""
 
         project = self.object
-        current_status = project.current_status
 
         try:
             with transaction.atomic():
@@ -1475,9 +1474,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     petition_project=project,
                     type=LOG_TYPES.suspension,
                     due_date=form.cleaned_data["due_date"],
-                    original_due_date=(
-                        current_status.due_date if current_status else None
-                    ),
+                    original_due_date=project.due_date,
                     created_by=self.request.user,
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
                 )
