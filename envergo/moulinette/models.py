@@ -1022,7 +1022,66 @@ class ConfigBase(models.Model):
         ]
 
     def __str__(self):
-        return self.department.get_department_display()
+        dept_display = self.department.get_department_display()
+        if self.valid_from or self.valid_until:
+            from_str = self.valid_from.isoformat() if self.valid_from else "…"
+            until_str = self.valid_until.isoformat() if self.valid_until else "…"
+            return f"{dept_display} [{from_str} - {until_str})"
+        return dept_display
+
+    def clean(self):
+        super().clean()
+        if self.valid_from and self.valid_until and self.valid_from >= self.valid_until:
+            raise ValidationError(
+                "La date de début doit être antérieure à la date de fin."
+            )
+        self._validate_no_overlap()
+
+    def _validate_no_overlap(self):
+        """Check for overlapping active configs for the same department."""
+        if not self.is_activated:
+            return  # Only validate active configs
+
+        # Build queryset to find overlapping configs
+        qs = self.__class__.objects.filter(
+            department=self.department,
+            is_activated=True,
+        )
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        for other in qs:
+            if self._overlaps_with(other):
+                raise ValidationError(
+                    "Cette configuration chevauche une configuration active "
+                    "existante pour ce département."
+                )
+
+    def _overlaps_with(self, other):
+        """Check if this config's validity period overlaps with another."""
+        self_start = self.valid_from
+        self_end = self.valid_until
+        other_start = other.valid_from
+        other_end = other.valid_until
+
+        # Two ranges [a, b) and [c, d) overlap if a < d and c < b
+        # With None representing infinity:
+        # - If self_end is None, it's always >= other_start
+        # - If other_end is None, it's always >= self_start
+        # - If self_start is None, it's always <= other_end
+        # - If other_start is None, it's always <= self_end
+
+        # Check if self starts before other ends
+        self_starts_before_other_ends = other_end is None or (
+            self_start is None or self_start < other_end
+        )
+
+        # Check if other starts before self ends
+        other_starts_before_self_ends = self_end is None or (
+            other_start is None or other_start < self_end
+        )
+
+        return self_starts_before_other_ends and other_starts_before_self_ends
 
 
 class ConfigAmenagement(ConfigBase):
