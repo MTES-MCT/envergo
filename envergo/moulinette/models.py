@@ -30,6 +30,7 @@ from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -940,6 +941,43 @@ class Perimeter(models.Model):
             </div>
         """
         return mark_safe(contact)
+
+
+class ConfigQuerySet(models.QuerySet):
+    """QuerySet for Config models with validity date filtering."""
+
+    def valid_at(self, date):
+        """Filter configs valid at the given date.
+
+        A config is valid if:
+        - valid_from is None or valid_from <= date (inclusive start)
+        - valid_until is None or valid_until > date (exclusive end)
+        """
+        return self.filter(
+            Q(valid_from__lte=date) | Q(valid_from__isnull=True),
+            Q(valid_until__gt=date) | Q(valid_until__isnull=True),
+        )
+
+
+class ConfigManager(models.Manager):
+    """Manager for Config models with validity date support."""
+
+    def get_queryset(self):
+        return ConfigQuerySet(self.model, using=self._db)
+
+    def get_valid_config(self, department, date=None):
+        """Get the active configuration for a department at a given date."""
+
+        if date is None:
+            date = timezone.now().date()
+        return (
+            self.filter(
+                department=department,
+                is_activated=True,
+            )
+            .valid_at(date)
+            .first()
+        )
 
 
 class ConfigBase(models.Model):
