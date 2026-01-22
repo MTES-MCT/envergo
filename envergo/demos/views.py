@@ -99,13 +99,12 @@ class HedgeDensity(LatLngDemoMixin, FormView):
             map__map_type=MAP_TYPES.haies,
             geometry__intersects=circle,
         )
-
         polygons = []
         polygons.append(
             {
                 "polygon": to_geojson(
                     MultiLineString(
-                        [hedge.geometry for hedge in hedges], srid=EPSG_WGS84
+                        [hedge.geometry.merged for hedge in hedges], srid=EPSG_WGS84
                     )
                 ),
                 "color": "#f0f921",
