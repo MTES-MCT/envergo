@@ -10,27 +10,29 @@ def populate_petition_project_status(apps, schema_editor):
     PetitionProject = apps.get_model("petitions", "PetitionProject")
     StatusLog = apps.get_model("petitions", "StatusLog")
     project_qs = PetitionProject.objects.prefetch_related(
-                Prefetch(
-                    "status_history",
-                    queryset=StatusLog.objects.all().order_by("-created_at"),
-                )
-            )
+        Prefetch(
+            "status_history",
+            queryset=StatusLog.objects.all().order_by("-created_at"),
+        )
+    )
     for project in project_qs:
         current_status = project.status_history.filter(type="status_change").first()
-        project.stage= current_status.stage if current_status else "to_be_processed"
+        project.stage = current_status.stage if current_status else "to_be_processed"
         project.decision = current_status.decision if current_status else "unset"
 
         latest_suspension = project.status_history.filter(type="suspension").first()
-        latest_resumption= project.status_history.filter(type="resumption").first()
+        latest_resumption = project.status_history.filter(type="resumption").first()
         if not latest_suspension:
             project.is_additional_information_requested = False
         elif not latest_resumption:
             project.is_additional_information_requested = True
         else:
-            project.is_additional_information_requested = latest_suspension.created_at > latest_resumption.created_at
+            project.is_additional_information_requested = (
+                latest_suspension.created_at > latest_resumption.created_at
+            )
 
         if project.is_additional_information_requested:
-            project.due_date = project.latest_suspension.due_date
+            project.due_date = latest_suspension.due_date
         if latest_resumption and current_status:
             project.due_date = (
                 latest_resumption.due_date
