@@ -431,16 +431,22 @@ class MoulinetteConfigTemplateInline(MoulinetteTemplateInline):
 
 @admin.register(ConfigAmenagement)
 class ConfigAmenagementAdmin(admin.ModelAdmin):
-    list_display = ["department", "is_activated", "zh_doubt"]
+    list_display = [
+        "department",
+        "is_activated",
+        "valid_from",
+        "valid_until",
+        "zh_doubt",
+    ]
     form = ConfigAmenagementForm
     inlines = [MoulinetteConfigTemplateInline]
-    list_filter = ["is_activated", "zh_doubt"]
+    list_filter = ["is_activated", "zh_doubt", DepartmentsListFilter]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department")
+            .order_by("department__department", "-valid_from")
             .defer("department__geometry")
         )
 
@@ -494,8 +500,8 @@ class ConfigHaieAdminForm(forms.ModelForm):
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
-    list_display = ["department", "is_activated"]
-    list_filter = ["is_activated"]
+    list_display = ["department", "is_activated", "valid_from", "valid_until"]
+    list_filter = ["is_activated", DepartmentsListFilter]
     fieldsets = [
         (
             None,
@@ -507,6 +513,17 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",
                 ],
+            },
+        ),
+        (
+            "Période de validité",
+            {
+                "fields": [
+                    "valid_from",
+                    "valid_until",
+                ],
+                "description": "Définissez la période pendant laquelle cette configuration est active. "
+                "Laissez vide pour une validité illimitée.",
             },
         ),
         (
@@ -549,7 +566,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department")
+            .order_by("department__department", "-valid_from")
             .defer("department__geometry")
         )
 
