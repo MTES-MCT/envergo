@@ -154,6 +154,29 @@ class PetitionProject(models.Model):
         default=None,
     )
 
+    stage = models.CharField(
+        "Étape",
+        max_length=30,
+        choices=STAGES,
+        default=STAGES.to_be_processed,
+    )
+    decision = models.CharField(
+        "Décision",
+        max_length=30,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
+    )
+
+    is_additional_information_requested = models.BooleanField(
+        "En attente d'informations complémentaires ?", default=False
+    )
+
+    due_date = models.DateField(
+        "Date de prochaine échéance",
+        null=True,
+        blank=True,
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -176,60 +199,14 @@ class PetitionProject(models.Model):
                 self.department = None
         super().save(*args, **kwargs)
 
-    @cached_property
-    def current_status(self):
-        """Get the latest status_change log."""
-        return self.status_history.filter(type=LOG_TYPES.status_change).first()
+    @property
+    def is_closed(self):
+        return self.stage == STAGES.closed
 
     @cached_property
     def latest_suspension(self):
         """Get the latest suspension log."""
         return self.status_history.filter(type=LOG_TYPES.suspension).first()
-
-    @cached_property
-    def latest_resumption(self):
-        """Get the latest resumption log."""
-        return self.status_history.filter(type=LOG_TYPES.resumption).first()
-
-    @property
-    def current_stage(self):
-        return (
-            self.current_status.stage if self.current_status else STAGES.to_be_processed
-        )
-
-    @property
-    def current_decision(self):
-        return self.current_status.decision if self.current_status else DECISIONS.unset
-
-    @property
-    def due_date(self):
-        if self.is_paused:
-            return self.latest_suspension.due_date
-        status = self.current_status
-        resumption = self.latest_resumption
-        if resumption and status:
-            return (
-                resumption.due_date
-                if resumption.created_at > status.created_at
-                else status.due_date
-            )
-        elif status:
-            return status.due_date
-        elif resumption:
-            return resumption.due_date
-        else:
-            return None
-
-    @property
-    def is_paused(self):
-        """Check if there's an unresolved suspension."""
-        suspension = self.latest_suspension
-        if not suspension:
-            return False
-        resumption = self.latest_resumption
-        if not resumption:
-            return True
-        return suspension.created_at > resumption.created_at
 
     def get_department_code(self):
         """Get department from moulinette url"""
@@ -501,6 +478,19 @@ class PetitionProject(models.Model):
         )
         return has_unread_messages
 
+    def update_status(self, status_log):
+        """Update the project status when a new status log is created"""
+        if status_log.type == LOG_TYPES.status_change:
+            self.stage = status_log.stage
+            self.decision = status_log.decision
+        elif status_log.type == LOG_TYPES.suspension:
+            self.is_additional_information_requested = True
+        elif status_log.type == LOG_TYPES.resumption:
+            self.is_additional_information_requested = False
+
+        self.due_date = status_log.due_date
+        self.save()
+
 
 USER_TYPE = Choices(
     ("petitioner", "Demandeur"),
@@ -545,7 +535,7 @@ class Simulation(models.Model):
         return not (self.is_initial or self.is_active)
 
     def can_be_activated(self):
-        return not self.project.current_status.is_closed
+        return not self.project.is_closed
 
     def custom_url(self, view_name, **kwargs):
         """Generate an url with the given parameters."""
@@ -732,10 +722,6 @@ class StatusLog(models.Model):
             ),
         ]
         ordering = ["-created_at"]
-
-    @property
-    def is_closed(self):
-        return self.stage == STAGES.closed
 
 
 class LatestMessagerieAccess(models.Model):

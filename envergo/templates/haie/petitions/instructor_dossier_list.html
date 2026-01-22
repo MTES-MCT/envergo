@@ -108,11 +108,11 @@
                       <div>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
                     <td>
-                      <div>{% stage_badge project.current_stage %}</div>
-                      {% if project.current_stage != "closed" %}
+                      <div>{% stage_badge project.stage %}</div>
+                      {% if project.stage != "closed" %}
                         <div>
-                          {% if project.is_paused %}
-                            {% display_pause project.latest_suspension.due_date %}
+                          {% if project.is_additional_information_requested %}
+                            {% display_pause project.due_date %}
                           {% else %}
                             {% display_due_date project.due_date False True %}
                           {% endif %}
@@ -130,7 +130,7 @@
                       <div>{{ project.city }}</div>
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{% decision_badge project.current_decision True %}</td>
+                    <td>{% decision_badge project.decision True %}</td>
                     <td class="messagerie-col {{ project.has_unread_messages|yesno:"unread,read" }}">
                       {% if project.has_unread_messages %}
                         <span class="fr-icon-mail-fill fr-icon--sm"></span>

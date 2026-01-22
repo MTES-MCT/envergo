@@ -1300,7 +1300,7 @@ def test_petition_project_request_for_info(
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__due_date=today)
     assert project.due_date == today
-    assert project.is_paused is False
+    assert project.is_additional_information_requested is False
 
     # Request for additional info
     rai_url = reverse(
@@ -1317,9 +1317,8 @@ def test_petition_project_request_for_info(
 
     project.refresh_from_db()
     clear_cached_properties(project)
-    assert project.is_paused is True
-    # Suspension fields are now on the suspension log, not current_status
-    assert project.latest_suspension.due_date == next_month
+    assert project.is_additional_information_requested is True
+    assert project.due_date == next_month
     assert project.latest_suspension.original_due_date == today
 
 
@@ -1350,7 +1349,7 @@ def test_petition_project_resume_instruction(
         original_due_date=today,
         due_date=next_month,
     )
-    assert project.is_paused is True
+    assert project.is_additional_information_requested is True
 
     # WHEN the user try to change step while paused
 
@@ -1370,8 +1369,8 @@ def test_petition_project_resume_instruction(
     # THEN this step is not authorized
     assert res.status_code == 200
     project.refresh_from_db()
-    assert project.current_stage == "to_be_processed"
-    assert project.current_stage == "to_be_processed"
+    assert project.stage == "to_be_processed"
+    assert project.decision == "unset"
 
     # Resume instruction
     rai_url = reverse(
@@ -1387,7 +1386,7 @@ def test_petition_project_resume_instruction(
 
     project.refresh_from_db()
     clear_cached_properties(project)
-    assert project.is_paused is False
+    assert project.is_additional_information_requested is False
     # The new due_date is computed on the resumption log
     assert project.due_date == next_month
 
