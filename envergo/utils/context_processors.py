@@ -48,6 +48,7 @@ def settings_context(_request):
         "CRISP_WEBSITE_ID": crisp_website_id,
         "HAIE_FAQ_URL": settings.HAIE_FAQ_URL,
         "HAIE_INSTRUCTORS_FAQ_URL": settings.HAIE_INSTRUCTORS_FAQ_URL,
+        "DISPLAY_TEACHING_TOPBAR": settings.DISPLAY_TEACHING_TOPBAR,
     }
 
 

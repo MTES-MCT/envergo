@@ -1,0 +1,69 @@
+{% if config.single_procedure and not aa_only %}
+
+  <p>
+    Le projet est soumis à autorisation, car il est situé dans le périmètre d’un site protégé, et peut porter atteinte
+    au patrimoine paysager de celui-ci.
+  </p>
+
+  <p>
+    C’est le guichet unique qui instruit le projet. L’administration aura la charge de saisir l’architecte des
+    bâtiments de France, qui peut autoriser le projet, imposer des prescriptions dans l’intérêt du site protégé, ou
+    s’opposer au projet.
+  </p>
+
+  <p>
+    Pour favoriser l’autorisation du projet, il est conseillé de <a href="https://www.culture.gouv.fr/catalogue-des-demarches-et-subventions/mes-travaux-en-site-protege"
+    target="_blank"
+    rel="noopener external">consulter la mairie et l’architecte des bâtiments de France</a> en avant-projet.
+  </p>
+
+{% else %}
+
+  <p>
+    Le projet est soumis à autorisation préalable de travaux, car il est situé dans le périmètre d’un site protégé. La
+    destruction et/ou la plantation d'arbres peut porter atteinte au patrimoine paysager de celui-ci.
+  </p>
+
+  <p>
+    L’autorisation de travaux doit être déposée en mairie. Celle-ci aura la charge de saisir l’architecte des bâtiments
+    de France, qui peut autoriser le projet, imposer des prescriptions dans l’intérêt du site protégé, ou s’opposer au
+    projet.
+  </p>
+
+  <p>
+    Pour favoriser l’autorisation du projet, il est conseillé de <a href="https://www.culture.gouv.fr/catalogue-des-demarches-et-subventions/mes-travaux-en-site-protege"
+    target="_blank"
+    rel="noopener external">consulter la mairie et l’architecte des bâtiments de France</a> en avant-projet.
+  </p>
+{% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  {% if config.single_procedure %}
+    <p>Les pièces complémentaires suivantes seront exigées :</p>
+    <ul>
+      <li>une notice de présentation des travaux, notamment de compensation, indiquant leurs modes d’exécution ;</li>
+      <li>
+        un plan de masse faisant apparaître les constructions, les clôtures, la végétation et les éléments paysagers
+        existants, et illustre les modifications prévues.
+      </li>
+    </ul>
+  {% else %}
+    <p>
+      Des documents permettant au service instructeur et à l’architecte des bâtiments de France d’apprécier les impacts
+      du projet sur le site protégé seront demandés, notamment :
+    </p>
+    <ul>
+      <li>des photographies de l’existant, rapprochées et éloignées ;</li>
+      <li>
+        un schéma d’insertion ou photo-montage donnant un rendu visuel du projet une fois les linéaires détruits et les
+        linéaires compensatoires plantés et à maturité ;
+      </li>
+      <li>
+        un plan de masse faisant apparaître les constructions, les clôtures, la végétation existante, et illustre les
+        modifications prévues.
+      </li>
+    </ul>
+  {% endif %}
+</div>

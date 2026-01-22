@@ -289,3 +289,8 @@ def truncated_comment(text, uid, limit=50):
         "head": text[:limit],
         "tail": text[limit:],
     }
+
+
+@register.filter
+def join_ids(objects):
+    return ", ".join(str(o.id) for o in objects)

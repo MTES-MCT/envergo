@@ -16,7 +16,7 @@
       <div id="slim-menu" class="fr-header__tools fr-nav">
         <div class="fr-header__tools-links">
           <ul class="fr-nav__list">
-            {% if user.is_authenticated %}
+            {% if user.is_involved_in_guh %}
               <li class="fr-nav__item">
                 <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Dossiers</a>
               </li>
