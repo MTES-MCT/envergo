@@ -18,7 +18,7 @@ from django.views.generic import FormView, ListView, TemplateView
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.analytics.utils import get_user_type, log_event
 from envergo.geodata.models import Department
-from envergo.moulinette.models import ConfigAmenagement
+from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 from envergo.utils.tools import get_site_literal
@@ -35,16 +35,13 @@ class HomeHaieView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        departments = (
-            Department.objects.defer("geometry").select_related("confighaie").all()
-        )
+        departments = Department.objects.defer("geometry").all()
         context["departments"] = departments
+        # Get departments that have an active and valid config
         context["activated_departments"] = [
             department
             for department in departments
-            if department
-            and hasattr(department, "confighaie")
-            and department.confighaie.is_activated
+            if ConfigHaie.objects.get_valid_config(department) is not None
         ]
         return context
 
@@ -53,19 +50,13 @@ class HomeHaieView(TemplateView):
         department_id = data.get("department")
         department = None
         if department_id:
-            department = (
-                Department.objects.select_related("confighaie")
-                .defer("geometry")
-                .get(id=department_id)
-            )
+            department = Department.objects.defer("geometry").get(id=department_id)
 
         config = (
-            department.confighaie
-            if department and hasattr(department, "confighaie")
-            else None
+            ConfigHaie.objects.get_valid_config(department) if department else None
         )
 
-        if config and config.is_activated:
+        if config:
             query_params = {"department": department.department}
             return HttpResponseRedirect(
                 f"{reverse('triage')}?{urlencode(query_params)}"
