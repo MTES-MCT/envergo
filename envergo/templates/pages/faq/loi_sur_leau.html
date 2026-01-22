@@ -62,11 +62,19 @@
         </button>
       </h3>
       <div class="fr-collapse" id="accordion-savoir_si_mon_projet_est_soumis">
-        <p>
-          S’il s’agit d’un projet d’aménagement ou de construction, le <a href="{% url 'moulinette_form' %}">simulateur Envergo</a> vous permet en quelques clics de vérifier si le projet est soumis à la Loi sur l'eau — ainsi qu’aux autres réglementations environnementales (Natura 2000, évaluation environnementale…).
-          C'est un service public numérique gratuit, fourni par le Ministère de la Transition Écologique.
-          Il fonctionne pour l'instant dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a>, et sera progressivement étendu à l'ensemble du territoire national.
-        </p>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur Envergo, vérifiez en quelques clics si un projet est soumis à la Loi sur l'eau,
+              ainsi qu’aux autres réglementations
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
+
         <p>Pour déterminer avec certitude si votre projet est soumis à la Loi sur l'eau, il est conseillé :</p>
         <ul>
           <li>
