@@ -1,13 +1,13 @@
 import random
 
 import factory
-from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.contrib.gis.geos import LineString, MultiPolygon, Polygon
 from factory import Faker as factory_Faker
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from envergo.geodata.models import Department, Map, Zone
+from envergo.geodata.models import Department, Line, Map, Zone
 
 # This is a rough pentagon that I manually drew on geoportail and that contains
 # France's mainland.
@@ -140,6 +140,28 @@ class FuzzyMultiPolygon(fuzzy.BaseFuzzyAttribute):
         return MultiPolygon(*polygons)
 
 
+class FuzzyLine(fuzzy.BaseFuzzyAttribute):
+
+    def __init__(self, length=None, **kwargs):
+        if length is None:
+            length = random.randint(2, 20)
+        self.length = length
+        super().__init__(**kwargs)
+
+    def get_random_coords(self):
+        faker = Faker()
+        return (
+            faker.latitude(),
+            faker.longitude(),
+        )
+
+    def fuzz(self):
+        prefix = self.get_random_coords()
+        suffix = self.get_random_coords()
+        coords = [self.get_random_coords() for __ in range(self.length - 1)]
+        return LineString([prefix] + coords + [suffix])
+
+
 class MapFactory(DjangoModelFactory):
     class Meta:
         model = Map
@@ -157,6 +179,15 @@ class MapFactory(DjangoModelFactory):
 class ZoneFactory(DjangoModelFactory):
     class Meta:
         model = Zone
+
+    map = factory.SubFactory(MapFactory)
+    geometry = france_multipolygon
+    species_taxrefs = []
+
+
+class LineFactory(DjangoModelFactory):
+    class Meta:
+        model = Line
 
     map = factory.SubFactory(MapFactory)
     geometry = france_multipolygon
