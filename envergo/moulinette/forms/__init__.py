@@ -371,11 +371,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         super().__init__(*args, **kwargs)
 
         # We override the queryset here because it prevents a "models are not ready" exception
-        self.fields["department"].queryset = (
-            Department.objects.defer("geometry")
-            .select_related("confighaie")
-            .annotate(centroid=Centroid("geometry"))
-        )
+        self.fields["department"].queryset = Department.objects.defer(
+            "geometry"
+        ).annotate(centroid=Centroid("geometry"))
 
     def clean(self):
         data = super().clean()

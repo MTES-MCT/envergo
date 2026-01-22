@@ -134,7 +134,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             PetitionProject.objects.exclude(
                 demarches_simplifiees_state__exact=DOSSIER_STATES.draft
             )
-            .select_related("hedge_data", "department__confighaie")
+            .select_related("hedge_data", "department")
             .prefetch_related(
                 Prefetch(
                     "status_history",
