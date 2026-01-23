@@ -145,7 +145,7 @@ django-appconf==1.1.0
     #   django-compressor
 django-braces==1.17.0
     # via -r base.txt
-django-compressor==4.5.1
+django-compressor==4.6.0
     # via -r base.txt
 django-coverage-plugin==3.1.1
     # via -r local.in
@@ -241,6 +241,8 @@ kombu==5.5.4
     # via
     #   -r base.txt
     #   celery
+librt==0.7.7
+    # via mypy
 markdown==3.8.2
     # via -r base.txt
 markupsafe==3.0.2
@@ -255,7 +257,7 @@ multidict==6.6.3
     # via
     #   -r base.txt
     #   yarl
-mypy==1.17.1
+mypy==1.19.0
     # via -r local.in
 mypy-extensions==1.1.0
     # via
@@ -378,7 +380,7 @@ qrcode==8.2
     # via
     #   -r base.txt
     #   django-otp
-rcssmin==1.1.2
+rcssmin==1.2.2
     # via
     #   -r base.txt
     #   django-compressor
@@ -395,7 +397,7 @@ requests==2.32.4
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via -r base.txt
-rjsmin==1.2.2
+rjsmin==1.2.5
     # via
     #   -r base.txt
     #   django-compressor
@@ -445,18 +447,16 @@ types-pyyaml==6.0.12.20250516
 typing-extensions==4.14.1
     # via
     #   -r base.txt
-    #   anyio
     #   beautifulsoup4
     #   django-stubs
     #   django-stubs-ext
     #   mypy
-    #   psycopg
 tzdata==2025.2
     # via
     #   -r base.txt
     #   faker
     #   kombu
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -r base.txt
     #   django-anymail

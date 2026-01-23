@@ -62,7 +62,7 @@ hr.separator {
   border: none;
   border-top: 1px solid var(--border-action-high-blue-france);
 
-  &--lignt {
+  &--light {
     border-top: 1px solid var(--border-default-grey);
   }
 }
@@ -2024,6 +2024,11 @@ main.demos {
 // Some dsfr related fixes
 .fr-hint-text a.fr-link:has(+ span.fr-tooltip) {
   font-size: inherit;
+}
+
+// Prevent the button to wrap when joined to an input
+.fr-input-wrap--addon button {
+  white-space: nowrap;
 }
 
 // Fix issues with the leaflet icon detection
