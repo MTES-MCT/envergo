@@ -1999,7 +1999,7 @@ class Moulinette(ABC):
 
     @property
     def date(self):
-        """Date fo the simulation. Today by default."""
+        """Date for the simulation. Today by default."""
         date_str = self.data.get("date", None)
         if date_str:
             try:
