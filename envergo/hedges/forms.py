@@ -2,6 +2,7 @@ import copy
 from abc import abstractmethod
 
 from django import forms
+from django.conf import settings
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import HEDGE_TYPES
@@ -22,7 +23,7 @@ class HedgePropertiesBaseForm(forms.Form):
         label=mark_safe(
             """
         <span>Type de haie</span>
-        <a href="https://equatorial-red-4c6.notion.site/Les-cinq-types-de-haies-2e9fe5fe476681fabfb4f45300d54a7f?pvs=74"
+        <a href="https://equatorial-red-4c6.notion.site/Les-cinq-types-de-haies-2e9fe5fe476681fabfb4f45300d54a7f"
         target="_blank" rel="noopener">Aide</a>
         """
         ),
@@ -47,9 +48,9 @@ MODE_DESTRUCTION_CHOICES = (
     (
         "coupe_a_blanc",
         mark_safe(
-            """Coupe à blanc (sur essence ne recépant pas)
+            f"""Coupe à blanc (sur essence ne recépant pas)
             <span class="fr-hint-text">
-            <a href="https://equatorial-red-4c6.notion.site/Liste-des-essences-et-leur-capacit-rec-per-2e9fe5fe476681568c89f296be4bfc02"
+            <a href="{settings.HAIE_FAQ_URLS["TREE_SPECIES_COPPICING_CAPACITY"]}"
                target="_blank" rel="noopener">
             Liste des essences ne recépant pas</a></span>
             """

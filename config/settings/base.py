@@ -466,7 +466,10 @@ FROM_EMAIL = {
     },
 }
 
-HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-emplacement-environnemental-2e9fe5fe47668150a8a1f57c2e44f44e"  # noqa: E501
+HAIE_FAQ_URLS = {
+    "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST": "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-emplacement-environnemental-2e9fe5fe47668150a8a1f57c2e44f44e",  # noqa: E501
+    "TREE_SPECIES_COPPICING_CAPACITY": "https://equatorial-red-4c6.notion.site/Liste-des-essences-et-leur-capacit-rec-per-2e9fe5fe476681568c89f296be4bfc02",  # noqa: E501
+}
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload
 FILE_UPLOAD_HANDLERS = [
