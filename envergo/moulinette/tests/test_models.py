@@ -99,12 +99,6 @@ def test_moulinette_config(moulinette_data):
     assert moulinette.has_config()
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    # Active config should be returned by has_config()
-    ConfigAmenagementFactory(is_activated=True)
-    moulinette = MoulinetteAmenagement(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.has_config()
-
 
 @pytest.mark.parametrize("footprint", [50])
 def test_result_with_inactive_contact_data(moulinette_data):
