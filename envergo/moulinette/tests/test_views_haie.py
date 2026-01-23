@@ -365,7 +365,7 @@ def test_moulinette_post_form_error(client):
         "haies": [
             {
                 "code": "required",
-                "message": "Aucune haie n’a été saisie. Cliquez sur le bouton "
+                "message": "Aucune haie n'a été saisie. Cliquez sur le bouton "
                 "ci-dessus pour\n"
                 "            localiser les haies à détruire.",
             }
