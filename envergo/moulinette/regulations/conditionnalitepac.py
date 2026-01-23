@@ -81,7 +81,7 @@ class Bcae8Form(forms.Form):
         help_text=f"""
         La liste des organismes habilités à délivrer un conseil environnemental est
         <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre" target="_blank" rel="noopener external"
-        href="{settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST}">
+        href="{settings.HAIE_FAQ_URLS["BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST"]}">
         disponible ici</a>.""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
@@ -221,9 +221,9 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        catalog["authorized_organizations_list_url"] = (
-            settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST
-        )
+        catalog["authorized_organizations_list_url"] = settings.HAIE_FAQ_URLS[
+            "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST"
+        ]
         is_lte_2percent_pac = False
         haies = self.catalog.get("haies")
         if haies:
