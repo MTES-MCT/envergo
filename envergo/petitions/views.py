@@ -203,9 +203,11 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
-                city, organization, _ = extract_data_from_fields(
-                    obj.department.confighaie, dossier
+                # TODO Find a way to prevent a new sql query for each project
+                config = ConfigHaie.objects.get_valid_config(
+                    obj.department, obj.created_at.date()
                 )
+                city, organization, _ = extract_data_from_fields(config, dossier)
                 obj.city = city
                 obj.organization = organization
 
