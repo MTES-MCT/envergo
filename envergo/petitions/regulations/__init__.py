@@ -1,4 +1,4 @@
-from envergo.moulinette.regulations import CriterionEvaluator
+from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
 
 _evaluator_instructors_information_registry = {}
 
@@ -14,7 +14,7 @@ def evaluator_instructor_view_context_getter(cls):
 
 
 def get_instructor_view_context(
-    evaluator: CriterionEvaluator, petition_project, moulinette
+    evaluator: CriterionEvaluator | RegulationEvaluator, petition_project, moulinette
 ):
     """
     Retrieve instructor information for a given evaluator using a Class-based Dispatch Registry.

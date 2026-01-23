@@ -19,17 +19,19 @@ else:
 END
 }
 
-echo "Starting the post_compile hook"
+echo ">>> Starting the post_compile hook"
 
-echo "Installing npm dev dependencies for assets generation."
+echo ">>> Installing npm dev dependencies for assets generation."
 npm ci --dev
 
 # This is required because we disabled all npm scripts in .npmrc
 node node_modules/optipng-bin/lib/install.js
 npm run build
 
-echo "Uninstall dev dependencies to prevent bloating /staticfiles"
+echo ">>> Uninstall dev dependencies to prevent bloating /staticfiles"
 npm prune --production
+
+echo ">>> Build assets"
 
 if compress_enabled
 then
@@ -42,4 +44,4 @@ python manage.py collectstatic --noinput
 
 python manage.py compilemessages -l fr -i .scalingo -i .venv
 
-echo "Leaving the post_compile hook"
+echo ">>> Leaving the post_compile hook"
