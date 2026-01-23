@@ -1863,6 +1863,7 @@ class Moulinette(ABC):
         self._regulations = value
 
     def has_config(self):
+        """Check if a valid, active config exists for this department."""
         return bool(self.config)
 
     @abstractmethod
