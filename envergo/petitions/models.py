@@ -266,18 +266,14 @@ class PetitionProject(models.Model):
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
             department = extract_param_from_url(self.moulinette_url, "department")
-            date_depot = extract_param_from_url(self.moulinette_url, "date")
-            if not date_depot:
-                if "dateDepot" in dossier and dossier["dateDepot"]:
-                    date_depot = parser.isoparse(dossier["dateDepot"]).date()
-                else:
-                    date_depot = date.today()
-                self.moulinette_url = update_qs(
-                    self.moulinette_url, {"date": date_depot.isoformat()}
-                )
+            if "dateDepot" in dossier and dossier["dateDepot"]:
+                date_depot = parser.isoparse(dossier["dateDepot"]).date()
             else:
-                # this dossier already have a date in the url. Nothing to do.
-                pass
+                date_depot = date.today()
+            # add date in the url or overwrite it if there is already one
+            self.moulinette_url = update_qs(
+                self.moulinette_url, {"date": date_depot.strftime("%Y%m%d")}
+            )
 
             usager_email = (
                 dossier["usager"]["email"]
@@ -291,7 +287,7 @@ class PetitionProject(models.Model):
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
                     "dossier_number": self.demarches_simplifiees_dossier_number,
-                    "dossier_date": date_depot,
+                    "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
                     "usager_email": usager_email,
