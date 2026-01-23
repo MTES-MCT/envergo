@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
+from datetime import datetime
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
@@ -10,7 +11,8 @@ from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import ArrayField, RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import (
@@ -28,6 +30,7 @@ from django.db.models.functions import Cast, Concat
 from django.forms import BoundField, Form
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -61,7 +64,11 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
     MapFactory,
 )
-from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
+from envergo.moulinette.utils import (
+    DateRange,
+    compute_surfaces,
+    list_moulinette_templates,
+)
 from envergo.utils.tools import insert_before
 
 # WGS84, geodetic coordinates, units in degrees
@@ -925,24 +932,135 @@ class Perimeter(models.Model):
         return mark_safe(contact)
 
 
+class ConfigQuerySet(models.QuerySet):
+    """QuerySet for Config models with validity date filtering."""
+
+    def valid_at(self, date):
+        """Filter configs valid at the given date.
+
+        A config is valid if:
+        - valid_from is None or valid_from <= date (inclusive start)
+        - valid_until is None or valid_until > date (exclusive end)
+        """
+        return self.filter(
+            Q(valid_from__lte=date) | Q(valid_from__isnull=True),
+            Q(valid_until__gt=date) | Q(valid_until__isnull=True),
+        )
+
+    def get_valid_config(self, department, date=None):
+        """Get the configuration for a department at a given date."""
+
+        if date is None:
+            date = timezone.now().date()
+        return self.filter(department=department).valid_at(date).first()
+
+
 class ConfigBase(models.Model):
-    department = models.OneToOneField(
+    department = models.ForeignKey(
         "geodata.Department",
         verbose_name=_("Department"),
         on_delete=models.PROTECT,
-        related_name="%(class)s",
+        related_name="%(class)ss",  # Plural: configamenagements, confighaies
     )
     is_activated = models.BooleanField(
         _("Is activated"),
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
+    valid_from = models.DateField(
+        _("Valid from"),
+        null=True,
+        blank=True,
+        help_text=_("Start date (inclusive). Empty = no start limit."),
+    )
+    valid_until = models.DateField(
+        _("Valid until"),
+        null=True,
+        blank=True,
+        help_text=_("End date (exclusive). Empty = no end limit."),
+    )
+
+    objects = ConfigQuerySet.as_manager()
 
     class Meta:
         abstract = True
+        constraints = [
+            CheckConstraint(
+                check=Q(valid_from__isnull=True)
+                | Q(valid_until__isnull=True)
+                | Q(valid_from__lt=F("valid_until")),
+                name="%(class)s_valid_dates_order",
+                violation_error_message=_(
+                    "La date de début doit être antérieure à la date de fin."
+                ),
+            ),
+            ExclusionConstraint(
+                name="%(class)s_no_overlapping_validity",
+                expressions=[
+                    ("department", RangeOperators.EQUAL),
+                    (
+                        DateRange("valid_from", "valid_until", Value("[)")),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+                violation_error_message=_(
+                    "Cette configuration chevauche une configuration "
+                    "existante pour ce département."
+                ),
+            ),
+        ]
 
     def __str__(self):
-        return self.department.get_department_display()
+        dept_display = self.department.get_department_display()
+        if self.valid_from or self.valid_until:
+            from_str = self.valid_from.isoformat() if self.valid_from else "…"
+            until_str = self.valid_until.isoformat() if self.valid_until else "…"
+            return f"{dept_display} [{from_str} - {until_str})"
+        return dept_display
+
+    def clean(self):
+        super().clean()
+        if self.valid_from and self.valid_until and self.valid_from >= self.valid_until:
+            raise ValidationError(
+                "La date de début doit être antérieure à la date de fin."
+            )
+        self._validate_no_overlap()
+
+    def _validate_no_overlap(self):
+        """Check for overlapping configs for the same department."""
+
+        # Build queryset to find overlapping configs
+        qs = self.__class__.objects.filter(department=self.department)
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        for other in qs:
+            if self._overlaps_with(other):
+                raise ValidationError(
+                    "Cette configuration chevauche une configuration "
+                    "existante pour ce département."
+                )
+
+    def _overlaps_with(self, other):
+        """Check if this config's validity period overlaps with another."""
+        self_start = self.valid_from
+        self_end = self.valid_until
+        other_start = other.valid_from
+        other_end = other.valid_until
+
+        # Two ranges [a, b) and [c, d) overlap if a < d and c < b
+
+        # Check if self starts before other ends
+        self_starts_before_other_ends = other_end is None or (
+            self_start is None or self_start < other_end
+        )
+
+        # Check if other starts before self ends
+        other_starts_before_self_ends = self_end is None or (
+            other_start is None or other_start < self_end
+        )
+
+        return self_starts_before_other_ends and other_starts_before_self_ends
 
 
 class ConfigAmenagement(ConfigBase):
@@ -982,7 +1100,7 @@ class ConfigAmenagement(ConfigBase):
         "Espèces protégées > Paragraphe libre", default="", null=False, blank=True
     )
 
-    class Meta:
+    class Meta(ConfigBase.Meta):
         verbose_name = _("Config amenagement")
         verbose_name_plural = _("Configs amenagement")
 
@@ -1235,10 +1353,10 @@ class ConfigHaie(ConfigBase):
 
         return available_sources
 
-    class Meta:
+    class Meta(ConfigBase.Meta):
         verbose_name = "Config haie"
         verbose_name_plural = "Configs haie"
-        constraints = [
+        constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
                 check=Q(is_activated=False)
                 | Q(demarche_simplifiee_number__isnull=False),
@@ -1421,6 +1539,29 @@ class Moulinette(ABC):
     @cached_property
     def config(self):
         return self.get_config()
+
+    @cached_property
+    def simulation_date(self):
+        return self.get_simulation_date()
+
+    def get_simulation_date(self):
+        """Get the simulation date from form data or default to today.
+
+        The simulation date determines which configuration is used for a given
+        department (when multiple configs exist with different validity periods).
+        """
+
+        data = self.form_kwargs.get("data", {})
+        initial = self.form_kwargs.get("initial", {})
+        date_str = data.get("simulation_date") or initial.get("simulation_date")
+
+        if date_str:
+            try:
+                return datetime.strptime(date_str, "%Y-%m-%d").date()
+            except (ValueError, TypeError):
+                pass
+
+        return timezone.now().date()
 
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
@@ -1710,6 +1851,7 @@ class Moulinette(ABC):
         self._regulations = value
 
     def has_config(self):
+        """Check if a valid, active config exists for this department."""
         return bool(self.config)
 
     @abstractmethod
@@ -2150,16 +2292,16 @@ class MoulinetteAmenagement(Moulinette):
             return None
 
         lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("configamenagement")
-            .prefetch_related("configamenagement__templates")
-            .first()
-        )
+        department = Department.objects.filter(geometry__contains=lng_lat).first()
         return department
 
     def get_config(self):
-        return getattr(self.department, "configamenagement", None)
+        if not self.department:
+            return None
+        config = ConfigAmenagement.objects.prefetch_related(
+            "templates"
+        ).get_valid_config(self.department, self.simulation_date)
+        return config
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
@@ -2219,7 +2361,11 @@ class MoulinetteHaie(Moulinette):
     triage_form_class = TriageFormHaie
 
     def get_config(self):
-        return getattr(self.department, "confighaie", None)
+        if not self.department:
+            return None
+        return ConfigHaie.objects.get_valid_config(
+            self.department, self.simulation_date
+        )
 
     @property
     def result(self):
@@ -2401,14 +2547,12 @@ class MoulinetteHaie(Moulinette):
         return data
 
     def get_department(self):
-
         dept = self.data.get("department", self.initial.get("department", None))
         if dept is None:
             return None
 
         qs = (
             Department.objects.defer("geometry")
-            .select_related("confighaie")
             .annotate(centroid=Centroid("geometry"))
             .filter(department=dept)
         )
