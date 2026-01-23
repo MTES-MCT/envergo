@@ -9,6 +9,7 @@ from envergo.petitions.views import (
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorAlternativeEdit,
     PetitionProjectInstructorAlternativeView,
+    PetitionProjectInstructorConsultationsView,
     PetitionProjectInstructorDossierDSView,
     PetitionProjectInstructorMessagerieMarkUnreadView,
     PetitionProjectInstructorMessagerieView,
@@ -17,7 +18,8 @@ from envergo.petitions.views import (
     PetitionProjectInstructorRegulationView,
     PetitionProjectInstructorRequestAdditionalInfoView,
     PetitionProjectInstructorView,
-    PetitionProjectInvitationToken,
+    PetitionProjectInvitationTokenCreate,
+    PetitionProjectInvitationTokenDelete,
     PetitionProjectList,
     toggle_follow_project,
 )
@@ -69,6 +71,11 @@ instruction_urlpatterns = [
         "procedure/",
         PetitionProjectInstructorProcedureView.as_view(),
         name="petition_project_instructor_procedure_view",
+    ),
+    path(
+        "consultations/",
+        PetitionProjectInstructorConsultationsView.as_view(),
+        name="petition_project_instructor_consultations_view",
     ),
     path(
         "demander-complement/",
@@ -125,9 +132,14 @@ urlpatterns = [
         name="petition_project_hedge_data_export",
     ),
     path(
-        "<slug:reference>/invitations/",
-        PetitionProjectInvitationToken.as_view(),
-        name="petition_project_invitation_token",
+        "<slug:reference>/invitations/create/",
+        PetitionProjectInvitationTokenCreate.as_view(),
+        name="petition_project_invitation_token_create",
+    ),
+    path(
+        "<slug:reference>/invitations/delete/",
+        PetitionProjectInvitationTokenDelete.as_view(),
+        name="petition_project_invitation_token_delete",
     ),
     path(
         "<slug:reference>/invitations/<slug:token>/",

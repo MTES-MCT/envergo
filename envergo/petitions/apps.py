@@ -9,3 +9,4 @@ class PetitionsConfig(AppConfig):
         import envergo.petitions.regulations.alignementarbres  # noqa
         import envergo.petitions.regulations.conditionnalitepac  # noqa
         import envergo.petitions.regulations.ep  # noqa
+        import envergo.petitions.regulations.sites_proteges_haie  # noqa

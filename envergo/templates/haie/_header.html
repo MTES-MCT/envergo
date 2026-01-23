@@ -60,7 +60,7 @@
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
-        {% if user.is_authenticated %}
+        {% if user.is_involved_in_guh %}
           <li class="fr-nav__item">
             <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Dossiers</a>
           </li>

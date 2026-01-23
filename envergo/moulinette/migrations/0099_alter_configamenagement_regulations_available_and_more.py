@@ -29,6 +29,7 @@ class Migration(migrations.Migration):
                         ("reserves_naturelles", "Réserves naturelles"),
                         ("code_rural_haie", "Code rural"),
                         ("regime_unique_haie", "Régime unique haie"),
+                        ("sites_proteges_haie", "Sites protégés"),
                     ],
                     max_length=64,
                 ),
@@ -55,12 +56,29 @@ class Migration(migrations.Migration):
                         ("reserves_naturelles", "Réserves naturelles"),
                         ("code_rural_haie", "Code rural"),
                         ("regime_unique_haie", "Régime unique haie"),
+                        ("sites_proteges_haie", "Sites protégés"),
                     ],
                     max_length=64,
                 ),
                 blank=True,
                 default=list,
                 size=None,
+            ),
+        ),
+        migrations.AlterField(
+            model_name="criterion",
+            name="activation_mode",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("department_centroid", "Centroïde du département dans la carte"),
+                    (
+                        "hedges_intersection",
+                        "Intersection de la carte et des haies (à la fois à détruire et à planter)",
+                    ),
+                ],
+                max_length=32,
+                verbose_name="Mode d'activation (GUH uniquement)",
             ),
         ),
         migrations.AlterField(
@@ -810,12 +828,51 @@ class Migration(migrations.Migration):
                         "sage/result_non_soumis_single_perimeter.html",
                     ),
                     (
+                        "sites_proteges_haie/result_non_active.html",
+                        "sites_proteges_haie/result_non_active.html",
+                    ),
+                    (
+                        "sites_proteges_haie/result_non_concerne.html",
+                        "sites_proteges_haie/result_non_concerne.html",
+                    ),
+                    (
+                        "sites_proteges_haie/result_non_disponible.html",
+                        "sites_proteges_haie/result_non_disponible.html",
+                    ),
+                    (
+                        "sites_proteges_haie/result_soumis.html",
+                        "sites_proteges_haie/result_soumis.html",
+                    ),
+                    (
                         "urbanisme_haie/urbanisme_haie_a_verifier.html",
                         "urbanisme_haie/urbanisme_haie_a_verifier.html",
                     ),
                 ],
                 max_length=512,
                 verbose_name="Key",
+            ),
+        ),
+        migrations.AlterField(
+            model_name="regulation",
+            name="map_factory_name",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    (
+                        "envergo.moulinette.regulations.PerimetersBoundedWithCenterMapMarkerMapFactory",
+                        "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre du projet",
+                    ),
+                    (
+                        "envergo.moulinette.regulations.HedgesToRemoveCentricMapFactory",
+                        "Une carte centrée sur les haies à détruire (GUH uniquement)",
+                    ),
+                    (
+                        "envergo.moulinette.regulations.HedgesCentricMapFactory",
+                        "Une carte centrée sur les haies, à la fois à détruire et à planter (GUH uniquement)",
+                    ),
+                ],
+                max_length=256,
+                verbose_name="Type de carte affichée",
             ),
         ),
         migrations.AlterField(
@@ -835,6 +892,7 @@ class Migration(migrations.Migration):
                     ("reserves_naturelles", "Réserves naturelles"),
                     ("code_rural_haie", "Code rural"),
                     ("regime_unique_haie", "Régime unique haie"),
+                    ("sites_proteges_haie", "Sites protégés"),
                 ],
                 max_length=64,
                 verbose_name="Regulation",

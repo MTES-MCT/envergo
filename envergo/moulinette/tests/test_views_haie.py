@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import (  # noqa
+    bizous_town_center,
     loire_atlantique_department,
     loire_atlantique_map,
 )
@@ -14,7 +15,9 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    PerimeterFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -33,7 +36,10 @@ def autouse_site(site):
 
 @pytest.fixture(autouse=True)
 def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
-    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    regulation = RegulationFactory(
+        regulation="conditionnalite_pac",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Regulation",
+    )
     criteria = [
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
@@ -489,3 +495,120 @@ def test_confighaie_settings_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Département : Loire-Atlantique (44)" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
+    client, bizous_town_center  # noqa
+):
+
+    # GIVEN a moulinette with an hedge to plant inside N2000 perimeters and site proteges perimeter
+    sites_proteges_regulation = RegulationFactory(
+        regulation="sites_proteges_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesProtegesRegulation",
+    )
+    n2000_regulation = RegulationFactory(
+        regulation="natura2000_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRegulation",
+    )
+    spr_perimeter = PerimeterFactory(
+        name="MH Bizous",
+        activation_map=bizous_town_center,
+        regulations=[sites_proteges_regulation],
+    )
+    n2000_perimeter = PerimeterFactory(
+        name="N2000 Bizous",
+        activation_map=bizous_town_center,
+        regulations=[n2000_regulation],
+    )
+
+    CriterionFactory(
+        title="Sites Patrimoniaux Remarquables",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    )
+
+    CriterionFactory(
+        title="Natura 2000 Haie > Haie Bizous",
+        regulation=n2000_regulation,
+        perimeter=n2000_perimeter,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+        evaluator_settings={"result": "soumis"},
+    )
+    hedge_inside = HedgeFactory(
+        type="TO_PLANT",
+        latLngs=[
+            {"lat": 43.06930871579473, "lng": 0.4421436860179369},
+            {"lat": 43.069162248282396, "lng": 0.44236765047068033},
+        ],
+    )
+    hedge_outside = HedgeFactory(
+        type="TO_REMOVE",
+        latLngs=[
+            {"lat": 43.09248072614743, "lng": 0.48007431760217484},
+            {"lat": 43.09280782621999, "lng": 0.48095944654749073},
+        ],
+    )
+    hedges = HedgeDataFactory(hedges=[hedge_inside, hedge_outside])
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 20000,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result")
+    query = urlencode(data)
+
+    # WHEN requesting the result plantation page with droit constant
+    config_44 = DCConfigHaieFactory()
+    res = client.get(f"{url}?{query}")
+
+    # THEN the result page is displayed with a warning listing all regulations
+    assert (
+        sites_proteges_regulation
+        in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
+    )
+    assert (
+        n2000_regulation
+        in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
+    )
+    assert (
+        "La localisation des linéaires à planter dans des zones sensibles "
+        in res.content.decode()
+    )
+
+    # # Given a department configured as régime unique
+    config_44.delete()
+    RUConfigHaieFactory()
+    # WHEN requesting the result plantation page with droit constant
+    res = client.get(f"{url}?{query}")
+
+    # THEN the result page is displayed with a warning listing only regulations that can be in "autorisation"
+    assert (
+        sites_proteges_regulation
+        in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
+    )
+    assert (
+        n2000_regulation
+        not in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
+    )
+    assert (
+        "La localisation des linéaires à planter dans des zones sensibles "
+        in res.content.decode()
+    )
