@@ -12,7 +12,8 @@ from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
-from django.contrib.postgres.fields import ArrayField, DateRangeField
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import (
@@ -64,7 +65,11 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
     MapFactory,
 )
-from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
+from envergo.moulinette.utils import (
+    DateRange,
+    compute_surfaces,
+    list_moulinette_templates,
+)
 from envergo.utils.tools import insert_before
 
 # WGS84, geodetic coordinates, units in degrees
@@ -1003,6 +1008,20 @@ class ConfigBase(models.Model):
                     "La date de début doit être antérieure à la date de fin."
                 ),
             ),
+            ExclusionConstraint(
+                name="%(class)s_no_overlapping_validity",
+                expressions=[
+                    ("department", RangeOperators.EQUAL),
+                    (
+                        DateRange("valid_from", "valid_until", Value("[)")),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+                violation_error_message=_(
+                    "Cette configuration chevauche une configuration "
+                    "existante pour ce département."
+                ),
+            ),
         ]
 
     def __str__(self):
@@ -1022,20 +1041,17 @@ class ConfigBase(models.Model):
         self._validate_no_overlap()
 
     def _validate_no_overlap(self):
-        """Check for overlapping active configs for the same department."""
+        """Check for overlapping configs for the same department."""
 
         # Build queryset to find overlapping configs
-        qs = self.__class__.objects.filter(
-            department=self.department,
-            is_activated=True,
-        )
+        qs = self.__class__.objects.filter(department=self.department)
         if self.pk:
             qs = qs.exclude(pk=self.pk)
 
         for other in qs:
             if self._overlaps_with(other):
                 raise ValidationError(
-                    "Cette configuration chevauche une configuration active "
+                    "Cette configuration chevauche une configuration "
                     "existante pour ce département."
                 )
 
@@ -1098,7 +1114,7 @@ class ConfigAmenagement(ConfigBase):
         "Espèces protégées > Paragraphe libre", default="", null=False, blank=True
     )
 
-    class Meta:
+    class Meta(ConfigBase.Meta):
         verbose_name = _("Config amenagement")
         verbose_name_plural = _("Configs amenagement")
 
@@ -1351,10 +1367,10 @@ class ConfigHaie(ConfigBase):
 
         return available_sources
 
-    class Meta:
+    class Meta(ConfigBase.Meta):
         verbose_name = "Config haie"
         verbose_name_plural = "Configs haie"
-        constraints = [
+        constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
                 check=Q(is_activated=False)
                 | Q(demarche_simplifiee_number__isnull=False),
