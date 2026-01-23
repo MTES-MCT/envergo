@@ -956,13 +956,6 @@ class ConfigQuerySet(models.QuerySet):
             Q(valid_until__gt=date) | Q(valid_until__isnull=True),
         )
 
-
-class ConfigManager(models.Manager):
-    """Manager for Config models with validity date support."""
-
-    def get_queryset(self):
-        return ConfigQuerySet(self.model, using=self._db)
-
     def get_valid_config(self, department, date=None):
         """Get the active configuration for a department at a given date."""
 
@@ -1003,7 +996,7 @@ class ConfigBase(models.Model):
         help_text=_("End date (exclusive). Empty = no end limit."),
     )
 
-    objects = ConfigManager()
+    objects = ConfigQuerySet.as_manager()
 
     class Meta:
         abstract = True
@@ -2325,10 +2318,10 @@ class MoulinetteAmenagement(Moulinette):
     def get_config(self):
         if not self.department:
             return None
-        config = ConfigAmenagement.objects.get_valid_config(
-            self.department, self.simulation_date
-        ).prefetch_related("templates")
-        return config.first()
+        config = ConfigAmenagement.objects.prefetch_related(
+            "templates"
+        ).get_valid_config(self.department, self.simulation_date)
+        return config
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
