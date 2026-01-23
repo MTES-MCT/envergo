@@ -156,23 +156,28 @@ class PetitionProject(models.Model):
 
     stage = models.CharField(
         "Étape",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
         max_length=30,
         choices=STAGES,
         default=STAGES.to_be_processed,
     )
     decision = models.CharField(
         "Décision",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
         max_length=30,
         choices=DECISIONS,
         default=DECISIONS.unset,
     )
 
     is_additional_information_requested = models.BooleanField(
-        "En attente d'informations complémentaires ?", default=False
+        "En attente d'informations complémentaires ?",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        default=False,
     )
 
     due_date = models.DateField(
         "Date de prochaine échéance",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
         null=True,
         blank=True,
     )
