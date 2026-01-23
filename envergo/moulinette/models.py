@@ -962,18 +962,11 @@ class ConfigQuerySet(models.QuerySet):
         )
 
     def get_valid_config(self, department, date=None):
-        """Get the active configuration for a department at a given date."""
+        """Get the configuration for a department at a given date."""
 
         if date is None:
             date = timezone.now().date()
-        return (
-            self.filter(
-                department=department,
-                is_activated=True,
-            )
-            .valid_at(date)
-            .first()
-        )
+        return self.filter(department=department).valid_at(date).first()
 
 
 class ConfigBase(models.Model):
@@ -1035,8 +1028,6 @@ class ConfigBase(models.Model):
 
     def _validate_no_overlap(self):
         """Check for overlapping active configs for the same department."""
-        if not self.is_activated:
-            return  # Only validate active configs
 
         # Build queryset to find overlapping configs
         qs = self.__class__.objects.filter(
