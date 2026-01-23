@@ -184,8 +184,13 @@ class Department(models.Model):
         return self.get_department_display()
 
     def is_amenagement_activated(self):
-        config = getattr(self, "configamenagement", None)
-        return config and config.is_activated
+        """Check if there's an active amenagement config for this department."""
+        # Import here to avoid circular imports
+        from envergo.moulinette.models import ConfigAmenagement
+
+        return ConfigAmenagement.objects.filter(
+            department=self, is_activated=True
+        ).exists()
 
 
 class CatchmentAreaTile(models.Model):
