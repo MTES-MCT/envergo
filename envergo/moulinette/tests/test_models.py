@@ -93,11 +93,11 @@ def test_moulinette_config(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_config()
 
-    # Inactive config should NOT be returned by has_config()
+    # Inactive config should be returned by has_config()
     ConfigAmenagementFactory(is_activated=False)
     moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.has_config()
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert not moulinette.has_config()  # Changed: inactive configs are not returned
 
     # Active config should be returned by has_config()
     ConfigAmenagementFactory(is_activated=True)
@@ -417,19 +417,6 @@ class TestConfigValidityDates:
             == config_2025
         )
 
-    def test_inactive_config_not_returned(self):
-        """Inactive configs are never returned even if dates match."""
-        dept = DepartmentFactory()
-        ConfigAmenagementFactory(
-            department=dept,
-            is_activated=False,
-            valid_from=None,
-            valid_until=None,
-        )
-        assert (
-            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15)) is None
-        )
-
 
 class TestConfigOverlapValidation:
     """Tests for the overlap validation on Config models."""
@@ -458,30 +445,6 @@ class TestConfigOverlapValidation:
         with pytest.raises(ValidationError) as exc_info:
             overlapping.clean()
         assert "chevauche" in str(exc_info.value)
-
-    def test_overlap_allowed_for_inactive_configs(self):
-        """Inactive configs can overlap with active configs."""
-        dept = DepartmentFactory()
-        ConfigAmenagementFactory(
-            department=dept,
-            is_activated=True,
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2025, 12, 31),
-        )
-        # Inactive config with overlapping dates should be allowed
-        inactive_config = ConfigAmenagement(
-            department=dept,
-            is_activated=False,
-            valid_from=date(2025, 6, 1),
-            valid_until=date(2026, 6, 1),
-            lse_contact_ddtm="test",
-            n2000_contact_ddtm_info="test",
-            n2000_contact_ddtm_instruction="test",
-            n2000_procedure_ein="test",
-            evalenv_procedure_casparcas="test",
-        )
-        # Should not raise
-        inactive_config.clean()
 
     def test_date_order_validation(self):
         """valid_from must be before valid_until."""
