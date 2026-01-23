@@ -471,7 +471,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
 class ActionToTakeForm(forms.ModelForm):
     details = forms.ChoiceField(
         choices=get_template_choices(template_subdir="moulinette/actions_to_take/"),
-        require=False,
+        required=False,
     )
 
     class Meta:
