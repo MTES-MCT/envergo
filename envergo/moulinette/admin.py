@@ -213,7 +213,7 @@ class CriterionAdmin(admin.ModelAdmin):
         html = f"<a href='{url}'>{content}</a>"
         return mark_safe(html)
 
-    @admin.display(ordering="validity_date_start", description="Dates")
+    @admin.display(ordering="validity_date_start", description="Validité")
     def validity_dates_column(self, obj):
         date_start_display = (
             obj.validity_date_start.strftime("%-d/%-m/%y")

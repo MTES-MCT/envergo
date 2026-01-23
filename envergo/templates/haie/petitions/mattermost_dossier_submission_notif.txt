@@ -1,7 +1,7 @@
 ### Nouveau dossier – {{ department }}
 
 N° de dossier : {{ dossier_number }}
-Date de dépôt : {{ dossier_date }}
+Date de création : {{ created_at|date:"DATE_FORMAT" }}
 Email de l'usager : {{ usager_email }}
 Linéaire détruit : {{ length_to_remove|floatformat:0 }} m
 

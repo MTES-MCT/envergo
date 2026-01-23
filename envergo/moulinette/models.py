@@ -631,6 +631,12 @@ class Criterion(models.Model):
     )
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
+    validity_date_start = models.DateField(
+        "Date de début de validité", blank=True, null=True
+    )
+    validity_date_end = models.DateField(
+        "Date de fin de validité", blank=True, null=True
+    )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
         verbose_name=_("Regulation"),
@@ -644,12 +650,6 @@ class Criterion(models.Model):
         related_name="criteria",
         null=True,
         blank=True,
-    )
-    validity_date_start = models.DateField(
-        "Date de début de validité", blank=True, null=True
-    )
-    validity_date_end = models.DateField(
-        "Date de fin de validité", blank=True, null=True
     )
     activation_map = models.ForeignKey(
         "geodata.Map",
@@ -700,6 +700,16 @@ class Criterion(models.Model):
     class Meta:
         verbose_name = _("Criterion")
         verbose_name_plural = _("Criteria")
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    Q(validity_date_start__isnull=True)
+                    | Q(validity_date_end__isnull=True)
+                    | Q(validity_date_end__gte=F("validity_date_start"))
+                ),
+                name="validity_date_end_gte_start",
+            )
+        ]
 
     def __str__(self):
         return self.title
