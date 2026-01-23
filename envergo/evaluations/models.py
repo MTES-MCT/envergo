@@ -327,16 +327,6 @@ class Evaluation(models.Model):
         """Return the evaluation params as provided in the moulinette url."""
         return MoulinetteUrl(self.moulinette_url).params
 
-    def get_moulinette_config(self):
-        params = self.moulinette_params
-        if "lng" not in params or "lat" not in params:
-            return None
-
-        lng, lat = params["lng"], params["lat"]
-        coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        department = Department.objects.filter(geometry__contains=coords).first()
-        return department.configamenagement if department else None
-
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.models import MoulinetteAmenagement
@@ -594,7 +584,7 @@ class EvaluationEmail:
     def get_bcc_recipients(self):
         evaluation = self.evaluation
         moulinette = self.moulinette
-        config = evaluation.get_moulinette_config()
+        config = moulinette.get_config()
 
         bcc_recipients = []
 
