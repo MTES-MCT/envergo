@@ -275,7 +275,7 @@ TRAVAUX_CHOICES = (
 Toute intervention supprimant définitivement la végétation :
 arrachage ; « déplacement » de haie ;
 coupe à blanc sur essences qui ne recèpent pas
-(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+(<a href="https://equatorial-red-4c6.notion.site/Liste-des-essences-et-leur-capacit-rec-per-2e9fe5fe476681568c89f296be4bfc02"
 target="_blank" rel="noopener">voir liste</a>) ;
 entretien sévère et récurrent ; etc.
 </span>
@@ -289,7 +289,7 @@ entretien sévère et récurrent ; etc.
 <span class="fr-hint-text">
     Intervention qui permet la repousse de la végétation :
     élagage, taille, coupe à blanc sur une essence capable de recéper
-    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+    (<a href="https://equatorial-red-4c6.notion.site/Liste-des-essences-et-leur-capacit-rec-per-2e9fe5fe476681568c89f296be4bfc02"
     target="_blank" rel="noopener">voir liste</a>), etc.
 </span>
                     """
