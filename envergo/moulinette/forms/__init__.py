@@ -256,7 +256,7 @@ ELEMENT_CHOICES = (
     ("bosquet", "Bosquets"),
     (
         "autre",
-         mark_safe(
+        mark_safe(
             """Autre<br />
 <span class="fr-hint-text">
     Arbres isolés, bandes boisées, lisières forestières, fourrés, etc.
@@ -300,7 +300,8 @@ entretien sévère et récurrent ; etc.
         mark_safe(
             """Autre<br />
 <span class="fr-hint-text">
-    Plantation d’une nouvelle haie sans destruction préalable, mise en défens, travaux de restauration écologique, travaux de revégétalisation, etc.
+    Plantation d’une nouvelle haie sans destruction préalable, mise en défens, travaux de restauration écologique,
+    travaux de revégétalisation, etc.
 </span>
                     """
         ),
