@@ -471,7 +471,7 @@ HAIE_FAQ_URLS = {
     "FIVE_HEDGES_TYPES": "https://equatorial-red-4c6.notion.site/Les-cinq-types-de-haies-2e9fe5fe476681fabfb4f45300d54a7f",  # noqa: E501
     "NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION": "https://equatorial-red-4c6.notion.site/Normandie-quels-types-de-haie-permettent-une-r-duction-de-la-compensation-attendue-2e9fe5fe47668120bdd6ec6fd14a6195",  # noqa: E501
     "NORMANDIE_EP_FOR_WORKS": "https://equatorial-red-4c6.notion.site/Normandie-prise-en-compte-des-esp-ces-prot-g-es-pour-les-demandes-de-travaux-sur-haies-2e9fe5fe4766819bb55af564fd39b782",  # noqa: E501
-    "IDENTIFY_NATURAL_ZONE": "https://equatorial-red-4c6.notion.site/Comment-identifier-une-r-serve-naturelle-et-son-gestionnaire-2e9fe5fe476681608770efde43cf92c8",  # noqa: E501
+    "IDENTIFY_NATURAL_AREA_MANAGER": "https://equatorial-red-4c6.notion.site/Comment-identifier-une-r-serve-naturelle-et-son-gestionnaire-2e9fe5fe476681608770efde43cf92c8",  # noqa: E501
     "GUIDE_FORM_HEDGE_DESTRUCTION": "https://equatorial-red-4c6.notion.site/Guide-au-remplissage-du-formulaire-de-d-claration-pr-alable-pour-une-destruction-de-haie-ou-d-aligne-2e9fe5fe47668173a2a1d4b83630a750",  # noqa: E501
     "HOWTO_IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://equatorial-red-4c6.notion.site/Comment-identifier-les-protections-sur-les-haies-et-alignements-d-arbres-dans-le-g-oportail-de-l-urb-2e9fe5fe47668126ba11eb2e1c74e6a6",  # noqa: E501
 }
