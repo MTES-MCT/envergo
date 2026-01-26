@@ -11,7 +11,7 @@
 
       {% for criterion in regulation.criteria.all %}
         {% if criterion.should_be_displayed %}
-          {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
+          {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion counter=forloop.counter %}
         {% endif %}
       {% endfor %}
     </div>

@@ -9,7 +9,7 @@
 {% endblock title %}
 
 {% block content %}
-  <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
+  <h1 class="fr-my-2w project-list__title">Liste des dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
     {% if not user_can_view_one_petition_project %}
       <div class="fr-alert fr-alert--info">
@@ -27,8 +27,8 @@
         </p>
       </div>
     {% else %}
-      <fieldset class="fr-segmented">
-        <legend class="fr-segmented__legend">Filtre des dossiers</legend>
+      <fieldset class="fr-segmented fr-segmented--sm">
+        <legend class="fr-segmented__legend fr-mb-1v">Filtrer la liste :</legend>
         <div class="fr-segmented__elements">
           <div class="fr-segmented__element">
             <a href="{% url 'petition_project_list' %}"

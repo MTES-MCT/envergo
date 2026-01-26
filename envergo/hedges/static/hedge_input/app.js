@@ -654,7 +654,12 @@ createApp({
         },
         body: JSON.stringify(hedgeData),
       })
-        .then(response => response.json())
+          .then(async response => {
+            if (!response.ok) {
+              throw await response.json();
+            }
+            return response.json();
+          })
         .then(data => {
           // Note : using Object.assign will not delete keys.
           // E.g if the initial evaluation data has a `length_to_plant_pac` key,
@@ -665,7 +670,10 @@ createApp({
           conditions.status = "ok";
           conditions.result = conditions.conditions.every(element => element.result);
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+          console.error('Error:', error);
+          conditions.status = "error";
+        });
     }
 
     const addTooltip = (e) => {

@@ -12,7 +12,7 @@ window.addEventListener('load', function () {
   var dropzone = new Dropzone(form, {
     url: DROPZONE_UPLOAD_URL,
     paramName: function () { return 'additional_files'; },
-    maxFilesize: 20,
+    maxFilesize: DROPZONE_MAX_FILESIZE,
     maxFiles: DROPZONE_MAX_FILES,
     acceptedFiles: 'image/*,application/pdf,application/zip',
     autoProcessQueue: true,
@@ -29,7 +29,7 @@ window.addEventListener('load', function () {
     dictInvalidFileType: "Ce type de fichier n'est pas autorisé.",
     dictResponseError: "Ce fichier n'a pas pu être envoyé à cause d'une erreur du serveur.",
     dictCancelUpload: "Annuler l'envoi",
-    dictCancelUploadConfirmation: "Êtes vous certain·e de vouloir annuler l'envoi ?",
+    dictCancelUploadConfirmation: "Êtes vous certain(e) de vouloir annuler l'envoi ?",
     dictMaxFilesExceeded: "Vous ne pouvez pas envoyer plus de fichiers.",
 
     init: function () {
@@ -109,6 +109,11 @@ window.addEventListener('load', function () {
 
   // Disable the confirmation form while files are being uploaded
   Dropzone.prototype.disableForm = function () {
+    if(!submitBtn){
+      // there is no submit button when the user is only editing the evaluation request to add/remove some files
+      return;
+    }
+
     // Disable form submit
     submitBtn.setAttribute("disabled", "");
 
@@ -122,6 +127,11 @@ window.addEventListener('load', function () {
 
   // Reactivate the confirmation form
   Dropzone.prototype.enableForm = function () {
+    if(!submitBtn){
+      // there is no submit button when the user is only editing the evaluation request to add/remove some files
+      return;
+    }
+
     submitBtn.removeAttribute("disabled");
 
     // Update button message

@@ -528,6 +528,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
         context = super().get_context_data(**kwargs)
         context["max_files"] = settings.MAX_EVALREQ_FILES
+        context["max_filesize"] = settings.MAX_EVALREQ_FILESIZE
         context["uploaded_files"] = files
         context["request_submitted"] = self.object.submitted
         context["matomo_custom_url"] = update_url_with_matomo_params(
@@ -568,6 +569,16 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             if not file:
                 return JsonResponse(
                     {"error": "Aucun fichier n'a été reçu."},
+                    status=400,
+                )
+
+            # Make sure that the file size limit is respected
+            max_size_bytes = settings.MAX_EVALREQ_FILESIZE * 1024 * 1024
+            if file.size > max_size_bytes:
+                return JsonResponse(
+                    {
+                        "error": f"Ce fichier est trop volumineux. Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                    },
                     status=400,
                 )
 
