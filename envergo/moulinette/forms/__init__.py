@@ -382,12 +382,11 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if not any(on_pac_values):
                 self.add_error(
-                    "localisation_pac",
+                    "haies",
                     ValidationError(
-                        """Il est indiqué que « oui, au moins une des haies » est située
-                        sur une parcelle PAC, mais aucune des haies saisies n’est marquée
-                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                        les haies.""",
+                        """ Aucune haie saisie n’a été marquée sur parcelle PAC. Cliquer sur "Modifier les
+                        haies" et indiquer lesquelles sont situées sur parcelle PAC (pour cela, cliquer sur le tracé de
+                        haie ou sur "Description").""",
                         code="inconsistent_hedges",
                     ),
                 )
