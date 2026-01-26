@@ -23,7 +23,7 @@ class HedgePropertiesBaseForm(forms.Form):
         label=mark_safe(
             """
         <span>Type de haie</span>
-        <a href="https://equatorial-red-4c6.notion.site/Les-cinq-types-de-haies-2e9fe5fe476681fabfb4f45300d54a7f"
+        <a href="settings.HAIE_FAQ_URLS["FIVE_HEDGES_TYPES"]"
         target="_blank" rel="noopener">Aide</a>
         """
         ),
