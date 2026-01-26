@@ -1099,3 +1099,7 @@ button.hide-expanded[aria-expanded="true"] {
     }
   }
 }
+
+#footer-description {
+  max-width: 23em; // valeur empirique permettant d'optimiser le ratio rendu/accessibilité
+}
