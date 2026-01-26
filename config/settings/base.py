@@ -446,9 +446,6 @@ BREVO = {
     ),
 }
 
-HAIE_FAQ_URL = "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-usagers-17efe5fe47668058a991eb26153a70b0"  # noqa: E501
-HAIE_INSTRUCTORS_FAQ_URL = "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718"  # noqa: E501
-
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
     "static/gpkg/hedge_data_export_template.gpkg"
 )
@@ -467,6 +464,8 @@ FROM_EMAIL = {
 }
 
 HAIE_FAQ_URLS = {
+    "USAGERS": "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-usagers-17efe5fe47668058a991eb26153a70b0",  # noqa: E501
+    "INSTRUCTORS": "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718",  # noqa: E501
     "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST": "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-emplacement-environnemental-2e9fe5fe47668150a8a1f57c2e44f44e",  # noqa: E501
     "TREE_SPECIES_COPPICING_CAPACITY": "https://equatorial-red-4c6.notion.site/Liste-des-essences-et-leur-capacit-rec-per-2e9fe5fe476681568c89f296be4bfc02",  # noqa: E501
     "FIVE_HEDGES_TYPES": "https://equatorial-red-4c6.notion.site/Les-cinq-types-de-haies-2e9fe5fe476681fabfb4f45300d54a7f",  # noqa: E501
