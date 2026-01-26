@@ -21,9 +21,9 @@ class HedgePropertiesBaseForm(forms.Form):
     type_haie = forms.ChoiceField(
         choices=HEDGE_TYPES,
         label=mark_safe(
-            """
+            f"""
         <span>Type de haie</span>
-        <a href="settings.HAIE_FAQ_URLS["FIVE_HEDGES_TYPES"]"
+        <a href="{settings.HAIE_FAQ_URLS["FIVE_HEDGES_TYPES"]}"
         target="_blank" rel="noopener">Aide</a>
         """
         ),
