@@ -1185,7 +1185,7 @@ class PetitionProjectInstructorAlternativeView(
                     queryset=StatusLog.objects.all().order_by("-created_at"),
                 )
             )
-            .order_by("created_at")
+            .order_by("-created_at")
         )
 
         context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
