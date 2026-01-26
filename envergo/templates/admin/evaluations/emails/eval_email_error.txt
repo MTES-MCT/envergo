@@ -13,4 +13,4 @@ L'avis :
  - erreur : {{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})
  - envoi du {{ log.sent_at }}
 
- Chargé·e d'études : {{ log.sender }}
+ Chargé(e) d'études : {{ log.sender }}
