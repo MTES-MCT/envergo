@@ -430,7 +430,7 @@ class NormandieQualityCondition(PlantationCondition):
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
                 proposant de planter des haies de type supérieur à celui des haies à détruire
-                (<a href="https://www.notion.so/Normandie-quels-types-de-haie-permettent-une-r-duction-de-la-compensation-attendue-232fe5fe4766807f8029c78ca68d319e" target="_blank" rel="noopener">voir le guide</a>).
+                (<a href="https://equatorial-red-4c6.notion.site/Normandie-quels-types-de-haie-permettent-une-r-duction-de-la-compensation-attendue-2e9fe5fe47668120bdd6ec6fd14a6195" target="_blank" rel="noopener">voir le guide</a>).
                 """  # noqa: E501
             )
 
