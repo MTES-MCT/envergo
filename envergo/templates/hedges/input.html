@@ -201,6 +201,8 @@
               </div>
               <div v-if="conditions.status === 'loading'"
                    class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
+              <div v-if="conditions.status === 'error'"
+                   class="fr-px-1w fr-pt-2w fr-pb-1w">Erreur lors de la vérification de la plantation</div>
             </div>
             <div id="conditions"
                  :class="conditions.status"
