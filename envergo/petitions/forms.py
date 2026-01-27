@@ -22,7 +22,12 @@ class PetitionProjectForm(forms.ModelForm):
         self.fields["moulinette_url"].required = True
 
     def clean_moulinette_url(self):
-        # remove the date parameter from the moulinette url if there is one
+        """Remove the date parameter from the moulinette url if there is one
+
+        We keep the date during simulations because it can be used for project alternatives or for simulations at a
+        given point in time. However, when creating a file, we want to take current legislation into account, so we
+        remove the date if necessary.
+        """
         moulinette_url = self.cleaned_data["moulinette_url"]
         cleaned_moulinette_url = remove_from_qs(moulinette_url, "date")
         return cleaned_moulinette_url

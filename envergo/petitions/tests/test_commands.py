@@ -135,4 +135,4 @@ def test_dossier_submission_admin_alert(
     )
     assert project.demarches_simplifiees_last_sync is not None
     assert mock_post.call_count == 2
-    assert "date=20250129" in project.moulinette_url
+    assert "date=2025-01-29" in project.moulinette_url
