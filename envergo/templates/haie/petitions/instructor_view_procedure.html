@@ -203,14 +203,16 @@
                           <br />
                           Décision : {{ DECISIONS|get_choice_label:log.decision }}
                         {% endif %}
-                      {% elif log.type == "suspension" %}
+                      {% elif log.type == "suspension" and log.due_date %}
                         <br />
                         Date limite : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
                       {% elif log.type == "resumption" %}
                         <br />
                         Réception : {{ log.info_receipt_date|date:"SHORT_DATE_FORMAT" }}
-                        <br />
-                        Prochaine échéance : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                        {% if log.due_date %}
+                          <br />
+                          Prochaine échéance : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                        {% endif %}
                       {% endif %}
                     </td>
                     <td>
