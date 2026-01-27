@@ -1570,7 +1570,11 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             info_receipt_date=info_receipt_date,
             due_date=new_due_date,
             created_by=self.request.user,
-            update_comment="Reprise de l’instruction, date d'échéance ajustée.",
+            update_comment=(
+                "Reprise de l’instruction, date d'échéance ajustée."
+                if new_due_date
+                else "Reprise de l’instruction."
+            ),
         )
 
         # Send Mattermost notification
