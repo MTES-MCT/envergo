@@ -138,9 +138,9 @@ prompt-toolkit==3.0.51
     # via click-repl
 propcache==0.3.2
     # via yarl
-psycopg[binary]==3.2.9
+psycopg[binary]==3.3.2
     # via -r base.in
-psycopg-binary==3.2.9
+psycopg-binary==3.3.2
     # via psycopg
 pycparser==2.22
     # via cffi
