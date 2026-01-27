@@ -1,4 +1,5 @@
 import logging
+import re
 
 from django import forms
 
@@ -53,7 +54,17 @@ class DisplayChoiceField(DisplayFieldMixin, forms.ChoiceField):
 
 
 class DisplayIntegerField(DisplayFieldMixin, forms.IntegerField):
-    pass
+    """IntegerField that strips whitespace from input.
+
+    Users often enter numbers with spaces as thousand separators (e.g., "8 000").
+    This field removes all whitespace before validation.
+    """
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            # The \s class matches all whitespaces (spaces, nbsp, tabs…)
+            value = re.sub(r"\s", "", value)
+        return super().to_python(value)
 
 
 class DisplayCharField(DisplayFieldMixin, forms.CharField):
