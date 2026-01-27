@@ -323,3 +323,27 @@ def test_otp_can_be_deactivated(settings, admin_client):
 
     res = admin_client.get(admin_url, follow=False)
     assert res.status_code == 200
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+def test_haie_homepage_admin_faq(haie_user, haie_user_44, client):
+    """Test display of admin FAQ according to user rights"""
+    # AS anonymous visitor, WHEN I visit homepage
+    res = client.get("/")
+    # THEN admin FAQ is not visible
+    assert "Pour l'administration" not in res.content.decode()
+
+    # AS basic haie user
+    client.force_login(haie_user)
+    # WHEN I visit homepage
+    res = client.get("/")
+    # THEN admin FAQ is not visible
+    assert "Pour l'administration" not in res.content.decode()
+
+    # AS haie user with right on a department
+    client.force_login(haie_user_44)
+    # WHEN I visit homepage
+    res = client.get("/")
+    # THEN admin FAQ is visible
+    assert "Pour l'administration" in res.content.decode()
