@@ -14,14 +14,14 @@
   <div>
     <h3>État du dossier</h3>
   </div>
-  <div class="project-inner-content{{ petition_project.is_paused|yesno:" paused," }}">
+  <div class="project-inner-content{{ petition_project.is_additional_information_requested|yesno:" paused," }}">
     <section class="fr-my-3w">
       <h4>Étape</h4>
-      <p>{% stage_badge petition_project.current_stage False %}</p>
+      <p>{% stage_badge petition_project.stage False %}</p>
 
       <div id="due-date-container" class="fr-mb-3w">
 
-        {% if petition_project.is_paused %}
+        {% if petition_project.is_additional_information_requested %}
           <div class="alt-light fr-py-3w fr-px-3w fr-mb-3w">
             <b>En attente de compléments</b>
             <br />
@@ -44,7 +44,7 @@
                   {% csrf_token %}
                   {% include '_form_snippet.html' with form=resume_processing_form %}
 
-                  {% if petition_project.current_status.original_due_date %}
+                  {% if petition_project.latest_suspension.original_due_date %}
                     <div class="fr-input-group">
                       <label for="" class="fr-label">
                         <span class="label-content fr-text--bold">Nouvelle échéance d'instruction</span>
@@ -55,8 +55,8 @@
                              type="date"
                              disabled="disabled"
                              class="fr-input"
-                             data-suspension-date="{{ petition_project.current_status.suspension_date|date:"c" }}"
-                             data-original-due-date="{{ petition_project.current_status.original_due_date|date:"c" }}">
+                             data-suspension-date="{{ petition_project.latest_suspension.created_at.date|date:"c" }}"
+                             data-original-due-date="{{ petition_project.latest_suspension.original_due_date|date:"c" }}">
                     </div>
                   {% endif %}
 
@@ -77,34 +77,34 @@
             <br />
             <span class="due-date fr-text--sm">
               <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
-              {{ petition_project.current_status.suspension_date|date:"DATE_FORMAT" }}
+              {{ petition_project.latest_suspension.created_at|date:"DATE_FORMAT" }}
             </span>
           </p>
 
-          {% if petition_project.current_status.original_due_date %}
+          {% if petition_project.latest_suspension.original_due_date %}
             <p>
               <strong>Échéance d'instruction avant la suspension</strong>
               <br />
               <span class="due-date fr-text--sm">
                 <span class="fr-icon-timer-line fr-icon--sm"></span>
-                {{ petition_project.current_status.original_due_date|date:"DATE_FORMAT" }}
+                {{ petition_project.latest_suspension.original_due_date|date:"DATE_FORMAT" }}
               </span>
             </p>
           {% endif %}
 
         {% else %}
 
-          {% if petition_project.current_stage != "closed" %}
+          {% if petition_project.stage != "closed" %}
             <b>Échéance pour cette étape :</b>
             <br />
             {% display_due_date petition_project.due_date %}
           {% endif %}
         {% endif %}
 
-        {% include "haie/petitions/stage_objectives/"|add:petition_project.current_stage|add:".html" %}
+        {% include "haie/petitions/stage_objectives/"|add:petition_project.stage|add:".html" %}
       </div>
 
-      {% if is_department_instructor and not request_info_form and not petition_project.is_paused %}
+      {% if is_department_instructor and not request_info_form and not petition_project.is_additional_information_requested %}
         <button type="button"
                 class="fr-btn fr-btn--secondary fr-mb-3w disabled"
                 disabled="disabled"
@@ -115,7 +115,7 @@
 
       {% endif %}
 
-      {% if request_info_form and not petition_project.is_paused %}
+      {% if request_info_form and not petition_project.is_additional_information_requested %}
         <button type="button"
                 class="fr-btn fr-btn--secondary fr-mb-3w hide-expanded"
                 aria-expanded="false"
@@ -146,22 +146,25 @@
       {% endif %}
 
       <h4>Décision</h4>
-      <p>{% decision_badge petition_project.current_decision False %}</p>
+      <p>{% decision_badge petition_project.decision False %}</p>
     </section>
   </div>
   {% if is_department_instructor %}
     <button class="fr-btn"
-            {% if petition_project.demarches_simplifiees_state == "draft" %}disabled{% endif %}
+            {% if petition_project.demarches_simplifiees_state == "draft" or petition_project.is_additional_information_requested %}disabled{% endif %}
             data-fr-opened="{% if form.errors %}true{% else %}false{% endif %}"
             aria-controls="procedure-modal">Modifier l'état du dossier</button>
     {% if petition_project.demarches_simplifiees_state == "draft" %}
       <span class="fr-hint-text">Ce dossier n'a pas encore été déposé par le pétitionnaire.</span>
     {% endif %}
+    {% if petition_project.is_additional_information_requested %}
+      <span class="fr-hint-text">Impossible tant que le dossier est en attente de compléments.</span>
+    {% endif %}
   {% endif %}
 
   {% if paginator.count %}
     <h3 class="fr-mt-6w">Historique des changements</h3>
-    <div class="fr-table  procedure-history__table">
+    <div class="fr-table fr-table--multiline  procedure-history__table">
       <div class="fr-table__wrapper">
         <div class="fr-table__container">
           <div class="fr-table__content">
@@ -172,50 +175,52 @@
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">Date / heure de la saisie</th>
-                  <th scope="col">Date effective</th>
+                  <th scope="col">Date</th>
                   <th scope="col">Auteur</th>
-                  <th scope="col">Étape / Décision départ</th>
-                  <th scope="col">Étape / Décision arrivée</th>
+                  <th scope="col">Modification</th>
                   <th scope="col">Commentaire</th>
                 </tr>
               </thead>
               <tbody>
                 {% for log in object_list %}
                   <tr class="project">
-                    <td>{{ log.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
-                    <td>{{ log.status_date|date:"SHORT_DATE_FORMAT" }}</td>
                     <td>
-                      <span class="described-by-tooltip"
-                            aria-describedby="email-tooltip-{{ forloop.counter }}">{{ log.created_by.email }}</span>
-                      <span class="fr-tooltip fr-placement"
-                            role="tooltip"
-                            id="email-tooltip-{{ forloop.counter }}">{{ log.created_by.email }}</span>
+                      {{ log.created_at|date:"SHORT_DATE_FORMAT" }}
+                      <br />
+                      {{ log.created_at|date:"TIME_FORMAT" }}
                     </td>
+                    <td>{% created_by_display log %}</td>
                     <td>
-                      {% if log.previous_log %}
-                        {{ log.previous_log.get_stage_display }}
-                        {% if log.previous_log.decision != "unset" %}
-                          <br />
-                          {{ log.previous_log.get_decision_display }}
-                        {% endif %}
-                      {% else %}
-                        {{ log|choice_default_label:"stage" }}
-                      {% endif %}
-                    </td>
-                    <td>
-                      {{ log.get_stage_display }}
-                      {% if log.decision != "unset" %}
+                      <b>{{ log.get_type_display }}</b>
+                      {% if log.type == "status_change" %}
                         <br />
-                        {{ log.get_decision_display }}
+                        {{ STAGES|get_choice_label:log.stage }}
+                        {% if log.due_date %}
+                          <br />
+                          Échéance le {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                        {% endif %}
+                        {% if log.decision != "unset" %}
+                          <br />
+                          Décision : {{ DECISIONS|get_choice_label:log.decision }}
+                        {% endif %}
+                      {% elif log.type == "suspension" and log.due_date %}
+                        <br />
+                        Date limite : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                      {% elif log.type == "resumption" %}
+                        <br />
+                        Réception : {{ log.info_receipt_date|date:"SHORT_DATE_FORMAT" }}
+                        {% if log.due_date %}
+                          <br />
+                          Prochaine échéance : {{ log.due_date|date:"SHORT_DATE_FORMAT" }}
+                        {% endif %}
                       {% endif %}
                     </td>
                     <td>
-                      <span class="described-by-tooltip"
-                            aria-describedby="comment-tooltip-{{ forloop.counter }}">{{ log.update_comment }}</span>
-                      <span class="fr-tooltip fr-placement"
-                            role="tooltip"
-                            id="comment-tooltip-{{ forloop.counter }}">{{ log.update_comment }}</span>
+                      {% if log.status_date and log.status_date != log.created_at.date %}
+                        Changement effectif le {{ log.status_date|date:"SHORT_DATE_FORMAT" }}
+                        <br />
+                      {% endif %}
+                      {% truncated_comment log.update_comment forloop.counter 60 %}
                     </td>
                   </tr>
                 {% endfor %}
@@ -243,12 +248,15 @@
   {{ block.super }}
   <script defer src="{% static 'js/libs/sync_new_due_date.js' %}"></script>
 
-  {% if resume_processing_form and petition_project.current_status.original_due_date %}
+  {% if resume_processing_form and petition_project.latest_suspension.original_due_date %}
     <script>
     window.addEventListener("load", function() {
       let receipt_date_input = document.getElementById("id_info_receipt_date");
       let due_date_input = document.getElementById("id_new_due_date");
-      new DueDateInput(due_date_input, receipt_date_input);
+      // due date input exists only if a due date was previously set
+      if(due_date_input) {
+        new DueDateInput(due_date_input, receipt_date_input);
+      }
     });
     </script>
   {% endif %}

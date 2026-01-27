@@ -9,7 +9,7 @@
 {% endblock title %}
 
 {% block content %}
-  <h1 class="fr-my-2w project-list__title">Tous les dossiers</h1>
+  <h1 class="fr-my-2w project-list__title">Liste des dossiers</h1>
   {% with project_number=page_obj.paginator.count %}
     {% if not user_can_view_one_petition_project %}
       <div class="fr-alert fr-alert--info">
@@ -27,8 +27,8 @@
         </p>
       </div>
     {% else %}
-      <fieldset class="fr-segmented">
-        <legend class="fr-segmented__legend">Filtre des dossiers</legend>
+      <fieldset class="fr-segmented fr-segmented--sm">
+        <legend class="fr-segmented__legend fr-mb-1v">Filtrer la liste :</legend>
         <div class="fr-segmented__elements">
           <div class="fr-segmented__element">
             <a href="{% url 'petition_project_list' %}"
@@ -108,11 +108,11 @@
                       <div>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
                     <td>
-                      <div>{% stage_badge project.current_stage %}</div>
-                      {% if project.current_stage != "closed" %}
+                      <div>{% stage_badge project.stage %}</div>
+                      {% if project.stage != "closed" %}
                         <div>
-                          {% if project.is_paused %}
-                            {% display_pause project.current_status.response_due_date %}
+                          {% if project.is_additional_information_requested %}
+                            {% display_pause project.due_date %}
                           {% else %}
                             {% display_due_date project.due_date False True %}
                           {% endif %}
@@ -130,7 +130,7 @@
                       <div>{{ project.city }}</div>
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{% decision_badge project.current_decision True %}</td>
+                    <td>{% decision_badge project.decision True %}</td>
                     <td class="messagerie-col {{ project.has_unread_messages|yesno:"unread,read" }}">
                       {% if project.has_unread_messages %}
                         <span class="fr-icon-mail-fill fr-icon--sm"></span>

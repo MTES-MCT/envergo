@@ -688,25 +688,27 @@ div#instructor-view-side-menu {
  * Page project list
  */
 .fr-segmented {
-  a {
-    text-decoration: none;
-    background-image: none;
-    align-items: center;
-    border-radius: 0.25rem;
-    display: inline-flex;
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.5rem;
-    max-height: none;
-    max-width: 100%;
-    min-height: 2.5rem;
-    overflow: initial;
-    padding: 0.5rem 1rem;
-    white-space: nowrap;
-    width: 100%;
+  &.fr-segmented--sm {
+    a {
+      text-decoration: none;
+      background-image: none;
+      align-items: center;
+      border-radius: 0.25rem;
+      display: inline-flex;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.5rem;
+      max-height: none;
+      max-width: 100%;
+      min-height: 2rem;
+      overflow: initial;
+      padding: 0.25rem 0.75rem;
+      white-space: nowrap;
+      width: 100%;
 
-    &:hover {
-      background-color: var(--hover);
+      &:hover {
+        background-color: var(--hover);
+      }
     }
   }
 
@@ -714,10 +716,6 @@ div#instructor-view-side-menu {
     box-shadow: inset 0 0 0 1px var(--border-active-blue-france);
     color: var(--text-active-blue-france);
   }
-}
-
-.project-list__title {
-  text-align: center;
 }
 
 .project-list__table,
@@ -924,15 +922,16 @@ div.title-with-link-container {
   }
 
   td {
-    height: 72px;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
     max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 
-    a {
+    @supports (selector(:has(*))) {
+      &:has(.more.fr-collapse--expanded) .ellipsis {
+        display: none;
+      }
+    }
+
+    a,
+    button {
       font-size: 0.875rem;
     }
   }

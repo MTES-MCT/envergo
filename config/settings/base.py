@@ -351,6 +351,7 @@ VISITOR_COOKIE_NAME = "visitorid"
 
 # The max number of files that can be uploaded with a single evaluation request
 MAX_EVALREQ_FILES = 25
+MAX_EVALREQ_FILESIZE = 50
 
 TEST_EMAIL = "test@test.fr"
 
@@ -445,16 +446,6 @@ BREVO = {
     ),
 }
 
-HAIE_FAQ_URL = (
-    "https://www.notion.so/"
-    "Guichet-unique-de-la-haie-Ressources-pour-les-usagers-17efe5fe47668058a991eb26153a70b0"
-)
-HAIE_INSTRUCTORS_FAQ_URL = (
-    "https://www.notion.so/"
-    "Guichet-unique-de-la-haie-Ressources-pour-les-services-coordonnateurs-"
-    "et-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718"
-)
-
 GUH_DATA_EXPORT_TEMPLATE = APPS_DIR.joinpath(
     "static/gpkg/hedge_data_export_template.gpkg"
 )
@@ -472,10 +463,18 @@ FROM_EMAIL = {
     },
 }
 
-HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST = (
-    "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-"
-    "emplacement-environnemental-1a7fe5fe476680f8afb2c648119f8e23"
-)
+HAIE_FAQ_URLS = {
+    "SERVICE_USERS": "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-usagers-17efe5fe47668058a991eb26153a70b0",  # noqa: E501
+    "INSTRUCTORS": "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718",  # noqa: E501
+    "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST": "https://equatorial-red-4c6.notion.site/Liste-des-organismes-agr-s-pour-d-livrer-une-attestation-de-meilleur-emplacement-environnemental-2e9fe5fe47668150a8a1f57c2e44f44e",  # noqa: E501
+    "TREE_SPECIES_COPPICING_CAPACITY": "https://equatorial-red-4c6.notion.site/Liste-des-essences-et-leur-capacit-rec-per-2e9fe5fe476681568c89f296be4bfc02",  # noqa: E501
+    "FIVE_HEDGES_TYPES": "https://equatorial-red-4c6.notion.site/Les-cinq-types-de-haies-2e9fe5fe476681fabfb4f45300d54a7f",  # noqa: E501
+    "NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION": "https://equatorial-red-4c6.notion.site/Normandie-quels-types-de-haie-permettent-une-r-duction-de-la-compensation-attendue-2e9fe5fe47668120bdd6ec6fd14a6195",  # noqa: E501
+    "NORMANDIE_EP_FOR_WORKS": "https://equatorial-red-4c6.notion.site/Normandie-prise-en-compte-des-esp-ces-prot-g-es-pour-les-demandes-de-travaux-sur-haies-2e9fe5fe4766819bb55af564fd39b782",  # noqa: E501
+    "IDENTIFY_NATURAL_AREA_MANAGER": "https://equatorial-red-4c6.notion.site/Comment-identifier-une-r-serve-naturelle-et-son-gestionnaire-2e9fe5fe476681608770efde43cf92c8",  # noqa: E501
+    "GUIDE_FORM_HEDGE_DESTRUCTION": "https://equatorial-red-4c6.notion.site/Guide-au-remplissage-du-formulaire-de-d-claration-pr-alable-pour-une-destruction-de-haie-ou-d-aligne-2e9fe5fe47668173a2a1d4b83630a750",  # noqa: E501
+    "IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://equatorial-red-4c6.notion.site/Comment-identifier-les-protections-sur-les-haies-et-alignements-d-arbres-dans-le-g-oportail-de-l-urb-2e9fe5fe47668126ba11eb2e1c74e6a6",  # noqa: E501
+}
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload
 FILE_UPLOAD_HANDLERS = [
