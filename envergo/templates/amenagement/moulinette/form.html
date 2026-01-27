@@ -24,7 +24,7 @@
           {{ form.lng.as_hidden }}
           {{ form.lat.as_hidden }}
 
-          {% include '_field_snippet.html' with field=form.address %}
+          {% render_field form.address %}
         </div>
 
         <div id="form-section-map" class="form-section">
@@ -70,8 +70,8 @@
             Surfaces à prendre en compte : bâti, voirie, espaces verts, remblais et bassins — impacts définitifs et
             temporaires (travaux).
           </p>
-          {% include '_field_snippet.html' with field=form.created_surface %}
-          {% include '_field_snippet.html' with field=form.final_surface %}
+          {% render_field form.created_surface %}
+          {% render_field form.final_surface %}
         </div>
         {% include 'amenagement/moulinette/_form_footer.html' %}
       </form>
