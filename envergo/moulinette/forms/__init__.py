@@ -17,6 +17,20 @@ from envergo.moulinette.forms.fields import (
 )
 
 
+class UnitInput(forms.TextInput):
+    input_type = "text"
+    template_name = "forms/widgets/text_unit.html"
+
+    def __init__(self, unit, attrs=None):
+        self.unit = unit
+        super().__init__(attrs)
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["unit"] = self.unit
+        return context
+
+
 class BaseMoulinetteForm(forms.Form):
     pass
 
@@ -39,8 +53,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         min_value=0,
         max_value=10000000,
         help_text="Surface au sol nouvellement impactée par le projet",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         display_unit="m²",
         display_label="Surface nouvellement impactée par le projet :",
@@ -80,9 +94,7 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         min_value=0,
         max_value=10000000,
         help_text="Surface au sol impactée totale, en comptant l'existant",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": "8000", "inputmode": "numeric"}),
         display_unit="m²",
         display_label="Surface impactée totale, y compris l'existant :",
         display_help_text="Bâti, voirie, espaces verts, remblais et bassins — temporaires et définitifs",
