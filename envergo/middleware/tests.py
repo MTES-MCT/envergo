@@ -10,6 +10,7 @@ def autouse_site(site):
 
 
 @override_settings(RATELIMIT_RATE="0/s")
+@override_settings(RATELIMIT_ENABLE=True)
 def test_ratelimit(client):
     # GIVEN a 0/s rate limit setting (to avoid flakyness)
     url = "/simulateur/formulaire/"

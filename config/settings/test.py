@@ -47,3 +47,5 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 ENV_NAME = "test"
 ENVERGO_AMENAGEMENT_DOMAIN = "testserver"
+
+RATELIMIT_ENABLE = False
