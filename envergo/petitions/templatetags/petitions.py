@@ -246,8 +246,8 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
 
 
 @register.simple_tag
-def display_pause(response_due_date):
-    days_left = (response_due_date - date.today()).days
+def display_pause(due_date):
+    days_left = (due_date - date.today()).days
     if days_left >= 7:
         icon_class = ""
     elif days_left >= 0:
@@ -292,3 +292,16 @@ def display_ds_field(context, field_name):
 def has_edit_permission(user, project):
     """Check if the user can edit the project."""
     return project.has_change_permission(user)
+
+
+@register.simple_tag
+def created_by_display(log):
+    user = getattr(log, "created_by", None)
+
+    if not user:
+        return ""
+
+    if getattr(user, "is_staff", False):
+        return "Administrateur"
+
+    return getattr(user, "email", "")

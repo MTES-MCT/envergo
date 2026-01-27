@@ -60,6 +60,12 @@ DECISIONS = Choices(
     ("dropped", "Classé sans suite"),
 )
 
+LOG_TYPES = Choices(
+    ("status_change", "Changement d'état"),
+    ("suspension", "Demande de compléments"),
+    ("resumption", "Compléments reçus"),
+)
+
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
 
@@ -148,6 +154,34 @@ class PetitionProject(models.Model):
         default=None,
     )
 
+    stage = models.CharField(
+        "Étape",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        max_length=30,
+        choices=STAGES,
+        default=STAGES.to_be_processed,
+    )
+    decision = models.CharField(
+        "Décision",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        max_length=30,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
+    )
+
+    is_additional_information_requested = models.BooleanField(
+        "En attente d'informations complémentaires ?",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        default=False,
+    )
+
+    due_date = models.DateField(
+        "Date de prochaine échéance",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        null=True,
+        blank=True,
+    )
+
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
@@ -170,29 +204,14 @@ class PetitionProject(models.Model):
                 self.department = None
         super().save(*args, **kwargs)
 
+    @property
+    def is_closed(self):
+        return self.stage == STAGES.closed
+
     @cached_property
-    def current_status(self):
-        # Make sure the `status_history` is prefetched with the correct ordering
-        log = self.status_history.first()
-        return log
-
-    @property
-    def current_stage(self):
-        return (
-            self.current_status.stage if self.current_status else STAGES.to_be_processed
-        )
-
-    @property
-    def current_decision(self):
-        return self.current_status.decision if self.current_status else DECISIONS.unset
-
-    @property
-    def due_date(self):
-        return self.current_status.due_date if self.current_status else None
-
-    @property
-    def is_paused(self):
-        return self.current_status.is_paused if self.current_status else False
+    def latest_suspension(self):
+        """Get the latest suspension log."""
+        return self.status_history.filter(type=LOG_TYPES.suspension).first()
 
     def get_department_code(self):
         """Get department from moulinette url"""
@@ -451,6 +470,19 @@ class PetitionProject(models.Model):
         )
         return has_unread_messages
 
+    def update_status(self, status_log):
+        """Update the project status when a new status log is created"""
+        if status_log.type == LOG_TYPES.status_change:
+            self.stage = status_log.stage
+            self.decision = status_log.decision
+        elif status_log.type == LOG_TYPES.suspension:
+            self.is_additional_information_requested = True
+        elif status_log.type == LOG_TYPES.resumption:
+            self.is_additional_information_requested = False
+
+        self.due_date = status_log.due_date
+        self.save()
+
 
 USER_TYPE = Choices(
     ("petitioner", "Demandeur"),
@@ -495,7 +527,7 @@ class Simulation(models.Model):
         return not (self.is_initial or self.is_active)
 
     def can_be_activated(self):
-        return not self.project.current_status.is_closed
+        return not self.project.is_closed
 
     def custom_url(self, view_name, **kwargs):
         """Generate an url with the given parameters."""
@@ -586,29 +618,39 @@ class InvitationToken(models.Model):
 # Some data constraints checks
 
 # Check that all request for info suspension data is set
-q_suspended = Q(suspension_date__isnull=False) & Q(response_due_date__isnull=False)
+q_suspended = Q(type=LOG_TYPES.suspension) & Q(due_date__isnull=False)
 
 # Check that no single field is set
 q_not_suspended = (
-    Q(suspension_date__isnull=True)
-    & Q(response_due_date__isnull=True)
+    Q(type=LOG_TYPES.status_change)
     & Q(original_due_date__isnull=True)
+    & Q(info_receipt_date__isnull=True)
 )
 
-# Check that the receipt date is only set if the project was suspended
-q_receipt_date = Q(info_receipt_date__isnull=True) | (
-    Q(info_receipt_date__isnull=False) & q_suspended
-)
+# Check that the receipt date is only set if the project is resumed
+q_resumed = Q(type=LOG_TYPES.resumption) & Q(info_receipt_date__isnull=False)
 
 
 class StatusLog(models.Model):
-    """A petition project status (stage + decision) change log entry."""
+    """A petition project status log entry.
+
+    Each entry represents one of:
+    - status_change: A change in stage and/or decision
+    - suspension: A request for additional information (pauses the process)
+    - resumption: Receipt of additional information (resumes the process)
+    """
 
     petition_project = models.ForeignKey(
         PetitionProject,
         on_delete=models.CASCADE,
         related_name="status_history",
         verbose_name="Projet",
+    )
+    type = models.CharField(
+        "Type de log",
+        max_length=20,
+        choices=LOG_TYPES,
+        default=LOG_TYPES.status_change,
     )
     created_by = models.ForeignKey(
         "users.User",
@@ -646,25 +688,8 @@ class StatusLog(models.Model):
     )
 
     # "Request for additional information" related fields
-    suspension_date = models.DateField(
-        "Date de suspension pour demande d'information complémentaire",
-        null=True,
-        blank=True,
-    )
-    response_due_date = models.DateField(
-        "Échéance pour l'envoi de pièces complémentaires",
-        null=True,
-        blank=True,
-    )
     original_due_date = models.DateField(
         "Date de prochaine échéance avant suspension", null=True, blank=True
-    )
-    suspended_by = models.ForeignKey(
-        "users.User",
-        related_name="suspended_logs",
-        on_delete=models.SET_NULL,
-        verbose_name="Auteur de la demande d'informations complémentaires",
-        null=True,
     )
     info_receipt_date = models.DateField(
         "Date de réception des pièces complémentaires", null=True, blank=True
@@ -684,24 +709,11 @@ class StatusLog(models.Model):
                 name="forbid_closed_with_unset_decision",
             ),
             models.CheckConstraint(
-                check=q_suspended | q_not_suspended,
+                check=q_suspended | q_not_suspended | q_resumed,
                 name="suspension_data_is_consistent",
-            ),
-            models.CheckConstraint(
-                check=q_receipt_date, name="receipt_date_data_is_consistent"
             ),
         ]
         ordering = ["-created_at"]
-
-    @property
-    def is_paused(self):
-        """Are we currently waiting for additional info?"""
-
-        return self.suspension_date is not None and self.info_receipt_date is None
-
-    @property
-    def is_closed(self):
-        return self.stage == STAGES.closed
 
 
 class LatestMessagerieAccess(models.Model):
