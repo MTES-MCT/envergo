@@ -1,3 +1,5 @@
+{% load utils %}
+
 <div class="parcel-formset fr-col-12">
   <p class="formset-header">Parcelle</p>
 
@@ -7,18 +9,18 @@
 </div>
 
 <div class="formset-field fr-col-12 fr-col-md-6 fr-col-lg-3">
-  {% include '_field_snippet.html' with field=form.commune %}
+  {% render_field form.commune %}
 
 </div>
 <div class="formset-field fr-col-12 fr-col-md-6 fr-col-lg-3">
-  {% include '_field_snippet.html' with field=form.prefix %}
+  {% render_field form.prefix %}
 
 </div>
 <div class="formset-field fr-col-12 fr-col-md-6 fr-col-lg-3">
-  {% include '_field_snippet.html' with field=form.section %}
+  {% render_field form.section %}
 
 </div>
 <div class="formset-field fr-col-12 fr-col-md-6 fr-col-lg-3">
-  {% include '_field_snippet.html' with field=form.order %}
+  {% render_field form.order %}
 
 </div>
