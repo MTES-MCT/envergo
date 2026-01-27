@@ -1,6 +1,6 @@
 import logging
 import secrets
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from dateutil import parser
@@ -288,10 +288,10 @@ class PetitionProject(models.Model):
             if "dateDepot" in dossier and dossier["dateDepot"]:
                 date_depot = parser.isoparse(dossier["dateDepot"]).date()
             else:
-                date_depot = date.today()
+                date_depot = timezone.localdate()
             # add date in the url or overwrite it if there is already one
             self.moulinette_url = update_qs(
-                self.moulinette_url, {"date": date_depot.strftime("%Y%m%d")}
+                self.moulinette_url, {"date": date_depot.isoformat()}
             )
 
             usager_email = (

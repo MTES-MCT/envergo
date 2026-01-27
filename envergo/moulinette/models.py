@@ -632,10 +632,16 @@ class Criterion(models.Model):
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
     validity_date_start = models.DateField(
-        "Date de début de validité", blank=True, null=True
+        "Date de début de validité",
+        blank=True,
+        null=True,
+        help_text="Date incluse : le critère est valide dés ce jour-là.",
     )
     validity_date_end = models.DateField(
-        "Date de fin de validité", blank=True, null=True
+        "Date de fin de validité",
+        blank=True,
+        null=True,
+        help_text="Date exclue : le critère ne sera plus valide ce jour là.",
     )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
@@ -705,9 +711,9 @@ class Criterion(models.Model):
                 check=(
                     Q(validity_date_start__isnull=True)
                     | Q(validity_date_end__isnull=True)
-                    | Q(validity_date_end__gte=F("validity_date_start"))
+                    | Q(validity_date_end__gt=F("validity_date_start"))
                 ),
-                name="validity_date_end_gte_start",
+                name="validity_date_end_gt_start",
             )
         ]
 
@@ -1999,7 +2005,7 @@ class Moulinette(ABC):
 
     @property
     def date(self):
-        """Date fo the simulation. Today by default."""
+        """Date for the simulation. Today by default."""
         date_str = self.data.get("date", None)
         if date_str:
             try:
