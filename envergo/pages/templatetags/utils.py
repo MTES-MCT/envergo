@@ -244,6 +244,9 @@ def get_field_template_name(field):
     """
     widget = field.field.widget
 
+    # The hedge choice field is an hedge case, because it's a radio select
+    # but we must use the normal field template for rendering. All the specific
+    # radio code is in the widget template.
     if isinstance(widget, HedgeChoiceField):
         return "django/forms/fields/field.html"
     elif isinstance(widget, CheckboxInput):
