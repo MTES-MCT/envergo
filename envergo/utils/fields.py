@@ -37,7 +37,6 @@ def get_human_readable_value(choices, key):
 
 
 class HedgeChoiceField(RadioSelect):
-    custom_template = True
     template_name = "haie/forms/widgets/hedge_radio.html"
     option_template_name = "haie/forms/widgets/hedge_radio_option.html"
 
@@ -62,7 +61,6 @@ class MultipleFileField(FileField):
 
 
 class ProjectStageField(Select):
-    custom_template = True
     template_name = "haie/forms/widgets/project_stage.html"
     option_template_name = "django/forms/widgets/select_option.html"
 
