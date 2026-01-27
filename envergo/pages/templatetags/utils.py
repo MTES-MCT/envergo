@@ -20,6 +20,8 @@ from django.utils.dateparse import parse_datetime
 from django.utils.deprecation import RemovedInDjango51Warning
 from django.utils.html import urlize as _urlize
 
+from envergo.utils.fields import HedgeChoiceField
+
 register = template.Library()
 
 
@@ -242,7 +244,9 @@ def get_field_template_name(field):
     """
     widget = field.field.widget
 
-    if isinstance(widget, CheckboxInput):
+    if isinstance(widget, HedgeChoiceField):
+        return "django/forms/fields/field.html"
+    elif isinstance(widget, CheckboxInput):
         return "django/forms/fields/checkbox.html"
     elif isinstance(widget, RadioSelect):
         return "django/forms/fields/radio.html"
