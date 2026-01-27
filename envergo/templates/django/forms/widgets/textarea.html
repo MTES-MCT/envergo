@@ -1,0 +1,3 @@
+<textarea name="{{ widget.name }}"
+          class="fr-input{% if widget.attrs.class %} {{ widget.attrs.class }}{% endif %}"
+          {% for name, value in widget.attrs.items %}{% if value is not False and name != "class" %} {{ name }}{% if value is not True %}="{{ value|stringformat:'s' }}"{% endif %}{% endif %}{% endfor %}>{% if widget.value %}{{ widget.value }}{% endif %}</textarea>
