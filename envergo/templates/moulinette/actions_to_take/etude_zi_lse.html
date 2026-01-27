@@ -1,12 +1,6 @@
-<p>
-  {% if moulinette.loi_sur_leau.result == 'action_requise' %}
-    Si le projet soustrait plus de 400 m² à la zone d'expansion des crues d'un cours d'eau, il est soumis à déclaration
-    Loi sur l’eau.
-  {% elif moulinette.loi_sur_leau.result == 'soumis' %}
-    L'étude doit figurer dans le dossier Loi sur l'eau.
-  {% endif %}
-
-  <br />
+<p>L'étude doit évaluer la surface soustraite par le projet à la zone d'expansion des crues du cours d'eau.</p>
+<p>Si cette surface dépasse 400 m², le projet est soumis à déclaration Loi sur l’eau.</p>
+  
   <a title="Voir le détail de la réglementation « Loi sur l'eau »"
      href='#criterion-loi_sur_leau__zone_inondable'
      class="fr-link fr-text--sm action-learn-more-link'">En savoir plus</a>
