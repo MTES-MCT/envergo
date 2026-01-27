@@ -1,0 +1,9 @@
+<label class="fr-label" for="{{ field.id_for_label }}">
+  <span class="label-content fr-text--bold">
+    {{ field.label }}
+    {% if not field.field.required %}<i class="fr-text--light optional-tag">– facultatif</i>{% endif %}
+  </span>
+  {% if field.help_text %}
+    <span class="fr-hint-text">{{ field.help_text|safe }}</span>
+  {% endif %}
+</label>

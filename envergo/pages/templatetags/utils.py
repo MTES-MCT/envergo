@@ -15,59 +15,12 @@ from django.forms.widgets import (
 from django.http import QueryDict
 from django.template.base import TemplateSyntaxError
 from django.template.defaultfilters import stringfilter
+from django.template.loader import get_template
 from django.utils.dateparse import parse_datetime
 from django.utils.deprecation import RemovedInDjango51Warning
 from django.utils.html import urlize as _urlize
 
 register = template.Library()
-
-
-@register.filter
-def has_custom_template(field):
-    """Should we use the field's own template.
-
-    This is a hack, since we should always override the field's templates instead
-    of defining "field snippets".
-
-    This should be fixed some day.
-    """
-
-    return hasattr(field.field.widget, "custom_template")
-
-
-@register.filter
-def is_checkbox(field):
-    """Is the given field a checkbox input?."""
-
-    return isinstance(field.field.widget, CheckboxInput)
-
-
-@register.filter
-def is_checkbox_multiple(field):
-    """Is the given field a multiple checkbox input?."""
-
-    return isinstance(field.field.widget, CheckboxSelectMultiple)
-
-
-@register.filter
-def is_radio(field):
-    """Is the given field a radio select?."""
-
-    return isinstance(field.field.widget, RadioSelect)
-
-
-@register.filter
-def is_select(field):
-    """Is the given field a select?."""
-
-    return isinstance(field.field.widget, Select)
-
-
-@register.filter
-def is_input_file(field):
-    """Is the given field an input[type=file] widget?."""
-
-    return isinstance(field.field.widget, FileInput)
 
 
 @register.filter
@@ -78,21 +31,6 @@ def add_classes(field, classes):
     all_classes.remove("")  # Prevent unwanted space in class list
     ret = field.as_widget(attrs={"class": " ".join(all_classes)})
     return ret
-
-
-@register.filter
-def compute_input_classes(field):
-    """Compute css classes for the field widget html."""
-    classes = "fr-input"
-    if hasattr(field, "errors") and field.errors:
-        classes = classes + " fr-input--error"
-    if (
-        hasattr(field.field.widget, "input_type")
-        and field.field.widget.input_type == "select"
-    ):
-        classes = classes + " fr-select"
-
-    return add_classes(field, classes)
 
 
 @register.inclusion_tag("admin/submit_line.html", takes_context=True)
@@ -294,3 +232,49 @@ def truncated_comment(text, uid, limit=50):
 @register.filter
 def join_ids(objects):
     return ", ".join(str(o.id) for o in objects)
+
+
+def get_field_template_name(field):
+    """Determine which template to use for rendering a field wrapper.
+
+    Returns the template path based on the widget type.
+    This is for the field wrapper (label + widget + errors), not the widget itself.
+    """
+    widget = field.field.widget
+
+    if isinstance(widget, CheckboxInput):
+        return "django/forms/fields/checkbox.html"
+    elif isinstance(widget, RadioSelect):
+        return "django/forms/fields/radio.html"
+    elif isinstance(widget, CheckboxSelectMultiple):
+        return "django/forms/fields/checkbox_multiple.html"
+    elif isinstance(widget, FileInput):
+        return "django/forms/fields/input_file.html"
+    elif isinstance(widget, Select):
+        return "django/forms/fields/select.html"
+    else:
+        return "django/forms/fields/field.html"
+
+
+@register.simple_tag(takes_context=True)
+def render_field(context, field, **kwargs):
+    """Render a form field with the appropriate DSFR template.
+
+    Usage:
+        {% render_field form.my_field %}
+
+    This replaces the old pattern:
+        {% include '_field_snippet.html' with field=form.my_field %}
+    """
+    template_name = get_field_template_name(field)
+    t = get_template(template_name)
+
+    new_context = context.flatten()
+    new_context.update(
+        {
+            "field": field,
+            "nest_field_class": kwargs.get("nest_field_class", ""),
+        }
+    )
+
+    return t.render(new_context)
