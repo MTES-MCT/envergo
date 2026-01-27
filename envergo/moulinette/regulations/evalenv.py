@@ -3,6 +3,7 @@ from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
+from envergo.moulinette.forms import UnitInput
 from envergo.moulinette.forms.fields import (
     DisplayChoiceField,
     DisplayIntegerField,
@@ -37,8 +38,8 @@ class EmpriseForm(forms.Form):
         label="Emprise au sol totale",
         help_text="Projection verticale du volume de la construction. "
         "Inclure l'existant autorisé depuis le 16 mai 2017.",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         required=True,
         display_unit="m²",
@@ -163,8 +164,9 @@ class TerrainAssietteForm(forms.Form):
     terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
         help_text="Ensemble des parcelles cadastrales concernées par le projet",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²",
+            attrs={"placeholder": "8000", "inputmode": "numeric"},
         ),
         required=True,
         display_unit="m²",
