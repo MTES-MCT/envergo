@@ -749,6 +749,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
 
+        # Get activation maps for criteria in regulations
         maps_regulation_list = [
             "natura2000_haie",
             "reserves_naturelles",
@@ -758,10 +759,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         criteria_in_regulations = Criterion.objects.filter(
             regulation__regulation__in=maps_regulation_list
         )
-
         activation_maps = Map.objects.filter(
             criteria__in=criteria_in_regulations.values_list("pk", flat=True)
         )
-        context["criteria_with_maps"] = criteria_in_regulations
         context["activation_maps"] = activation_maps
         return context

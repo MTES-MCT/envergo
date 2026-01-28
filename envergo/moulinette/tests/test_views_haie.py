@@ -505,13 +505,15 @@ def test_confighaie_settings_view(
 def test_confighaie_settings_view_map_display(
     client,
     haie_instructor_44,
+    loire_atlantique_department,  # noqa: F811
+    bizous_town_center,  # noqa: F811
+    france_map,  # noqa: F811
 ):
     """Test maps display in department setting view"""
 
     DCConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
-    bizous_town_center.departments = [44]
     regulation_code_rural = RegulationFactory(
         regulation="code_rural_haie",
         evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRuralHaieRegulation",
@@ -551,7 +553,6 @@ def test_confighaie_settings_view_map_display(
     # THEN department config page is displayed
     content = response.content.decode()
 
-    assert n2000_regulation.title in content
     assert n2000_perimeter.activation_map.name in content
 
 
