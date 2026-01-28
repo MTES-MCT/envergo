@@ -111,6 +111,7 @@ def test_dossier_submission_admin_alert(
 
     mock_post.side_effect = [mock_response_1, mock_response_2]
     project = PetitionProjectFactory()
+    assert "date=" not in project.moulinette_url
     DCConfigHaieFactory()
     call_command("dossier_submission_admin_alert")
 
@@ -134,3 +135,4 @@ def test_dossier_submission_admin_alert(
     )
     assert project.demarches_simplifiees_last_sync is not None
     assert mock_post.call_count == 2
+    assert "date=2025-01-29" in project.moulinette_url

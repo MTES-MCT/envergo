@@ -1,10 +1,14 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin.widgets import AdminDateWidget
+from django.contrib.postgres.forms import DateRangeField, RangeWidget
+from django.db.models import Q
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import mark_safe
+from django.utils.html import format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
+from psycopg.types.range import DateRange
 
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
@@ -88,11 +92,27 @@ class RegulationAdmin(admin.ModelAdmin):
         return obj.regulation
 
 
+class AdminDateRangeWidget(RangeWidget):
+    template_name = "admin/widgets/date_range.html"
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        self.widgets = (
+            AdminDateWidget(),
+            AdminDateWidget(),
+        )
+
+
 class CriterionAdminForm(forms.ModelForm):
     header = forms.CharField(
         label=_("Header"),
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+    )
+    validity_range = DateRangeField(
+        label="Dates de validité",
+        required=False,
+        widget=AdminDateRangeWidget,
     )
 
     def __init__(self, *args, **kwargs):
@@ -155,11 +175,11 @@ class MoulinetteTemplateInline(admin.StackedInline):
 class CriterionAdmin(admin.ModelAdmin):
     list_display = [
         "backend_title",
-        "is_optional",
         "regulation",
         "perimeter_list",
         "activation_map_column",
         "activation_distance_column",
+        "validity_column",
         "evaluator_column",
         "weight",
     ]
@@ -173,7 +193,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "activation_map__name",
     ]
     list_editable = ["weight"]
-    list_filter = ["regulation", "is_optional", MapDepartmentsListFilter, "evaluator"]
+    list_filter = ["regulation", MapDepartmentsListFilter, "evaluator"]
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
     inlines = [MoulinetteTemplateInline]
 
@@ -213,6 +233,20 @@ class CriterionAdmin(admin.ModelAdmin):
         html = f"<a href='{url}'>{content}</a>"
         return mark_safe(html)
 
+    @admin.display(description="Validité")
+    def validity_column(self, obj):
+        date_start_display = (
+            obj.validity_range.lower.strftime("%-d/%-m/%y")
+            if obj.validity_range and obj.validity_range.lower
+            else "−∞"
+        )
+        date_end_display = (
+            obj.validity_range.upper.strftime("%-d/%-m/%y")
+            if obj.validity_range and obj.validity_range.upper
+            else "∞"
+        )
+        return f"[{date_start_display}, {date_end_display})"
+
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
     ):
@@ -225,6 +259,58 @@ class CriterionAdmin(admin.ModelAdmin):
                     "subtitle": criterion.backend_title,
                 }
             )
+            validity_range = DateRange(
+                obj.validity_range.lower if obj.validity_range else None,
+                obj.validity_range.upper if obj.validity_range else None,
+                "[)",
+            )
+            overlapping_criteria = (
+                Criterion.objects.filter(
+                    evaluator=obj.evaluator,
+                    activation_map_id=obj.activation_map_id,
+                    regulation=obj.regulation,
+                )
+                .filter(
+                    Q(validity_range__overlap=validity_range)
+                    | Q(validity_range__isnull=True)
+                    | Q(validity_range__isnull=True)
+                )
+                .exclude(pk=obj.pk)
+            )
+
+            count = overlapping_criteria.count()
+            if count:
+                links_html = format_html_join(
+                    ", ",
+                    '<a href="{}">{}</a>',
+                    (
+                        (
+                            reverse(
+                                f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change",
+                                args=[obj.pk],
+                            ),
+                            str(obj),
+                        )
+                        for obj in overlapping_criteria
+                    ),
+                )
+                if count == 1:
+                    message = mark_safe(
+                        f"Un autre critère avec le même évaluateur et la même carte d’activation a des dates qui se "
+                        f"superposent à celui-ci : {links_html}"
+                    )
+                else:
+                    message = mark_safe(
+                        f"D’autres critères avec le même évaluateur et la même carte d’activation ont des dates qui se "
+                        f"superposent à celui-ci : {links_html}"
+                    )
+
+                self.message_user(
+                    request,
+                    message,
+                    level=messages.WARNING,
+                )
+
         res = super().render_change_form(request, context, add, change, form_url, obj)
         return res
 
