@@ -38,17 +38,20 @@
             <p class="fr-mb-1w">
               <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
             </p>
-            <p class="fr-hint-text fr-mb-1w">
-              <strong>Source :</strong>
-              {{ map.source|safe|linebreaksbr|urlize_html }}
-            </p>
-            <div class="fr-download">
-
-              <a class="fr-link fr-link--download"
-                 download="true"
-                 target="_self"
-                 href="{{ map.file.url }}">{{ map.file }}</a>
-            </div>
+            {% if map.source %}
+              <p class="fr-hint-text fr-mb-1w">
+                <strong>Source :</strong>
+                {{ map.source|safe|linebreaksbr|urlize_html }}
+              </p>
+            {% endif %}
+            {% if map.file %}
+              <div class="fr-download">
+                <a class="fr-link fr-link--download"
+                   download="true"
+                   target="_self"
+                   href="{{ map.file.url }}">{{ map.file }}</a>
+              </div>
+            {% endif %}
           </li>
 
         {% endfor %}
