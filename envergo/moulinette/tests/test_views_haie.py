@@ -513,6 +513,8 @@ def test_confighaie_settings_view_map_display(
 
     DCConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
+    bizous_town_center.departments = [loire_atlantique_department.department]
+    bizous_town_center.save()
 
     regulation_code_rural = RegulationFactory(
         regulation="code_rural_haie",
