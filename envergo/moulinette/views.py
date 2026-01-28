@@ -759,9 +759,11 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         criteria_in_regulations = Criterion.objects.filter(
             regulation__regulation__in=maps_regulation_list
         )
-        activation_maps = Map.objects.filter(
-            criteria__in=criteria_in_regulations.values_list("pk", flat=True)
-        ).filter(departments__contains=[self.department.department])
+        activation_maps = (
+            Map.objects.defer("geometry")
+            .filter(criteria__in=criteria_in_regulations.values_list("pk", flat=True))
+            .filter(departments__contains=[self.department.department])
+        )
 
         context["activation_maps"] = activation_maps
         return context
