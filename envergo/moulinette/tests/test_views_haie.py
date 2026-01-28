@@ -8,6 +8,7 @@ from django.urls import reverse
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import (  # noqa
     bizous_town_center,
+    france_map,
     loire_atlantique_department,
     loire_atlantique_map,
 )
@@ -474,7 +475,7 @@ def test_confighaie_settings_view(
     # THEN response is 403
     assert response.status_code == 403
 
-    # GIVEN a instructor user
+    # GIVEN an instructor user
     client.force_login(haie_instructor_44)
     # WHEN they visit department setting page
     response = client.get(url)
@@ -495,6 +496,66 @@ def test_confighaie_settings_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Département : Loire-Atlantique (44)" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_settings_view_map_display(
+    client,
+    haie_instructor_44,
+    loire_atlantique_department,  # noqa: F811
+    bizous_town_center,  # noqa: F811
+    france_map,  # noqa: F811
+):
+    """Test maps display in department setting view"""
+
+    DCConfigHaieFactory(department=loire_atlantique_department)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    bizous_town_center.departments = [loire_atlantique_department.department]
+    bizous_town_center.save()
+
+    regulation_code_rural = RegulationFactory(
+        regulation="code_rural_haie",
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRuralHaieRegulation",
+    )
+    CriterionFactory(
+        title="Code rural L126-3",
+        regulation=regulation_code_rural,
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRural",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+
+    n2000_regulation = RegulationFactory(
+        regulation="natura2000_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRegulation",
+    )
+    n2000_perimeter = PerimeterFactory(
+        name="N2000 Bizous",
+        activation_map=bizous_town_center,
+        regulations=[n2000_regulation],
+    )
+    CriterionFactory(
+        title="Natura 2000 Haie > Haie Bizous",
+        regulation=n2000_regulation,
+        perimeter=n2000_perimeter,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+        evaluator_settings={"result": "soumis"},
+    )
+
+    # GIVEN an instructor user
+    client.force_login(haie_instructor_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+
+    assert n2000_perimeter.activation_map.name in content
 
 
 @pytest.mark.urls("config.urls_haie")

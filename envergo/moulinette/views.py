@@ -20,10 +20,11 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
+from envergo.geodata.models import Map
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie
+from envergo.moulinette.models import ConfigHaie, Criterion
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
@@ -748,4 +749,21 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
 
+        # Get activation maps for criteria in regulations
+        maps_regulation_list = [
+            "natura2000_haie",
+            "reserves_naturelles",
+            "code_rural_haie",
+            "sites_proteges_haie",
+        ]
+        criteria_in_regulations = Criterion.objects.filter(
+            regulation__regulation__in=maps_regulation_list
+        )
+        activation_maps = (
+            Map.objects.defer("geometry")
+            .filter(criteria__in=criteria_in_regulations.values_list("pk", flat=True))
+            .filter(departments__contains=[self.department.department])
+        )
+
+        context["activation_maps"] = activation_maps
         return context
