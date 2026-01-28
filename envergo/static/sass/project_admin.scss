@@ -100,8 +100,14 @@ a#add_id_departments {
     white-space: normal;
   }
 
-  td.field-validity_dates_column {
-    min-width: 8em;
+  td.field-regulation,
+  td.field-perimeter_list,
+  th.field-backend_title {
+    min-width: 12em;
+  }
+
+  td.field-validity_column {
+    min-width: 9em;
   }
 
   td.field-evaluator_column {
