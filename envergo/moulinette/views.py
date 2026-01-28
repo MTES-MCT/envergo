@@ -20,7 +20,6 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
-from envergo.geodata.models import Map
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
@@ -756,14 +755,15 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             "code_rural_haie",
             "sites_proteges_haie",
         ]
-        criteria_in_regulations = Criterion.objects.filter(
-            regulation__regulation__in=maps_regulation_list
-        )
-        activation_maps = (
-            Map.objects.defer("geometry")
-            .filter(criteria__in=criteria_in_regulations.values_list("pk", flat=True))
-            .filter(departments__contains=[self.department.department])
+        grouped_criteria = (
+            Criterion.objects.select_related("regulation")
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+            .filter(regulation__regulation__in=maps_regulation_list)
+            .filter(activation_map__departments__contains=[self.department.department])
+            .order_by("activation_map__name", "id")
+            .distinct("activation_map__name", "id")
         )
 
-        context["activation_maps"] = activation_maps
+        context["grouped_criteria"] = grouped_criteria
         return context

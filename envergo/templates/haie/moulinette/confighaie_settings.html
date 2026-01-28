@@ -29,33 +29,39 @@
         Pour signaler une erreur ou poser une question, l'équipe Envergo est disponible.
       </p>
 
-      <ul>
-        {% for map in activation_maps %}
-          <li>
-            <p class="fr-mb-1w">
-              <strong>{{ map.name }}</strong>
-            </p>
-            <p class="fr-mb-1w">
-              <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
-            </p>
-            {% if map.source %}
-              <p class="fr-hint-text fr-mb-1w">
-                <strong>Source :</strong>
-                {{ map.source|safe|linebreaksbr|urlize_html }}
-              </p>
-            {% endif %}
-            {% if map.file %}
-              <div class="fr-download">
-                <a class="fr-link fr-link--download"
-                   download="true"
-                   target="_self"
-                   href="{{ map.file.url }}">{{ map.file }}</a>
-              </div>
-            {% endif %}
-          </li>
+      {% regroup grouped_criteria by regulation as regulation_list %}
+      {% for regulation in regulation_list %}
+        <h3>{{ regulation.grouper }}</h3>
 
-        {% endfor %}
-      </ul>
+        <ul>
+          {% for criterion in regulation.list %}
+            {% with map=criterion.activation_map %}
+              <li>
+                <p class="fr-mb-1w">
+                  <strong>{{ map.name }}</strong>
+                </p>
+                <p class="fr-mb-1w">
+                  <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
+                </p>
+                {% if map.source %}
+                  <p class="fr-hint-text fr-mb-1w">
+                    <strong>Source :</strong>
+                    {{ map.source|safe|linebreaksbr|urlize_html }}
+                  </p>
+                {% endif %}
+                {% if map.file %}
+                  <div class="fr-download">
+                    <a class="fr-link fr-link--download"
+                       download="true"
+                       target="_self"
+                       href="{{ map.file.url }}">{{ map.file }}</a>
+                  </div>
+                {% endif %}
+              </li>
+            {% endwith %}
+          {% endfor %}
+        </ul>
+      {% endfor %}
 
       <h2 id="title-comptes">Comptes</h2>
 
