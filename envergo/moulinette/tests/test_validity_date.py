@@ -1,4 +1,7 @@
+from datetime import date
+
 import pytest
+from psycopg.types.range import DateRange
 
 from envergo.geodata.conftest import bizous_town_center  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
@@ -34,8 +37,7 @@ def n2000_criteria(bizous_town_center):  # noqa
             evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
-            validity_date_start="2025-01-01",
-            validity_date_end="2026-01-01",
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
             evaluator_settings={"result": "soumis"},
         ),
         CriterionFactory(
@@ -45,7 +47,7 @@ def n2000_criteria(bizous_town_center):  # noqa
             evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
-            validity_date_start="2026-01-01",
+            validity_range=DateRange(date(2026, 1, 1), None, "[)"),
             evaluator_settings={"result": "soumis"},
         ),
     ]

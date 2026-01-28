@@ -12,7 +12,7 @@ from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, DateRangeField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import (
@@ -631,17 +631,11 @@ class Criterion(models.Model):
     )
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
-    validity_date_start = models.DateField(
-        "Date de début de validité",
+
+    validity_range = DateRangeField(
+        "Dates de validité",
         blank=True,
         null=True,
-        help_text="Date incluse : le critère est valide dés ce jour-là.",
-    )
-    validity_date_end = models.DateField(
-        "Date de fin de validité",
-        blank=True,
-        null=True,
-        help_text="Date exclue : le critère ne sera plus valide ce jour là.",
     )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
@@ -679,7 +673,7 @@ class Criterion(models.Model):
     is_optional = models.BooleanField(
         _("Is optional"),
         default=False,
-        help_text=_("Only show this criterion to admin users"),
+        help_text="Ne s'applique que sur activation expresse de l'utilisateur (questions « optionnelles »)",
     )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
@@ -708,13 +702,10 @@ class Criterion(models.Model):
         verbose_name_plural = _("Criteria")
         constraints = [
             models.CheckConstraint(
-                check=(
-                    Q(validity_date_start__isnull=True)
-                    | Q(validity_date_end__isnull=True)
-                    | Q(validity_date_end__gt=F("validity_date_start"))
-                ),
-                name="validity_date_end_gt_start",
-            )
+                check=Q(validity_range__isempty=False),
+                name="validity_range_non_empty",
+                violation_error_message="La date de fin de validité doit être supérieure à la date de début",
+            ),
         ]
 
     def __str__(self):
@@ -1807,14 +1798,7 @@ class Moulinette(ABC):
             .annotate(distance=Cast(0, IntegerField()))
             .order_by("weight", "id", "distance")
             .filter(
-                (
-                    Q(validity_date_start__isnull=True)
-                    | Q(validity_date_start__lte=self.date)
-                ),
-                (
-                    Q(validity_date_end__isnull=True)
-                    | Q(validity_date_end__gt=self.date)
-                ),
+                Q(validity_range__contains=self.date) | Q(validity_range__isnull=True)
             )
         )
 
