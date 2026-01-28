@@ -1,5 +1,7 @@
 {% extends 'haie/base.html' %}
 
+{% load utils %}
+
 {% block title %}
   Paramétrage {{ department }}
 {% endblock title %}
@@ -9,19 +11,19 @@
     <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-9">
       <h1>Paramétrage du portail</h1>
 
-      <p class="fr-text--lead">Département : {{ department }}</p>
+      <p class="fr-text--lead">Département : {{ department }}</p>
 
       <h2>Configuration</h2>
 
       <p class="fr-mb-1w">
-        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
+        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
       </p>
       <p>
-        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
+        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
       </p>
 
       <h2 id="title-cartes">Cartes</h2>
-      <p>
+      <p class="fr-hint-text">
         Ici sont recensées toutes les cartes utilisées dans le simulateur pour le département.
         Les fichiers sont téléchargeables pour consultation et vérification (format compatible QGIS).
         Pour signaler une erreur ou poser une question, l'équipe Envergo est disponible.
@@ -30,14 +32,25 @@
       <ul>
         {% for map in activation_maps %}
           <li>
-            <strong>{{ map.name }}</strong>
-            <br>
-            <strong>Description:</strong> {{ map.description }}
-            <br>
-            <span>{{ map.source }}</span>
-            <br>
-            <span>{{ map.file }}</span>
+            <p class="fr-mb-1w">
+              <strong>{{ map.name }}</strong>
+            </p>
+            <p class="fr-mb-1w">
+              <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
+            </p>
+            <p class="fr-hint-text fr-mb-1w">
+              <strong>Source :</strong>
+              {{ map.source|safe|linebreaksbr|urlize_html }}
+            </p>
+            <div class="fr-download">
+
+              <a class="fr-link fr-link--download"
+                 download="true"
+                 target="_self"
+                 href="{{ map.file.url }}">{{ map.file }}</a>
+            </div>
           </li>
+
         {% endfor %}
       </ul>
 
