@@ -77,7 +77,9 @@ def send_new_account_notification(user_id):
     anon_email = f"{user[0]}***@{domain}"
 
     user_url = reverse("admin:users_user_change", args=[user_id])
-    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    base_url = get_base_url(
+        settings.ENVERGO_AMENAGEMENT_DOMAIN
+    )  # TODO: fix base url when on haie site
     full_user_url = f"{base_url}{user_url}"
 
     message_body = render_to_string(
