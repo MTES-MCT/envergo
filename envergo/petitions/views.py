@@ -1399,7 +1399,6 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             try:
                 update_demarches_simplifiees_status(self.object, new_ds_status)
-                raise DemarchesSimplifieesError(message="DS message not sent")
             except DemarchesSimplifieesError as e:
                 logger.error(e)
                 form.add_error(
