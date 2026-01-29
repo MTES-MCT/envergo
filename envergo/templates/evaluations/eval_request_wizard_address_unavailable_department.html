@@ -1,6 +1,6 @@
 {% extends 'evaluations/eval_request_wizard_address.html' %}
 
-{% load pages %}
+{% load pages static %}
 
 {% block form %}
   <div id="unavailable-department-alert"
@@ -19,3 +19,5 @@
      href="{% url 'request_eval_wizard_reset' %}">Nouvelle demande d'avis réglementaire</a>
 </div>
 {% endblock %}
+
+{% block extra_js %}{% endblock %}
