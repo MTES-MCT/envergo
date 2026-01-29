@@ -548,6 +548,15 @@ def test_confighaie_settings_view_map_display(
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
     )
+    CriterionFactory(
+        title="Natura 2000 Haie > Haie Bizous après 2020",
+        regulation=n2000_regulation,
+        perimeter=n2000_perimeter,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+        evaluator_settings={"result": "soumis"},
+    )
 
     # AS instructor user in 44
     client.force_login(haie_instructor_44)
@@ -556,6 +565,8 @@ def test_confighaie_settings_view_map_display(
     response = client.get(url)
     # THEN department config page is displayed
     assert response.status_code == 200
+    # AND only one criterion is in context_data
+    assert len(response.context_data["grouped_criteria"]) == 1
     # AND activation map bizou is in page
     content = response.content.decode()
     assert bizous_town_center.name in content
