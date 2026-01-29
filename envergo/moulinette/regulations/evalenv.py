@@ -1,6 +1,5 @@
 from django import forms
 from django.utils.html import mark_safe
-from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms import UnitInput
