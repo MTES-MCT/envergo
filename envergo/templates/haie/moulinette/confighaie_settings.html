@@ -86,7 +86,7 @@
         {% endif %}
       </div>
 
-      <div>
+      <div class="fr-mb-2w">
         <p class="fr-mb-1w">
           <strong>Liste des comptes ayant les droits invités sur le département :</strong>
         </p>
@@ -95,7 +95,9 @@
             {% for member_email in department_members.invited_emails %}<li>{{ member_email }}</li>{% endfor %}
           </ul>
         {% else %}
-          <p>Pas de compte invité pour ce département.</p>
+          <p>
+            <em>Pas de compte invité pour ce département.</em>
+          </p>
         {% endif %}
       </div>
 
