@@ -19,3 +19,8 @@
      href="{% url 'request_eval_wizard_reset' %}">Nouvelle demande d'avis réglementaire</a>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+  <script>DEPARTMENT_FIELD_NAME = 'department';</script>
+  <script defer src="{% static 'js/libs/eval_request_department.js' %}"></script>
+{% endblock %}
