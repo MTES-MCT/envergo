@@ -482,7 +482,7 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Département : Loire-Atlantique (44)" in content
+    assert "Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
     assert haie_user.email not in content
     assert haie_instructor_44.email in content
@@ -495,7 +495,7 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Département : Loire-Atlantique (44)" in content
+    assert "Loire-Atlantique (44)" in content
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -511,8 +511,9 @@ def test_confighaie_settings_view_map_display(
 ):
     """Test maps display in department setting view"""
 
+    # GIVEN a config haie
     DCConfigHaieFactory(department=loire_atlantique_department)
-    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    # GIVEN a map in department
     bizous_town_center.departments = [loire_atlantique_department.department]
     bizous_town_center.save()
 
@@ -547,15 +548,29 @@ def test_confighaie_settings_view_map_display(
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
     )
+    CriterionFactory(
+        title="Natura 2000 Haie > Haie Bizous après 2020",
+        regulation=n2000_regulation,
+        perimeter=n2000_perimeter,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+        evaluator_settings={"result": "soumis"},
+    )
 
-    # GIVEN an instructor user
+    # AS instructor user in 44
     client.force_login(haie_instructor_44)
     # WHEN they visit department setting page
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url)
     # THEN department config page is displayed
+    assert response.status_code == 200
+    # AND only one criterion is in context_data
+    assert len(response.context_data["grouped_criteria"]) == 1
+    # AND activation map bizou is in page
     content = response.content.decode()
-
-    assert n2000_perimeter.activation_map.name in content
+    assert bizous_town_center.name in content
+    assert france_map.name not in content
 
 
 @pytest.mark.urls("config.urls_haie")

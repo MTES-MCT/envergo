@@ -728,7 +728,9 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         return obj
 
     def get_context_data(self, **kwargs):
-        """Add department members emails"""
+        """Add department members emails and activation maps related to this department"""
+
+        # Add department members emails
         context = super().get_context_data()
         department = self.department
         context["department"] = self.department
@@ -748,7 +750,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
 
-        # Get activation maps for criteria in regulations
+        # Get activation maps for criteria in regulations related to this department
         maps_regulation_list = [
             "natura2000_haie",
             "reserves_naturelles",
@@ -761,8 +763,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             .defer("activation_map__geometry")
             .filter(regulation__regulation__in=maps_regulation_list)
             .filter(activation_map__departments__contains=[self.department.department])
-            .order_by("regulation__regulation", "activation_map__name", "id")
-            .distinct("regulation__regulation", "activation_map__name", "id")
+            .order_by("regulation__regulation", "activation_map__name")
+            .distinct("regulation__regulation", "activation_map__name")
         )
 
         context["grouped_criteria"] = grouped_criteria
