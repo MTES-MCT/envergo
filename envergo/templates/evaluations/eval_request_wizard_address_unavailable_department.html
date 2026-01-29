@@ -1,6 +1,6 @@
 {% extends 'evaluations/eval_request_wizard_address.html' %}
 
-{% load pages %}
+{% load pages static %}
 
 {% block form %}
   <div id="unavailable-department-alert"
@@ -20,7 +20,4 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
-  <script>DEPARTMENT_FIELD_NAME = 'department';</script>
-  <script defer src="{% static 'js/libs/eval_request_department.js' %}"></script>
-{% endblock %}
+{% block extra_js %}{% endblock %}
