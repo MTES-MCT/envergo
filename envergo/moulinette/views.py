@@ -757,6 +757,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             "code_rural_haie",
             "sites_proteges_haie",
         ]
+        # Retrieve criteria filtered by regulation in MAPS_REGULATION_LIST, filtered by department,
+        # ordered by regulation display order, with unique activation map to be regrouped by regulation
         grouped_criteria = (
             Criterion.objects.select_related("regulation")
             .select_related("activation_map")
