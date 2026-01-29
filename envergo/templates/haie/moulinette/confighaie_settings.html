@@ -59,11 +59,11 @@
                 {% endif %}
               </li>
             {% endwith %}
-
-          {% empty %}
-            <li>Aucune carte paramétrée.</li>
           {% endfor %}
+
         </ul>
+      {% empty %}
+        <p>Aucune carte paramétrée.</p>
       {% endfor %}
 
       <h2 id="title-comptes">Comptes</h2>
