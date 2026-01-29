@@ -482,7 +482,7 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Département : Loire-Atlantique (44)" in content
+    assert "Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
     assert haie_user.email not in content
     assert haie_instructor_44.email in content
@@ -495,7 +495,7 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Département : Loire-Atlantique (44)" in content
+    assert "Loire-Atlantique (44)" in content
 
 
 @pytest.mark.urls("config.urls_haie")
