@@ -1,0 +1,78 @@
+<div class="fr-table hedge-summary-table" id="hedges-summary-table">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <caption>
+            <div class="fr-table__caption__desc">
+              <strong>Détail par type de haie ou alignement d'arbres</strong>
+            </div>
+          </caption>
+          <thead>
+            <tr>
+              <th class="fr-cell--fixed" role="columnheader">Type</th>
+              <th colspan="2">À détruire</th>
+              <th colspan="2">À planter</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-row-key="4">
+              <th class="fr-cell--fixed" scope="row">
+                Dégradée ou résiduelle basse <span class="fr-text">(type 1)</span>
+              </th>
+              <td>{{ hedges.degradee.to_remove.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.degradee.to_remove.names|default:"-" }}</td>
+              <td>{{ hedges.degradee.to_plant.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.degradee.to_plant.names|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="3">
+              <th class="fr-cell--fixed" scope="row">
+                Buissonnante basse <span class="fr-text">(type 2)</span>
+              </th>
+              <td>{{ hedges.buissonnante.to_remove.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.buissonnante.to_remove.names|default:"-" }}</td>
+              <td>{{ hedges.buissonnante.to_plant.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.buissonnante.to_plant.names|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="2">
+              <th class="fr-cell--fixed" scope="row">
+                Arbustive <span class="fr-text">(type 3)</span>
+              </th>
+              <td>{{ hedges.arbustive.to_remove.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.arbustive.to_remove.names|default:"-" }}</td>
+              <td>{{ hedges.arbustive.to_plant.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.arbustive.to_plant.names|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="1">
+              <th class="fr-cell--fixed" scope="row">
+                Mixte <span class="fr-text">(type 5)</span>
+              </th>
+              <td>{{ hedges.mixte.to_remove.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.mixte.to_remove.names|default:"-" }}</td>
+              <td>{{ hedges.mixte.to_plant.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.mixte.to_plant.names|default:"-" }}</td>
+            </tr>
+            <tr data-row-key="4" class="total-row">
+              <th class="fr-cell--fixed" scope="row">Total haies</th>
+              <td colspan="2">
+                <b> {{ hedges.n_alignement.to_remove.length|floatformat:"0g" }} m </b>
+              </td>
+              <td colspan="2">
+                <b> {{ hedges.n_alignement.to_plant.length|floatformat:"0g" }} m </b>
+              </td>
+            </tr>
+            <tr data-row-key="4">
+              <th class="fr-cell--fixed" scope="row">
+                Alignement d'arbres <span class="fr-text">(type 4)</span>
+              </th>
+              <td>{{ hedges.alignement.to_remove.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.alignement.to_remove.names|default:"-" }}</td>
+              <td>{{ hedges.alignement.to_plant.length|floatformat:"0g" }} m</td>
+              <td>{{ hedges.alignement.to_plant.names|default:"-" }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
