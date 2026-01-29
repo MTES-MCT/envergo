@@ -23,7 +23,7 @@ from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie
+from envergo.moulinette.models import ConfigHaie, Criterion
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
@@ -748,4 +748,22 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
 
+        # Get activation maps for criteria in regulations
+        maps_regulation_list = [
+            "natura2000_haie",
+            "reserves_naturelles",
+            "code_rural_haie",
+            "sites_proteges_haie",
+        ]
+        grouped_criteria = (
+            Criterion.objects.select_related("regulation")
+            .select_related("activation_map")
+            .defer("activation_map__geometry")
+            .filter(regulation__regulation__in=maps_regulation_list)
+            .filter(activation_map__departments__contains=[self.department.department])
+            .order_by("regulation__regulation", "activation_map__name", "id")
+            .distinct("regulation__regulation", "activation_map__name", "id")
+        )
+
+        context["grouped_criteria"] = grouped_criteria
         return context
