@@ -529,20 +529,39 @@ def test_confighaie_settings_view_map_display(
         activation_mode="department_centroid",
     )
 
-    n2000_regulation = RegulationFactory(
+    regulation_reserves_naturelles = RegulationFactory(
+        regulation="reserves_naturelles",
+        has_perimeters=True,
+    )
+    perimeter_reserves_naturelles = PerimeterFactory(
+        name="N2000 Bizous",
+        activation_map=bizous_town_center,
+        regulations=[regulation_reserves_naturelles],
+    )
+    CriterionFactory(
+        title="Réserves Naturelles > RN Bizous",
+        regulation=regulation_reserves_naturelles,
+        perimeter=perimeter_reserves_naturelles,
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturelles",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    ),
+
+    regulation_natura2000_haie = RegulationFactory(
         regulation="natura2000_haie",
         has_perimeters=True,
         evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRegulation",
+        weight=2,
     )
-    n2000_perimeter = PerimeterFactory(
+    perimeter_natura2000_haie = PerimeterFactory(
         name="N2000 Bizous",
         activation_map=bizous_town_center,
-        regulations=[n2000_regulation],
+        regulations=[regulation_natura2000_haie],
     )
     CriterionFactory(
         title="Natura 2000 Haie > Haie Bizous",
-        regulation=n2000_regulation,
-        perimeter=n2000_perimeter,
+        regulation=regulation_natura2000_haie,
+        perimeter=perimeter_natura2000_haie,
         evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
@@ -550,8 +569,8 @@ def test_confighaie_settings_view_map_display(
     )
     CriterionFactory(
         title="Natura 2000 Haie > Haie Bizous après 2020",
-        regulation=n2000_regulation,
-        perimeter=n2000_perimeter,
+        regulation=regulation_natura2000_haie,
+        perimeter=perimeter_natura2000_haie,
         evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
@@ -566,7 +585,7 @@ def test_confighaie_settings_view_map_display(
     # THEN department config page is displayed
     assert response.status_code == 200
     # AND only one criterion is in context_data
-    assert len(response.context_data["grouped_criteria"]) == 1
+    assert len(response.context_data["grouped_criteria"]) == 2
     # AND activation map bizou is in page
     content = response.content.decode()
     assert bizous_town_center.name in content
