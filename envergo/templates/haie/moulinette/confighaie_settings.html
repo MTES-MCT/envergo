@@ -29,41 +29,43 @@
         Pour signaler une erreur ou poser une question, l'équipe Envergo est disponible.
       </p>
 
-      {% regroup grouped_criteria by regulation as regulation_list %}
       {% for regulation in regulation_list %}
-        <h3 class="fr-h5">{{ regulation.grouper }}</h3>
-
-        <ul class="fr-mb-3w">
-          {% for criterion in regulation.list %}
-            {% with map=criterion.activation_map %}
-              <li class="fr-mb-2w">
-                <p class="fr-mb-1w">
-                  <strong>{{ map.name }}</strong>
-                </p>
-                <p class="fr-mb-1w">
-                  <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
-                </p>
-                {% if map.source %}
-                  <p class="fr-hint-text fr-mb-1w">
-                    <strong>Source :</strong>
-                    {{ map.source|safe|linebreaksbr|urlize_html }}
+        <h3 class="fr-h5">{{ regulation.title }}</h3>
+        {% if regulation.regulation in grouped_criteria %}
+          <ul class="fr-mb-3w">
+            {% for criterion in grouped_criteria|get_item:regulation.regulation %}
+              {% with map=criterion.activation_map %}
+                <li class="fr-mb-2w">
+                  <p class="fr-mb-1w">
+                    <strong>{{ map.name }}</strong>
                   </p>
-                {% endif %}
-                {% if map.file %}
-                  <div>
-                    <a class="fr-link fr-icon-download-line fr-link--icon-right"
-                       download="true"
-                       target="_self"
-                       href="{{ map.file.url }}">{{ map.file }}</a>
-                  </div>
-                {% endif %}
-              </li>
-            {% endwith %}
-          {% endfor %}
+                  <p class="fr-mb-1w">
+                    <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
+                  </p>
+                  {% if map.source %}
+                    <p class="fr-hint-text fr-mb-1w">
+                      <strong>Source :</strong>
+                      {{ map.source|safe|linebreaksbr|urlize_html }}
+                    </p>
+                  {% endif %}
+                  {% if map.file %}
+                    <div>
+                      <a class="fr-link fr-icon-download-line fr-link--icon-right"
+                         download="true"
+                         target="_self"
+                         href="{{ map.file.url }}">{{ map.file }}</a>
+                    </div>
+                  {% endif %}
+                </li>
+              {% endwith %}
+            {% endfor %}
 
-        </ul>
-      {% empty %}
-        <p>Aucune carte paramétrée.</p>
+          </ul>
+        {% else %}
+          <p>
+            <em>Aucune carte paramétrée.</em>
+          </p>
+        {% endif %}
       {% endfor %}
 
       <h2 id="title-comptes">Comptes</h2>

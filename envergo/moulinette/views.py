@@ -1,5 +1,7 @@
 import json
 from collections import defaultdict
+from itertools import groupby
+from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -23,7 +25,7 @@ from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, Criterion
+from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
@@ -759,10 +761,19 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         ]
         # Retrieve criteria filtered by regulation in MAPS_REGULATION_LIST, filtered by department,
         # ordered by regulation display order, with unique activation map to be regrouped by regulation
-        grouped_criteria = (
+        regulation_list = Regulation.objects.filter(regulation__in=MAPS_REGULATION_LIST)
+
+        criteria_list = (
             Criterion.objects.select_related("regulation")
             .select_related("activation_map")
-            .defer("activation_map__geometry")
+            .only(
+                "regulation__regulation",
+                "activation_map__name",
+                "activation_map__file",
+                "activation_map__description",
+                "activation_map__source",
+                "activation_map__departments",
+            )
             .filter(regulation__regulation__in=MAPS_REGULATION_LIST)
             .filter(activation_map__departments__contains=[self.department.department])
             .order_by(
@@ -777,5 +788,10 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             )
         )
 
-        context["grouped_criteria"] = grouped_criteria
+        grouped_criteria_by_regulation = {
+            k: list(v)
+            for k, v in groupby(criteria_list, key=attrgetter("regulation.regulation"))
+        }
+        context["regulation_list"] = regulation_list
+        context["grouped_criteria"] = grouped_criteria_by_regulation
         return context
