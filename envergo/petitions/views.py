@@ -1133,7 +1133,7 @@ class PetitionProjectInstructorConsultationsView(
     """View for managing invitation tokens (consultations)"""
 
     template_name = "haie/petitions/instructor_view_consultations.html"
-    event_action = "consultation_tokens"
+    event_action = None  # do not log event
 
     def has_view_permission(self, request, object):
         """Only department administratons can see this page"""
@@ -1399,14 +1399,15 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             try:
                 update_demarches_simplifiees_status(self.object, new_ds_status)
+                raise DemarchesSimplifieesError(message="DS message not sent")
             except DemarchesSimplifieesError as e:
                 logger.error(e)
                 form.add_error(
                     None,
                     mark_safe(
-                        f"Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste, "
-                        f"<a href='{reverse("contact_us")}'>contactez l'équipe du Guichet Unique de la Haie</a> en "
-                        f"indiquant l'identifiant du dossier."
+                        f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
+                        <a href='{reverse("contact_us")}'>contactez l'équipe du Guichet Unique de la Haie</a> en
+                        indiquant l'identifiant du dossier."""
                     ),
                 )
                 return self.form_invalid(form)
