@@ -922,15 +922,16 @@ div.title-with-link-container {
   }
 
   td {
-    height: 72px;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
     max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 
-    a {
+    @supports (selector(:has(*))) {
+      &:has(.more.fr-collapse--expanded) .ellipsis {
+        display: none;
+      }
+    }
+
+    a,
+    button {
       font-size: 0.875rem;
     }
   }

@@ -221,7 +221,7 @@ def request_for_info_message():
 class RequestAdditionalInfoForm(forms.Form):
     """Let an instructor pause the instruction and request for more information."""
 
-    response_due_date = forms.DateField(
+    due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
         required=True,
         initial=three_months_from_now,

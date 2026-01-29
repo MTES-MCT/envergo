@@ -14,8 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.exceptions import SuspiciousOperation
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -45,6 +44,7 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.list import MultipleObjectMixin
 from fiona import Feature, Geometry, Properties
 from pyproj import Transformer
 from shapely.ops import transform
@@ -72,7 +72,9 @@ from envergo.petitions.forms import (
     SimulationForm,
 )
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
+    LOG_TYPES,
     STAGES,
     InvitationToken,
     LatestMessagerieAccess,
@@ -247,7 +249,10 @@ class PetitionProjectCreate(FormView):
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
                 petition_project.save()
 
-                StatusLog.objects.create(petition_project=petition_project)
+                StatusLog.objects.create(
+                    petition_project=petition_project,
+                    update_comment="Création initiale",
+                )
 
                 Simulation.objects.create(
                     project=petition_project,
@@ -1294,7 +1299,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
 
 class PetitionProjectInstructorProcedureView(
-    BasePetitionProjectInstructorView, FormView
+    BasePetitionProjectInstructorView, MultipleObjectMixin, FormView
 ):
     """View for display and edit the petition project procedure by the instructor"""
 
@@ -1302,49 +1307,34 @@ class PetitionProjectInstructorProcedureView(
     template_name = "haie/petitions/instructor_view_procedure.html"
     paginate_by = 10
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object_list = self.object.status_history.select_related(
+            "created_by"
+        ).order_by("-created_at")
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object_list = self.object.status_history.select_related(
+            "created_by"
+        ).order_by("-created_at")
+        return super().post(request, *args, **kwargs)
+
     def get_initial(self):
         initial = super().get_initial()
-        initial["stage"] = self.object.current_stage
-        initial["decision"] = self.object.current_decision
+        initial["stage"] = self.object.stage
+        initial["decision"] = self.object.decision
 
         return initial
 
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
-        obj = self.object
-        history_qs = obj.status_history.select_related("created_by").order_by(
-            "-created_at"
-        )
-        paginator = Paginator(history_qs, self.paginate_by)
-
-        page_number = self.request.GET.get("page")
-        try:
-            page_obj = paginator.page(page_number)
-        except PageNotAnInteger:
-            page_obj = paginator.page(1)
-        except EmptyPage:
-            page_obj = paginator.page(paginator.num_pages)
-
-        # Prefetch previous log in the current page
-        start = max(
-            page_obj.start_index() - 2, 0
-        )  # -1 for 0 index, -1 to get previous log
-        end = page_obj.end_index()
-        logs = list(history_qs[start:end])
-        for i, log in enumerate(logs):
-            log.previous_log = logs[i + 1] if i + 1 < len(logs) else None
-
-        # Drop the extra item (first one) if it's not part of this page
-        if page_obj.number > 1:
-            logs = logs[1:]
-
         context.update(
             {
-                "object_list": logs,
-                "paginator": paginator,
-                "page_obj": page_obj,
-                "is_paginated": paginator.num_pages > 1,
                 "STAGES": STAGES,
+                "DECISIONS": DECISIONS,
             }
         )
 
@@ -1352,7 +1342,7 @@ class PetitionProjectInstructorProcedureView(
         # in the "instruction" phase
         if self.has_change_permission(
             self.request, self.object
-        ) and obj.current_stage.startswith("instruction"):
+        ) and self.object.stage.startswith("instruction"):
             request_info_form = RequestAdditionalInfoForm()
             resume_processing_form = ResumeProcessingForm()
             context.update(
@@ -1387,11 +1377,21 @@ class PetitionProjectInstructorProcedureView(
             )
             notify(message, "haie")
 
+        if self.object.is_additional_information_requested:
+            form.add_error(
+                None,
+                ValidationError(
+                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
+                    code="modification_while_paused",
+                ),
+            )
+            return self.form_invalid(form)
+
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
-        previous_stage = self.object.current_stage
-        previous_decision = self.object.current_decision
+        previous_stage = self.object.stage
+        previous_decision = self.object.decision
 
         previous_ds_status = self.object.demarches_simplifiees_state
         new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
@@ -1421,6 +1421,7 @@ class PetitionProjectInstructorProcedureView(
                 self.request,
                 reference=self.object.reference,
                 etape_i=previous_stage,
+                department=self.object.get_department_code(),
                 etape_f=log.stage,
                 decision_i=previous_decision,
                 decision_f=log.decision,
@@ -1443,7 +1444,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
     http_method_names = ["post"]
 
     def get_form_class(self):
-        if self.object.is_paused:
+        if self.object.is_additional_information_requested:
             form_class = ResumeProcessingForm
         else:
             form_class = RequestAdditionalInfoForm
@@ -1464,27 +1465,34 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor requested additional data."""
 
         project = self.object
-        status = project.current_status
 
         try:
             with transaction.atomic():
-                # Update data model
-                status.suspension_date = timezone.now().date()
-                status.info_receipt_date = None
-                status.original_due_date = status.due_date
-                status.response_due_date = form.cleaned_data["response_due_date"]
-                status.due_date = status.response_due_date
-                status.suspended_by = self.request.user
-                status.save()
+                # Create a new suspension log entry
+                StatusLog.objects.create(
+                    petition_project=project,
+                    type=LOG_TYPES.suspension,
+                    due_date=form.cleaned_data["due_date"],
+                    original_due_date=project.due_date,
+                    created_by=self.request.user,
+                    update_comment="Suspension de l’instruction, message envoyé au demandeur.",
+                )
 
                 # Send DS Message
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 
                 if ds_response is None or ds_response.get("errors") is not None:
-                    # We raise an exception to make sure the data model transaction
-                    # is aborted
-                    raise DemarchesSimplifieesError(message="DS message not sent")
+                    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+                        messages.info(
+                            self.request,
+                            """L'accès à l'API démarches simplifiées n'est pas activée.
+                            Le message n'est pas envoyé""",
+                        )
+                    else:
+                        # We raise an exception to make sure the data model transaction
+                        # is aborted
+                        raise DemarchesSimplifieesError(message="DS message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1543,18 +1551,30 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         """Instructor received the requested additional info."""
 
         project = self.object
-        status = project.current_status
+        suspension = project.latest_suspension
 
-        # Update model data
         # Compute the new due date, that is the original due date + number of interruption days
         # Note: if you modify this rule, you must apply the same update in the sync_new_due_date.js file
-        status.info_receipt_date = form.cleaned_data["info_receipt_date"]
-        interruption_days = status.info_receipt_date - status.suspension_date
-        if status.original_due_date:
-            status.due_date = status.original_due_date + interruption_days
+        info_receipt_date = form.cleaned_data["info_receipt_date"]
+        interruption_days = info_receipt_date - suspension.created_at.date()
+        if suspension.original_due_date:
+            new_due_date = suspension.original_due_date + interruption_days
         else:
-            status.due_date = None
-        status.save()
+            new_due_date = None
+
+        # Create a new resumption log entry
+        StatusLog.objects.create(
+            petition_project=project,
+            type=LOG_TYPES.resumption,
+            info_receipt_date=info_receipt_date,
+            due_date=new_due_date,
+            created_by=self.request.user,
+            update_comment=(
+                "Reprise de l’instruction, date d'échéance ajustée."
+                if new_due_date
+                else "Reprise de l’instruction."
+            ),
+        )
 
         # Send Mattermost notification
         haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)

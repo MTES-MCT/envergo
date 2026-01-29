@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.gis.db.models.functions import Centroid
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import floatformat
@@ -270,12 +271,12 @@ TRAVAUX_CHOICES = (
     (
         "destruction",
         mark_safe(
-            """Destruction<br />
+            f"""Destruction<br />
 <span class="fr-hint-text">
 Toute intervention supprimant définitivement la végétation :
 arrachage ; « déplacement » de haie ;
 coupe à blanc sur essences qui ne recèpent pas
-(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+(<a href="{settings.HAIE_FAQ_URLS["TREE_SPECIES_COPPICING_CAPACITY"]}"
 target="_blank" rel="noopener">voir liste</a>) ;
 entretien sévère et récurrent ; etc.
 </span>
@@ -285,11 +286,11 @@ entretien sévère et récurrent ; etc.
     (
         "entretien",
         mark_safe(
-            """Entretien<br />
+            f"""Entretien<br />
 <span class="fr-hint-text">
     Intervention qui permet la repousse de la végétation :
     élagage, taille, coupe à blanc sur une essence capable de recéper
-    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+    (<a href="{settings.HAIE_FAQ_URLS["TREE_SPECIES_COPPICING_CAPACITY"]}"
     target="_blank" rel="noopener">voir liste</a>), etc.
 </span>
                     """
@@ -395,12 +396,11 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if not any(on_pac_values):
                 self.add_error(
-                    "localisation_pac",
+                    "haies",
                     ValidationError(
-                        """Il est indiqué que « oui, au moins une des haies » est située
-                        sur une parcelle PAC, mais aucune des haies saisies n’est marquée
-                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                        les haies.""",
+                        """ Aucune haie saisie n’a été marquée sur parcelle PAC. Cliquer sur "Modifier les
+                        haies" et indiquer lesquelles sont situées sur parcelle PAC (pour cela, cliquer sur le tracé de
+                        haie ou sur "Description").""",
                         code="inconsistent_hedges",
                     ),
                 )

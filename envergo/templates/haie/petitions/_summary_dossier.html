@@ -42,18 +42,18 @@
     </div>
     <div class="fr-col-12 fr-col-sm-4 fr-pb-2w fr-text--sm">
       {% if user|has_edit_permission:petition_project %}
-        <div>{% stage_badge petition_project.current_stage %}</div>
-        {% if petition_project.current_decision != "unset" %}
-          <div>{% decision_badge petition_project.current_decision %}</div>
+        <div>{% stage_badge petition_project.stage %}</div>
+        {% if petition_project.decision != "unset" %}
+          <div>{% decision_badge petition_project.decision %}</div>
         {% endif %}
-        {% if petition_project.current_stage != "closed" %}
+        {% if petition_project.stage != "closed" %}
           <div class="fr-mt-2v">
             <div>
               <strong>Prochaine échéance :</strong>
             </div>
             <div>
-              {% if petition_project.is_paused %}
-                {% display_pause petition_project.current_status.response_due_date %}
+              {% if petition_project.is_additional_information_requested %}
+                {% display_pause petition_project.due_date %}
               {% else %}
                 {% display_due_date petition_project.due_date False %}
               {% endif %}
