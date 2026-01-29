@@ -1,3 +1,5 @@
+{% load utils %}
+
 <dialog id="modal-new-message"
         class="fr-modal"
         aria-labelledby="modal-new-message-title"
@@ -24,10 +26,8 @@
                   action="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">
               {% csrf_token %}
 
-              <div id="field-message_body" class="fr-my-2w">{% include '_field_snippet.html' with field=form.message_body %}</div>
-              <div id="field-additional_file" class="fr-my-2w">
-                {% include '_file_snippet.html' with field=form.additional_file %}
-              </div>
+              <div id="field-message_body" class="fr-my-2w">{% render_field form.message_body %}</div>
+              <div id="field-additional_file" class="fr-my-2w">{% render_field form.additional_file %}</div>
 
               <button type="submit"
                       class="fr-btn fr-btn--primary"

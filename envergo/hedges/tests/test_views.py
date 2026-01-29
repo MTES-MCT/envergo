@@ -24,14 +24,8 @@ def test_hedge_input_without_config_should_have_default_hedge_properties_form(cl
     res = client.get(url)
 
     assert res.status_code == 200
-    assert (
-        '<input type="checkbox" name="plantation-sur_parcelle_pac" id="id_plantation-sur_parcelle_pac">'
-        in res.content.decode()
-    )
-    assert (
-        '<input type="checkbox" name="plantation-connexion_boisement" id="id_plantation-connexion_boisement">'
-        not in res.content.decode()
-    )
+    assert 'name="plantation-sur_parcelle_pac"' in res.content.decode()
+    assert 'name="plantation-connexion_boisement"' not in res.content.decode()
 
 
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
@@ -46,27 +40,12 @@ def test_hedge_input_with_config_should_have_set_hedge_properties_form(client):
     res = client.get(url)
 
     assert res.status_code == 200
-    assert (
-        '<input type="checkbox" name="plantation-sur_parcelle_pac" id="id_plantation-sur_parcelle_pac">'
-        in res.content.decode()
-    )
-    assert (
-        '<input type="checkbox" name="plantation-connexion_boisement" id="id_plantation-connexion_boisement">'
-        in res.content.decode()
-    )
-    assert (
-        '<input type="checkbox" name="removal-connexion_boisement" id="id_removal-connexion_boisement">'
-        not in res.content.decode()
-    )
+    assert 'name="plantation-sur_parcelle_pac"' in res.content.decode()
+    assert 'name="plantation-connexion_boisement"' in res.content.decode()
+    assert 'name="removal-connexion_boisement"' not in res.content.decode()
 
-    assert (
-        '<input type="checkbox" name="plantation-essences_non_bocageres" id="id_plantation-essences_non_bocageres">'
-        not in res.content.decode()
-    )
-    assert (
-        '<input type="checkbox" name="removal-essences_non_bocageres" id="id_removal-essences_non_bocageres">'
-        in res.content.decode()
-    )
+    assert 'name="plantation-essences_non_bocageres"' not in res.content.decode()
+    assert 'name="removal-essences_non_bocageres"' in res.content.decode()
 
 
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")

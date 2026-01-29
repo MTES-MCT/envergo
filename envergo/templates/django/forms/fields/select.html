@@ -3,7 +3,7 @@
 <div id="form-group-{{ field.html_name }}"
      class="fr-select-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-select-group--error{% endif %}">
 
-  {% include '_label.html' %}
+  {% include 'django/forms/fields/label.html' %}
 
   {% if nest_field_class %}<div class="{{ nest_field_class }}">{% endif %}
 
@@ -15,7 +15,7 @@
 
     {% if nest_field_class %}</div>{% endif %}
 
-  {% if field.help_text and bottom_help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
+  {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
 
   {% if field.errors %}
     <p class="fr-error-text">

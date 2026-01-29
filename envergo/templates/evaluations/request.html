@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load evaluations static %}
+{% load evaluations static utils %}
 
 {% block title %}Demandez une avis réglementaire{% endblock %}
 
@@ -33,7 +33,7 @@
         <p>Elle est essentielle pour connaître les règles locales relatives à la Loi sur l'eau.</p>
       </div>
 
-      {% include '_field_snippet.html' with field=form.address %}
+      {% render_field form.address %}
 
       <label class="fr-label fr-mb-3w">
         Renseignez la ou les parcelles cadastrales concernées par le projet.
@@ -58,11 +58,11 @@
         <p>Ces paramètres nous permettront de réaliser l'avis réglementaire.</p>
       </div>
 
-      {% include '_field_snippet.html' with field=form.created_surface %}
-      {% include '_field_snippet.html' with field=form.existing_surface %}
-      {% include '_field_snippet.html' with field=form.application_number %}
-      {% include '_field_snippet.html' with field=form.project_description %}
-      {% include '_input_file_snippet.html' with field=form.additional_data %}
+      {% render_field form.created_surface %}
+      {% render_field form.existing_surface %}
+      {% render_field form.application_number %}
+      {% render_field form.project_description %}
+      {% render_field form.additional_data %}
 
     </fieldset>
 
@@ -73,10 +73,10 @@
         <p>Nous enverrons l'avis réglementaire à ces coordonnées.</p>
       </div>
 
-      {% include '_field_snippet.html' with field=form.urbanism_department_emails %}
-      {% include '_field_snippet.html' with field=form.project_owner_emails %}
-      {% include '_field_snippet.html' with field=form.project_owner_phone %}
-      {% include '_checkbox_snippet.html' with field=form.send_eval_to_project_owner %}
+      {% render_field form.urbanism_department_emails %}
+      {% render_field form.project_owner_emails %}
+      {% render_field form.project_owner_phone %}
+      {% render_field form.send_eval_to_project_owner %}
 
     </fieldset>
 

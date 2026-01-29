@@ -1,9 +1,11 @@
+{% load utils %}
+
 <h5 class="fr-mt-3w">Liste des espèces</h5>
 <form method="post"
       action="{% url 'petition_project_instructor_regulation_view' petition_project.reference current_regulation.slug %}">
   {% csrf_token %}
   <div id="field-onagre_number" class="fr-my-2w">
-    {% include '_field_snippet.html' with field=form.onagre_number %}
+    {% render_field form.onagre_number %}
     {% if is_department_instructor %}
       <button type="submit"
               class="fr-btn fr-btn--secondary"

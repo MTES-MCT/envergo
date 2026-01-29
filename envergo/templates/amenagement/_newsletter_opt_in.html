@@ -1,3 +1,5 @@
+{% load utils %}
+
 <div class="fr-follow fr-py-8w hide-print">
   <div class="fr-container">
     <div class="fr-grid-row">
@@ -18,8 +20,8 @@
                   action="{% url 'newsletter_opt_in' %}"
                   method="post">
               {% csrf_token %}
-              {% include '_field_snippet.html' with field=newsletter_opt_in_form.type %}
-              {% include '_field_snippet.html' with field=newsletter_opt_in_form.email %}
+              {% render_field newsletter_opt_in_form.type %}
+              {% render_field newsletter_opt_in_form.email %}
               <button class="fr-btn fr-mt-2w"
                       title="S‘abonner à notre lettre d’information"
                       type="submit">M'abonner</button>

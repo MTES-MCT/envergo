@@ -61,9 +61,7 @@ def test_moulinette_form_with_params_displays_the_form(client):
     full_url = f"{url}?{params}"
     res = client.get(full_url)
     assert res.status_code == 200
-    assert (
-        '<input type="text" name="created_surface" value="500"' in res.content.decode()
-    )
+    assert 'name="created_surface"' in res.content.decode()
 
 
 def test_moulinette_result_without_config(client):

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
-from envergo.moulinette.forms import DisplayIntegerField
+from envergo.moulinette.forms import DisplayIntegerField, UnitInput
 from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 logger = logging.getLogger(__name__)
@@ -38,8 +38,8 @@ class Bcae8Form(forms.Form):
         help_text="Si la valeur exacte est inconnue, une estimation est suffisante",
         required=True,
         min_value=0,
-        widget=forms.TextInput(
-            attrs={"placeholder": "En mètres", "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         display_unit="m",
         display_help_text="",

@@ -31,9 +31,9 @@
 
         {% include '_form_header.html' with form=form %}
 
-        <div class="form-section">{% include '_radio_snippet.html' with field=form.motif %}</div>
-        <div class="form-section">{% include '_radio_snippet.html' with field=form.reimplantation %}</div>
-        <div class="form-section">{% include '_radio_snippet.html' with field=form.localisation_pac %}</div>
+        <div class="form-section">{% render_field form.motif %}</div>
+        <div class="form-section">{% render_field form.reimplantation %}</div>
+        <div class="form-section">{% render_field form.localisation_pac %}</div>
 
         <div class="form-section">
           <div id="form-group-haies"

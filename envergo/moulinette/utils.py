@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -77,6 +78,15 @@ def get_moulinette_class_from_url(url):
     return cls
 
 
+def parse_surface(value):
+    """Make sure we remove whitespaces from input."""
+
+    if isinstance(value, str):
+        # The \s class matches all whitespaces (spaces, nbsp, tabs…)
+        value = re.sub(r"\s", "", value)
+    return value
+
+
 def compute_surfaces(data: QueryDict):
     """Compute all moulinette form surfaces.
 
@@ -90,9 +100,9 @@ def compute_surfaces(data: QueryDict):
     form urls, this utility method makes sure all the required surfaces are computed
     and provided to the moulinette
     """
-    created_surface = data.get("created_surface")
-    existing_surface = data.get("existing_surface")
-    final_surface = data.get("final_surface")
+    created_surface = parse_surface(data.get("created_surface"))
+    existing_surface = parse_surface(data.get("existing_surface"))
+    final_surface = parse_surface(data.get("final_surface"))
 
     # If too many values missing, we can't do anything
     if existing_surface is None and final_surface is None:
