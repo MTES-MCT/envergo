@@ -774,6 +774,11 @@ form#request-evaluation-form {
   box-shadow: inset 0 -2px 0 0 var(--border-plain-error);
 }
 
+.fr-input[inputmode="numeric"] {
+  display: inline-block;
+  max-width: 15rem;
+}
+
 /**
  * Misc stuff
  */

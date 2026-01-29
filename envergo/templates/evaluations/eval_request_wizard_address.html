@@ -32,12 +32,12 @@
 
       {% include '_form_header.html' with form=form %}
 
-      {% include '_field_snippet.html' with field=form.address %}
+      {% render_field form.address %}
       <div class="fr-info-text fr-mb-3w">
         Si le projet n'a pas d'adresse, sélectionnez le nom de la commune où il se situe majoritairement.
       </div>
-      {% include '_field_snippet.html' with field=form.application_number %}
-      {% include '_field_snippet.html' with field=form.project_description bottom_help_text=True %}
+      {% render_field form.application_number %}
+      {% render_field form.project_description %}
       {{ form.department.as_hidden }}
 
       <div class="fr-mt-6w fr-mb-3w fr-alert fr-alert--info">

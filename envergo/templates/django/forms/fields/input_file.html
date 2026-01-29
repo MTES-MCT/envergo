@@ -3,7 +3,7 @@
 <div id="form-group-{{ field.html_name }}"
      class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
 
-  {% include '_label.html' %}
+  {% include 'django/forms/fields/label.html' %}
 
   <div class="input-file-box">
 
