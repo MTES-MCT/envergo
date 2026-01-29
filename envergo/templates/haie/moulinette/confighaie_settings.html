@@ -31,12 +31,12 @@
 
       {% regroup grouped_criteria by regulation as regulation_list %}
       {% for regulation in regulation_list %}
-        <h3>{{ regulation.grouper }}</h3>
+        <h3 class="fr-h5">{{ regulation.grouper }}</h3>
 
-        <ul>
+        <ul class="fr-mb-3w">
           {% for criterion in regulation.list %}
             {% with map=criterion.activation_map %}
-              <li>
+              <li class="fr-mb-2w">
                 <p class="fr-mb-1w">
                   <strong>{{ map.name }}</strong>
                 </p>
@@ -59,6 +59,9 @@
                 {% endif %}
               </li>
             {% endwith %}
+
+          {% empty %}
+            <li>Aucune carte paramétrée.</li>
           {% endfor %}
         </ul>
       {% endfor %}
