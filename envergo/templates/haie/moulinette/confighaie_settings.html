@@ -70,7 +70,7 @@
 
       <h2 id="title-comptes">Comptes</h2>
 
-      <div>
+      <div class="fr-mb-2w">
         <p class="fr-mb-1w">
           <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
         </p>
@@ -80,7 +80,9 @@
             {% for member_email in department_members.instructors_emails %}<li>{{ member_email }}</li>{% endfor %}
           </ul>
         {% else %}
-          <p>Pas de compte instructeur pour ce département.</p>
+          <p>
+            <em>Pas de compte instructeur pour ce département.</em>
+          </p>
         {% endif %}
       </div>
 
