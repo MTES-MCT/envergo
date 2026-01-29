@@ -511,8 +511,9 @@ def test_confighaie_settings_view_map_display(
 ):
     """Test maps display in department setting view"""
 
+    # GIVEN a config haie
     DCConfigHaieFactory(department=loire_atlantique_department)
-    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    # GIVEN a map in department
     bizous_town_center.departments = [loire_atlantique_department.department]
     bizous_town_center.save()
 
@@ -548,14 +549,17 @@ def test_confighaie_settings_view_map_display(
         evaluator_settings={"result": "soumis"},
     )
 
-    # GIVEN an instructor user
+    # AS instructor user in 44
     client.force_login(haie_instructor_44)
     # WHEN they visit department setting page
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url)
     # THEN department config page is displayed
+    assert response.status_code == 200
+    # AND activation map bizou is in page
     content = response.content.decode()
-
-    assert n2000_perimeter.activation_map.name in content
+    assert bizous_town_center.name in content
+    assert france_map.name not in content
 
 
 @pytest.mark.urls("config.urls_haie")
