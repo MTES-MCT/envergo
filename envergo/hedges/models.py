@@ -1,6 +1,7 @@
 import operator
 import uuid
 from functools import reduce
+from typing import Self
 
 import shapely
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -186,12 +187,44 @@ class HedgeList(list[Hedge]):
         super().__init__(*args, **kwargs)
 
     @property
+    def names(self):
+        return ", ".join(h.id for h in self)
+
+    @property
     def length(self):
         return sum(h.length for h in self)
 
-    @property
-    def names(self):
-        return ", ".join(h.id for h in self)
+    def to_plant(self) -> Self:
+        return HedgeList([h for h in self if h.type == TO_PLANT])
+
+    def to_remove(self) -> Self:
+        return HedgeList([h for h in self if h.type == TO_REMOVE])
+
+    def pac(self) -> Self:
+        return HedgeList(
+            [h for h in self if h.is_on_pac and h.hedge_type != "alignement"]
+        )
+
+    def mixte(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "mixte"])
+
+    def arbustive(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "arbustive"])
+
+    def buissonnante(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "buissonnante"])
+
+    def degradee(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "degradee"])
+
+    def alignement(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "alignement"])
+
+    def n_alignement(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type != "alignement"])
+
+    def filter(self, f) -> Self:
+        return HedgeList([h for h in self if f(h)])
 
 
 class HedgeData(models.Model):
@@ -227,26 +260,48 @@ class HedgeData(models.Model):
         return box
 
     def hedges(self):
-        return [Hedge(**h) for h in self.data]
+        return HedgeList([Hedge(**h) for h in self.data])
 
     def hedges_to_plant(self):
-        return [Hedge(**h) for h in self.data if h["type"] == TO_PLANT]
+        return self.hedges().to_plant()
 
     def length_to_plant(self):
-        return sum(h.length for h in self.hedges_to_plant())
+        return self.hedges().to_plant().length
 
     def hedges_to_remove(self):
-        return [Hedge(**h) for h in self.data if h["type"] == TO_REMOVE]
+        return self.hedges().to_remove()
 
     def length_to_remove(self):
-        return sum(h.length for h in self.hedges_to_remove())
+        return self.hedges().to_remove().length
 
     def hedges_to_remove_pac(self):
-        return [
-            h
+        return self.hedges().to_remove().pac()
+
+    def hedges_to_plant_pac(self):
+        def pac_selection(h):
+            """Check if hedge must be taken into account for pac plantation."""
+            res = h.is_on_pac and h.hedge_type != "alignement"
+            if h.has_property("mode_plantation"):
+                res = res and h.prop("mode_plantation") == "plantation"
+            return res
+
+        return HedgeList([h for h in self.hedges_to_plant() if pac_selection(h)])
+
+    def length_to_plant_pac(self):
+        return self.hedges_to_plant_pac().length
+
+    def lineaire_detruit_pac(self):
+        return self.hedges_to_remove_pac().length
+
+    def lineaire_detruit_pac_including_alignement(self):
+        return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)
+
+    def lineaire_type_4_sur_parcelle_pac(self):
+        return sum(
+            h.length
             for h in self.hedges_to_remove()
-            if h.is_on_pac and h.hedge_type != "alignement"
-        ]
+            if h.is_on_pac and h.hedge_type == "alignement"
+        )
 
     def get_centroid_to_remove(self):
         hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
@@ -259,32 +314,6 @@ class HedgeData(models.Model):
             hedges_centroid.x, hedges_centroid.y
         )
         return code_department
-
-    def hedges_to_plant_pac(self):
-        def pac_selection(h):
-            """Check if hedge must be taken into account for pac plantation."""
-            res = h.is_on_pac and h.hedge_type != "alignement"
-            if h.has_property("mode_plantation"):
-                res = res and h.prop("mode_plantation") == "plantation"
-            return res
-
-        return [h for h in self.hedges_to_plant() if pac_selection(h)]
-
-    def length_to_plant_pac(self):
-        return sum(h.length for h in self.hedges_to_plant_pac())
-
-    def lineaire_detruit_pac(self):
-        return sum(h.length for h in self.hedges_to_remove_pac())
-
-    def lineaire_detruit_pac_including_alignement(self):
-        return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)
-
-    def lineaire_type_4_sur_parcelle_pac(self):
-        return sum(
-            h.length
-            for h in self.hedges_to_remove()
-            if h.is_on_pac and h.hedge_type == "alignement"
-        )
 
     def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
         """HedgeData filter
@@ -325,16 +354,16 @@ class HedgeData(models.Model):
             return result
 
         if hedge_to == TO_REMOVE:
-            hedges_filtered = self.hedges_to_remove()
+            hedges_filtered = self.hedges().to_remove()
         elif hedge_to == TO_PLANT:
-            hedges_filtered = self.hedges_to_plant()
+            hedges_filtered = self.hedges().to_plant()
         else:
             raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
 
         if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
             raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
 
-        return HedgeList([hedge for hedge in hedges_filtered if hedge_selection(hedge)])
+        return hedges_filtered.filter(hedge_selection)
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
