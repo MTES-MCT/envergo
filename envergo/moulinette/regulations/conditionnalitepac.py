@@ -39,7 +39,7 @@ class Bcae8Form(forms.Form):
         required=True,
         min_value=0,
         widget=UnitInput(
-            unit="m", attrs={"placeholder": "8000", "inputmode": "numeric"}
+            unit="m", attrs={"placeholder": "2500", "inputmode": "numeric"}
         ),
         display_unit="m",
         display_help_text="",
