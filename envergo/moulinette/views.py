@@ -751,7 +751,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         context["department_members"] = departement_members_dict
 
         # Get activation maps for criteria in regulations related to this department
-        maps_regulation_list = [
+        MAPS_REGULATION_LIST = [
             "natura2000_haie",
             "reserves_naturelles",
             "code_rural_haie",
@@ -761,10 +761,14 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             Criterion.objects.select_related("regulation")
             .select_related("activation_map")
             .defer("activation_map__geometry")
-            .filter(regulation__regulation__in=maps_regulation_list)
+            .filter(regulation__regulation__in=MAPS_REGULATION_LIST)
             .filter(activation_map__departments__contains=[self.department.department])
-            .order_by("regulation__regulation", "activation_map__name")
-            .distinct("regulation__regulation", "activation_map__name")
+            .order_by(
+                "regulation__weight", "regulation__regulation", "activation_map__name"
+            )
+            .distinct(
+                "regulation__weight", "regulation__regulation", "activation_map__name"
+            )
         )
 
         context["grouped_criteria"] = grouped_criteria
