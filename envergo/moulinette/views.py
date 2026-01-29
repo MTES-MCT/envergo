@@ -761,8 +761,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             .defer("activation_map__geometry")
             .filter(regulation__regulation__in=maps_regulation_list)
             .filter(activation_map__departments__contains=[self.department.department])
-            .order_by("activation_map__name", "id")
-            .distinct("activation_map__name", "id")
+            .order_by("regulation__regulation", "activation_map__name", "id")
+            .distinct("regulation__regulation", "activation_map__name", "id")
         )
 
         context["grouped_criteria"] = grouped_criteria
