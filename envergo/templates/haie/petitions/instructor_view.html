@@ -44,8 +44,16 @@
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
 
-      <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
-      <ul class="instructor-view-list">
+      <h6>Linéaires</h6>
+
+      <div class="fr-my-3w">
+        <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
+                type="button"
+                data-fr-opened="false"
+                aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
+      </div>
+
+      <ul class="instructor-view-list fr-mb-3w">
         {% include "haie/petitions/_item.html" with label="Total linéaire à détruire" value=length_to_remove|floatformat:"0g" unit="m" %}
         {% include "haie/petitions/_item.html" with label="Mode de destruction" %}
         {% for mode, hedges_by_mode in hedge_to_remove_by_destruction_mode.items %}
@@ -58,9 +66,8 @@
         {% endfor %}
       </ul>
 
-      <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Plantation</h3>
       {% if hedge_to_plant_by_plantation_mode %}
-        <ul class="instructor-view-list">
+        <ul class="instructor-view-list fr-mb-3w">
           {% include "haie/petitions/_item.html" with label="Total linéaire à planter, renforcer ou reconnecter" value=length_to_plant|floatformat:"0g" unit="m" %}
           {% for mode, hedges_by_mode in hedge_to_plant_by_plantation_mode.items %}
             <li class="fr-pl-4w">
@@ -75,17 +82,14 @@
         </ul>
       {% else %}
         {{ hedge_to_plant_by_plantation_mode }}
-        <ul class="instructor-view-list">
+        <ul class="instructor-view-list fr-mb-3w">
           {% include "haie/petitions/_item.html" with label="Total linéaire à planter" value=length_to_plant|floatformat:"0g" unit="m" %}
           {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=plantation_ratio|floatformat:"2g" %}
         </ul>
       {% endif %}
-      <div class="fr-my-2w">
-        <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
-                type="button"
-                data-fr-opened="false"
-                aria-controls="hedge-input-modal">Ouvrir la carte des haies</button>
-      </div>
+
+      {% include 'hedges/_hedge_summary_table.html' with hedges=haies.hedges %}
+
     </section>
 
     <section id="section-moulinette-result" class="fr-my-4w">
