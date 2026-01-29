@@ -1133,6 +1133,7 @@ class PetitionProjectInstructorConsultationsView(
     """View for managing invitation tokens (consultations)"""
 
     template_name = "haie/petitions/instructor_view_consultations.html"
+    event_action = None  # do not log event
 
     def has_view_permission(self, request, object):
         """Only department administratons can see this page"""
