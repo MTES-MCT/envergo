@@ -764,10 +764,14 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             .filter(regulation__regulation__in=MAPS_REGULATION_LIST)
             .filter(activation_map__departments__contains=[self.department.department])
             .order_by(
-                "regulation__weight", "regulation__regulation", "activation_map__name"
+                "regulation__display_order",
+                "regulation__regulation",
+                "activation_map__name",
             )
             .distinct(
-                "regulation__weight", "regulation__regulation", "activation_map__name"
+                "regulation__display_order",
+                "regulation__regulation",
+                "activation_map__name",
             )
         )
 
