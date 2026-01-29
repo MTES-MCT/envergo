@@ -761,7 +761,9 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         ]
         # Retrieve criteria filtered by regulation in MAPS_REGULATION_LIST, filtered by department,
         # ordered by regulation display order, with unique activation map to be regrouped by regulation
-        regulation_list = Regulation.objects.filter(regulation__in=MAPS_REGULATION_LIST)
+        regulation_list = Regulation.objects.filter(
+            regulation__in=MAPS_REGULATION_LIST
+        ).order_by("display_order")
 
         criteria_list = (
             Criterion.objects.select_related("regulation")
