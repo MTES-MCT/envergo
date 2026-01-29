@@ -46,16 +46,10 @@
         <legend class="fr-fieldset__legend">Porteur de projet</legend>
 
         <div id="element-{{ form.send_eval_to_project_owner.name }}"
-             class="fr-fieldset__element">
-          {% render_field form.send_eval_to_project_owner %}
-        </div>
+             class="fr-fieldset__element">{% render_field form.send_eval_to_project_owner %}</div>
 
-        <div class="only-if-send-eval-checked fr-fieldset__element">
-          {% render_field form.project_owner_emails %}
-        </div>
-        <div class="only-if-send-eval-checked fr-fieldset__element">
-          {% render_field form.project_owner_phone %}
-        </div>
+        <div class="only-if-send-eval-checked fr-fieldset__element">{% render_field form.project_owner_emails %}</div>
+        <div class="only-if-send-eval-checked fr-fieldset__element">{% render_field form.project_owner_phone %}</div>
 
         <div id="send-eval-hint"
              class="only-if-send-eval-checked fr-fieldset__element">

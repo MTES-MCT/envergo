@@ -27,9 +27,7 @@
               {% csrf_token %}
 
               <div id="field-message_body" class="fr-my-2w">{% render_field form.message_body %}</div>
-              <div id="field-additional_file" class="fr-my-2w">
-                {% render_field form.additional_file %}
-              </div>
+              <div id="field-additional_file" class="fr-my-2w">{% render_field form.additional_file %}</div>
 
               <button type="submit"
                       class="fr-btn fr-btn--primary"
