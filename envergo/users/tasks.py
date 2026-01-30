@@ -66,7 +66,11 @@ def send_account_activation_email(user_email, side_id, activate_url):
 
 @app.task
 def send_new_account_notification(user_id):
-    """Warn admins of new haie account registrations."""
+    """Warn admins of new haie account registrations.
+    Only used for new accounts on GUH.
+
+    TODO: fix base url if not on GUH
+    """
 
     try:
         user = User.objects.get(id=user_id)
@@ -77,9 +81,7 @@ def send_new_account_notification(user_id):
     anon_email = f"{user[0]}***@{domain}"
 
     user_url = reverse("admin:users_user_change", args=[user_id])
-    base_url = get_base_url(
-        settings.ENVERGO_AMENAGEMENT_DOMAIN
-    )  # TODO: fix base url when on haie site
+    base_url = get_base_url(settings.ENVERGO_HAIE_DOMAIN)
     full_user_url = f"{base_url}{user_url}"
 
     message_body = render_to_string(
