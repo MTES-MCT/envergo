@@ -759,12 +759,12 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             "code_rural_haie",
             "sites_proteges_haie",
         ]
-        # Retrieve criteria filtered by regulation in MAPS_REGULATION_LIST, filtered by department,
-        # ordered by regulation display order, with unique activation map to be regrouped by regulation
         regulation_list = Regulation.objects.filter(
             regulation__in=MAPS_REGULATION_LIST
         ).order_by("display_order")
 
+        # Retrieve criteria filtered by regulation in MAPS_REGULATION_LIST, filtered by department,
+        # ordered by regulation display order, with unique activation map to be regrouped by regulation
         criteria_list = (
             Criterion.objects.select_related("regulation")
             .select_related("activation_map")
@@ -776,7 +776,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 "activation_map__source",
                 "activation_map__departments",
             )
-            .filter(regulation__regulation__in=MAPS_REGULATION_LIST)
+            .filter(regulation__in=regulation_list)
             .filter(activation_map__departments__contains=[self.department.department])
             .order_by(
                 "regulation__display_order",
