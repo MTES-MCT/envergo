@@ -97,6 +97,19 @@ def ep_criteria(france_map):  # noqa
     return criteria
 
 
+def test_petition_projet_create_view_dispatch(client, site, haie_user):
+    """Test request GET on url "/project" """
+    project_url = reverse("petition_project_create")
+    response = client.get(project_url)
+    assert response.status_code == 302
+    assert response.url == "/"
+
+    client.force_login(haie_user)
+    response = client.get(project_url)
+    assert response.status_code == 302
+    assert response.url == "/projet/liste"
+
+
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
