@@ -26,7 +26,7 @@
       <p class="fr-hint-text">
         Ici sont recensées toutes les cartes utilisées dans le simulateur pour le département.
         Les fichiers sont téléchargeables pour consultation et vérification (format compatible QGIS).
-        Pour signaler une erreur ou poser une question, l'équipe Envergo est disponible.
+        Pour signaler une erreur ou poser une question, <a href="{% url 'contact_us' %}">l'équipe Envergo est disponible</a>.
       </p>
 
       {% for regulation in regulation_list %}
@@ -39,19 +39,12 @@
                   <p class="fr-mb-1w">
                     <strong>{{ map.name }}</strong>
                   </p>
-                  <p class="fr-mb-1w">
+                  <p class="fr-text--sm fr-mb-1w">
                     <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
                   </p>
-                  {% if map.source %}
-                    <p class="fr-hint-text fr-mb-1w">
-                      <strong>Source :</strong>
-                      {{ map.source|safe|linebreaksbr|urlize_html }}
-                    </p>
-                  {% endif %}
                   {% if map.file %}
-                    <div>
+                    <div class="fr-mb-1w">
                       <a class="fr-link fr-icon-download-line fr-link--icon-right"
-                         download="true"
                          target="_self"
                          href="{{ map.file.url }}">{{ map.file }}</a>
                     </div>
