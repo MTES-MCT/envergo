@@ -217,6 +217,14 @@ class PetitionProjectCreate(FormView):
 
     def dispatch(self, request, *args, **kwargs):
         # store alerts in the request object to notify admins if needed
+        if request.method == "GET":
+            if request.user.is_authenticated:
+                url = reverse("petition_project_list")
+            else:
+                url = reverse("home")
+
+            return HttpResponseRedirect(url)
+
         request.alerts = PetitionProjectCreationAlert(request)
         res = super().dispatch(request, *args, **kwargs)
 
