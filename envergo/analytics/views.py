@@ -24,6 +24,7 @@ from envergo.analytics.utils import log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_site_literal
+from envergo.utils.urls import extract_mtm_params
 
 
 class DisableVisitorCookie(RedirectView):
@@ -75,6 +76,9 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
         feedback = form.cleaned_data["feedback"]
         metadata = form.cleaned_data.get("moulinette_data", {})
         metadata["feedback"] = feedback
+        metadata.update(
+            {k: ", ".join(v) for k, v in extract_mtm_params(feedback_origin).items()}
+        )
 
         message_body = render_to_string(
             "analytics/mattermost_feedback_respond.txt",
@@ -123,6 +127,11 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         moulinette_data = form.cleaned_data.get("moulinette_data", {})
         if moulinette_data:
             metadata.update(moulinette_data)
+
+        feedback_origin = self.request.META.get("HTTP_REFERER")
+        metadata.update(
+            {k: ", ".join(v) for k, v in extract_mtm_params(feedback_origin).items()}
+        )
 
         feedback_origin = self.request.META.get("HTTP_REFERER")
         address = self.parse_address()
