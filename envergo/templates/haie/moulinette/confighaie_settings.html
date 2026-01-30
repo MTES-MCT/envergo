@@ -43,7 +43,7 @@
                     <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
                   </p>
                   {% if map.file %}
-                    <div class=”fr-mb-1w”>
+                    <div class="fr-mb-1w">
                       <a class="fr-link fr-icon-download-line fr-link--icon-right"
                          target="_self"
                          href="{{ map.file.url }}">{{ map.file }}</a>
@@ -95,6 +95,7 @@
       </div>
 
     </div>
-  {% endblock %}
+  </div>
+{% endblock %}
 
-  {% block after-content %}{% endblock %}
+{% block after-content %}{% endblock %}
