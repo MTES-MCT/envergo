@@ -23,6 +23,21 @@ from envergo.geodata.utils import (
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
 
+HEDGE_TYPES = (
+    ("degradee", "Haie dégradée ou résiduelle basse"),
+    ("buissonnante", "Haie buissonnante basse"),
+    ("arbustive", "Haie arbustive"),
+    ("alignement", "Alignement d'arbres"),
+    ("mixte", "Haie mixte"),
+)
+
+HEDGE_PROPERTIES = (
+    ("proximite_mare", "Mare à moins de 200 m"),
+    ("proximite_point_eau", "Mare ou ruisseau à moins de 10 m"),
+    ("connexion_boisement", "Connectée à un boisement ou à une autre haie"),
+    ("vieil_arbre", "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"),
+)
+
 R = 1.5  # Coefficient de replantation exigée
 
 # WGS84, geodetic coordinates, units in degrees
@@ -226,6 +241,34 @@ class HedgeList(list[Hedge]):
     def filter(self, f) -> Self:
         return HedgeList([h for h in self if f(h)])
 
+    def type(self, t) -> Self:
+        """Filter hedges by hedge type. Prefix with a "!" to negate the filter."""
+
+        # Make sure the type filter is valid
+        if t.replace("!", "") not in dict(HEDGE_TYPES).keys():
+            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+
+        if t.startswith("!"):
+            hedges = HedgeList([h for h in self if h.hedge_type != t.replace("!", "")])
+        else:
+            hedges = HedgeList([h for h in self if h.hedge_type == t])
+        return hedges
+
+    def prop(self, p) -> Self:
+        """Select hedges with a given prod. Prefix with "!" to negate the filter.
+
+        We also embed the hedges that just don't have the property.
+        """
+
+        if p.startswith("!"):
+            p = p.replace("!", "")
+            hedges = HedgeList(
+                [h for h in self if not h.prop(p) or not h.has_property(p)]
+            )
+        else:
+            hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
+        return hedges
+
 
 class HedgeData(models.Model):
     """Hedge data model.
@@ -330,40 +373,22 @@ class HedgeData(models.Model):
             ValueError: If hedge to or type argument has a wrong value
         """
 
-        def hedge_selection(hedge):
-            """Select h in hedges to return"""
-            result = True
-
-            # Check type_haie
-            if "!" in hedge_type:
-                result = result and not hedge.hedge_type == hedge_type.replace("!", "")
-            else:
-                result = result and hedge.hedge_type == hedge_type
-
-            # Check for each prop if
-            for prop in props:
-                operator_not = False
-                if "!" in prop:
-                    operator_not = True
-                    prop = prop.replace("!", "")
-                if hedge.has_property(prop):
-                    if operator_not:
-                        result = result and not hedge.prop(prop)
-                    else:
-                        result = result and hedge.prop(prop)
-            return result
-
-        if hedge_to == TO_REMOVE:
-            hedges_filtered = self.hedges().to_remove()
-        elif hedge_to == TO_PLANT:
-            hedges_filtered = self.hedges().to_plant()
-        else:
+        if hedge_to not in (TO_REMOVE, TO_PLANT):
             raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
 
-        if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
-            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+        hedges = self.hedges()
 
-        return hedges_filtered.filter(hedge_selection)
+        if hedge_to == TO_REMOVE:
+            hedges = hedges.to_remove()
+        elif hedge_to == TO_PLANT:
+            hedges = hedges.to_plant()
+
+        hedges = hedges.type(hedge_type)
+
+        for prop in props:
+            hedges = hedges.prop(prop)
+
+        return hedges
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
@@ -433,21 +458,6 @@ class HedgeData(models.Model):
                 return True
         return False
 
-
-HEDGE_TYPES = (
-    ("degradee", "Haie dégradée ou résiduelle basse"),
-    ("buissonnante", "Haie buissonnante basse"),
-    ("arbustive", "Haie arbustive"),
-    ("alignement", "Alignement d'arbres"),
-    ("mixte", "Haie mixte"),
-)
-
-HEDGE_PROPERTIES = (
-    ("proximite_mare", "Mare à moins de 200 m"),
-    ("proximite_point_eau", "Mare ou ruisseau à moins de 10 m"),
-    ("connexion_boisement", "Connectée à un boisement ou à une autre haie"),
-    ("vieil_arbre", "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"),
-)
 
 SPECIES_GROUPS = Choices(
     ("amphibiens", "Amphibiens"),
