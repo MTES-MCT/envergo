@@ -105,7 +105,7 @@ class ActivateAccount(AnonymousRequiredMixin, MessageMixin, TemplateView):
                 messages.success(request, self.get_success_message())
 
                 if send_notification:
-                    send_new_account_notification.delay(user.id)
+                    send_new_account_notification.delay(user.id, self.request.site.id)
 
         return HttpResponseRedirect(self.get_success_url())
 
