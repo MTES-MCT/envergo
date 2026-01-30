@@ -321,13 +321,13 @@ ANALYTICS = {
         "TRACKER_ENABLED": env("DJANGO_AMENAGEMENT_TRACKER_ENABLED", default=False),
         "TRACKER_URL": env("DJANGO_AMENAGEMENT_TRACKER_URL", default=""),
         "SITE_ID": env("DJANGO_AMENAGEMENT_SITE_ID", default=""),
-        "TRACKER_URL_2": env("DJANGO_AMENAGEMENT_TRACKER_URL_2", default=""),
-        "SITE_ID_2": env("DJANGO_AMENAGEMENT_SITE_ID_2", default=""),
+        "SECURITY_TOKEN": env("DJANGO_AMENAGEMENT_MATOMO_SECURITY_TOKEN", default=""),
     },
     "HAIE": {
         "TRACKER_ENABLED": env("DJANGO_HAIE_TRACKER_ENABLED", default=False),
         "TRACKER_URL": env("DJANGO_HAIE_TRACKER_URL", default=""),
         "SITE_ID": env("DJANGO_HAIE_SITE_ID", default=""),
+        "SECURITY_TOKEN": env("DJANGO_HAIE_MATOMO_SECURITY_TOKEN", default=""),
     },
 }
 
