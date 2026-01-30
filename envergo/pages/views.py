@@ -1,6 +1,6 @@
 import logging
 from datetime import date, timedelta
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
 
 import requests
 from django.conf import settings
@@ -21,6 +21,7 @@ from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
+from envergo.utils.tools import get_site_literal
 
 logger = logging.getLogger(__name__)
 
@@ -207,13 +208,31 @@ class Outlinks(TemplateView):
         return context
 
     def check_links(self):
-        token = settings.MATOMO_SECURITY_TOKEN
-        if not token:
+        site_literal = get_site_literal(self.request.site)
+        if site_literal == "amenagement":
+            analytics_config = settings.ANALYTICS["AMENAGEMENT"]
+        elif site_literal == "haie":
+            analytics_config = settings.ANALYTICS["HAIE"]
+        else:
+            raise RuntimeError("Unknown site for outlinks")
+
+        if not analytics_config.get("SECURITY_TOKEN"):
             raise RuntimeError("No matomo token configured")
+
+        if not analytics_config.get("TRACKER_ENABLED"):
+            raise RuntimeError("Analytics tracker is not enabled")
+
+        if not analytics_config.get("TRACKER_URL"):
+            raise RuntimeError("No analytics tracker url configured")
 
         today = date.today()
         last_month = today - timedelta(days=30)
-        data_url = f"https://stats.data.gouv.fr/index.php?module=API&format=JSON&idSite=186&period=range&date={last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth={token}&filter_limit=100"  # noqa
+        data_url = urljoin(
+            analytics_config["TRACKER_URL"],
+            f"index.php?module=API&format=JSON&idSite={analytics_config["SITE_ID"]}&period=range&date="
+            f"{last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth="
+            f"{analytics_config["SECURITY_TOKEN"]}&filter_limit=100",
+        )
         data = requests.get(data_url).json()
 
         links = []
