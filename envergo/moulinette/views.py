@@ -1,5 +1,7 @@
 import json
 from collections import defaultdict
+from itertools import groupby
+from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -23,7 +25,7 @@ from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie
+from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
@@ -728,7 +730,9 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         return obj
 
     def get_context_data(self, **kwargs):
-        """Add department members emails"""
+        """Add department members emails and activation maps related to this department"""
+
+        # Add department members emails
         context = super().get_context_data()
         department = self.department
         context["department"] = self.department
@@ -748,4 +752,48 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
 
+        # Get activation maps for criteria in regulations related to this department
+        MAPS_REGULATION_LIST = [
+            "natura2000_haie",
+            "reserves_naturelles",
+            "code_rural_haie",
+            "sites_proteges_haie",
+        ]
+        regulation_list = Regulation.objects.filter(
+            regulation__in=MAPS_REGULATION_LIST
+        ).order_by("display_order")
+
+        # Retrieve criteria filtered by regulation in MAPS_REGULATION_LIST, filtered by department,
+        # ordered by regulation display order, with unique activation map to be regrouped by regulation
+        criteria_list = (
+            Criterion.objects.select_related("regulation")
+            .select_related("activation_map")
+            .only(
+                "regulation__regulation",
+                "activation_map__name",
+                "activation_map__file",
+                "activation_map__description",
+                "activation_map__source",
+                "activation_map__departments",
+            )
+            .filter(regulation__in=regulation_list)
+            .filter(activation_map__departments__contains=[self.department.department])
+            .order_by(
+                "regulation__display_order",
+                "regulation__regulation",
+                "activation_map__name",
+            )
+            .distinct(
+                "regulation__display_order",
+                "regulation__regulation",
+                "activation_map__name",
+            )
+        )
+
+        grouped_criteria_by_regulation = {
+            k: list(v)
+            for k, v in groupby(criteria_list, key=attrgetter("regulation.regulation"))
+        }
+        context["regulation_list"] = regulation_list
+        context["grouped_criteria"] = grouped_criteria_by_regulation
         return context

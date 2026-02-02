@@ -1,11 +1,11 @@
 {% load moulinette evaluations utils %}
 
 <div class="fr-accordion fr-accordion--no-icon"
-     id="criterion-{{ criterion.unique_slug }}{{ counter }}">
+     id="criterion-{{ criterion.unique_slug }}{% if criterion.perimeter %}-{{ criterion.perimeter.id }}{% endif %}">
   <h4 class="fr-accordion__title">
     <button class="fr-accordion__btn"
             aria-expanded="false"
-            aria-controls="read-more-{{ criterion.unique_slug }}{{ counter }}">
+            aria-controls="read-more-{{ criterion.unique_slug }}{% if criterion.perimeter %}-{{ criterion.perimeter.id }}{% endif %}">
       <span class="title">
         {% if criterion.perimeter and regulation.has_several_perimeters %}
           <span class="perimeter">{{ criterion.perimeter }}</span>
@@ -31,7 +31,7 @@
   </h4>
 
   <div class="fr-collapse"
-       id="read-more-{{ criterion.unique_slug }}{{ counter }}">
+       id="read-more-{{ criterion.unique_slug }}{% if criterion.perimeter %}-{{ criterion.perimeter.id }}{% endif %}">
     {% criterion_value criterion 'header' as criterion_header %}
     {% if criterion_header %}<p class="fr-text--light fr-text--sm">{{ criterion_header }}</p>{% endif %}
     {% show_criterion_body regulation criterion %}
@@ -42,6 +42,10 @@
     {% endif %}
   </div>
 
-  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug|add_string:counter %}
+  {% if criterion.perimeter %}
+    {% include "moulinette/_read_more_btn.html" with aria_controls=criterion.unique_slug|add_string:"-"|add_string:criterion.perimeter.id %}
+  {% else %}
+    {% include "moulinette/_read_more_btn.html" with aria_controls=criterion.unique_slug %}
+  {% endif %}
 
 </div>

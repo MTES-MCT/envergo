@@ -8,6 +8,7 @@ from django.urls import reverse
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import (  # noqa
     bizous_town_center,
+    france_map,
     loire_atlantique_department,
     loire_atlantique_map,
 )
@@ -474,14 +475,14 @@ def test_confighaie_settings_view(
     # THEN response is 403
     assert response.status_code == 403
 
-    # GIVEN a instructor user
+    # GIVEN an instructor user
     client.force_login(haie_instructor_44)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Département : Loire-Atlantique (44)" in content
+    assert "Loire-Atlantique (44)" in content
     # AND instructor emails are visible, not admin ones
     assert haie_user.email not in content
     assert haie_instructor_44.email in content
@@ -494,7 +495,101 @@ def test_confighaie_settings_view(
     # THEN department config page is displayed
     content = response.content.decode()
     assert response.status_code == 200
-    assert "Département : Loire-Atlantique (44)" in content
+    assert "Loire-Atlantique (44)" in content
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_settings_view_map_display(
+    client,
+    haie_instructor_44,
+    loire_atlantique_department,  # noqa: F811
+    bizous_town_center,  # noqa: F811
+    france_map,  # noqa: F811
+):
+    """Test maps display in department setting view"""
+
+    # GIVEN a config haie
+    DCConfigHaieFactory(department=loire_atlantique_department)
+    # GIVEN a map in department
+    bizous_town_center.departments = [loire_atlantique_department.department]
+    bizous_town_center.save()
+
+    regulation_code_rural = RegulationFactory(
+        regulation="code_rural_haie",
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRuralHaieRegulation",
+    )
+    CriterionFactory(
+        title="Code rural L126-3",
+        regulation=regulation_code_rural,
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRural",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+
+    regulation_reserves_naturelles = RegulationFactory(
+        regulation="reserves_naturelles",
+        has_perimeters=True,
+    )
+    perimeter_reserves_naturelles = PerimeterFactory(
+        name="N2000 Bizous",
+        activation_map=bizous_town_center,
+        regulations=[regulation_reserves_naturelles],
+    )
+    CriterionFactory(
+        title="Réserves Naturelles > RN Bizous",
+        regulation=regulation_reserves_naturelles,
+        perimeter=perimeter_reserves_naturelles,
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturelles",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    ),
+
+    regulation_natura2000_haie = RegulationFactory(
+        regulation="natura2000_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRegulation",
+        weight=2,
+    )
+    perimeter_natura2000_haie = PerimeterFactory(
+        name="N2000 Bizous",
+        activation_map=bizous_town_center,
+        regulations=[regulation_natura2000_haie],
+    )
+    CriterionFactory(
+        title="Natura 2000 Haie > Haie Bizous",
+        regulation=regulation_natura2000_haie,
+        perimeter=perimeter_natura2000_haie,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+        evaluator_settings={"result": "soumis"},
+    )
+    CriterionFactory(
+        title="Natura 2000 Haie > Haie Bizous après 2020",
+        regulation=regulation_natura2000_haie,
+        perimeter=perimeter_natura2000_haie,
+        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+        evaluator_settings={"result": "soumis"},
+    )
+
+    # AS instructor user in 44
+    client.force_login(haie_instructor_44)
+    # WHEN they visit department setting page
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    response = client.get(url)
+    # THEN department config page is displayed
+    assert response.status_code == 200
+    # AND only one criterion is in context_data
+    assert len(response.context_data["grouped_criteria"]) == 2
+    # AND activation map bizou is in page
+    content = response.content.decode()
+    assert bizous_town_center.name in content
+    assert france_map.name not in content
 
 
 @pytest.mark.urls("config.urls_haie")
