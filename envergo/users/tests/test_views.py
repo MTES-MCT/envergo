@@ -105,15 +105,13 @@ def test_register_with_existing_email_and_other_errors(
     )
     assert res.status_code == 200
     assert len(mailoutbox) == 0
-    assert (
-        'class="fr-input fr-input--error" required id="id_password2"'
-        in res.content.decode()
-    )
+    content = res.content.decode()
 
-    assert (
-        'class="fr-input fr-input--error" required id="id_email"'
-        not in res.content.decode()
-    )
+    # Password mismatch error should be displayed
+    assert "Les deux mots de passe ne correspondent pas" in content
+
+    # Email error should NOT be displayed (security: don't reveal existing emails)
+    assert "existe déjà" not in content
 
 
 @pytest.mark.urls("config.urls_haie")

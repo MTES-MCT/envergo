@@ -12,6 +12,7 @@ from envergo.moulinette.forms.fields import (
     DisplayCharField,
     DisplayChoiceField,
     DisplayIntegerField,
+    UnitInput,
     extract_choices,
     extract_display_function,
 )
@@ -39,8 +40,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         min_value=0,
         max_value=10000000,
         help_text="Surface au sol nouvellement impactée par le projet",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         display_unit="m²",
         display_label="Surface nouvellement impactée par le projet :",
@@ -80,8 +81,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         min_value=0,
         max_value=10000000,
         help_text="Surface au sol impactée totale, en comptant l'existant",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         display_unit="m²",
         display_label="Surface impactée totale, y compris l'existant :",

@@ -31,8 +31,8 @@
           {% csrf_token %}
           {{ form.department.as_hidden }}
 
-          {% include '_radio_snippet.html' with field=form.element %}
-          {% include '_radio_snippet.html' with field=form.travaux %}
+          {% render_field form.element %}
+          {% render_field form.travaux %}
 
           <div class="hide-print submit-section cta-group">
             <a href="{% url 'home' %}"
