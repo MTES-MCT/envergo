@@ -10,6 +10,20 @@ def classpath(klass):
     return "{}.{}".format(klass.__module__, klass.__name__)
 
 
+class StripWhitespaceMixin:
+    """IntegerField that strips whitespace from input.
+
+    Users often enter numbers with spaces as thousand separators (e.g., "8 000").
+    This field removes all whitespace before validation.
+    """
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            # The \s class matches all whitespaces (spaces, nbsp, tabs…)
+            value = re.sub(r"\s", "", value)
+        return super().to_python(value)
+
+
 class NoInstanciateChoiceField(forms.TypedChoiceField):
     def prepare_value(self, value):
         """Fix prepared value.
@@ -53,18 +67,8 @@ class DisplayChoiceField(DisplayFieldMixin, forms.ChoiceField):
     pass
 
 
-class DisplayIntegerField(DisplayFieldMixin, forms.IntegerField):
-    """IntegerField that strips whitespace from input.
-
-    Users often enter numbers with spaces as thousand separators (e.g., "8 000").
-    This field removes all whitespace before validation.
-    """
-
-    def to_python(self, value):
-        if isinstance(value, str):
-            # The \s class matches all whitespaces (spaces, nbsp, tabs…)
-            value = re.sub(r"\s", "", value)
-        return super().to_python(value)
+class DisplayIntegerField(DisplayFieldMixin, StripWhitespaceMixin, forms.IntegerField):
+    pass
 
 
 class DisplayCharField(DisplayFieldMixin, forms.CharField):
