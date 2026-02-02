@@ -1,0 +1,83 @@
+<p>
+  Le projet se trouve dans le périmètre de l'un des sites classés ou en instance de classement de {{ department }}.
+</p>
+
+{% if config.single_procedure and not aa_only %}
+
+  <p>
+    Le projet est soumis à autorisation, car il est situé dans le périmètre d'un site classé ou en instance de classement, et peut porter atteinte au patrimoine paysager de celui-ci.
+  </p>
+
+  <p>
+    Le projet est instruit par le guichet unique. L'administration transmettra le dossier pour avis à la commission départementale de la nature, des paysages et des sites ainsi qu'au ministre chargé des sites. Ces instances peuvent autoriser le projet, imposer des prescriptions pour protéger le site classé ou s'opposer au projet.
+  </p>
+
+  <p>
+    Pour favoriser l'autorisation du projet, il est fortement conseillé de
+    <a href="https://www.culture.gouv.fr/catalogue-des-demarches-et-subventions/mes-travaux-en-site-protege"
+       target="_blank"
+       rel="noopener external">consulter la mairie et l'architecte des bâtiments de France</a> en avant-projet.
+  </p>
+
+{% else %}
+
+  <p>
+    Le projet est soumis à autorisation spéciale, car il est situé dans le périmètre d'un site classé ou en instance de classement. La destruction et/ou la plantation de linéaires peut porter atteinte au patrimoine paysager de celui-ci.
+  </p>
+
+  <ul>
+    <li>
+      Si les travaux relèvent d'une procédure d'urbanisme (déclaration préalable ou permis, au sens du code de l'urbanisme), la demande doit être déposée en mairie, qui assurera l'instruction du dossier ainsi que la consultation de l'Architecte des Bâtiments de France et de la DREAL et, selon la nature du projet, du ministre chargé des sites.
+    </li>
+    <li>
+      Si les travaux ne relèvent pas d'une procédure d'urbanisme, la demande doit être adressée à la commission départementale de la nature, des paysages et des sites. L'Architecte des Bâtiments de France, la DREAL et, selon la nature du projet, le ministre chargé des sites sont également consultés dans ce cadre.
+    </li>
+  </ul>
+
+  <p>
+    Dans tous les cas, les autorités compétentes peuvent émettre des prescriptions ou une opposition afin de préserver la qualité paysagère du site.
+  </p>
+
+  <p>
+    Pour favoriser l'autorisation du projet, il est fortement conseillé de
+    <a href="https://www.culture.gouv.fr/catalogue-des-demarches-et-subventions/mes-travaux-en-site-protege"
+       target="_blank"
+       rel="noopener external">consulter la mairie et l'architecte des bâtiments de France</a> en avant-projet.
+  </p>
+
+{% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  {% if config.single_procedure and not aa_only %}
+    <p>Les pièces complémentaires suivantes seront exigées :</p>
+    <ul>
+      <li>
+        une analyse des impacts paysagers du projet, y compris ceux du linéaire compensatoire projeté s'il est situé en site classé ;
+      </li>
+      <li>
+        des documents photographiques permettant de situer le terrain respectivement dans l'environnement proche et si possible dans le paysage lointain. Les points et les angles des prises de vue sont reportés sur le plan de situation ;
+      </li>
+      <li>
+        des montages larges photographiques ou des dessins permettant d'évaluer dans de bonnes conditions les effets du projet sur le paysage en le situant notamment par rapport à son environnement immédiat et au périmètre du site classé.
+      </li>
+    </ul>
+  {% else %}
+    <p>
+      Des documents permettant au service instructeur et à l'Architecte des Bâtiments de France d'<a href="https://www.culture.gouv.fr/catalogue-des-demarches-et-subventions/mes-travaux-en-site-protege/2.-preparer-mon-projet#documents"
+   target="_blank"
+   rel="noopener external">apprécier les impacts du projet sur le site protégé</a> seront demandés, notamment :
+    </p>
+    <ul>
+      <li>des photographies de l'existant, rapprochées et éloignées ;</li>
+      <li>
+        un schéma d'insertion ou photo-montage donnant un rendu visuel du projet une fois les linéaires détruits et les linéaires compensatoires plantés et à maturité ;
+      </li>
+      <li>
+        un plan de masse faisant apparaître les constructions, les clôtures, la végétation existante, et illustre les modifications prévues ;
+      </li>
+      <li>une description des impacts sur le site et le paysage.</li>
+    </ul>
+  {% endif %}
+</div>
