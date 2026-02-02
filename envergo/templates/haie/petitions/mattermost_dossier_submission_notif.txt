@@ -1,6 +1,7 @@
 ### Nouveau dossier – {{ department }}
 
 N° de dossier : {{ dossier_number }}
+Date de création : {{ created_at|date:"DATE_FORMAT" }}
 Email de l'usager : {{ usager_email }}
 Linéaire détruit : {{ length_to_remove|floatformat:0 }} m
 
@@ -9,5 +10,3 @@ Linéaire détruit : {{ length_to_remove|floatformat:0 }} m
 Consulter le dossier : {{instructor_url}}
 
 [Voir le dossier en admin]({{ admin_url }})
-
-[Voir le dossier sur DS]({{ ds_url }})
