@@ -28,7 +28,7 @@ def sites_inscrits_regulation():
 
 
 @pytest.fixture()
-def perimeter(sites_inscrits_regulation, bizous_town_center):  # noqa
+def sites_inscrits_perimeter(sites_inscrits_regulation, bizous_town_center):  # noqa
     return PerimeterFactory(
         name="SI Bizous",
         activation_map=bizous_town_center,
@@ -38,14 +38,14 @@ def perimeter(sites_inscrits_regulation, bizous_town_center):  # noqa
 
 @pytest.fixture()
 def sites_inscrits_criteria(
-    sites_inscrits_regulation, perimeter, bizous_town_center  # noqa
+    sites_inscrits_regulation, sites_inscrits_perimeter, bizous_town_center  # noqa
 ):
 
     criteria = [
         CriterionFactory(
             title="Sites inscrits",
             regulation=sites_inscrits_regulation,
-            perimeter=perimeter,
+            perimeter=sites_inscrits_perimeter,
             evaluator="envergo.moulinette.regulations.sites_inscrits_haie.SitesInscritsHaie",
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
