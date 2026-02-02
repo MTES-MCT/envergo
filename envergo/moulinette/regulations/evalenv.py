@@ -6,6 +6,7 @@ from envergo.moulinette.forms import UnitInput
 from envergo.moulinette.forms.fields import (
     DisplayChoiceField,
     DisplayIntegerField,
+    UnitInput,
     extract_choices,
     extract_display_function,
 )

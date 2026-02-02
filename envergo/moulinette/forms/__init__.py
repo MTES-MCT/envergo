@@ -12,6 +12,7 @@ from envergo.moulinette.forms.fields import (
     DisplayCharField,
     DisplayChoiceField,
     DisplayIntegerField,
+    UnitInput,
     extract_choices,
     extract_display_function,
 )

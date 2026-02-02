@@ -10,6 +10,20 @@ def classpath(klass):
     return "{}.{}".format(klass.__module__, klass.__name__)
 
 
+class StripWhitespaceMixin:
+    """IntegerField that strips whitespace from input.
+
+    Users often enter numbers with spaces as thousand separators (e.g., "8 000").
+    This field removes all whitespace before validation.
+    """
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            # The \s class matches all whitespaces (spaces, nbsp, tabs…)
+            value = re.sub(r"\s", "", value)
+        return super().to_python(value)
+
+
 class NoInstanciateChoiceField(forms.TypedChoiceField):
     def prepare_value(self, value):
         """Fix prepared value.
@@ -53,18 +67,8 @@ class DisplayChoiceField(DisplayFieldMixin, forms.ChoiceField):
     pass
 
 
-class DisplayIntegerField(DisplayFieldMixin, forms.IntegerField):
-    """IntegerField that strips whitespace from input.
-
-    Users often enter numbers with spaces as thousand separators (e.g., "8 000").
-    This field removes all whitespace before validation.
-    """
-
-    def to_python(self, value):
-        if isinstance(value, str):
-            # The \s class matches all whitespaces (spaces, nbsp, tabs…)
-            value = re.sub(r"\s", "", value)
-        return super().to_python(value)
+class DisplayIntegerField(DisplayFieldMixin, StripWhitespaceMixin, forms.IntegerField):
+    pass
 
 
 class DisplayCharField(DisplayFieldMixin, forms.CharField):
@@ -86,3 +90,22 @@ def extract_display_function(choices):
     return lambda value: next(
         (choice[2] for choice in choices if choice[0] == value), None
     )
+
+
+class UnitInput(forms.TextInput):
+    """Render a text input with a custom prefix placeholder.
+
+    This renders an input with a unit right next to it.
+    """
+
+    input_type = "text"
+    template_name = "forms/widgets/text_unit.html"
+
+    def __init__(self, unit, attrs=None):
+        self.unit = unit
+        super().__init__(attrs)
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["unit"] = self.unit
+        return context
