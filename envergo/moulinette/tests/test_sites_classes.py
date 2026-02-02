@@ -44,7 +44,7 @@ def sites_classes_criterion(
         title="Sites classés",
         regulation=sites_classes_regulation,
         perimeter=sites_classes_perimeter,
-        evaluator="envergo.moulinette.regulations.sites_classes.SitesClassesHaie",
+        evaluator="envergo.moulinette.regulations.sites_classes_haie.SitesClassesHaie",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
     )
