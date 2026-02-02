@@ -77,11 +77,16 @@ class User(AbstractUser):
 
     def is_involved_in_guh(self):
         """Returns True if user has instructor right or if user has department or token"""
-        return any(
-            (
-                self.is_superuser,
-                self.is_instructor,
-                self.departments.defer("geometry").exists(),
-                self.invitation_tokens.exists(),
+        # Check fast conditions first
+        if not self.is_authenticated:
+            return False
+        elif self.is_superuser or self.is_instructor:
+            return True
+        # Check if token or department exists for user
+        else:
+            return any(
+                (
+                    self.invitation_tokens.exists(),
+                    self.departments.defer("geometry").exists(),
+                )
             )
-        )
