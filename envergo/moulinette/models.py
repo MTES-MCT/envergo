@@ -108,6 +108,7 @@ REGULATIONS = Choices(
     ("code_rural_haie", "Code rural"),
     ("regime_unique_haie", "Régime unique haie"),
     ("sites_proteges_haie", "Sites protégés"),
+    ("sites_classes_haie", "Sites classés"),
 )
 
 
@@ -2237,6 +2238,7 @@ class MoulinetteHaie(Moulinette):
         "code_rural_haie",
         "regime_unique_haie",
         "sites_proteges_haie",
+        "sites_classes_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
