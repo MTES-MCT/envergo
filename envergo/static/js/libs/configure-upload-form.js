@@ -109,7 +109,7 @@ window.addEventListener('load', function () {
 
   // Disable the confirmation form while files are being uploaded
   Dropzone.prototype.disableForm = function () {
-    if(!submitBtn){
+    if (!submitBtn) {
       // there is no submit button when the user is only editing the evaluation request to add/remove some files
       return;
     }
@@ -127,7 +127,7 @@ window.addEventListener('load', function () {
 
   // Reactivate the confirmation form
   Dropzone.prototype.enableForm = function () {
-    if(!submitBtn){
+    if (!submitBtn) {
       // there is no submit button when the user is only editing the evaluation request to add/remove some files
       return;
     }
