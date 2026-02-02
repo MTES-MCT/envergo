@@ -1,3 +1,4 @@
+from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 
@@ -15,6 +16,16 @@ class SitesInscritsHaie(CriterionEvaluator):
     slug = "si_haie"
     plantation_conditions = []
 
+    RESULT_MATRIX = {
+        "soumis": RESULTS.soumis,
+        "non_concerne": RESULTS.non_concerne,
+    }
+
+    CODE_MATRIX = {
+        True: "soumis",
+        False: "non_concerne",
+    }
+
     def get_catalog_data(self):
         data = super().get_catalog_data()
         data["aa_only"] = all(
@@ -22,5 +33,10 @@ class SitesInscritsHaie(CriterionEvaluator):
         )
         return data
 
-    def evaluate(self):
-        self._result_code, self._result = "soumis", "soumis"
+    def get_result_data(self):
+        """Check if any hedge (to remove or to plant) intersects the activation map.
+
+        If we are evaluating this criterion, it means that the criterion was activated,
+        which implies that at least one hedge intersects the perimeter.
+        """
+        return True
