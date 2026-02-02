@@ -28,7 +28,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
-from envergo.utils.urls import extract_param_from_url
+from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -285,6 +285,15 @@ class PetitionProject(models.Model):
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
             department = extract_param_from_url(self.moulinette_url, "department")
+            if "dateDepot" in dossier and dossier["dateDepot"]:
+                date_depot = parser.isoparse(dossier["dateDepot"]).date()
+            else:
+                date_depot = timezone.localdate()
+            # add date in the url or overwrite it if there is already one
+            self.moulinette_url = update_qs(
+                self.moulinette_url, {"date": date_depot.isoformat()}
+            )
+
             usager_email = (
                 dossier["usager"]["email"]
                 if "usager" in dossier and "email" in dossier["usager"]
@@ -297,8 +306,8 @@ class PetitionProject(models.Model):
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
                     "dossier_number": self.demarches_simplifiees_dossier_number,
+                    "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
-                    "ds_url": get_ds_url(),
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),

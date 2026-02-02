@@ -1,16 +1,18 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
+from datetime import date
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+from dateutil import parser
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, DateRangeField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import (
@@ -629,6 +631,12 @@ class Criterion(models.Model):
     )
     subtitle = models.CharField(_("Subtitle"), max_length=256, blank=True)
     header = models.CharField(_("Header"), max_length=4096, blank=True)
+
+    validity_range = DateRangeField(
+        "Dates de validité",
+        blank=True,
+        null=True,
+    )
     regulation = models.ForeignKey(
         "moulinette.Regulation",
         verbose_name=_("Regulation"),
@@ -665,7 +673,7 @@ class Criterion(models.Model):
     is_optional = models.BooleanField(
         _("Is optional"),
         default=False,
-        help_text=_("Only show this criterion to admin users"),
+        help_text="Ne s'applique que sur activation expresse de l'utilisateur (questions « optionnelles »)",
     )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
@@ -692,6 +700,13 @@ class Criterion(models.Model):
     class Meta:
         verbose_name = _("Criterion")
         verbose_name_plural = _("Criteria")
+        constraints = [
+            models.CheckConstraint(
+                check=Q(validity_range__isempty=False),
+                name="validity_range_non_empty",
+                violation_error_message="La date de fin de validité doit être supérieure à la date de début",
+            ),
+        ]
 
     def __str__(self):
         return self.title
@@ -1782,6 +1797,9 @@ class Moulinette(ABC):
             .prefetch_related("templates")
             .annotate(distance=Cast(0, IntegerField()))
             .order_by("weight", "id", "distance")
+            .filter(
+                Q(validity_range__contains=self.date) | Q(validity_range__isnull=True)
+            )
         )
 
         return criteria
@@ -1968,6 +1986,17 @@ class Moulinette(ABC):
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
         return dict(result)
+
+    @property
+    def date(self):
+        """Date for the simulation. Today by default."""
+        date_str = self.data.get("date", None)
+        if date_str:
+            try:
+                return parser.isoparse(date_str).date()
+            except (ValueError, TypeError):
+                pass
+        return date.today()
 
 
 class MoulinetteAmenagement(Moulinette):

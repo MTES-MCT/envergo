@@ -11,6 +11,7 @@ from django.utils.formats import date_format
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import PetitionProject, Simulation, StatusLog
 from envergo.utils.fields import ProjectStageField
+from envergo.utils.urls import remove_from_qs
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -19,6 +20,17 @@ class PetitionProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["moulinette_url"].required = True
+
+    def clean_moulinette_url(self):
+        """Remove the date parameter from the moulinette url if there is one
+
+        We keep the date during simulations because it can be used for project alternatives or for simulations at a
+        given point in time. However, when creating a file, we want to take current legislation into account, so we
+        remove the date if necessary.
+        """
+        moulinette_url = self.cleaned_data["moulinette_url"]
+        cleaned_moulinette_url = remove_from_qs(moulinette_url, "date")
+        return cleaned_moulinette_url
 
     class Meta:
         model = PetitionProject
