@@ -86,3 +86,22 @@ def extract_display_function(choices):
     return lambda value: next(
         (choice[2] for choice in choices if choice[0] == value), None
     )
+
+
+class UnitInput(forms.TextInput):
+    """Render a text input with a custom prefix placeholder.
+
+    This renders an input with a unit right next to it.
+    """
+
+    input_type = "text"
+    template_name = "forms/widgets/text_unit.html"
+
+    def __init__(self, unit, attrs=None):
+        self.unit = unit
+        super().__init__(attrs)
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["unit"] = self.unit
+        return context

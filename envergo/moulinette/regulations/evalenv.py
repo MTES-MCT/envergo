@@ -2,10 +2,10 @@ from django import forms
 from django.utils.html import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.forms import UnitInput
 from envergo.moulinette.forms.fields import (
     DisplayChoiceField,
     DisplayIntegerField,
+    UnitInput,
     extract_choices,
     extract_display_function,
 )
