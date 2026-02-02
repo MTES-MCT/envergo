@@ -20,7 +20,7 @@ from envergo.moulinette.forms.fields import (
 class UnitInput(forms.TextInput):
     """Render a text input with a custom prefix placeholder.
 
-    This renders an input with a little help text right next to it.
+    This renders an input with a unit right next to it.
     """
 
     input_type = "text"
