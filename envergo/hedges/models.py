@@ -197,6 +197,16 @@ class Hedge:
 
 
 class HedgeList(list[Hedge]):
+    """A class representing a list of Hedge objects.
+
+    This class is a basic list with some filtering api added, and a chainable api.
+
+    For example, for selecting the hedges to remove of type "haie mixte" with a
+    "vieilArbre" property:
+
+    hedges = HedgeList(hedges).to_remove().mixte().prop("vieilArbre")
+    """
+
     def __init__(self, *args, label=None, **kwargs):
         self.label = label
         super().__init__(*args, **kwargs)
@@ -236,9 +246,14 @@ class HedgeList(list[Hedge]):
         return HedgeList([h for h in self if h.hedge_type == "alignement"])
 
     def n_alignement(self) -> Self:
+        """Select all hedges that are of ALL types BUT alignement.
+
+        Useful because we often need to separate "haies" from "alignements d'arbres".
+        """
         return HedgeList([h for h in self if h.hedge_type != "alignement"])
 
     def filter(self, f) -> Self:
+        """Filter the hedge list using a specific filtering method."""
         return HedgeList([h for h in self if f(h)])
 
     def type(self, t) -> Self:
@@ -257,7 +272,7 @@ class HedgeList(list[Hedge]):
     def prop(self, p) -> Self:
         """Select hedges with a given prod. Prefix with "!" to negate the filter.
 
-        We also embed the hedges that just don't have the property.
+        IMPORTANT! We don't filter out the hedges that DO NOT feature the property.
         """
 
         if p.startswith("!"):

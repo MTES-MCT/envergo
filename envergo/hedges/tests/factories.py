@@ -30,7 +30,7 @@ class HedgeFactory(factory.Factory):
 
     @factory.post_generation
     def length(obj, create, extracted, **kwargs):
-        """Force the hedge to be a specific (althougr very approximate) length."""
+        """Force the hedge to be a specific (althoug very approximate) length."""
         if extracted:
 
             # One degree of latitude is approx 111 km
