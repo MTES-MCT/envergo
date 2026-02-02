@@ -18,6 +18,7 @@ from envergo.moulinette.regulations import (  # noqa
     reserves_naturelles,
     sage,
     sites_classes_haie,
+    sites_inscrits_haie,
     sites_proteges_haie,
     urbanisme_haie,
 )
