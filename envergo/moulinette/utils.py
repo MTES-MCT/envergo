@@ -84,6 +84,14 @@ def parse_surface(value):
     if isinstance(value, str):
         # The \s class matches all whitespaces (spaces, nbsp, tabs…)
         value = re.sub(r"\s", "", value)
+
+    if value is not None:
+        try:
+            int(value)
+        except (ValueError, TypeError):
+            # If the value cannot be converted to int, we prevent an exception
+            # by just removing the field from data.
+            value = ""
     return value
 
 
