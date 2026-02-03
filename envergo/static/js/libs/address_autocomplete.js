@@ -123,7 +123,7 @@
       source: function (query, populateResults) {
         const event = new CustomEvent('Envergo:address_autocomplete_input', { detail: query });
         window.dispatchEvent(event);
-        return debouncedFetch(`https://api-adresse.data.gouv.fr/search/?autocomplete=1&q=${query}`)
+        return debouncedFetch(`https://data.geopf.fr/geocodage/search/?autocomplete=1&q=${query}`)
           .then((response) => response.json())
           .then(({ features }) => {
             populateResults(features);
@@ -147,7 +147,7 @@
       }
     });
 
-    observer.observe(this.inputElement, {attributes: true, attributeFilter: ['disabled']});
+    observer.observe(this.inputElement, { attributes: true, attributeFilter: ['disabled'] });
   };
 
 })(this, accessibleAutocomplete);

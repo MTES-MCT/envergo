@@ -271,6 +271,7 @@ SECURE_CSP_REPORT_ONLY = {
     ],
     "connect-src": [
         CSP.SELF,
+        "https://data.geopf.fr",  # New address autocomplete api
         "https://*.data.gouv.fr",  # Address autocomplete api
         "https://*.beta.gouv.fr",  # Stats
         "https://sentry.incubateur.net",
