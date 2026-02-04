@@ -55,7 +55,7 @@ def confirm_request_to_requester(request_id, host):
     user_emails = request.get_requester_emails()
     faq_url = reverse("faq")
     contact_url = reverse("contact_us")
-    file_upload_url = reverse("request_eval_wizard_step_3", args=[request.reference])
+    file_upload_url = request.upload_files_url
     context = {
         "application_number": request.application_number,
         "delay_mention": delay_mention,

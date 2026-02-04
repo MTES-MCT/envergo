@@ -726,6 +726,11 @@ class Request(models.Model):
     send_eval_to_project_owner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
+    obfuscation_key = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        verbose_name="Clé d'obfuscation",
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -795,6 +800,11 @@ class Request(models.Model):
             send_eval_to_project_owner=self.send_eval_to_project_owner,
         )
         return evaluation
+
+    @property
+    def upload_files_url(self):
+        url = reverse("request_eval_wizard_step_3", args=[self.reference])
+        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
 
 
 def request_file_format(instance, filename):

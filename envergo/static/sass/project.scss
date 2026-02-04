@@ -775,7 +775,11 @@ form#request-evaluation-form {
 
 .fr-input[inputmode="numeric"] {
   display: inline-block;
-  max-width: 15rem;
+  max-width: 10rem;
+
+  & + .fr-input--unit {
+    margin-left: 0.25rem;
+  }
 }
 
 /**
