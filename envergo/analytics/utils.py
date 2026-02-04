@@ -1,8 +1,10 @@
+import binascii
 import ipaddress
 import logging
 import socket
 from datetime import timedelta
 
+from _hashlib import pbkdf2_hmac
 from django.conf import settings
 
 from envergo.analytics.models import Event
@@ -54,6 +56,17 @@ def is_request_from_a_bot(request):
     return False
 
 
+def get_hash_unique_id(value: str):
+    our_app_iters = 500_000
+    salt_value = settings.HASH_SALT_KEY
+    if not salt_value:
+        logger.warning("Salt key not set")
+    dk = pbkdf2_hmac(
+        "sha256", str.encode(value), binascii.unhexlify(salt_value), our_app_iters
+    )
+    return dk.hex()
+
+
 def log_event(category, event, request, **kwargs):
     visitor_id = request.COOKIES.get(settings.VISITOR_COOKIE_NAME, "")
     log_event_raw(category, event, visitor_id, request.user, request.site, **kwargs)
@@ -61,10 +74,14 @@ def log_event(category, event, request, **kwargs):
 
 def log_event_raw(category, event, visitor_id, user, site, **kwargs):
     if visitor_id and not user.is_staff:
+        unique_id = ""
+        if user.access_haie:
+            unique_id = get_hash_unique_id(user.email)
         Event.objects.create(
             category=category,
             event=event,
             session_key=visitor_id,
+            unique_id=unique_id,
             metadata=kwargs,
             site=site,
         )
