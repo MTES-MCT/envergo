@@ -1,14 +1,15 @@
 from unittest.mock import patch
 
 import pytest
+from django.contrib.auth.models import AnonymousUser
 
 from envergo.analytics.models import Event
-from envergo.analytics.utils import is_request_from_a_bot, log_event
+from envergo.analytics.utils import get_hash_unique_id, is_request_from_a_bot, log_event
 
 pytestmark = pytest.mark.django_db
 
 
-def test_log_event(rf, user, admin_user, site):
+def test_log_event(rf, user, haie_user, admin_user, site):
     event_qs = Event.objects.all()
     assert event_qs.count() == 0
 
@@ -24,10 +25,23 @@ def test_log_event(rf, user, admin_user, site):
     assert event.category == "Category"
     assert event.event == "Event"
     assert event.metadata == metadata
+    assert event.unique_id == ""
 
     request.user = admin_user
     log_event("Category", "Event", request, **metadata)
     assert event_qs.count() == 1
+
+    request.user = haie_user
+    log_event("Category", "Event", request, **metadata)
+    assert event_qs.count() == 2
+    event = event_qs.last()
+    assert event.unique_id == get_hash_unique_id(haie_user.email)
+
+    request.user = AnonymousUser()
+    log_event("Category", "Event", request, **metadata)
+    assert event_qs.count() == 3
+    event = event_qs.last()
+    assert event.unique_id == ""
 
 
 def test_is_request_from_a_bot_no_ip(rf):
