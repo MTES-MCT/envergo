@@ -25,7 +25,7 @@ def test_log_event(rf, user, haie_user, admin_user, site):
     assert event.category == "Category"
     assert event.event == "Event"
     assert event.metadata == metadata
-    assert event.unique_id == ""
+    assert event.unique_id is None
 
     request.user = admin_user
     log_event("Category", "Event", request, **metadata)
@@ -41,7 +41,7 @@ def test_log_event(rf, user, haie_user, admin_user, site):
     log_event("Category", "Event", request, **metadata)
     assert event_qs.count() == 3
     event = event_qs.last()
-    assert event.unique_id == ""
+    assert event.unique_id is None
 
 
 def test_is_request_from_a_bot_no_ip(rf):

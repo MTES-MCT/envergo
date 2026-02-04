@@ -74,7 +74,7 @@ def log_event(category, event, request, **kwargs):
 
 def log_event_raw(category, event, visitor_id, user, site, **kwargs):
     if visitor_id and not user.is_staff:
-        unique_id = ""
+        unique_id = None
         if user.is_authenticated and user.access_haie:
             unique_id = get_hash_unique_id(user.email)
         Event.objects.create(
