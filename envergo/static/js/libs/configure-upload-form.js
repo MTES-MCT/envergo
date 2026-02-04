@@ -93,7 +93,7 @@ window.addEventListener('load', function () {
 
         if (file.id) {
           // Remove the file from the server
-          fetch(`${DROPZONE_UPLOAD_URL}?file_id=${file.id}`, { method: 'DELETE' })
+          fetch(`${DROPZONE_UPLOAD_URL}&file_id=${file.id}`, { method: 'DELETE' })
             .then(function (response) {
               if (!response.ok) {
                 this.options.addedfile.call(this, file);

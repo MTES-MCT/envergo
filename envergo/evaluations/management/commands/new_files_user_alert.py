@@ -37,9 +37,7 @@ class Command(BaseCommand):
             emails = request.get_requester_emails()
             faq_url = reverse("faq")
             contact_url = reverse("contact_us")
-            file_upload_url = reverse(
-                "request_eval_wizard_step_3", args=[request.reference]
-            )
+            file_upload_url = request.upload_files_url
             context = {
                 "reference": request.reference,
                 "address": request.address,

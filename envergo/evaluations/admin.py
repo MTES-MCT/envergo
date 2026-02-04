@@ -551,7 +551,7 @@ class RequestAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        (_("Meta info"), {"fields": ("created_at",)}),
+        (_("Meta info"), {"fields": ("created_at", "obfuscation_key")}),
     )
     actions = ["make_evaluation"]
     change_form_template = "evaluations/admin/request_change_form.html"
@@ -599,10 +599,9 @@ class RequestAdmin(admin.ModelAdmin):
             except Evaluation.DoesNotExist:
                 context["show_make_eval_button"] = True
 
-            upload_files_url = reverse(
-                "request_eval_wizard_step_3", args=[obj.reference]
+            context["upload_files_url"] = request.build_absolute_uri(
+                obj.upload_files_url
             )
-            context["upload_files_url"] = request.build_absolute_uri(upload_files_url)
 
         return super().render_change_form(request, context, add, change, form_url, obj)
 
