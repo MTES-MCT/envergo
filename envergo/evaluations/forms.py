@@ -80,7 +80,14 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     )
     application_number = forms.CharField(
         label=_("Application number"),
-        help_text=_("If an application number was already submitted."),
+        help_text=(
+            "Si une demande de permis de construire ou d'aménager"
+            " a déjà été déposée."
+            "<br>"
+            "<strong>Format :</strong> 15 caractères commençant par"
+            " « PA », « PC »,"
+            " « DP » ou « CU »."
+        ),
         max_length=64,
     )
     project_description = forms.CharField(
@@ -106,9 +113,9 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["application_number"].required = False
-        self.fields["application_number"].widget.attrs["placeholder"] = _(
-            "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
-        )
+        self.fields["application_number"].widget.attrs[
+            "placeholder"
+        ] = "PC0123456789012"
         self.fields["project_description"].widget.attrs["rows"] = 3
 
     def clean(self):
