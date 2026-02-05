@@ -1,7 +1,7 @@
+import re
 import warnings
 from collections.abc import Iterable, Mapping
 
-from bs4 import BeautifulSoup
 from django import template
 from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
@@ -128,11 +128,29 @@ def choice_default_label(model, field_name):
 @stringfilter
 def urlize_html(value, blank=True):
     """Convert URLs in plain text into clickable links."""
-    # Remove existing tag a before urlize
-    soup = BeautifulSoup(value, "html.parser")
-    for a in soup.findAll("a"):
-        a.replaceWith(a["href"])
-    result = _urlize(str(soup), nofollow=True, autoescape=False)
+    # Strip existing <a> tags, keeping only the href value.
+    # We use a regex instead of BeautifulSoup to avoid HTML entity decoding
+    # (e.g. &numero being converted to №).
+
+    # <a> tag matching regex
+    # Parsing html with regexes is not ideal
+    text = re.sub(
+        r"""
+            <a\s            # opening <a tag followed by a space
+            [^>]*           # any attributes before href
+            href\s*=\s*     # href attribute with optional whitespace around =
+            ["']            # opening quote
+            ([^"']*)        # capture the URL
+            ["']            # closing quote
+            [^>]*>          # any attributes after href, then close tag
+            .*?             # link text (non-greedy)
+            </a>            # closing tag
+        """,
+        r"\1",
+        value,
+        flags=re.IGNORECASE | re.DOTALL | re.VERBOSE,
+    )
+    result = _urlize(text, nofollow=True, autoescape=False)
     if blank:
         result = result.replace("<a", '<a target="_blank" rel="noopener"')
     return result

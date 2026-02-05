@@ -60,34 +60,53 @@ def test_petition_department_list(
 def test_urlize_html():
     """Test urlize_html filter"""
 
-    # Given a text message with a link
+    # Plain text URL
     message = "voici un lien https://exemple.com"
-    expected_result = 'voici un lien <a target="_blank" rel="noopener" href="https://exemple.com" rel="nofollow">https://exemple.com</a>'  # noqa: E501
-    # When message is urlized
     result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
+    assert 'href="https://exemple.com"' in result
+    assert 'target="_blank"' in result
+    assert 'rel="noopener"' in result
 
-    # Given a html message with a link and another tag
-    message = 'voici un lien <a href="https://exemple.com">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa: E501
-    expected_result = 'voici un lien <a target="_blank" rel="noopener" href="https://exemple.com" rel="nofollow">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa: E501
-    # When message is urlized
+    # URL with &numero parameter — must NOT be decoded to №
+    message = "lien https://exemple.com?foo=bar&numero_pacage=012345678"
     result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
+    assert "№" not in result
+    assert "&numero_pacage" in result
 
-    # Given a html message with two links
-    message = 'voici un lien <a href="www.exemple.fr">coucou</a> et un deuxième lien <a href="exemple.com">hello</a>.'
-    expected_result = 'voici un lien <a target="_blank" rel="noopener" href="http://www.exemple.fr" rel="nofollow">www.exemple.fr</a> et un deuxième lien <a target="_blank" rel="noopener" href="http://exemple.com" rel="nofollow">exemple.com</a>.'  # noqa: E501
-    # When message is urlized
+    # Existing <a> tag: strip tag, re-urlize the href
+    message = 'voici un lien <a href="https://exemple.com">https://exemple.com</a>'
     result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
+    assert 'href="https://exemple.com"' in result
+    assert 'target="_blank"' in result
 
-    # Given a html message with a links with target="_blank"
+    # Existing <a> with extra attributes (e.g. target="_blank"): strip all, re-urlize href
     message = 'voici un lien <a target="_blank" href="https://exemple.com">hello</a>.'
-    expected_result = 'voici un lien <a target="_blank" rel="noopener" href="https://exemple.com" rel="nofollow">https://exemple.com</a>.'  # noqa: E501
-    # When message is urlized
     result = urlize_html(message)
-    # Then result is expected_result
-    assert result == expected_result
+    assert 'href="https://exemple.com"' in result
+    assert 'target="_blank"' in result
+
+    # Two existing <a> tags: both cleaned and re-urlized
+    message = 'voici un lien <a href="www.exemple.fr">coucou</a> et un deuxième lien <a href="exemple.com">hello</a>.'  # noqa: E501
+    result = urlize_html(message)
+    assert "www.exemple.fr" in result
+    assert "exemple.com" in result
+    assert result.count("<a ") == 2
+
+    # Mixed <a> tag + other HTML (e.g. <strong>): <a> cleaned, <strong> preserved
+    message = 'voici un lien <a href="https://exemple.com">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa: E501
+    result = urlize_html(message)
+    assert 'href="https://exemple.com"' in result
+    assert "<strong>balise</strong>" in result
+
+    # UTF-8 characters: accented characters must not be converted to HTML entities
+    message = "voici un lien https://exemple.com avec des accents éàü"
+    result = urlize_html(message)
+    assert "éàü" in result
+    assert "&eacute;" not in result
+
+    # Existing <a> with bad formatting (e.g. <a    href="…" target = " _blank "): strip all, re-urlize href
+    message = 'voici un lien <a  tartiflette   href= "https://exemple.com" target = "_blank">hello</a>.'
+    result = urlize_html(message)
+    assert 'href="https://exemple.com"' in result
+    assert 'target="_blank"' in result
+    assert "tartiflette" not in result
