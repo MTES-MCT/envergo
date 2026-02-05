@@ -127,7 +127,12 @@ def choice_default_label(model, field_name):
 @register.filter(is_safe=True)
 @stringfilter
 def urlize_html(value, blank=True):
-    """Convert URLs in plain text into clickable links."""
+    """Convert URLs in plain text into clickable links.
+
+    This is a sensitive piece of code, since it's used to sanitize content that we get
+    from a third party (messages from DS), but it must output `safe` content that will
+    be integrated as-is in the page.
+    """
     # Strip existing <a> tags, keeping only the href value.
     # We use a regex instead of BeautifulSoup to avoid HTML entity decoding
     # (e.g. &numero being converted to №).
@@ -150,7 +155,7 @@ def urlize_html(value, blank=True):
         value,
         flags=re.IGNORECASE | re.DOTALL | re.VERBOSE,
     )
-    result = _urlize(text, nofollow=True, autoescape=False)
+    result = _urlize(text, nofollow=True, autoescape=True)
     if blank:
         result = result.replace("<a", '<a target="_blank" rel="noopener"')
     return result
