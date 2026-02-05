@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load l10n %}
+
 {% load static %}
 
 {% block title %}Saisie haie{% endblock %}
@@ -16,6 +18,8 @@
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
        data-conditions-url="{{ hedge_conditions_url }}"
        data-hedges-data='{{ hedge_data_json|safe }}'
+       data-department-lat='{{ department_centroid.lat|unlocalize }}'
+       data-department-lng='{{ department_centroid.lng|unlocalize }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
     {% if is_alternative %}
       <div class="fr-notice fr-notice--info">
