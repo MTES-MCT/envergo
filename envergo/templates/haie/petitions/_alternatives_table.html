@@ -52,33 +52,33 @@
                           data-clipboard-text="{{ base_url }}{{ simulation.form_url }}"
                           class="action clipboard btn--copy-to-clipboard btn--shorten-url fr-icon-link">
 
-                  <a href="{{ simulation.result_url }}"
-                     class="action"
-                     target="_blank"
-                     rel="noopener"
-                     title="Voir le résultat de cette simulation (nouvel onglet)">
-                    <span type="submit" class="fr-icon-eye-line"></span>
-                  </a>
+                    <a href="{{ simulation.result_url }}"
+                       class="action"
+                       target="_blank"
+                       rel="noopener"
+                       title="Voir le résultat de cette simulation (nouvel onglet)">
+                      <span type="submit" class="fr-icon-eye-line"></span>
+                    </a>
 
-                  {% if simulation.can_be_deleted and has_change_permission %}
-                    <button type="button"
-                            aria-controls="simulation-delete-modal-{{ simulation.id }}"
-                            data-fr-opened="false"
-                            class="action fr-icon-delete-line"
-                            title="Supprimer la simulation"></button>
-                  {% else %}
-                    <button type="button"
-                            disabled="disabled"
-                            class="action fr-icon-delete-line"
-                            title="Supprimer la simulation"></button>
+                    {% if simulation.can_be_deleted and has_change_permission %}
+                      <button type="button"
+                              aria-controls="simulation-delete-modal-{{ simulation.id }}"
+                              data-fr-opened="false"
+                              class="action fr-icon-delete-line"
+                              title="Supprimer la simulation"></button>
+                    {% else %}
+                      <button type="button"
+                              disabled="disabled"
+                              class="action fr-icon-delete-line"
+                              title="Supprimer la simulation"></button>
 
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
