@@ -52,7 +52,7 @@
               <span class="ds-message__date">{{ message_date|date:"D\. j F Y" }} {{ message_date|time:"H\hi" }}</span>
             {% endwith %}
           </div>
-          <div class="ds-message__content">{{ message.body|safe|linebreaksbr|urlize_html }}</div>
+          <div class="ds-message__content">{{ message.body|safe|urlize_html|linebreaks }}</div>
 
           <div class="fr-mt-2w">
             {% for pj in message.attachments %}
