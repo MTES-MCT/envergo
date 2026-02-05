@@ -803,7 +803,14 @@ class Request(models.Model):
 
     @property
     def upload_files_url(self):
+        """return the obfuscated url to the upload files UI"""
         url = reverse("request_eval_wizard_step_3", args=[self.reference])
+        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+
+    @property
+    def upload_files_api_url(self):
+        """return the obfuscated url to the upload files API"""
+        url = reverse("request_eval_wizard_step_3_upload", args=[self.reference])
         return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
 
 
