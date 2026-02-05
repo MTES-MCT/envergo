@@ -490,6 +490,7 @@ class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
             return render(
                 request,
                 "evaluations/eval_request_wizard_files_404.html",
+                context={"reference": self.kwargs["reference"]},
                 status=404,
             )
 
