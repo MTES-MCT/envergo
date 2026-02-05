@@ -80,10 +80,6 @@
 
 {% for regulation in moulinette.regulations %}
   {% include 'amenagement/moulinette/_result_regulation.html' with regulation=regulation %}
-
-  {% if evaluation.is_eligible_to_self_declaration %}
-    {% include 'evaluations/_self_declaration_cta.html' %}
-  {% endif %}
 {% endfor %}
 
 {% include 'moulinette/_additional_regulations.html' with moulinette=moulinette %}
