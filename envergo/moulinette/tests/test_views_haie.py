@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 import pytest
 from django.test import override_settings
 from django.urls import reverse
-from psycopg.types.range import DateRange
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import (  # noqa
