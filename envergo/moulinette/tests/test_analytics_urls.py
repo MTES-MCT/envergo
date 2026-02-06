@@ -7,6 +7,7 @@ from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -25,6 +26,7 @@ def autouse_site(site):
 @pytest.fixture(autouse=True)
 def autouse_moulinette(france_map):  # noqa
     ConfigAmenagementFactory(is_activated=True)
+    RUConfigHaieFactory(is_activated=True)
     regulation = RegulationFactory(regulation="eval_env")
     CriterionFactory(
         title="Terrain d'assiette",

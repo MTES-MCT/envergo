@@ -118,7 +118,7 @@ def parametrage_departments_menu(context, is_slim=False):
 
     config_haies = ConfigHaie.objects.all()
     departments_with_config = Department.objects.defer("geometry").filter(
-        confighaie__in=config_haies
+        confighaies__in=config_haies
     )
 
     if current_user.is_superuser:

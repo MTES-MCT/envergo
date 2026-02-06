@@ -2,13 +2,13 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import AdminDateWidget
 from django.contrib.postgres.forms import DateRangeField, RangeWidget
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import Q
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
-from psycopg.types.range import DateRange
 
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
@@ -235,17 +235,18 @@ class CriterionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        date_start_display = (
-            obj.validity_range.lower.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.lower
-            else "−∞"
-        )
-        date_end_display = (
-            obj.validity_range.upper.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.upper
-            else "∞"
-        )
-        return f"[{date_start_display}, {date_end_display})"
+        if not obj.validity_range:
+            return ""
+        lower = obj.validity_range.lower
+        upper = obj.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"→ {upper.strftime(fmt)}"
+        return ""
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
@@ -392,6 +393,11 @@ class ConfigAmenagementForm(forms.ModelForm):
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
     )
+    validity_range = DateRangeField(
+        label="Dates de validité",
+        required=False,
+        widget=AdminDateRangeWidget,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -431,16 +437,36 @@ class MoulinetteConfigTemplateInline(MoulinetteTemplateInline):
 
 @admin.register(ConfigAmenagement)
 class ConfigAmenagementAdmin(admin.ModelAdmin):
-    list_display = ["department", "is_activated", "zh_doubt"]
+    list_display = [
+        "department",
+        "is_activated",
+        "validity_column",
+        "zh_doubt",
+    ]
     form = ConfigAmenagementForm
     inlines = [MoulinetteConfigTemplateInline]
-    list_filter = ["is_activated", "zh_doubt"]
+    list_filter = ["is_activated", "zh_doubt", DepartmentsListFilter]
+
+    @admin.display(description="Validité")
+    def validity_column(self, obj):
+        if not obj.validity_range:
+            return ""
+        lower = obj.validity_range.lower
+        upper = obj.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"→ {upper.strftime(fmt)}"
+        return ""
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department")
+            .order_by("department__department", "-validity_range")
             .defer("department__geometry")
         )
 
@@ -454,6 +480,11 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
 class ConfigHaieAdminForm(forms.ModelForm):
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
+    )
+    validity_range = DateRangeField(
+        label="Dates de validité",
+        required=False,
+        widget=AdminDateRangeWidget,
     )
 
     class Meta:
@@ -494,8 +525,8 @@ class ConfigHaieAdminForm(forms.ModelForm):
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
-    list_display = ["department", "is_activated"]
-    list_filter = ["is_activated"]
+    list_display = ["department", "is_activated", "validity_column"]
+    list_filter = ["is_activated", DepartmentsListFilter]
     fieldsets = [
         (
             None,
@@ -507,6 +538,16 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",
                 ],
+            },
+        ),
+        (
+            "Période de validité",
+            {
+                "fields": [
+                    "validity_range",
+                ],
+                "description": "Définissez la période pendant laquelle cette configuration est active. "
+                "Laissez vide pour une validité illimitée.",
             },
         ),
         (
@@ -545,11 +586,26 @@ class ConfigHaieAdmin(admin.ModelAdmin):
         ),
     ]
 
+    @admin.display(description="Validité")
+    def validity_column(self, obj):
+        if not obj.validity_range:
+            return ""
+        lower = obj.validity_range.lower
+        upper = obj.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"→ {upper.strftime(fmt)}"
+        return ""
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department")
+            .order_by("department__department", "-validity_range")
             .defer("department__geometry")
         )
 

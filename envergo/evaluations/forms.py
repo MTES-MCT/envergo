@@ -133,11 +133,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             # We therefore add the department number
             data["address"] = f"{address} ({department_input})"
 
-        department = (
-            Department.objects.filter(department=department_input)
-            .select_related("configamenagement")
-            .first()
-        )
+        department = Department.objects.filter(department=department_input).first()
         if department and not department.is_amenagement_activated():
             self.add_error(
                 "department",

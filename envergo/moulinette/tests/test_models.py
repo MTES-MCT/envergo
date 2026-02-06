@@ -1,14 +1,21 @@
+from datetime import date
 from unittest.mock import MagicMock
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
-from envergo.geodata.tests.factories import ZoneFactory
+from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement
-from envergo.moulinette.models import ConfigHaie, MoulinetteAmenagement, MoulinetteHaie
+from envergo.moulinette.models import (
+    ConfigAmenagement,
+    ConfigHaie,
+    MoulinetteAmenagement,
+    MoulinetteHaie,
+)
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
@@ -87,10 +94,11 @@ def test_moulinette_config(moulinette_data):
     moulinette = MoulinetteAmenagement(moulinette_data)
     assert not moulinette.has_config()
 
+    # Inactive config should be returned by has_config()
     ConfigAmenagementFactory(is_activated=False)
     moulinette = MoulinetteAmenagement(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
     assert moulinette.has_config()
+    assert moulinette.is_valid(), moulinette.form_errors()
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -274,3 +282,249 @@ def test_regulation_with_map_factory_can_create_a_hedge_to_remove_map(
     assert regulation.map.entries[0].color == regulation.polygon_color
     assert regulation.map.entries[-1].color == "red"
     assert not regulation.map.display_marker_at_center
+
+
+class TestConfigValidityDates:
+    """Tests for the validity date mechanism on Config models."""
+
+    def test_config_with_no_dates_is_always_valid(self):
+        """A config with no date bounds is valid for any date."""
+        dept = DepartmentFactory()
+        config = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=None,
+        )
+        # Should be returned for any date
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2020, 1, 1)) == config
+        )
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15))
+            == config
+        )
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2030, 12, 31))
+            == config
+        )
+
+    def test_config_valid_from_inclusive(self):
+        """The lower bound of validity_range is inclusive (config is valid on that date)."""
+        dept = DepartmentFactory()
+        config = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+        # Should NOT be returned before lower bound
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2024, 12, 31)) is None
+        )
+        # Should be returned ON lower bound (inclusive)
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 1, 1)) == config
+        )
+        # Should be returned after lower bound
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15))
+            == config
+        )
+
+    def test_config_valid_until_exclusive(self):
+        """The upper bound of validity_range is exclusive (config is NOT valid on that date)."""
+        dept = DepartmentFactory()
+        config = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(None, date(2025, 6, 1), "[)"),
+        )
+        # Should be returned before upper bound
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 5, 31))
+            == config
+        )
+        # Should NOT be returned ON upper bound (exclusive)
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 1)) is None
+        )
+        # Should NOT be returned after upper bound
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 2)) is None
+        )
+
+    def test_config_with_both_dates(self):
+        """A config with both dates is only valid within the range [from, until)."""
+        dept = DepartmentFactory()
+        config = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 6, 1), "[)"),
+        )
+        # Before range
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2024, 12, 31)) is None
+        )
+        # At start (inclusive)
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 1, 1)) == config
+        )
+        # In range
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 3, 15))
+            == config
+        )
+        # At end (exclusive)
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 1)) is None
+        )
+        # After range
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 7, 1)) is None
+        )
+
+    def test_multiple_configs_different_periods(self):
+        """Multiple configs for the same department with non-overlapping periods."""
+        dept = DepartmentFactory()
+        config_2024 = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_2025 = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
+        )
+        # 2024 config should be returned for 2024 dates
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2024, 6, 15))
+            == config_2024
+        )
+        # 2025 config should be returned for 2025 dates
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15))
+            == config_2025
+        )
+
+
+class TestConfigOverlapValidation:
+    """Tests for the DB-level overlap ExclusionConstraint on Config models."""
+
+    def test_overlap_rejected_between_configs(self):
+        """Configs with overlapping dates should be rejected by the DB constraint."""
+        dept = DepartmentFactory()
+        ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
+        )
+        overlapping = ConfigAmenagement(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
+            lse_contact_ddtm="test",
+            n2000_contact_ddtm_info="test",
+            n2000_contact_ddtm_instruction="test",
+            n2000_procedure_ein="test",
+            evalenv_procedure_casparcas="test",
+        )
+        with pytest.raises(Exception):
+            overlapping.save()
+
+    def test_overlap_rejected_for_inactive_configs(self):
+        """Inactive configs with overlapping dates should also be rejected."""
+        dept = DepartmentFactory()
+        ConfigAmenagementFactory(
+            department=dept,
+            is_activated=False,
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
+        )
+        overlapping = ConfigAmenagement(
+            department=dept,
+            is_activated=False,
+            validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
+            lse_contact_ddtm="test",
+            n2000_contact_ddtm_info="test",
+            n2000_contact_ddtm_instruction="test",
+            n2000_procedure_ein="test",
+            evalenv_procedure_casparcas="test",
+        )
+        with pytest.raises(Exception):
+            overlapping.save()
+
+    def test_overlap_rejected_between_active_and_inactive(self):
+        """An inactive config cannot overlap with an active config."""
+        dept = DepartmentFactory()
+        ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
+        )
+        overlapping = ConfigAmenagement(
+            department=dept,
+            is_activated=False,
+            validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
+            lse_contact_ddtm="test",
+            n2000_contact_ddtm_info="test",
+            n2000_contact_ddtm_instruction="test",
+            n2000_procedure_ein="test",
+            evalenv_procedure_casparcas="test",
+        )
+        with pytest.raises(Exception):
+            overlapping.save()
+
+    def test_empty_range_not_allowed(self):
+        """An empty validity_range (same lower and upper) is rejected by the DB constraint."""
+        dept = DepartmentFactory()
+        config = ConfigAmenagement(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 6, 1), date(2025, 6, 1), "[)"),
+            lse_contact_ddtm="test",
+            n2000_contact_ddtm_info="test",
+            n2000_contact_ddtm_instruction="test",
+            n2000_procedure_ein="test",
+            evalenv_procedure_casparcas="test",
+        )
+        with pytest.raises(Exception):
+            config.save()
+
+
+class TestMoulinetteWithDate:
+    """Tests for the Moulinette using date to select configs."""
+
+    @pytest.mark.parametrize("footprint", [50])
+    def test_moulinette_uses_date(self, moulinette_data):
+        """Moulinette should use date to select the appropriate config."""
+        dept = DepartmentFactory(department="44")
+        config_2024 = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_2025 = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
+        )
+        moulinette_data["data"]["date"] = "2024-06-15"
+        moulinette = MoulinetteAmenagement(moulinette_data)
+
+        assert moulinette.config == config_2024
+
+        moulinette_data["data"]["date"] = "2025-06-15"
+        moulinette = MoulinetteAmenagement(moulinette_data)
+
+        assert moulinette.config == config_2025
+
+    @pytest.mark.parametrize("footprint", [50])
+    def test_moulinette_defaults_to_today(self, moulinette_data):
+        """Without date, Moulinette should use today's date."""
+        dept = DepartmentFactory(department="44")
+        ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=None,
+        )
+        moulinette = MoulinetteAmenagement(moulinette_data)
+        assert moulinette.config is not None

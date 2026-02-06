@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import tempfile
+from collections import defaultdict
 from urllib.parse import parse_qs, urlparse
 
 import fiona
@@ -134,7 +135,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             PetitionProject.objects.exclude(
                 demarches_simplifiees_state__exact=DOSSIER_STATES.draft
             )
-            .select_related("hedge_data", "department__confighaie")
+            .select_related("hedge_data", "department")
             .prefetch_related(
                 Prefetch(
                     "status_history",
@@ -200,16 +201,69 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             context["user_can_view_one_petition_project"] = all_results.exists()
 
         # Add city and organization to each obj
-        for obj in context["object_list"]:
+        objects = context["object_list"]
+        for obj in objects:
             dossier = obj.prefetched_dossier
             if dossier:
-                city, organization, _ = extract_data_from_fields(
-                    obj.department.confighaie, dossier
-                )
+                config = self.get_project_config(obj)
+                city, organization, _ = extract_data_from_fields(config, dossier)
                 obj.city = city
                 obj.organization = organization
 
         return context
+
+    def get_project_config(self, project):
+        """Return the Config object associated with this project.
+
+        Internally builds a cache by prefetching all ConfigHaie for the departments
+        present in `object_list` in a single query.
+        """
+
+        def _build_cache():
+            """Build a list of of config objects per department."""
+
+            # Extract the set of departments from the list of projects
+            department_ids = {obj.department_id for obj in self.object_list}
+
+            # For each department, extract the list of existing configs
+            configs_by_dept = defaultdict(list)
+            for config in ConfigHaie.objects.filter(department_id__in=department_ids):
+                configs_by_dept[config.department_id].append(config)
+
+            return configs_by_dept
+
+        if not hasattr(self, "_config_cache"):
+            self._config_cache = _build_cache()
+        configs_by_dept = self._config_cache
+
+        department_id = project.department_id
+        project_date = project.created_at.date()
+
+        for config in configs_by_dept[department_id]:
+            # If there is no range, then it's the only possible config for this
+            # department
+            if config.validity_range is None:
+                return config
+
+            # Config is not valid yet, skip
+            if (
+                config.validity_range.lower
+                and project_date < config.validity_range.lower
+            ):
+                continue
+
+            # Config is not valid anymore, skip
+            if (
+                config.validity_range.upper
+                and project_date >= config.validity_range.upper
+            ):
+                continue
+
+            # We found a valid config
+            # Since config cannot overlap, it must be the only valid one
+            return config
+
+        return None
 
 
 class PetitionProjectCreate(FormView):
