@@ -2,13 +2,13 @@ from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import AdminDateWidget
 from django.contrib.postgres.forms import DateRangeField, RangeWidget
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import Q
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
-from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
