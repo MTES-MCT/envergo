@@ -4,20 +4,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.contrib.postgres.fields import DateRangeField
-from django.db.models import Func
 from django.http import QueryDict
 from django.template import engines
 from django.utils._os import safe_join
 
 from envergo.urlmappings.utils import unfold_url
-
-
-class DateRange(Func):
-    """PostgreSQL daterange() function for use in constraints."""
-
-    function = "daterange"
-    output_field = DateRangeField()
 
 
 class MoulinetteUrl:
