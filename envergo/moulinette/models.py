@@ -610,9 +610,9 @@ class Regulation(models.Model):
             )
 
         if hasattr(self._evaluator, "actions_to_take"):
-            actions_to_take = set(self._evaluator.actions_to_take)
+            actions_to_take = self._evaluator.actions_to_take
         else:
-            actions_to_take = set()
+            actions_to_take = {}
 
         return actions_to_take
 
