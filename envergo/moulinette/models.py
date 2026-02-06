@@ -1063,18 +1063,17 @@ class ConfigBase(models.Model):
 
     def __str__(self):
         dept_display = self.department.get_department_display()
-        if self.validity_range:
-            from_str = (
-                self.validity_range.lower.isoformat()
-                if self.validity_range.lower
-                else "…"
-            )
-            until_str = (
-                self.validity_range.upper.isoformat()
-                if self.validity_range.upper
-                else "…"
-            )
-            return f"{dept_display} [{from_str} - {until_str})"
+        if not self.validity_range:
+            return dept_display
+        lower = self.validity_range.lower
+        upper = self.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{dept_display} {lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{dept_display} {lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"{dept_display} → {upper.strftime(fmt)}"
         return dept_display
 
 
