@@ -28,7 +28,6 @@ from django.db.models import (
 from django.db.models import Value
 from django.db.models import Value as V
 from django.db.models.functions import Cast, Coalesce, Concat
-from psycopg.types.range import DateRange as PsycopgDateRange
 from django.forms import BoundField, Form
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
@@ -39,6 +38,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
+from psycopg.types.range import DateRange as PsycopgDateRange
 
 from envergo.evaluations.models import (
     RESULT_CASCADE,
@@ -68,10 +68,7 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
     MapFactory,
 )
-from envergo.moulinette.utils import (
-    compute_surfaces,
-    list_moulinette_templates,
-)
+from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
 
 # WGS84, geodetic coordinates, units in degrees
