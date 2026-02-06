@@ -408,17 +408,16 @@ class TestConfigValidityDates:
 
 
 class TestConfigOverlapValidation:
-    """Tests for the overlap validation on Config models."""
+    """Tests for the DB-level overlap ExclusionConstraint on Config models."""
 
-    def test_overlap_validation_between_configs(self):
-        """Configs with overlapping dates should fail validation."""
+    def test_overlap_rejected_between_configs(self):
+        """Configs with overlapping dates should be rejected by the DB constraint."""
         dept = DepartmentFactory()
         ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
             validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
         )
-        # Try to create overlapping config
         overlapping = ConfigAmenagement(
             department=dept,
             is_activated=True,
@@ -429,22 +428,20 @@ class TestConfigOverlapValidation:
             n2000_procedure_ein="test",
             evalenv_procedure_casparcas="test",
         )
-        with pytest.raises(ValidationError) as exc_info:
-            overlapping.clean()
-        assert "chevauche" in str(exc_info.value)
+        with pytest.raises(Exception):
+            overlapping.save()
 
-    def test_overlap_validation_applies_to_inactive_configs(self):
-        """Inactive configs with overlapping dates should also fail validation."""
+    def test_overlap_rejected_for_inactive_configs(self):
+        """Inactive configs with overlapping dates should also be rejected."""
         dept = DepartmentFactory()
         ConfigAmenagementFactory(
             department=dept,
-            is_activated=False,  # Inactive
+            is_activated=False,
             validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
         )
-        # Try to create overlapping inactive config
         overlapping = ConfigAmenagement(
             department=dept,
-            is_activated=False,  # Also inactive
+            is_activated=False,
             validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
             lse_contact_ddtm="test",
             n2000_contact_ddtm_info="test",
@@ -452,22 +449,20 @@ class TestConfigOverlapValidation:
             n2000_procedure_ein="test",
             evalenv_procedure_casparcas="test",
         )
-        with pytest.raises(ValidationError) as exc_info:
-            overlapping.clean()
-        assert "chevauche" in str(exc_info.value)
+        with pytest.raises(Exception):
+            overlapping.save()
 
-    def test_overlap_validation_between_active_and_inactive(self):
+    def test_overlap_rejected_between_active_and_inactive(self):
         """An inactive config cannot overlap with an active config."""
         dept = DepartmentFactory()
         ConfigAmenagementFactory(
             department=dept,
-            is_activated=True,  # Active
+            is_activated=True,
             validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
         )
-        # Try to create overlapping inactive config
         overlapping = ConfigAmenagement(
             department=dept,
-            is_activated=False,  # Inactive
+            is_activated=False,
             validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
             lse_contact_ddtm="test",
             n2000_contact_ddtm_info="test",
@@ -475,9 +470,8 @@ class TestConfigOverlapValidation:
             n2000_procedure_ein="test",
             evalenv_procedure_casparcas="test",
         )
-        with pytest.raises(ValidationError) as exc_info:
-            overlapping.clean()
-        assert "chevauche" in str(exc_info.value)
+        with pytest.raises(Exception):
+            overlapping.save()
 
     def test_empty_range_not_allowed(self):
         """An empty validity_range (same lower and upper) is rejected by the DB constraint."""
