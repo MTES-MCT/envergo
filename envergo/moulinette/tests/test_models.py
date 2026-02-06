@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.core.exceptions import ValidationError
-from psycopg.types.range import DateRange
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa

@@ -2,7 +2,7 @@ import django.contrib.postgres.constraints
 import django.contrib.postgres.fields.ranges
 from django.db import migrations, models
 from django.db.models.functions import Coalesce
-from psycopg.types.range import DateRange
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 
 def convert_config_dates_to_range(apps, schema_editor):
