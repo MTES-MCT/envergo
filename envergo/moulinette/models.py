@@ -38,7 +38,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
-from psycopg.types.range import DateRange as PsycopgDateRange
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.evaluations.models import (
     RESULT_CASCADE,
@@ -749,7 +749,7 @@ class Criterion(models.Model):
                     (
                         Coalesce(
                             "validity_range",
-                            Value(PsycopgDateRange(None, None, "[)")),
+                            Value(DateRange(None, None, "[)")),
                         ),
                         RangeOperators.OVERLAPS,
                     ),
@@ -1051,7 +1051,7 @@ class ConfigBase(models.Model):
                     (
                         Coalesce(
                             "validity_range",
-                            Value(PsycopgDateRange(None, None, "[)")),
+                            Value(DateRange(None, None, "[)")),
                         ),
                         RangeOperators.OVERLAPS,
                     ),
