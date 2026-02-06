@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.core.exceptions import ValidationError
+from psycopg.types.range import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
@@ -292,8 +293,7 @@ class TestConfigValidityDates:
         config = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=None,
-            valid_until=None,
+            validity_range=None,
         )
         # Should be returned for any date
         assert (
@@ -309,47 +309,45 @@ class TestConfigValidityDates:
         )
 
     def test_config_valid_from_inclusive(self):
-        """The valid_from date is inclusive (config is valid on that date)."""
+        """The lower bound of validity_range is inclusive (config is valid on that date)."""
         dept = DepartmentFactory()
         config = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 1, 1),
-            valid_until=None,
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
-        # Should NOT be returned before valid_from
+        # Should NOT be returned before lower bound
         assert (
             ConfigAmenagement.objects.get_valid_config(dept, date(2024, 12, 31)) is None
         )
-        # Should be returned ON valid_from (inclusive)
+        # Should be returned ON lower bound (inclusive)
         assert (
             ConfigAmenagement.objects.get_valid_config(dept, date(2025, 1, 1)) == config
         )
-        # Should be returned after valid_from
+        # Should be returned after lower bound
         assert (
             ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15))
             == config
         )
 
     def test_config_valid_until_exclusive(self):
-        """The valid_until date is exclusive (config is NOT valid on that date)."""
+        """The upper bound of validity_range is exclusive (config is NOT valid on that date)."""
         dept = DepartmentFactory()
         config = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=None,
-            valid_until=date(2025, 6, 1),
+            validity_range=DateRange(None, date(2025, 6, 1), "[)"),
         )
-        # Should be returned before valid_until
+        # Should be returned before upper bound
         assert (
             ConfigAmenagement.objects.get_valid_config(dept, date(2025, 5, 31))
             == config
         )
-        # Should NOT be returned ON valid_until (exclusive)
+        # Should NOT be returned ON upper bound (exclusive)
         assert (
             ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 1)) is None
         )
-        # Should NOT be returned after valid_until
+        # Should NOT be returned after upper bound
         assert (
             ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 2)) is None
         )
@@ -360,8 +358,7 @@ class TestConfigValidityDates:
         config = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2025, 6, 1),
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 6, 1), "[)"),
         )
         # Before range
         assert (
@@ -391,14 +388,12 @@ class TestConfigValidityDates:
         config_2024 = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2024, 1, 1),
-            valid_until=date(2025, 1, 1),
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
         )
         config_2025 = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2026, 1, 1),
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
         )
         # 2024 config should be returned for 2024 dates
         assert (
@@ -421,15 +416,13 @@ class TestConfigOverlapValidation:
         ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2025, 12, 31),
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
         )
         # Try to create overlapping config
         overlapping = ConfigAmenagement(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 6, 1),
-            valid_until=date(2026, 6, 1),
+            validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
             lse_contact_ddtm="test",
             n2000_contact_ddtm_info="test",
             n2000_contact_ddtm_instruction="test",
@@ -446,15 +439,13 @@ class TestConfigOverlapValidation:
         ConfigAmenagementFactory(
             department=dept,
             is_activated=False,  # Inactive
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2025, 12, 31),
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
         )
         # Try to create overlapping inactive config
         overlapping = ConfigAmenagement(
             department=dept,
             is_activated=False,  # Also inactive
-            valid_from=date(2025, 6, 1),
-            valid_until=date(2026, 6, 1),
+            validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
             lse_contact_ddtm="test",
             n2000_contact_ddtm_info="test",
             n2000_contact_ddtm_instruction="test",
@@ -471,15 +462,13 @@ class TestConfigOverlapValidation:
         ConfigAmenagementFactory(
             department=dept,
             is_activated=True,  # Active
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2025, 12, 31),
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 12, 31), "[)"),
         )
         # Try to create overlapping inactive config
         overlapping = ConfigAmenagement(
             department=dept,
             is_activated=False,  # Inactive
-            valid_from=date(2025, 6, 1),
-            valid_until=date(2026, 6, 1),
+            validity_range=DateRange(date(2025, 6, 1), date(2026, 6, 1), "[)"),
             lse_contact_ddtm="test",
             n2000_contact_ddtm_info="test",
             n2000_contact_ddtm_instruction="test",
@@ -490,41 +479,21 @@ class TestConfigOverlapValidation:
             overlapping.clean()
         assert "chevauche" in str(exc_info.value)
 
-    def test_date_order_validation(self):
-        """valid_from must be before valid_until."""
+    def test_empty_range_not_allowed(self):
+        """An empty validity_range (same lower and upper) is rejected by the DB constraint."""
         dept = DepartmentFactory()
         config = ConfigAmenagement(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 12, 1),
-            valid_until=date(2025, 1, 1),  # Before valid_from!
+            validity_range=DateRange(date(2025, 6, 1), date(2025, 6, 1), "[)"),
             lse_contact_ddtm="test",
             n2000_contact_ddtm_info="test",
             n2000_contact_ddtm_instruction="test",
             n2000_procedure_ein="test",
             evalenv_procedure_casparcas="test",
         )
-        with pytest.raises(ValidationError) as exc_info:
-            config.clean()
-        assert "antérieure" in str(exc_info.value)
-
-    def test_same_dates_not_allowed(self):
-        """valid_from and valid_until cannot be the same date."""
-        dept = DepartmentFactory()
-        config = ConfigAmenagement(
-            department=dept,
-            is_activated=True,
-            valid_from=date(2025, 6, 1),
-            valid_until=date(2025, 6, 1),  # Same as valid_from!
-            lse_contact_ddtm="test",
-            n2000_contact_ddtm_info="test",
-            n2000_contact_ddtm_instruction="test",
-            n2000_procedure_ein="test",
-            evalenv_procedure_casparcas="test",
-        )
-        with pytest.raises(ValidationError) as exc_info:
-            config.clean()
-        assert "antérieure" in str(exc_info.value)
+        with pytest.raises(Exception):
+            config.save()
 
 
 class TestMoulinetteWithSimulationDate:
@@ -537,14 +506,12 @@ class TestMoulinetteWithSimulationDate:
         config_2024 = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2024, 1, 1),
-            valid_until=date(2025, 1, 1),
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
         )
         config_2025 = ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=date(2025, 1, 1),
-            valid_until=date(2026, 1, 1),
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
         )
         # Add simulation_date to data
         moulinette_data["data"]["simulation_date"] = "2024-06-15"
@@ -565,8 +532,7 @@ class TestMoulinetteWithSimulationDate:
         ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
-            valid_from=None,
-            valid_until=None,
+            validity_range=None,
         )
         # No simulation_date
         moulinette = MoulinetteAmenagement(moulinette_data)
