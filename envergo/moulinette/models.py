@@ -67,7 +67,6 @@ from envergo.moulinette.regulations import (
     MapFactory,
 )
 from envergo.moulinette.utils import (
-    DateRange,
     compute_surfaces,
     list_moulinette_templates,
 )
