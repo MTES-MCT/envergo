@@ -1556,7 +1556,6 @@ class Moulinette(ABC):
     def config(self):
         return self.get_config()
 
-
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
 
@@ -2371,9 +2370,7 @@ class MoulinetteHaie(Moulinette):
     def get_config(self):
         if not self.department:
             return None
-        return ConfigHaie.objects.get_valid_config(
-            self.department, self.date
-        )
+        return ConfigHaie.objects.get_valid_config(self.department, self.date)
 
     @property
     def result(self):
