@@ -778,34 +778,6 @@ class Criterion(models.Model):
                     "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
                 }
             )
-        self._validate_no_overlap()
-
-    def _validate_no_overlap(self):
-        """Check for overlapping criteria with the same evaluator, activation_map, regulation, and perimeter.
-
-        This duplicates the ExclusionConstraint check at the Python level so
-        that admin form validation surfaces a friendly error message instead
-        of letting the raw IntegrityError bubble up on save().
-        """
-
-        qs = Criterion.objects.filter(
-            evaluator=self.evaluator,
-            activation_map=self.activation_map,
-            regulation=self.regulation,
-            perimeter=self.perimeter,
-        )
-        if self.pk:
-            qs = qs.exclude(pk=self.pk)
-
-        self_range = self.validity_range or PsycopgDateRange(None, None, "[)")
-        overlapping = qs.filter(
-            Q(validity_range__overlap=self_range) | Q(validity_range__isnull=True)
-        )
-        if overlapping.exists():
-            raise ValidationError(
-                "Ce critère chevauche un critère existant avec le même "
-                "évaluateur, la même carte d'activation et la même réglementation."
-            )
 
     @property
     def slug(self):
@@ -1109,33 +1081,6 @@ class ConfigBase(models.Model):
             )
             return f"{dept_display} [{from_str} - {until_str})"
         return dept_display
-
-    def clean(self):
-        super().clean()
-        self._validate_no_overlap()
-
-    def _validate_no_overlap(self):
-        """Check for overlapping configs for the same department.
-
-        This duplicates the ExclusionConstraint check at the Python level so
-        that admin form validation surfaces a friendly error message instead
-        of letting the raw IntegrityError bubble up on save().
-        """
-
-        qs = self.__class__.objects.filter(department=self.department)
-        if self.pk:
-            qs = qs.exclude(pk=self.pk)
-
-        # Build a range for overlap check: treat NULL as infinite range
-        self_range = self.validity_range or PsycopgDateRange(None, None, "[)")
-        overlapping = qs.filter(
-            Q(validity_range__overlap=self_range) | Q(validity_range__isnull=True)
-        )
-        if overlapping.exists():
-            raise ValidationError(
-                "Cette configuration chevauche une configuration "
-                "existante pour ce département."
-            )
 
 
 class ConfigAmenagement(ConfigBase):
