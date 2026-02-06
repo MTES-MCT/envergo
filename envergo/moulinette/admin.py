@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
-from psycopg.types.range import DateRange
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
