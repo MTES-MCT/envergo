@@ -10,6 +10,8 @@ from envergo.moulinette.forms.fields import (
     extract_display_function,
 )
 from envergo.moulinette.regulations import (
+    TO_ADD,
+    TO_SUBTRACT,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -27,8 +29,11 @@ class EvalEnvRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Eval Env"
 
     ACTIONS_TO_TAKE_MATRIX = {
-        "systematique": ["depot_etude_impact"],
-        "cas_par_cas": ["depot_cas_par_cas", "pc_cas_par_cas"],
+        "systematique": {
+            TO_ADD: {"depot_etude_impact", "pc_etude_impact"},
+            TO_SUBTRACT: {"pc_ein"},
+        },
+        "cas_par_cas": {TO_ADD: {"depot_cas_par_cas", "pc_cas_par_cas"}},
     }
 
 

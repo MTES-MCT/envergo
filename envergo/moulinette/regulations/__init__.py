@@ -642,16 +642,21 @@ class HedgeDensityMixin:
     pass
 
 
+TO_ADD = "to_add"
+
+TO_SUBTRACT = "to_subtract"
+
+
 class ActionsToTakeBaseMixin:
     ACTIONS_TO_TAKE_MATRIX = {}
 
-    def get_actions_to_take(self):
-        actions_to_take = self.ACTIONS_TO_TAKE_MATRIX.get(self.result, [])
+    def get_actions_to_take(self) -> dict[str, set[str]]:
+        actions_to_take = self.ACTIONS_TO_TAKE_MATRIX.get(self.result, {})
         return actions_to_take
 
     @property
-    def actions_to_take(self):
-        """Return the actions to take depending on regulation result."""
+    def actions_to_take(self) -> dict[str, set[str]]:
+        """Return the sets of actions to take to add or to subtract depending on regulation result."""
         if not hasattr(self, "_actions_to_take"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 

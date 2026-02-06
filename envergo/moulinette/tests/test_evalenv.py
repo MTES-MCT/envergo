@@ -20,7 +20,10 @@ def autouse_site(site):
 
 @pytest.fixture(autouse=True)
 def evalenv_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="eval_env")
+    regulation = RegulationFactory(
+        regulation="eval_env",
+        evaluator="envergo.moulinette.regulations.evalenv.EvalEnvRegulation",
+    )
     criteria = [
         CriterionFactory(
             title="Emprise",
@@ -362,3 +365,28 @@ def test_evalenv_rubrique44(admin_client):
         "Le projet ne concerne pas un équipement sportif, de loisirs, ou d’activités culturelles."
         in res.content.decode()
     )
+
+
+@pytest.mark.parametrize("footprint", [40000])
+def test_evalenv_subtractive_actions_to_take(moulinette_data):
+    ConfigAmenagementFactory()
+    moulinette_data["data"]["terrain_assiette"] = 150000
+    moulinette_data["data"]["operation_amenagement"] = "oui"
+
+    # Mouais coordinates in 44
+    moulinette_data["data"]["lat"] = 47.696706
+    moulinette_data["data"]["lng"] = -1.646947
+
+    moulinette = MoulinetteAmenagement(moulinette_data)
+    assert moulinette.eval_env.terrain_assiette.result == "systematique"
+    assert moulinette.eval_env.actions_to_take == {
+        "to_add": {"depot_etude_impact", "pc_etude_impact"},
+        "to_subtract": {"pc_ein"},
+    }
+    actions_to_take_flatten = {
+        target: [action.slug for action in actions_list]
+        for target, actions_list in moulinette.actions_to_take.items()
+    }
+    assert actions_to_take_flatten == {
+        "petitioner": ["depot_etude_impact"]
+    }  # there is no pc_etude_impact in DB
