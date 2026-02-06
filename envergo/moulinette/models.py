@@ -1560,28 +1560,6 @@ class Moulinette(ABC):
     def config(self):
         return self.get_config()
 
-    @cached_property
-    def simulation_date(self):
-        return self.get_simulation_date()
-
-    def get_simulation_date(self):
-        """Get the simulation date from form data or default to today.
-
-        The simulation date determines which configuration is used for a given
-        department (when multiple configs exist with different validity periods).
-        """
-
-        data = self.form_kwargs.get("data", {})
-        initial = self.form_kwargs.get("initial", {})
-        date_str = data.get("simulation_date") or initial.get("simulation_date")
-
-        if date_str:
-            try:
-                return datetime.strptime(date_str, "%Y-%m-%d").date()
-            except (ValueError, TypeError):
-                pass
-
-        return timezone.now().date()
 
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
@@ -2149,10 +2127,10 @@ class Moulinette(ABC):
             result[action_key].append(action)
         return dict(result)
 
-    @property
+    @cached_property
     def date(self):
         """Date for the simulation. Today by default."""
-        date_str = self.data.get("date", None)
+        date_str = self.data.get("date") or self.initial.get("date")
         if date_str:
             try:
                 return parser.isoparse(date_str).date()
@@ -2349,7 +2327,7 @@ class MoulinetteAmenagement(Moulinette):
             return None
         config = ConfigAmenagement.objects.prefetch_related(
             "templates"
-        ).get_valid_config(self.department, self.simulation_date)
+        ).get_valid_config(self.department, self.date)
         return config
 
     def get_debug_context(self):
@@ -2415,7 +2393,7 @@ class MoulinetteHaie(Moulinette):
         if not self.department:
             return None
         return ConfigHaie.objects.get_valid_config(
-            self.department, self.simulation_date
+            self.department, self.date
         )
 
     @property

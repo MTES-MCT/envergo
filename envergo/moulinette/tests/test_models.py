@@ -490,12 +490,12 @@ class TestConfigOverlapValidation:
             config.save()
 
 
-class TestMoulinetteWithSimulationDate:
-    """Tests for the Moulinette using simulation_date to select configs."""
+class TestMoulinetteWithDate:
+    """Tests for the Moulinette using date to select configs."""
 
     @pytest.mark.parametrize("footprint", [50])
-    def test_moulinette_uses_simulation_date(self, moulinette_data):
-        """Moulinette should use simulation_date to select the appropriate config."""
+    def test_moulinette_uses_date(self, moulinette_data):
+        """Moulinette should use date to select the appropriate config."""
         dept = DepartmentFactory(department="44")
         config_2024 = ConfigAmenagementFactory(
             department=dept,
@@ -507,28 +507,24 @@ class TestMoulinetteWithSimulationDate:
             is_activated=True,
             validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
         )
-        # Add simulation_date to data
-        moulinette_data["data"]["simulation_date"] = "2024-06-15"
+        moulinette_data["data"]["date"] = "2024-06-15"
         moulinette = MoulinetteAmenagement(moulinette_data)
 
         assert moulinette.config == config_2024
 
-        # Change simulation_date
-        moulinette_data["data"]["simulation_date"] = "2025-06-15"
+        moulinette_data["data"]["date"] = "2025-06-15"
         moulinette = MoulinetteAmenagement(moulinette_data)
 
         assert moulinette.config == config_2025
 
     @pytest.mark.parametrize("footprint", [50])
     def test_moulinette_defaults_to_today(self, moulinette_data):
-        """Without simulation_date, Moulinette should use today's date."""
+        """Without date, Moulinette should use today's date."""
         dept = DepartmentFactory(department="44")
         ConfigAmenagementFactory(
             department=dept,
             is_activated=True,
             validity_range=None,
         )
-        # No simulation_date
         moulinette = MoulinetteAmenagement(moulinette_data)
-        # Should use today's date and find the config
         assert moulinette.config is not None
