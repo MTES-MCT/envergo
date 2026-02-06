@@ -721,6 +721,19 @@ class Criterion(models.Model):
                 name="validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début",
             ),
+            # Prevent two criteria with the same identity from having
+            # overlapping validity periods.
+            #
+            # "perimeter" is part of the identity key because the same
+            # (evaluator, activation_map, regulation) combination legitimately
+            # exists for different perimeters (e.g. different SAGE zones).
+            # Coalesce(perimeter, 0) is needed because perimeter is nullable
+            # and PostgreSQL exclusion constraints treat NULL != NULL, so
+            # without it two NULL-perimeter rows would never conflict.
+            #
+            # Coalesce(validity_range, '(,)') treats a NULL validity_range as
+            # an infinite range so that an "always valid" criterion correctly
+            # conflicts with any other criterion sharing the same identity.
             ExclusionConstraint(
                 name="criterion_no_overlapping_validity",
                 expressions=[
@@ -763,7 +776,12 @@ class Criterion(models.Model):
         self._validate_no_overlap()
 
     def _validate_no_overlap(self):
-        """Check for overlapping criteria with the same evaluator, activation_map, regulation, and perimeter."""
+        """Check for overlapping criteria with the same evaluator, activation_map, regulation, and perimeter.
+
+        This duplicates the ExclusionConstraint check at the Python level so
+        that admin form validation surfaces a friendly error message instead
+        of letting the raw IntegrityError bubble up on save().
+        """
 
         qs = Criterion.objects.filter(
             evaluator=self.evaluator,
@@ -1092,7 +1110,12 @@ class ConfigBase(models.Model):
         self._validate_no_overlap()
 
     def _validate_no_overlap(self):
-        """Check for overlapping configs for the same department."""
+        """Check for overlapping configs for the same department.
+
+        This duplicates the ExclusionConstraint check at the Python level so
+        that admin form validation surfaces a friendly error message instead
+        of letting the raw IntegrityError bubble up on save().
+        """
 
         qs = self.__class__.objects.filter(department=self.department)
         if self.pk:
