@@ -52,9 +52,7 @@ class HomeHaieView(TemplateView):
         if department_id:
             department = Department.objects.defer("geometry").get(id=department_id)
 
-        config = (
-            ConfigHaie.objects.get_valid_config(department) if department else None
-        )
+        config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         if config:
             query_params = {"department": department.department}
