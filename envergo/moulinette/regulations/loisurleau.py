@@ -3,6 +3,7 @@ import logging
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import (
+    TO_ADD,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -25,9 +26,9 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Loi sur l'eau"
 
     ACTIONS_TO_TAKE_MATRIX = {
-        "soumis_ou_pac": ["depot_pac_lse", "mention_arrete_lse", "pc_ein"],
-        "soumis": ["depot_dossier_lse", "mention_arrete_lse", "pc_ein"],
-        "action_requise": ["mention_arrete_lse"],
+        "soumis_ou_pac": {TO_ADD: {"depot_pac_lse", "mention_arrete_lse", "pc_ein"}},
+        "soumis": {TO_ADD: {"depot_dossier_lse", "mention_arrete_lse", "pc_ein"}},
+        "action_requise": {TO_ADD: {"mention_arrete_lse"}},
     }
 
 
@@ -78,7 +79,7 @@ class ZoneHumide(
         "action_requise_tout_dpt": RESULTS.action_requise,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zh_lse"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh_lse"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -200,7 +201,7 @@ class ZoneInondable(
         "action_requise_dans_doute": RESULTS.action_requise,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zi_lse"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zi_lse"}}}
 
     def get_result_data(self):
         """Run the check for the 3.1.2.0 rule."""
@@ -300,7 +301,7 @@ class EcoulementSansBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         ("lt_8000", "pv_sol"): "non_soumis_pv_sol",
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_2150"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_2150"}}}
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
@@ -449,7 +450,7 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         "non_soumis": RESULTS.non_soumis,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_2150"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_2150"}}}
 
     def get_catalog_data(self):
         data = {}

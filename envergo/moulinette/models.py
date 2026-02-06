@@ -59,6 +59,8 @@ from envergo.moulinette.forms import (
     TriageFormHaie,
 )
 from envergo.moulinette.regulations import (
+    TO_ADD,
+    TO_SUBTRACT,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
     MapFactory,
@@ -227,6 +229,7 @@ ACTIONS_TO_TAKE = Choices(
         "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
     ),
     ("pc_ein", "L’évaluation des incidences Natura 2000"),
+    ("pc_etude_impact", "L'étude d'impact"),
 )
 
 
@@ -599,8 +602,8 @@ class Regulation(models.Model):
             return False
 
     @property
-    def actions_to_take(self) -> set[str]:
-        """Get potential actions to take from regulation result."""
+    def actions_to_take(self) -> dict[str, set[str]]:
+        """Get potential actions to take (to add or to subtract) from regulation result."""
         if not hasattr(self, "_evaluator"):
             raise RuntimeError(
                 "Regulation must be evaluated before accessing actions to take."
@@ -840,17 +843,17 @@ class Criterion(models.Model):
         return self._evaluator.result_tag_style
 
     @property
-    def actions_to_take(self) -> set[str]:
-        """Get potential actions to take from regulation result."""
+    def actions_to_take(self) -> dict[str, set[str]]:
+        """Get potential actions to take (to add or to subtract) from regulation result."""
         if not hasattr(self, "_evaluator"):
             raise RuntimeError(
                 "Criterion must be evaluated before accessing actions to take."
             )
 
         if hasattr(self._evaluator, "actions_to_take"):
-            actions_to_take = set(self._evaluator.actions_to_take)
+            actions_to_take = self._evaluator.actions_to_take
         else:
-            actions_to_take = set()
+            actions_to_take = {}
 
         return actions_to_take
 
@@ -1974,11 +1977,28 @@ class Moulinette(ABC):
     @cached_property
     def actions_to_take(self):
         """Get potential actions to take from all activated regulations and criteria"""
-        actions_to_take = set()
+        actions_to_take_inputs = {
+            TO_ADD: set(),
+            TO_SUBTRACT: set(),
+        }
         for regulation in self.regulations:
-            actions_to_take.update(regulation.actions_to_take)
+            actions_to_take_inputs[TO_ADD].update(
+                regulation.actions_to_take.get(TO_ADD, set())
+            )
+            actions_to_take_inputs[TO_SUBTRACT].update(
+                regulation.actions_to_take.get(TO_SUBTRACT, set())
+            )
             for criterion in regulation.criteria.all():
-                actions_to_take.update(criterion.actions_to_take)
+                actions_to_take_inputs[TO_ADD].update(
+                    criterion.actions_to_take.get(TO_ADD, set())
+                )
+                actions_to_take_inputs[TO_SUBTRACT].update(
+                    criterion.actions_to_take.get(TO_SUBTRACT, set())
+                )
+
+        actions_to_take = (
+            actions_to_take_inputs[TO_ADD] - actions_to_take_inputs[TO_SUBTRACT]
+        )
 
         actions = ActionToTake.objects.filter(slug__in=actions_to_take).all()
         result = defaultdict(list)

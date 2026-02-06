@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms.fields import DisplayChoiceField
 from envergo.moulinette.regulations import (
+    TO_ADD,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -21,7 +22,7 @@ LIGHTBLUE = "#00BFFF"
 class Natura2000Regulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Natura 2000"
 
-    ACTIONS_TO_TAKE_MATRIX = {"soumis": ["depot_ein", "pc_ein"]}
+    ACTIONS_TO_TAKE_MATRIX = {"soumis": {TO_ADD: {"depot_ein", "pc_ein"}}}
 
 
 class ZoneHumideSettingsForm(forms.Form):
@@ -73,7 +74,7 @@ class ZoneHumide(
         "non_concerne": RESULTS.non_concerne,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zh_n2000"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh_n2000"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
@@ -167,7 +168,7 @@ class ZoneInondable(
         ("outside", "small"): RESULTS.non_concerne,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zi_n2000"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: ["etude_zi_n2000"]}}
 
     def get_result_data(self):
         if self.catalog["flood_zones_within_12m"]:
