@@ -2,6 +2,7 @@ import json
 import logging
 from urllib.parse import urlparse
 
+from django.contrib.gis.db.models.functions import Centroid
 from django.http import JsonResponse, QueryDict
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -13,6 +14,7 @@ from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.decorators.csp import csp_override, csp_report_only_override
+from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
@@ -122,9 +124,19 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         department = self.kwargs.get("department", "")
         context["department"] = department
         if department:
-            config = ConfigHaie.objects.filter(
-                department__department=department
-            ).first()
+            config = (
+                ConfigHaie.objects.filter(department__department=department)
+                .annotate(department_centroid=Centroid("department__geometry"))
+                .first()
+            )
+            if config:
+                centroid = config.department_centroid
+                if centroid.srid != EPSG_WGS84:
+                    centroid = centroid.transform(EPSG_WGS84, clone=True)
+                context["department_centroid"] = {
+                    "lat": centroid.y,
+                    "lng": centroid.x,
+                }
 
         context["hedge_to_plant_data_form"] = self.get_hedge_to_plant_data_form(config)
         context["hedge_to_remove_data_form"] = self.get_hedge_to_remove_data_form(
