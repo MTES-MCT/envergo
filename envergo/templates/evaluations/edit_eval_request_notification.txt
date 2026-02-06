@@ -1,10 +1,10 @@
-**Une [demande d'avis](https://envergo.beta.gouv.fr{{ url }}) a été mise à jour aprés la création de l'[avis réglementaire](https://envergo.beta.gouv.fr{{ eval_url }}).**
+**Une [demande d'avis](https://envergo.beta.gouv.fr{{ url }}) a été mise à jour après la création de l'[avis réglementaire](https://envergo.beta.gouv.fr{{ eval_url }}).**
 
 Adresse : {{ request.address }}
 
 Date de la demande initiale : {{ request.created_at|date:"DATE_FORMAT" }}
 
-Date de la creation de l'avis : {{ request.evaluation.created_at|date:"DATE_FORMAT" }}
+Date de la création de l'avis : {{ request.evaluation.created_at|date:"DATE_FORMAT" }}
 
 {{ files_number }} nouveaux fichiers ont été ajoutés.
 
