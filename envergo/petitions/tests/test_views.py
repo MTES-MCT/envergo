@@ -47,6 +47,7 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
     PetitionProjectInstructorView,
+    PetitionProjectList,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -2516,3 +2517,97 @@ def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
         category="dossier", event="invitation_revocation"
     ).first()
     assert revocation_event is not None
+
+
+class TestGetProjectConfig:
+    """Tests for PetitionProjectList.get_project_config."""
+
+    def _make_view(self, projects):
+        """Create a PetitionProjectList instance with the given object_list."""
+        view = PetitionProjectList()
+        view.object_list = projects
+        return view
+
+    @pytest.mark.django_db
+    def test_returns_config_without_validity_range(self):
+        config = DCConfigHaieFactory(validity_range=None)
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) == config
+
+    @pytest.mark.django_db
+    def test_returns_config_matching_date(self):
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        config_old = DCConfigHaieFactory(
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_new = DCConfigHaieFactory(
+            department=config_old.department,
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            created_at=timezone.make_aware(datetime(2025, 6, 15)),
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) == config_new
+
+    @pytest.mark.django_db
+    def test_returns_old_config_for_old_project(self):
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        config_old = DCConfigHaieFactory(
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_new = DCConfigHaieFactory(
+            department=config_old.department,
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            created_at=timezone.make_aware(datetime(2024, 6, 15)),
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) == config_old
+
+    @pytest.mark.django_db
+    def test_returns_none_when_no_config_matches(self):
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        DCConfigHaieFactory(
+            validity_range=DateRange(date(2026, 1, 1), None, "[)"),
+        )
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            created_at=timezone.make_aware(datetime(2025, 6, 15)),
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) is None
+
+    @pytest.mark.django_db
+    def test_cache_is_built_once(self):
+        from envergo.moulinette.models import ConfigHaie
+
+        DCConfigHaieFactory(validity_range=None)
+        project1 = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        )
+        project2 = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        )
+        view = self._make_view([project1, project2])
+
+        with patch.object(
+            ConfigHaie.objects, "filter", wraps=ConfigHaie.objects.filter
+        ) as mock_filter:
+            view.get_project_config(project1)
+            view.get_project_config(project2)
+
+            mock_filter.assert_called_once()
