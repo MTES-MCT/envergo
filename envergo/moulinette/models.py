@@ -27,7 +27,8 @@ from django.db.models import (
 )
 from django.db.models import Value
 from django.db.models import Value as V
-from django.db.models.functions import Cast, Concat
+from django.db.models.functions import Cast, Coalesce, Concat
+from psycopg.types.range import DateRange as PsycopgDateRange
 from django.forms import BoundField, Form
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
@@ -626,6 +627,16 @@ class Regulation(models.Model):
         return self._evaluator
 
 
+class CriterionQuerySet(models.QuerySet):
+    """QuerySet for Criterion models with validity date filtering."""
+
+    def valid_at(self, date):
+        """Filter criteria valid at the given date."""
+        return self.filter(
+            Q(validity_range__contains=date) | Q(validity_range__isnull=True)
+        )
+
+
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
 
@@ -705,6 +716,8 @@ class Criterion(models.Model):
         blank=True,
     )
 
+    objects = CriterionQuerySet.as_manager()
+
     class Meta:
         verbose_name = _("Criterion")
         verbose_name_plural = _("Criteria")
@@ -713,6 +726,29 @@ class Criterion(models.Model):
                 check=Q(validity_range__isempty=False),
                 name="validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début",
+            ),
+            ExclusionConstraint(
+                name="criterion_no_overlapping_validity",
+                expressions=[
+                    ("evaluator", RangeOperators.EQUAL),
+                    ("activation_map", RangeOperators.EQUAL),
+                    ("regulation", RangeOperators.EQUAL),
+                    (
+                        Coalesce("perimeter", Value(0)),
+                        RangeOperators.EQUAL,
+                    ),
+                    (
+                        Coalesce(
+                            "validity_range",
+                            Value(PsycopgDateRange(None, None, "[)")),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+                violation_error_message=(
+                    "Ce critère chevauche un critère existant avec le même "
+                    "évaluateur, la même carte d'activation et la même réglementation."
+                ),
             ),
         ]
 
@@ -729,6 +765,29 @@ class Criterion(models.Model):
                 {
                     "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
                 }
+            )
+        self._validate_no_overlap()
+
+    def _validate_no_overlap(self):
+        """Check for overlapping criteria with the same evaluator, activation_map, regulation, and perimeter."""
+
+        qs = Criterion.objects.filter(
+            evaluator=self.evaluator,
+            activation_map=self.activation_map,
+            regulation=self.regulation,
+            perimeter=self.perimeter,
+        )
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+
+        self_range = self.validity_range or PsycopgDateRange(None, None, "[)")
+        overlapping = qs.filter(
+            Q(validity_range__overlap=self_range) | Q(validity_range__isnull=True)
+        )
+        if overlapping.exists():
+            raise ValidationError(
+                "Ce critère chevauche un critère existant avec le même "
+                "évaluateur, la même carte d'activation et la même réglementation."
             )
 
     @property
@@ -954,13 +1013,11 @@ class ConfigQuerySet(models.QuerySet):
     def valid_at(self, date):
         """Filter configs valid at the given date.
 
-        A config is valid if:
-        - valid_from is None or valid_from <= date (inclusive start)
-        - valid_until is None or valid_until > date (exclusive end)
+        A config is valid if its validity_range contains the date,
+        or if validity_range is NULL (always valid).
         """
         return self.filter(
-            Q(valid_from__lte=date) | Q(valid_from__isnull=True),
-            Q(valid_until__gt=date) | Q(valid_until__isnull=True),
+            Q(validity_range__contains=date) | Q(validity_range__isnull=True)
         )
 
     def get_valid_config(self, department, date=None):
@@ -983,17 +1040,10 @@ class ConfigBase(models.Model):
         help_text=_("Is the moulinette available for this department?"),
         default=False,
     )
-    valid_from = models.DateField(
-        _("Valid from"),
-        null=True,
+    validity_range = DateRangeField(
+        "Dates de validité",
         blank=True,
-        help_text=_("Start date (inclusive). Empty = no start limit."),
-    )
-    valid_until = models.DateField(
-        _("Valid until"),
         null=True,
-        blank=True,
-        help_text=_("End date (exclusive). Empty = no end limit."),
     )
 
     objects = ConfigQuerySet.as_manager()
@@ -1002,12 +1052,10 @@ class ConfigBase(models.Model):
         abstract = True
         constraints = [
             CheckConstraint(
-                check=Q(valid_from__isnull=True)
-                | Q(valid_until__isnull=True)
-                | Q(valid_from__lt=F("valid_until")),
-                name="%(class)s_valid_dates_order",
+                check=Q(validity_range__isempty=False),
+                name="%(class)s_validity_range_non_empty",
                 violation_error_message=_(
-                    "La date de début doit être antérieure à la date de fin."
+                    "La date de fin de validité doit être supérieure à la date de début."
                 ),
             ),
             ExclusionConstraint(
@@ -1015,7 +1063,10 @@ class ConfigBase(models.Model):
                 expressions=[
                     ("department", RangeOperators.EQUAL),
                     (
-                        DateRange("valid_from", "valid_until", Value("[)")),
+                        Coalesce(
+                            "validity_range",
+                            Value(PsycopgDateRange(None, None, "[)")),
+                        ),
                         RangeOperators.OVERLAPS,
                     ),
                 ],
@@ -1028,55 +1079,41 @@ class ConfigBase(models.Model):
 
     def __str__(self):
         dept_display = self.department.get_department_display()
-        if self.valid_from or self.valid_until:
-            from_str = self.valid_from.isoformat() if self.valid_from else "…"
-            until_str = self.valid_until.isoformat() if self.valid_until else "…"
+        if self.validity_range:
+            from_str = (
+                self.validity_range.lower.isoformat()
+                if self.validity_range.lower
+                else "…"
+            )
+            until_str = (
+                self.validity_range.upper.isoformat()
+                if self.validity_range.upper
+                else "…"
+            )
             return f"{dept_display} [{from_str} - {until_str})"
         return dept_display
 
     def clean(self):
         super().clean()
-        if self.valid_from and self.valid_until and self.valid_from >= self.valid_until:
-            raise ValidationError(
-                "La date de début doit être antérieure à la date de fin."
-            )
         self._validate_no_overlap()
 
     def _validate_no_overlap(self):
         """Check for overlapping configs for the same department."""
 
-        # Build queryset to find overlapping configs
         qs = self.__class__.objects.filter(department=self.department)
         if self.pk:
             qs = qs.exclude(pk=self.pk)
 
-        for other in qs:
-            if self._overlaps_with(other):
-                raise ValidationError(
-                    "Cette configuration chevauche une configuration "
-                    "existante pour ce département."
-                )
-
-    def _overlaps_with(self, other):
-        """Check if this config's validity period overlaps with another."""
-        self_start = self.valid_from
-        self_end = self.valid_until
-        other_start = other.valid_from
-        other_end = other.valid_until
-
-        # Two ranges [a, b) and [c, d) overlap if a < d and c < b
-
-        # Check if self starts before other ends
-        self_starts_before_other_ends = other_end is None or (
-            self_start is None or self_start < other_end
+        # Build a range for overlap check: treat NULL as infinite range
+        self_range = self.validity_range or PsycopgDateRange(None, None, "[)")
+        overlapping = qs.filter(
+            Q(validity_range__overlap=self_range) | Q(validity_range__isnull=True)
         )
-
-        # Check if other starts before self ends
-        other_starts_before_self_ends = self_end is None or (
-            other_start is None or other_start < self_end
-        )
-
-        return self_starts_before_other_ends and other_starts_before_self_ends
+        if overlapping.exists():
+            raise ValidationError(
+                "Cette configuration chevauche une configuration "
+                "existante pour ce département."
+            )
 
 
 class ConfigAmenagement(ConfigBase):
@@ -1935,14 +1972,12 @@ class Moulinette(ABC):
         be used in a prefetch_related call when we fetch the regulations.
         """
         criteria = (
-            Criterion.objects.order_by("weight")
+            Criterion.objects.valid_at(self.date)
+            .order_by("weight")
             .distinct("weight", "id")
             .prefetch_related("templates")
             .annotate(distance=Cast(0, IntegerField()))
             .order_by("weight", "id", "distance")
-            .filter(
-                Q(validity_range__contains=self.date) | Q(validity_range__isnull=True)
-            )
         )
 
         return criteria

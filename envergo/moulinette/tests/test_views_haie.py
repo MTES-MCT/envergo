@@ -1,9 +1,11 @@
+from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
 from django.test import override_settings
 from django.urls import reverse
+from psycopg.types.range import DateRange
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import (  # noqa
@@ -566,6 +568,7 @@ def test_confighaie_settings_view_map_display(
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
+        validity_range=DateRange(None, date(2020, 1, 1), "[)"),
     )
     CriterionFactory(
         title="Natura 2000 Haie > Haie Bizous après 2020",
@@ -575,6 +578,7 @@ def test_confighaie_settings_view_map_display(
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
+        validity_range=DateRange(date(2020, 1, 1), None, "[)"),
     )
 
     # AS instructor user in 44
