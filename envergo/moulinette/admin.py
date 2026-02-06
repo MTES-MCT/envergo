@@ -235,17 +235,18 @@ class CriterionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        date_start_display = (
-            obj.validity_range.lower.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.lower
-            else "−∞"
-        )
-        date_end_display = (
-            obj.validity_range.upper.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.upper
-            else "∞"
-        )
-        return f"[{date_start_display}, {date_end_display})"
+        if not obj.validity_range:
+            return ""
+        lower = obj.validity_range.lower
+        upper = obj.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"→ {upper.strftime(fmt)}"
+        return ""
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
@@ -448,17 +449,18 @@ class ConfigAmenagementAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        date_start_display = (
-            obj.validity_range.lower.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.lower
-            else "−∞"
-        )
-        date_end_display = (
-            obj.validity_range.upper.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.upper
-            else "∞"
-        )
-        return f"[{date_start_display}, {date_end_display})"
+        if not obj.validity_range:
+            return ""
+        lower = obj.validity_range.lower
+        upper = obj.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"→ {upper.strftime(fmt)}"
+        return ""
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -586,17 +588,18 @@ class ConfigHaieAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        date_start_display = (
-            obj.validity_range.lower.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.lower
-            else "−∞"
-        )
-        date_end_display = (
-            obj.validity_range.upper.strftime("%-d/%-m/%y")
-            if obj.validity_range and obj.validity_range.upper
-            else "∞"
-        )
-        return f"[{date_start_display}, {date_end_display})"
+        if not obj.validity_range:
+            return ""
+        lower = obj.validity_range.lower
+        upper = obj.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"→ {upper.strftime(fmt)}"
+        return ""
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
