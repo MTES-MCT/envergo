@@ -1,7 +1,14 @@
+import binascii
+import logging
+from hashlib import pbkdf2_hmac
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models import CharField
 from django.utils.translation import gettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
@@ -90,3 +97,17 @@ class User(AbstractUser):
                     self.departments.defer("geometry").exists(),
                 )
             )
+
+    def get_unique_hash(self):
+        """Return unique hash from user email with a salt from env variable"""
+        our_app_iters = 500_000
+        salt_value = settings.HASH_SALT_KEY
+        if not salt_value:
+            logger.warning("Salt key not set")
+        dk = pbkdf2_hmac(
+            "sha256",
+            str.encode(self.email),
+            binascii.unhexlify(salt_value),
+            our_app_iters,
+        )
+        return dk.hex()
