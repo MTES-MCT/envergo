@@ -1,6 +1,6 @@
-import binascii
+import hashlib
+import hmac
 import logging
-from hashlib import pbkdf2_hmac
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -101,14 +101,8 @@ class User(AbstractUser):
 
     def get_unique_hash(self):
         """Return unique hash from user email with a salt from env variable"""
-        our_app_iters = 500_000
         salt_value = settings.HASH_SALT_KEY
         if not salt_value:
             raise ImproperlyConfigured("Missing setting: `HASH_SALT_KEY` is not set")
-        dk = pbkdf2_hmac(
-            "sha256",
-            str.encode(self.email),
-            binascii.unhexlify(salt_value),
-            our_app_iters,
-        )
-        return dk.hex()
+        key = salt_value.encode()
+        return hmac.new(key, self.email.encode(), hashlib.sha256).hexdigest()
