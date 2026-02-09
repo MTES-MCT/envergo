@@ -4,6 +4,7 @@ from hashlib import pbkdf2_hmac
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models import CharField
 from django.utils.translation import gettext_lazy as _
@@ -103,7 +104,7 @@ class User(AbstractUser):
         our_app_iters = 500_000
         salt_value = settings.HASH_SALT_KEY
         if not salt_value:
-            logger.warning("Salt key not set")
+            raise ImproperlyConfigured("Missing setting: `HASH_SALT_KEY` is not set")
         dk = pbkdf2_hmac(
             "sha256",
             str.encode(self.email),
