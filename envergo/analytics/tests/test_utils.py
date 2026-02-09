@@ -2,9 +2,10 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth.models import AnonymousUser
+from django.test import override_settings
 
 from envergo.analytics.models import Event
-from envergo.analytics.utils import get_hash_unique_id, is_request_from_a_bot, log_event
+from envergo.analytics.utils import is_request_from_a_bot, log_event
 
 pytestmark = pytest.mark.django_db
 
@@ -14,12 +15,15 @@ def test_log_event(rf, user, haie_user, admin_user, site):
     assert event_qs.count() == 0
 
     request = rf.get("/")
-    request.user = user
     request.site = site
     request.COOKIES["visitorid"] = "1234"
     metadata = {"data1": "value1", "data2": "value2"}
 
+    # AS a basic user
+    request.user = user
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN a new event is saved with category, event and metadata, but no unique hash
     assert event_qs.count() == 1
     event = event_qs.first()
     assert event.category == "Category"
@@ -27,20 +31,64 @@ def test_log_event(rf, user, haie_user, admin_user, site):
     assert event.metadata == metadata
     assert event.unique_id is None
 
+    # AS an admin user
     request.user = admin_user
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN no event is saved
     assert event_qs.count() == 1
 
+    # AS an haie user
     request.user = haie_user
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN a new event is saved with category, event and metadata, and unique hash
     assert event_qs.count() == 2
     event = event_qs.last()
-    assert event.unique_id == get_hash_unique_id(haie_user.email)
+    assert event.unique_id == haie_user.get_unique_hash()
 
+    # AS an anonymous visitor
     request.user = AnonymousUser()
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN a new event is saved with category, event and metadata, but no unique hash
     assert event_qs.count() == 3
     event = event_qs.last()
+    assert event.unique_id is None
+
+
+@override_settings(HASH_SALT_KEY="")
+def test_log_event_with_no_salt_key_configured(rf, haie_user, site, caplog):
+    """Test log event with no salt key configured"""
+
+    request = rf.get("/")
+    request.site = site
+    request.COOKIES["visitorid"] = "1234"
+    metadata = {"data1": "value1", "data2": "value2"}
+
+    # AS an haie user
+    request.user = haie_user
+    # WHEN log event is fired
+    log_event("Category", "Event", request, **metadata)
+    # THEN error message is sent
+
+    assert (
+        len(
+            [
+                rec.message
+                for rec in caplog.records
+                if "No `unique_id` is set to event" in rec.message
+            ]
+        )
+        > 0
+    )
+    # AND event is loggued without unique_id
+    event_qs = Event.objects.all()
+    assert event_qs.count() == 1
+    event = event_qs.first()
+    assert event.category == "Category"
+    assert event.event == "Event"
+    assert event.metadata == metadata
     assert event.unique_id is None
 
 
