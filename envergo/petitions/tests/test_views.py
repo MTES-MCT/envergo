@@ -2564,7 +2564,7 @@ class TestGetProjectConfig:
         config_old = DCConfigHaieFactory(
             validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
         )
-        config_new = DCConfigHaieFactory(
+        config_new = DCConfigHaieFactory(  # noqa
             department=config_old.department,
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )

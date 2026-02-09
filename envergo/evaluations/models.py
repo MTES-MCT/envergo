@@ -6,7 +6,6 @@ from os.path import splitext
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
@@ -24,7 +23,6 @@ from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
-from envergo.geodata.models import Department
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.utils.markdown import markdown_to_html
 from envergo.utils.tools import get_base_url

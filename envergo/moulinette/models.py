@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date, datetime
+from datetime import date
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
