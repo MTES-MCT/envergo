@@ -14,12 +14,15 @@ def test_log_event(rf, user, haie_user, admin_user, site):
     assert event_qs.count() == 0
 
     request = rf.get("/")
-    request.user = user
     request.site = site
     request.COOKIES["visitorid"] = "1234"
     metadata = {"data1": "value1", "data2": "value2"}
 
+    # AS a basic user
+    request.user = user
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN a new event is saved with category, event and metadata, but no unique hash
     assert event_qs.count() == 1
     event = event_qs.first()
     assert event.category == "Category"
@@ -27,18 +30,27 @@ def test_log_event(rf, user, haie_user, admin_user, site):
     assert event.metadata == metadata
     assert event.unique_id is None
 
+    # AS an admin user
     request.user = admin_user
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN no event is saved
     assert event_qs.count() == 1
 
+    # AS an haie user
     request.user = haie_user
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN a new event is saved with category, event and metadata, and unique hash
     assert event_qs.count() == 2
     event = event_qs.last()
     assert event.unique_id == haie_user.get_unique_hash()
 
+    # AS an anonymous visitor
     request.user = AnonymousUser()
+    # WHEN log event is fired
     log_event("Category", "Event", request, **metadata)
+    # THEN a new event is saved with category, event and metadata, but no unique hash
     assert event_qs.count() == 3
     event = event_qs.last()
     assert event.unique_id is None
