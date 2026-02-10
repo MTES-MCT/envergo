@@ -7,14 +7,16 @@
 {% block before-title-content %}
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
-    <li>
-      <span id="go-to-ds-btn">
-        <a class="fr-btn"
-           href="{{ ds_url }}"
-           target="_blank"
-           rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
-      </span>
-    </li>
+    {% if demarches_simplifiees_state != "draft" %}
+      <li>
+        <span id="go-to-ds-btn">
+          <a class="fr-btn"
+             href="{{ ds_url }}"
+             target="_blank"
+             rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
+        </span>
+      </li>
+    {% endif %}
   </ul>
 
   {% if demarches_simplifiees_state == "draft" %}
