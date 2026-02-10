@@ -35,8 +35,8 @@
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
       <p class="fr-mb-1w">
-        {% with num_messages=ds_messages|length num_messages_displayed=20 %}
-          {{ num_messages }} message{{ num_messages|pluralize }}
+        {% with num_messages=ds_messages|length %}
+          {{ num_messages }} message{{ num_messages|pluralize }} affiché{{ num_messages|pluralize }}
         {% endwith %}
       </p>
 
