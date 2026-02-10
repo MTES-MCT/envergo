@@ -1,1 +1,4 @@
+User-agent: *
+Disallow: /avis/*
+
 Sitemap: https://envergo.beta.gouv.fr/sitemap.xml
