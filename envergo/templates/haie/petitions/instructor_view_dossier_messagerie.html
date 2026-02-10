@@ -36,15 +36,11 @@
     <section class="ds-messages fr-my-4w">
       <p class="fr-mb-1w">
         {% with num_messages=ds_messages|length num_messages_displayed=20 %}
-          {% if num_messages <= num_messages_displayed %}
-            {{ num_messages }} message{{ num_messages|pluralize }}
-          {% else %}
-            {{ num_messages_displayed }} messages affichés sur {{ num_messages }} messages
-          {% endif %}
+          {{ num_messages }} message{{ num_messages|pluralize }}
         {% endwith %}
       </p>
 
-      {% for message in ds_messages|slice:":num_messages_displayed" %}
+      {% for message in ds_messages %}
         <div class="ds-message ds-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
           <div class="fr-mb-2w ds-message__metadata">
             <span class="ds-message__exp">{{ message.email }}</span> –
