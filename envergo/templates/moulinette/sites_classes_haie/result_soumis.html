@@ -47,9 +47,9 @@
 
 {% endif %}
 
-{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
-<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
   {% if config.single_procedure and not aa_only %}
     <p>Les pièces complémentaires suivantes seront exigées :</p>
     <ul>
