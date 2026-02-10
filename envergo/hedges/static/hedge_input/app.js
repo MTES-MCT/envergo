@@ -25,6 +25,8 @@ const fitBoundsOptions = { padding: [10, 10] };
 const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
+const defaultLat = document.getElementById('app').dataset.departmentLat || 46.6033540;
+const defaultLng = document.getElementById('app').dataset.departmentLng || 1.8883335;
 
 /**
  * What is the length of the hedge (in meters)?
@@ -814,14 +816,14 @@ createApp({
       // on the zoom level.
       // So we have to set the view with a zoom maxed out, restore the markers,
       // then zoom out.
-      map.setView([43.6861, 3.5911], 22);
+      map.setView([defaultLat, defaultLng], 22);
       restoreHedges();
 
       if (mode === PLANTATION_MODE || mode === READ_ONLY_MODE) {
         // We need to call this function once to initialize the quality object
         onHedgesToPlantChange();
       }
-      map.setZoom(14);
+      map.setZoom(9);
       zoomOut(false); // remove animation, it is smoother at the beginning, and it eases the helpBubbleMessage display
 
       map.on('editable:drawing:start', addTooltip);

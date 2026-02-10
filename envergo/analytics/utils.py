@@ -4,6 +4,7 @@ import socket
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from envergo.analytics.models import Event
 from envergo.utils.urls import extract_mtm_params, update_qs
@@ -61,10 +62,17 @@ def log_event(category, event, request, **kwargs):
 
 def log_event_raw(category, event, visitor_id, user, site, **kwargs):
     if visitor_id and not user.is_staff:
+        unique_id = None
+        if user.is_authenticated and user.access_haie:
+            try:
+                unique_id = user.get_unique_hash()
+            except ImproperlyConfigured as e:
+                logger.error(f"No `unique_id` is set to event: {e}")
         Event.objects.create(
             category=category,
             event=event,
             session_key=visitor_id,
+            unique_id=unique_id,
             metadata=kwargs,
             site=site,
         )
