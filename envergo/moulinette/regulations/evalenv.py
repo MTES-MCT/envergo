@@ -168,7 +168,9 @@ class TerrainAssietteForm(forms.Form):
 
     terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
-        help_text="Ensemble des parcelles cadastrales concernées par le projet",
+        help_text="""Surface couverte par les aménagements du projet dans leur étendue la plus large (enveloppe convexe),
+        <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf"
+        rel="noopener" target="_blank">voir p.&nbsp;50 du guide</a>.""",  # noqa 501
         widget=UnitInput(
             unit="m²",
             attrs={"placeholder": "8000", "inputmode": "numeric"},
