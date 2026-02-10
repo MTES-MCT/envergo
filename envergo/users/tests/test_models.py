@@ -25,3 +25,8 @@ def test_user_is_involved(haie_user, haie_user_44, haie_instructor_44, admin_use
     # THEN this user is involved in GUH
     InvitationTokenFactory(user=haie_user, petition_project=petition_project)
     assert haie_user.is_involved_in_guh()
+
+
+def test_get_unique_hash(haie_user, haie_user_44):
+    """Test get_unique_hash method"""
+    assert haie_user_44.get_unique_hash() != haie_user.get_unique_hash()
