@@ -16,6 +16,17 @@
       </span>
     </li>
   </ul>
+
+  {% if demarches_simplifiees_state == "draft" %}
+    <div class="fr-alert fr-alert--warning">
+      <h3 class="fr-alert__title">Dépôt du dossier</h3>
+      <p>
+        Votre dossier n'a pas encore été déposé.
+        <br>
+        Pour finaliser votre demande, rendez-vous sur l'outil <a href="#">Démarches numériques</a>.
+      </p>
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block result_title %}
