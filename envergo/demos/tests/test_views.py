@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from django.test import override_settings
 from django.urls import reverse
@@ -22,7 +24,7 @@ def test_hedges_density_around_point_demo(client):
     # THEN page is displayed with no error
     assert response.status_code == 200
     # AND mtm is in context
-    assert "&mtm_campaign=share-demo-densite-haie" in response.context["share_btn_url"]
+    assert "mtm_campaign=share-demo-densite-haie" in response.context["share_btn_url"]
 
 
 @pytest.mark.urls("config.urls_haie")
@@ -44,3 +46,48 @@ def test_hedges_density_in_buffer_demo(client):
     assert response.status_code == 200
     # AND mtm is in context
     assert "&mtm_campaign=share-demo-densite-haie" in response.context["share_btn_url"]
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver",
+    ENVERGO_AMENAGEMENT_DOMAIN="otherserver",
+)
+def test_hedges_density_in_buffer_demo_errors(client):
+    """Test hedge density demo : inside a buffer around lines"""
+    url = reverse("demo_density_buffer")
+
+    # WHEN I get demo page with haies bad params
+    params = "haies=1234"
+    full_url = f"{url}?{params}"
+    response = client.get(full_url)
+    # THEN page is displayed with no error
+    assert response.status_code == 200
+    # AND error message is in page
+    assert (
+        "Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation."
+        in response.content.decode()
+    )
+
+    # WHEN I get demo page with haies bad params
+    params = f"haies={uuid.uuid4()}"
+    full_url = f"{url}?{params}"
+    response = client.get(full_url)
+    # THEN page is displayed with no error
+    assert response.status_code == 200
+    # AND error message is in page
+    assert (
+        "Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation."
+        in response.content.decode()
+    )
+
+    # WHEN I get demo page with haies no params
+    full_url = f"{url}"
+    response = client.get(full_url)
+    # THEN page is displayed with no error
+    assert response.status_code == 200
+    # AND error message is in page
+    assert (
+        "Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation."
+        in response.content.decode()
+    )

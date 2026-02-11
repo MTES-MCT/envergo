@@ -8,16 +8,11 @@
 
 {% block content %}
   <article>
-    <h1>Calcul de densité de haie : démonstrateur</h1>
+    <h1>Densité bocagère du projet</h1>
     <div class="fr-grid-row fr-grid-row--gutters">
       <div class="fr-col-7">
         <form method="get" action="">
-          {{ form.lng.as_hidden }}
-          {{ form.lat.as_hidden }}
-          <label class="step">
-            Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-            l'emplacement du projet.
-          </label>
+          {{ form.haies.as_hidden }}
 
           <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
             <div class="ratio-content">
@@ -25,7 +20,6 @@
             </div>
           </div>
 
-          <button type="submit" class="fr-btn">Valider</button>
         </form>
       </div>
       <div class="fr-col-5">
@@ -37,42 +31,28 @@
             <thead>
               <tr>
                 <th></th>
-                <th>Rayon 200 m</th>
-                <th>Rayon 400 m</th>
-                <th>Rayon 5 km</th>
+                <th>Distance 400 m</th>
               </tr>
             </thead>
 
             <tbody>
               <tr>
                 <th scope="row">Linéaire</th>
-                <td>{{ length_200|floatformat:"0g" }} ml</td>
                 <td>{{ length_400|floatformat:"0g" }} ml</td>
-                <td>{{ length_5000|floatformat:"0g" }} ml</td>
               </tr>
               <tr>
                 <th scope="row">Surface</th>
-                <td>{{ area_200_ha|floatformat:"g" }} ha</td>
                 <td>{{ area_400_ha|floatformat:"g" }} ha</td>
-                <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
               </tr>
               <tr>
                 <th scope="row">Densité</th>
-                <td>{{ density_200|floatformat:"g" }} ml/ha</td>
                 <td>{{ density_400|floatformat:"g" }} ml/ha</td>
-                <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
               </tr>
             </tbody>
           </table>
 
         {% else %}
-          {% if form.is_bound %}
-            <h2 class="fr-h4">Département non disponible</h2>
-            <p>Le calcul de densité de haie n'est pas encore disponible dans ce département.</p>
-          {% else %}
-            <h2 class="fr-h4">Essayez notre démonstrateur</h2>
-            <p>Sélectionnez un point sur la carte et lancez la simulation.</p>
-          {% endif %}
+          <p>Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation.</p>
         {% endif %}
 
         {% if debug %}

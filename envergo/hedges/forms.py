@@ -3,9 +3,10 @@ from abc import abstractmethod
 
 from django import forms
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from envergo.hedges.models import HEDGE_TYPES
+from envergo.hedges.models import HEDGE_TYPES, HedgeData
 from envergo.moulinette.forms.fields import (
     DisplayBooleanField,
     DisplayChoiceField,
@@ -281,3 +282,14 @@ class HedgeForm(forms.Form):
     """Hedge form used in demo for density 2 (inside buffer)"""
 
     haies = forms.UUIDField(label="Haies", required=False)
+
+    def clean_haies(self):
+        """Get HedgeData object or raise ValidationError"""
+        data = self.cleaned_data["haies"]
+        try:
+            hedge_data_object = HedgeData.objects.get(pk=data)
+            data = hedge_data_object
+        except HedgeData.DoesNotExist:
+            raise ValidationError("Données de haies inexistantes")
+
+        return data
