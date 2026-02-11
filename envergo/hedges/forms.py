@@ -279,7 +279,7 @@ class HedgeToPlantPropertiesAisneForm(
 
 
 class HedgeForm(forms.Form):
-    """Hedge form used in demo for density 2 (inside buffer)"""
+    """Hedge form to get HedgeData object"""
 
     haies = forms.UUIDField(label="Haies", required=False)
 

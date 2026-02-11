@@ -86,6 +86,7 @@ class HedgeDensity(LatLngDemoMixin, FormView):
     default_lng_lat = [-0.274314, 49.276204]
 
     def get_result_data(self, lng, lat):
+        """Return context with data to display map"""
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
         density_200 = compute_hedge_density_around_point(lng_lat, 200)
         density_400 = compute_hedge_density_around_point(lng_lat, 400)
@@ -213,8 +214,20 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
 
     def get_result_data(self, hedges):
         """Return context with data to display map"""
+
+        # Create multilinestring from hedges to remove
+        hedges_to_remove_mls = []
+        for hedge in hedges.hedges_to_remove():
+            geom = hedge.geos_geometry
+            if geom:
+                hedges_to_remove_mls.extend(geom)
+
+        buffer_polygon = None
+
         context = {
             "result_available": True,
+            "hedges_to_remove_mls": hedges_to_remove_mls,
+            "polygons": json.dumps(buffer_polygon),
         }
         return context
 
