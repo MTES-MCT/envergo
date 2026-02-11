@@ -2,6 +2,8 @@ import pytest
 from django.test import override_settings
 from django.urls import reverse
 
+from envergo.hedges.tests.factories import HedgeDataFactory
+
 pytestmark = pytest.mark.django_db
 
 
@@ -10,10 +12,35 @@ pytestmark = pytest.mark.django_db
     ENVERGO_HAIE_DOMAIN="testserver",
     ENVERGO_AMENAGEMENT_DOMAIN="otherserver",
 )
-def test_hedges_density_demo(client):
+def test_hedges_density_around_point_demo(client):
     """Test hedge density demo"""
     url = reverse("demo_density")
+    # WHEN I get demo page with lat/lng
     params = "lng=-0.72510&lat=49.08247"
     full_url = f"{url}?{params}"
     response = client.get(full_url)
+    # THEN page is displayed with no error
     assert response.status_code == 200
+    # AND mtm is in context
+    assert "&mtm_campaign=share-demo-densite-haie" in response.context["share_btn_url"]
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver",
+    ENVERGO_AMENAGEMENT_DOMAIN="otherserver",
+)
+def test_hedges_density_in_buffer_demo(client):
+    """Test hedge density demo : inside a buffer around lines"""
+    url = reverse("demo_density_buffer")
+
+    # GIVEN existing haies
+    hedges = HedgeDataFactory()
+    # WHEN I get demo page with haies params
+    params = f"haies={hedges.id}"
+    full_url = f"{url}?{params}"
+    response = client.get(full_url)
+    # THEN page is displayed with no error
+    assert response.status_code == 200
+    # AND mtm is in context
+    assert "&mtm_campaign=share-demo-densite-haie" in response.context["share_btn_url"]

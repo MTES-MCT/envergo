@@ -14,6 +14,7 @@ from envergo.geodata.utils import (
     get_catchment_area_pixel_values,
     to_geojson,
 )
+from envergo.hedges.forms import HedgeForm
 from envergo.utils.urls import remove_mtm_params, update_qs
 
 EPSG_WGS84 = 4326
@@ -165,6 +166,55 @@ class HedgeDensity(LatLngDemoMixin, FormView):
             "truncated_circle_5000": density_5000["artifacts"]["truncated_circle"],
             "density_5000": density_5000["density"],
             "polygons": json.dumps(polygons),
+        }
+        return context
+
+
+class HedgeDensityBuffer(LatLngDemoMixin, FormView):
+    """Displays hedge density inside a buffer around a hedge data given in query string"""
+
+    template_name = "demos/hedge_density_buffer.html"
+    form_class = HedgeForm
+    mtm_campaign_tag = "share-demo-densite-haie"
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+        }
+
+        if "haies" in self.request.GET:
+            kwargs["data"] = self.request.GET
+
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        form = context["form"]
+        if form.is_bound and "haies" in form.cleaned_data:
+            hedges = form.cleaned_data["haies"]
+            context["display_marker"] = True
+            context["center_map"] = [hedges]
+            context["default_zoom"] = 17
+        else:
+            context["display_marker"] = False
+            context["center_map"] = self.default_lng_lat
+            context["default_zoom"] = 8
+
+        form = context["form"]
+        context["result_available"] = False
+        if form.is_bound and "haies" in form.cleaned_data:
+            hedges = form.cleaned_data["haies"]
+            context.update(self.get_result_data(hedges))
+
+        return context
+
+    def get_result_data(self, hedges):
+        """Return context with data to display map"""
+        context = {
+            "result_available": True,
         }
         return context
 
