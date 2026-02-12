@@ -1,11 +1,10 @@
-{% if moulinette.eval_env.result == "systematique" %}
-  <p>
+<p>
+  {% if moulinette.eval_env.result == "systematique" %}
     L'étude d'impact exigée pour ce projet tient lieu d'évaluation des incidences Natura 2000, et la remplace dans les
     différents dossiers où celle-ci doit être jointe.
-  </p>
-{% endif %}
+    <br />
+  {% endif %}
 
-<p>
   L'évaluation des incidences (EIN) doit être :
 
   {% if not moulinette.natura2000.autorisation_urba_needed and moulinette.loi_sur_leau.result == 'action_requise' and moulinette.eval_env.result == 'non_soumis' %}
