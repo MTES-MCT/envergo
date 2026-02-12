@@ -10,10 +10,12 @@ from scipy.interpolate import griddata
 from envergo.geodata.forms import LatLngForm
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import (
+    compute_hedge_density_around_line,
     compute_hedge_density_around_point,
     get_catchment_area_pixel_values,
     to_geojson,
 )
+from envergo.hedges.forms import HedgeForm
 from envergo.utils.urls import remove_mtm_params, update_qs
 
 EPSG_WGS84 = 4326
@@ -63,7 +65,7 @@ class LatLngDemoMixin:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
             context["display_marker"] = True
             context["center_map"] = [lng, lat]
-            context["default_zoom"] = 17
+            context["default_zoom"] = 16
         else:
             context["display_marker"] = False
             context["center_map"] = self.default_lng_lat
@@ -85,6 +87,7 @@ class HedgeDensity(LatLngDemoMixin, FormView):
     default_lng_lat = [-0.274314, 49.276204]
 
     def get_result_data(self, lng, lat):
+        """Return context with data to display map"""
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
         density_200 = compute_hedge_density_around_point(lng_lat, 200)
         density_400 = compute_hedge_density_around_point(lng_lat, 400)
@@ -165,6 +168,97 @@ class HedgeDensity(LatLngDemoMixin, FormView):
             "truncated_circle_5000": density_5000["artifacts"]["truncated_circle"],
             "density_5000": density_5000["density"],
             "polygons": json.dumps(polygons),
+        }
+        return context
+
+
+class HedgeDensityBuffer(LatLngDemoMixin, FormView):
+    """Displays hedge density inside a buffer around a hedge data given in query string"""
+
+    template_name = "demos/hedge_density_buffer.html"
+    form_class = HedgeForm
+    mtm_campaign_tag = "share-demo-densite-haie"
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            "initial": self.get_initial(),
+            "prefix": self.get_prefix(),
+        }
+
+        if "haies" in self.request.GET:
+            kwargs["data"] = self.request.GET
+
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        form = context["form"]
+        context["result_available"] = False
+        if form.is_bound and "haies" in form.cleaned_data:
+            hedges = form.cleaned_data["haies"]
+            centroid = hedges.get_centroid_to_remove()
+            context["display_marker"] = False
+            context["center_map"] = [centroid.x, centroid.y]
+            context["default_zoom"] = 17
+            hedges = form.cleaned_data["haies"]
+            context.update(self.get_result_data(hedges))
+        else:
+            context["display_marker"] = False
+            context["center_map"] = self.default_lng_lat
+            context["default_zoom"] = 8
+
+        return context
+
+    def get_result_data(self, hedges):
+        """Return context with data to display map"""
+
+        # Create multilinestring from hedges to remove
+        hedges_to_remove_mls = []
+        for hedge in hedges.hedges_to_remove():
+            geom = MultiLineString(hedge.geos_geometry)
+            if geom:
+                hedges_to_remove_mls.extend(geom)
+        hedges_to_remove_mls_merged = MultiLineString(
+            hedges_to_remove_mls, srid=EPSG_WGS84
+        )
+
+        # Generate buffer 400m around hedges
+        density_400 = compute_hedge_density_around_line(
+            hedges_to_remove_mls_merged, 400, hedges.get_centroid_to_remove()
+        )
+
+        polygons = []
+        polygons.append(
+            {
+                "polygon": to_geojson(hedges_to_remove_mls_merged),
+                "color": "red",
+                "legend": "Haies à détruire",
+                "opacity": 1.0,
+            }
+        )
+        polygons.append(
+            {
+                "polygon": to_geojson(
+                    density_400["artifacts"]["truncated_buffer_zone"]
+                    or density_400["artifacts"]["buffer_zone"]
+                ),
+                "color": "#cc4778",
+                "legend": "400m",
+                "opacity": 1.0,
+            }
+        )
+        context = {
+            "result_available": True,
+            "hedges_to_remove_mls": hedges_to_remove_mls,
+            "polygons": json.dumps(polygons),
+            "length_400": density_400["artifacts"]["length"],
+            "area_400_ha": density_400["artifacts"]["area_ha"],
+            "truncated_buffer_zone_400": density_400["artifacts"][
+                "truncated_buffer_zone"
+            ],
+            "density_400": density_400["density"],
         }
         return context
 
