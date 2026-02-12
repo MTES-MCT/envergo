@@ -226,7 +226,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
 
         # Generate buffer 400m around hedges
         density_400 = compute_hedge_density_around_line(
-            hedges_to_remove_mls_merged, 400, hedges.get_centroid_to_remove()
+            hedges_to_remove_mls_merged, 400
         )
 
         buffered_400_polygon = (
@@ -249,17 +249,17 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         polygons = []
         polygons.append(
             {
-                "polygon": to_geojson(hedges_to_remove_mls_merged),
-                "color": "red",
-                "legend": "Haies à détruire",
+                "polygon": to_geojson(MultiLineString(hedges_400_mls, srid=EPSG_WGS84)),
+                "color": "#f0f921",
+                "legend": "Haies",
                 "opacity": 1.0,
             }
         )
         polygons.append(
             {
-                "polygon": to_geojson(MultiLineString(hedges_400_mls, srid=EPSG_WGS84)),
-                "color": "#f0f921",
-                "legend": "Haies",
+                "polygon": to_geojson(hedges_to_remove_mls_merged),
+                "color": "red",
+                "legend": "Haies à détruire",
                 "opacity": 1.0,
             }
         )
