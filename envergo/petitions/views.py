@@ -367,9 +367,15 @@ class PetitionProjectCreate(FormView):
             return None
 
         moulinette_data["haies"] = project.hedge_data
-        config = ConfigHaie.objects.select_related("department").get(
-            department__department=department
-        )  # it should always exist, otherwise the simulator would not be available
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
+        config = moulinette.config
+        if config is None:
+            logger.error(
+                "No valid ConfigHaie found for department",
+                extra={"department": department},
+            )
+            return None
         self.request.alerts.config = config
         demarche_id = config.demarche_simplifiee_number
 
@@ -388,8 +394,6 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
