@@ -711,3 +711,37 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         "La localisation des linéaires à planter dans des zones sensibles "
         in res.content.decode()
     )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_settings_view_with_multiple_configs(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """Settings view returns the currently valid config when multiple exist."""
+    from datetime import timedelta
+
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    current_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == current_config.pk
