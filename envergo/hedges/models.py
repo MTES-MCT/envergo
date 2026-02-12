@@ -468,7 +468,9 @@ class HedgeData(models.Model):
             density_200, density_5000, _ = (
                 self.compute_density_around_points_with_artifacts()
             )
+            # Density inside buffer
             density_400_buffer = self.compute_density_inside_buffer_with_artifacts()
+
             self._density = {
                 "density_around_centroid": {
                     "length_200": density_200["artifacts"]["length"],
