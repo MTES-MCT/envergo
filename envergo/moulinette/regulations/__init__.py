@@ -642,7 +642,9 @@ class HedgeDensityMixin:
     pass
 
 
-class ActionsToTakeBaseMixin:
+class ActionsToTakeMixin:
+    """Mixin for evaluators (for both criterion and regulation) that project result into actions to take."""
+
     ACTIONS_TO_TAKE_MATRIX = {}
 
     def get_actions_to_take(self):
@@ -656,10 +658,6 @@ class ActionsToTakeBaseMixin:
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._actions_to_take
-
-
-class ActionsToTakeMixin(ActionsToTakeBaseMixin):
-    """Mixin for evaluators (for both criterion and regulation) that project result into actions to take."""
 
     def evaluate(self, *args):
         super().evaluate(*args)
