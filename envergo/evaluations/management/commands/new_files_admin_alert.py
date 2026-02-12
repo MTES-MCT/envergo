@@ -4,6 +4,7 @@ from itertools import groupby
 from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.db.models import F
 from django.template.loader import render_to_string
@@ -12,6 +13,7 @@ from django.utils.timezone import localtime
 
 from envergo.evaluations.models import Request, RequestFile
 from envergo.utils.mattermost import notify
+from envergo.utils.tools import get_base_url
 
 
 def is_file_uploaded_from_admin(file, logs_from_admin):
@@ -62,10 +64,13 @@ class Command(BaseCommand):
             ):
                 continue
 
-            url = reverse("admin:evaluations_request_change", args=[request.id])
-            eval_url = reverse(
+            site = Site.objects.get(domain=settings.ENVERGO_AMENAGEMENT_DOMAIN)
+            base_url = get_base_url(site.domain)
+
+            url = f"{base_url}{reverse("admin:evaluations_request_change", args=[request.id])}"
+            eval_url = f"{base_url}{reverse(
                 "admin:evaluations_evaluation_change", args=[request.evaluation.uid]
-            )
+            )}"
 
             message = render_to_string(
                 "evaluations/edit_eval_request_notification.txt",
