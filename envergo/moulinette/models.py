@@ -2467,7 +2467,7 @@ class MoulinetteHaie(Moulinette):
                 )
 
             density_200, density_5000, centroid_geos = (
-                haies.compute_density_with_artifacts()
+                haies.compute_density_around_points_with_artifacts()
             )
             truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
             truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
