@@ -1124,9 +1124,14 @@ button.hide-expanded[aria-expanded="true"] {
   }
 }
 
+.procedure-history__table td {
+  vertical-align: top;
+}
+
 /* Density buffer */
 .demo-hedge-density-buffer {
   thead th {
     text-align: left;
   }
 }
+
