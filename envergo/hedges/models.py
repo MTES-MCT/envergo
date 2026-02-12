@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Self
 
 import shapely
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models
@@ -16,6 +16,7 @@ from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
+    compute_hedge_density_around_line,
     compute_hedge_density_around_point,
     get_department_from_coords,
 )
@@ -426,7 +427,7 @@ class HedgeData(models.Model):
         )
         return species
 
-    def compute_density_with_artifacts(self):
+    def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
         # get two circles at 200m and 5000m from the centroid of the hedges to remove
@@ -438,18 +439,50 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
+    def compute_density_inside_buffer_with_artifacts(self):
+        """Compute the density of hedges around the hedges to remove in 400m buffer."""
+
+        # Create multilinestring from hedges to remove
+        hedges_to_remove_mls = []
+        for hedge in self.hedges_to_remove():
+            geom = MultiLineString(hedge.geos_geometry)
+            if geom:
+                hedges_to_remove_mls.extend(geom)
+        hedges_to_remove_mls_merged = MultiLineString(
+            hedges_to_remove_mls, srid=EPSG_WGS84
+        )
+
+        # Generate buffer 400m around hedges and compute data
+        return compute_hedge_density_around_line(hedges_to_remove_mls_merged, 400)
+
     @property
     def density(self):
-        """Returns pre-computed density of hedges if it exists, otherwise compute it."""
+        """Returns pre-computed density of hedges if it exists, otherwise compute it.
+
+        Two compute methods are existing:
+        - one around centroid
+        - one inside a buffer around hedges to remove
+        """
         if not self._density:
-            density_200, density_5000, _ = self.compute_density_with_artifacts()
+            # Density around centroid
+            density_200, density_5000, _ = (
+                self.compute_density_around_points_with_artifacts()
+            )
+            density_400_buffer = self.compute_density_inside_buffer_with_artifacts()
             self._density = {
-                "length_200": density_200["artifacts"]["length"],
-                "length_5000": density_5000["artifacts"]["length"],
-                "area_200_ha": density_200["artifacts"]["area_ha"],
-                "area_5000_ha": density_5000["artifacts"]["area_ha"],
-                "density_200": density_200["density"],
-                "density_5000": density_5000["density"],
+                "density_around_centroid": {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                },
+                "density_inside_buffer": {
+                    "length_400": density_400_buffer["artifacts"]["length"],
+                    "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
+                    "density_400": density_400_buffer["density"],
+                },
             }
             self.save()
 
