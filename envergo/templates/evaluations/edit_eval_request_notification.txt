@@ -1,4 +1,4 @@
-**Une [demande d'avis](https://envergo.beta.gouv.fr{{ url }}) a été mise à jour après la création de l'[avis réglementaire](https://envergo.beta.gouv.fr{{ eval_url }}).**
+**Une [demande d'avis]({{ url }}) a été mise à jour après la création de l'[avis réglementaire]({{ eval_url }}).**
 
 Adresse : {{ request.address }}
 
