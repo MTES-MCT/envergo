@@ -217,7 +217,7 @@
                     </td>
                     <td>
                       {% if log.status_date and log.status_date != log.created_at.date %}
-                        Changement effectif le {{ log.status_date|date:"SHORT_DATE_FORMAT" }}
+                        <i>Changement effectif le {{ log.status_date|date:"SHORT_DATE_FORMAT" }}</i>
                         <br />
                       {% endif %}
                       {% truncated_comment log.update_comment forloop.counter 60 %}
