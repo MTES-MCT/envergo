@@ -226,7 +226,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
 
         # Generate buffer 400m around hedges
         density_400 = compute_hedge_density_around_line(
-            hedges_to_remove_mls_merged, 400, hedges.get_centroid_to_remove()
+            hedges_to_remove_mls_merged, 400
         )
 
         buffered_400_polygon = (

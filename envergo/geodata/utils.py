@@ -673,27 +673,62 @@ def compute_hedge_density_around_point(point_geos, radius):
     }
 
 
-def compute_hedge_density_around_line(
-    line_geos,
-    radius,
-    centroid=None,
-):
+def compute_hedge_density_around_line(line_geos, radius):
     """Compute the density of hedges in buffer radius."""
 
     # use specific projection to be able to use meters for buffering
-    epsg_utm = get_best_epsg_for_location(centroid.x, centroid.y)
+    line_centroid = line_geos.centroid
+    epsg_utm = get_best_epsg_for_location(line_centroid.x, line_centroid.y)
     line_meter = line_geos.transform(epsg_utm, clone=True)
     buffer_zone = line_meter.buffer(radius)
     buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
-    truncated_buffer_zone = buffer_zone
+
+    # Check if the centroid is on land
+    on_land = (
+        Zone.objects.filter(map__map_type=MAP_TYPES.terres_emergees)
+        .filter(geometry__contains=line_centroid)
+        .exists()
+    )
+    truncated_buffer_zone = None
+
+    if on_land:
+        # Remove the sea from the circle
+        truncated_buffer_zone = trim_land(buffer_zone)
+
+    if on_land and truncated_buffer_zone:
+        truncated_buffer_zone_m = truncated_buffer_zone.transform(
+            epsg_utm, clone=True
+        )  # use specific projection to compute the area in square meters
+
+        area = truncated_buffer_zone_m.area
+        area_ha = area * 0.0001
+
+        # get the length of the hedges in the circles
+        length = (
+            Line.objects.filter(
+                geometry__intersects=truncated_buffer_zone,
+                map__map_type=MAP_TYPES.haies,
+            )
+            .annotate(clipped=Intersection("geometry", truncated_buffer_zone))
+            .annotate(length=Length(Cast("clipped", GeometryField())))
+            .aggregate(total=Sum("length"))["total"]
+        )
+        length = length if length else Distance(0)
+
+        density = length.standard / area_ha if area_ha > 0 else 0.0
+    else:
+        # there is no land in the circle (e.g. sea or foreign country)
+        length = Distance(0)
+        area_ha = 0.0
+        density = 1.0
 
     return {
-        "density": 0,
+        "density": density,
         "artifacts": {
             "buffer_zone": buffer_zone,
             "truncated_buffer_zone": truncated_buffer_zone,
-            "length": 0,
-            "area_ha": 0,
+            "length": length.standard,
+            "area_ha": area_ha,
         },
     }
 
