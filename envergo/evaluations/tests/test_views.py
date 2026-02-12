@@ -706,4 +706,4 @@ def test_actions_to_take_are_displayed_in_evaluations(mock_actions_to_take, clie
     # THEN I see the actions to take section
     assert "Actions à mener" in res.content.decode()
     assert 'id="action-mention_arrete_lse"' in res.content.decode()
-    assert 'id="action-etude_zh_lse"' in res.content.decode()
+    assert 'id="action-etude_zh"' in res.content.decode()

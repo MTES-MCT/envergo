@@ -396,7 +396,7 @@ def test_moulinette_returns_actions_to_take(moulinette_data):
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
     assert moulinette.loi_sur_leau.actions_to_take == {"to_add": {"mention_arrete_lse"}}
     assert moulinette.loi_sur_leau.zone_humide.actions_to_take == {
-        "to_add": {"etude_zh_lse"}
+        "to_add": {"etude_zh"}
     }
     actions_to_take_flatten = {
         target: [action.slug for action in actions_list]
@@ -404,5 +404,5 @@ def test_moulinette_returns_actions_to_take(moulinette_data):
     }
     assert actions_to_take_flatten == {
         "instructor": ["mention_arrete_lse"],
-        "petitioner": ["etude_zh_lse"],
+        "petitioner": ["etude_zh"],
     }

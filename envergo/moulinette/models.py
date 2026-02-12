@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date, datetime
+from datetime import date
 from enum import IntEnum
 from itertools import groupby
 from operator import attrgetter
@@ -16,6 +16,7 @@ from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
     CheckConstraint,
     Exists,
@@ -38,7 +39,6 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
-from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.evaluations.models import (
     RESULT_CASCADE,
@@ -222,14 +222,17 @@ ACTIONS_TO_TAKE = Choices(
     ),
     ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
     ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
-    ("etude_zh_lse", "LSE > Réaliser un inventaire zones humides"),
+    ("etude_zh", "Réaliser un inventaire zones humides"),
     ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
     ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
     ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
     ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
     ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
-    ("etude_zh_n2000", "Natura 2000 > Réaliser un inventaire zones humides"),
     ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
+    (
+        "interdit_sage",
+        "Modifier le projet pour le rendre conforme au règlement de SAGE",
+    ),
     (
         "pc_cas_par_cas",
         "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
