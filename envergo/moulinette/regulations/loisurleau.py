@@ -25,7 +25,7 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Loi sur l'eau"
 
     ACTIONS_TO_TAKE_MATRIX = {
-        "soumis_ou_pac": ["depot_pac_lse", "mention_arrete_lse", "pc_ein"],
+        "soumis_ou_pac": ["depot_pac_lse", "mention_arrete_lse"],
         "soumis": ["depot_dossier_lse", "mention_arrete_lse", "pc_ein"],
         "action_requise": ["mention_arrete_lse"],
     }

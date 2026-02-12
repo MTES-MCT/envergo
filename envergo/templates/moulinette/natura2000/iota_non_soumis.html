@@ -1,19 +1,38 @@
 <p>
-  <strong>Pourquoi le projet n'est-il pas concerné ?</strong>
+  Tout projet soumis à la Loi sur l’eau, <em>qu’il soit dans un site Natura 2000 ou non</em>, est automatiquement
+  soumis à évaluation des incidences Natura 2000 (EIN)
 </p>
 
-<p>
-  Au vu des informations saisies, le projet n'est pas soumis à la Loi sur l'eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>).
-</p>
+{% if moulinette.loi_sur_leau.result == "soumis_ou_pac" %}
+  <p>
+    Or le projet est une modification d’un projet qui franchissait déjà les seuils de la Loi sur l’eau (<a href="#regulation_loi_sur_leau">voir section « Loi sur l’eau »</a>).
+  </p>
 
-<p>
-  Tout projet soumis à la Loi sur l’eau, <em>qu’il soit dans un site Natura 2000 ou non</em>, est automatiquement soumis à évaluation des incidences Natura 2000. Cette disposition ne s’applique donc pas ici.
-</p>
+  <p>
+    Si un dossier Loi sur l’eau a été déposé pour le projet initial, une EIN a dû être réalisée à cette occasion, et il
+    n’est pas nécessaire d’en produire une nouvelle.
+  </p>
+
+  <p>
+    À l’inverse, si aucun dossier Loi sur l’eau n’a été réalisé précédemment, le projet doit être remis en conformité
+    en constituant un dossier Loi sur l’eau, auquel sera joint une évaluation des incidences Natura 2000.
+  </p>
+
+{% else %}
+  <p>
+    Au vu des informations saisies, le projet n'est pas soumis à la Loi sur l'eau (<a href="#regulation_loi_sur_leau">voir
+    section « Loi sur l’eau »</a>).
+  </p>
+
+  <p>Cette disposition ne s’applique donc pas ici.</p>
+
+{% endif %}
 
 <p>
   <strong>Quel impact environnemental ?</strong>
 </p>
 
 <p>
-  En raison de la surface qu’ils impactent et de la fragilité des milieux où ils s’insèrent, les projets soumis à la Loi sur l'eau sont susceptibles d'avoir des impacts significatifs sur des espèces fragiles et leurs habitats.
+  En raison de la surface qu’ils impactent et de la fragilité des milieux où ils s’insèrent, les projets soumis à la Loi
+  sur l'eau sont susceptibles d'avoir des impacts significatifs sur des espèces fragiles et leurs habitats.
 </p>
