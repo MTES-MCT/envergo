@@ -12,7 +12,7 @@ class SitesInscritsRegulation(HaieRegulationEvaluator):
 
 
 class SitesInscritsHaie(CriterionEvaluator):
-    choice_label = "Sites inscrits > SI Haie"
+    choice_label = "Sites inscrits > Sites inscrits Haie"
     slug = "si_haie"
     plantation_conditions = []
 
