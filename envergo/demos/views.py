@@ -218,16 +218,25 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         # Create multilinestring from hedges to remove
         hedges_to_remove_mls = []
         for hedge in hedges.hedges_to_remove():
-            geom = hedge.geos_geometry
+            geom = MultiLineString(hedge.geos_geometry)
             if geom:
                 hedges_to_remove_mls.extend(geom)
 
-        buffer_polygon = None
-
+        polygons = []
+        polygons.append(
+            {
+                "polygon": to_geojson(
+                    MultiLineString(hedges_to_remove_mls, srid=EPSG_WGS84)
+                ),
+                "color": "red",
+                "legend": "Haies à détruire",
+                "opacity": 1.0,
+            }
+        )
         context = {
             "result_available": True,
             "hedges_to_remove_mls": hedges_to_remove_mls,
-            "polygons": json.dumps(buffer_polygon),
+            "polygons": json.dumps(polygons),
         }
         return context
 
