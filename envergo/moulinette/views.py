@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from datetime import date
 from itertools import groupby
 from operator import attrgetter
 from urllib.parse import urlencode
@@ -721,15 +722,15 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         if self.department is None:
             self.department = self.get_department(self.kwargs)
 
-        queryset = self.queryset.filter(department=self.department)
-
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
+        obj = (
+            self.queryset.filter(department=self.department)
+            .valid_at(date.today())
+            .first()
+        )
+        if obj is None:
             raise Http404(
                 _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                % {"verbose_name": self.queryset.model._meta.verbose_name}
             )
         return obj
 
