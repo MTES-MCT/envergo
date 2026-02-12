@@ -673,6 +673,31 @@ def compute_hedge_density_around_point(point_geos, radius):
     }
 
 
+def compute_hedge_density_around_line(
+    line_geos,
+    radius,
+    centroid=None,
+):
+    """Compute the density of hedges in buffer radius."""
+
+    # use specific projection to be able to use meters for buffering
+    epsg_utm = get_best_epsg_for_location(centroid.x, centroid.y)
+    line_meter = line_geos.transform(epsg_utm, clone=True)
+    buffer_zone = line_meter.buffer(radius)
+    buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
+    truncated_buffer_zone = buffer_zone
+
+    return {
+        "density": 0,
+        "artifacts": {
+            "buffer_zone": buffer_zone,
+            "truncated_buffer_zone": truncated_buffer_zone,
+            "length": 0,
+            "area_ha": 0,
+        },
+    }
+
+
 def _get_centered_url(url, hedges: "HedgeData"):
     lng = FRANCE_LNG
     lat = FRANCE_LAT

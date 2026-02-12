@@ -10,6 +10,7 @@ from scipy.interpolate import griddata
 from envergo.geodata.forms import LatLngForm
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import (
+    compute_hedge_density_around_line,
     compute_hedge_density_around_point,
     get_catchment_area_pixel_values,
     to_geojson,
@@ -64,7 +65,7 @@ class LatLngDemoMixin:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
             context["display_marker"] = True
             context["center_map"] = [lng, lat]
-            context["default_zoom"] = 17
+            context["default_zoom"] = 16
         else:
             context["display_marker"] = False
             context["center_map"] = self.default_lng_lat
@@ -219,15 +220,32 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             geom = MultiLineString(hedge.geos_geometry)
             if geom:
                 hedges_to_remove_mls.extend(geom)
+        hedges_to_remove_mls_merged = MultiLineString(
+            hedges_to_remove_mls, srid=EPSG_WGS84
+        )
+
+        # Generate buffer 400m around hedges
+        density_400 = compute_hedge_density_around_line(
+            hedges_to_remove_mls_merged, 400, hedges.get_centroid_to_remove()
+        )
 
         polygons = []
         polygons.append(
             {
-                "polygon": to_geojson(
-                    MultiLineString(hedges_to_remove_mls, srid=EPSG_WGS84)
-                ),
+                "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
                 "legend": "Haies à détruire",
+                "opacity": 1.0,
+            }
+        )
+        polygons.append(
+            {
+                "polygon": to_geojson(
+                    density_400["artifacts"]["truncated_buffer_zone"]
+                    or density_400["artifacts"]["buffer_zone"]
+                ),
+                "color": "#cc4778",
+                "legend": "400m",
                 "opacity": 1.0,
             }
         )
@@ -235,6 +253,12 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             "result_available": True,
             "hedges_to_remove_mls": hedges_to_remove_mls,
             "polygons": json.dumps(polygons),
+            "length_400": density_400["artifacts"]["length"],
+            "area_400_ha": density_400["artifacts"]["area_ha"],
+            "truncated_buffer_zone_400": density_400["artifacts"][
+                "truncated_buffer_zone"
+            ],
+            "density_400": density_400["density"],
         }
         return context
 
