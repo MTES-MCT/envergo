@@ -194,22 +194,19 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         context = super().get_context_data(**kwargs)
 
         form = context["form"]
+        context["result_available"] = False
         if form.is_bound and "haies" in form.cleaned_data:
             hedges = form.cleaned_data["haies"]
             centroid = hedges.get_centroid_to_remove()
-            context["display_marker"] = True
+            context["display_marker"] = False
             context["center_map"] = [centroid.x, centroid.y]
             context["default_zoom"] = 17
+            hedges = form.cleaned_data["haies"]
+            context.update(self.get_result_data(hedges))
         else:
             context["display_marker"] = False
             context["center_map"] = self.default_lng_lat
             context["default_zoom"] = 8
-
-        form = context["form"]
-        context["result_available"] = False
-        if form.is_bound and "haies" in form.cleaned_data:
-            hedges = form.cleaned_data["haies"]
-            context.update(self.get_result_data(hedges))
 
         return context
 
