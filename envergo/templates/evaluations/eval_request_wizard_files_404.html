@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% load evaluations leaflet_tags static %}
+
+{% block title %}Lien invalide{% endblock %}
+
+{% block article %}
+  <h1>Lien invalide</h1>
+
+  <p class="fr-text--lead">Le lien de cette page a expiré.</p>
+  <p>
+    Si vous avez reçu ce lien par e-mail, il est possible que ce dernier ait été désactivé pour des raisons de sécurité.
+  </p>
+  <p>
+    Pour accéder à nouveau à votre dossier, <a href="{% url 'contact_us' %}">contactez-nous</a> en précisant la
+    référence : {{ reference }}.
+  </p>
+{% endblock %}
