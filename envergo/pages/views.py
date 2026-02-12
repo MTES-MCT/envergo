@@ -246,13 +246,23 @@ class AvailabilityInfo(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["configs_available"] = ConfigAmenagement.objects.filter(
-            is_activated=True
-        ).order_by("department")
+        context["configs_available"] = (
+            ConfigAmenagement.objects.filter(is_activated=True)
+            .valid_at(date.today())
+            .order_by("department")
+        )
 
-        context["configs_soon"] = ConfigAmenagement.objects.filter(
-            is_activated=False
-        ).order_by("department")
+        # Departments being set up: departments that have at least one inactive
+        # config but no currently valid active config (otherwise they'd already
+        # appear in configs_available).
+        active_department_ids = context["configs_available"].values_list(
+            "department_id", flat=True
+        )
+        context["configs_soon"] = (
+            Department.objects.filter(configamenagements__is_activated=False)
+            .exclude(pk__in=active_department_ids)
+            .distinct()
+        )
 
         return context
 
