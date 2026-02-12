@@ -188,9 +188,11 @@ class Department(models.Model):
         # Import here to avoid circular imports
         from envergo.moulinette.models import ConfigAmenagement
 
-        return ConfigAmenagement.objects.filter(
-            department=self, is_activated=True
-        ).exists()
+        return (
+            ConfigAmenagement.objects.filter(department=self, is_activated=True)
+            .valid_at(timezone.now().date())
+            .exists()
+        )
 
 
 class CatchmentAreaTile(models.Model):
