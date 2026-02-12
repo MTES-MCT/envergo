@@ -229,6 +229,23 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             hedges_to_remove_mls_merged, 400, hedges.get_centroid_to_remove()
         )
 
+        buffered_400_polygon = (
+            density_400["artifacts"]["truncated_buffer_zone"]
+            or density_400["artifacts"]["buffer_zone"]
+        )
+
+        # Get hedges intersects buffer and hedges map
+        hedges_400 = Line.objects.filter(
+            map__map_type=MAP_TYPES.haies,
+            geometry__intersects=buffered_400_polygon,
+        )
+
+        hedges_400_mls = []
+        for hedge in hedges_400:
+            geom = hedge.geometry
+            if geom:
+                hedges_400_mls.extend(geom)
+
         polygons = []
         polygons.append(
             {
@@ -240,10 +257,15 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         )
         polygons.append(
             {
-                "polygon": to_geojson(
-                    density_400["artifacts"]["truncated_buffer_zone"]
-                    or density_400["artifacts"]["buffer_zone"]
-                ),
+                "polygon": to_geojson(MultiLineString(hedges_400_mls, srid=EPSG_WGS84)),
+                "color": "#f0f921",
+                "legend": "Haies",
+                "opacity": 1.0,
+            }
+        )
+        polygons.append(
+            {
+                "polygon": to_geojson(buffered_400_polygon),
                 "color": "#cc4778",
                 "legend": "400m",
                 "opacity": 1.0,
