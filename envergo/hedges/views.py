@@ -126,6 +126,11 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         if department:
             config = (
                 ConfigHaie.objects.filter(department__department=department)
+                # Filter by validity date
+                # Note: moulinette is only valid for plantation view, where we pass
+                # simulation parameters, but the moulinette object exists anyway and
+                # the date defaults to today, which is what we want
+                .valid_at(self.moulinette.date)
                 .annotate(department_centroid=Centroid("department__geometry"))
                 .first()
             )
