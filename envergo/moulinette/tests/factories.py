@@ -20,6 +20,11 @@ class ConfigAmenagementFactory(DjangoModelFactory):
     is_activated = True
     regulations_available = ["loi_sur_leau", "sage", "natura2000", "eval_env"]
     validity_range = None
+    lse_contact_ddtm = "Contact DDTM"
+    n2000_contact_ddtm_info = "Contact N2000 info"
+    n2000_contact_ddtm_instruction = "Contact N2000 instruction"
+    n2000_procedure_ein = "Procédure EIN"
+    evalenv_procedure_casparcas = "Procédure cas par cas"
 
 
 class MoulinetteTemplateFactory(DjangoModelFactory):
@@ -44,6 +49,7 @@ class CriterionFactory(DjangoModelFactory):
         model = Criterion
 
     title = "Zone humide"
+    backend_title = "Zone humide"
     regulation = factory.SubFactory(RegulationFactory)
     activation_map = factory.SubFactory(MapFactory)
     evaluator = "envergo.moulinette.regulations.loisurleau.ZoneHumide"
