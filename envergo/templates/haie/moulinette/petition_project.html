@@ -7,15 +7,41 @@
 {% block before-title-content %}
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
-    <li>
-      <span id="go-to-ds-btn">
-        <a class="fr-btn"
-           href="{{ ds_url }}"
-           target="_blank"
-           rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
-      </span>
-    </li>
+    {% if demarches_simplifiees_state != "draft" %}
+      <li>
+        <span id="go-to-ds-btn">
+          <a class="fr-btn"
+             href="{{ ds_url }}"
+             target="_blank"
+             rel="noopener external">Voir le dossier sur Démarches simplifiées</a>
+        </span>
+      </li>
+    {% endif %}
   </ul>
+
+  {% if demarches_simplifiees_state == "draft" %}
+    <div class="fr-alert fr-alert--warning">
+      <h3 class="fr-alert__title">Dépôt du dossier</h3>
+      <p>
+        Votre dossier n'a pas encore été déposé.
+        <br>
+        Pour finaliser votre demande, rendez-vous sur l'outil <a href="#">Démarches numériques</a>.
+
+        <form id="demarche-simplifiee-form"
+              action="{% url 'petition_project_create' %}"
+              method="post">
+          {% csrf_token %}
+          <input type="hidden"
+                 name="moulinette_url"
+                 value="{{ petitionproject.moulinette_url }}" />
+          <button type="submit"
+                  class="fr-btn demarche-simplifiee-btn fr-btn--icon-right fr-icon-external-link-line">
+            Poursuivre vers la demande
+          </button>
+        </form>
+      </p>
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block result_title %}
