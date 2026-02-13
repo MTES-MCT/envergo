@@ -1023,7 +1023,7 @@ class ConfigBase(models.Model):
     )
     is_activated = models.BooleanField(
         _("Is activated"),
-        help_text=_("Is the moulinette available for this department?"),
+        help_text="Le simulateur est-il activé pour ce département ?",
         default=False,
     )
     validity_range = DateRangeField(
