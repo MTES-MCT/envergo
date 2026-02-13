@@ -251,7 +251,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             {
                 "polygon": to_geojson(MultiLineString(hedges_400_mls, srid=EPSG_WGS84)),
                 "color": "#f0f921",
-                "legend": "Haies existentes",
+                "legend": "Haies existantes",
                 "opacity": 1.0,
             }
         )
@@ -267,8 +267,8 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         polygons.append(
             {
                 "polygon": to_geojson(buffered_400_polygon),
-                "color": "#cc4778",
-                "legend": "400m",
+                "color": "#457EAC",
+                "legend": "Zone tampon de 400m",
                 "opacity": 1.0,
             }
         )
