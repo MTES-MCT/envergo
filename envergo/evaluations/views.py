@@ -637,6 +637,12 @@ class RequestEvalWizardStep3Upload(WizardStep3Mixin, WizardStepMixin, UpdateView
             )
 
     def form_invalid(self, form):
+        if form.errors and "additional_files" in form.errors:
+            return JsonResponse(
+                {"error": "\n".join(form.errors["additional_files"])},
+                status=400,
+            )
+
         return JsonResponse(
             {"error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."},
             status=400,

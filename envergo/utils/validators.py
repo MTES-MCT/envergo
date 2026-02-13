@@ -1,5 +1,10 @@
+import logging
+
+import magic
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
+
+logger = logging.getLogger(__name__)
 
 
 class NoIdnEmailValidator(EmailValidator):
@@ -27,3 +32,14 @@ class NoIdnEmailValidator(EmailValidator):
                 return
 
             raise ValidationError(self.message, code=self.code, params={"value": value})
+
+
+def validate_mime(file, allowed_mime_types):
+    detected = magic.from_buffer(file.read(2048), mime=True)
+    file.seek(0)
+    if detected not in allowed_mime_types:
+        logger.warning(
+            f"Le fichier téléchargé a un type MIME détecté de {detected}, qui n'est pas dans la liste des types "
+            f"autorisés. Son type MIME déclaré est {file.content_type}."
+        )
+        raise ValidationError("Ce type de fichier n'est pas autorisé")
