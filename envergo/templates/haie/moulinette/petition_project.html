@@ -26,6 +26,19 @@
         Votre dossier n'a pas encore été déposé.
         <br>
         Pour finaliser votre demande, rendez-vous sur l'outil <a href="#">Démarches numériques</a>.
+
+        <form id="demarche-simplifiee-form"
+              action="{% url 'petition_project_create' %}"
+              method="post">
+          {% csrf_token %}
+          <input type="hidden"
+                 name="moulinette_url"
+                 value="{{ petitionproject.moulinette_url }}" />
+          <button type="submit"
+                  class="fr-btn demarche-simplifiee-btn fr-btn--icon-right fr-icon-external-link-line">
+            Poursuivre vers la demande
+          </button>
+        </form>
       </p>
     </div>
   {% endif %}
