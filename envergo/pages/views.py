@@ -9,6 +9,7 @@ from django.contrib.syndication.views import Feed
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.decorators.csrf import requires_csrf_token
@@ -35,14 +36,20 @@ class HomeHaieView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # List all departments for the select input
         departments = Department.objects.defer("geometry").all()
         context["departments"] = departments
-        # Get departments that have an active and valid config
-        context["activated_departments"] = [
-            department
-            for department in departments
-            if ConfigHaie.objects.get_valid_config(department) is not None
-        ]
+
+        # Only show activated departments in the button list
+        configs = (
+            ConfigHaie.objects.valid_at(timezone.now().date())
+            .filter(is_activated=True)
+            .select_related("department")
+            .defer("department__geometry")
+            .order_by("department__department")
+        )
+        context["activated_configs"] = configs
         return context
 
     def post(self, request, *args, **kwargs):

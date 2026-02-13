@@ -81,13 +81,13 @@
         <span class="fr-text fr-text--sm">Simulation gratuite et anonyme. Durée : 3 min.</span>
       </p>
       <div class="fr-grid-row">
-        {% for department in activated_departments %}
+        {% for config in activated_configs %}
           <div class="fr-col-12 fr-col-sm-6 fr-col-lg-2 fr-mb-2w">
             <div class="fr-tile fr-tile--sm fr-tile--horizontal fr-tile--no-icon fr-enlarge-link fr-mr-2w">
               <div class="fr-tile__body">
                 <div class="fr-tile__content">
                   <h3 class="fr-tile__title">
-                    <a href="{% url 'triage' %}?department={{ department.department }}">{{ department }}</a>
+                    <a href="{% url 'triage' %}?department={{ config.department.department }}">{{ config.department }}</a>
                   </h3>
                 </div>
               </div>
