@@ -14,7 +14,7 @@ window.addEventListener('load', function () {
     paramName: function () { return 'additional_files'; },
     maxFilesize: DROPZONE_MAX_FILESIZE,
     maxFiles: DROPZONE_MAX_FILES,
-    acceptedFiles: 'image/*,application/pdf,application/zip',
+    acceptedFiles: 'image/*,application/pdf,application/zip,application/x-zip-compressed,application/octet-stream,.zip',
     autoProcessQueue: true,
     uploadMultiple: false,
     parallelUploads: 100,
