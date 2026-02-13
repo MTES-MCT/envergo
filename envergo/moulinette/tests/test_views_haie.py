@@ -1,7 +1,9 @@
+from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 from django.urls import reverse
 
@@ -365,7 +367,7 @@ def test_moulinette_post_form_error(client):
         "haies": [
             {
                 "code": "required",
-                "message": "Aucune haie n’a été saisie. Cliquez sur le bouton "
+                "message": "Aucune haie n'a été saisie. Cliquez sur le bouton "
                 "ci-dessus pour\n"
                 "            localiser les haies à détruire.",
             }
@@ -566,6 +568,7 @@ def test_confighaie_settings_view_map_display(
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
+        validity_range=DateRange(None, date(2020, 1, 1), "[)"),
     )
     CriterionFactory(
         title="Natura 2000 Haie > Haie Bizous après 2020",
@@ -575,6 +578,7 @@ def test_confighaie_settings_view_map_display(
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
+        validity_range=DateRange(date(2020, 1, 1), None, "[)"),
     )
 
     # AS instructor user in 44
@@ -707,3 +711,37 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         "La localisation des linéaires à planter dans des zones sensibles "
         in res.content.decode()
     )
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_settings_view_with_multiple_configs(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """Settings view returns the currently valid config when multiple exist."""
+    from datetime import timedelta
+
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    current_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == current_config.pk
