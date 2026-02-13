@@ -26,6 +26,19 @@ from envergo.moulinette.utils import get_template_choices, list_moulinette_templ
 from envergo.utils.widgets import JSONWidget
 
 
+def format_validity_range(validity_range):
+    """Format a DateRange for display in admin list columns."""
+    if not validity_range:
+        return ""
+
+    fmt = "%d/%m/%y"
+    lower = validity_range.lower
+    upper = validity_range.upper
+    lower_str = lower.strftime(fmt) if lower else ""
+    upper_str = upper.strftime(fmt) if upper else ""
+    return f"{lower_str} → {upper_str}"
+
+
 class MapDepartmentsListFilter(DepartmentsListFilter):
     title = _("Departments")
     parameter_name = "departments"
@@ -235,18 +248,7 @@ class CriterionAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        if not obj.validity_range:
-            return ""
-        lower = obj.validity_range.lower
-        upper = obj.validity_range.upper
-        fmt = "%d/%m/%y"
-        if lower and upper:
-            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
-        if lower:
-            return f"{lower.strftime(fmt)} → ajd"
-        if upper:
-            return f"→ {upper.strftime(fmt)}"
-        return ""
+        return format_validity_range(obj.validity_range)
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
@@ -449,18 +451,7 @@ class ConfigAmenagementAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        if not obj.validity_range:
-            return ""
-        lower = obj.validity_range.lower
-        upper = obj.validity_range.upper
-        fmt = "%d/%m/%y"
-        if lower and upper:
-            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
-        if lower:
-            return f"{lower.strftime(fmt)} → ajd"
-        if upper:
-            return f"→ {upper.strftime(fmt)}"
-        return ""
+        return format_validity_range(obj.validity_range)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -588,18 +579,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
 
     @admin.display(description="Validité")
     def validity_column(self, obj):
-        if not obj.validity_range:
-            return ""
-        lower = obj.validity_range.lower
-        upper = obj.validity_range.upper
-        fmt = "%d/%m/%y"
-        if lower and upper:
-            return f"{lower.strftime(fmt)} → {upper.strftime(fmt)}"
-        if lower:
-            return f"{lower.strftime(fmt)} → ajd"
-        if upper:
-            return f"→ {upper.strftime(fmt)}"
-        return ""
+        return format_validity_range(obj.validity_range)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
