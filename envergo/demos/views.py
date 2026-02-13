@@ -251,7 +251,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             {
                 "polygon": to_geojson(MultiLineString(hedges_400_mls, srid=EPSG_WGS84)),
                 "color": "#f0f921",
-                "legend": "Haies",
+                "legend": "Haies existentes",
                 "opacity": 1.0,
             }
         )
@@ -259,6 +259,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             {
                 "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
+                "className": "hedge to-remove",
                 "legend": "Haies à détruire",
                 "opacity": 1.0,
             }
