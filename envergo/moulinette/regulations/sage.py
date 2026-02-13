@@ -80,7 +80,7 @@ class ImpactZoneHumide(
         "non_soumis_dehors": RESULTS.non_soumis,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zh"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
