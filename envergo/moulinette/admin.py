@@ -1,9 +1,7 @@
 from django import forms
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.contrib.admin.widgets import AdminDateWidget
 from django.contrib.postgres.forms import DateRangeField, RangeWidget
-from django.db.backends.postgresql.psycopg_any import DateRange
-from django.db.models import Q
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -11,6 +9,7 @@ from django.utils.html import format_html_join, mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.admin import DepartmentsListFilter
+from envergo.utils.admin import OverlapValidationFormMixin
 from envergo.moulinette.models import (
     REGULATIONS,
     ActionToTake,
@@ -116,7 +115,13 @@ class AdminDateRangeWidget(RangeWidget):
         )
 
 
-class CriterionAdminForm(forms.ModelForm):
+class CriterionAdminForm(OverlapValidationFormMixin, forms.ModelForm):
+    overlap_identity_fields = ["evaluator", "activation_map", "regulation", "perimeter"]
+    overlap_error_message = (
+        "Ce critère chevauche un ou plusieurs critères existants avec le même "
+        "évaluateur, la même carte d'activation et la même réglementation : {links}"
+    )
+
     header = forms.CharField(
         label=_("Header"),
         required=False,
@@ -254,68 +259,13 @@ class CriterionAdmin(admin.ModelAdmin):
         self, request, context, add=False, change=False, form_url="", obj=None
     ):
         if obj:
-            criterion = obj
-            settings_form = criterion.get_settings_form()
             context.update(
                 {
-                    "settings_form": settings_form,
-                    "subtitle": criterion.backend_title,
+                    "settings_form": obj.get_settings_form(),
+                    "subtitle": obj.backend_title,
                 }
             )
-            validity_range = DateRange(
-                obj.validity_range.lower if obj.validity_range else None,
-                obj.validity_range.upper if obj.validity_range else None,
-                "[)",
-            )
-            overlapping_criteria = (
-                Criterion.objects.filter(
-                    evaluator=obj.evaluator,
-                    activation_map_id=obj.activation_map_id,
-                    regulation=obj.regulation,
-                )
-                .filter(
-                    Q(validity_range__overlap=validity_range)
-                    | Q(validity_range__isnull=True)
-                    | Q(validity_range__isnull=True)
-                )
-                .exclude(pk=obj.pk)
-            )
-
-            count = overlapping_criteria.count()
-            if count:
-                links_html = format_html_join(
-                    ", ",
-                    '<a href="{}">{}</a>',
-                    (
-                        (
-                            reverse(
-                                f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change",
-                                args=[obj.pk],
-                            ),
-                            str(obj),
-                        )
-                        for obj in overlapping_criteria
-                    ),
-                )
-                if count == 1:
-                    message = mark_safe(
-                        f"Un autre critère avec le même évaluateur et la même carte d’activation a des dates qui se "
-                        f"superposent à celui-ci : {links_html}"
-                    )
-                else:
-                    message = mark_safe(
-                        f"D’autres critères avec le même évaluateur et la même carte d’activation ont des dates qui se "
-                        f"superposent à celui-ci : {links_html}"
-                    )
-
-                self.message_user(
-                    request,
-                    message,
-                    level=messages.WARNING,
-                )
-
-        res = super().render_change_form(request, context, add, change, form_url, obj)
-        return res
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     def render_delete_form(self, request, context):
         criterion = context["object"]
@@ -391,7 +341,13 @@ class PerimeterAdmin(admin.ModelAdmin):
         return obj.activation_map.departments
 
 
-class ConfigAmenagementForm(forms.ModelForm):
+class ConfigAmenagementForm(OverlapValidationFormMixin, forms.ModelForm):
+    overlap_identity_fields = ["department"]
+    overlap_error_message = (
+        "Cette configuration chevauche une ou plusieurs configurations "
+        "existantes pour ce département : {links}"
+    )
+
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
     )
@@ -468,7 +424,13 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
-class ConfigHaieAdminForm(forms.ModelForm):
+class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
+    overlap_identity_fields = ["department"]
+    overlap_error_message = (
+        "Cette configuration chevauche une ou plusieurs configurations "
+        "existantes pour ce département : {links}"
+    )
+
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
     )
