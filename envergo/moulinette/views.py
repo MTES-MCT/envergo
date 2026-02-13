@@ -513,7 +513,7 @@ class BaseMoulinetteResult(FormView):
         # Triage is required and triage form is invalid
         if triage_form and not triage_form.is_valid():
             if "department" in triage_form.errors:
-                redirect_url = f"{reverse("home")}#simulateur"
+                redirect_url = f"{reverse('home')}#simulateur"
             else:
                 redirect_url = reverse("triage")
                 redirect_url = update_qs(redirect_url, request.GET)
@@ -654,7 +654,7 @@ class Triage(MoulinetteMixin, FormView):
         """This page requires a valid department to be displayed."""
 
         if not self.moulinette.department:
-            return HttpResponseRedirect(f"{reverse("home")}#simulateur")
+            return HttpResponseRedirect(f"{reverse('home')}#simulateur")
 
         config = self.moulinette.get_config()
         if not config:
@@ -762,6 +762,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
+            "sites_inscrits_haie",
+            "sites_classes_haie",
         ]
         regulation_list = Regulation.objects.filter(
             regulation__in=MAPS_REGULATION_LIST
