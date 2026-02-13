@@ -84,6 +84,7 @@
         fillColor: "transparent",
         fillOpacity: polygon.properties.opacity,
         opacity: polygon.properties.opacity,
+        className: polygon.properties.className,
         weight: 5,
       };
     };
@@ -93,7 +94,7 @@
         var polygonJSON = {
           type: "Feature",
           geometry: polygon.polygon,
-          properties: { color: polygon.color, opacity: polygon.opacity }
+          properties: { color: polygon.color, opacity: polygon.opacity, className: polygon.className }
         };
         return polygonJSON;
       });
