@@ -1,8 +1,10 @@
 import datetime
+from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
@@ -136,3 +138,30 @@ def test_dossier_submission_admin_alert(
     assert project.demarches_simplifiees_last_sync is not None
     assert mock_post.call_count == 2
     assert "date=2025-01-29" in project.moulinette_url
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_dossier_submission_admin_alert_ignores_expired_config(
+    mock_post, mock_notify_command, mock_notify_model
+):
+    """The command should not process expired configs."""
+    today = date.today()
+    one_year_ago = today - timedelta(days=365)
+
+    # Expired config — should be ignored by the command
+    DCConfigHaieFactory(
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+
+    PetitionProjectFactory()
+    call_command("dossier_submission_admin_alert")
+
+    # The DS API should never be called since no valid config exists
+    mock_post.assert_not_called()
