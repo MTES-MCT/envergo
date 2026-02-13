@@ -2316,10 +2316,12 @@ class MoulinetteHaie(Moulinette):
             if pre_computed_density:
                 context.update(
                     {
-                        "pre_computed_density_200": pre_computed_density["density_200"],
+                        "pre_computed_density_200": pre_computed_density[
+                            "density_around_centroid"
+                        ]["density_200"],
                         "pre_computed_density_5000": pre_computed_density[
-                            "density_5000"
-                        ],
+                            "density_around_centroid"
+                        ]["density_5000"],
                     }
                 )
 
