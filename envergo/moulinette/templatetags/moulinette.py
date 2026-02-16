@@ -1,6 +1,7 @@
 import json
 import logging
 import string
+from datetime import date
 from decimal import Decimal
 
 from django import template
@@ -10,6 +11,7 @@ from django.template import Context, Template
 from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
+from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
@@ -343,3 +345,29 @@ def display_remove_only_haies_field(field):
 @register.simple_tag
 def humanize_motif(motif):
     return dict(MOTIF_CHOICES).get(motif, "Motif non défini")
+
+
+@register.filter
+def display_validity_range(validity_range):
+    """Format a DateRange for human-friendly display.
+
+    Returns an empty string when the range is None (always valid), so the
+    caller can hide the entire line with {% if ... %}.
+    """
+    if validity_range is None:
+        return ""
+
+    lower = validity_range.lower
+    upper = validity_range.upper
+    fmt = "d/m/Y"
+
+    if lower and upper:
+        return f"du {date_format(lower, fmt)} au {date_format(upper, fmt)}"
+
+    if upper:
+        return f"jusqu'au {date_format(upper, fmt)}"
+
+    # Only a lower bound
+    if lower <= date.today():
+        return f"depuis le {date_format(lower, fmt)}"
+    return f"à partir du {date_format(lower, fmt)}"
