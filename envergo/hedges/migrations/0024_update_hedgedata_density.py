@@ -9,114 +9,69 @@ from envergo.hedges.models import HedgeList, Hedge
 
 def update_hedges_density_with_density_inside_buffer(apps, schema_editor):
     HedgeData = apps.get_model("hedges", "HedgeData")
-    qs = HedgeData.objects.filter(_density__isnull=False)
+    hedges = HedgeData.objects.filter(_density__isnull=False)
 
-    total = qs.count()
-    batch_size = 10
-    i = 0
-    with tqdm(total=total) as pbar:
-        while i < total:
-            models = qs[i : i + batch_size].iterator()  # noqa
-            to_update = []
-            for model in models:
-                if not model._density:
-                    continue
-                if "density_around_centroid" not in model._density:
-                    model._density.update(
-                        {
-                            "density_around_centroid": {
-                                "length_200": model._density.pop("length_200"),
-                                "length_5000": model._density.pop("length_5000"),
-                                "area_200_ha": model._density.pop("area_200_ha"),
-                                "area_5000_ha": model._density.pop("area_5000_ha"),
-                                "density_200": model._density.pop("density_200"),
-                                "density_5000": model._density.pop("density_5000"),
-                            }
-                        }
-                    )
-                if "density_inside_buffer" not in model._density:
-                    # Get hedges to remove multilinestring
-                    hedges_to_remove = HedgeList(
-                        [Hedge(**h) for h in model.data]
-                    ).to_remove()
-                    hedges_to_remove_mls = []
-                    for hedge in hedges_to_remove:
-                        geom = MultiLineString(hedge.geos_geometry)
-                        if geom:
-                            hedges_to_remove_mls.extend(geom)
-                    hedges_to_remove_mls_merged = MultiLineString(
-                        hedges_to_remove_mls, srid=EPSG_WGS84
-                    )
-                    # Compute density inside buffer
-                    density_400_buffer = compute_hedge_density_around_lines(
-                        hedges_to_remove_mls_merged, 400
-                    )
-                    # Update _density
-                    model._density.update(
-                        {
-                            "density_inside_buffer": {
-                                "length_400": density_400_buffer["artifacts"]["length"],
-                                "area_400_ha": density_400_buffer["artifacts"][
-                                    "area_ha"
-                                ],
-                                "density_400": density_400_buffer["density"],
-                            },
-                        }
-                    )
+    to_update = []
+    for hedge in hedges:
+        if not hedge._density:
+            continue
+        if "density_around_centroid" not in hedge._density:
+            hedge._density.update(
+                {
+                    "density_around_centroid": {
+                        "length_200": hedge._density.pop("length_200"),
+                        "length_5000": hedge._density.pop("length_5000"),
+                        "area_200_ha": hedge._density.pop("area_200_ha"),
+                        "area_5000_ha": hedge._density.pop("area_5000_ha"),
+                        "density_200": hedge._density.pop("density_200"),
+                        "density_5000": hedge._density.pop("density_5000"),
+                    }
+                }
+            )
 
-                to_update.append(model)
+        to_update.append(hedge)
 
-            HedgeData.objects.bulk_update(to_update, ["_density"])
-            i += batch_size
-            pbar.update(batch_size)
+    HedgeData.objects.bulk_update(to_update, ["_density"])
 
 
 def reverse_hedges_density(apps, schema_editor):
     HedgeData = apps.get_model("hedges", "HedgeData")
-    qs = HedgeData.objects.filter(_density__isnull=False)
+    hedges = HedgeData.objects.filter(_density__isnull=False)
 
-    total = qs.count()
-    batch_size = 1000
-    i = 0
-    with tqdm(total=total) as pbar:
-        while i < total:
-            models = qs[i : i + batch_size].iterator()  # noqa
-            to_update = []
-            for model in models:
-                if not model._density:
-                    continue
-                if "density_around_centroid" in model._density:
-                    model._density.update(
-                        {
-                            "length_200": model._density["density_around_centroid"].pop(
-                                "length_200"
-                            ),
-                            "length_5000": model._density[
-                                "density_around_centroid"
-                            ].pop("length_5000"),
-                            "area_200_ha": model._density[
-                                "density_around_centroid"
-                            ].pop("area_200_ha"),
-                            "area_5000_ha": model._density[
-                                "density_around_centroid"
-                            ].pop("area_5000_ha"),
-                            "density_200": model._density[
-                                "density_around_centroid"
-                            ].pop("density_200"),
-                            "density_5000": model._density[
-                                "density_around_centroid"
-                            ].pop("density_5000"),
-                        }
-                    )
-                    del model._density["density_around_centroid"]
-                if "density_inside_buffer" in model._density:
-                    del model._density["density_inside_buffer"]
+    to_update = []
+    for hedge in hedges:
+        if not hedge._density:
+            continue
+        if "density_around_centroid" in hedge._density:
+            hedge._density.update(
+                {
+                    "length_200": hedge._density["density_around_centroid"].pop(
+                        "length_200"
+                    ),
+                    "length_5000": hedge._density["density_around_centroid"].pop(
+                        "length_5000"
+                    ),
+                    "area_200_ha": hedge._density["density_around_centroid"].pop(
+                        "area_200_ha"
+                    ),
+                    "area_5000_ha": hedge._density["density_around_centroid"].pop(
+                        "area_5000_ha"
+                    ),
+                    "density_200": hedge._density["density_around_centroid"].pop(
+                        "density_200"
+                    ),
+                    "density_5000": hedge._density["density_around_centroid"].pop(
+                        "density_5000"
+                    ),
+                }
+            )
+            del hedge._density["density_around_centroid"]
+        if "density_inside_buffer" in hedge._density:
+            del hedge._density["density_inside_buffer"]
 
-                to_update.append(model)
+        to_update.append(hedge)
 
-            HedgeData.objects.bulk_update(to_update, ["_density"])
-            i += batch_size
-            pbar.update(batch_size)
+    HedgeData.objects.bulk_update(to_update, ["_density"])
 
 
 class Migration(migrations.Migration):
