@@ -79,11 +79,11 @@ def reverse_hedges_density(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("hedges", "0023_rename_pacage_pacage_pacage_num"),
+        ("hedges", "0024_update_hedgedata_density"),
     ]
 
     operations = [
         migrations.RunPython(
-            update_hedges_density_with_density_inside_buffer, reverse_hedges_density
+            update_hedges_density_inside_buffer_to_inside_line, reverse_hedges_density
         ),
     ]
