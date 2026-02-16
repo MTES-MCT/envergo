@@ -51,9 +51,7 @@ def instance_to_form_data(instance):
 
     # JSONField values need string serialization for form widgets
     json_field_names = {
-        f.name
-        for f in instance._meta.get_fields()
-        if isinstance(f, JSONField)
+        f.name for f in instance._meta.get_fields() if isinstance(f, JSONField)
     }
     for key in json_field_names:
         if key in data:
