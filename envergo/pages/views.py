@@ -61,7 +61,7 @@ class HomeHaieView(TemplateView):
 
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
-        if config:
+        if config and config.is_activated:
             query_params = {"department": department.department}
             return HttpResponseRedirect(
                 f"{reverse('triage')}?{urlencode(query_params)}"
