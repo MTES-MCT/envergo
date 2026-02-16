@@ -5,11 +5,10 @@ from django.contrib.postgres.forms import DateRangeField, RangeWidget
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.html import format_html_join, mark_safe
+from django.utils.html import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.admin import DepartmentsListFilter
-from envergo.utils.admin import OverlapValidationFormMixin
 from envergo.moulinette.models import (
     REGULATIONS,
     ActionToTake,
@@ -22,6 +21,7 @@ from envergo.moulinette.models import (
 )
 from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
 from envergo.moulinette.utils import get_template_choices, list_moulinette_templates
+from envergo.utils.admin import OverlapValidationFormMixin
 from envergo.utils.widgets import JSONWidget
 
 
