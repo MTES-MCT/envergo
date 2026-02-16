@@ -1,9 +1,13 @@
+from datetime import date, timedelta
+
 import factory
 import pytest
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.pages.templatetags.pages import config_menu_link
 from envergo.pages.templatetags.utils import urlize_html
 
 pytestmark = pytest.mark.django_db
@@ -43,8 +47,8 @@ def test_petition_department_list(
     content = response.content.decode()
     assert "Paramétrage" in content
 
-    assert 'href="/simulateur/parametrage/44"' in content
-    assert 'href="/simulateur/parametrage/34"' not in content
+    assert 'href="/simulateur/parametrage/44/"' in content
+    assert 'href="/simulateur/parametrage/34/"' not in content
 
     # GIVEN an admin user
     client.force_login(admin_user)
@@ -53,8 +57,8 @@ def test_petition_department_list(
     # THEN department menu is displayed with 34 and 44
     content = response.content.decode()
     assert "Paramétrage" in content
-    assert 'href="/simulateur/parametrage/44"' in content
-    assert 'href="/simulateur/parametrage/34"' in content
+    assert 'href="/simulateur/parametrage/44/"' in content
+    assert 'href="/simulateur/parametrage/34/"' in content
 
 
 def test_urlize_html():
@@ -238,3 +242,206 @@ def test_urlize_html_known_limitations():
     message = "foo &amp; bar"
     result = urlize_html(message)
     assert "&amp;amp;" in result
+
+
+@pytest.mark.urls("config.urls_haie")
+class TestConfigMenuLink:
+    """Unit tests for config_menu_link: label content and validity display."""
+
+    def test_active_valid_config_shows_actif_badge(self):
+        today = date.today()
+        one_year_later = today + timedelta(days=365)
+        config = DCConfigHaieFactory(
+            is_activated=True,
+            validity_range=DateRange(today, one_year_later, "[)"),
+        )
+        url, label, _ = config_menu_link(config)
+
+        label_str = str(label)
+        assert "/simulateur/parametrage/44/" in url
+        assert "ACTIF" in label_str
+        assert "fr-badge--success" in label_str
+        # No dates shown for active+valid
+        assert today.strftime("%d/%m/%Y") not in label_str
+
+    def test_active_null_range_shows_actif_badge(self):
+        """A null range means always valid; active → ACTIF badge."""
+        config = DCConfigHaieFactory(is_activated=True, validity_range=None)
+        _, label, _ = config_menu_link(config)
+
+        assert "ACTIF" in str(label)
+
+    def test_inactive_valid_config_shows_dates(self):
+        today = date.today()
+        one_year_later = today + timedelta(days=365)
+        config = DCConfigHaieFactory(
+            is_activated=False,
+            validity_range=DateRange(today, one_year_later, "[)"),
+        )
+        _, label, _ = config_menu_link(config)
+
+        label_str = str(label)
+        assert "ACTIF" not in label_str
+        assert today.strftime("%d/%m/%Y") in label_str
+        assert one_year_later.strftime("%d/%m/%Y") in label_str
+
+    def test_active_expired_config_shows_dates(self):
+        today = date.today()
+        one_year_ago = today - timedelta(days=365)
+        config = DCConfigHaieFactory(
+            is_activated=True,
+            validity_range=DateRange(one_year_ago, today, "[)"),
+        )
+        _, label, _ = config_menu_link(config)
+
+        label_str = str(label)
+        assert "ACTIF" not in label_str
+        assert one_year_ago.strftime("%d/%m/%Y") in label_str
+
+    def test_inactive_null_range_shows_department_only(self):
+        config = DCConfigHaieFactory(is_activated=False, validity_range=None)
+        _, label, _ = config_menu_link(config)
+
+        label_str = str(label)
+        assert "ACTIF" not in label_str
+        assert "<br>" not in label_str
+
+
+@pytest.mark.urls("config.urls_haie")
+class TestParametrageDepartmentsMenu:
+    """Test the content of the "Parametrage" menu."""
+
+    @pytest.fixture(autouse=True)
+    def _settings(self, settings):
+        settings.ENVERGO_HAIE_DOMAIN = "testserver"
+
+    def test_anonymous_user_sees_no_menu(self, client):
+        DCConfigHaieFactory()
+        content = client.get("/").content.decode()
+
+        assert "Paramétrage" not in content
+
+    def test_non_instructor_sees_no_menu(self, client, haie_user):
+        DCConfigHaieFactory()
+        client.force_login(haie_user)
+        content = client.get("/").content.decode()
+
+        assert "Paramétrage" not in content
+
+    def test_instructor_sees_only_own_department(self, client, haie_instructor_44):
+        DCConfigHaieFactory()  # dept 44
+        DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+
+        client.force_login(haie_instructor_44)
+        content = client.get("/").content.decode()
+
+        assert "Paramétrage" in content
+        assert "/simulateur/parametrage/44/" in content
+        assert "/simulateur/parametrage/34/" not in content
+
+    def test_superuser_sees_all_departments(self, client, admin_user):
+        DCConfigHaieFactory()  # dept 44
+        DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+
+        assert "/simulateur/parametrage/44/" in content
+        assert "/simulateur/parametrage/34/" in content
+
+    def test_multiple_configs_per_department_all_listed(self, client, admin_user):
+        """Each config is a separate menu entry, even for the same department."""
+        today = date.today()
+        one_year_ago = today - timedelta(days=365)
+        one_year_later = today + timedelta(days=365)
+        two_years_later = today + timedelta(days=730)
+
+        DCConfigHaieFactory(
+            validity_range=DateRange(one_year_ago, today, "[)"),
+        )
+        DCConfigHaieFactory(
+            validity_range=DateRange(today, one_year_later, "[)"),
+        )
+        DCConfigHaieFactory(
+            department=factory.SubFactory(Department34Factory),
+            validity_range=DateRange(one_year_later, two_years_later, "[)"),
+        )
+
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+
+        # Dept 44 appears twice (two configs), dept 34 once
+        assert content.count("/simulateur/parametrage/44/") == 2
+        assert content.count("/simulateur/parametrage/34/") == 1
+
+    def test_active_valid_config_shows_actif_badge(self, client, admin_user):
+        DCConfigHaieFactory(is_activated=True)
+
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+
+        assert "ACTIF" in content
+
+    def test_inactive_config_shows_dates_not_badge(self, client, admin_user):
+        today = date.today()
+        one_year_later = today + timedelta(days=365)
+        DCConfigHaieFactory(
+            is_activated=False,
+            validity_range=DateRange(today, one_year_later, "[)"),
+        )
+
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+
+        assert "ACTIF" not in content
+        assert today.strftime("%d/%m/%Y") in content
+
+    def test_expired_config_shows_dates_not_badge(self, client, admin_user):
+        today = date.today()
+        one_year_ago = today - timedelta(days=365)
+        DCConfigHaieFactory(
+            is_activated=True,
+            validity_range=DateRange(one_year_ago, today, "[)"),
+        )
+
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+
+        assert "ACTIF" not in content
+        assert one_year_ago.strftime("%d/%m/%Y") in content
+
+    def test_configs_ordered_by_department_then_validity(self, client, admin_user):
+        """Entries appear sorted: department 34 before 44, earlier ranges first."""
+        today = date.today()
+        one_year_ago = today - timedelta(days=365)
+        one_year_later = today + timedelta(days=365)
+        two_years_later = today + timedelta(days=730)
+
+        # Create in reverse order to confirm sorting isn't insertion-based.
+        # All inactive so they show dates (not ACTIF badge).
+        DCConfigHaieFactory(
+            is_activated=False,
+            validity_range=DateRange(one_year_later, two_years_later, "[)"),
+        )
+        DCConfigHaieFactory(
+            is_activated=False,
+            validity_range=DateRange(one_year_ago, today, "[)"),
+        )
+        DCConfigHaieFactory(
+            is_activated=False,
+            department=factory.SubFactory(Department34Factory),
+            validity_range=DateRange(one_year_ago, today, "[)"),
+        )
+
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+
+        # Dept 34 should appear before dept 44 entries
+        pos_34 = content.index("/simulateur/parametrage/34/")
+        pos_44_first = content.index("/simulateur/parametrage/44/")
+        assert pos_34 < pos_44_first
+
+        # Within dept 44, earlier range should appear first
+        earlier_date = one_year_ago.strftime("%d/%m/%Y")
+        later_date = one_year_later.strftime("%d/%m/%Y")
+        assert content.index(earlier_date) < content.index(later_date)

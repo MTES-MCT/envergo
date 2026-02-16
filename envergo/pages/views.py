@@ -9,6 +9,7 @@ from django.contrib.syndication.views import Feed
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.decorators.csrf import requires_csrf_token
@@ -35,14 +36,20 @@ class HomeHaieView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # List all departments for the select input
         departments = Department.objects.defer("geometry").all()
         context["departments"] = departments
-        # Get departments that have an active and valid config
-        context["activated_departments"] = [
-            department
-            for department in departments
-            if ConfigHaie.objects.get_valid_config(department) is not None
-        ]
+
+        # Only show activated departments in the button list
+        configs = (
+            ConfigHaie.objects.valid_at(timezone.now().date())
+            .filter(is_activated=True)
+            .select_related("department")
+            .defer("department__geometry")
+            .order_by("department__department")
+        )
+        context["activated_configs"] = configs
         return context
 
     def post(self, request, *args, **kwargs):
@@ -246,13 +253,23 @@ class AvailabilityInfo(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["configs_available"] = ConfigAmenagement.objects.filter(
-            is_activated=True
-        ).order_by("department")
+        context["configs_available"] = (
+            ConfigAmenagement.objects.filter(is_activated=True)
+            .valid_at(date.today())
+            .order_by("department")
+        )
 
-        context["configs_soon"] = ConfigAmenagement.objects.filter(
-            is_activated=False
-        ).order_by("department")
+        # Departments being set up: departments that have at least one inactive
+        # config but no currently valid active config (otherwise they'd already
+        # appear in configs_available).
+        active_department_ids = context["configs_available"].values_list(
+            "department_id", flat=True
+        )
+        context["configs_soon"] = (
+            Department.objects.filter(configamenagements__is_activated=False)
+            .exclude(pk__in=active_department_ids)
+            .distinct()
+        )
 
         return context
 

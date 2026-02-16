@@ -284,6 +284,50 @@ def test_regulation_with_map_factory_can_create_a_hedge_to_remove_map(
     assert not regulation.map.display_marker_at_center
 
 
+class TestConfigIsValidAt:
+    """Tests for ConfigBase.is_valid_at — instance-level validity check."""
+
+    def test_null_range_is_always_valid(self):
+        config = ConfigAmenagementFactory.build(validity_range=None)
+
+        assert config.is_valid_at(date(2020, 1, 1)) is True
+        assert config.is_valid_at(date(2030, 12, 31)) is True
+
+    def test_null_range_defaults_to_today(self):
+        config = ConfigAmenagementFactory.build(validity_range=None)
+
+        assert config.is_valid_at() is True
+
+    def test_lower_bound_inclusive(self):
+        config = ConfigAmenagementFactory.build(
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+
+        assert config.is_valid_at(date(2024, 12, 31)) is False
+        assert config.is_valid_at(date(2025, 1, 1)) is True
+        assert config.is_valid_at(date(2025, 6, 15)) is True
+
+    def test_upper_bound_exclusive(self):
+        config = ConfigAmenagementFactory.build(
+            validity_range=DateRange(None, date(2025, 6, 1), "[)"),
+        )
+
+        assert config.is_valid_at(date(2025, 5, 31)) is True
+        assert config.is_valid_at(date(2025, 6, 1)) is False
+        assert config.is_valid_at(date(2025, 6, 2)) is False
+
+    def test_both_bounds(self):
+        config = ConfigAmenagementFactory.build(
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 6, 1), "[)"),
+        )
+
+        assert config.is_valid_at(date(2024, 12, 31)) is False
+        assert config.is_valid_at(date(2025, 1, 1)) is True
+        assert config.is_valid_at(date(2025, 3, 15)) is True
+        assert config.is_valid_at(date(2025, 6, 1)) is False
+        assert config.is_valid_at(date(2025, 7, 1)) is False
+
+
 class TestConfigValidityDates:
     """Tests for the validity date mechanism on Config models."""
 
@@ -528,3 +572,57 @@ class TestMoulinetteWithDate:
         )
         moulinette = MoulinetteAmenagement(moulinette_data)
         assert moulinette.config is not None
+
+
+class TestConfigQueryWithMultipleValidityPeriods:
+    """Tests for querying configs when multiple validity periods exist."""
+
+    def test_get_valid_config_with_multiple_periods(self):
+        """get_valid_config returns the right config for each date."""
+        dept = DepartmentFactory()
+        config_old = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_new = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
+        )
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2024, 6, 15))
+            == config_old
+        )
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15))
+            == config_new
+        )
+
+    def test_get_valid_config_returns_none_when_no_valid(self):
+        """get_valid_config returns None when no config is valid for the date."""
+        dept = DepartmentFactory()
+        ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2020, 1, 1), date(2021, 1, 1), "[)"),
+        )
+        assert (
+            ConfigAmenagement.objects.get_valid_config(dept, date(2025, 6, 15)) is None
+        )
+
+    def test_valid_at_excludes_expired_configs(self):
+        """valid_at only returns configs valid at the given date."""
+        dept = DepartmentFactory()
+        ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2020, 1, 1), date(2021, 1, 1), "[)"),
+        )
+        config_current = ConfigAmenagementFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
+        )
+        results = list(ConfigAmenagement.objects.valid_at(date(2025, 6, 15)))
+        assert results == [config_current]
