@@ -673,7 +673,7 @@ def compute_hedge_density_around_point(point_geos, radius):
     }
 
 
-def compute_hedge_density_around_line(line_geos, radius):
+def compute_hedge_density_around_lines(line_geos, radius):
     """Compute the density of hedges in buffer radius."""
 
     # use specific projection to be able to use meters for buffering

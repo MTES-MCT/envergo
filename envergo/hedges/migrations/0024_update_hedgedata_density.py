@@ -3,7 +3,7 @@ from django.contrib.gis.geos import MultiLineString
 from django.db import migrations
 from tqdm import tqdm
 
-from envergo.geodata.utils import EPSG_WGS84, compute_hedge_density_around_line
+from envergo.geodata.utils import EPSG_WGS84, compute_hedge_density_around_lines
 from envergo.hedges.models import HedgeList, Hedge
 
 
@@ -48,7 +48,7 @@ def update_hedges_density_with_density_inside_buffer(apps, schema_editor):
                         hedges_to_remove_mls, srid=EPSG_WGS84
                     )
                     # Compute density inside buffer
-                    density_400_buffer = compute_hedge_density_around_line(
+                    density_400_buffer = compute_hedge_density_around_lines(
                         hedges_to_remove_mls_merged, 400
                     )
                     # Update _density

@@ -16,7 +16,7 @@ from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
-    compute_hedge_density_around_line,
+    compute_hedge_density_around_lines,
     compute_hedge_density_around_point,
     get_department_from_coords,
 )
@@ -439,7 +439,7 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
-    def compute_density_inside_buffer_with_artifacts(self):
+    def compute_around_lines_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove in 400m buffer."""
 
         # Create multilinestring from hedges to remove
@@ -453,7 +453,7 @@ class HedgeData(models.Model):
         )
 
         # Generate buffer 400m around hedges and compute data
-        return compute_hedge_density_around_line(hedges_to_remove_mls_merged, 400)
+        return compute_hedge_density_around_lines(hedges_to_remove_mls_merged, 400)
 
     @property
     def density(self):
@@ -469,10 +469,10 @@ class HedgeData(models.Model):
                 self.compute_density_around_points_with_artifacts()
             )
             # Density inside buffer
-            density_400_buffer = self.compute_density_inside_buffer_with_artifacts()
+            density_400_buffer = self.compute_around_lines_with_artifacts()
 
             self._density = {
-                "density_around_centroid": {
+                "around_centroid": {
                     "length_200": density_200["artifacts"]["length"],
                     "length_5000": density_5000["artifacts"]["length"],
                     "area_200_ha": density_200["artifacts"]["area_ha"],
@@ -480,7 +480,7 @@ class HedgeData(models.Model):
                     "density_200": density_200["density"],
                     "density_5000": density_5000["density"],
                 },
-                "density_inside_buffer": {
+                "around_lines": {
                     "length_400": density_400_buffer["artifacts"]["length"],
                     "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
                     "density_400": density_400_buffer["density"],
