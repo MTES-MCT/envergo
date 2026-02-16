@@ -439,7 +439,7 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
-    def compute_around_lines_with_artifacts(self):
+    def compute_density_around_lines_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove in 400m buffer."""
 
         # Create multilinestring from hedges to remove
@@ -461,7 +461,7 @@ class HedgeData(models.Model):
 
         Two compute methods are existing:
         - one around centroid
-        - one inside a buffer around hedges to remove
+        - one around lines, inside a buffer around hedges to remove
         """
         if not self._density:
             # Density around centroid
@@ -469,7 +469,7 @@ class HedgeData(models.Model):
                 self.compute_density_around_points_with_artifacts()
             )
             # Density inside buffer
-            density_400_buffer = self.compute_around_lines_with_artifacts()
+            density_400_buffer = self.compute_density_around_lines_with_artifacts()
 
             self._density = {
                 "around_centroid": {
