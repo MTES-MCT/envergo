@@ -683,19 +683,10 @@ def compute_hedge_density_around_line(line_geos, radius):
     buffer_zone = line_meter.buffer(radius)
     buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
 
-    # Check if the centroid is on land
-    on_land = (
-        Zone.objects.filter(map__map_type=MAP_TYPES.terres_emergees)
-        .filter(geometry__contains=line_centroid)
-        .exists()
-    )
-    truncated_buffer_zone = None
+    # Remove the sea from the circle
+    truncated_buffer_zone = trim_land(buffer_zone)
 
-    if on_land:
-        # Remove the sea from the circle
-        truncated_buffer_zone = trim_land(buffer_zone)
-
-    if on_land and truncated_buffer_zone:
+    if truncated_buffer_zone:
         truncated_buffer_zone_m = truncated_buffer_zone.transform(
             epsg_utm, clone=True
         )  # use specific projection to compute the area in square meters
