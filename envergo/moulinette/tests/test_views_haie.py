@@ -727,7 +727,7 @@ def test_confighaie_settings_view_with_multiple_configs(
     from datetime import timedelta
 
     today = date.today()
-    yesterday = today - timedelta(days=1)
+    yesterday = today - timedelta(days=1)  # noqa
     tomorrow = today + timedelta(days=1)
     one_year_ago = today - timedelta(days=365)
 
