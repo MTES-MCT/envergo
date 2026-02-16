@@ -5,8 +5,8 @@ from django import template
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
+from envergo.moulinette.templatetags.moulinette import display_validity_range
 
 register = template.Library()
 
@@ -109,34 +109,27 @@ def faq_menu(context):
 @register.simple_tag(takes_context=True)
 def parametrage_departments_menu(context, is_slim=False):
     """Generate html for the "Paramétrages" collapsible menu.
-    List available departments for current user."""
+
+    Lists all ConfigHaie objects visible to the current user, sorted by
+    department then by validity start date.  Each entry shows the department
+    name and, when applicable, the validity range as secondary text.
+    """
 
     current_user = context["user"]
 
     if not current_user.is_authenticated:
         return None
 
-    config_haies = ConfigHaie.objects.all()
-    departments_with_config = Department.objects.defer("geometry").filter(
-        confighaies__in=config_haies
+    configs = (
+        ConfigHaie.objects.select_related("department")
+        .defer("department__geometry")
+        .order_by("department__department", "validity_range")
     )
 
-    if current_user.is_superuser:
-        available_departments = departments_with_config
-    else:
-        user_departments = current_user.departments.defer("geometry")
-        available_departments = departments_with_config & user_departments
+    if not current_user.is_superuser:
+        configs = configs.filter(department__in=current_user.departments.all())
 
-    links = (
-        (
-            reverse(
-                "confighaie_settings", kwargs={"department": department.department}
-            ),
-            department,
-            [],
-        )
-        for department in available_departments
-    )
+    links = (config_menu_link(config) for config in configs)
 
     return collapsible_menu(
         context,
@@ -145,6 +138,35 @@ def parametrage_departments_menu(context, is_slim=False):
         "menu-settings-departments",
         is_slim=is_slim,
     )
+
+
+def config_menu_link(config):
+    """Build a (url, label, event_data) tuple for a single ConfigHaie.
+
+    Active + currently valid configs get an "ACTIF" badge instead of dates,
+    so admins can spot at a glance which config is live.
+    """
+    url = reverse(
+        "confighaie_settings",
+        kwargs={"department": config.department.department},
+    )
+
+    if config.is_activated and config.is_valid_at():
+        label = mark_safe(
+            f"{config.department} "
+            f'<span class="fr-badge fr-badge--sm fr-badge--success">ACTIF</span>'
+        )
+    else:
+        validity_text = display_validity_range(config.validity_range)
+        if validity_text:
+            label = mark_safe(
+                f"{config.department}<br>"
+                f'<span class="fr-text--xs">{validity_text}</span>'
+            )
+        else:
+            label = str(config.department)
+
+    return (url, label, [])
 
 
 def collapsible_menu(
