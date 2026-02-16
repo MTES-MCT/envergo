@@ -284,6 +284,50 @@ def test_regulation_with_map_factory_can_create_a_hedge_to_remove_map(
     assert not regulation.map.display_marker_at_center
 
 
+class TestConfigIsValidAt:
+    """Tests for ConfigBase.is_valid_at — instance-level validity check."""
+
+    def test_null_range_is_always_valid(self):
+        config = ConfigAmenagementFactory.build(validity_range=None)
+
+        assert config.is_valid_at(date(2020, 1, 1)) is True
+        assert config.is_valid_at(date(2030, 12, 31)) is True
+
+    def test_null_range_defaults_to_today(self):
+        config = ConfigAmenagementFactory.build(validity_range=None)
+
+        assert config.is_valid_at() is True
+
+    def test_lower_bound_inclusive(self):
+        config = ConfigAmenagementFactory.build(
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+
+        assert config.is_valid_at(date(2024, 12, 31)) is False
+        assert config.is_valid_at(date(2025, 1, 1)) is True
+        assert config.is_valid_at(date(2025, 6, 15)) is True
+
+    def test_upper_bound_exclusive(self):
+        config = ConfigAmenagementFactory.build(
+            validity_range=DateRange(None, date(2025, 6, 1), "[)"),
+        )
+
+        assert config.is_valid_at(date(2025, 5, 31)) is True
+        assert config.is_valid_at(date(2025, 6, 1)) is False
+        assert config.is_valid_at(date(2025, 6, 2)) is False
+
+    def test_both_bounds(self):
+        config = ConfigAmenagementFactory.build(
+            validity_range=DateRange(date(2025, 1, 1), date(2025, 6, 1), "[)"),
+        )
+
+        assert config.is_valid_at(date(2024, 12, 31)) is False
+        assert config.is_valid_at(date(2025, 1, 1)) is True
+        assert config.is_valid_at(date(2025, 3, 15)) is True
+        assert config.is_valid_at(date(2025, 6, 1)) is False
+        assert config.is_valid_at(date(2025, 7, 1)) is False
+
+
 class TestConfigValidityDates:
     """Tests for the validity date mechanism on Config models."""
 

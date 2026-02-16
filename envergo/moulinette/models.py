@@ -1066,6 +1066,25 @@ class ConfigBase(models.Model):
             ),
         ]
 
+    def is_valid_at(self, at_date=None):
+        """Check whether this config's validity range covers the given date.
+
+        Instance-level counterpart of ConfigQuerySet.valid_at().
+        None validity_range means "always valid".
+        Range semantics are [lower, upper) — lower inclusive, upper exclusive.
+        """
+        if self.validity_range is None:
+            return True
+
+        if at_date is None:
+            at_date = date.today()
+
+        lower = self.validity_range.lower
+        upper = self.validity_range.upper
+        after_start = lower is None or at_date >= lower
+        before_end = upper is None or at_date < upper
+        return after_start and before_end
+
     def __str__(self):
         dept_display = self.department.get_department_display()
         if not self.validity_range:
