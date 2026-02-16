@@ -25,31 +25,39 @@
       <div class="fr-col-5">
 
         {% if result_available %}
-          <h2 class="fr-h4">Résultat du calcul</h2>
+          <div class="fr-table" id="table-0-component">
+            <div class="fr-table__wrapper">
+              <div class="fr-table__container">
+                <div class="fr-table__content">
 
-          <table class="fr-mb-3w">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Distance 400 m</th>
-              </tr>
-            </thead>
+                  <table>
 
-            <tbody>
-              <tr>
-                <th scope="row">Linéaire</th>
-                <td>{{ length_400|floatformat:"0g" }} ml</td>
-              </tr>
-              <tr>
-                <th scope="row">Surface</th>
-                <td>{{ area_400_ha|floatformat:"g" }} ha</td>
-              </tr>
-              <tr>
-                <th scope="row">Densité</th>
-                <td>{{ density_400|floatformat:"g" }} ml/ha</td>
-              </tr>
-            </tbody>
-          </table>
+                    <caption> Résultat du calcul </caption>
+                    <thead>
+                      <tr>
+                        <th colspan="2">Distance 400 m</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      <tr>
+                        <th scope="row">Linéaire</th>
+                        <td>{{ length_400|floatformat:"0g" }} ml</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Surface</th>
+                        <td>{{ area_400_ha|floatformat:"g" }} ha</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Densité</th>
+                        <td>{{ density_400|floatformat:"g" }} ml/ha</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
 
         {% else %}
           <p>Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation.</p>
