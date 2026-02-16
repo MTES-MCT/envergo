@@ -3,9 +3,6 @@ from django.contrib.gis.geos import MultiLineString
 from django.db import migrations
 from tqdm import tqdm
 
-from envergo.geodata.utils import EPSG_WGS84, compute_hedge_density_around_lines
-from envergo.hedges.models import HedgeList, Hedge
-
 
 def update_hedges_density_inside_buffer_to_inside_line(apps, schema_editor):
     HedgeData = apps.get_model("hedges", "HedgeData")
