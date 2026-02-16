@@ -42,4 +42,4 @@ def validate_mime(file, allowed_mime_types):
             f"Le fichier téléchargé a un type MIME détecté de {detected}, qui n'est pas dans la liste des types "
             f"autorisés. Son type MIME déclaré est {file.content_type}."
         )
-        raise ValidationError("Ce type de fichier n'est pas autorisé")
+        raise ValidationError("Ce type de fichier n'est pas autorisé.")
