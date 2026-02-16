@@ -10,7 +10,7 @@ from scipy.interpolate import griddata
 from envergo.geodata.forms import LatLngForm
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import (
-    compute_hedge_density_around_line,
+    compute_hedge_density_around_lines,
     compute_hedge_density_around_point,
     get_catchment_area_pixel_values,
     to_geojson,
@@ -225,7 +225,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         )
 
         # Generate buffer 400m around hedges
-        density_400 = compute_hedge_density_around_line(
+        density_400 = compute_hedge_density_around_lines(
             hedges_to_remove_mls_merged, 400
         )
 
