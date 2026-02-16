@@ -463,7 +463,11 @@ class HedgeData(models.Model):
         - one around centroid
         - one around lines, inside a buffer around hedges to remove
         """
-        if not self._density:
+        if (
+            not self._density
+            or "around_centroid" not in self._density
+            or "around_lines" not in self._density
+        ):
             # Density around centroid
             density_200, density_5000, _ = (
                 self.compute_density_around_points_with_artifacts()

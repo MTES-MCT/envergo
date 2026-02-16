@@ -6,74 +6,54 @@ from tqdm import tqdm
 
 def update_hedges_density_inside_buffer_to_inside_line(apps, schema_editor):
     HedgeData = apps.get_model("hedges", "HedgeData")
-    qs = HedgeData.objects.filter(_density__isnull=False)
+    hedges = HedgeData.objects.filter(_density__isnull=False)
 
-    total = qs.count()
-    batch_size = 1000
-    i = 0
-    with tqdm(total=total) as pbar:
-        while i < total:
-            models = qs[i : i + batch_size].iterator()  # noqa
-            to_update = []
-            for model in models:
-                if not model._density:
-                    continue
-                if "density_around_centroid" in model._density:
-                    model._density.update(
-                        {
-                            "around_centroid": model._density.pop(
-                                "density_around_centroid"
-                            ),
-                        }
-                    )
-                if "density_inside_buffer" in model._density:
-                    model._density.update(
-                        {
-                            "around_lines": model._density.pop("density_inside_buffer"),
-                        }
-                    )
+    to_update = []
+    for hedge in hedges:
+        if not hedge._density:
+            continue
+        if "density_around_centroid" in hedge._density:
+            hedge._density.update(
+                {
+                    "around_centroid": hedge._density.pop("density_around_centroid"),
+                }
+            )
+        if "density_inside_buffer" in hedge._density:
+            hedge._density.update(
+                {
+                    "around_lines": hedge._density.pop("density_inside_buffer"),
+                }
+            )
 
-                to_update.append(model)
+        to_update.append(hedge)
 
-            HedgeData.objects.bulk_update(to_update, ["_density"])
-            i += batch_size
-            pbar.update(batch_size)
+    HedgeData.objects.bulk_update(to_update, ["_density"])
 
 
 def reverse_hedges_density(apps, schema_editor):
     HedgeData = apps.get_model("hedges", "HedgeData")
-    qs = HedgeData.objects.filter(_density__isnull=False)
+    hedges = HedgeData.objects.filter(_density__isnull=False)
 
-    total = qs.count()
-    batch_size = 1000
-    i = 0
-    with tqdm(total=total) as pbar:
-        while i < total:
-            models = qs[i : i + batch_size].iterator()  # noqa
-            to_update = []
-            for model in models:
-                if not model._density:
-                    continue
-                if "around_centroid" in model._density:
-                    model._density.update(
-                        {
-                            "density_around_centroid": model._density.pop(
-                                "around_centroid"
-                            ),
-                        }
-                    )
-                if "around_lines" in model._density:
-                    model._density.update(
-                        {
-                            "density_inside_buffer": model._density.pop("around_lines"),
-                        }
-                    )
+    to_update = []
+    for hedge in hedges:
+        if not hedge._density:
+            continue
+        if "around_centroid" in hedge._density:
+            hedge._density.update(
+                {
+                    "density_around_centroid": hedge._density.pop("around_centroid"),
+                }
+            )
+        if "around_lines" in hedge._density:
+            hedge._density.update(
+                {
+                    "density_inside_buffer": hedge._density.pop("around_lines"),
+                }
+            )
 
-                to_update.append(model)
+        to_update.append(hedge)
 
-            HedgeData.objects.bulk_update(to_update, ["_density"])
-            i += batch_size
-            pbar.update(batch_size)
+    HedgeData.objects.bulk_update(to_update, ["_density"])
 
 
 class Migration(migrations.Migration):
