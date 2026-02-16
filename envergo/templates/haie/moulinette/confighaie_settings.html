@@ -65,7 +65,7 @@
 
       <div class="fr-mb-2w">
         <p class="fr-mb-1w">
-          <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
+          <strong>Liste des comptes ayant les droits de modification (services coordonnateurs) sur tous les dossiers du département :</strong>
         </p>
 
         {% if department_members.instructors_emails %}
@@ -81,7 +81,7 @@
 
       <div class="fr-mb-2w">
         <p class="fr-mb-1w">
-          <strong>Liste des comptes ayant les droits invités sur le département :</strong>
+          <strong>Liste des comptes ayant les droits de lecture sur tous les dossiers du département :</strong>
         </p>
         {% if department_members.invited_emails %}
           <ul>
@@ -93,7 +93,13 @@
           </p>
         {% endif %}
       </div>
+    </div>
 
+    <div class="fr-mb-2w">
+        <p class="fr-mb-1w">
+          <strong>Outre les comptes listés ci-dessus, des comptes peuvent avoir été invités dossier par dossier. 
+Ils ne sont pas recensés ici mais dans la vue «&nbsp;Services consultés&nbsp;» de chaque dossier.</strong>
+        </p>
     </div>
   </div>
 {% endblock %}
