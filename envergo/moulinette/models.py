@@ -214,31 +214,21 @@ def _check_results_groups_matrices():
 
 _check_results_groups_matrices()
 
-
 ACTIONS_TO_TAKE = Choices(
-    (
-        "mention_arrete_lse",
-        "Mentionner dans l’arrêté le différé de réalisation des travaux",
-    ),
-    ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
-    ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
-    ("etude_zh", "Réaliser un inventaire zones humides"),
-    ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
-    ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
-    ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
-    ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
-    ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
-    ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
-    (
-        "interdit_sage",
-        "Modifier le projet pour le rendre conforme au règlement de SAGE",
-    ),
-    (
-        "pc_cas_par_cas",
-        "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
-    ),
-    ("pc_ein", "L’évaluation des incidences Natura 2000"),
-    ("pc_etude_impact", "L'étude d'impact"),
+    ("mention_arrete_lse", "Mention arrêté LSE"),
+    ("depot_pac_lse", "Dépôt PAC LSE"),
+    ("depot_dossier_lse", "Dépôt dossier LSE"),
+    ("etude_zh", "Étude ZH"),
+    ("etude_zi_lse", "Étude ZI LSE"),
+    ("etude_2150", "Étude 2150"),
+    ("depot_etude_impact", "Dépôt étude impact"),
+    ("depot_cas_par_cas", "Dépôt cas par cas"),
+    ("depot_ein", "Dépôt EIN"),
+    ("etude_zi_n2000", "Étude ZI Natura 2000"),
+    ("interdit_sage", "Interdit SAGE"),
+    ("pc_cas_par_cas", "PC cas par cas"),
+    ("pc_ein", "PC EIN"),
+    ("pc_etude_impact", "PC étude impact"),
 )
 
 

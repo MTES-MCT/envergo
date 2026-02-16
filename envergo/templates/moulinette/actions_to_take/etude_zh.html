@@ -1,3 +1,4 @@
+{% load evaluations %}
 {% load humanize %}
 
 <p>L'étude doit évaluer la surface de zones humides détruites ou affectées par le projet.</p>
@@ -12,18 +13,20 @@
 </p>
 <p>
   {% if moulinette.sage.interdiction_impact_zh.result == 'action_requise' %}
-    Si cette surface dépasse {{ moulinette.sage.interdiction_impact_zh.evaluator_settings.threshold|intcomma }} m²,
+    {% get_min_threshold moulinette.sage "interdiction_impact_zh" as sage_threshold %}
+    Si cette surface dépasse {{ sage_threshold|intcomma }} m²,
     le projet est susceptible d'être interdit par le règlement de SAGE.
     <a title="Voir le détail de la réglementation « Règlement de SAGE »"
-       href="#criterion-sage__interdiction_impact_zh{% if moulinette.sage.interdiction_impact_zh.perimeter %}-{{ moulinette.sage.interdiction_impact_zh.perimeter.id }}{% endif %}"
+       href="#regulation_sage"
        class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
   {% endif %}
 
 </p>
 <p>
   {% if moulinette.natura2000.zone_humide.result == 'action_requise' %}
-    Si cette surface dépasse {{ moulinette.natura2000.zone_humide.evaluator_settings.threshold|intcomma }} m², le
-    projet est susceptible d'être interdit par Natura 2000.
+    {% get_min_threshold moulinette.natura2000 "zone_humide" as n2000_threshold %}
+    Si cette surface dépasse {{ n2000_threshold|intcomma }} m², le
+    projet est soumis à Natura 2000.
     <a title="Voir le détail de la réglementation « Natura 2000 »"
        href="#criterion-natura2000__zone_humide"
        class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
