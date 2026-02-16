@@ -363,9 +363,19 @@ class HedgeData(models.Model):
         )
 
     def get_centroid_to_remove(self):
+        """Returns hedges to remove centroid"""
         hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
         hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
         return hedges_centroid
+
+    def get_multilinestring_to_remove(self):
+        """Returns multilinestring from hedges to remove geometries"""
+        hedges_to_remove_mls = []
+        for hedge in self.hedges_to_remove():
+            geom = MultiLineString(hedge.geos_geometry)
+            if geom:
+                hedges_to_remove_mls.extend(geom)
+        return hedges_to_remove_mls
 
     def get_department(self):
         hedges_centroid = self.get_centroid_to_remove()
@@ -443,11 +453,7 @@ class HedgeData(models.Model):
         """Compute the density of hedges around the hedges to remove in 400m buffer."""
 
         # Create multilinestring from hedges to remove
-        hedges_to_remove_mls = []
-        for hedge in self.hedges_to_remove():
-            geom = MultiLineString(hedge.geos_geometry)
-            if geom:
-                hedges_to_remove_mls.extend(geom)
+        hedges_to_remove_mls = self.get_multilinestring_to_remove()
         hedges_to_remove_mls_merged = MultiLineString(
             hedges_to_remove_mls, srid=EPSG_WGS84
         )

@@ -215,11 +215,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         """Return context with data to display map"""
 
         # Create multilinestring from hedges to remove
-        hedges_to_remove_mls = []
-        for hedge in hedges.hedges_to_remove():
-            geom = MultiLineString(hedge.geos_geometry)
-            if geom:
-                hedges_to_remove_mls.extend(geom)
+        hedges_to_remove_mls = hedges.get_multilinestring_to_remove()
         hedges_to_remove_mls_merged = MultiLineString(
             hedges_to_remove_mls, srid=EPSG_WGS84
         )
