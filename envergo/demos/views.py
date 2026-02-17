@@ -65,7 +65,7 @@ class LatLngDemoMixin:
             lng, lat = form.cleaned_data["lng"], form.cleaned_data["lat"]
             context["display_marker"] = True
             context["center_map"] = [lng, lat]
-            context["default_zoom"] = 16
+            context["default_zoom"] = 17
         else:
             context["display_marker"] = False
             context["center_map"] = self.default_lng_lat
