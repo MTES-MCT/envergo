@@ -375,7 +375,7 @@ class HedgeData(models.Model):
             geom = MultiLineString(hedge.geos_geometry)
             if geom:
                 hedges_to_remove_mls.extend(geom)
-        return hedges_to_remove_mls
+        return MultiLineString(hedges_to_remove_mls, srid=EPSG_WGS84)
 
     def get_department(self):
         hedges_centroid = self.get_centroid_to_remove()
@@ -452,13 +452,7 @@ class HedgeData(models.Model):
     def compute_density_around_lines_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove in 400m buffer."""
 
-        # Create multilinestring from hedges to remove
-        hedges_to_remove_mls = self.get_multilinestring_to_remove()
-        hedges_to_remove_mls_merged = MultiLineString(
-            hedges_to_remove_mls, srid=EPSG_WGS84
-        )
-
-        # Generate buffer 400m around hedges and compute data
+        hedges_to_remove_mls_merged = self.get_multilinestring_to_remove()
         return compute_hedge_density_around_lines(hedges_to_remove_mls_merged, 400)
 
     @property

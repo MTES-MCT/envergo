@@ -214,10 +214,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         """Return context with data to display map"""
 
         # Create multilinestring from hedges to remove
-        hedges_to_remove_mls = hedges.get_multilinestring_to_remove()
-        hedges_to_remove_mls_merged = MultiLineString(
-            hedges_to_remove_mls, srid=EPSG_WGS84
-        )
+        hedges_to_remove_mls_merged = hedges.get_multilinestring_to_remove()
 
         # Generate buffer 400m around hedges and get data
         density_400 = compute_hedge_density_around_lines(
@@ -269,7 +266,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         )
         context = {
             "result_available": True,
-            "hedges_to_remove_mls": hedges_to_remove_mls,
+            "hedges_to_remove_mls": hedges_to_remove_mls_merged,
             "polygons": json.dumps(polygons),
             "length_400": density_400["artifacts"]["length"],
             "area_400_ha": density_400["artifacts"]["area_ha"],
