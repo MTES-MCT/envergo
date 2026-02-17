@@ -3,7 +3,6 @@ from datetime import date
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
 
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -11,6 +10,7 @@ from envergo.moulinette.tests.factories import (
     PerimeterFactory,
     RegulationFactory,
 )
+from envergo.moulinette.tests.utils import COORDS_BIZOUS_INSIDE, make_haie_data, make_hedge
 
 
 @pytest.fixture(autouse=True)
@@ -46,72 +46,29 @@ def n2000_criteria(bizous_town_center):  # noqa
     return criteria
 
 
-@pytest.fixture
-def moulinette_data(lat1, lng1, lat2, lng2):
-    hedges = HedgeDataFactory(
-        data=[
-            {
-                "id": "D1",
-                "type": "TO_REMOVE",
-                "latLngs": [
-                    {"lat": lat1, "lng": lng1},
-                    {"lat": lat2, "lng": lng2},
-                ],
-                "additionalData": {
-                    "type_haie": "degradee",
-                    "vieil_arbre": False,
-                    "proximite_mare": False,
-                    "sur_parcelle_pac": False,
-                    "proximite_point_eau": False,
-                    "connexion_boisement": False,
-                },
-            }
-        ]
-    )
-    data = {
-        "motif": "chemin_acces",
-        "reimplantation": "replantation",
-        "localisation_pac": "non",
-        "haies": hedges,
-        "travaux": "destruction",
-        "element": "haie",
-        "department": "44",
-    }
-    return {"initial": data, "data": data}
-
-
-@pytest.mark.parametrize(
-    "lat1, lng1, lat2, lng2, expected_result",
-    [
-        (
-            43.06930871579473,
-            0.4421436860179369,
-            43.069162248282396,
-            0.44236765047068033,
-            "soumis",
-        ),
-    ],
-)
-def test_moulinette_validity_date_on_criteria(moulinette_data, expected_result):
+def test_moulinette_validity_date_on_criteria():
     """Test criteria evaluated according to date in moulinette data"""
     DCConfigHaieFactory()
+    data = make_haie_data(
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)], reimplantation="replantation"
+    )
 
     # GIVEN moulinette data without date
     # WHEN moulinette data are evaluated
-    moulinette = MoulinetteHaie(moulinette_data)
+    moulinette = MoulinetteHaie(data)
     # THEN only 2026 N2000 criteria is used
     assert "2026" in moulinette.get_criteria().get().title
 
     # GIVEN moulinette data with date in 2025
-    moulinette_data["data"]["date"] = "2025-03-13"
+    data["data"]["date"] = "2025-03-13"
     # WHEN moulinette data are evaluated
-    moulinette = MoulinetteHaie(moulinette_data)
+    moulinette = MoulinetteHaie(data)
     # THEN only 2025 N2000 criteria is used
     assert "2025" in moulinette.get_criteria().get().title
 
     # GIVEN moulinette data with date in 2026
-    moulinette_data["data"]["date"] = "2026-03-13"
+    data["data"]["date"] = "2026-03-13"
     # WHEN moulinette data are evaluated
-    moulinette = MoulinetteHaie(moulinette_data)
+    moulinette = MoulinetteHaie(data)
     # THEN only 2026 N2000 criteria is used
     assert "2026" in moulinette.get_criteria().get().title

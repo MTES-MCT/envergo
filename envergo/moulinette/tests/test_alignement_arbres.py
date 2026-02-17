@@ -1,12 +1,12 @@
 import pytest
 
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     RegulationFactory,
 )
+from envergo.moulinette.tests.utils import make_haie_data, make_hedge
 
 
 @pytest.fixture(autouse=True)
@@ -23,41 +23,6 @@ def alignementarbres_criteria(france_map):  # noqa
         ),
     ]
     return criteria
-
-
-@pytest.fixture
-def moulinette_data(type_haie, bord_voie, motif):
-    hedges = HedgeDataFactory(
-        data=[
-            {
-                "id": "D1",
-                "type": "TO_REMOVE",
-                "latLngs": [
-                    {"lat": 43.0693, "lng": 0.4421},
-                    {"lat": 43.0695, "lng": 0.4420},
-                ],
-                "additionalData": {
-                    "type_haie": type_haie,
-                    "vieil_arbre": False,
-                    "proximite_mare": False,
-                    "sur_parcelle_pac": False,
-                    "proximite_point_eau": False,
-                    "connexion_boisement": False,
-                    "bord_voie": bord_voie,
-                },
-            }
-        ]
-    )
-    data = {
-        "motif": motif,
-        "reimplantation": "replantation",
-        "localisation_pac": "non",
-        "haies": hedges,
-        "travaux": "destruction",
-        "element": "haie",
-        "department": "44",
-    }
-    return {"initial": data, "data": data}
 
 
 @pytest.mark.parametrize(
@@ -85,10 +50,15 @@ def moulinette_data(type_haie, bord_voie, motif):
     ],
 )
 def test_moulinette_evaluation(
-    moulinette_data, expected_result_code, expected_result, expected_r
+    type_haie, bord_voie, motif, expected_result_code, expected_result, expected_r
 ):
     DCConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(
+        hedge_data=[make_hedge(type_haie=type_haie, bord_voie=bord_voie)],
+        motif=motif,
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.alignement_arbres.result == expected_result
     assert (
         moulinette.alignement_arbres.alignement_arbres.result_code

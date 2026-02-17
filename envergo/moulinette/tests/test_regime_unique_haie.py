@@ -1,6 +1,5 @@
 import pytest
 
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -8,6 +7,7 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import make_haie_data, make_hedge
 
 
 @pytest.fixture(autouse=True)
@@ -31,40 +31,6 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
     return criteria
 
 
-@pytest.fixture
-def moulinette_data(type_haie):
-    hedges = HedgeDataFactory(
-        data=[
-            {
-                "id": "D1",
-                "type": "TO_REMOVE",
-                "latLngs": [
-                    {"lat": 43.0693, "lng": 0.4421},
-                    {"lat": 43.0695, "lng": 0.4420},
-                ],
-                "additionalData": {
-                    "type_haie": type_haie,
-                    "vieil_arbre": False,
-                    "proximite_mare": False,
-                    "sur_parcelle_pac": False,
-                    "proximite_point_eau": False,
-                    "connexion_boisement": False,
-                },
-            }
-        ]
-    )
-    data = {
-        "motif": "chemin_acces",
-        "reimplantation": "replantation",
-        "localisation_pac": "non",
-        "haies": hedges,
-        "travaux": "destruction",
-        "element": "haie",
-        "department": "44",
-    }
-    return {"initial": data, "data": data}
-
-
 @pytest.mark.parametrize(
     "type_haie, expected_result, expected_result_code",
     [
@@ -81,10 +47,13 @@ def moulinette_data(type_haie):
     ],
 )
 def test_moulinette_evaluation_single_procedure(
-    moulinette_data, expected_result, expected_result_code
+    type_haie, expected_result, expected_result_code
 ):
     RUConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(
+        hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
         moulinette.regime_unique_haie.regime_unique_haie.result_code
@@ -100,10 +69,13 @@ def test_moulinette_evaluation_single_procedure(
     ],
 )
 def test_moulinette_evaluation_droit_constant(
-    moulinette_data, expected_result, expected_result_code
+    type_haie, expected_result, expected_result_code
 ):
     DCConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(
+        hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
         moulinette.regime_unique_haie.regime_unique_haie.result_code
@@ -115,9 +87,12 @@ def test_moulinette_evaluation_droit_constant(
     "type_haie, expected_result",
     [("mixte", "non_active"), ("alignement", "non_active")],
 )
-def test_moulinette_evaluation_non_active(moulinette_data, expected_result):
+def test_moulinette_evaluation_non_active(type_haie, expected_result):
     RUConfigHaieFactory(regulations_available=[])
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(
+        hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
 
 
@@ -126,7 +101,10 @@ def test_moulinette_evaluation_non_active(moulinette_data, expected_result):
     [("mixte", "non_disponible"), ("alignement", "non_disponible")],
 )
 @pytest.mark.disable_regime_haie_criterion
-def test_moulinette_evaluation_non_disponible(moulinette_data, expected_result):
+def test_moulinette_evaluation_non_disponible(type_haie, expected_result):
     RUConfigHaieFactory()
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(
+        hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result

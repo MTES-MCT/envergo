@@ -1,12 +1,18 @@
 import pytest
 
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+)
+from envergo.moulinette.tests.utils import (
+    COORDS_BIZOUS_EDGE,
+    COORDS_BIZOUS_INSIDE,
+    COORDS_BIZOUS_OUTSIDE,
+    make_haie_data,
+    make_hedge,
 )
 
 
@@ -38,71 +44,18 @@ def sites_classes_criterion(
     )
 
 
-@pytest.fixture
-def moulinette_data(lat1, lng1, lat2, lng2):
-    hedges = HedgeDataFactory(
-        data=[
-            {
-                "id": "D1",
-                "type": "TO_REMOVE",
-                "latLngs": [
-                    {"lat": lat1, "lng": lng1},
-                    {"lat": lat2, "lng": lng2},
-                ],
-                "additionalData": {
-                    "type_haie": "degradee",
-                    "vieil_arbre": False,
-                    "proximite_mare": False,
-                    "sur_parcelle_pac": False,
-                    "proximite_point_eau": False,
-                    "connexion_boisement": False,
-                },
-            }
-        ]
-    )
-    data = {
-        "motif": "chemin_acces",
-        "reimplantation": "replantation",
-        "localisation_pac": "non",
-        "haies": hedges,
-        "travaux": "destruction",
-        "element": "haie",
-        "department": "44",
-    }
-    return {"initial": data, "data": data}
-
-
 @pytest.mark.parametrize(
-    "lat1, lng1, lat2, lng2, expected_result",
+    "coords, expected_result",
     [
-        (
-            43.06930871579473,
-            0.4421436860179369,
-            43.069162248282396,
-            0.44236765047068033,
-            "soumis",
-        ),  # inside perimeter
-        (
-            43.069807900393826,
-            0.4426179348420038,
-            43.068048918563875,
-            0.4415625648710002639653,
-            "soumis",
-        ),  # edge inside but vertices outside
-        (
-            43.09248072614743,
-            0.48007431760217484,
-            43.09280782621999,
-            0.48095944654749073,
-            "non_concerne",
-        ),  # outside perimeter
+        (COORDS_BIZOUS_INSIDE, "soumis"),
+        (COORDS_BIZOUS_EDGE, "soumis"),  # edge inside but vertices outside
+        (COORDS_BIZOUS_OUTSIDE, "non_concerne"),
     ],
 )
-def test_moulinette_evaluation(
-    moulinette_data, expected_result, sites_classes_criterion
-):
+def test_moulinette_evaluation(coords, expected_result, sites_classes_criterion):
     DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(hedge_data=[make_hedge(coords=coords)], reimplantation="replantation")
+    moulinette = MoulinetteHaie(data)
     assert moulinette.sites_classes_haie.result == expected_result
     if expected_result != "non_concerne":
         assert (
@@ -110,72 +63,22 @@ def test_moulinette_evaluation(
         )
 
 
-@pytest.fixture
-def moulinette_data_alignement_only(lat1, lng1, lat2, lng2):
-    """Moulinette data with only alignement d'arbres hedges."""
-    hedges = HedgeDataFactory(
-        data=[
-            {
-                "id": "D1",
-                "type": "TO_REMOVE",
-                "latLngs": [
-                    {"lat": lat1, "lng": lng1},
-                    {"lat": lat2, "lng": lng2},
-                ],
-                "additionalData": {
-                    "type_haie": "alignement",
-                    "vieil_arbre": False,
-                    "proximite_mare": False,
-                    "sur_parcelle_pac": False,
-                    "proximite_point_eau": False,
-                    "connexion_boisement": False,
-                },
-            }
-        ]
-    )
-    data = {
-        "motif": "chemin_acces",
-        "reimplantation": "replantation",
-        "localisation_pac": "non",
-        "haies": hedges,
-        "travaux": "destruction",
-        "element": "haie",
-        "department": "44",
-    }
-    return {"initial": data, "data": data}
-
-
-@pytest.mark.parametrize(
-    "lat1, lng1, lat2, lng2",
-    [
-        (
-            43.06930871579473,
-            0.4421436860179369,
-            43.069162248282396,
-            0.44236765047068033,
-        ),  # inside perimeter
-    ],
-)
-def test_aa_only_flag(moulinette_data_alignement_only, sites_classes_criterion):
+def test_aa_only_flag(sites_classes_criterion):
     """Test that aa_only is True when all hedges are alignement d'arbres."""
     DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
-    moulinette = MoulinetteHaie(moulinette_data_alignement_only)
+    data = make_haie_data(
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, type_haie="alignement")],
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.catalog.get("aa_only") is True
 
 
-@pytest.mark.parametrize(
-    "lat1, lng1, lat2, lng2",
-    [
-        (
-            43.06930871579473,
-            0.4421436860179369,
-            43.069162248282396,
-            0.44236765047068033,
-        ),  # inside perimeter
-    ],
-)
-def test_aa_only_false_with_mixed_hedges(moulinette_data, sites_classes_criterion):
+def test_aa_only_false_with_mixed_hedges(sites_classes_criterion):
     """Test that aa_only is False when hedges include non-alignement types."""
     DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
-    moulinette = MoulinetteHaie(moulinette_data)
+    data = make_haie_data(
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)], reimplantation="replantation"
+    )
+    moulinette = MoulinetteHaie(data)
     assert moulinette.catalog.get("aa_only") is False
