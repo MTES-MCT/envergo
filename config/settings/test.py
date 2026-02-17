@@ -49,3 +49,11 @@ ENV_NAME = "test"
 ENVERGO_AMENAGEMENT_DOMAIN = "testserver"
 
 RATELIMIT_ENABLE = False
+
+# LOGGING
+# ------------------------------------------------------------------------------
+# Silence the noisiest loggers during tests (DS API calls, GraphQL transport)
+# while keeping other log output visible for debugging.
+LOGGING.setdefault("loggers", {})  # noqa F405
+LOGGING["loggers"]["envergo.petitions.demarches_simplifiees"] = {"level": "WARNING"}
+LOGGING["loggers"]["gql"] = {"level": "WARNING"}
