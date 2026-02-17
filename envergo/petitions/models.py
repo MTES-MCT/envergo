@@ -543,7 +543,10 @@ class Simulation(models.Model):
 
         m_url = MoulinetteUrl(self.moulinette_url)
         qt = m_url.querydict
-        qt.update(kwargs)
+        # Use iteration instead of `qt.update` because qt is a MultiValueDict and
+        # update just adds more values instead of just updating them
+        for key, value in kwargs.items():
+            qt[key] = value
         f_url = reverse(view_name)
         url = f"{f_url}?{qt.urlencode()}"
         return url
@@ -551,7 +554,7 @@ class Simulation(models.Model):
     @property
     def form_url(self):
         """Return the moulinette form url with the simulation parameters."""
-        return self.custom_url("moulinette_form", alternative=True)
+        return self.custom_url("moulinette_form", alternative="true")
 
     @property
     def result_url(self):
@@ -560,7 +563,7 @@ class Simulation(models.Model):
         if self.is_active:
             url = reverse("petition_project", args=[self.project.reference])
         else:
-            url = self.custom_url("moulinette_result_plantation", alternative=True)
+            url = self.custom_url("moulinette_result_plantation", alternative="true")
         return url
 
 

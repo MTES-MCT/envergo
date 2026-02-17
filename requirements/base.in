@@ -31,7 +31,7 @@ scipy  # Just for interpolation, remove later
 django-otp[qrcode]
 faker
 tqdm
-bs4
 gql
 requests-toolbelt
 dacite
+python-magic
