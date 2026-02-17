@@ -168,7 +168,7 @@ class ZoneInondable(
         ("outside", "small"): RESULTS.non_concerne,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: ["etude_zi_n2000"]}}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zi_n2000"}}}
 
     def get_result_data(self):
         if self.catalog["flood_zones_within_12m"]:
