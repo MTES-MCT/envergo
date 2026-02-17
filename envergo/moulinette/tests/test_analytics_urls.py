@@ -1,5 +1,4 @@
 import pytest
-from django.test import override_settings
 from django.urls import reverse
 
 from envergo.moulinette.tests.factories import (
@@ -76,10 +75,7 @@ def test_envergo_result_debug(client):
     assert_url(res, "/simulateur/resultat/debug/")
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
+@pytest.mark.haie
 def test_haie_triage_form(client):
     url = reverse("triage")
     res = client.get(f"{url}?department=44")
@@ -88,10 +84,7 @@ def test_haie_triage_form(client):
     assert_url(res, "/simulateur/triage/")
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
+@pytest.mark.haie
 def test_haie_triage_prefilled_form(client):
     url = reverse("triage")
     res = client.get(f"{url}?department=44&element=bosquet&travaux=entretien")
@@ -100,10 +93,7 @@ def test_haie_triage_prefilled_form(client):
     assert_url(res, "/simulateur/triage/pre-rempli/")
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
+@pytest.mark.haie
 def test_haie_triage_invalid(client):
     url = reverse("moulinette_result")
     res = client.get(f"{url}?department=44&element=bosquet&travaux=entretien")
@@ -112,10 +102,7 @@ def test_haie_triage_invalid(client):
     assert_url(res, "/simulateur/resultat_nspp/")
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
+@pytest.mark.haie
 def test_envergo_form_with_only_triage_values(client):
     url = reverse("moulinette_form")
     res = client.get(f"{url}?department=14&element=haie&travaux=destruction")
@@ -123,10 +110,7 @@ def test_envergo_form_with_only_triage_values(client):
     assert_url(res, "/simulateur/formulaire/")
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
+@pytest.mark.haie
 def test_envergo_form_with_more_than_triage_values(client):
     url = reverse("moulinette_form")
     res = client.get(
