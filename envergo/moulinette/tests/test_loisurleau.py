@@ -5,6 +5,7 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ActionToTakeFactory,
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
@@ -390,6 +391,8 @@ def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
 @pytest.mark.parametrize("footprint", [700])
 def test_moulinette_returns_actions_to_take(moulinette_data):
     ConfigAmenagementFactory()
+    ActionToTakeFactory(slug="mention_arrete_lse")
+    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
     moulinette = MoulinetteAmenagement(moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
