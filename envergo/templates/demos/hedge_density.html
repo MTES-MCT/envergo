@@ -1,126 +1,112 @@
 {% extends 'base.html' %}
 
-{% load static l10n evaluations moulinette %}
+{% load static l10n %}
 
 {% block title %}Démonstrateur densité de haie{% endblock %}
 
-{% block main-classes %}demos{% endblock %}
+{% block content-title %}Calcul de densité de haie : démonstrateur{% endblock %}
 
-{% block content %}
-  <article>
-    <h1>Calcul de densité de haie : démonstrateur</h1>
-    <div class="fr-grid-row fr-grid-row--gutters">
-      <div class="fr-col-7">
-        <form method="get" action="">
-          {{ form.lng.as_hidden }}
-          {{ form.lat.as_hidden }}
-          <label class="step">
-            Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
-            l'emplacement du projet.
-          </label>
+{% block content-demo-map %}
+  <form method="get" action="">
+    {{ form.lng.as_hidden }}
+    {{ form.lat.as_hidden }}
+    <label class="step">
+      Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+      l'emplacement du projet.
+    </label>
 
-          <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
-            <div class="ratio-content">
-              <div id="map"></div>
-            </div>
-          </div>
-
-          <button type="submit" class="fr-btn">Valider</button>
-        </form>
-      </div>
-      <div class="fr-col-5">
-
-        {% if result_available %}
-          <h2 class="fr-h4">Résultat du calcul</h2>
-
-          <table class="fr-mb-3w">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Rayon 200 m</th>
-                <th>Rayon 400 m</th>
-                <th>Rayon 5 km</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <th scope="row">Linéaire</th>
-                <td>{{ length_200|floatformat:"0g" }} ml</td>
-                <td>{{ length_400|floatformat:"0g" }} ml</td>
-                <td>{{ length_5000|floatformat:"0g" }} ml</td>
-              </tr>
-              <tr>
-                <th scope="row">Surface</th>
-                <td>{{ area_200_ha|floatformat:"g" }} ha</td>
-                <td>{{ area_400_ha|floatformat:"g" }} ha</td>
-                <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
-              </tr>
-              <tr>
-                <th scope="row">Densité</th>
-                <td>{{ density_200|floatformat:"g" }} ml/ha</td>
-                <td>{{ density_400|floatformat:"g" }} ml/ha</td>
-                <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
-              </tr>
-            </tbody>
-          </table>
-
-        {% else %}
-          {% if form.is_bound %}
-            <h2 class="fr-h4">Département non disponible</h2>
-            <p>Le calcul de densité de haie n'est pas encore disponible dans ce département.</p>
-          {% else %}
-            <h2 class="fr-h4">Essayez notre démonstrateur</h2>
-            <p>Sélectionnez un point sur la carte et lancez la simulation.</p>
-          {% endif %}
-        {% endif %}
-
-        {% if debug %}
-          <h2 class="fr-h4">Données de calcul</h2>
-
-          {% if values %}
-            <table class="fr-table">
-              {% for row in values %}
-                <tr>
-                  {% for value in row %}<td>{{ value }}</td>{% endfor %}
-                </tr>
-              {% endfor %}
-            </table>
-          {% elif flat_values %}
-            {% for value in flat_values %}<span>{{ value }}&nbsp;</span>{% endfor %}
-          {% endif %}
-
-        {% endif %}
-
-        <h2 class="fr-h4">Pour améliorer ce démonstrateur</h2>
-
-        <p>
-          Nous sommes preneurs de tous vos retours, positifs et critiques : contactez-nous à <a href="mailto:contact@haie.beta.gouv.fr">contact@haie.beta.gouv.fr</a>
-        </p>
-
-        <p>
-          Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
-        </p>
-
-        <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
+    <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
+      <div class="ratio-content">
+        <div id="map"></div>
       </div>
     </div>
-  </article>
+
+    <button type="submit" class="fr-btn">Valider</button>
+  </form>
+{% endblock %}
+
+{% block content-demo-results %}
+  {% if result_available %}
+    <h2 class="fr-h4">Résultat du calcul</h2>
+
+    <table class="fr-mb-3w">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Rayon 200 m</th>
+          <th>Rayon 400 m</th>
+          <th>Rayon 5 km</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <th scope="row">Linéaire</th>
+          <td>{{ length_200|floatformat:"0g" }} ml</td>
+          <td>{{ length_400|floatformat:"0g" }} ml</td>
+          <td>{{ length_5000|floatformat:"0g" }} ml</td>
+        </tr>
+        <tr>
+          <th scope="row">Surface</th>
+          <td>{{ area_200_ha|floatformat:"g" }} ha</td>
+          <td>{{ area_400_ha|floatformat:"g" }} ha</td>
+          <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
+        </tr>
+        <tr>
+          <th scope="row">Densité</th>
+          <td>{{ density_200|floatformat:"g" }} ml/ha</td>
+          <td>{{ density_400|floatformat:"g" }} ml/ha</td>
+          <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
+        </tr>
+      </tbody>
+    </table>
+
+  {% else %}
+    {% if form.is_bound %}
+      <h2 class="fr-h4">Département non disponible</h2>
+      <p>Le calcul de densité de haie n'est pas encore disponible dans ce département.</p>
+    {% else %}
+      <h2 class="fr-h4">Essayez notre démonstrateur</h2>
+      <p>Sélectionnez un point sur la carte et lancez la simulation.</p>
+    {% endif %}
+  {% endif %}
+
+  {% if debug %}
+    <h2 class="fr-h4">Données de calcul</h2>
+
+    {% if values %}
+      <table class="fr-table">
+        {% for row in values %}
+          <tr>
+            {% for value in row %}<td>{{ value }}</td>{% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
+    {% elif flat_values %}
+      {% for value in flat_values %}<span>{{ value }}&nbsp;</span>{% endfor %}
+    {% endif %}
+
+  {% endif %}
+
+  <h2 class="fr-h4">Pour améliorer ce démonstrateur</h2>
+
+  <p>
+    Nous sommes preneurs de tous vos retours, positifs et critiques : contactez-nous à <a href="mailto:contact@haie.beta.gouv.fr">contact@haie.beta.gouv.fr</a>
+  </p>
+
+  <p>
+    Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
+  </p>
+
+  <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
 {% endblock %}
 
 {% block extra_body %}
   {% include '_share_url_modal.html' with shorten_url=False share_url=share_btn_url %}
 {% endblock %}
 
-{% block extra_css %}
-  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
-  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
-{% endblock %}
-
 {% block extra_js %}
-  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
-  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
-  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  {{ super }}
   <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 
