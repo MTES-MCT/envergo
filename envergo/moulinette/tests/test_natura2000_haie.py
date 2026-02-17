@@ -48,7 +48,9 @@ def n2000_criteria(bizous_town_center):  # noqa
 )
 def test_moulinette_evaluation(coords, expected_result):
     DCConfigHaieFactory()
-    data = make_haie_data(hedge_data=[make_hedge(coords=coords)], reimplantation="replantation")
+    data = make_haie_data(
+        hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
+    )
     moulinette = MoulinetteHaie(data)
     assert moulinette.natura2000_haie.result == expected_result
     if expected_result != "non_concerne":

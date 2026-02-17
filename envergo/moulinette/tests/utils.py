@@ -7,7 +7,6 @@ creating regulation/criterion combos, and building hedge scenarios.
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
 
-
 # ---------------------------------------------------------------------------
 # Coordinate presets
 # ---------------------------------------------------------------------------
@@ -48,6 +47,7 @@ COORDS_BIZOU = (48.496195, 0.750409)
 # ---------------------------------------------------------------------------
 # Data builders
 # ---------------------------------------------------------------------------
+
 
 def make_amenagement_data(
     lat=COORDS_MOUAIS[0],
@@ -156,6 +156,7 @@ def make_haie_data(
 # them as a tuple (regulation, [criteria]). These replace the repetitive
 # autouse fixtures duplicated across test files.
 
+
 def setup_loi_sur_leau(activation_map, include_optional=True):
     """Create Loi sur l'eau regulation with standard criteria."""
     regulation = RegulationFactory(
@@ -183,22 +184,24 @@ def setup_loi_sur_leau(activation_map, include_optional=True):
         ),
     ]
     if include_optional:
-        criteria.extend([
-            CriterionFactory(
-                title="Écoulement EP sans BV",
-                regulation=regulation,
-                evaluator="envergo.moulinette.regulations.loisurleau.EcoulementSansBV",
-                activation_map=activation_map,
-                is_optional=True,
-            ),
-            CriterionFactory(
-                title="Écoulement EP avec BV",
-                regulation=regulation,
-                evaluator="envergo.moulinette.regulations.loisurleau.EcoulementAvecBV",
-                activation_map=activation_map,
-                is_optional=True,
-            ),
-        ])
+        criteria.extend(
+            [
+                CriterionFactory(
+                    title="Écoulement EP sans BV",
+                    regulation=regulation,
+                    evaluator="envergo.moulinette.regulations.loisurleau.EcoulementSansBV",
+                    activation_map=activation_map,
+                    is_optional=True,
+                ),
+                CriterionFactory(
+                    title="Écoulement EP avec BV",
+                    regulation=regulation,
+                    evaluator="envergo.moulinette.regulations.loisurleau.EcoulementAvecBV",
+                    activation_map=activation_map,
+                    is_optional=True,
+                ),
+            ]
+        )
     return regulation, criteria
 
 

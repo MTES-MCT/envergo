@@ -10,7 +10,11 @@ from envergo.moulinette.tests.factories import (
     PerimeterFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import COORDS_BIZOUS_INSIDE, make_haie_data, make_hedge
+from envergo.moulinette.tests.utils import (
+    COORDS_BIZOUS_INSIDE,
+    make_haie_data,
+    make_hedge,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +54,8 @@ def test_moulinette_validity_date_on_criteria():
     """Test criteria evaluated according to date in moulinette data"""
     DCConfigHaieFactory()
     data = make_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)], reimplantation="replantation"
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)],
+        reimplantation="replantation",
     )
 
     # GIVEN moulinette data without date

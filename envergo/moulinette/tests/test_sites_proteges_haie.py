@@ -75,7 +75,9 @@ def sites_proteges_criteria(
 )
 def test_moulinette_evaluation(coords, expected_result, sites_proteges_criteria):
     DCConfigHaieFactory()
-    data = make_haie_data(hedge_data=[make_hedge(coords=coords)], reimplantation="replantation")
+    data = make_haie_data(
+        hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
+    )
     moulinette = MoulinetteHaie(data)
     assert moulinette.sites_proteges_haie.result == expected_result
     if expected_result != "non_concerne":

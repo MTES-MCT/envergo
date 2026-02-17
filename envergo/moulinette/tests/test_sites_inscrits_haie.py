@@ -58,7 +58,9 @@ def sites_inscrits_criteria(
 )
 def test_moulinette_evaluation(coords, expected_result, sites_inscrits_criteria):
     DCConfigHaieFactory()
-    data = make_haie_data(hedge_data=[make_hedge(coords=coords)], reimplantation="replantation")
+    data = make_haie_data(
+        hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
+    )
     moulinette = MoulinetteHaie(data)
     assert moulinette.sites_inscrits_haie.result == expected_result
     if expected_result != "non_concerne":
@@ -80,7 +82,8 @@ def test_aa_only_false_with_mixed_hedges(sites_inscrits_criteria):
     """Test that aa_only is False when hedges include non-alignement types."""
     DCConfigHaieFactory(regulations_available=["sites_inscrits_haie"])
     data = make_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)], reimplantation="replantation"
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)],
+        reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.catalog.get("aa_only") is False

@@ -111,7 +111,14 @@ def test_perimeter_map_display(client):
     ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
-    params = urlencode({"created_surface": 1000, "final_surface": 1000, "lng": -1.646947, "lat": 47.696706})
+    params = urlencode(
+        {
+            "created_surface": 1000,
+            "final_surface": 1000,
+            "lng": -1.646947,
+            "lat": 47.696706,
+        }
+    )
     res = client.get(f"{url}?{params}")
     assert res.status_code == 200
 
@@ -132,7 +139,14 @@ def test_several_perimeter_maps_display(sage_criteria, france_map, client):  # n
     )
 
     url = reverse("moulinette_result")
-    params = urlencode({"created_surface": 1000, "final_surface": 1000, "lng": -1.646947, "lat": 47.696706})
+    params = urlencode(
+        {
+            "created_surface": 1000,
+            "final_surface": 1000,
+            "lng": -1.646947,
+            "lat": 47.696706,
+        }
+    )
     res = client.get(f"{url}?{params}")
     assert res.status_code == 200
 
@@ -144,7 +158,9 @@ def test_several_perimeter_maps_display(sage_criteria, france_map, client):  # n
 
 
 def test_several_perimeter_may_have_different_results(
-    sage_criteria, france_map, client,  # noqa
+    sage_criteria,
+    france_map,
+    client,  # noqa
 ):
     """When several perimeters are found, their respective results are displayed."""
     ConfigAmenagementFactory(is_activated=True)

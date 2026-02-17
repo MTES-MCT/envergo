@@ -99,8 +99,11 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt10m_1, hedge_gt20m])
     data = make_haie_data(
-        hedges=hedges, profil="autre", reimplantation="non",
-        localisation_pac="oui", numero_pacage="012345678",
+        hedges=hedges,
+        profil="autre",
+        reimplantation="non",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -125,8 +128,11 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt10m_1, hedge_lt10m_2])
     data = make_haie_data(
-        hedges=hedges, profil="autre", reimplantation="non",
-        localisation_pac="oui", numero_pacage="012345678",
+        hedges=hedges,
+        profil="autre",
+        reimplantation="non",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -165,8 +171,11 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_lt20m_2]
     )
     data = make_haie_data(
-        hedges=hedges, profil="autre", reimplantation="replantation",
-        localisation_pac="oui", numero_pacage="012345678",
+        hedges=hedges,
+        profil="autre",
+        reimplantation="replantation",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -205,8 +214,11 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_lt20m_2]
     )
     data = make_haie_data(
-        hedges=hedges, profil="autre", reimplantation="non",
-        localisation_pac="oui", numero_pacage="012345678",
+        hedges=hedges,
+        profil="autre",
+        reimplantation="non",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -235,9 +247,12 @@ def test_ep_normandie_dispense_coupe_a_blanc(
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_lt20m_2])
     data = make_haie_data(
-        hedges=hedges, profil="autre", motif="amelioration_culture",
+        hedges=hedges,
+        profil="autre",
+        motif="amelioration_culture",
         reimplantation="remplacement",
-        localisation_pac="oui", numero_pacage="012345678",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -265,9 +280,12 @@ def test_ep_normandie_interdit_remplacement(
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_gt20m])
     data = make_haie_data(
-        hedges=hedges, profil="autre", motif="amelioration_culture",
+        hedges=hedges,
+        profil="autre",
+        motif="amelioration_culture",
         reimplantation="remplacement",
-        localisation_pac="oui", numero_pacage="012345678",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -296,8 +314,11 @@ def test_ep_normandie_derogation_simplifiee(
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_gt20m])
     data = make_haie_data(
-        hedges=hedges, profil="autre", reimplantation="replantation",
-        localisation_pac="oui", numero_pacage="012345678",
+        hedges=hedges,
+        profil="autre",
+        reimplantation="replantation",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -326,8 +347,11 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
     )
     hedges = HedgeDataFactory(hedges=[hedge_gt20m])
     data = make_haie_data(
-        hedges=hedges, profil="autre", reimplantation="replantation",
-        localisation_pac="oui", numero_pacage="012345678",
+        hedges=hedges,
+        profil="autre",
+        reimplantation="replantation",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -374,9 +398,12 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
     data = make_haie_data(
-        hedges=hedges, profil="autre", motif=motif,
+        hedges=hedges,
+        profil="autre",
+        motif=motif,
         reimplantation="replantation",
-        localisation_pac="oui", numero_pacage="012345678",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -407,9 +434,12 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
     data = make_haie_data(
-        hedges=hedges, profil="autre", motif="securite",
+        hedges=hedges,
+        profil="autre",
+        motif="securite",
         reimplantation="replantation",
-        localisation_pac="oui", numero_pacage="012345678",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     with pytest.raises(RuntimeError) as exc_info:
@@ -459,9 +489,12 @@ def test_min_length_condition_normandie(
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_gt20m]
     )
     data = make_haie_data(
-        hedges=hedges, profil="autre", motif="amelioration_culture",
+        hedges=hedges,
+        profil="autre",
+        motif="amelioration_culture",
         reimplantation="remplacement",
-        localisation_pac="oui", numero_pacage="012345678",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)
@@ -502,9 +535,12 @@ def test_replantation_coefficient_normandie(
     )
     hedges = HedgeDataFactory(hedges=[hedge_gt20m])
     data = make_haie_data(
-        hedges=hedges, profil="autre", motif="amelioration_culture",
+        hedges=hedges,
+        profil="autre",
+        motif="amelioration_culture",
         reimplantation="remplacement",
-        localisation_pac="oui", numero_pacage="012345678",
+        localisation_pac="oui",
+        numero_pacage="012345678",
     )
 
     moulinette = MoulinetteHaie(data)

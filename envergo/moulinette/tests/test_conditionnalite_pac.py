@@ -157,7 +157,10 @@ def test_bcae8_small_interdit_transfert_parcelles():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_transfert_parcelles"
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_transfert_parcelles"
+    )
 
 
 def test_bcae8_small_interdit_amelioration_culture():
@@ -177,7 +180,10 @@ def test_bcae8_small_interdit_amelioration_culture():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_transfert_parcelles"
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_transfert_parcelles"
+    )
 
 
 def test_bcae8_small_soumis_chemin_acces():
@@ -363,7 +369,9 @@ def test_bcae8_big_soumis_transfer_parcelles():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
+    )
     assert round(
         moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
         1,
@@ -387,7 +395,10 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_meilleur_emplacement"
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "soumis_meilleur_emplacement"
+    )
     assert round(
         moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
         1,
@@ -411,7 +422,10 @@ def test_bcae8_big_interdit_amelioration_culture():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amelioration_culture"
+    assert (
+        moulinette.conditionnalite_pac.bcae8.result_code
+        == "interdit_amelioration_culture"
+    )
 
 
 def test_bcae8_big_interdit_embellissement():

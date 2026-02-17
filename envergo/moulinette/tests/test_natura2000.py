@@ -10,8 +10,10 @@ def _bizou_data(created_surface, **extra):
     defaults = {"autorisation_urba": "none"}
     defaults.update(extra)
     return make_amenagement_data(
-        lat=COORDS_BIZOU[0], lng=COORDS_BIZOU[1],
-        created_surface=created_surface, final_surface=created_surface,
+        lat=COORDS_BIZOU[0],
+        lng=COORDS_BIZOU[1],
+        created_surface=created_surface,
+        final_surface=created_surface,
         **defaults,
     )
 

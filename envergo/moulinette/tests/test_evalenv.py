@@ -24,8 +24,10 @@ def _bizou_data(created_surface, **extra):
     }
     defaults.update(extra)
     return make_amenagement_data(
-        lat=COORDS_BIZOU[0], lng=COORDS_BIZOU[1],
-        created_surface=created_surface, final_surface=created_surface,
+        lat=COORDS_BIZOU[0],
+        lng=COORDS_BIZOU[1],
+        created_surface=created_surface,
+        final_surface=created_surface,
         **defaults,
     )
 
@@ -255,8 +257,7 @@ def test_evalenv_non_soumis_no_optional_criteria(admin_client):
     content = res.content.decode()
     assert (
         "Le projet n’est pas soumis à évaluation environnementale au titre des seuils "
-        "de surface plancher, d'emprise au sol et de terrain d'assiette."
-        in content
+        "de surface plancher, d'emprise au sol et de terrain d'assiette." in content
     )
     assert (
         "Le projet n’est pas soumis à évaluation environnementale, ni à examen au cas par cas."
@@ -295,8 +296,7 @@ def test_evalenv_non_soumis_optional_criteria(admin_client):
     content = res.content.decode()
     assert (
         "Le projet n’est pas soumis à évaluation environnementale au titre des seuils "
-        "de surface plancher, d'emprise au sol et de terrain d'assiette."
-        not in content
+        "de surface plancher, d'emprise au sol et de terrain d'assiette." not in content
     )
     assert (
         "Le projet n’est pas soumis à évaluation environnementale, ni à examen au cas par cas."

@@ -45,7 +45,9 @@ def _moulinette(footprint, **extra):
     }
     defaults.update(extra)
     data = make_amenagement_data(
-        created_surface=footprint, final_surface=footprint, **defaults,
+        created_surface=footprint,
+        final_surface=footprint,
+        **defaults,
     )
     return MoulinetteAmenagement(data)
 
