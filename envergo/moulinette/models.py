@@ -2336,15 +2336,17 @@ class MoulinetteHaie(Moulinette):
             if pre_computed_density:
                 context.update(
                     {
-                        "pre_computed_density_200": pre_computed_density["density_200"],
+                        "pre_computed_density_200": pre_computed_density[
+                            "around_centroid"
+                        ]["density_200"],
                         "pre_computed_density_5000": pre_computed_density[
-                            "density_5000"
-                        ],
+                            "around_centroid"
+                        ]["density_5000"],
                     }
                 )
 
             density_200, density_5000, centroid_geos = (
-                haies.compute_density_with_artifacts()
+                haies.compute_density_around_points_with_artifacts()
             )
             truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
             truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
