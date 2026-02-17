@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 import pytest
 from django.urls import reverse
 
-from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Criterion, MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
@@ -12,13 +11,7 @@ from envergo.moulinette.tests.factories import (
     PerimeterFactory,
     RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
+from envergo.moulinette.tests.utils import make_amenagement_data
 
 
 @pytest.fixture(autouse=True)
@@ -40,48 +33,37 @@ def sage_criteria(france_map):  # noqa
     return criteria
 
 
-@pytest.fixture
-def moulinette_data(footprint):
-    data = {
-        # Mouais coordinates
-        "lat": 47.696706,
-        "lng": -1.646947,
-        "created_surface": footprint,
-        "final_surface": footprint,
-    }
-    return {"initial": data, "data": data}
+# ---------------------------------------------------------------------------
+# SAGE criterion results
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_result_interdit(moulinette_data):
+def test_result_interdit():
     """Test the default criterion result"""
-
     ConfigAmenagementFactory(is_activated=True)
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=1000, final_surface=1000)
+    moulinette = MoulinetteAmenagement(data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
-
     assert moulinette.sage.result == "interdit"
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_deactivated_regulation(moulinette_data):
+def test_deactivated_regulation():
     """Test single regulation deactivation in moulinette config."""
-
     ConfigAmenagementFactory(is_activated=True, regulations_available=[])
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=1000, final_surface=1000)
+    moulinette = MoulinetteAmenagement(data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
-
     assert moulinette.sage.result == "non_active"
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_default_result_when_a_perimeter_is_found(moulinette_data):
+def test_default_result_when_a_perimeter_is_found():
     Criterion.objects.all().delete()
 
     ConfigAmenagementFactory(is_activated=True)
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=1000, final_surface=1000)
+    moulinette = MoulinetteAmenagement(data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
 
@@ -89,12 +71,12 @@ def test_default_result_when_a_perimeter_is_found(moulinette_data):
     assert moulinette.sage.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_default_result_when_a_perimeter_is_deactivated(moulinette_data):
+def test_default_result_when_a_perimeter_is_deactivated():
     Criterion.objects.all().delete()
 
     ConfigAmenagementFactory(is_activated=True)
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=1000, final_surface=1000)
+    moulinette = MoulinetteAmenagement(data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
 
     perimeter = moulinette.sage.perimeters.all()[0]
@@ -105,13 +87,13 @@ def test_default_result_when_a_perimeter_is_deactivated(moulinette_data):
     assert moulinette.sage.result == "non_disponible"
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_default_result_when_a_perimeter_is_not_found(moulinette_data):
+def test_default_result_when_a_perimeter_is_not_found():
     Criterion.objects.all().delete()
     Perimeter.objects.all().delete()
 
     ConfigAmenagementFactory(is_activated=True)
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=1000, final_surface=1000)
+    moulinette = MoulinetteAmenagement(data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
 
@@ -119,16 +101,18 @@ def test_default_result_when_a_perimeter_is_not_found(moulinette_data):
     assert moulinette.sage.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_perimeter_map_display(moulinette_data, client):
-    """The perimeter map should be displayed in the result page."""
+# ---------------------------------------------------------------------------
+# SAGE perimeter display in views
+# ---------------------------------------------------------------------------
 
+
+def test_perimeter_map_display(client):
+    """The perimeter map should be displayed in the result page."""
     ConfigAmenagementFactory(is_activated=True)
 
     url = reverse("moulinette_result")
-    params = urlencode(moulinette_data["data"])
-    full_url = f"{url}?{params}"
-    res = client.get(full_url)
+    params = urlencode({"created_surface": 1000, "final_surface": 1000, "lng": -1.646947, "lat": 47.696706})
+    res = client.get(f"{url}?{params}")
     assert res.status_code == 200
 
     assert "Le projet se trouve dans le périmètre" in res.content.decode()
@@ -138,12 +122,8 @@ def test_perimeter_map_display(moulinette_data, client):
     )
 
 
-@pytest.mark.parametrize("footprint", [1000])
-def test_several_perimeter_maps_display(
-    moulinette_data, sage_criteria, france_map, client  # noqa
-):
+def test_several_perimeter_maps_display(sage_criteria, france_map, client):  # noqa
     """When several perimeters are found, they are all displayed."""
-
     ConfigAmenagementFactory(is_activated=True)
     PerimeterFactory(
         name="Sage Test",
@@ -152,9 +132,8 @@ def test_several_perimeter_maps_display(
     )
 
     url = reverse("moulinette_result")
-    params = urlencode(moulinette_data["data"])
-    full_url = f"{url}?{params}"
-    res = client.get(full_url)
+    params = urlencode({"created_surface": 1000, "final_surface": 1000, "lng": -1.646947, "lat": 47.696706})
+    res = client.get(f"{url}?{params}")
     assert res.status_code == 200
 
     assert (
@@ -164,15 +143,10 @@ def test_several_perimeter_maps_display(
     assert "« Sage Test »" in res.content.decode()
 
 
-@pytest.mark.parametrize("footprint", [1000])
 def test_several_perimeter_may_have_different_results(
-    moulinette_data,
-    sage_criteria,
-    france_map,  # noqa
-    client,  # noqa
+    sage_criteria, france_map, client,  # noqa
 ):
     """When several perimeters are found, their respective results are displayed."""
-
     ConfigAmenagementFactory(is_activated=True)
 
     sage_non_disponible = PerimeterFactory(
@@ -197,7 +171,8 @@ def test_several_perimeter_may_have_different_results(
         activation_map=france_map,
     )
 
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=1000, final_surface=1000)
+    moulinette = MoulinetteAmenagement(data)
     moulinette.catalog["forbidden_wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.sage.results_by_perimeter == {

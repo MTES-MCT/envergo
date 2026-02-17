@@ -2,7 +2,6 @@ import pytest
 from django.test import override_settings
 from django.urls import reverse
 
-from envergo.geodata.conftest import france_map  # noqa: F401
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
@@ -10,17 +9,10 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 
-pytestmark = pytest.mark.django_db
-
 
 def assert_url(result, url):
     res_url = result.context_data["matomo_custom_url"]
     assert res_url == f"http://testserver{url}"
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
 
 
 @pytest.fixture(autouse=True)

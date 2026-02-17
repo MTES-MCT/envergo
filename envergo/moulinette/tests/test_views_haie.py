@@ -8,12 +8,6 @@ from django.test import override_settings
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.conftest import (  # noqa
-    bizous_town_center,
-    france_map,
-    loire_atlantique_department,
-    loire_atlantique_map,
-)
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -23,18 +17,11 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 
-pytestmark = pytest.mark.django_db
-
 
 HOME_TITLE = "Projet de destruction de haies ou alignements d'arbres"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
 )
-
-
-@pytest.fixture(autouse=False)
-def autouse_site(site):
-    pass
 
 
 @pytest.fixture(autouse=True)
