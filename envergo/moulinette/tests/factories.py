@@ -3,6 +3,7 @@ from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
 from envergo.moulinette.models import (
+    ActionToTake,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
@@ -42,6 +43,21 @@ class RegulationFactory(DjangoModelFactory):
     regulation = "loi_sur_leau"
     evaluator = "envergo.moulinette.regulations.RegulationEvaluator"
     has_perimeters = False
+
+
+class ActionToTakeFactory(DjangoModelFactory):
+    class Meta:
+        model = ActionToTake
+        django_get_or_create = ("slug",)
+
+    slug = "mention_arrete_lse"
+    type = "action"
+    target = "instructor"
+    order = factory.Sequence(lambda n: n + 1)
+    label = factory.LazyAttribute(lambda o: o.slug.replace("_", " ").capitalize())
+    details = factory.LazyAttribute(
+        lambda o: f"moulinette/actions_to_take/{o.slug}.html"
+    )
 
 
 class CriterionFactory(DjangoModelFactory):
