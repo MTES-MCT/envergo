@@ -285,6 +285,8 @@ class HedgeForm(forms.Form):
 
     def clean_haies(self):
         """Get HedgeData object or raise ValidationError"""
+        if not data:
+            return data
         data = self.cleaned_data["haies"]
         try:
             hedge_data_object = HedgeData.objects.get(pk=data)
