@@ -41,7 +41,7 @@ def test_hedges_density_around_point_demo(client):
 )
 def test_hedges_density_in_buffer_demo(client):
     """Test hedge density demo : inside a buffer around lines"""
-    url = reverse("demo_density_buffer")
+    url = reverse("demo_density_project")
 
     # GIVEN existing haies
     hedges = HedgeDataFactory()
@@ -64,7 +64,7 @@ def test_hedges_density_in_buffer_demo(client):
 )
 def test_hedges_density_in_buffer_demo_errors(client):
     """Test hedge density demo : inside a buffer around lines"""
-    url = reverse("demo_density_buffer")
+    url = reverse("demo_density_project")
 
     # WHEN I get demo page with haies bad params
     params = "haies=1234"
