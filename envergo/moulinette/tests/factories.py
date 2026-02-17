@@ -58,6 +58,7 @@ class CriterionFactory(DjangoModelFactory):
 class PerimeterFactory(DjangoModelFactory):
     class Meta:
         model = Perimeter
+        skip_postgeneration_save = True
 
     name = "Loi sur l'eau Zone humide"
     activation_map = factory.SubFactory(MapFactory)
