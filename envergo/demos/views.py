@@ -202,7 +202,6 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             context["display_marker"] = False
             context["center_map"] = [centroid.x, centroid.y]
             context["default_zoom"] = 17
-            hedges = form.cleaned_data["haies"]
             context.update(self.get_result_data(hedges))
         else:
             context["display_marker"] = False
