@@ -13,6 +13,7 @@ from envergo.petitions.models import (
     DOSSIER_STATES,
     InvitationToken,
     PetitionProject,
+    ResultSnapshot,
     Simulation,
     StatusLog,
 )
@@ -145,3 +146,12 @@ class InvitationTokenFactory(DjangoModelFactory):
 
     created_by = factory.SubFactory(UserFactory)
     petition_project = factory.SubFactory(PetitionProjectFactory)
+
+
+class ResultSnapshotFactory(DjangoModelFactory):
+    class Meta:
+        model = ResultSnapshot
+
+    project = factory.SubFactory(PetitionProjectFactory)
+    moulinette_url = factory.SelfAttribute("project.moulinette_url")
+    payload = factory.LazyAttribute(lambda obj: {"test": "data"})

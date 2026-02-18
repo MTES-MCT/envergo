@@ -358,11 +358,6 @@ class PetitionProject(models.Model):
                 **self.get_log_event_data(),
             )
 
-            # Always create a result snapshot when the dossier is submitted
-            transaction.on_commit(
-                lambda: ResultSnapshot.create_for_project(project=self)
-            )
-
         elif (
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
