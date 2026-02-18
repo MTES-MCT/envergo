@@ -189,8 +189,8 @@ class PetitionProject(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = _("Petition project")
-        verbose_name_plural = _("Petition projects")
+        verbose_name = "Dossier"
+        verbose_name_plural = "Dossiers"
 
     def __str__(self):
         return self.reference
@@ -529,8 +529,8 @@ class Simulation(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = "Simulation"
-        verbose_name_plural = "Simulations"
+        verbose_name = "Simulation alternative"
+        verbose_name_plural = "Simulations alternatives"
         constraints = [
             models.UniqueConstraint(
                 fields=["project", "is_active"],
