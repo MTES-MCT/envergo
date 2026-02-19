@@ -30,14 +30,6 @@
              rel="noopener"
              href="{{ demarches_simplifiees_prefill_url }}">Démarches numériques</a>.
         </p>
-      {% else %}
-        <p>Pour finaliser votre demande, rendez-vous sur l'outil Démarches numériques.</p>
-        <p>
-          <button id="demarche-simplifiee-banner-btn"
-                  class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
-                  aria-controls="demarches-simplifiees-modal"
-                  data-fr-opened="false">Finaliser ma demande</button>
-        </p>
       {% endif %}
     </div>
   {% endif %}
@@ -105,15 +97,3 @@
           data-fr-opened="false"
           aria-controls="hedge-input-modal">Ouvrir la carte pour voir le détail</button>
 {% endblock %}
-
-{% if demarches_simplifiees_prefill_url %}
-  {% block extra_body %}
-    {{ block.super }}
-    {% include 'haie/moulinette/_init_dossier_on_demarches_simplifees.html' %}
-  {% endblock %}
-
-  {% block extra_js %}
-    {{ block.super }}
-    <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
-  {% endblock %}
-{% endif %}
