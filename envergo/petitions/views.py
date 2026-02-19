@@ -309,6 +309,9 @@ class PetitionProjectCreate(FormView):
                 transaction.set_rollback(True)
             else:
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
+                petition_project.demarches_simplifiees_prefill_url = (
+                    demarche_simplifiee_url
+                )
                 petition_project.save()
 
                 StatusLog.objects.create(
@@ -425,7 +428,7 @@ class PetitionProjectCreate(FormView):
                 f"\nrequest.url: {api_url}"
                 f"\nrequest.body: {body}"
             )
-            return None, None
+            return None, None, None
 
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
@@ -695,6 +698,7 @@ class PetitionProjectDetail(DetailView):
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
+        context["demarches_simplifiees_state"] = self.object.demarches_simplifiees_state
         context["demarches_simplifiees_dossier_number"] = (
             self.object.demarches_simplifiees_dossier_number
         )
@@ -727,6 +731,11 @@ class PetitionProjectDetail(DetailView):
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
+
+        if self.object.demarches_simplifiees_state == "draft":
+            context["demarches_simplifiees_prefill_url"] = (
+                self.object.demarches_simplifiees_prefill_url
+            )
         context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
