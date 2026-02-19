@@ -22,23 +22,20 @@
   {% if demarches_simplifiees_state == "draft" %}
     <div class="fr-alert fr-alert--warning">
       <h3 class="fr-alert__title">Dépôt du dossier</h3>
+      <p>Votre dossier n'a pas encore été déposé.</p>
       <p>
-        Votre dossier n'a pas encore été déposé.
-        <br>
-        Pour finaliser votre demande, rendez-vous sur l'outil <a href="#">Démarches numériques</a>.
+        Pour finaliser votre demande, rendez-vous sur l'outil
+        {% if demarches_simplifiees_prefill_url %}
+          <a href="{{ demarches_simplifiees_prefill_url }}">Démarches numériques</a>.
 
-        <form id="demarche-simplifiee-form"
-              action="{% url 'petition_project_create' %}"
-              method="post">
-          {% csrf_token %}
-          <input type="hidden"
-                 name="moulinette_url"
-                 value="{{ petitionproject.moulinette_url }}" />
-          <button type="submit"
-                  class="fr-btn demarche-simplifiee-btn fr-btn--icon-right fr-icon-external-link-line">
-            Poursuivre vers la demande
-          </button>
-        </form>
+        {% else %}
+          Démarches numériques.
+          <button id="demarche-simplifiee-banner-btn"
+                  class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
+                  aria-controls="demarches-simplifiees-modal"
+                  data-fr-opened="false">Déposer une demande d'autorisation</button>
+        {% endif %}
+
       </p>
     </div>
   {% endif %}
@@ -105,4 +102,9 @@
           type="button"
           data-fr-opened="false"
           aria-controls="hedge-input-modal">Ouvrir la carte pour voir le détail</button>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
 {% endblock %}

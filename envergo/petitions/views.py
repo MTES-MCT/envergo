@@ -731,6 +731,11 @@ class PetitionProjectDetail(DetailView):
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
+
+        if self.object.demarches_simplifiees_state == "draft":
+            context["demarches_simplifiees_prefill_url"] = (
+                self.object.demarches_simplifiees_prefill_url
+            )
         context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
