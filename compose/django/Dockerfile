@@ -44,6 +44,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # Geo tools
   binutils libproj-dev libheif1 gdal-bin \
   curl \
+  # python-magic mimetype detection dependencies
+  libmagic1 \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*

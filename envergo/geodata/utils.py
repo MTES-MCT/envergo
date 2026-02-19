@@ -614,6 +614,32 @@ def trim_land(geom):
         return trimmed_geom
 
 
+def compute_hedge_density_data(buffer_zone, epsg_utm):
+    """Compute hedge length, area in Ha and density"""
+
+    # compute the area in square meters with specific projection
+    truncated_buffer_zone_m = buffer_zone.transform(epsg_utm, clone=True)
+
+    area = truncated_buffer_zone_m.area
+    area_ha = area * 0.0001
+
+    # get the length of the hedges in the circles
+    length = (
+        Line.objects.filter(
+            geometry__intersects=buffer_zone,
+            map__map_type=MAP_TYPES.haies,
+        )
+        .annotate(clipped=Intersection("geometry", buffer_zone))
+        .annotate(length=Length(Cast("clipped", GeometryField())))
+        .aggregate(total=Sum("length"))["total"]
+    )
+    length = length if length else Distance(0)
+
+    density = length.standard / area_ha if area_ha > 0 else 0.0
+
+    return length, area_ha, density
+
+
 def compute_hedge_density_around_point(point_geos, radius):
     """Compute the density of hedges around a point."""
 
@@ -636,26 +662,9 @@ def compute_hedge_density_around_point(point_geos, radius):
         truncated_circle = trim_land(circle)
 
     if on_land and truncated_circle:
-        truncated_circle_m = truncated_circle.transform(
-            epsg_utm, clone=True
-        )  # use specific projection to compute the area in square meters
-
-        area = truncated_circle_m.area
-        area_ha = area * 0.0001
-
-        # get the length of the hedges in the circles
-        length = (
-            Line.objects.filter(
-                geometry__intersects=truncated_circle,
-                map__map_type=MAP_TYPES.haies,
-            )
-            .annotate(clipped=Intersection("geometry", truncated_circle))
-            .annotate(length=Length(Cast("clipped", GeometryField())))
-            .aggregate(total=Sum("length"))["total"]
+        length, area_ha, density = compute_hedge_density_data(
+            truncated_circle, epsg_utm
         )
-        length = length if length else Distance(0)
-
-        density = length.standard / area_ha if area_ha > 0 else 0.0
     else:
         # there is no land in the circle (e.g. sea or foreign country)
         length = Distance(0)
@@ -667,6 +676,40 @@ def compute_hedge_density_around_point(point_geos, radius):
         "artifacts": {
             "circle": circle,
             "truncated_circle": truncated_circle,
+            "length": length.standard,
+            "area_ha": area_ha,
+        },
+    }
+
+
+def compute_hedge_density_around_lines(line_geos, radius):
+    """Compute the density of hedges in buffer radius."""
+
+    # use specific projection to be able to use meters for buffering
+    line_centroid = line_geos.centroid
+    epsg_utm = get_best_epsg_for_location(line_centroid.x, line_centroid.y)
+    line_meter = line_geos.transform(epsg_utm, clone=True)
+    buffer_zone = line_meter.buffer(radius)
+    buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
+
+    # Remove the sea from the circle
+    truncated_buffer_zone = trim_land(buffer_zone)
+
+    if truncated_buffer_zone:
+        length, area_ha, density = compute_hedge_density_data(
+            truncated_buffer_zone, epsg_utm
+        )
+    else:
+        # there is no land in the circle (e.g. sea or foreign country)
+        length = Distance(0)
+        area_ha = 0.0
+        density = 1.0
+
+    return {
+        "density": density,
+        "artifacts": {
+            "buffer_zone": buffer_zone,
+            "truncated_buffer_zone": truncated_buffer_zone,
             "length": length.standard,
             "area_ha": area_ha,
         },
