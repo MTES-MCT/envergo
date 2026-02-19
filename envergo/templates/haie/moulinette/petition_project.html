@@ -8,7 +8,6 @@
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
     {% if demarches_simplifiees_state != "draft" %}
-      {{ demarches_simplifiees_state }}
       <li>
         <span id="go-to-ds-btn">
           <a class="fr-btn"
@@ -20,7 +19,7 @@
     {% endif %}
   </ul>
 
-  {% if demarches_simplifiees_state == "draft" %}
+  {% if demarches_simplifiees_state == "draft" and not user.is_authenticated %}
     <div class="fr-alert fr-alert--warning">
       <h3 class="fr-alert__title">Dépôt du dossier</h3>
       <p>Votre dossier n'a pas encore été déposé.</p>
