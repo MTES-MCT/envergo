@@ -283,7 +283,9 @@ class TestConfigMenuLink:
         label_str = str(label)
         assert "ACTIF" not in label_str
         assert today.strftime("%d/%m/%Y") in label_str
-        assert one_year_later.strftime("%d/%m/%Y") in label_str
+        # Upper bound is exclusive in DB but displayed as inclusive (minus 1 day)
+        inclusive_upper = one_year_later - timedelta(days=1)
+        assert inclusive_upper.strftime("%d/%m/%Y") in label_str
 
     def test_active_expired_config_shows_dates(self):
         today = date.today()

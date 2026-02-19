@@ -1,7 +1,7 @@
 import json
 import logging
 import string
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django import template
@@ -351,6 +351,10 @@ def humanize_motif(motif):
 def display_validity_range(validity_range):
     """Format a DateRange for human-friendly display.
 
+    Ranges are stored as ``[lower, upper)`` (upper exclusive), but users
+    expect inclusive bounds on both sides.  The displayed upper date is
+    therefore shifted back by one day.
+
     Returns an empty string when the range is None (always valid), so the
     caller can hide the entire line with {% if ... %}.
     """
@@ -360,12 +364,14 @@ def display_validity_range(validity_range):
     lower = validity_range.lower
     upper = validity_range.upper
     fmt = "d/m/Y"
+    # Convert the exclusive upper bound to an inclusive one for display.
+    inclusive_upper = upper - timedelta(days=1) if upper else None
 
-    if lower and upper:
-        return f"du {date_format(lower, fmt)} au {date_format(upper, fmt)}"
+    if lower and inclusive_upper:
+        return f"du {date_format(lower, fmt)} au {date_format(inclusive_upper, fmt)}"
 
-    if upper:
-        return f"jusqu'au {date_format(upper, fmt)}"
+    if inclusive_upper:
+        return f"jusqu'au {date_format(inclusive_upper, fmt)}"
 
     # Only a lower bound
     if lower <= date.today():
