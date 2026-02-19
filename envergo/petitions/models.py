@@ -110,6 +110,14 @@ class PetitionProject(models.Model):
         help_text=_("Dossier ID on demarches-simplifiees.fr"), blank=True, null=True
     )
 
+    demarches_simplifiees_prefill_url = models.CharField(
+        help_text=_(
+            "Prefill dossier url on demarches-simplifiees.fr, used only when dossier is draft"
+        ),
+        blank=True,
+        null=True,
+    )
+
     demarches_simplifiees_state = models.CharField(
         _("State of the dossier on demarches-simplifiees.fr"),
         max_length=20,

@@ -255,6 +255,9 @@ class PetitionProjectCreate(FormView):
                 transaction.set_rollback(True)
             else:
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
+                petition_project.demarches_simplifiees_prefill_url = (
+                    demarche_simplifiee_url
+                )
                 petition_project.save()
 
                 StatusLog.objects.create(
@@ -367,7 +370,7 @@ class PetitionProjectCreate(FormView):
                 f"\nrequest.url: {api_url}"
                 f"\nrequest.body: {body}"
             )
-            return None, None
+            return None, None, None
 
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
