@@ -47,8 +47,8 @@ def test_petition_department_list(
     content = response.content.decode()
     assert "Paramétrage" in content
 
-    assert 'href="/simulateur/parametrage/44/"' in content
-    assert 'href="/simulateur/parametrage/34/"' not in content
+    assert 'href="/parametrage/44/' in content
+    assert 'href="/parametrage/34/' not in content
 
     # GIVEN an admin user
     client.force_login(admin_user)
@@ -57,8 +57,8 @@ def test_petition_department_list(
     # THEN department menu is displayed with 34 and 44
     content = response.content.decode()
     assert "Paramétrage" in content
-    assert 'href="/simulateur/parametrage/44/"' in content
-    assert 'href="/simulateur/parametrage/34/"' in content
+    assert 'href="/parametrage/44/' in content
+    assert 'href="/parametrage/34/' in content
 
 
 def test_urlize_html():
@@ -258,7 +258,7 @@ class TestConfigMenuLink:
         url, label, _ = config_menu_link(config)
 
         label_str = str(label)
-        assert "/simulateur/parametrage/44/" in url
+        assert "/parametrage/44/" in url
         assert "ACTIF" in label_str
         assert "fr-badge--success" in label_str
         # No dates shown for active+valid
@@ -336,8 +336,8 @@ class TestParametrageDepartmentsMenu:
         content = client.get("/").content.decode()
 
         assert "Paramétrage" in content
-        assert "/simulateur/parametrage/44/" in content
-        assert "/simulateur/parametrage/34/" not in content
+        assert "/parametrage/44/" in content
+        assert "/parametrage/34/" not in content
 
     def test_superuser_sees_all_departments(self, client, admin_user):
         DCConfigHaieFactory()  # dept 44
@@ -346,8 +346,8 @@ class TestParametrageDepartmentsMenu:
         client.force_login(admin_user)
         content = client.get("/").content.decode()
 
-        assert "/simulateur/parametrage/44/" in content
-        assert "/simulateur/parametrage/34/" in content
+        assert "/parametrage/44/" in content
+        assert "/parametrage/34/" in content
 
     def test_multiple_configs_per_department_all_listed(self, client, admin_user):
         """Each config is a separate menu entry, even for the same department."""
@@ -371,8 +371,8 @@ class TestParametrageDepartmentsMenu:
         content = client.get("/").content.decode()
 
         # Dept 44 appears twice (two configs), dept 34 once
-        assert content.count("/simulateur/parametrage/44/") == 2
-        assert content.count("/simulateur/parametrage/34/") == 1
+        assert content.count("/parametrage/44/") == 2
+        assert content.count("/parametrage/34/") == 1
 
     def test_active_valid_config_shows_actif_badge(self, client, admin_user):
         DCConfigHaieFactory(is_activated=True)
@@ -437,8 +437,8 @@ class TestParametrageDepartmentsMenu:
         content = client.get("/").content.decode()
 
         # Dept 34 should appear before dept 44 entries
-        pos_34 = content.index("/simulateur/parametrage/34/")
-        pos_44_first = content.index("/simulateur/parametrage/44/")
+        pos_34 = content.index("/parametrage/34/")
+        pos_44_first = content.index("/parametrage/44/")
         assert pos_34 < pos_44_first
 
         # Within dept 44, earlier range should appear first

@@ -1010,6 +1010,37 @@ class ConfigQuerySet(models.QuerySet):
             date = timezone.now().date()
         return self.filter(department=department).valid_at(date).first()
 
+    def get_by_date_slug(self, department, slug):
+        """Look up a config by department and date slug.
+
+        Slug format mirrors ``ConfigBase.date_slug``:
+        ``{start}_{end}`` with ISO dates, empty string for open bounds,
+        or ``"permanent"`` for NULL validity_range.
+
+        Returns None when the slug is malformed or no config matches.
+        """
+        qs = self.filter(department=department)
+        if slug == "permanent":
+            return qs.filter(validity_range__isnull=True).first()
+
+        parts = slug.split("_", 1)
+        if len(parts) != 2:
+            return None
+
+        lower_str, upper_str = parts
+        try:
+            if lower_str:
+                qs = qs.filter(validity_range__startswith=date.fromisoformat(lower_str))
+            else:
+                qs = qs.filter(validity_range__lower_inf=True)
+            if upper_str:
+                qs = qs.filter(validity_range__endswith=date.fromisoformat(upper_str))
+            else:
+                qs = qs.filter(validity_range__upper_inf=True)
+        except ValueError:
+            return None
+        return qs.first()
+
 
 class ConfigBase(models.Model):
     department = models.ForeignKey(
@@ -1059,6 +1090,29 @@ class ConfigBase(models.Model):
                 ),
             ),
         ]
+
+    @property
+    def date_slug(self):
+        """URL-friendly identifier derived from the validity_range bounds.
+
+        Format is ``{start}_{end}`` where each part is an ISO date or empty
+        when the bound is open.  The underscore separator avoids ambiguity
+        with the hyphens inside ISO dates.  Examples:
+        - ``2025-01-01_2026-01-01`` — both bounds set
+        - ``2025-01-01_``           — no upper bound
+        - ``_2026-01-01``           — no lower bound
+        - ``permanent``             — NULL validity_range (always valid)
+
+        The ExclusionConstraint on (department, validity_range) guarantees
+        uniqueness within a department.
+        """
+        if self.validity_range is None:
+            return "permanent"
+        lower = self.validity_range.lower
+        upper = self.validity_range.upper
+        lower_str = lower.isoformat() if lower else ""
+        upper_str = upper.isoformat() if upper else ""
+        return f"{lower_str}_{upper_str}"
 
     def is_valid_at(self, at_date=None):
         """Check whether this config's validity range covers the given date.

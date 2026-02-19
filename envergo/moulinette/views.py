@@ -717,16 +717,26 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     template_name = "haie/moulinette/confighaie_settings.html"
 
     def get_object(self, queryset=None):
-        """Return Config haie related to department number"""
+        """Return ConfigHaie for the department, optionally by date slug.
+
+        When a ``date_slug`` kwarg is present the lookup targets a specific
+        config (by its validity_range lower bound). Otherwise the currently
+        valid config is returned — same behaviour as before.
+        """
 
         if self.department is None:
-            self.department = self.get_department(self.kwargs)
+            self.department = self.get_departement()
 
-        obj = (
-            self.queryset.filter(department=self.department)
-            .valid_at(date.today())
-            .first()
-        )
+        date_slug = self.kwargs.get("date_slug")
+        if date_slug:
+            obj = self.queryset.get_by_date_slug(self.department, date_slug)
+        else:
+            obj = (
+                self.queryset.filter(department=self.department)
+                .valid_at(date.today())
+                .first()
+            )
+
         if obj is None:
             raise Http404(
                 _("No %(verbose_name)s found matching the query")

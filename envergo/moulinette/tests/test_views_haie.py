@@ -746,3 +746,118 @@ def test_confighaie_settings_view_with_multiple_configs(
 
     assert response.status_code == 200
     assert response.context["object"].pk == current_config.pk
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_detail_by_date_slug(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """Accessing /parametrage/{dep}/{date_slug}/ returns the matching config."""
+    from datetime import timedelta
+
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    old_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # Access the old config by its date slug ({start}_{end})
+    slug = f"{one_year_ago.isoformat()}_{today.isoformat()}"
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": slug},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == old_config.pk
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_detail_permanent_slug(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """The 'permanent' slug matches a config with no validity_range."""
+    permanent_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=None,
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": "permanent"},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == permanent_config.pk
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_confighaie_detail_invalid_slug_returns_404(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """An unknown date slug returns 404."""
+    DCConfigHaieFactory(department=loire_atlantique_department)
+
+    client.force_login(haie_instructor_44)
+
+    # Well-formed slug that matches no config
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": "9999-01-01_9999-12-31"},
+    )
+    response = client.get(url)
+    assert response.status_code == 404
+
+    # Malformed slug
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": "garbage"},
+    )
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.urls("config.urls_haie")
+@override_settings(
+    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
+)
+def test_old_parametrage_url_redirects(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """The old /moulinette/parametrage/{dep}/ URL permanently redirects."""
+    DCConfigHaieFactory(department=loire_atlantique_department)
+
+    client.force_login(haie_instructor_44)
+    response = client.get("/simulateur/parametrage/44/")
+
+    assert response.status_code == 301
+    assert response.url == "/parametrage/44/"
