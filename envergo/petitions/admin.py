@@ -121,6 +121,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
 
     length_to_remove.short_description = "Linéaire à détruire"
 
+    @admin.display(description="Dernier résultat de simulation")
     def last_result_snapshot(self, obj):
         snapshot = (
             ResultSnapshot.objects.filter(project=obj).order_by("-created_at").first()
@@ -139,8 +140,6 @@ class PetitionProjectAdmin(admin.ModelAdmin):
     """,
             pretty,
         )
-
-    last_result_snapshot.short_description = "Dernier résultat de simulation"
 
 
 class InvitationTokenAdminForm(forms.ModelForm):
