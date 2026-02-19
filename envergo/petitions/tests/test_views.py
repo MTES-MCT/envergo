@@ -148,13 +148,12 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number, dossier_prefill_token = (
-        view.pre_fill_demarche_simplifiee(petition_project)
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+        petition_project
     )
 
     assert demarche_simplifiee_url == "demarche_simplifiee_url"
     assert dossier_number == 21075665
-    assert dossier_prefill_token == "W3LFL68vStyL62kRBdJSGU1f"
 
     # Assert the body of the requests.post call
     expected_body = {
