@@ -147,8 +147,11 @@ def config_menu_link(config):
     so admins can spot at a glance which config is live.
     """
     url = reverse(
-        "confighaie_settings",
-        kwargs={"department": config.department.department},
+        "confighaie_detail",
+        kwargs={
+            "department": config.department.department,
+            "date_slug": config.date_slug,
+        },
     )
 
     if config.is_activated and config.is_valid_at():
