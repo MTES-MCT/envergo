@@ -13,10 +13,7 @@
                     aria-controls="demarches-simplifiees-modal">Fermer</button>
           </div>
           <div class="fr-modal__content">
-            <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">
-              Confirmez le verrouillage de votre
-              simulation
-            </h3>
+            <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmez le verrouillage de votre simulation</h3>
             <p>Vous souhaitez déposer votre dossier.</p>
             <p>
               <strong>Si vous continuez, votre simulation ne sera plus modifiable.</strong> Vous pourrez toujours la consulter.
@@ -31,9 +28,7 @@
                   action="{% url 'petition_project_create' %}"
                   method="post">
               {% csrf_token %}
-              <input type="hidden"
-                     name="moulinette_url"
-                     value="{{ request.build_absolute_uri }}" />
+              <input type="hidden" name="moulinette_url" value="{{ moulinette_url }}" />
               <div id="demarches-simplifiees-modal-btns">
                 <div>
                   <input type="button"
