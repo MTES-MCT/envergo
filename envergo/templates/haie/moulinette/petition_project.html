@@ -8,6 +8,7 @@
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
     {% if demarches_simplifiees_state != "draft" %}
+      {{ demarches_simplifiees_state }}
       <li>
         <span id="go-to-ds-btn">
           <a class="fr-btn"
@@ -23,19 +24,22 @@
     <div class="fr-alert fr-alert--warning">
       <h3 class="fr-alert__title">Dépôt du dossier</h3>
       <p>Votre dossier n'a pas encore été déposé.</p>
-      <p>
-        Pour finaliser votre demande, rendez-vous sur l'outil
-        {% if demarches_simplifiees_prefill_url %}
-          <a href="{{ demarches_simplifiees_prefill_url }}">Démarches numériques</a>.
-        {% else %}
-          Démarches numériques.
+      {% if demarches_simplifiees_prefill_url %}
+        <p>
+          Pour finaliser votre demande, rendez-vous sur l'outil
+          <a target="_blank"
+             rel="noopener"
+             href="{{ demarches_simplifiees_prefill_url }}">Démarches numériques</a>.
+        </p>
+      {% else %}
+        <p>Pour finaliser votre demande, rendez-vous sur l'outil Démarches numériques.</p>
+        <p>
           <button id="demarche-simplifiee-banner-btn"
                   class="fr-btn  fr-btn--icon-right fr-icon-external-link-line"
                   aria-controls="demarches-simplifiees-modal"
-                  data-fr-opened="false">Déposer une demande d'autorisation</button>
-        {% endif %}
-
-      </p>
+                  data-fr-opened="false">Finaliser ma demande</button>
+        </p>
+      {% endif %}
     </div>
   {% endif %}
 {% endblock %}
