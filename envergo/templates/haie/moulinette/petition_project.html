@@ -27,7 +27,6 @@
         Pour finaliser votre demande, rendez-vous sur l'outil
         {% if demarches_simplifiees_prefill_url %}
           <a href="{{ demarches_simplifiees_prefill_url }}">Démarches numériques</a>.
-
         {% else %}
           Démarches numériques.
           <button id="demarche-simplifiee-banner-btn"
@@ -104,7 +103,14 @@
           aria-controls="hedge-input-modal">Ouvrir la carte pour voir le détail</button>
 {% endblock %}
 
-{% block extra_js %}
-  {{ block.super }}
-  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
-{% endblock %}
+{% if demarches_simplifiees_prefill_url %}
+  {% block extra_body %}
+    {{ block.super }}
+    {% include 'haie/moulinette/_init_dossier_on_demarches_simplifees.html' %}
+  {% endblock %}
+
+  {% block extra_js %}
+    {{ block.super }}
+    <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
+  {% endblock %}
+{% endif %}
