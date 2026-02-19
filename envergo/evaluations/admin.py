@@ -1,3 +1,4 @@
+import json
 import logging
 from urllib.parse import urlparse
 
@@ -25,6 +26,7 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
+    EvaluationSnapshot,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -116,7 +118,13 @@ class EvaluationAdmin(admin.ModelAdmin):
         "application_number",
         "urbanism_department_emails",
     ]
-    readonly_fields = ["reference", "request", "sent_history", "versions"]
+    readonly_fields = [
+        "reference",
+        "request",
+        "sent_history",
+        "versions",
+        "last_result_snapshot",
+    ]
     fieldsets = (
         (
             None,
@@ -159,6 +167,7 @@ class EvaluationAdmin(admin.ModelAdmin):
                     "is_icpe",
                     "display_actions_to_take",
                     "details_md",
+                    "last_result_snapshot",
                 )
             },
         ),
@@ -488,6 +497,28 @@ class EvaluationAdmin(admin.ModelAdmin):
             {"evaluation": obj, "versions": obj.versions.all()},
         )
         return mark_safe(content)
+
+    @admin.display(description="Dernier résultat de simulation")
+    def last_result_snapshot(self, obj):
+        snapshot = (
+            EvaluationSnapshot.objects.filter(evaluation=obj)
+            .order_by("-created_at")
+            .first()
+        )
+        if not snapshot:
+            return "—"
+
+        # Pretty JSON
+        pretty = json.dumps(snapshot.payload, indent=2, ensure_ascii=False)
+        return format_html(
+            """
+        <details>
+            <summary>Afficher le JSON</summary>
+            <pre>{}</pre>
+        </details>
+    """,
+            pretty,
+        )
 
 
 class RequestFileInline(admin.TabularInline):

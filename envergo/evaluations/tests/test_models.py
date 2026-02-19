@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import pytest
 from django.contrib.gis.geos import MultiPolygon
 
-from envergo.evaluations.models import Evaluation
+from envergo.evaluations.models import Evaluation, EvaluationSnapshot
 from envergo.evaluations.tests.factories import EvaluationFactory
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
@@ -116,3 +116,48 @@ def test_render_context(moulinette_url):
 
     # THEN some info from configuration are present in the content
     assert "Contact de la DDTM du 44" in content
+
+
+@pytest.mark.django_db(transaction=True)
+class TestEvaluationSnapshot:
+    """Tests for EvaluationSnapshot model and automatic creation."""
+
+    @pytest.mark.parametrize("footprint", [1200])
+    def test_create_for_evaluation(self, moulinette_url):
+        """EvaluationSnapshot.create_for_evaluation creates a snapshot with correct data."""
+        evaluation = EvaluationFactory(moulinette_url=moulinette_url)
+
+        # Clear any snapshots created during evaluation creation
+        EvaluationSnapshot.objects.filter(evaluation=evaluation).delete()
+
+        snapshot = EvaluationSnapshot.create_for_evaluation(evaluation=evaluation)
+
+        assert snapshot.evaluation == evaluation
+        assert snapshot.moulinette_url == evaluation.moulinette_url
+        assert isinstance(snapshot.payload, dict)
+        # The payload should contain moulinette summary data
+        assert "lat" in snapshot.payload
+        assert "lng" in snapshot.payload
+        assert "department" in snapshot.payload
+
+    @pytest.mark.parametrize("footprint", [1200])
+    def test_snapshot_created_on_evaluation_publication(self, moulinette_url, user):
+        """An EvaluationSnapshot is created when an Evaluation version is published."""
+        initial_count = EvaluationSnapshot.objects.count()
+
+        evaluation = EvaluationFactory(moulinette_url=moulinette_url)
+        evaluation.create_version(user, "initial")
+
+        # A snapshot should have been created
+        assert EvaluationSnapshot.objects.count() == initial_count + 1
+        snapshot = EvaluationSnapshot.objects.filter(evaluation=evaluation).first()
+        assert snapshot is not None
+        assert snapshot.moulinette_url == evaluation.moulinette_url
+
+    @pytest.mark.parametrize("footprint", [1200])
+    def test_no_snapshot_when_no_version(self, moulinette_url):
+        """No EvaluationSnapshot is created when no version have been published."""
+        evaluation = EvaluationFactory(moulinette_url=moulinette_url)
+
+        # No new snapshot should have been created
+        assert EvaluationSnapshot.objects.filter(evaluation=evaluation).count() == 0

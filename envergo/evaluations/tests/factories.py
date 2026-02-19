@@ -3,6 +3,7 @@ from factory.django import DjangoModelFactory
 
 from envergo.evaluations.models import (
     Evaluation,
+    EvaluationSnapshot,
     EvaluationVersion,
     RegulatoryNoticeLog,
     Request,
@@ -89,3 +90,12 @@ class RegulatoryNoticeLogFactory(DjangoModelFactory):
     html_body = factory.Faker("text")
     subject = "Email subject"
     message_id = factory.Sequence(lambda n: f"message_{n}")
+
+
+class EvaluationSnapshotFactory(DjangoModelFactory):
+    class Meta:
+        model = EvaluationSnapshot
+
+    evaluation = factory.SubFactory(EvaluationFactory)
+    moulinette_url = factory.SelfAttribute("evaluation.moulinette_url")
+    payload = factory.LazyAttribute(lambda obj: {"test": "data"})
