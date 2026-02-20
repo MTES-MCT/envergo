@@ -51,6 +51,10 @@ class ReservesNaturelles(CriterionEvaluator):
         catalog = super().get_catalog_data()
         hedges_to_remove = self.catalog["haies"].hedges_to_remove()
 
+        # Make sure those variable always exist
+        resnat = {}
+        l_resnat = 0.0
+
         if hedges_to_remove:
             hedges_geom = MultiLineString(
                 [h.geos_geometry for h in hedges_to_remove], srid=EPSG_WGS84
@@ -62,27 +66,26 @@ class ReservesNaturelles(CriterionEvaluator):
                 .filter(geometry__intersects=hedges_geom)
                 .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
             )
-            # Aggregate them into a single polygon
+            # Aggregate them into a single polygon.
+            # Union returns None when no zones match the filter.
             multipolygon = qs["geom"]
 
-            # Other conversion options throw a cryptic numpy error, so…
-            geom = shapely.from_wkt(multipolygon.wkt)
+            if multipolygon is not None:
+                # Other conversion options throw a cryptic numpy error, so…
+                geom = shapely.from_wkt(multipolygon.wkt)
 
-            resnat = {}
-            l_resnat = 0.0
+                # Use the geodesic length
+                geod = Geod(ellps="WGS84")
 
-            # Use the geodesic length
-            geod = Geod(ellps="WGS84")
+                for h in hedges_to_remove:
+                    intersect = h.geometry.intersection(geom)
+                    length = geod.geometry_length(intersect)
+                    if length > 0.0:
+                        resnat[h.id] = ceil(length)
+                        l_resnat += length
 
-            for h in hedges_to_remove:
-                intersect = h.geometry.intersection(geom)
-                length = geod.geometry_length(intersect)
-                if length > 0.0:
-                    resnat[h.id] = ceil(length)
-                    l_resnat += length
-
-            catalog["resnat"] = resnat
-            catalog["l_resnat"] = ceil(l_resnat)
+        catalog["resnat"] = resnat
+        catalog["l_resnat"] = ceil(l_resnat)
 
         return catalog
 
