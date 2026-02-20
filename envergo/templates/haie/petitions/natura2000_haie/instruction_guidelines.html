@@ -1,15 +1,40 @@
 <p>
-  Lorsque la liste locale 2 soumet à évaluation des incidences l'arrachage de haies dans un site Natura 2000, « arrachage » doit être interprété comme toute opération conduisant à la destruction d’une haie (voir <a href="https://www.legifrance.gouv.fr/download/pdf/circ?id=34510"
+  Le simulateur détecte automatiquement :
+</p>
+<ul class="fr-mb-2w">
+  <li>si le projet (linéaires à détruire ou à planter) est situé en tout ou partie
+  dans le périmètre d'un site Natura 2000 ;</li>
+  <li>si, dans le site en question, l'arrachage de haies est soumis à évaluation des incidences, sur la base
+    de la liste locale 2 du département. Dans ce cas, « arrachage » doit être interprété comme toute opération
+    conduisant à la destruction d’une haie (voir <a href="https://www.legifrance.gouv.fr/download/pdf/circ?id=34510"
     rel="noopener"
-    target="_blank">circulaire du 26 décembre 2011</a>). En outre, les alignements d'arbres ne sont pas concernés.
+    target="_blank">circulaire du 26 décembre 2011</a>).</li>
+</ul>
+
+<h3 class="fr-h6">Régime unique</h3>
+
+<p>
+  Dans le cadre du régime unique de la haie, l'instruction au titre de Natura 2000 ne fait pas basculer le projet
+  en autorisation. Durant l'instruction de la déclaration, le service coordonnateur du guichet unique saisit
+  le service compétent pour avis simple, avec un délai de réponse de 45 jours. Silence vaut accord.
 </p>
 
 <p>
-  Le simulateur fonctionne à partir des déclarations du demandeur. L'instructeur ou l'instructrice est donc invité(e) à vérifier notamment :
+  À noter : si la destruction de haies se fait dans le cadre d'un projet plus large soumis à autorisation d'urbanisme,
+  le demandeur doit tout de même déposer une déclaration auprès du guichet unique, qui prend alors en charge l'instruction
+  au titre de Natura 2000.
 </p>
 
-<ul>
-  <li>
-    que les linéaires déclarés comme « alignements d'arbres » dans le simulateur en sont bien, sur la base des <a href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">photos jointes au dossier</a> et d'images satellite (<a href="{{ ign_url }}" target="_blank" rel="noopener">IGN</a>, <a href="{{ google_maps_url }}" target="_blank" rel="noopener">Google</a>) ;
-  </li>
-</ul>
+
+<h3 class="fr-h6">Hors régime unique</h3>
+
+<p class="fr-hint-text">
+  Destruction d’alignements d’arbres ou de haies exclues du régime unique, et tout projet déposé avant l’entrée en vigueur
+  du régime unique
+</p>
+
+<p>
+  Par défaut, les alignements d'arbres ne sont pas concernés par cet item de la nomenclature Natura 2000. Il existe
+  cependant des exceptions, si la définition de la haie est rendue explicite dans l'arrêté préfectoral Natura 2000,
+  que le simulateur ne prend pas encore en compte.
+</p>
