@@ -1,11 +1,12 @@
 {% block block-section %}
-  {% block block-title %}<h3 class="fr-h6">Consultation</h3>{% endblock %}
+  {% block block-title %}{% endblock %}
 
   {% block block-content %}
+    <hr class="fr-mt-2w"></hr>
     <p>
-      Pour partager le dossier et demander un avis,
-      <a href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}">
-        consultez la page dédiée aux consultations</a>.
-      </p>
+      <a href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}" class="fr-link fr-icon-arrow-right-line fr-link--icon-right">
+        Gérer les consultations
+      </a>
+    </p>
     {% endblock %}
   {% endblock %}
