@@ -176,7 +176,9 @@ def test_new_files_user_alert_ignores_unsubmitted_requests(
 def test_new_files_user_alert_recipient(mailoutbox, time_1h30_ago, time_20min_ago):
     """The mail is sent to the right recipients."""
 
-    request = RequestFactory(user_type="instructor", created_at=time_1h30_ago, submitted=True)
+    request = RequestFactory(
+        user_type="instructor", created_at=time_1h30_ago, submitted=True
+    )
     EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_20min_ago)
     call_command("new_files_user_alert")
