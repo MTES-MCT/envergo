@@ -131,6 +131,7 @@ class CriterionAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         label="Dates de validité",
         required=False,
         widget=AdminDateRangeWidget,
+        help_text="Laisser les dates vides pour une validité illimitée",
     )
 
     def __init__(self, *args, **kwargs):
@@ -355,6 +356,7 @@ class ConfigAmenagementForm(OverlapValidationFormMixin, forms.ModelForm):
         label="Dates de validité",
         required=False,
         widget=AdminDateRangeWidget,
+        help_text="Laisser les dates vides pour une validité illimitée",
     )
 
     def __init__(self, *args, **kwargs):
@@ -438,6 +440,7 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         label="Dates de validité",
         required=False,
         widget=AdminDateRangeWidget,
+        help_text="Laisser les dates vides pour une validité illimitée",
     )
 
     class Meta:
@@ -487,20 +490,11 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "department",
                     "is_activated",
+                    "validity_range",
                     "regulations_available",
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",
                 ],
-            },
-        ),
-        (
-            "Période de validité",
-            {
-                "fields": [
-                    "validity_range",
-                ],
-                "description": "Définissez la période pendant laquelle cette configuration est active. "
-                "Laissez vide pour une validité illimitée.",
             },
         ),
         (
