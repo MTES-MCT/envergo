@@ -18,6 +18,7 @@ from django.template.defaultfilters import stringfilter
 from django.template.loader import get_template
 from django.utils.dateparse import parse_datetime
 from django.utils.deprecation import RemovedInDjango51Warning
+from django.utils.html import strip_tags
 from django.utils.html import urlize as _urlize
 
 from envergo.utils.fields import HedgeChoiceField
@@ -127,25 +128,30 @@ def choice_default_label(model, field_name):
 @register.filter(is_safe=True)
 @stringfilter
 def urlize_html(value, blank=True):
-    """Convert URLs in plain text into clickable links.
+    """Convert URLs in text into clickable links, stripping any HTML markup.
 
-    This is a sensitive piece of code, since it's used to sanitize content that we get
-    from a third party (messages from DS), but it must output `safe` content that will
-    be integrated as-is in the page.
+    This filter is mainly used to parse and sanitized messages fetched from DS.
+
+    DS sends messages in inconsistent formats. Sometimes html, sometimes markdown.
+
+    We strip all tags while preserving paragraph
+    boundaries as newlines (so the downstream |linebreaks filter recreates the
+    visual structure), then linkify any URLs found in the resulting plain text.
+
+    This is a sensitive piece of code, since it's used to sanitize content that
+    we get from a third party, but it must output `safe`
+    content that will be integrated as-is in the page.
     """
     # Strip existing <a> tags, keeping only the href value.
     # We use a regex instead of BeautifulSoup to avoid HTML entity decoding
     # (e.g. &numero being converted to №).
-
-    # <a> tag matching regex
-    # Parsing html with regexes is not ideal
     text = re.sub(
         r"""
             <a\s            # opening <a tag followed by a space
             [^>]*           # any attributes before href
             href\s*=\s*     # href attribute with optional whitespace around =
             ["']            # opening quote
-            ([^"']*)        # capture the URL
+            ([^"']*)        # everything that is not a quote, capture the URL
             ["']            # closing quote
             [^>]*>          # any attributes after href, then close tag
             .*?             # link text (non-greedy)
@@ -155,6 +161,25 @@ def urlize_html(value, blank=True):
         value,
         flags=re.IGNORECASE | re.DOTALL | re.VERBOSE,
     )
+
+    # Convert block-level HTML boundaries to newlines before stripping tags,
+    # so paragraph structure is preserved through the |linebreaks filter.
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"</(?:p|div|h[1-6]|li|tr|blockquote)>",
+        "\n\n",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Strip all remaining HTML tags.
+    text = strip_tags(text)
+
+    # Collapse runs of multiple blank lines into a single paragraph break,
+    # preventing |linebreaks from generating empty paragraphs.
+    text = re.sub(r"\n(\s*\n)+", "\n\n", text)
+    text = text.strip()
+
     result = _urlize(text, nofollow=True, autoescape=True)
     if blank:
         result = result.replace("<a", '<a target="_blank" rel="noopener"')
