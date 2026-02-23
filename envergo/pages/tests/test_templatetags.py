@@ -83,11 +83,12 @@ def test_urlize_html():
     assert 'href="https://exemple.com"' in result
     assert 'target="_blank"' in result
 
-    # Existing <a> with extra attributes (e.g. target="_blank"): strip all, re-urlize href
+    # Existing <a> with extra attributes (e.g. target="_blank"): sanitize, preserve link text
     message = 'voici un lien <a target="_blank" href="https://exemple.com">hello</a>.'
     result = urlize_html(message)
     assert 'href="https://exemple.com"' in result
     assert 'target="_blank"' in result
+    assert ">hello</a>" in result
 
     # Two existing <a> tags: both cleaned and re-urlized
     message = 'voici un lien <a href="www.exemple.fr">coucou</a> et un deuxième lien <a href="exemple.com">hello</a>.'  # noqa: E501
@@ -109,12 +110,13 @@ def test_urlize_html():
     assert "éàü" in result
     assert "&eacute;" not in result
 
-    # Existing <a> with bad formatting (e.g. <a    href="…" target = " _blank "): strip all, re-urlize href
+    # Existing <a> with bad formatting: sanitize, preserve link text, discard junk attributes
     message = 'voici un lien <a  tartiflette   href= "https://exemple.com" target = "_blank">hello</a>.'
     result = urlize_html(message)
     assert 'href="https://exemple.com"' in result
     assert 'target="_blank"' in result
     assert "tartiflette" not in result
+    assert ">hello</a>" in result
 
 
 def test_urlize_html_xss():
@@ -235,11 +237,19 @@ def test_urlize_html_strips_html_content():
     assert "<p>" not in result
     assert "Thanks" in result
 
-    # <a> inside HTML: href preserved, surrounding tags stripped
+    # <a> inside HTML: link preserved with its text, surrounding tags stripped
     message = '<p>Click <a href="https://example.com">here</a> for info</p>'
     result = urlize_html(message)
     assert 'href="https://example.com"' in result
+    assert ">here</a>" in result
     assert "<p>" not in result
+
+    # <a> tag with link text different from URL: text is preserved
+    message = '<div><p>This content <a href="http://example.org">contains a url</a>.</p></div>'
+    result = urlize_html(message)
+    assert 'href="http://example.org"' in result
+    assert "contains a url" in result
+    assert ">http://example.org<" not in result
 
     # <h1>–<h6>, <div>, <blockquote>, <li>, <tr> boundaries become newlines
     message = "<h2>Title</h2><div>Content</div>"
@@ -291,12 +301,11 @@ def test_urlize_html_known_limitations():
     # The full address is NOT correctly linked (known limitation)
     assert 'href="mailto:o\'brien@example.com"' not in result
 
-    # mailto: <a> tag: the regex strips the tag, leaving "mailto:alice@example.com"
-    # as plain text. urlize does not re-linkify mailto: URIs.
+    # mailto: <a> tag is preserved (safe scheme), link text is kept
     message = '<a href="mailto:alice@example.com">write to us</a>'
     result = urlize_html(message)
-    assert "<a " not in result
-    assert "mailto:alice@example.com" in result
+    assert 'href="mailto:alice@example.com"' in result
+    assert "write to us" in result
 
     # Pre-escaped HTML entities get double-escaped because urlize_html
     # expects raw plain text, not pre-escaped HTML.

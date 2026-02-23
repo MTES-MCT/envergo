@@ -18,8 +18,7 @@ from django.template.defaultfilters import stringfilter
 from django.template.loader import get_template
 from django.utils.dateparse import parse_datetime
 from django.utils.deprecation import RemovedInDjango51Warning
-from django.utils.html import strip_tags
-from django.utils.html import urlize as _urlize
+from django.utils.html import escape, strip_tags, urlize
 
 from envergo.utils.fields import HedgeChoiceField
 
@@ -125,42 +124,61 @@ def choice_default_label(model, field_name):
     return dict(field.choices).get(default, default)
 
 
+_UNSAFE_HREF_SCHEME = re.compile(r"^(javascript|data|vbscript):", re.IGNORECASE)
+
+_A_TAG_RE = re.compile(
+    r"""
+        <a\s            # opening <a tag followed by a space
+        [^>]*           # any attributes before href
+        href\s*=\s*     # href attribute with optional whitespace around =
+        ["']            # opening quote
+        ([^"']*)        # capture the URL (group 1)
+        ["']            # closing quote
+        [^>]*>          # any attributes after href, then close tag
+        (.*?)           # link text (group 2, non-greedy)
+        </a>            # closing tag
+    """,
+    re.IGNORECASE | re.DOTALL | re.VERBOSE,
+)
+
+
 @register.filter(is_safe=True)
 @stringfilter
 def urlize_html(value, blank=True):
     """Convert URLs in text into clickable links, stripping any HTML markup.
 
-    This filter is mainly used to parse and sanitized messages fetched from DS.
+    This filter is mainly used to parse and sanitize messages fetched from DS.
 
-    DS sends messages in inconsistent formats. Sometimes html, sometimes markdown.
+    DS sends messages in inconsistent formats. Sometimes html, sometimes
+    markdown. We strip all tags while preserving paragraph boundaries as
+    newlines (so the downstream |linebreaks filter recreates the visual
+    structure), then linkify any bare URLs found in the resulting plain text.
 
-    We strip all tags while preserving paragraph
-    boundaries as newlines (so the downstream |linebreaks filter recreates the
-    visual structure), then linkify any URLs found in the resulting plain text.
+    Existing <a> tags with safe href schemes are preserved (sanitized to keep
+    only the href and link text). Unsafe schemes (javascript:, data:, …) are
+    discarded entirely.
 
     This is a sensitive piece of code, since it's used to sanitize content that
-    we get from a third party, but it must output `safe`
-    content that will be integrated as-is in the page.
+    we get from a third party, but it must output `safe` content that will be
+    integrated as-is in the page.
     """
-    # Strip existing <a> tags, keeping only the href value.
+    # Sanitize <a> tags: preserve safe links as placeholders that survive
+    # strip_tags and urlize, discard links with dangerous URI schemes.
     # We use a regex instead of BeautifulSoup to avoid HTML entity decoding
     # (e.g. &numero being converted to №).
-    text = re.sub(
-        r"""
-            <a\s            # opening <a tag followed by a space
-            [^>]*           # any attributes before href
-            href\s*=\s*     # href attribute with optional whitespace around =
-            ["']            # opening quote
-            ([^"']*)        # everything that is not a quote, capture the URL
-            ["']            # closing quote
-            [^>]*>          # any attributes after href, then close tag
-            .*?             # link text (non-greedy)
-            </a>            # closing tag
-        """,
-        r"\1",
-        value,
-        flags=re.IGNORECASE | re.DOTALL | re.VERBOSE,
-    )
+    preserved_links = []
+
+    def _sanitize_link(match):
+        """Replace an <a> tag with a placeholder (safe href) or plain text (unsafe)."""
+        href = match.group(1)
+        link_text = strip_tags(match.group(2))
+        if _UNSAFE_HREF_SCHEME.match(href):
+            return link_text
+        idx = len(preserved_links)
+        preserved_links.append((href, link_text))
+        return f"ENVERGOLINK{idx}END"
+
+    text = _A_TAG_RE.sub(_sanitize_link, value)
 
     # Convert block-level HTML boundaries to newlines before stripping tags,
     # so paragraph structure is preserved through the |linebreaks filter.
@@ -172,7 +190,7 @@ def urlize_html(value, blank=True):
         flags=re.IGNORECASE,
     )
 
-    # Strip all remaining HTML tags.
+    # Strip all remaining HTML tags (placeholders are plain text, unaffected).
     text = strip_tags(text)
 
     # Collapse runs of multiple blank lines into a single paragraph break,
@@ -180,7 +198,16 @@ def urlize_html(value, blank=True):
     text = re.sub(r"\n(\s*\n)+", "\n\n", text)
     text = text.strip()
 
-    result = _urlize(text, nofollow=False, autoescape=True)
+    # Linkify bare URLs. Placeholders are alphanumeric and won't be touched.
+    result = urlize(text, nofollow=False, autoescape=True)
+
+    # Restore preserved links as sanitized <a> tags (href + text only).
+    for idx, (href, link_text) in enumerate(preserved_links):
+        safe_href = escape(href)
+        safe_text = escape(link_text)
+        tag = f'<a href="{safe_href}">{safe_text}</a>'
+        result = result.replace(f"ENVERGOLINK{idx}END", tag)
+
     if blank:
         result = result.replace("<a", '<a target="_blank" rel="noopener"')
     return result
