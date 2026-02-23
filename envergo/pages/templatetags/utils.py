@@ -1,6 +1,7 @@
 import re
 import warnings
 from collections.abc import Iterable, Mapping
+from html import unescape as html_unescape
 
 from django import template
 from django.db.models import NOT_PROVIDED
@@ -164,14 +165,12 @@ def urlize_html(value, blank=True):
     """
     # Sanitize <a> tags: preserve safe links as placeholders that survive
     # strip_tags and urlize, discard links with dangerous URI schemes.
-    # We use a regex instead of BeautifulSoup to avoid HTML entity decoding
-    # (e.g. &numero being converted to №).
     preserved_links = []
 
     def _sanitize_link(match):
         """Replace an <a> tag with a placeholder (safe href) or plain text (unsafe)."""
-        href = match.group(1)
-        link_text = strip_tags(match.group(2))
+        href = html_unescape(match.group(1))
+        link_text = html_unescape(strip_tags(match.group(2)))
         if _UNSAFE_HREF_SCHEME.match(href):
             return link_text
         idx = len(preserved_links)
@@ -192,6 +191,13 @@ def urlize_html(value, blank=True):
 
     # Strip all remaining HTML tags (placeholders are plain text, unaffected).
     text = strip_tags(text)
+
+    # Unescape HTML entities (e.g. &amp; → &, &nbsp; → space) so they don't
+    # get double-escaped by urlize's autoescape. DS sends HTML where & in URLs
+    # is encoded as &amp;.
+    # This must happen AFTER strip_tags, because strip_tags uses HTMLParser
+    # which normalizes bare & as entity references (e.g. &element → &element;).
+    text = html_unescape(text)
 
     # Collapse runs of multiple blank lines into a single paragraph break,
     # preventing |linebreaks from generating empty paragraphs.

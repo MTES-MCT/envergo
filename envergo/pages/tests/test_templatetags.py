@@ -260,6 +260,19 @@ def test_urlize_html_strips_html_content():
     assert "Content" in result
     assert "\n" in result
 
+    # HTML entities in URLs must be unescaped to avoid double-escaping.
+    # DS sends &amp; for & in HTML-encoded URLs.
+    message = (
+        "<div>Votre simulation :<br>"
+        "http://haie.local:8000/simulateur/?department=14"
+        "&amp;element=haie"
+        "&amp;numero_pacage=012345678<br><br></div>"
+    )
+    result = urlize_html(message)
+    assert "&amp;amp;" not in result
+    assert "&amp;element=haie" in result
+    assert "&amp;numero_pacage=012345678" in result
+
     # Consecutive <br> tags must not produce excessive newlines that
     # |linebreaks would turn into empty paragraphs.
     message = (
@@ -307,11 +320,12 @@ def test_urlize_html_known_limitations():
     assert 'href="mailto:alice@example.com"' in result
     assert "write to us" in result
 
-    # Pre-escaped HTML entities get double-escaped because urlize_html
-    # expects raw plain text, not pre-escaped HTML.
+    # HTML entities are unescaped before processing, then re-escaped by
+    # urlize's autoescape. No double-escaping.
     message = "foo &amp; bar"
     result = urlize_html(message)
-    assert "&amp;amp;" in result
+    assert "foo &amp; bar" in result
+    assert "&amp;amp;" not in result
 
 
 @pytest.mark.urls("config.urls_haie")
