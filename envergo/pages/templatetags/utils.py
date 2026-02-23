@@ -180,7 +180,7 @@ def urlize_html(value, blank=True):
     text = re.sub(r"\n(\s*\n)+", "\n\n", text)
     text = text.strip()
 
-    result = _urlize(text, nofollow=True, autoescape=True)
+    result = _urlize(text, nofollow=False, autoescape=True)
     if blank:
         result = result.replace("<a", '<a target="_blank" rel="noopener"')
     return result
