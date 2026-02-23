@@ -15,18 +15,12 @@ from envergo.geodata.forms import DepartmentForm
 from envergo.geodata.models import (
     Department,
     Map,
-    Parcel,
     RGEAltiDptProcess,
     Zone,
 )
 from envergo.geodata.tasks import generate_map_preview, process_map
 from envergo.geodata.utils import count_features, extract_map
 
-
-@admin.register(Parcel)
-class ParcelAdmin(admin.ModelAdmin):
-    list_display = ["commune", "prefix", "section", "order"]
-    search_fields = ["commune", "prefix", "section", "order"]
 
 
 class MapForm(forms.ModelForm):

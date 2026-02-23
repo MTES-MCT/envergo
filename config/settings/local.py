@@ -12,7 +12,7 @@ SECRET_KEY = env(
 )
 
 
-ENVERGO_AMENAGEMENT_DOMAIN = "envergo.local"
+ENVERGO_AMENAGEMENT_DOMAIN = "envergo.desktop"
 ENVERGO_HAIE_DOMAIN = "haie.local"
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
@@ -22,6 +22,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "envergo.local",
     "haie.local",
+    "envergo.desktop",
     ENVERGO_AMENAGEMENT_DOMAIN,
     ENVERGO_HAIE_DOMAIN,
 ]
