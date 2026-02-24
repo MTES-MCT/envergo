@@ -1,10 +1,18 @@
+import json
+
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import DEPARTMENT_CHOICES
-from envergo.petitions.models import InvitationToken, PetitionProject, Simulation
+from envergo.petitions.models import (
+    InvitationToken,
+    PetitionProject,
+    ResultSnapshot,
+    Simulation,
+)
 from envergo.users.models import User
 from envergo.utils.widgets import JSONWidget
 
@@ -83,6 +91,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         "demarches_simplifiees_state",
         DepartmentFilter,
     ]
+    readonly_fields = ["last_result_snapshot"]
 
     def get_queryset(self, request):
         # Use select_related to optimize queries for foreign key fields
@@ -90,6 +99,17 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         return queryset.select_related("department", "hedge_data").defer(
             "department__geometry"
         )
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+
+        fields.remove("last_result_snapshot")
+
+        if obj:
+            index = fields.index("hedge_data") + 1
+            fields.insert(index, "last_result_snapshot")
+
+        return fields
 
     def length_to_plant(self, obj):
         return round(obj.hedge_data.length_to_plant())
@@ -100,6 +120,26 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         return round(obj.hedge_data.length_to_remove())
 
     length_to_remove.short_description = "Linéaire à détruire"
+
+    @admin.display(description="Dernier résultat de simulation")
+    def last_result_snapshot(self, obj):
+        snapshot = (
+            ResultSnapshot.objects.filter(project=obj).order_by("-created_at").first()
+        )
+        if not snapshot:
+            return "—"
+
+        # Pretty JSON
+        pretty = json.dumps(snapshot.payload, indent=2, ensure_ascii=False)
+        return format_html(
+            """
+        <details>
+            <summary>Déployer</summary>
+            <pre>{}</pre>
+        </details>
+    """,
+            pretty,
+        )
 
 
 class InvitationTokenAdminForm(forms.ModelForm):
