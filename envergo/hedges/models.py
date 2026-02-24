@@ -4,7 +4,7 @@ from functools import reduce
 from typing import Self
 
 import shapely
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models
@@ -16,6 +16,7 @@ from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
+    compute_hedge_density_around_lines,
     compute_hedge_density_around_point,
     get_department_from_coords,
 )
@@ -362,9 +363,19 @@ class HedgeData(models.Model):
         )
 
     def get_centroid_to_remove(self):
+        """Returns hedges to remove centroid"""
         hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
         hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
         return hedges_centroid
+
+    def get_multilinestring_to_remove(self):
+        """Returns multilinestring from hedges to remove geometries"""
+        hedges_to_remove_mls = []
+        for hedge in self.hedges_to_remove():
+            geom = MultiLineString(hedge.geos_geometry)
+            if geom:
+                hedges_to_remove_mls.extend(geom)
+        return MultiLineString(hedges_to_remove_mls, srid=EPSG_WGS84)
 
     def get_department(self):
         hedges_centroid = self.get_centroid_to_remove()
@@ -426,7 +437,7 @@ class HedgeData(models.Model):
         )
         return species
 
-    def compute_density_with_artifacts(self):
+    def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
         # get two circles at 200m and 5000m from the centroid of the hedges to remove
@@ -438,18 +449,46 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
+    def compute_density_around_lines_with_artifacts(self):
+        """Compute the density of hedges around the hedges to remove in 400m buffer."""
+
+        hedges_to_remove_mls_merged = self.get_multilinestring_to_remove()
+        return compute_hedge_density_around_lines(hedges_to_remove_mls_merged, 400)
+
     @property
     def density(self):
-        """Returns pre-computed density of hedges if it exists, otherwise compute it."""
-        if not self._density:
-            density_200, density_5000, _ = self.compute_density_with_artifacts()
+        """Returns pre-computed density of hedges if it exists, otherwise compute it.
+
+        Two compute methods are existing:
+        - one around centroid
+        - one around lines, inside a buffer around hedges to remove
+        """
+        if (
+            not self._density
+            or "around_centroid" not in self._density
+            or "around_lines" not in self._density
+        ):
+            # Density around centroid
+            density_200, density_5000, _ = (
+                self.compute_density_around_points_with_artifacts()
+            )
+            # Density inside buffer
+            density_400_buffer = self.compute_density_around_lines_with_artifacts()
+
             self._density = {
-                "length_200": density_200["artifacts"]["length"],
-                "length_5000": density_5000["artifacts"]["length"],
-                "area_200_ha": density_200["artifacts"]["area_ha"],
-                "area_5000_ha": density_5000["artifacts"]["area_ha"],
-                "density_200": density_200["density"],
-                "density_5000": density_5000["density"],
+                "around_centroid": {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                },
+                "around_lines": {
+                    "length_400": density_400_buffer["artifacts"]["length"],
+                    "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
+                    "density_400": density_400_buffer["density"],
+                },
             }
             self.save()
 
