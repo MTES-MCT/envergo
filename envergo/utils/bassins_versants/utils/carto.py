@@ -1,4 +1,22 @@
+import os
+
 import numpy as np
+
+
+def build_tile_index(carto_dir):
+    """Pre-read all tile headers and build a coordinate-keyed lookup.
+
+    Returns a dict mapping (x_range[0], y_range[0]) to the tile's info dict.
+    This allows O(1) neighbor lookup in cartoQuerier instead of scanning every
+    file for each tile processed.
+    """
+    index = {}
+    for filename in os.listdir(carto_dir):
+        filepath = os.path.join(carto_dir, filename)
+        info = get_carto_info(filepath)
+        key = (round(info["x_range"][0]), round(info["y_range"][0]))
+        index[key] = info
+    return index
 
 
 def get_carto_info(file_name):

@@ -1,6 +1,8 @@
 import warnings
+from math import pi
 from typing import List
 
+import numpy as np
 from tqdm import tqdm
 from utils import carto
 from utils.bassin_versant import calculate_bassin_versant_one_point
@@ -109,12 +111,163 @@ def calculate_bassin_versant_on_points(
     return results
 
 
+def calculate_bassin_versant_vectorized(
+    params,
+    current_tile,
+    output_carto_precision,
+    input_folder,
+    tile_index=None,
+):
+    """Compute bassin versant for all output points in a tile using numpy vectorization.
+
+    Instead of looping over individual points, this computes all ~62,500 output
+    points simultaneously using numpy broadcasting and fancy indexing. Each
+    (quadrant, radius) section is processed as a single array operation over all
+    points, giving ~100-1000x speedup over the per-point loop.
+
+    Args:
+        params: bassinVersantParameters with algorithm settings.
+        current_tile: Path to the center tile ASC file.
+        output_carto_precision: Output grid spacing in meters.
+        input_folder: Directory containing the input ASC tiles.
+        tile_index: Optional pre-built tile index for fast neighbor lookup.
+
+    Returns:
+        Tuple of (result_array, output_info) where result_array is a 2D numpy
+        array (nrows, ncols) of bassin versant values, and output_info is the
+        header dict for the output ASC file.
+    """
+    querier = cartoQuerier(input_folder, current_tile, tile_index=tile_index)
+    big_carto = querier.current_big_carto
+    tile_info = querier.center_tile_info
+    cellsize = tile_info["cellsize"]
+    nrows = tile_info["nrows"]
+    ncols = tile_info["ncols"]
+
+    # Build the quadrant geometry (offsets in meters)
+    inner_offsets_list, quadrant_offsets = carto.create_quadrants(
+        params.carto_precision,
+        params.inner_radius,
+        params.radii,
+        params.quadrants_nb,
+    )
+    inner_offsets = np.array(inner_offsets_list, dtype=np.int32)
+
+    # Output grid dimensions
+    out_width = round(params.carto_precision * ncols / output_carto_precision)
+    out_height = round(params.carto_precision * nrows / output_carto_precision)
+    step = round(output_carto_precision / cellsize)  # pixels between output points
+
+    # Compute pixel positions of all output points in the big carto.
+    # x_indices: 0..out_width-1, y_indices: 0..out_height-1
+    # Output point (xi, yi) is at:
+    #   col = xi * step + ncols
+    #   row = 2*nrows - 1 - yi * step
+    x_indices = np.arange(out_width)
+    y_indices = np.arange(out_height)
+    point_cols = x_indices * step + ncols  # shape (out_width,)
+    point_rows = 2 * nrows - 1 - y_indices * step  # shape (out_height,)
+
+    # Flatten to 1D arrays of all N = out_width * out_height points.
+    # Points are ordered (y=0,x=0), (y=0,x=1), ..., (y=0,x=W-1), (y=1,x=0), ...
+    # matching the original code's iteration order.
+    grid_rows, grid_cols = np.meshgrid(point_rows, point_cols, indexing="ij")
+    flat_rows = grid_rows.ravel()  # shape (N,)
+    flat_cols = grid_cols.ravel()  # shape (N,)
+    num_points = len(flat_rows)
+
+    # Convert quadrant offsets from meters to pixel deltas.
+    # Offset (ox, oy) in meters → col_delta = ox/cellsize, row_delta = -oy/cellsize
+    inner_col_deltas = (inner_offsets[:, 0] / cellsize).astype(int)
+    inner_row_deltas = (-inner_offsets[:, 1] / cellsize).astype(int)
+
+    # Compute inner circle mean altitude for all points at once
+    inner_mean = _vectorized_section_mean(
+        big_carto, flat_rows, flat_cols, inner_row_deltas, inner_col_deltas
+    )
+
+    # Compute section means for all (quadrant, radius) combinations
+    section_means = []
+    for q in range(params.quadrants_nb):
+        quad_means = []
+        for r in range(len(params.radii)):
+            offsets = quadrant_offsets[q][r]
+            col_deltas = (offsets[:, 0] / cellsize).astype(int)
+            row_deltas = (-offsets[:, 1] / cellsize).astype(int)
+            mean = _vectorized_section_mean(
+                big_carto, flat_rows, flat_cols, row_deltas, col_deltas
+            )
+            quad_means.append(mean)
+        section_means.append(quad_means)
+
+    # Vectorized bassin versant algorithm
+    radii_ext = [0, params.inner_radius] + params.radii
+    section_surfaces = np.array(
+        [pi * radii_ext[r + 2] ** 2 - pi * radii_ext[r + 1] ** 2
+         for r in range(len(params.radii))]
+    )
+
+    total_surface = np.zeros(num_points)
+    for q in range(params.quadrants_nb):
+        prev_alti = inner_mean.copy()
+        still_active = np.ones(num_points, dtype=bool)
+        for r in range(len(params.radii)):
+            denom = radii_ext[r + 2] - radii_ext[r]
+            slope_ok = (
+                2 * (section_means[q][r] - prev_alti) / denom
+            ) > params.slope
+            still_active &= slope_ok
+            total_surface += still_active * section_surfaces[r]
+            prev_alti = np.where(still_active, section_means[q][r], prev_alti)
+
+    result_flat = total_surface / params.quadrants_nb
+
+    # Reshape to 2D output grid. y_indices go south-to-north (0=south), but
+    # ASC format stores row 0 as the northernmost row, so flip vertically.
+    result_array = result_flat.reshape(out_height, out_width)[::-1]
+
+    bottom_left = (tile_info["x_range"][0], tile_info["y_range"][0])
+    output_info = {
+        "ncols": out_width,
+        "nrows": out_height,
+        "xllcorner": bottom_left[0],
+        "yllcorner": bottom_left[1],
+        "cellsize": output_carto_precision,
+        "nodata_value": -99999.00,
+    }
+
+    return result_array, output_info
+
+
+def _vectorized_section_mean(big_carto, point_rows, point_cols, row_deltas, col_deltas):
+    """Compute the mean altitude of a section for all points simultaneously.
+
+    For N output points and K offset positions in the section, builds an (N, K)
+    lookup table via numpy broadcasting and computes the mean across the K axis.
+
+    Args:
+        big_carto: The 3×3 tile altitude array.
+        point_rows: 1D array of row indices for all output points (N,).
+        point_cols: 1D array of col indices for all output points (N,).
+        row_deltas: 1D array of row offsets for this section (K,).
+        col_deltas: 1D array of col offsets for this section (K,).
+
+    Returns:
+        1D array of mean altitudes, shape (N,).
+    """
+    lookup_rows = point_rows[:, None] + row_deltas[None, :]  # (N, K)
+    lookup_cols = point_cols[:, None] + col_deltas[None, :]  # (N, K)
+    altitudes = big_carto[lookup_rows, lookup_cols]  # (N, K)
+    return np.mean(altitudes, axis=1)
+
+
 def create_carto(
     params: bassinVersantParameters,
     current_tile: str,
     output_carto_precision: int,
     ouptut_file: str,
     input_folder: str,
+    tile_index=None,
 ):
     """
     Crée une cartographie en calculant le bassin versant.
@@ -125,38 +278,13 @@ def create_carto(
         output_carto_precision (int): Précision de la cartographie de sortie.
         ouptut_file (str): Fichier de sortie de la cartographie.
         input_folder (str): Dossier d'entrée.
+        tile_index: Optional pre-built tile index for fast neighbor lookup.
     """
-    bottom_left = carto.get_bottom_left_corner(current_tile)
-    info = carto.get_carto_info(current_tile)
-    width = round(params.carto_precision * info["ncols"] / output_carto_precision)
-    height = round(params.carto_precision * info["nrows"] / output_carto_precision)
-
-    points = []
-    for y in range(height):
-        for x in range(width):
-            points.append(
-                (
-                    round(bottom_left[0] + x * output_carto_precision),
-                    round(bottom_left[1] + y * output_carto_precision),
-                )
-            )
-
-    res = calculate_bassin_versant_on_points(
-        points,
+    result_array, output_info = calculate_bassin_versant_vectorized(
         params,
         current_tile,
+        output_carto_precision,
         input_folder,
+        tile_index=tile_index,
     )
-
-    carto.save_list_to_carto(
-        res,
-        ouptut_file,
-        {
-            "ncols": width,
-            "nrows": height,
-            "xllcorner": bottom_left[0],
-            "yllcorner": bottom_left[1],
-            "cellsize": output_carto_precision,
-            "nodata_value": -99999.00,
-        },
-    )
+    carto.save_array_to_carto(result_array, ouptut_file, output_info)
