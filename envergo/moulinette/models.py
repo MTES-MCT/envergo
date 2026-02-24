@@ -12,9 +12,11 @@ from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
-from django.contrib.postgres.fields import ArrayField, DateRangeField
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
     CheckConstraint,
     Exists,
@@ -26,10 +28,11 @@ from django.db.models import (
 )
 from django.db.models import Value
 from django.db.models import Value as V
-from django.db.models.functions import Cast, Concat
+from django.db.models.functions import Cast, Coalesce, Concat
 from django.forms import BoundField, Form
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
@@ -623,6 +626,16 @@ class Regulation(models.Model):
         return self._evaluator
 
 
+class CriterionQuerySet(models.QuerySet):
+    """QuerySet for Criterion models with validity date filtering."""
+
+    def valid_at(self, date):
+        """Filter criteria valid at the given date."""
+        return self.filter(
+            Q(validity_range__contains=date) | Q(validity_range__isnull=True)
+        )
+
+
 class Criterion(models.Model):
     """A single criteria for a regulation (e.g. Loi sur l'eau > Zone humide)."""
 
@@ -702,6 +715,8 @@ class Criterion(models.Model):
         blank=True,
     )
 
+    objects = CriterionQuerySet.as_manager()
+
     class Meta:
         verbose_name = _("Criterion")
         verbose_name_plural = _("Criteria")
@@ -710,6 +725,42 @@ class Criterion(models.Model):
                 check=Q(validity_range__isempty=False),
                 name="validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début",
+            ),
+            # Prevent two criteria with the same identity from having
+            # overlapping validity periods.
+            #
+            # "perimeter" is part of the identity key because the same
+            # (evaluator, activation_map, regulation) combination legitimately
+            # exists for different perimeters (e.g. different SAGE zones).
+            # Coalesce(perimeter, 0) is needed because perimeter is nullable
+            # and PostgreSQL exclusion constraints treat NULL != NULL, so
+            # without it two NULL-perimeter rows would never conflict.
+            #
+            # Coalesce(validity_range, '(,)') treats a NULL validity_range as
+            # an infinite range so that an "always valid" criterion correctly
+            # conflicts with any other criterion sharing the same identity.
+            ExclusionConstraint(
+                name="criterion_no_overlapping_validity",
+                expressions=[
+                    ("evaluator", RangeOperators.EQUAL),
+                    ("activation_map", RangeOperators.EQUAL),
+                    ("regulation", RangeOperators.EQUAL),
+                    (
+                        Coalesce("perimeter", Value(0)),
+                        RangeOperators.EQUAL,
+                    ),
+                    (
+                        Coalesce(
+                            "validity_range",
+                            Value(DateRange(None, None, "[)")),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+                violation_error_message=(
+                    "Ce critère chevauche un critère existant avec le même "
+                    "évaluateur, la même carte d'activation et la même réglementation."
+                ),
             ),
         ]
 
@@ -945,24 +996,163 @@ class Perimeter(models.Model):
         return mark_safe(contact)
 
 
+class ConfigQuerySet(models.QuerySet):
+    """QuerySet for Config models with validity date filtering."""
+
+    def valid_at(self, date):
+        """Filter configs valid at the given date.
+
+        A config is valid if its validity_range contains the date,
+        or if validity_range is NULL (always valid).
+        """
+        return self.filter(
+            Q(validity_range__contains=date) | Q(validity_range__isnull=True)
+        )
+
+    def get_valid_config(self, department, date=None):
+        """Get the configuration for a department at a given date."""
+
+        if date is None:
+            date = timezone.now().date()
+        return self.filter(department=department).valid_at(date).first()
+
+    def get_by_date_slug(self, department, slug):
+        """Look up a config by department and date slug.
+
+        Slug format mirrors ``ConfigBase.date_slug``:
+        ``{start}_{end}`` with ISO dates, empty string for open bounds,
+        or ``"permanent"`` for NULL validity_range.
+
+        Returns None when the slug is malformed or no config matches.
+        """
+        qs = self.filter(department=department)
+        if slug == "permanent":
+            return qs.filter(validity_range__isnull=True).first()
+
+        parts = slug.split("_", 1)
+        if len(parts) != 2:
+            return None
+
+        lower_str, upper_str = parts
+        try:
+            if lower_str:
+                qs = qs.filter(validity_range__startswith=date.fromisoformat(lower_str))
+            else:
+                qs = qs.filter(validity_range__lower_inf=True)
+            if upper_str:
+                qs = qs.filter(validity_range__endswith=date.fromisoformat(upper_str))
+            else:
+                qs = qs.filter(validity_range__upper_inf=True)
+        except ValueError:
+            return None
+        return qs.first()
+
+
 class ConfigBase(models.Model):
-    department = models.OneToOneField(
+    department = models.ForeignKey(
         "geodata.Department",
         verbose_name=_("Department"),
         on_delete=models.PROTECT,
-        related_name="%(class)s",
+        related_name="%(class)ss",  # Plural: configamenagements, confighaies
     )
     is_activated = models.BooleanField(
         _("Is activated"),
-        help_text=_("Is the moulinette available for this department?"),
+        help_text="Le simulateur est-il activé pour ce département ?",
         default=False,
     )
+    validity_range = DateRangeField(
+        "Dates de validité",
+        blank=True,
+        null=True,
+    )
+
+    objects = ConfigQuerySet.as_manager()
 
     class Meta:
         abstract = True
+        constraints = [
+            CheckConstraint(
+                check=Q(validity_range__isempty=False),
+                name="%(class)s_validity_range_non_empty",
+                violation_error_message=_(
+                    "La date de fin de validité doit être supérieure à la date de début."
+                ),
+            ),
+            ExclusionConstraint(
+                name="%(class)s_no_overlapping_validity",
+                expressions=[
+                    ("department", RangeOperators.EQUAL),
+                    (
+                        Coalesce(
+                            "validity_range",
+                            Value(DateRange(None, None, "[)")),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+                violation_error_message=_(
+                    "Cette configuration chevauche une configuration "
+                    "existante pour ce département."
+                ),
+            ),
+        ]
+
+    @property
+    def date_slug(self):
+        """URL-friendly identifier derived from the validity_range bounds.
+
+        Format is ``{start}_{end}`` where each part is an ISO date or empty
+        when the bound is open.  The underscore separator avoids ambiguity
+        with the hyphens inside ISO dates.  Examples:
+        - ``2025-01-01_2026-01-01`` — both bounds set
+        - ``2025-01-01_``           — no upper bound
+        - ``_2026-01-01``           — no lower bound
+        - ``permanent``             — NULL validity_range (always valid)
+
+        The ExclusionConstraint on (department, validity_range) guarantees
+        uniqueness within a department.
+        """
+        if self.validity_range is None:
+            return "permanent"
+        lower = self.validity_range.lower
+        upper = self.validity_range.upper
+        lower_str = lower.isoformat() if lower else ""
+        upper_str = upper.isoformat() if upper else ""
+        return f"{lower_str}_{upper_str}"
+
+    def is_valid_at(self, at_date=None):
+        """Check whether this config's validity range covers the given date.
+
+        Instance-level counterpart of ConfigQuerySet.valid_at().
+        None validity_range means "always valid".
+        Range semantics are [lower, upper) — lower inclusive, upper exclusive.
+        """
+        if self.validity_range is None:
+            return True
+
+        if at_date is None:
+            at_date = date.today()
+
+        lower = self.validity_range.lower
+        upper = self.validity_range.upper
+        after_start = lower is None or at_date >= lower
+        before_end = upper is None or at_date < upper
+        return after_start and before_end
 
     def __str__(self):
-        return self.department.get_department_display()
+        dept_display = self.department.get_department_display()
+        if not self.validity_range:
+            return dept_display
+        lower = self.validity_range.lower
+        upper = self.validity_range.upper
+        fmt = "%d/%m/%y"
+        if lower and upper:
+            return f"{dept_display} {lower.strftime(fmt)} → {upper.strftime(fmt)}"
+        if lower:
+            return f"{dept_display} {lower.strftime(fmt)} → ajd"
+        if upper:
+            return f"{dept_display} → {upper.strftime(fmt)}"
+        return dept_display
 
 
 class ConfigAmenagement(ConfigBase):
@@ -1002,7 +1192,7 @@ class ConfigAmenagement(ConfigBase):
         "Espèces protégées > Paragraphe libre", default="", null=False, blank=True
     )
 
-    class Meta:
+    class Meta(ConfigBase.Meta):
         verbose_name = _("Config amenagement")
         verbose_name_plural = _("Configs amenagement")
 
@@ -1255,10 +1445,10 @@ class ConfigHaie(ConfigBase):
 
         return available_sources
 
-    class Meta:
+    class Meta(ConfigBase.Meta):
         verbose_name = "Config haie"
         verbose_name_plural = "Configs haie"
-        constraints = [
+        constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
                 check=Q(is_activated=False)
                 | Q(demarche_simplifiee_number__isnull=False),
@@ -1730,6 +1920,7 @@ class Moulinette(ABC):
         self._regulations = value
 
     def has_config(self):
+        """Check if a valid, active config exists for this department."""
         return bool(self.config)
 
     @abstractmethod
@@ -1797,14 +1988,12 @@ class Moulinette(ABC):
         be used in a prefetch_related call when we fetch the regulations.
         """
         criteria = (
-            Criterion.objects.order_by("weight")
+            Criterion.objects.valid_at(self.date)
+            .order_by("weight")
             .distinct("weight", "id")
             .prefetch_related("templates")
             .annotate(distance=Cast(0, IntegerField()))
             .order_by("weight", "id", "distance")
-            .filter(
-                Q(validity_range__contains=self.date) | Q(validity_range__isnull=True)
-            )
         )
 
         return criteria
@@ -2009,10 +2198,10 @@ class Moulinette(ABC):
             result[action_key].append(action)
         return dict(result)
 
-    @property
+    @cached_property
     def date(self):
         """Date for the simulation. Today by default."""
-        date_str = self.data.get("date", None)
+        date_str = self.data.get("date") or self.initial.get("date")
         if date_str:
             try:
                 return parser.isoparse(date_str).date()
@@ -2201,16 +2390,16 @@ class MoulinetteAmenagement(Moulinette):
             return None
 
         lng_lat = self.catalog["lng_lat"]
-        department = (
-            Department.objects.filter(geometry__contains=lng_lat)
-            .select_related("configamenagement")
-            .prefetch_related("configamenagement__templates")
-            .first()
-        )
+        department = Department.objects.filter(geometry__contains=lng_lat).first()
         return department
 
     def get_config(self):
-        return getattr(self.department, "configamenagement", None)
+        if not self.department:
+            return None
+        config = ConfigAmenagement.objects.prefetch_related(
+            "templates"
+        ).get_valid_config(self.department, self.date)
+        return config
 
     def get_debug_context(self):
         # In the debug page, we want to factorize the maps we display, so we order them
@@ -2272,7 +2461,9 @@ class MoulinetteHaie(Moulinette):
     triage_form_class = TriageFormHaie
 
     def get_config(self):
-        return getattr(self.department, "confighaie", None)
+        if not self.department:
+            return None
+        return ConfigHaie.objects.get_valid_config(self.department, self.date)
 
     @property
     def result(self):
@@ -2456,14 +2647,12 @@ class MoulinetteHaie(Moulinette):
         return data
 
     def get_department(self):
-
         dept = self.data.get("department", self.initial.get("department", None))
         if dept is None:
             return None
 
         qs = (
             Department.objects.defer("geometry")
-            .select_related("confighaie")
             .annotate(centroid=Centroid("geometry"))
             .filter(department=dept)
         )
