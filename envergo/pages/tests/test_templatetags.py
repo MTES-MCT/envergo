@@ -83,11 +83,12 @@ def test_urlize_html():
     assert 'href="https://exemple.com"' in result
     assert 'target="_blank"' in result
 
-    # Existing <a> with extra attributes (e.g. target="_blank"): strip all, re-urlize href
+    # Existing <a> with extra attributes (e.g. target="_blank"): sanitize, preserve link text
     message = 'voici un lien <a target="_blank" href="https://exemple.com">hello</a>.'
     result = urlize_html(message)
     assert 'href="https://exemple.com"' in result
     assert 'target="_blank"' in result
+    assert ">hello</a>" in result
 
     # Two existing <a> tags: both cleaned and re-urlized
     message = 'voici un lien <a href="www.exemple.fr">coucou</a> et un deuxième lien <a href="exemple.com">hello</a>.'  # noqa: E501
@@ -96,11 +97,12 @@ def test_urlize_html():
     assert "exemple.com" in result
     assert result.count("<a ") == 2
 
-    # Mixed <a> tag + other HTML (e.g. <strong>): <a> cleaned, <strong> escaped
+    # Mixed <a> tag + other HTML (e.g. <strong>): <a> cleaned, other tags stripped
     message = 'voici un lien <a href="https://exemple.com">https://exemple.com</a>. Et une autre <strong>balise</strong>'  # noqa: E501
     result = urlize_html(message)
     assert 'href="https://exemple.com"' in result
-    assert "&lt;strong&gt;balise&lt;/strong&gt;" in result
+    assert "<strong>" not in result
+    assert "balise" in result
 
     # UTF-8 characters: accented characters must not be converted to HTML entities
     message = "voici un lien https://exemple.com avec des accents éàü"
@@ -108,76 +110,72 @@ def test_urlize_html():
     assert "éàü" in result
     assert "&eacute;" not in result
 
-    # Existing <a> with bad formatting (e.g. <a    href="…" target = " _blank "): strip all, re-urlize href
+    # Existing <a> with bad formatting: sanitize, preserve link text, discard junk attributes
     message = 'voici un lien <a  tartiflette   href= "https://exemple.com" target = "_blank">hello</a>.'
     result = urlize_html(message)
     assert 'href="https://exemple.com"' in result
     assert 'target="_blank"' in result
     assert "tartiflette" not in result
+    assert ">hello</a>" in result
 
 
 def test_urlize_html_xss():
-    """Test that urlize_html escapes XSS vectors."""
+    """Test that urlize_html neutralizes XSS vectors.
 
-    # XSS: <script> tags must be escaped, not rendered
+    HTML tags are stripped (not escaped) so they cannot execute.
+    """
+
+    # XSS: <script> tags must be stripped
     message = "<script>alert('xss')</script>"
     result = urlize_html(message)
     assert "<script>" not in result
-    assert "&lt;script&gt;" in result
 
     # javascript: href must not produce a clickable link
     message = "<a href=\"javascript:alert('xss')\">click me</a>"
     result = urlize_html(message)
     assert "<a " not in result
 
-    # Multiline <script> must be escaped
+    # Multiline <script> must be stripped
     message = "<script>\nalert(1)\n</script>"
     result = urlize_html(message)
     assert "<script>" not in result
-    assert "&lt;script&gt;" in result
 
-    # <img> with onerror handler must be escaped
+    # <img> with onerror handler must be stripped
     message = "<img src=x onerror=alert(1)>"
     result = urlize_html(message)
     assert "<img" not in result
-    assert "&lt;img src=x onerror=alert(1)&gt;" == result
 
-    # <svg> with onload handler must be escaped
+    # <svg> with onload handler must be stripped
     message = "<svg onload=alert(1)>"
     result = urlize_html(message)
     assert "<svg" not in result
-    assert "&lt;svg onload=alert(1)&gt;" == result
 
-    # <iframe> must be escaped (URL inside may still be linkified)
+    # <iframe> must be stripped
     message = '<iframe src="https://evil.com"></iframe>'
     result = urlize_html(message)
     assert "<iframe" not in result
-    assert "&lt;iframe" in result
-    assert "&lt;/iframe&gt;" in result
 
-    # <div> with event handler must be escaped
+    # <div> with event handler must be stripped, text preserved
     message = '<div onmouseover="alert(1)">hover me</div>'
     result = urlize_html(message)
     assert "<div" not in result
-    assert "&lt;div" in result
+    assert "hover me" in result
 
-    # <style> tag must be escaped
+    # <style> tag must be stripped
     message = '<style>body{background:url("javascript:alert(1)")}</style>'
     result = urlize_html(message)
     assert "<style>" not in result
-    assert "&lt;style&gt;" in result
 
-    # Nested/broken tags must be escaped
+    # Nested/broken tags must be stripped
     message = "<scr<script>ipt>alert(1)</script>"
     result = urlize_html(message)
     assert "<script>" not in result
-    assert "&lt;script&gt;" in result
 
     # data: URI in <a> tag must not produce a clickable link
     message = '<a href="data:text/html,<script>alert(1)</script>">click</a>'
     result = urlize_html(message)
     assert "<a " not in result
-    assert "&lt;script&gt;" in result
+    assert "<script>" not in result
 
     # <a> with onclick handler — handler is stripped, only href re-urlized
     message = '<a href="https://exemple.com" onclick="alert(1)">click</a>'
@@ -201,7 +199,93 @@ def test_urlize_html_xss():
     result = urlize_html(message)
     assert 'href="https://exemple.com"' in result
     assert "<script>" not in result
-    assert "&lt;script&gt;" in result
+
+
+def test_urlize_html_strips_html_content():
+    """Test that HTML content from DS is stripped while preserving paragraph structure.
+
+    DS may send messages as HTML. Block-level boundaries (<p>, <br>, <div>…) are
+    converted to newlines so that the downstream |linebreaks filter recreates the
+    visual paragraph structure. All other tags are stripped.
+    """
+
+    # HTML paragraphs: closing </p> tags produce double newlines
+    message = "<p>First paragraph</p><p>Second paragraph</p>"
+    result = urlize_html(message)
+    assert "<p>" not in result
+    assert "First paragraph" in result
+    assert "Second paragraph" in result
+    assert "\n" in result
+
+    # <br> tags converted to single newlines (all variants)
+    message = "Line one<br>Line two<br/>Line three<br />Line four"
+    result = urlize_html(message)
+    assert "<br" not in result
+    assert "Line one\nLine two\nLine three\nLine four" == result
+
+    # Nested inline HTML: all tags stripped, text preserved
+    message = "<p><strong>Bold</strong> and <em>italic</em></p>"
+    result = urlize_html(message)
+    assert "<strong>" not in result
+    assert "<em>" not in result
+    assert "Bold and italic" in result
+
+    # HTML with URLs: tags stripped, URLs linkified
+    message = "<p>Visit https://example.com</p><p>Thanks</p>"
+    result = urlize_html(message)
+    assert 'href="https://example.com"' in result
+    assert "<p>" not in result
+    assert "Thanks" in result
+
+    # <a> inside HTML: link preserved with its text, surrounding tags stripped
+    message = '<p>Click <a href="https://example.com">here</a> for info</p>'
+    result = urlize_html(message)
+    assert 'href="https://example.com"' in result
+    assert ">here</a>" in result
+    assert "<p>" not in result
+
+    # <a> tag with link text different from URL: text is preserved
+    message = '<div><p>This content <a href="http://example.org">contains a url</a>.</p></div>'
+    result = urlize_html(message)
+    assert 'href="http://example.org"' in result
+    assert "contains a url" in result
+    assert ">http://example.org<" not in result
+
+    # <h1>–<h6>, <div>, <blockquote>, <li>, <tr> boundaries become newlines
+    message = "<h2>Title</h2><div>Content</div>"
+    result = urlize_html(message)
+    assert "<h2>" not in result
+    assert "<div>" not in result
+    assert "Title" in result
+    assert "Content" in result
+    assert "\n" in result
+
+    # HTML entities in URLs must be unescaped to avoid double-escaping.
+    # DS sends &amp; for & in HTML-encoded URLs.
+    message = (
+        "<div>Votre simulation :<br>"
+        "http://haie.local:8000/simulateur/?department=14"
+        "&amp;element=haie"
+        "&amp;numero_pacage=012345678<br><br></div>"
+    )
+    result = urlize_html(message)
+    assert "&amp;amp;" not in result
+    assert "&amp;element=haie" in result
+    assert "&amp;numero_pacage=012345678" in result
+
+    # Consecutive <br> tags must not produce excessive newlines that
+    # |linebreaks would turn into empty paragraphs.
+    message = (
+        "<div>Bonjour, <br /><br /></div>\n"
+        "<div>\n"
+        "  Cordialement, <br />\n"
+        "  <br /><br />\n"
+        "</div>"
+    )
+    result = urlize_html(message)
+    assert "\n\n\n" not in result
+    assert "Bonjour," in result
+    assert "Cordialement," in result
 
 
 def test_urlize_html_known_limitations():
@@ -230,18 +314,18 @@ def test_urlize_html_known_limitations():
     # The full address is NOT correctly linked (known limitation)
     assert 'href="mailto:o\'brien@example.com"' not in result
 
-    # mailto: <a> tag: the regex strips the tag, leaving "mailto:alice@example.com"
-    # as plain text. urlize does not re-linkify mailto: URIs.
+    # mailto: <a> tag is preserved (safe scheme), link text is kept
     message = '<a href="mailto:alice@example.com">write to us</a>'
     result = urlize_html(message)
-    assert "<a " not in result
-    assert "mailto:alice@example.com" in result
+    assert 'href="mailto:alice@example.com"' in result
+    assert "write to us" in result
 
-    # Pre-escaped HTML entities get double-escaped because urlize_html
-    # expects raw plain text, not pre-escaped HTML.
+    # HTML entities are unescaped before processing, then re-escaped by
+    # urlize's autoescape. No double-escaping.
     message = "foo &amp; bar"
     result = urlize_html(message)
-    assert "&amp;amp;" in result
+    assert "foo &amp; bar" in result
+    assert "&amp;amp;" not in result
 
 
 @pytest.mark.urls("config.urls_haie")
