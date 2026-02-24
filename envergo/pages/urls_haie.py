@@ -4,6 +4,7 @@ from django.urls import path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView, TemplateView
 
+from envergo.moulinette.views import ConfigHaieSettingsView
 from envergo.pages.models import HaieSitemap
 from envergo.pages.views import HomeHaieView, Outlinks
 
@@ -55,4 +56,14 @@ urlpatterns = [
         name="contact_us",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
+    path(
+        "parametrage/<str:department>/",
+        ConfigHaieSettingsView.as_view(),
+        name="confighaie_settings",
+    ),
+    path(
+        "parametrage/<str:department>/<str:date_slug>/",
+        ConfigHaieSettingsView.as_view(),
+        name="confighaie_detail",
+    ),
 ]

@@ -8,7 +8,11 @@ from django.core.management import call_command
 from django.utils.timezone import localtime
 
 from envergo.evaluations.models import Request
-from envergo.evaluations.tests.factories import RequestFactory, RequestFileFactory
+from envergo.evaluations.tests.factories import (
+    EvaluationFactory,
+    RequestFactory,
+    RequestFileFactory,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -42,6 +46,7 @@ def time_3h_ago():
 def test_new_files_admin_alert_with_new_requests(mock_notify):
     """When a request was just created, no alert is sent."""
     request = RequestFactory()
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request)
     call_command("new_files_admin_alert")
 
@@ -55,7 +60,21 @@ def test_new_files_admin_alert_with_new_file_lt_1hr_ago(
     """When a file was just uploaded, no alert is sent."""
 
     request = RequestFactory(created_at=time_3h_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_45min_ago)
+    call_command("new_files_admin_alert")
+
+    mock_notify.assert_not_called()
+
+
+@patch("envergo.evaluations.management.commands.new_files_admin_alert.notify")
+def test_new_files_admin_alert_without_evaluation_created(
+    mock_notify, time_3h_ago, time_1h30_ago
+):
+    """When a file was uploaded on a request that doesn't have evaluation yet, no alert is sent."""
+
+    request = RequestFactory(created_at=time_3h_ago)
+    RequestFileFactory(request=request, uploaded_at=time_1h30_ago)
     call_command("new_files_admin_alert")
 
     mock_notify.assert_not_called()
@@ -65,9 +84,10 @@ def test_new_files_admin_alert_with_new_file_lt_1hr_ago(
 def test_new_files_admin_alert_with_new_file_gt_1hr_ago(
     mock_notify, time_3h_ago, time_1h30_ago
 ):
-    """When a file was uploaded recently than 1hr, no alert is sent."""
+    """When a file was uploaded more than 1hr ago, an alert is sent."""
 
     request = RequestFactory(created_at=time_3h_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_1h30_ago)
     call_command("new_files_admin_alert")
 
@@ -79,6 +99,7 @@ def test_new_files_admin_alert_with_old_file(mock_notify, time_3h_ago):
     """When a file was uploaded a while ago, no alert is sent."""
 
     request = RequestFactory(created_at=time_3h_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_3h_ago)
     call_command("new_files_admin_alert")
 
@@ -88,6 +109,7 @@ def test_new_files_admin_alert_with_old_file(mock_notify, time_3h_ago):
 def test_new_files_user_alert_with_new_requests(mailoutbox):
     """When a request was just created, no alert is sent to user."""
     request = RequestFactory()
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request)
     call_command("new_files_user_alert")
 
@@ -100,6 +122,7 @@ def test_new_files_user_alert_with_new_file_lt_15min_ago(
     """When a file was just uploaded, no alert is sent."""
 
     request = RequestFactory(created_at=time_1h30_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_10min_ago)
     call_command("new_files_user_alert")
 
@@ -112,6 +135,7 @@ def test_new_files_user_alert_with_new_file_gt_15min_ago(
     """When a file was uploaded more than 15min ago, an alert is sent."""
 
     request = RequestFactory(created_at=time_1h30_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_20min_ago)
     call_command("new_files_user_alert")
 
@@ -125,6 +149,7 @@ def test_new_files_user_alert_with_new_file_gt_30min_ago(
     """File uploaded more than 30min ago, it's too late, no alert is sent."""
 
     request = RequestFactory(created_at=time_1h30_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_45min_ago)
     call_command("new_files_user_alert")
 
@@ -135,6 +160,7 @@ def test_new_files_user_alert_recipient(mailoutbox, time_1h30_ago, time_20min_ag
     """The mail is sent to the right recipients."""
 
     request = RequestFactory(user_type="instructor", created_at=time_1h30_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_20min_ago)
     call_command("new_files_user_alert")
 
@@ -157,6 +183,7 @@ def test_new_files_admin_alert(mock_notify, time_1h30_ago, time_3h_ago, user):
     """When a file was uploaded between 1 and 2 hours ago, and more than one hour after the request"""
 
     request = RequestFactory(created_at=time_3h_ago)
+    EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_1h30_ago)
 
     call_command("new_files_admin_alert")
@@ -172,6 +199,7 @@ def test_new_files_user_alert_with_new_file_from_admin(
     but it has been imported via admin, no alert is sent."""
 
     request = RequestFactory(created_at=time_3h_ago)
+    EvaluationFactory(request=request)
     file = RequestFileFactory(request=request, uploaded_at=time_1h30_ago)
     LogEntry.objects.create(
         action_time=time_1h30_ago,
@@ -195,6 +223,7 @@ def test_new_files_user_alert_with_new_file_from_admin(
 
     # if there is file both from admin and front, an alert is sent
     request = RequestFactory(created_at=time_3h_ago)
+    EvaluationFactory(request=request)
     file_2 = RequestFileFactory(request=request, uploaded_at=time_1h30_ago)
     RequestFileFactory(request=request, uploaded_at=time_1h30_ago)
     LogEntry.objects.create(

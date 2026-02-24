@@ -1,6 +1,6 @@
 import logging
 from datetime import date, timedelta
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
 
 import requests
 from django.conf import settings
@@ -9,6 +9,7 @@ from django.contrib.syndication.views import Feed
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import mark_safe
 from django.views.decorators.csrf import requires_csrf_token
@@ -18,9 +19,10 @@ from django.views.generic import FormView, ListView, TemplateView
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.analytics.utils import get_user_type, log_event
 from envergo.geodata.models import Department
-from envergo.moulinette.models import ConfigAmenagement
+from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
+from envergo.utils.tools import get_site_literal
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +36,20 @@ class HomeHaieView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        departments = (
-            Department.objects.defer("geometry").select_related("confighaie").all()
-        )
+
+        # List all departments for the select input
+        departments = Department.objects.defer("geometry").all()
         context["departments"] = departments
-        context["activated_departments"] = [
-            department
-            for department in departments
-            if department
-            and hasattr(department, "confighaie")
-            and department.confighaie.is_activated
-        ]
+
+        # Only show activated departments in the button list
+        configs = (
+            ConfigHaie.objects.valid_at(timezone.now().date())
+            .filter(is_activated=True)
+            .select_related("department")
+            .defer("department__geometry")
+            .order_by("department__department")
+        )
+        context["activated_configs"] = configs
         return context
 
     def post(self, request, *args, **kwargs):
@@ -52,17 +57,9 @@ class HomeHaieView(TemplateView):
         department_id = data.get("department")
         department = None
         if department_id:
-            department = (
-                Department.objects.select_related("confighaie")
-                .defer("geometry")
-                .get(id=department_id)
-            )
+            department = Department.objects.defer("geometry").get(id=department_id)
 
-        config = (
-            department.confighaie
-            if department and hasattr(department, "confighaie")
-            else None
-        )
+        config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         if config and config.is_activated:
             query_params = {"department": department.department}
@@ -207,13 +204,31 @@ class Outlinks(TemplateView):
         return context
 
     def check_links(self):
-        token = settings.MATOMO_SECURITY_TOKEN
-        if not token:
+        site_literal = get_site_literal(self.request.site)
+        if site_literal == "amenagement":
+            analytics_config = settings.ANALYTICS["AMENAGEMENT"]
+        elif site_literal == "haie":
+            analytics_config = settings.ANALYTICS["HAIE"]
+        else:
+            raise RuntimeError("Unknown site for outlinks")
+
+        if not analytics_config.get("SECURITY_TOKEN"):
             raise RuntimeError("No matomo token configured")
+
+        if not analytics_config.get("TRACKER_ENABLED"):
+            raise RuntimeError("Analytics tracker is not enabled")
+
+        if not analytics_config.get("TRACKER_URL"):
+            raise RuntimeError("No analytics tracker url configured")
 
         today = date.today()
         last_month = today - timedelta(days=30)
-        data_url = f"https://stats.data.gouv.fr/index.php?module=API&format=JSON&idSite=186&period=range&date={last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth={token}&filter_limit=100"  # noqa
+        data_url = urljoin(
+            analytics_config["TRACKER_URL"],
+            f"index.php?module=API&format=JSON&idSite={analytics_config["SITE_ID"]}&period=range&date="
+            f"{last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth="
+            f"{analytics_config["SECURITY_TOKEN"]}&filter_limit=100",
+        )
         data = requests.get(data_url).json()
 
         links = []
@@ -238,13 +253,23 @@ class AvailabilityInfo(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["configs_available"] = ConfigAmenagement.objects.filter(
-            is_activated=True
-        ).order_by("department")
+        context["configs_available"] = (
+            ConfigAmenagement.objects.filter(is_activated=True)
+            .valid_at(date.today())
+            .order_by("department")
+        )
 
-        context["configs_soon"] = ConfigAmenagement.objects.filter(
-            is_activated=False
-        ).order_by("department")
+        # Departments being set up: departments that have at least one inactive
+        # config but no currently valid active config (otherwise they'd already
+        # appear in configs_available).
+        active_department_ids = context["configs_available"].values_list(
+            "department_id", flat=True
+        )
+        context["configs_soon"] = (
+            Department.objects.filter(configamenagements__is_activated=False)
+            .exclude(pk__in=active_department_ids)
+            .distinct()
+        )
 
         return context
 

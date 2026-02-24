@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from psycopg.types.range import DateRange
+from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.geodata.conftest import bizous_town_center  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory

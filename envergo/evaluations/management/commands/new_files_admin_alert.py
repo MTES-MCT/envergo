@@ -1,17 +1,19 @@
 from datetime import timedelta
 from itertools import groupby
-from textwrap import dedent
 
 from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
 from django.db.models import F
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.timezone import localtime
 
 from envergo.evaluations.models import Request, RequestFile
 from envergo.utils.mattermost import notify
+from envergo.utils.tools import get_base_url
 
 
 def is_file_uploaded_from_admin(file, logs_from_admin):
@@ -23,7 +25,7 @@ def is_file_uploaded_from_admin(file, logs_from_admin):
 
 
 class Command(BaseCommand):
-    help = "Post a message when a an evalreq has a new file."
+    help = "Post a message when a an evalreq, that has already been converted into an evaluation, has a new file."
 
     def handle(self, *args, **options):
 
@@ -37,12 +39,13 @@ class Command(BaseCommand):
         one_hour_delta = timedelta(hours=1)
 
         files = (
-            RequestFile.objects.filter(uploaded_at__gte=two_hours_ago)
+            RequestFile.objects.filter(request__evaluation__isnull=False)
+            .filter(uploaded_at__gte=two_hours_ago)
             .filter(uploaded_at__lt=one_hr_ago)
             .annotate(upload_delta=F("uploaded_at") - F("request__created_at"))
             .filter(upload_delta__gte=one_hour_delta)
             .order_by("request")
-            .select_related("request")
+            .select_related("request__evaluation")
         )
         groups = groupby(files, key=lambda file: file.request)
 
@@ -61,18 +64,22 @@ class Command(BaseCommand):
             ):
                 continue
 
-            url = reverse("admin:evaluations_request_change", args=[request.id])
-            message = dedent(
-                f"""\
-                **Une [demande d'avis](https://envergo.beta.gouv.fr{url}) a été mise à jour.**
+            site = Site.objects.get(domain=settings.ENVERGO_AMENAGEMENT_DOMAIN)
+            base_url = get_base_url(site.domain)
 
-                Adresse : {request.address}
+            url = f"{base_url}{reverse("admin:evaluations_request_change", args=[request.id])}"
+            eval_url = f"{base_url}{reverse(
+                "admin:evaluations_evaluation_change", args=[request.evaluation.uid]
+            )}"
 
-                Date de la demande initiale : {request.created_at:%d/%m/%Y}
-
-                {len(list(files))} nouveaux fichiers ont été ajoutés.
-
-                ping {", ".join(settings.OPS_MATTERMOST_HANDLERS)}
-                """
+            message = render_to_string(
+                "evaluations/edit_eval_request_notification.txt",
+                context={
+                    "url": url,
+                    "eval_url": eval_url,
+                    "request": request,
+                    "files_number": len(list(files)),
+                    "ops": ", ".join(settings.OPS_MATTERMOST_HANDLERS),
+                },
             )
             notify(message, "amenagement")

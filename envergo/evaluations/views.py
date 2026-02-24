@@ -1,4 +1,5 @@
 import logging
+import uuid
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -360,6 +361,25 @@ class WizardStepMixin:
         return context
 
 
+class WizardStep3Mixin:
+    """Mixin for step 3 of the request evaluation wizard.
+
+    This step handles file uploads and deletions via ajax.
+    """
+
+    def get_queryset(self):
+        raw_key = self.request.GET.get("clef")
+        if not raw_key:
+            return Request.objects.none()
+
+        try:
+            key = uuid.UUID(raw_key)
+        except ValueError:
+            return Request.objects.none()
+
+        return super().get_queryset().filter(obfuscation_key=key)
+
+
 class RequestEvalWizardHome(TemplateView):
     template_name = "evaluations/eval_request_wizard_home.html"
 
@@ -449,20 +469,30 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
         request = form.save()
         self.reset_data()
-        success_url = reverse("request_eval_wizard_step_3", args=[request.reference])
-        return HttpResponseRedirect(success_url)
+        return HttpResponseRedirect(request.upload_files_url)
 
     def request_form_invalid(self, form):
         return HttpResponseRedirect(reverse("request_eval_wizard_reset"))
 
 
-class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
+class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
     template_name = "evaluations/eval_request_wizard_files.html"
     model = Request
     form_class = WizardFilesForm
     slug_field = "reference"
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return render(
+                request,
+                "evaluations/eval_request_wizard_files_404.html",
+                context={"reference": self.kwargs["reference"]},
+                status=404,
+            )
 
     def get_success_url(self):
         url = reverse("request_success", args=[self.object.reference])
@@ -539,7 +569,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
+class RequestEvalWizardStep3Upload(WizardStep3Mixin, WizardStepMixin, UpdateView):
     """Handle ajax file uploads and deletions."""
 
     model = Request
@@ -547,6 +577,15 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return JsonResponse(
+                {"error": "Cette demande d'avis n'existe pas."},
+                status=404,
+            )
 
     def form_valid(self, form):
         """This is called when a file is uploaded with dropzone."""
@@ -598,6 +637,12 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             )
 
     def form_invalid(self, form):
+        if form.errors and "additional_files" in form.errors:
+            return JsonResponse(
+                {"error": "\n".join(form.errors["additional_files"])},
+                status=400,
+            )
+
         return JsonResponse(
             {"error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."},
             status=400,

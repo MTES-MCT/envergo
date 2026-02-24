@@ -49,17 +49,18 @@ html.saisie {
 }
 
 .hedge {
-  stroke-width: 6px;
   filter: drop-shadow(white 1px 1px 0) drop-shadow(white -1px 1px 0)
     drop-shadow(white 1px -1px 0) drop-shadow(white -1px -1px 0);
 
   &.to-remove {
+    stroke-width: 6px;
     stroke: #f00;
     stroke-dasharray: 12 10;
     stroke-linecap: square;
   }
 
   &.to-plant {
+    stroke-width: 10px;
     stroke: #0f0;
   }
 }
@@ -183,7 +184,7 @@ div#app {
     .hedge.to-plant {
       &:hover,
       &.hovered {
-        stroke-width: 8px;
+        stroke-width: 12px;
       }
     }
 
@@ -1120,5 +1121,12 @@ button.hide-expanded[aria-expanded="true"] {
         var(--border-contrast-grey),
         var(--border-contrast-grey)
       );
+  }
+}
+
+/* Density buffer */
+.demo-hedge-density-buffer {
+  thead th {
+    text-align: left;
   }
 }

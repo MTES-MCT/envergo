@@ -12,6 +12,7 @@ from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.fields import MultipleFileField, NoIdnEmailField
+from envergo.utils.validators import validate_mime
 
 
 class EvaluationFormMixin(forms.Form):
@@ -133,11 +134,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             # We therefore add the department number
             data["address"] = f"{address} ({department_input})"
 
-        department = (
-            Department.objects.filter(department=department_input)
-            .select_related("configamenagement")
-            .first()
-        )
+        department = Department.objects.filter(department=department_input).first()
         if department and not department.is_amenagement_activated():
             self.add_error(
                 "department",
@@ -247,6 +244,15 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         return cleaned_data
 
 
+ALLOWED_MIME_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "application/pdf",
+    "application/zip",
+}
+
+
 class WizardFilesForm(forms.ModelForm):
     additional_files = MultipleFileField(
         label=_("Additional files you might deem useful for the evaluation"),
@@ -257,6 +263,18 @@ class WizardFilesForm(forms.ModelForm):
             Maximum {settings.MAX_EVALREQ_FILESIZE} Mo par fichier. <br>
         """,
     )
+
+    def clean_additional_files(self):
+        files = self.cleaned_data.get("additional_files") or []
+
+        for f in files:
+            validate_mime(f, ALLOWED_MIME_TYPES)
+            if f.size > settings.MAX_EVALREQ_FILESIZE * 1024 * 1024:
+                raise ValidationError(
+                    f"Ce fichier est trop volumineux({f.size} Mo). Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                )
+
+        return files
 
     class Meta:
         model = Request

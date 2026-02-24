@@ -21,19 +21,18 @@
   </ul>
 
   {{ block.super }}
-
-  {% if show_make_eval_button %}
-    <div class="submit-row">
+  <div class="submit-row">
+    {% if show_make_eval_button %}
       <input type="submit"
              value="Créer un avis réglementaire"
              name="_make-evaluation">
-      <input type="button"
-             id="copy-upload-url-btn"
-             class="button"
-             style="padding: 10px 15px"
-             value="Copier le lien de l'étape 3 de la demande">
-    </div>
-  {% endif %}
+    {% endif %}
+    <input type="button"
+           id="copy-upload-url-btn"
+           class="button"
+           style="padding: 10px 15px"
+           value="Copier le lien de l'étape 3 de la demande">
+  </div>
 {% endblock %}
 
 {% block extrahead %}

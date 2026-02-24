@@ -6,7 +6,6 @@ from os.path import splitext
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
@@ -24,7 +23,6 @@ from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
-from envergo.geodata.models import Department
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.utils.markdown import markdown_to_html
 from envergo.utils.tools import get_base_url
@@ -327,16 +325,6 @@ class Evaluation(models.Model):
         """Return the evaluation params as provided in the moulinette url."""
         return MoulinetteUrl(self.moulinette_url).params
 
-    def get_moulinette_config(self):
-        params = self.moulinette_params
-        if "lng" not in params or "lat" not in params:
-            return None
-
-        lng, lat = params["lng"], params["lat"]
-        coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        department = Department.objects.filter(geometry__contains=coords).first()
-        return department.configamenagement if department else None
-
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
         from envergo.moulinette.models import MoulinetteAmenagement
@@ -594,7 +582,7 @@ class EvaluationEmail:
     def get_bcc_recipients(self):
         evaluation = self.evaluation
         moulinette = self.moulinette
-        config = evaluation.get_moulinette_config()
+        config = moulinette.get_config()
 
         bcc_recipients = []
 
@@ -726,6 +714,11 @@ class Request(models.Model):
     send_eval_to_project_owner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
+    obfuscation_key = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        verbose_name="Clé d'obfuscation",
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -795,6 +788,18 @@ class Request(models.Model):
             send_eval_to_project_owner=self.send_eval_to_project_owner,
         )
         return evaluation
+
+    @property
+    def upload_files_url(self):
+        """return the obfuscated url to the upload files UI"""
+        url = reverse("request_eval_wizard_step_3", args=[self.reference])
+        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+
+    @property
+    def upload_files_api_url(self):
+        """return the obfuscated url to the upload files API"""
+        url = reverse("request_eval_wizard_step_3_upload", args=[self.reference])
+        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
 
 
 def request_file_format(instance, filename):

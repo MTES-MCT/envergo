@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from datetime import date
 from itertools import groupby
 from operator import attrgetter
 from urllib.parse import urlencode
@@ -513,7 +514,7 @@ class BaseMoulinetteResult(FormView):
         # Triage is required and triage form is invalid
         if triage_form and not triage_form.is_valid():
             if "department" in triage_form.errors:
-                redirect_url = f"{reverse("home")}#simulateur"
+                redirect_url = f"{reverse('home')}#simulateur"
             else:
                 redirect_url = reverse("triage")
                 redirect_url = update_qs(redirect_url, request.GET)
@@ -651,9 +652,13 @@ class Triage(MoulinetteMixin, FormView):
     template_name = "haie/moulinette/triage.html"
 
     def get(self, request, *args, **kwargs):
-        """This page should always have a department to be displayed."""
+        """This page requires a valid department to be displayed."""
 
         if not self.moulinette.department:
+            return HttpResponseRedirect(f"{reverse('home')}#simulateur")
+
+        config = self.moulinette.get_config()
+        if not config:
             return HttpResponseRedirect(f"{reverse("home")}#simulateur")
 
         event_params = {
@@ -712,20 +717,30 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     template_name = "haie/moulinette/confighaie_settings.html"
 
     def get_object(self, queryset=None):
-        """Return Config haie related to department number"""
+        """Return ConfigHaie for the department, optionally by date slug.
+
+        When a ``date_slug`` kwarg is present the lookup targets a specific
+        config (by its validity_range lower bound). Otherwise the currently
+        valid config is returned — same behaviour as before.
+        """
 
         if self.department is None:
-            self.department = self.get_department(self.kwargs)
+            self.department = self.get_departement()
 
-        queryset = self.queryset.filter(department=self.department)
+        date_slug = self.kwargs.get("date_slug")
+        if date_slug:
+            obj = self.queryset.get_by_date_slug(self.department, date_slug)
+        else:
+            obj = (
+                self.queryset.filter(department=self.department)
+                .valid_at(date.today())
+                .first()
+            )
 
-        try:
-            # Get the single item from the filtered queryset
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
+        if obj is None:
             raise Http404(
                 _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
+                % {"verbose_name": self.queryset.model._meta.verbose_name}
             )
         return obj
 
@@ -758,6 +773,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
+            "sites_inscrits_haie",
+            "sites_classes_haie",
         ]
         regulation_list = Regulation.objects.filter(
             regulation__in=MAPS_REGULATION_LIST
