@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.50.1",
-    "@types/node": "^22.13.1",
+    "@types/node": "^24.6.2",
     "autoprefixer": "^10.4.20",
     "cssnano": "^7.0.6",
     "gulp": "^5.0.0",
