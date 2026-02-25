@@ -2,6 +2,7 @@ from django import forms
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
+    TO_ADD,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -18,7 +19,7 @@ BLACK = "#000000"
 
 class SageRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Règlement de SAGE"
-    ACTIONS_TO_TAKE_MATRIX = {"interdit": ["interdit_sage"]}
+    ACTIONS_TO_TAKE_MATRIX = {"interdit": {TO_ADD: {"interdit_sage"}}}
 
 
 class ImpactZHSettings(forms.Form):
@@ -79,7 +80,7 @@ class ImpactZoneHumide(
         "non_soumis_dehors": RESULTS.non_soumis,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": ["etude_zh"]}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
