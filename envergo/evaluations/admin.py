@@ -513,7 +513,7 @@ class EvaluationAdmin(admin.ModelAdmin):
         return format_html(
             """
         <details>
-            <summary>Afficher le JSON</summary>
+            <summary>Déployer</summary>
             <pre>{}</pre>
         </details>
     """,
