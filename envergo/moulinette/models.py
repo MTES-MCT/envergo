@@ -779,7 +779,10 @@ class Criterion(models.Model):
 
     @property
     def unique_slug(self):
-        return f"{self.regulation.slug}__{self.slug}"
+        unique_slug = f"{self.regulation.slug}__{self.slug}"
+        if self.perimeter:
+            unique_slug += f"__{self.perimeter.id}"
+        return unique_slug
 
     def evaluate(self, moulinette, distance):
         """Initialize and run the actual evaluator."""

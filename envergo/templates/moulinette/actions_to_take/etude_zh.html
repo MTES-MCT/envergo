@@ -1,3 +1,4 @@
+{% load utils %}
 {% load evaluations %}
 {% load humanize %}
 
@@ -13,8 +14,8 @@
 </p>
 <p>
   {% if moulinette.sage.interdiction_impact_zh.result == 'action_requise' %}
-    {% get_min_threshold moulinette.sage "interdiction_impact_zh" as sage_threshold %}
-    Si cette surface dépasse {{ sage_threshold|intcomma }} m²,
+    {% get_from_evaluator_settings moulinette.sage "interdiction_impact_zh" "threshold" as sage_thresholds %}
+    Si cette surface dépasse {{ sage_thresholds|min_numeric|floatformat:0|intcomma }} m²,
     le projet est susceptible d'être interdit par le règlement de SAGE.
     <a title="Voir le détail de la réglementation « Règlement de SAGE »"
        href="#regulation_sage"
@@ -22,13 +23,13 @@
   {% endif %}
 
 </p>
-<p>
-  {% if moulinette.natura2000.zone_humide.result == 'action_requise' %}
-    {% get_min_threshold moulinette.natura2000 "zone_humide" as n2000_threshold %}
-    Si cette surface dépasse {{ n2000_threshold|intcomma }} m², le
+{% if moulinette.natura2000.zone_humide.result == 'action_requise' %}
+  <p>
+    {% get_from_evaluator_settings moulinette.natura2000 "zone_humide" "threshold" as n2000_thresholds %}
+    Si cette surface dépasse {{ n2000_thresholds|min_numeric|floatformat:0|intcomma }} m², le
     projet est soumis à Natura 2000.
     <a title="Voir le détail de la réglementation « Natura 2000 »"
        href="#criterion-natura2000__zone_humide"
        class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
-  {% endif %}
-</p>
+  </p>
+{% endif %}

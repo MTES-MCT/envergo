@@ -28,8 +28,8 @@ def gauge_angle(p):
 
 
 @register.simple_tag
-def get_min_threshold(regulation, criterion_slug):
-    """Returns the minimum threshold from evaluator settings for a given criterion.
+def get_from_evaluator_settings(regulation, criterion_slug, setting_name):
+    """Returns the values of a given setting from evaluator settings for a given criterion.
 
     This method is useful when there are multiple instances of the same criterion in a regulation. e.g. two SAGE
     """
@@ -44,7 +44,9 @@ def get_min_threshold(regulation, criterion_slug):
         for criterion in regulation.__dict__["_prefetched_objects_cache"]["criteria"]
         if criterion.slug == criterion_slug
     ]
-    thresholds = [
-        criterion.evaluator_settings.get("threshold", 0) for criterion in criteria
+    values = [
+        criterion.evaluator_settings[setting_name]
+        for criterion in criteria
+        if setting_name in criterion.evaluator_settings
     ]
-    return min(thresholds) if thresholds else 0
+    return values
