@@ -392,7 +392,7 @@ def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
 def test_moulinette_returns_actions_to_take(moulinette_data):
     ConfigAmenagementFactory()
     ActionToTakeFactory(slug="mention_arrete_lse")
-    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
+    ActionToTakeFactory(slug="etude_zh", target="petitioner")
     moulinette = MoulinetteAmenagement(moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()

@@ -17,7 +17,6 @@ from envergo.evaluations.tests.factories import (
     VersionFactory,
 )
 from envergo.geodata.conftest import loire_atlantique_department  # noqa
-from envergo.moulinette.models import ActionToTake
 from envergo.moulinette.tests.factories import (
     ActionToTakeFactory,
     ConfigAmenagementFactory,
@@ -692,11 +691,12 @@ def test_admin_can_view_unpublished_content(admin_client):
 def test_actions_to_take_are_displayed_in_evaluations(mock_actions_to_take, client):
     # GIVEN an evaluation with display_actions_to_take set to True
     # and ActionToTake records exist in the DB
-    ActionToTakeFactory(slug="mention_arrete_lse")
-    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
+    actions = [
+        ActionToTakeFactory(slug="mention_arrete_lse"),
+        ActionToTakeFactory(slug="etude_zh", target="petitioner"),
+    ]
     eval = EvaluationFactory(display_actions_to_take=True)
     url = eval.get_absolute_url()
-    actions = ActionToTake.objects.all()
     actions_dict = defaultdict(list)
     for action in actions:
         action_key = action.type if action.type == "pc" else action.target
