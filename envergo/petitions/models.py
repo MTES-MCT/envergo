@@ -7,7 +7,6 @@ from dateutil import parser
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
 from django.db.models import Q
 from django.http import QueryDict
@@ -29,6 +28,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
+from envergo.utils.models import ResultSnapshotBase
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -765,23 +765,22 @@ class LatestMessagerieAccess(models.Model):
         ]
 
 
-class ResultSnapshot(models.Model):
+class ResultSnapshot(ResultSnapshotBase):
+    """Snapshot of moulinette results for a PetitionProject."""
+
     project = models.ForeignKey(
         PetitionProject,
         on_delete=models.CASCADE,
         related_name="result_snapshots",
         verbose_name="Projet",
     )
-    payload = models.JSONField(encoder=DjangoJSONEncoder)
-
-    moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
-
-    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     @classmethod
     def create_for_project(cls, project):
+        """Create a snapshot for a PetitionProject."""
         moulinette = project.get_moulinette()
         payload = moulinette.summary()
+        # Convert HedgeData object to its UUID for JSON serialization
         payload["haies"] = payload["haies"].id
         return cls.objects.create(
             project=project,
