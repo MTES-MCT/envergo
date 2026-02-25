@@ -74,7 +74,7 @@ class ZoneHumide(
         "non_concerne": RESULTS.non_concerne,
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh_n2000"}}}
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.

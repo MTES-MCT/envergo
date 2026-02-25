@@ -5,6 +5,7 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ActionToTakeFactory,
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
@@ -390,13 +391,15 @@ def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
 @pytest.mark.parametrize("footprint", [700])
 def test_moulinette_returns_actions_to_take(moulinette_data):
     ConfigAmenagementFactory()
+    ActionToTakeFactory(slug="mention_arrete_lse")
+    ActionToTakeFactory(slug="etude_zh", target="petitioner")
     moulinette = MoulinetteAmenagement(moulinette_data)
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
     assert moulinette.loi_sur_leau.actions_to_take == {"to_add": {"mention_arrete_lse"}}
     assert moulinette.loi_sur_leau.zone_humide.actions_to_take == {
-        "to_add": {"etude_zh_lse"}
+        "to_add": {"etude_zh"}
     }
     actions_to_take_flatten = {
         target: [action.slug for action in actions_list]
@@ -404,5 +407,5 @@ def test_moulinette_returns_actions_to_take(moulinette_data):
     }
     assert actions_to_take_flatten == {
         "instructor": ["mention_arrete_lse"],
-        "petitioner": ["etude_zh_lse"],
+        "petitioner": ["etude_zh"],
     }
