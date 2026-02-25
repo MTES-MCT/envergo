@@ -115,9 +115,14 @@
     let statisticsContainer = document.getElementById("statistics-container");
     let baseUrl = "{% url 'input_hedges' department=request.GET.department|default:'' mode='removal' %}";
     let hedgeId = hedgeIdField.value;
+    let iframeParams = new URLSearchParams();
+    {% if is_alternative %}iframeParams.set("alternative", "true");{% endif %}
+    let dateParam = new URLSearchParams(window.location.search).get("date");
+    if (dateParam) iframeParams.set("date", dateParam);
+    let iframeQuery = iframeParams.size ? "?" + iframeParams.toString() : "";
     let iframeUrl = baseUrl;
     if (hedgeId) {
-      iframeUrl += hedgeId + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
+      iframeUrl += hedgeId + "/" + iframeQuery;
     }
     let redirectUrl = null;
 
@@ -146,7 +151,7 @@
       }
 
       hedgeIdField.value = data.input_id;
-      let iframeUrl = baseUrl + data.input_id + "/"{% if is_alternative %} + "?alternative=True" {% endif %};
+      let iframeUrl = baseUrl + data.input_id + "/" + iframeQuery;
       this.iframeUrl = iframeUrl;
     };
 

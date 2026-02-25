@@ -1,6 +1,6 @@
 {% extends 'haie/base.html' %}
 
-{% load utils %}
+{% load moulinette utils %}
 
 {% block title %}
   Paramétrage {{ department }}
@@ -15,6 +15,13 @@
 
       <h2>Configuration</h2>
 
+      {% with vr=object.validity_range|display_validity_range %}
+        {% if vr %}
+          <p class="fr-mb-1w">
+            <strong>Validité de la configuration :</strong> {{ vr }}
+          </p>
+        {% endif %}
+      {% endwith %}
       <p class="fr-mb-1w">
         <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
       </p>
@@ -40,7 +47,7 @@
                     <strong>{{ map.name }}</strong>
                   </p>
                   <p class="fr-text--sm fr-mb-1w">
-                    <strong>Description :</strong> {{ map.description|safe|linebreaksbr|urlize_html }}
+                    <strong>Description :</strong> {{ map.description|safe|urlize_html|linebreaksbr }}
                   </p>
                   {% if map.file %}
                     <div class="fr-mb-1w">
