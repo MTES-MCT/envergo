@@ -14,7 +14,13 @@ from requests import post
 
 from config.celery_app import app
 from envergo.confs.utils import get_setting
-from envergo.evaluations.models import USER_TYPES, Evaluation, RecipientStatus, Request
+from envergo.evaluations.models import (
+    USER_TYPES,
+    Evaluation,
+    EvaluationSnapshot,
+    RecipientStatus,
+    Request,
+)
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_base_url
 
@@ -177,7 +183,15 @@ def post_evaluation_to_automation(evaluation_uid):
     webhook_url = settings.MAKE_COM_EVALUATION_EDITION_WEBHOOK
     evaluation = Evaluation.objects.get(uid=evaluation_uid)
     logger.info(f"Sending Evaluation to make.com {evaluation.reference}")
-    post_a_model_to_automation(evaluation, webhook_url)
+    extra_data = {}
+    snapshot = (
+        EvaluationSnapshot.objects.filter(evaluation=evaluation)
+        .order_by("-created_at")
+        .first()
+    )
+    if snapshot:
+        extra_data["snapshot"] = snapshot.payload
+    post_a_model_to_automation(evaluation, webhook_url, **extra_data)
 
 
 def post_a_model_to_automation(model, webhook_url, **extra_data):
