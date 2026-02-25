@@ -1,13 +1,13 @@
 import random
 
 import factory
-from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.contrib.gis.geos import LineString, MultiLineString, MultiPolygon, Polygon
 from factory import Faker as factory_Faker
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from envergo.geodata.models import Department, Map, Zone
+from envergo.geodata.models import MAP_TYPES, Department, Line, Map, Zone
 
 # This is a rough pentagon that I manually drew on geoportail and that contains
 # France's mainland.
@@ -99,6 +99,18 @@ france_multipolygon = MultiPolygon([france_polygon])
 loire_atlantique_multipolygon = MultiPolygon([loire_atlantique_polygon])
 herault_multipolygon = MultiPolygon([herault_polygon])
 
+lines = LineString(
+    [
+        (3.549842492004394, 49.33552931554917),
+        (3.5300156029663086, 49.3152226495269),
+        (3.5619017037353515, 49.31217312946501),
+        (3.584561005493163, 49.32162882442222),
+        (3.5807415398559566, 49.329488538022105),
+        (3.5576530846557617, 49.33754274332614),
+    ]
+)
+map_lines = MultiLineString([lines])
+
 
 class FuzzyPolygon(fuzzy.BaseFuzzyAttribute):
     """Yields random polygon"""
@@ -152,6 +164,14 @@ class MapFactory(DjangoModelFactory):
         factory_related_name="map",
         size=1,
     )
+
+
+class LineFactory(DjangoModelFactory):
+    class Meta:
+        model = Line
+
+    map = factory.SubFactory(MapFactory, map_type=MAP_TYPES.haies)
+    geometry = map_lines
 
 
 class ZoneFactory(DjangoModelFactory):

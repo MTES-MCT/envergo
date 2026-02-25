@@ -408,7 +408,7 @@ class EspecesProtegeesNormandie(
         density_exploitation = self.get_exploitation_density(
             catalog.get("numero_pacage")
         )
-        density_5000 = haies.density.get("density_5000")
+        density_5000 = haies.density.get("around_centroid").get("density_5000")
         if density_exploitation:
             # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
             # We then pick a coefficient corresponding to the Normandie average : 1
