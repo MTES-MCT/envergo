@@ -269,12 +269,14 @@ class PetitionProject(models.Model):
             return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
         def get_latest_petitioner_msg():
-            emails = [instructeur["email"] for instructeur in dossier["instructeurs"]]
+            parsed_dossier = Dossier.from_dict(dossier)
             dates = sorted(
                 [
-                    datetime.fromisoformat(msg["createdAt"])
-                    for msg in dossier["messages"]
-                    if msg["email"] in emails
+                    msg.createdAt
+                    for msg in parsed_dossier.messages
+                    if msg.email not in parsed_dossier.instructor_emails
+                    and msg.email
+                    != settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"]
                 ],
                 reverse=True,
             )
@@ -374,7 +376,7 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
-        if "instructeurs" in dossier and "messages" in dossier:
+        if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
 
         self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
@@ -464,7 +466,7 @@ class PetitionProject(models.Model):
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 
-    @cached_property
+    @property
     def has_unread_messages(self):
         """Check if the current user has received unread messages.
 

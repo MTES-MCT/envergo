@@ -105,7 +105,7 @@
                                 role="tooltip">Lecture seule</span>
                         {% endif %}
                       </div>
-                      <div>{{ project.prefetched_dossier.date_depot|date:"SHORT_DATE_FORMAT" }}</div>
+                      <div>{{ project.prefetched_dossier.dateDepot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
                     <td>
                       <div>{% stage_badge project.stage %}</div>
