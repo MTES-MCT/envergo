@@ -5,7 +5,7 @@ import pytest
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import Criterion, MoulinetteHaie
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.moulinette.tests.utils import make_haie_data, setup_conditionnalite_pac
+from envergo.moulinette.tests.utils import make_moulinette_haie_data, setup_conditionnalite_pac
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,7 @@ def test_conditionnalite_pac_only_for_agri_pac():
         "autre",
     ]:
         for reimplantation_choice in ["remplacement", "replantation", "non"]:
-            moulinette_data = make_haie_data(
+            moulinette_data = make_moulinette_haie_data(
                 hedges=hedges,
                 motif=motif_choice,
                 reimplantation=reimplantation_choice,
@@ -49,7 +49,7 @@ def test_bcae8_impossible_case():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         localisation_pac="oui",
         lineaire_total=100,
@@ -64,7 +64,7 @@ def test_bcae8_not_activated(herault_map):  # noqa
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         localisation_pac="oui",
@@ -95,7 +95,7 @@ def test_bcae8_small_dispense_petit():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         localisation_pac="oui",
@@ -121,7 +121,7 @@ def test_bcae8_small_dispense_petit_2():
             HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False}),
         ]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         localisation_pac="oui",
@@ -145,7 +145,7 @@ def test_bcae8_small_interdit_transfert_parcelles():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         reimplantation="non",
@@ -168,7 +168,7 @@ def test_bcae8_small_interdit_amelioration_culture():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         reimplantation="non",
@@ -191,7 +191,7 @@ def test_bcae8_small_soumis_chemin_acces():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="chemin_acces",
         reimplantation="non",
@@ -210,7 +210,7 @@ def test_bcae8_small_interdit_chemin_acces():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=11, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="chemin_acces",
         reimplantation="non",
@@ -232,7 +232,7 @@ def test_bcae8_multi_chemin_acces():
             for length in [9, 8, 7, 6, 5, 4, 3, 2, 1]
         ]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="chemin_acces",
         reimplantation="non",
@@ -251,7 +251,7 @@ def test_bcae8_small_interdit_securite():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="securite",
         reimplantation="non",
@@ -271,7 +271,7 @@ def test_bcae8_small_soumis_amenagement():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amenagement",
         reimplantation="non",
@@ -291,7 +291,7 @@ def test_bcae8_small_interdit_amenagement():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amenagement",
         reimplantation="non",
@@ -311,7 +311,7 @@ def test_bcae8_small_interdit_embellissement():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="embellissement",
         reimplantation="non",
@@ -334,7 +334,7 @@ def test_bcae8_big_soumis_remplacement():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         localisation_pac="oui",
@@ -357,7 +357,7 @@ def test_bcae8_big_soumis_transfer_parcelles():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         reimplantation="replantation",
@@ -383,7 +383,7 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         reimplantation="replantation",
@@ -410,7 +410,7 @@ def test_bcae8_big_interdit_amelioration_culture():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
         reimplantation="replantation",
@@ -433,7 +433,7 @@ def test_bcae8_big_interdit_embellissement():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="embellissement",
         reimplantation="replantation",
@@ -451,7 +451,7 @@ def test_bcae8_big_soumis_fosse():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="autre",
         reimplantation="replantation",
@@ -474,7 +474,7 @@ def test_bcae8_big_soumis_incendie():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="autre",
         reimplantation="replantation",
@@ -497,7 +497,7 @@ def test_bcae8_big_soumis_maladie():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="autre",
         reimplantation="replantation",
@@ -520,7 +520,7 @@ def test_bcae8_big_interdit_autre():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="autre",
         reimplantation="replantation",
@@ -545,7 +545,7 @@ def test_bcae8_batiment_exploitation():
     hedges = HedgeDataFactory(
         hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
     )
-    moulinette_data = make_haie_data(
+    moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amenagement",
         reimplantation="replantation",

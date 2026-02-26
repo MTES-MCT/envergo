@@ -104,7 +104,7 @@ def make_hedge(
     }
 
 
-def make_haie_data(
+def make_moulinette_haie_data(
     hedges=None,
     hedge_data=None,
     motif="chemin_acces",

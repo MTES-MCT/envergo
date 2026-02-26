@@ -11,7 +11,7 @@ from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_EDGE,
     COORDS_BIZOUS_INSIDE,
     COORDS_BIZOUS_OUTSIDE,
-    make_haie_data,
+    make_moulinette_haie_data,
     make_hedge,
 )
 
@@ -48,7 +48,7 @@ def n2000_criteria(bizous_town_center):  # noqa
 )
 def test_moulinette_evaluation(coords, expected_result):
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
@@ -66,7 +66,7 @@ def test_moulinette_evaluation(coords, expected_result):
 )
 def test_moulinette_evaluation_alignement(coords, expected_result):
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords, type_haie="alignement")],
         reimplantation="replantation",
     )

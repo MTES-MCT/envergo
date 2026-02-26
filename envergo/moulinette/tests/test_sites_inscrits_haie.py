@@ -11,7 +11,7 @@ from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_EDGE,
     COORDS_BIZOUS_INSIDE,
     COORDS_BIZOUS_OUTSIDE,
-    make_haie_data,
+    make_moulinette_haie_data,
     make_hedge,
 )
 
@@ -58,7 +58,7 @@ def sites_inscrits_criteria(
 )
 def test_moulinette_evaluation(coords, expected_result, sites_inscrits_criteria):
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
@@ -70,7 +70,7 @@ def test_moulinette_evaluation(coords, expected_result, sites_inscrits_criteria)
 def test_aa_only_flag(sites_inscrits_criteria):
     """Test that aa_only is True when all hedges are alignement d'arbres."""
     DCConfigHaieFactory(regulations_available=["sites_inscrits_haie"])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, type_haie="alignement")],
         reimplantation="replantation",
     )
@@ -81,7 +81,7 @@ def test_aa_only_flag(sites_inscrits_criteria):
 def test_aa_only_false_with_mixed_hedges(sites_inscrits_criteria):
     """Test that aa_only is False when hedges include non-alignement types."""
     DCConfigHaieFactory(regulations_available=["sites_inscrits_haie"])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)],
         reimplantation="replantation",
     )

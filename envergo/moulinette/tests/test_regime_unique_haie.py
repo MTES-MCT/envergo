@@ -7,7 +7,7 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
-from envergo.moulinette.tests.utils import make_haie_data, make_hedge
+from envergo.moulinette.tests.utils import make_moulinette_haie_data, make_hedge
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +50,7 @@ def test_moulinette_evaluation_single_procedure(
     type_haie, expected_result, expected_result_code
 ):
     RUConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
@@ -72,7 +72,7 @@ def test_moulinette_evaluation_droit_constant(
     type_haie, expected_result, expected_result_code
 ):
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
@@ -89,7 +89,7 @@ def test_moulinette_evaluation_droit_constant(
 )
 def test_moulinette_evaluation_non_active(type_haie, expected_result):
     RUConfigHaieFactory(regulations_available=[])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
@@ -103,7 +103,7 @@ def test_moulinette_evaluation_non_active(type_haie, expected_result):
 @pytest.mark.disable_regime_haie_criterion
 def test_moulinette_evaluation_non_disponible(type_haie, expected_result):
     RUConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)

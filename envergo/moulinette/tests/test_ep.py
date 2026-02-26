@@ -13,7 +13,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import make_haie_data
+from envergo.moulinette.tests.utils import make_moulinette_haie_data
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def zonage_normandie(france_map):  # noqa
 
 def test_ep_is_soumis(ep_criteria):  # noqa
     DCConfigHaieFactory()
-    data = make_haie_data(profil="autre")
+    data = make_moulinette_haie_data(profil="autre")
 
     for motif_choice in ["amenagement", "autre"]:
         for reimplantation_choice in ["remplacement", "replantation", "non"]:
@@ -98,7 +98,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
         ]
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt10m_1, hedge_gt20m])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         reimplantation="non",
@@ -127,7 +127,7 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
         ]
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt10m_1, hedge_lt10m_2])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         reimplantation="non",
@@ -170,7 +170,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
     hedges = HedgeDataFactory(
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_lt20m_2]
     )
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         reimplantation="replantation",
@@ -213,7 +213,7 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
     hedges = HedgeDataFactory(
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_lt20m_2]
     )
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         reimplantation="non",
@@ -246,7 +246,7 @@ def test_ep_normandie_dispense_coupe_a_blanc(
         additionalData__mode_destruction="coupe_a_blanc",
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_lt20m_2])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         motif="amelioration_culture",
@@ -279,7 +279,7 @@ def test_ep_normandie_interdit_remplacement(
         ]
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_gt20m])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         motif="amelioration_culture",
@@ -313,7 +313,7 @@ def test_ep_normandie_derogation_simplifiee(
         ]
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1, hedge_gt20m])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         reimplantation="replantation",
@@ -346,7 +346,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
         ]
     )
     hedges = HedgeDataFactory(hedges=[hedge_gt20m])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         reimplantation="replantation",
@@ -397,7 +397,7 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
         additionalData__bord_voie=True,
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         motif=motif,
@@ -433,7 +433,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
         additionalData__bord_voie=True,
     )
     hedges = HedgeDataFactory(hedges=[hedge_lt20m_1])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         motif="securite",
@@ -488,7 +488,7 @@ def test_min_length_condition_normandie(
     hedges = HedgeDataFactory(
         hedges=[hedge_lt10m_1, hedge_lt10m_2, hedge_lt20m_1, hedge_gt20m]
     )
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         motif="amelioration_culture",
@@ -534,7 +534,7 @@ def test_replantation_coefficient_normandie(
         additionalData__type_haie=hedge_type,
     )
     hedges = HedgeDataFactory(hedges=[hedge_gt20m])
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedges=hedges,
         profil="autre",
         motif="amelioration_culture",

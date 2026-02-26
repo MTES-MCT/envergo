@@ -11,7 +11,7 @@ from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_EDGE,
     COORDS_BIZOUS_INSIDE,
     COORDS_BIZOUS_OUTSIDE,
-    make_haie_data,
+    make_moulinette_haie_data,
     make_hedge,
 )
 
@@ -75,7 +75,7 @@ def sites_proteges_criteria(
 )
 def test_moulinette_evaluation(coords, expected_result, sites_proteges_criteria):
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)

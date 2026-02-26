@@ -12,7 +12,7 @@ from envergo.moulinette.tests.factories import (
 )
 from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_INSIDE,
-    make_haie_data,
+    make_moulinette_haie_data,
     make_hedge,
 )
 
@@ -53,7 +53,7 @@ def n2000_criteria(bizous_town_center):  # noqa
 def test_moulinette_validity_date_on_criteria():
     """Test criteria evaluated according to date in moulinette data"""
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)],
         reimplantation="replantation",
     )

@@ -6,7 +6,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import make_haie_data, make_hedge
+from envergo.moulinette.tests.utils import make_moulinette_haie_data, make_hedge
 
 
 @pytest.fixture(autouse=True)
@@ -53,7 +53,7 @@ def test_moulinette_evaluation(
     type_haie, bord_voie, motif, expected_result_code, expected_result, expected_r
 ):
     DCConfigHaieFactory()
-    data = make_haie_data(
+    data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie, bord_voie=bord_voie)],
         motif=motif,
         reimplantation="replantation",

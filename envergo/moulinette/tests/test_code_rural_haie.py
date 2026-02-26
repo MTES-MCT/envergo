@@ -6,7 +6,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import make_haie_data, make_hedge
+from envergo.moulinette.tests.utils import make_moulinette_haie_data, make_hedge
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,7 @@ def code_rural_criteria(request, france_map):  # noqa
 
 def test_moulinette_evaluation():
     DCConfigHaieFactory()
-    data = make_haie_data(hedge_data=[make_hedge()], reimplantation="replantation")
+    data = make_moulinette_haie_data(hedge_data=[make_hedge()], reimplantation="replantation")
     moulinette = MoulinetteHaie(data)
     assert moulinette.code_rural_haie.result == "a_verifier"
 
