@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass, field
+from datetime import date as _date
+from datetime import datetime as _datetime
 from enum import Enum
 from typing import Literal, Optional, TypeAlias
 
@@ -26,6 +28,14 @@ from dateutil import parser
 
 def str_to_int(val):
     return int(val) if isinstance(val, str) and val.isdigit() else val
+
+
+def str_to_datetime(val):
+    return parser.parse(val) if isinstance(val, str) else val
+
+
+def str_to_date(val):
+    return parser.parse(val).date() if isinstance(val, str) else val
 
 
 BigInt: TypeAlias = str
@@ -62,13 +72,12 @@ as an input type, any string (such as `"4"`) or integer (such as `4`) input valu
 """
 
 
-ISO8601Date: TypeAlias = str
+ISO8601Date: TypeAlias = _date
 """
 An ISO 8601-encoded date
 """
 
-
-ISO8601DateTime: TypeAlias = str
+ISO8601DateTime: TypeAlias = _datetime
 """
 An ISO 8601-encoded datetime
 """
@@ -274,6 +283,8 @@ class TypeOrganisme(Enum):
 PARSER_CONFIG = Config(
     type_hooks={
         int: str_to_int,
+        ISO8601DateTime: str_to_datetime,
+        ISO8601Date: str_to_date,
         AddressType: AddressType,
         Civilite: Civilite,
         ConnectionUsager: ConnectionUsager,
@@ -1097,8 +1108,11 @@ class Dossier:
         )
 
     @property
-    def date_depot(self):
-        return parser.isoparse(self.dateDepot) if self.dateDepot else None
+    def instructor_emails(self) -> list[str]:
+        if self.instructeurs:
+            return [i.email for i in self.instructeurs]
+        else:
+            return []
 
 
 @dataclass(kw_only=True)

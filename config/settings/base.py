@@ -423,6 +423,7 @@ DEMARCHES_SIMPLIFIEES = {
         "DJANGO_DOSSIER_DOMAIN_BLACK_LIST", default=[]
     ),
     "INSTRUCTEUR_ID": env("DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID", default=None),
+    "AUTOMATIC_SENDER_EMAIL": "contact@demarche.numerique.gouv.fr",
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
