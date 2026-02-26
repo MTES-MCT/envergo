@@ -88,6 +88,7 @@ FILE_TEST_NOK_PATH = Path(
 class PetitionProjectFactory(DjangoModelFactory):
     class Meta:
         model = PetitionProject
+        skip_postgeneration_save = True
 
     reference = factory.Sequence(lambda n: f"ABC123{n}")
     moulinette_url = factory.LazyAttribute(

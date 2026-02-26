@@ -112,13 +112,9 @@ class TestAvailabilityInfo:
         assert configs_soon == []
 
 
-@pytest.mark.urls("config.urls_haie")
+@pytest.mark.haie
 class TestHomeHaie:
     """Test the active departments display on home page."""
-
-    @pytest.fixture(autouse=True)
-    def _settings(self, settings):
-        settings.ENVERGO_HAIE_DOMAIN = "testserver"
 
     def test_only_activated_and_valid_configs_shown(self, client):
         """The button list should only include activated configs valid today."""

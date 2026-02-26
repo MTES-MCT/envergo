@@ -399,7 +399,7 @@ class PetitionProject(models.Model):
         if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
 
-        self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
+        self.demarches_simplifiees_last_sync = timezone.now()
         self.save()
 
     def get_moulinette(self):

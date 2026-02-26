@@ -1,19 +1,12 @@
 import pytest
 
-from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
+from envergo.moulinette.tests.utils import make_amenagement_data
 
 
 @pytest.fixture(autouse=True)
@@ -41,27 +34,26 @@ def evalenv_criteria(france_map):  # noqa
     return criteria
 
 
-@pytest.fixture
-def moulinette_data(footprint):
-    data = {
-        # Mouais coordinates
-        "lat": 47.696706,
-        "lng": -1.646947,
-        "existing_surface": 0,
-        "created_surface": footprint,
-        "final_surface": footprint,
+def _moulinette(footprint, **extra):
+    """Build a moulinette with Mouais coordinates and evalenv fields."""
+    defaults = {
         "emprise": footprint,
         "zone_u": "non",
         "surface_plancher_sup_thld": "oui",
         "is_lotissement": "non",
         "terrain_assiette": 150000,
     }
-    return {"initial": data, "data": data}
+    defaults.update(extra)
+    data = make_amenagement_data(
+        created_surface=footprint,
+        final_surface=footprint,
+        **defaults,
+    )
+    return MoulinetteAmenagement(data)
 
 
-@pytest.mark.parametrize("footprint", [40000])
-def test_ein_if_evalenv_systematique(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_ein_if_evalenv_systematique():
+    moulinette = _moulinette(40000)
 
     assert moulinette.eval_env.emprise.result == "systematique"
     assert moulinette.natura2000.eval_env.result_code == "soumis_systematique"
@@ -69,10 +61,8 @@ def test_ein_if_evalenv_systematique(moulinette_data):
     assert moulinette.natura2000.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [40000])
-def test_ein_if_evalenv_cas_par_cas(moulinette_data):
-    moulinette_data["data"]["zone_u"] = "oui"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_ein_if_evalenv_cas_par_cas():
+    moulinette = _moulinette(40000, zone_u="oui")
 
     assert moulinette.eval_env.emprise.result == "cas_par_cas"
     assert moulinette.natura2000.eval_env.result_code == "soumis_cas_par_cas"
@@ -80,9 +70,8 @@ def test_ein_if_evalenv_cas_par_cas(moulinette_data):
     assert moulinette.natura2000.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [5])
-def test_no_ein_if_evalenv_non_soumis(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_no_ein_if_evalenv_non_soumis():
+    moulinette = _moulinette(5)
 
     assert moulinette.eval_env.emprise.result == "non_soumis"
     assert moulinette.natura2000.eval_env.result_code == "non_soumis"
