@@ -1109,7 +1109,10 @@ class Dossier:
 
     @property
     def instructor_emails(self) -> list[str]:
-        return [i.email for i in self.instructeurs]
+        if self.instructeurs:
+            return [i.email for i in self.instructeurs]
+        else:
+            return []
 
 
 @dataclass(kw_only=True)
