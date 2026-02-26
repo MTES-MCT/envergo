@@ -6,7 +6,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import make_moulinette_haie_data, make_hedge
+from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 
 
 @pytest.fixture(autouse=True)

@@ -12,8 +12,8 @@ from envergo.moulinette.tests.factories import (
 )
 from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_INSIDE,
-    make_moulinette_haie_data,
     make_hedge,
+    make_moulinette_haie_data,
 )
 
 

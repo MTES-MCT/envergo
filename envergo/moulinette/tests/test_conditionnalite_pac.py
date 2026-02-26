@@ -5,7 +5,10 @@ import pytest
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import Criterion, MoulinetteHaie
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.moulinette.tests.utils import make_moulinette_haie_data, setup_conditionnalite_pac
+from envergo.moulinette.tests.utils import (
+    make_moulinette_haie_data,
+    setup_conditionnalite_pac,
+)
 
 
 @pytest.fixture(autouse=True)
