@@ -82,7 +82,7 @@
                          href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_messagerie_view' %}aria-current="page"{% endif %}>
                         Messagerie
-                        {% if has_unread_messages %}
+                        {% if petition_project.has_unread_messages %}
                           <span style="color: var(--blue-france-sun-113-625);
                                        font-size: 150%;
                                        position: relative;
