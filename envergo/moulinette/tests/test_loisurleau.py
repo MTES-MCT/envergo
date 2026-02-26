@@ -2,136 +2,80 @@ from unittest.mock import patch
 
 import pytest
 
-from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
+    ActionToTakeFactory,
     ConfigAmenagementFactory,
-    CriterionFactory,
-    RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
+from envergo.moulinette.tests.utils import make_amenagement_data, setup_loi_sur_leau
 
 
 @pytest.fixture(autouse=True)
 def loisurleau_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
-        regulation="loi_sur_leau",
-        evaluator="envergo.moulinette.regulations.loisurleau.LoiSurLEauRegulation",
-    )
-    criteria = [
-        CriterionFactory(
-            title="Zone humide",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.loisurleau.ZoneHumide",
-            activation_map=france_map,
-        ),
-        CriterionFactory(
-            title="Zone inondable",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.loisurleau.ZoneInondable",
-            activation_map=france_map,
-        ),
-        CriterionFactory(
-            title="Ruissellement",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.loisurleau.Ruissellement",
-            activation_map=france_map,
-        ),
-        CriterionFactory(
-            title="Écoulement EP sans BV",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.loisurleau.EcoulementSansBV",
-            activation_map=france_map,
-            is_optional=True,
-        ),
-        CriterionFactory(
-            title="Écoulement EP avec BV",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.loisurleau.EcoulementAvecBV",
-            activation_map=france_map,
-            is_optional=True,
-        ),
-    ]
-    return criteria
+    return setup_loi_sur_leau(france_map)
 
 
-@pytest.fixture
-def moulinette_data(footprint):
-    data = {
-        # Mouais coordinates
-        "lat": 47.696706,
-        "lng": -1.646947,
-        "existing_surface": 0,
-        "created_surface": footprint,
-        "final_surface": footprint,
-    }
-    return {"initial": data, "data": data}
+# ---------------------------------------------------------------------------
+# Rubrique 3310 — Zone humide
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("footprint", [50])
-def test_3310_small_footprint_outside_wetlands(moulinette_data):
+def test_3310_small_footprint_outside_wetlands():
     """Project with footprint < 700m² are not subject to the 3310."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=50, final_surface=50)
+    )
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [50])
-def test_3310_small_footprint_inside_wetlands(moulinette_data):
+def test_3310_small_footprint_inside_wetlands():
     """Project with footprint < 700m² are not subject to the 3310."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=50, final_surface=50)
+    )
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [700])
-def test_3310_medium_footprint_inside_wetlands(moulinette_data):
+def test_3310_medium_footprint_inside_wetlands():
     """Project with 700 <= footprint <= 1000m² within a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=700, final_surface=700)
+    )
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [800])
-def test_3310_medium_footprint_inside_wetlands_2(moulinette_data):
+def test_3310_medium_footprint_inside_wetlands_2():
     """Project with 700 <= footprint <= 1000m² within a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=800, final_surface=800)
+    )
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [800])
-def test_3310_medium_footprint_close_to_wetlands(moulinette_data):
+def test_3310_medium_footprint_close_to_wetlands():
     """Project with 700 <= footprint <= 1000m² close to a wetland."""
-
-    # Make sure the project in close to a wetland
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=800, final_surface=800)
+    )
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [800])
-def test_3310_medium_footprint_inside_potential_wetlands(moulinette_data):
+def test_3310_medium_footprint_inside_potential_wetlands():
     """Project with 700 <= footprint <= 1000m² inside a potential wetland."""
-
-    # Make sure the project is in a potential wetland
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=800, final_surface=800)
+    )
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_10m"] = True
@@ -139,41 +83,41 @@ def test_3310_medium_footprint_inside_potential_wetlands(moulinette_data):
     assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [800])
-def test_3310_medium_footprint_outside_wetlands(moulinette_data):
+def test_3310_medium_footprint_outside_wetlands():
     """Project with 700 < footprint < 1000m² outside a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=800, final_surface=800)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [1500])
-def test_3310_large_footprint_within_wetlands(moulinette_data):
+def test_3310_large_footprint_within_wetlands():
     """Project with footprint >= 1000m² within a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1500, final_surface=1500)
+    )
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [1500])
-def test_3310_large_footprint_close_to_wetlands(moulinette_data):
+def test_3310_large_footprint_close_to_wetlands():
     """Project with footprint >= 1000m² close to a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1500, final_surface=1500)
+    )
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [1500])
-def test_3310_large_footprint_inside_potential_wetland(moulinette_data):
+def test_3310_large_footprint_inside_potential_wetland():
     """Project with footprint >= 1000m² inside a potential wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1500, final_surface=1500)
+    )
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_10m"] = True
@@ -181,139 +125,149 @@ def test_3310_large_footprint_inside_potential_wetland(moulinette_data):
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [1500])
-def test_3310_large_footprint_outside_wetlands(moulinette_data):
+def test_3310_large_footprint_outside_wetlands():
     """Project with footprint > 1000m² outside a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1500, final_surface=1500)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [1500])
-def test_3310_large_footprint_inside_doubt_department(moulinette_data):
+def test_3310_large_footprint_inside_doubt_department():
     """Project with footprint > 1000m² inside a whole zh department."""
-
     ConfigAmenagementFactory(zh_doubt=True)
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1500, final_surface=1500)
+    )
     moulinette.catalog["within_potential_wetlands_department"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [299])
-def test_3220_small_footprint(moulinette_data):
-    """Project with footprint < 300m² are not subject to the 3320."""
+# ---------------------------------------------------------------------------
+# Rubrique 3220 — Zone inondable
+# ---------------------------------------------------------------------------
 
-    # Make sure the project in in a flood zone
-    moulinette = MoulinetteAmenagement(moulinette_data)
+
+def test_3220_small_footprint():
+    """Project with footprint < 300m² are not subject to the 3320."""
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=299, final_surface=299)
+    )
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [300])
-def test_3220_medium_footprint_within_flood_zones(moulinette_data):
+def test_3220_medium_footprint_within_flood_zones():
     """Project with 500m² < footprint <= 300m² within a flood zone."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=300, final_surface=300)
+    )
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [300])
-def test_3220_medium_footprint_outside_flood_zones(moulinette_data):
+def test_3220_medium_footprint_outside_flood_zones():
     """Project with 500m² < footprint <= 300m² outside a flood zone."""
-
-    # Make sure the project in in a flood zone
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=300, final_surface=300)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [200])
-def test_3220_small_footprint_outside_flood_zones(moulinette_data):
+def test_3220_small_footprint_outside_flood_zones():
     """Project with small footprint outside a flood zone."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=200, final_surface=200)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [400])
-def test_3220_large_footprint_within_flood_zones(moulinette_data):
+def test_3220_large_footprint_within_flood_zones():
     """Project with footprint >= 400m² within a flood zone."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=400, final_surface=400)
+    )
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [400])
-def test_3220_large_footprint_outside_flood_zones(moulinette_data):
+def test_3220_large_footprint_outside_flood_zones():
     """Project with footprint >= 400m² outside a flood zone."""
-
-    # Make sure the project in in a flood zone
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=400, final_surface=400)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [400])
-def test_3220_large_footprint_within_potential_flood_zones(moulinette_data):
+def test_3220_large_footprint_within_potential_flood_zones():
     """Project with footprint >= 400m² within a potential flood zone."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=400, final_surface=400)
+    )
     moulinette.catalog["potential_flood_zones_within_0m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [300])
-def test_3220_medium_footprint_within_potential_flood_zones(moulinette_data):
+def test_3220_medium_footprint_within_potential_flood_zones():
     """Project with footprint >= 400m² outside a flood zone."""
-
-    # Make sure the project in in a flood zone
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=300, final_surface=300)
+    )
     moulinette.catalog["potential_flood_zones_within_0m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_inondable.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [9000])
-def test_2150_not_so_big(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+# ---------------------------------------------------------------------------
+# Rubrique 2150 — Écoulement EP (sans bassin versant)
+# ---------------------------------------------------------------------------
+
+
+def test_2150_not_so_big():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=9000, final_surface=9000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [10000])
-def test_2150_big(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_big():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=10000, final_surface=10000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "soumis_ou_pac"
 
 
-@pytest.mark.parametrize("footprint", [8000])
-def test_2150_medium(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_medium():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=8000, final_surface=8000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [7000])
-def test_2150_small(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_small():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=7000, final_surface=7000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [10000])
-def test_2150_with_pv_sol_big(moulinette_data):
-    moulinette_data["data"]["evalenv_rubrique_30-localisation"] = "sol"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_with_pv_sol_big():
+    data = make_amenagement_data(created_surface=10000, final_surface=10000)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert (
         moulinette.loi_sur_leau.ecoulement_sans_bv.result_code
@@ -321,57 +275,67 @@ def test_2150_with_pv_sol_big(moulinette_data):
     )
 
 
-@pytest.mark.parametrize("footprint", [8000])
-def test_2150_with_pv_sol_small(moulinette_data):
-    moulinette_data["data"]["evalenv_rubrique_30-localisation"] = "sol"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_with_pv_sol_small():
+    data = make_amenagement_data(created_surface=8000, final_surface=8000)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_sans_bv.result_code == "non_soumis_pv_sol"
 
 
-@pytest.mark.parametrize("footprint", [10000])
-def test_2150_avec_bv_big(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+# ---------------------------------------------------------------------------
+# Rubrique 2150 — Écoulement EP (avec bassin versant)
+# ---------------------------------------------------------------------------
+
+
+def test_2150_avec_bv_big():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=10000, final_surface=10000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [9000])
-def test_2150_avec_bv_medium(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_avec_bv_medium():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=9000, final_surface=9000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [7000])
-def test_2150_avec_bv_small(moulinette_data):
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_avec_bv_small():
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=7000, final_surface=7000)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis"
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-@pytest.mark.parametrize("footprint", [1400])
-def test_2150_avec_bv_small_but_big_bv(mock_get_catchment_area, moulinette_data):
+def test_2150_avec_bv_small_but_big_bv(mock_get_catchment_area):
     mock_get_catchment_area.return_value = 12000
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1400, final_surface=1400)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis"
 
 
 @patch("envergo.moulinette.regulations.loisurleau.get_catchment_area")
-@pytest.mark.parametrize("footprint", [1600])
-def test_2150_avec_bv_medium_but_big_bv(mock_get_catchment_area, moulinette_data):
+def test_2150_avec_bv_medium_but_big_bv(mock_get_catchment_area):
     mock_get_catchment_area.return_value = 12000
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=1600, final_surface=1600)
+    )
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [10000])
-def test_2150_avec_bv_with_pv_sol_big(moulinette_data):
-    moulinette_data["data"]["evalenv_rubrique_30-localisation"] = "sol"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_avec_bv_with_pv_sol_big():
+    data = make_amenagement_data(created_surface=10000, final_surface=10000)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert (
         moulinette.loi_sur_leau.ecoulement_avec_bv.result_code
@@ -379,18 +343,26 @@ def test_2150_avec_bv_with_pv_sol_big(moulinette_data):
     )
 
 
-@pytest.mark.parametrize("footprint", [8000])
-def test_2150_avec_bv_with_pv_sol_small(moulinette_data):
-    moulinette_data["data"]["evalenv_rubrique_30-localisation"] = "sol"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+def test_2150_avec_bv_with_pv_sol_small():
+    data = make_amenagement_data(created_surface=8000, final_surface=8000)
+    data["data"]["evalenv_rubrique_30-localisation"] = "sol"
+    moulinette = MoulinetteAmenagement(data)
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.ecoulement_avec_bv.result_code == "non_soumis_pv_sol"
 
 
-@pytest.mark.parametrize("footprint", [700])
-def test_moulinette_returns_actions_to_take(moulinette_data):
+# ---------------------------------------------------------------------------
+# Actions to take
+# ---------------------------------------------------------------------------
+
+
+def test_moulinette_returns_actions_to_take():
     ConfigAmenagementFactory()
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    ActionToTakeFactory(slug="mention_arrete_lse")
+    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
+    moulinette = MoulinetteAmenagement(
+        make_amenagement_data(created_surface=700, final_surface=700)
+    )
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"

@@ -1,6 +1,5 @@
 import pytest
 
-from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
@@ -8,13 +7,6 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
 
 
 @pytest.fixture(autouse=True)
