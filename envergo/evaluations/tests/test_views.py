@@ -16,29 +16,10 @@ from envergo.evaluations.tests.factories import (
     RequestFactory,
     VersionFactory,
 )
-from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.moulinette.tests.factories import (
     ActionToTakeFactory,
     ConfigAmenagementFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
-
-
-@pytest.fixture()
-def moulinette_config(loire_atlantique_department):  # noqa
-    ConfigAmenagementFactory(
-        department=loire_atlantique_department,
-        is_activated=True,
-        ddtm_water_police_email="ddtm_email_test@example.org",
-        ddtm_n2000_email="ddtm_n2000@example.org",
-        dreal_eval_env_email="dreal_evalenv@example.org",
-    )
 
 
 @pytest.fixture()

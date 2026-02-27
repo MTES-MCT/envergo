@@ -53,7 +53,7 @@ def test_form_url_does_not_duplicate_alternative_param():
     assert params["alternative"] == ["true"]
 
 
-@pytest.mark.urls("config.urls_haie")
+@pytest.mark.haie
 def test_result_url_adds_alternative_param():
     """result_url appends alternative=true for new simulations."""
     DCConfigHaieFactory()
@@ -65,7 +65,7 @@ def test_result_url_adds_alternative_param():
     assert params["alternative"] == ["true"]
 
 
-@pytest.mark.urls("config.urls_haie")
+@pytest.mark.haie
 def test_result_url_active_returns_project_url():
     """result_url points to the project page (without alternative param) for active simulations."""
     DCConfigHaieFactory()
