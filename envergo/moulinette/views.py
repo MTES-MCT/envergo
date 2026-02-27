@@ -813,4 +813,9 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         }
         context["regulation_list"] = regulation_list
         context["grouped_criteria"] = grouped_criteria_by_regulation
+        department_param = {"departement": str(self.department)}
+        department_query_string = urlencode(department_param)
+        context["department_settings_form"] = (
+            f"https://tally.so/r/Pd9b9e?{department_query_string}"
+        )
         return context
