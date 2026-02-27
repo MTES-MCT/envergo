@@ -35,7 +35,6 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
 class ZoneHumide(
     ZoneHumideMixin,
     SelfDeclarationMixin,
-    ActionsToTakeMixin,
     CriterionEvaluator,
 ):
     choice_label = "Loi sur l'eau > Zone humide"
@@ -78,8 +77,6 @@ class ZoneHumide(
         "action_requise_dans_doute": RESULTS.action_requise,
         "action_requise_tout_dpt": RESULTS.action_requise,
     }
-
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.

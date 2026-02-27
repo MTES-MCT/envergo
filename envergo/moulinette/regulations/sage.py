@@ -34,9 +34,7 @@ class ImpactZHSettings(forms.Form):
     )
 
 
-class ImpactZoneHumide(
-    ZoneHumideMixin, SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvaluator
-):
+class ImpactZoneHumide(ZoneHumideMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "SAGE > Interdiction impact ZH"
     slug = "interdiction_impact_zh"
     settings_form_class = ImpactZHSettings
@@ -79,8 +77,6 @@ class ImpactZoneHumide(
         "non_soumis": RESULTS.non_soumis,
         "non_soumis_dehors": RESULTS.non_soumis,
     }
-
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.

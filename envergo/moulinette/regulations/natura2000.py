@@ -36,7 +36,6 @@ class ZoneHumideSettingsForm(forms.Form):
 class ZoneHumide(
     ZoneHumideMixin,
     SelfDeclarationMixin,
-    ActionsToTakeMixin,
     CriterionEvaluator,
 ):
     choice_label = "Natura 2000 > Zone humide"
@@ -73,8 +72,6 @@ class ZoneHumide(
         "non_soumis_dans_doute": RESULTS.non_soumis,
         "non_concerne": RESULTS.non_concerne,
     }
-
-    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
 
     def get_result_data(self):
         """Evaluate the project and return the different parameter results.
