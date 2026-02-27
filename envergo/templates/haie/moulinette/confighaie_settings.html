@@ -30,7 +30,10 @@
           Les fichiers sont téléchargeables pour vérification par les services (format QGIS).
         </p>
         <p>
-          <a class="fr-btn fr-btn--secondary" href="https://tally.so/r/Pd9b9e" target="_blank" rel="noopener">Signaler une erreur / transmettre une carte</a>
+          <a class="fr-btn fr-btn--secondary"
+             href="{{ department_settings_form }}"
+             target="_blank"
+             rel="noopener">Signaler une erreur / transmettre une carte</a>
         </p>
       </div>
 
@@ -69,7 +72,10 @@
       <h2 id="title-comptes" class="fr-mb-4v">Comptes</h2>
 
       <p>
-        <a class="fr-btn fr-btn--secondary" href="https://tally.so/r/Pd9b9e" target="_blank" rel="noopener">Ajouter / modifier les droits d'accès</a>
+        <a class="fr-btn fr-btn--secondary"
+           href="{{ department_settings_form }}"
+           target="_blank"
+           rel="noopener">Ajouter / modifier les droits d'accès</a>
       </p>
 
       <div class="fr-mb-2w">
@@ -105,10 +111,10 @@
     </div>
 
     <div class="fr-mb-2w">
-        <p class="fr-mb-1w">
-          <strong>Outre ceux listés ci-dessus, certains comptes peuvent avoir été invités en lecture sur des dossiers individuels. 
-          Ces accès sont gérés et consultables directement dans la vue « Services consultés » de chaque dossier.</strong>
-        </p>
+      <p class="fr-mb-1w">
+        <strong>Outre ceux listés ci-dessus, certains comptes peuvent avoir été invités en lecture sur des dossiers individuels.
+        Ces accès sont gérés et consultables directement dans la vue « Services consultés » de chaque dossier.</strong>
+      </p>
     </div>
   </div>
 {% endblock %}
