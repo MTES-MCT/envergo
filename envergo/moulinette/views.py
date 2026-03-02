@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, ListView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
@@ -708,6 +708,17 @@ class Triage(MoulinetteMixin, FormView):
         url_with_params = f"{url}?{qs}"
         url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
+
+
+class ConfigHaieListView(ListView):
+    """Home view for ConfigHaie settings"""
+
+    queryset = (
+        ConfigHaie.objects.select_related("department")
+        .defer("department__geometry")
+        .order_by("department__department", "validity_range")
+    )
+    template_name = "haie/moulinette/confighaie_list.html"
 
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
