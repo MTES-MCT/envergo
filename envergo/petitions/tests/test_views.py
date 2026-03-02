@@ -235,8 +235,8 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     request.alerts = PetitionProjectCreationAlert(request)
 
     petition_project = PetitionProjectFactory()
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
-        petition_project
+    demarche_simplifiee_url, dossier_number, dossier_prefill_token = (
+        view.pre_fill_demarche_simplifiee(petition_project)
     )
     assert (
         len(

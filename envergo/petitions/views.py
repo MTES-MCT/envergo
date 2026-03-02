@@ -266,83 +266,8 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         return None
 
 
-class PetitionProjectCreate(FormView):
-    form_class = PetitionProjectForm
-
-    def dispatch(self, request, *args, **kwargs):
-        # store alerts in the request object to notify admins if needed
-        if request.method == "GET":
-            if request.user.is_authenticated:
-                url = reverse("petition_project_list")
-            else:
-                url = reverse("home")
-
-            return HttpResponseRedirect(url)
-
-        request.alerts = PetitionProjectCreationAlert(request)
-        res = super().dispatch(request, *args, **kwargs)
-
-        if len(request.alerts) > 0:
-            notify(request.alerts.compute_message(), "haie")
-        return res
-
-    def form_valid(self, form):
-
-        form.instance.hedge_data_id = extract_param_from_url(
-            form.cleaned_data["moulinette_url"], "haies"
-        )
-
-        with transaction.atomic():
-            petition_project = form.save()
-            read_only_url = reverse(
-                "petition_project_auto_redirection",
-                kwargs={"reference": petition_project.reference},
-            )
-
-            demarche_simplifiee_url, dossier_number = self.pre_fill_demarche_simplifiee(
-                petition_project
-            )
-
-            if not demarche_simplifiee_url:
-                res = self.form_invalid(form)
-                # Rollback the transaction to avoid saving the petition project
-                transaction.set_rollback(True)
-            else:
-                petition_project.demarches_simplifiees_dossier_number = dossier_number
-                petition_project.save()
-
-                StatusLog.objects.create(
-                    petition_project=petition_project,
-                    update_comment="Création initiale",
-                )
-
-                Simulation.objects.create(
-                    project=petition_project,
-                    is_initial=True,
-                    is_active=True,
-                    moulinette_url=petition_project.moulinette_url,
-                    comment="Simulation initiale",
-                )
-
-                log_event(
-                    "demande",
-                    "creation",
-                    self.request,
-                    **petition_project.get_log_event_data(),
-                    user_type=get_user_type(self.request.user),
-                    **get_matomo_tags(self.request),
-                )
-
-                self.request.alerts.petition_project = petition_project
-
-                res = JsonResponse(
-                    {
-                        "demarche_simplifiee_url": demarche_simplifiee_url,
-                        "read_only_url": read_only_url,
-                    }
-                )
-
-        return res
+class PetitionProjectPrefillMixin:
+    """Mixin for prefilling PetitionProject."""
 
     def pre_fill_demarche_simplifiee(self, project):
         """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
@@ -425,7 +350,7 @@ class PetitionProjectCreate(FormView):
                 f"\nrequest.url: {api_url}"
                 f"\nrequest.body: {body}"
             )
-            return None, None
+            return None, None, None
 
         response = requests.post(
             api_url, json=body, headers={"Content-Type": "application/json"}
@@ -457,6 +382,88 @@ class PetitionProjectCreate(FormView):
                 )
             )
         return redirect_url, dossier_number
+
+
+class PetitionProjectCreate(PetitionProjectPrefillMixin, FormView):
+    form_class = PetitionProjectForm
+
+    def dispatch(self, request, *args, **kwargs):
+        # store alerts in the request object to notify admins if needed
+        if request.method == "GET":
+            if request.user.is_authenticated:
+                url = reverse("petition_project_list")
+            else:
+                url = reverse("home")
+
+            return HttpResponseRedirect(url)
+
+        request.alerts = PetitionProjectCreationAlert(request)
+        res = super().dispatch(request, *args, **kwargs)
+
+        if len(request.alerts) > 0:
+            notify(request.alerts.compute_message(), "haie")
+        return res
+
+    def form_valid(self, form):
+
+        form.instance.hedge_data_id = extract_param_from_url(
+            form.cleaned_data["moulinette_url"], "haies"
+        )
+
+        with transaction.atomic():
+            petition_project = form.save()
+            read_only_url = reverse(
+                "petition_project_auto_redirection",
+                kwargs={"reference": petition_project.reference},
+            )
+
+            demarche_simplifiee_url, dossier_number = self.pre_fill_demarche_simplifiee(
+                petition_project
+            )
+
+            if not demarche_simplifiee_url:
+                res = self.form_invalid(form)
+                # Rollback the transaction to avoid saving the petition project
+                transaction.set_rollback(True)
+            else:
+                petition_project.demarches_simplifiees_dossier_number = dossier_number
+                petition_project.demarches_simplifiees_prefill_url = (
+                    demarche_simplifiee_url
+                )
+                petition_project.save()
+
+                StatusLog.objects.create(
+                    petition_project=petition_project,
+                    update_comment="Création initiale",
+                )
+
+                Simulation.objects.create(
+                    project=petition_project,
+                    is_initial=True,
+                    is_active=True,
+                    moulinette_url=petition_project.moulinette_url,
+                    comment="Simulation initiale",
+                )
+
+                log_event(
+                    "demande",
+                    "creation",
+                    self.request,
+                    **petition_project.get_log_event_data(),
+                    user_type=get_user_type(self.request.user),
+                    **get_matomo_tags(self.request),
+                )
+
+                self.request.alerts.petition_project = petition_project
+
+                res = JsonResponse(
+                    {
+                        "demarche_simplifiee_url": demarche_simplifiee_url,
+                        "read_only_url": read_only_url,
+                    }
+                )
+
+        return res
 
     def get_value_from_source(
         self, petition_project, moulinette, source, mapping, config
@@ -648,7 +655,7 @@ class PetitionProjectCreate(FormView):
         )
 
 
-class PetitionProjectDetail(DetailView):
+class PetitionProjectDetail(PetitionProjectPrefillMixin, DetailView):
     template_name = "haie/moulinette/petition_project.html"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
@@ -695,6 +702,7 @@ class PetitionProjectDetail(DetailView):
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
+        context["demarches_simplifiees_state"] = self.object.demarches_simplifiees_state
         context["demarches_simplifiees_dossier_number"] = (
             self.object.demarches_simplifiees_dossier_number
         )
@@ -727,6 +735,24 @@ class PetitionProjectDetail(DetailView):
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
+
+        if self.object.demarches_simplifiees_state == "draft":
+            if not self.object.demarches_simplifiees_prefill_url:
+                demarche_simplifiee_url, dossier_number = (
+                    self.pre_fill_demarche_simplifiee(self.object)
+                )
+                if demarche_simplifiee_url.startswith(
+                    "https://www.demarches-simplifiees.fr/commencer/"
+                ):
+                    self.object.demarches_simplifiees_prefill_url = (
+                        demarche_simplifiee_url
+                    )
+                    self.object.demarches_simplifiees_dossier_number = dossier_number
+                    self.object.save()
+
+            context["demarches_simplifiees_prefill_url"] = (
+                self.object.demarches_simplifiees_prefill_url
+            )
         context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
