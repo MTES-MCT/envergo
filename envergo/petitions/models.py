@@ -7,7 +7,8 @@ from dateutil import parser
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models, transaction
 from django.db.models import Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
@@ -15,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from model_utils import Choices
+from model_utils import Choices, FieldTracker
 
 from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
@@ -76,6 +77,8 @@ class PetitionProject(models.Model):
     A petition project will store any data needed to follow up a request concerning a hedge.
     Both the project owner and the public administration will be able to follow up the request.
     """
+
+    tracker = FieldTracker()
 
     reference = models.CharField(
         _("Reference"),
@@ -186,14 +189,16 @@ class PetitionProject(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = _("Petition project")
-        verbose_name_plural = _("Petition projects")
+        verbose_name = "Dossier"
+        verbose_name_plural = "Dossiers"
 
     def __str__(self):
         return self.reference
 
     def save(self, *args, **kwargs):
-        """Set department code before saving"""
+        moulinette_changed = not self.pk or self.tracker.has_changed("moulinette_url")
+
+        # Set department code before saving
         if not self.department:
             department_code = self.get_department_code()
             try:
@@ -203,6 +208,12 @@ class PetitionProject(models.Model):
             except ObjectDoesNotExist:
                 self.department = None
         super().save(*args, **kwargs)
+
+        # Create a result snapshot
+        if moulinette_changed:
+            transaction.on_commit(
+                lambda: ResultSnapshot.create_for_project(project=self)
+            )
 
     @property
     def is_closed(self):
@@ -346,6 +357,7 @@ class PetitionProject(models.Model):
                 haie_site,
                 **self.get_log_event_data(),
             )
+
         elif (
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
@@ -517,8 +529,8 @@ class Simulation(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = "Simulation"
-        verbose_name_plural = "Simulations"
+        verbose_name = "Simulation alternative"
+        verbose_name_plural = "Simulations alternatives"
         constraints = [
             models.UniqueConstraint(
                 fields=["project", "is_active"],
@@ -751,3 +763,28 @@ class LatestMessagerieAccess(models.Model):
                 fields=["user", "project"], name="access_unique_constraint"
             )
         ]
+
+
+class ResultSnapshot(models.Model):
+    project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        related_name="result_snapshots",
+        verbose_name="Projet",
+    )
+    payload = models.JSONField(encoder=DjangoJSONEncoder)
+
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
+
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    @classmethod
+    def create_for_project(cls, project):
+        moulinette = project.get_moulinette()
+        payload = moulinette.summary()
+        payload["haies"] = payload["haies"].id
+        return cls.objects.create(
+            project=project,
+            moulinette_url=project.moulinette_url,
+            payload=payload,
+        )
