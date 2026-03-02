@@ -722,11 +722,11 @@ def test_petition_project_list(
     DCConfigHaieFactory()
     DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # GIVEN two projects non draft, one in 34 and one in 44
-    today = date.today()
-    last_month = today - timedelta(days=30)
+    now = timezone.now()
+    last_month = now - timedelta(days=30)
     project_34 = PetitionProject34Factory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
@@ -801,28 +801,28 @@ def test_petition_project_list_filters(
     admin_user.save()
 
     # GIVEN projects non draft followed by users and instructors
-    today = date.today()
+    now = timezone.now()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
     project_44_followed_by_instructor2 = PetitionProjectFactory(
         reference="ACB132",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
     project_44_followed_by_invited = PetitionProjectFactory(
         reference="XYZ123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_invited.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2 = PetitionProjectFactory(
         reference="XYZ456",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2.followed_by.add(
@@ -831,13 +831,13 @@ def test_petition_project_list_filters(
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ789",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
 
     # AS haie user with no project
@@ -1499,9 +1499,9 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     read_msg = '<td class="messagerie-col read">'
     unread_msg = '<td class="messagerie-col unread">'
 
-    today = date.today()
-    last_week = today - timedelta(days=7)
-    last_month = today - timedelta(days=30)
+    now = timezone.now()
+    last_week = now - timedelta(days=7)
+    last_month = now - timedelta(days=30)
     project = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=last_month,
@@ -1523,7 +1523,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     # there is an existing message in the project before the user joined in
     project.latest_petitioner_msg = last_week
     project.save()
-    haie_instructor_44.date_joined = today
+    haie_instructor_44.date_joined = now
     haie_instructor_44.save()
     res = client.get(url)
     assert res.status_code == 200
@@ -1551,7 +1551,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg in res.content.decode()
 
     # The messagerie was accessed after the latest message
-    access.access = today
+    access.access = now
     access.save()
     res = client.get(url)
     assert res.status_code == 200

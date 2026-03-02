@@ -10,7 +10,7 @@ from envergo.moulinette.models import MoulinetteAmenagement
 def repopulate_evaluation_visit(apps, schema_editor):
     Event = apps.get_model("analytics", "Event")
     qs = Event.objects.filter(
-        category="evaluation", event="visit", date_created__gte="2025-10-27"
+        category="evaluation", event="visit", date_created__gte="2025-10-27T00:00:00Z"
     ).exclude(metadata__has_key="main_result")
     total = qs.count()
     batch_size = 10

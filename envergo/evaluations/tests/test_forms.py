@@ -1,10 +1,6 @@
 import pytest
 
 from envergo.evaluations.forms import WizardAddressForm, WizardContactForm
-from envergo.geodata.conftest import loire_atlantique_department  # noqa
-from envergo.moulinette.tests.factories import ConfigAmenagementFactory
-
-pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
@@ -16,14 +12,9 @@ def form_data():
 
 
 @pytest.fixture(autouse=True)
-def moulinette_config(loire_atlantique_department):  # noqa
-    ConfigAmenagementFactory(
-        department=loire_atlantique_department,
-        is_activated=True,
-        ddtm_water_police_email="ddtm_email_test@example.org",
-        ddtm_n2000_email="ddtm_n2000@example.org",
-        dreal_eval_env_email="dreal_evalenv@example.org",
-    )
+def _require_moulinette_config(moulinette_config):
+    """Activate the shared moulinette_config fixture for all tests in this module."""
+    pass
 
 
 def test_wizard_form_with_address_is_valid(form_data):
