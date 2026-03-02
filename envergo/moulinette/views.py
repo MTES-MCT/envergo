@@ -715,12 +715,25 @@ class Triage(MoulinetteMixin, FormView):
 class ConfigHaieListView(AccessMixin, ListView):
     """Home view for ConfigHaie settings"""
 
-    queryset = (
-        ConfigHaie.objects.select_related("department")
-        .defer("department__geometry")
-        .order_by("department__department", "validity_range")
-    )
+    queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_list.html"
+
+    def get_queryset(self):
+        """Filter confighaie by user departments"""
+
+        current_user = self.request.user
+        if not current_user.is_authenticated:
+            return self.queryset.none()
+
+        queryset = (
+            self.queryset.select_related("department")
+            .defer("department__geometry")
+            .order_by("department__department", "validity_range")
+        )
+        if not current_user.is_superuser:
+            queryset = queryset.filter(department__in=current_user.departments.all())
+
+        return queryset
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
