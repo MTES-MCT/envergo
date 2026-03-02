@@ -1,4 +1,10 @@
-class ZoneHumideMixin:
+from envergo.moulinette.regulations import TO_ADD, ActionsToTakeMixin
+
+
+class ZoneHumideMixin(ActionsToTakeMixin):
+
+    ACTIONS_TO_TAKE_MATRIX = {"action_requise": {TO_ADD: {"etude_zh"}}}
+
     def get_catalog_data(self):
         data = {}
         if "wetlands_25" not in self.catalog:
