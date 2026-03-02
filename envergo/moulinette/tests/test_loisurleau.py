@@ -359,7 +359,7 @@ def test_2150_avec_bv_with_pv_sol_small():
 def test_moulinette_returns_actions_to_take():
     ConfigAmenagementFactory()
     ActionToTakeFactory(slug="mention_arrete_lse")
-    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
+    ActionToTakeFactory(slug="etude_zh", target="petitioner")
     moulinette = MoulinetteAmenagement(
         make_amenagement_data(created_surface=700, final_surface=700)
     )
