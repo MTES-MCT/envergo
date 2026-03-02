@@ -5,7 +5,6 @@ from urllib.parse import urlencode
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
-from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.analytics.models import Event
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
@@ -391,6 +390,27 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     # THEN the result page is displayed without warning
     assert not res.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
+
+
+def test_confighaie_home_view(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_user,
+    haie_instructor_44,
+    admin_user,
+):
+    """Test config haie settings homepage view"""
+    DCConfigHaieFactory(department=loire_atlantique_department)
+    url = reverse("confighaie_settings_home")
+
+    # GIVEN an instructor user
+    client.force_login(haie_instructor_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Loire-Atlantique (44)" in content
 
 
 def test_confighaie_settings_view(
