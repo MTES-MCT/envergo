@@ -170,7 +170,7 @@ def config_menu_link(config):
         validity_text = display_validity_range(config.validity_range)
         if validity_text:
             label = mark_safe(
-                f"<span>{config.department}</span>"
+                f"{config.department} "
                 f'<span class="fr-text--xs">{validity_text}</span>'
             )
         else:
