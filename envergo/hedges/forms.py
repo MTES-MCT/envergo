@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 
-from envergo.hedges.models import HEDGE_TYPES, HedgeData
+from envergo.hedges.models import HedgeData, HedgeType
 from envergo.moulinette.forms.fields import (
     DisplayBooleanField,
     DisplayChoiceField,
@@ -20,7 +20,7 @@ class HedgePropertiesBaseForm(forms.Form):
     """Base Hedge properties form"""
 
     type_haie = forms.ChoiceField(
-        choices=HEDGE_TYPES,
+        choices=[],
         label=mark_safe(
             f"""
         <span>Type de haie</span>
@@ -42,6 +42,10 @@ class HedgePropertiesBaseForm(forms.Form):
         label="Mare à moins de 200 m",
         required=False,
     )
+
+    def __init__(self, single_procedure, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["type_haie"].choices = HedgeType.get_choices(single_procedure)
 
 
 MODE_DESTRUCTION_CHOICES = (

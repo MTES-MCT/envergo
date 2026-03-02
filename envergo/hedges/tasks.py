@@ -9,8 +9,8 @@ from django.utils import timezone
 from config.celery_app import app
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
-    HEDGE_TYPES,
     IMPORT_STATUSES,
+    HedgeType,
     Species,
     SpeciesMap,
     SpeciesMapFile,
@@ -19,7 +19,7 @@ from envergo.hedges.models import (
 logger = logging.getLogger(__name__)
 
 
-ALL_HEDGE_TYPES = dict(HEDGE_TYPES).keys()
+ALL_HEDGE_TYPES = HedgeType.names
 ALL_HEDGE_PROPERTIES = dict(HEDGE_PROPERTIES).keys()
 
 

@@ -10,8 +10,8 @@ from django.utils.html import mark_safe
 
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
-    HEDGE_TYPES,
     HedgeData,
+    HedgeType,
     Pacage,
     Species,
     SpeciesMap,
@@ -115,7 +115,9 @@ class SpeciesAdmin(admin.ModelAdmin):
 
 class SpeciesMapAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
-        choices=HEDGE_TYPES,
+        choices=HedgeType.get_choices(
+            single_procedure=False
+        ),  # EP s'applique uniquement à "droit constant" pour le moment
         widget=forms.CheckboxSelectMultiple,
         label="Types de haies considérés",
         required=False,

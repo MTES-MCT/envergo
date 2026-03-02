@@ -24,13 +24,32 @@ from envergo.geodata.utils import (
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
 
-HEDGE_TYPES = (
-    ("degradee", "Haie dégradée ou résiduelle basse"),
-    ("buissonnante", "Haie buissonnante basse"),
-    ("arbustive", "Haie arbustive"),
-    ("alignement", "Alignement d'arbres"),
-    ("mixte", "Haie mixte"),
-)
+
+class HedgeType(models.TextChoices):
+    DEGRADEE = "degradee", "Haie dégradée ou résiduelle basse"
+    BUISSONNANTE = "buissonnante", "Haie buissonnante basse"
+    ARBUSTIVE = "arbustive", "Haie arbustive"
+    ALIGNEMENT = "alignement", "Alignement d'arbres"
+    MIXTE = "mixte", "Haie mixte"
+
+    @property
+    def choices(self):
+        raise AttributeError(
+            "HedgeType.choices is depending of the context, use get_choices() instead."
+        )
+
+    @classmethod
+    def get_choices(cls, single_procedure: bool):
+        parent_choices = super().choices
+        if single_procedure:
+            return [
+                (key, label if key != HedgeType.MIXTE else "Haie arborée")
+                for key, label in parent_choices
+                if key != HedgeType.DEGRADEE
+            ]
+        else:
+            return parent_choices
+
 
 HEDGE_PROPERTIES = (
     ("proximite_mare", "Mare à moins de 200 m"),
@@ -261,8 +280,8 @@ class HedgeList(list[Hedge]):
         """Filter hedges by hedge type. Prefix with a "!" to negate the filter."""
 
         # Make sure the type filter is valid
-        if t.replace("!", "") not in dict(HEDGE_TYPES).keys():
-            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+        if t.replace("!", "") not in HedgeType.values:
+            raise ValueError(f"Argument hedge_type must be in {HedgeType}")
 
         if t.startswith("!"):
             hedges = HedgeList([h for h in self if h.hedge_type != t.replace("!", "")])
@@ -389,7 +408,7 @@ class HedgeData(models.Model):
 
         Args:
             hedge_to: TO_PLANT or TO_REMOVE
-            hedge_type: hedge type from HEDGE_TYPES
+            hedge_type: hedge type from HedgeType
             props: other hedge properties
 
         Returns:
@@ -599,7 +618,9 @@ class SpeciesMap(models.Model):
 
     hedge_types = ArrayField(
         verbose_name="Types de haies considérés",
-        base_field=models.CharField(max_length=32, choices=HEDGE_TYPES),
+        base_field=models.CharField(
+            max_length=32, choices=HedgeType.get_choices(single_procedure=False)
+        ),  # EP s'applique uniquement à "droit constant" pour le moment
     )
     hedge_properties = ArrayField(
         verbose_name="Propriétés de la haie",

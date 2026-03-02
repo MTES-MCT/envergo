@@ -1,4 +1,4 @@
-from envergo.hedges.models import HEDGE_TYPES, TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeType
 from envergo.moulinette.regulations.sites_proteges_haie import SitesProtegesRegulation
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
@@ -9,7 +9,9 @@ def sites_proteges_haie_get_instructor_view_context(
 ) -> dict:
     """Return context for sites proteges regulation instructor view"""
 
-    rows = HEDGE_TYPES + (("total", "total"),)
+    rows = HedgeType.get_choices(
+        single_procedure=moulinette.config.single_procedure
+    ) + (("total", "total"),)
 
     hedges_by_type = {
         hedge_type: {
