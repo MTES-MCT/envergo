@@ -746,6 +746,21 @@ class ConfigHaieListView(AccessMixin, ListView):
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        """Redirect to object detail if only one config is listed"""
+        self.object_list = self.get_queryset()
+        if self.object_list.count() == 1:
+            config = self.object_list.get()
+            config_url = reverse(
+                "confighaie_detail",
+                kwargs={
+                    "department": config.department.department,
+                    "date_slug": config.date_slug,
+                },
+            )
+            return HttpResponseRedirect(config_url)
+        return super().get(self, request, *args, **kwargs)
+
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     """Config haie settings view for a given department"""

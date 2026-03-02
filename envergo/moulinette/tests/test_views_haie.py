@@ -426,9 +426,8 @@ def test_confighaie_home_view(
     response = client.get(url)
     # THEN department config page is displayed
     content = response.content.decode()
-    assert response.status_code == 200
-    assert "Loire-Atlantique (44)" in content
-    assert "Hérault (34)" not in content
+    assert response.status_code == 302
+    assert response.url == "/parametrage/44/permanent/"
 
     # GIVEN an admin user
     client.force_login(admin_user)
