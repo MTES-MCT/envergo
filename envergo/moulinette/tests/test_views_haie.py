@@ -403,8 +403,31 @@ def test_confighaie_home_view(
     DCConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_settings_home")
 
+    # GIVEN an anonymous visitor
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is redirection to login page
+    content = response.content.decode()
+    assert response.status_code == 302
+
+    # GIVEN a connected user with no right to departement
+    client.force_login(haie_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is 403
+    assert response.status_code == 403
+
     # GIVEN an instructor user
     client.force_login(haie_instructor_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Loire-Atlantique (44)" in content
+
+    # GIVEN an admin user
+    client.force_login(admin_user)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN department config page is displayed
