@@ -6,13 +6,14 @@ from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.contrib.auth.mixins import AccessMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, ListView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
@@ -709,6 +710,41 @@ class Triage(MoulinetteMixin, FormView):
         url_with_params = f"{url}?{qs}"
         url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
+
+
+class ConfigHaieListView(AccessMixin, ListView):
+    """Home view for ConfigHaie settings"""
+
+    queryset = ConfigHaie.objects.all()
+    template_name = "haie/moulinette/confighaie_list.html"
+
+    def get_queryset(self):
+        """Filter confighaie by user departments"""
+
+        current_user = self.request.user
+        if not current_user.is_authenticated:
+            return self.queryset.none()
+
+        queryset = (
+            self.queryset.select_related("department")
+            .defer("department__geometry")
+            .order_by("department__department", "validity_range")
+        )
+        if not current_user.is_superuser:
+            queryset = queryset.filter(department__in=current_user.departments.all())
+
+        return queryset
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        if (
+            not request.user.is_superuser
+            and not request.user.departments.defer("geometry").exists()
+        ):
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
