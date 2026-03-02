@@ -2,11 +2,13 @@ from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
 
+import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
+from envergo.geodata.tests.factories import Department34Factory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -400,6 +402,7 @@ def test_confighaie_home_view(
     admin_user,
 ):
     """Test config haie settings homepage view"""
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     DCConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_settings_home")
 
@@ -425,6 +428,7 @@ def test_confighaie_home_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Loire-Atlantique (44)" in content
+    assert "Hérault (34)" not in content
 
     # GIVEN an admin user
     client.force_login(admin_user)
@@ -434,6 +438,7 @@ def test_confighaie_home_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Loire-Atlantique (44)" in content
+    assert "Hérault (34)" in content
 
 
 def test_confighaie_settings_view(
