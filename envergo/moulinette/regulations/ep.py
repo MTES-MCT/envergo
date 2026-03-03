@@ -131,7 +131,8 @@ def get_hedge_compensation_details(hedge, r):
     return {
         "id": hedge.id,
         "hedge_type": get_human_readable_value(
-            HedgeType.get_choices(single_procedure=False), hedge.hedge_type
+            HedgeType.build_from_context(single_procedure=False).choices,
+            hedge.hedge_type,
         ),  # EP s'applique uniquement à "droit constant" pour le moment
         "properties": ", ".join(hedge_properties) if hedge_properties else "-",
         "length": hedge.length,

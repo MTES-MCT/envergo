@@ -115,9 +115,9 @@ class SpeciesAdmin(admin.ModelAdmin):
 
 class SpeciesMapAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
-        choices=HedgeType.get_choices(
+        choices=HedgeType.build_from_context(
             single_procedure=False
-        ),  # EP s'applique uniquement à "droit constant" pour le moment
+        ).choices,  # EP s'applique uniquement à "droit constant" pour le moment
         widget=forms.CheckboxSelectMultiple,
         label="Types de haies considérés",
         required=False,

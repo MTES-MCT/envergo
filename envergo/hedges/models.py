@@ -25,30 +25,34 @@ TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
 
 
-class HedgeType(models.TextChoices):
+class HedgeTypeBase(models.TextChoices):
+    """This enum should list all the existing type. But it should not be used directly.
+
+    Prefer using HedgeType.build_from_context."""
+
     DEGRADEE = "degradee", "Haie dégradée ou résiduelle basse"
     BUISSONNANTE = "buissonnante", "Haie buissonnante basse"
     ARBUSTIVE = "arbustive", "Haie arbustive"
     ALIGNEMENT = "alignement", "Alignement d'arbres"
     MIXTE = "mixte", "Haie mixte"
 
-    @property
-    def choices(self):
-        raise AttributeError(
-            "HedgeType.choices is depending of the context, use get_choices() instead."
-        )
 
+class HedgeType(models.TextChoices):
     @classmethod
-    def get_choices(cls, single_procedure: bool):
-        parent_choices = super().choices
+    def build_from_context(cls, single_procedure: bool):
+        choices = HedgeTypeBase.choices
         if single_procedure:
-            return [
-                (key, label if key != HedgeType.MIXTE else "Haie arborée")
-                for key, label in parent_choices
-                if key != HedgeType.DEGRADEE
+            choices = [
+                (key, label if key != HedgeTypeBase.MIXTE else "Haie arborée")
+                for key, label in HedgeTypeBase.choices
+                if key != HedgeTypeBase.DEGRADEE
             ]
-        else:
-            return parent_choices
+
+        return models.TextChoices(
+            "ContextualHedgeType",
+            {key.upper(): (key, label) for key, label in choices},
+            type=HedgeType,
+        )
 
 
 HEDGE_PROPERTIES = (
@@ -280,8 +284,8 @@ class HedgeList(list[Hedge]):
         """Filter hedges by hedge type. Prefix with a "!" to negate the filter."""
 
         # Make sure the type filter is valid
-        if t.replace("!", "") not in HedgeType.values:
-            raise ValueError(f"Argument hedge_type must be in {HedgeType}")
+        if t.replace("!", "") not in HedgeTypeBase.values:
+            raise ValueError(f"Argument hedge_type must be in {HedgeTypeBase}")
 
         if t.startswith("!"):
             hedges = HedgeList([h for h in self if h.hedge_type != t.replace("!", "")])
@@ -619,7 +623,8 @@ class SpeciesMap(models.Model):
     hedge_types = ArrayField(
         verbose_name="Types de haies considérés",
         base_field=models.CharField(
-            max_length=32, choices=HedgeType.get_choices(single_procedure=False)
+            max_length=32,
+            choices=HedgeType.build_from_context(single_procedure=False).choices,
         ),  # EP s'applique uniquement à "droit constant" pour le moment
     )
     hedge_properties = ArrayField(

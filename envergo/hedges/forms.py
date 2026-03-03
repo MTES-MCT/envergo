@@ -45,7 +45,9 @@ class HedgePropertiesBaseForm(forms.Form):
 
     def __init__(self, single_procedure, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["type_haie"].choices = HedgeType.get_choices(single_procedure)
+        self.fields["type_haie"].choices = HedgeType.build_from_context(
+            single_procedure=single_procedure
+        ).choices
 
 
 MODE_DESTRUCTION_CHOICES = (

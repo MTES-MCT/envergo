@@ -9,9 +9,11 @@ def sites_proteges_haie_get_instructor_view_context(
 ) -> dict:
     """Return context for sites proteges regulation instructor view"""
 
-    rows = HedgeType.get_choices(
+    rows = HedgeType.build_from_context(
         single_procedure=moulinette.config.single_procedure
-    ) + (("total", "total"),)
+    ).choices + [
+        ("total", "total"),
+    ]
 
     hedges_by_type = {
         hedge_type: {
