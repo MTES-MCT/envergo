@@ -755,6 +755,10 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_settings.html"
 
+    def handle_no_permission(self):
+        """Redirect to confighaie list view when no permission is granted"""
+        return HttpResponseRedirect(reverse("confighaie_settings_home"))
+
     def dispatch(self, request, *args, **kwargs):
         """Redirect to confighaie list view if 404 error, meanings no department with params"""
         try:
