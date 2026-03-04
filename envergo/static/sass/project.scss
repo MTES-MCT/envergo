@@ -1932,6 +1932,29 @@ li.btn-link {
   }
 }
 
+img.moulinette-incentive-img {
+  max-height: 120px;
+}
+
+@media (width >= 48em) {
+  .card--horizontal-1-5 .fr-card__header {
+    width: 20%;
+    flex: 0 0 20%;
+  }
+
+  img.moulinette-incentive-img {
+    max-height: unset;
+  }
+}
+
+.responsive-img,
+.fr-card--horizontal .fr-card__img img.responsive-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 50%;
+}
+
 .fr-label--warning {
   color: var(--text-default-warning);
 }
@@ -1941,16 +1964,16 @@ li.btn-link {
 }
 
 .dark-only {
-  display: none;
+  display: none !important;
 }
 
 :root[data-fr-theme="dark"] {
   .dark-only {
-    display: inherit;
+    display: inherit !important;
   }
 
   .light-only {
-    display: none;
+    display: none !important;
   }
 }
 
