@@ -8,7 +8,7 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.tests.factories import Department34Factory
+from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -448,6 +448,8 @@ def test_confighaie_settings_view(
     admin_user,
 ):
     """Test config haie settings view"""
+    DepartmentFactory(department="24")
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     DCConfigHaieFactory(department=loire_atlantique_department)
     admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
@@ -487,6 +489,20 @@ def test_confighaie_settings_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Loire-Atlantique (44)" in content
+
+    # WHEN they visit not existing department setting page
+    url = reverse("confighaie_settings", kwargs={"department": "24"})
+    response = client.get(url)
+    # THEN redirect to confighaie list
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
+
+    # WHEN they visit existing department with no config setting page
+    url = reverse("confighaie_settings", kwargs={"department": "24"})
+    response = client.get(url)
+    # THEN redirect to confighaie list
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
 
 def test_confighaie_settings_view_map_display(
