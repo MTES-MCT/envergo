@@ -11,7 +11,6 @@ from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import DetailView, FormView, ListView
 
@@ -767,6 +766,14 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_settings.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        """Redirect to confighaie list view if 404 error, meanings no department with params"""
+        try:
+            res = super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return HttpResponseRedirect(reverse("confighaie_settings_home"))
+        return res
+
     def get_object(self, queryset=None):
         """Return ConfigHaie for the department, optionally by date slug.
 
@@ -788,12 +795,14 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
                 .first()
             )
 
-        if obj is None:
-            raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": self.queryset.model._meta.verbose_name}
-            )
         return obj
+
+    def get(self, request, *args, **kwargs):
+        """Redirect if not object"""
+        self.object = self.get_object()
+        if not self.object:
+            return HttpResponseRedirect(reverse("confighaie_settings_home"))
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         """Add department members emails and activation maps related to this department"""
