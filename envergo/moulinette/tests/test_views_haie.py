@@ -413,12 +413,20 @@ def test_confighaie_home_view(
     content = response.content.decode()
     assert response.status_code == 302
 
-    # GIVEN a connected user with no right to departement
+    # GIVEN a connected user with no right to departements
     client.force_login(haie_user)
     # WHEN they visit department setting page
     response = client.get(url)
-    # THEN response is 403
-    assert response.status_code == 403
+    # THEN response is 200
+    assert response.status_code == 200
+    # AND no confighaie is listed, but a message with
+    content = response.content.decode()
+    assert "Loire-Atlantique (44)" not in content
+    assert "Hérault (34)" not in content
+    assert (
+        "Vous n'avez pas les droits pour accéder aux pages de paramétrage du portail"
+        in content
+    )
 
     # GIVEN an instructor user
     client.force_login(haie_instructor_44)
