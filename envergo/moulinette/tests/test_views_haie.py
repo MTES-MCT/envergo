@@ -473,8 +473,9 @@ def test_confighaie_settings_view(
     client.force_login(haie_user)
     # WHEN they visit department setting page
     response = client.get(url)
-    # THEN response is 403
-    assert response.status_code == 403
+    # THEN response is redirect to confighaie list view
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
     # GIVEN an instructor user
     client.force_login(haie_instructor_44)
