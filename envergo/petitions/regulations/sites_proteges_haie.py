@@ -1,4 +1,4 @@
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeType
+from envergo.hedges.models import HedgeList
 from envergo.moulinette.regulations.sites_proteges_haie import SitesProtegesRegulation
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
@@ -9,19 +9,7 @@ def sites_proteges_haie_get_instructor_view_context(
 ) -> dict:
     """Return context for sites proteges regulation instructor view"""
 
-    rows = HedgeType.build_from_context(
-        single_procedure=moulinette.config.single_procedure
-    ).choices + [
-        ("total", "total"),
-    ]
-
-    hedges_by_type = {
-        hedge_type: {
-            TO_PLANT: {"length": 0.0, "ids": []},
-            TO_REMOVE: {"length": 0.0, "ids": []},
-        }
-        for hedge_type, _ in rows
-    }
+    hedges = HedgeList()
 
     for (
         regulation,
@@ -30,25 +18,13 @@ def sites_proteges_haie_get_instructor_view_context(
         if regulation.slug != "sites_proteges_haie":
             continue
 
-        all_hedges = {
+        hedges += {
             hedge
             for _, perimeter in perimeters.items()
             for _, hedges in perimeter.items()
             for hedge in hedges
         }
 
-        for hedge in all_hedges:
-            hedges_by_type[hedge.hedge_type][hedge.type]["ids"].append(hedge.id)
-            hedges_by_type[hedge.hedge_type][hedge.type]["length"] += hedge.length
-
-            if hedge.hedge_type != "alignement":
-                hedges_by_type["total"][hedge.type]["ids"].append(hedge.id)
-                hedges_by_type["total"][hedge.type]["length"] += hedge.length
-
-    for row, _ in rows:
-        hedges_by_type[row][TO_PLANT]["ids"].sort()
-        hedges_by_type[row][TO_REMOVE]["ids"].sort()
-
     return {
-        "sites_proteges_hedges": hedges_by_type,
+        "sites_proteges_hedges": hedges,
     }

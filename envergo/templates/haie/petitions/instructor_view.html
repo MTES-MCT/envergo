@@ -20,14 +20,17 @@
       <div class="fr-alert fr-alert--warning fr-mb-4w">
         <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
         <p>
-          Au moins un des linéaires saisis est situé hors du département choisi pour la simulation réalisée par le demandeur – {{ config.department }}.
+          Au moins un des linéaires saisis est situé hors du département choisi pour la simulation réalisée par le
+          demandeur – {{ config.department }}.
         </p>
         <p>
           Le simulateur n’est pas paramétré pour gérer les règles combinées de plusieurs départements.
-          L’instruction de la demande et l'élaboration de la décision unique peuvent nécessiter de se coordonner avec les services des préfectures concernées.
+          L’instruction de la demande et l'élaboration de la décision unique peuvent nécessiter de se coordonner avec
+          les services des préfectures concernées.
         </p>
         <p>
-          Le demandeur a été averti en ce sens (voir <a href="{% url 'petition_project' petition_project.reference %}">le résultat de la simulation</a>) avant qu'il dépose sa demande.
+          Le demandeur a été averti en ce sens (voir <a href="{% url 'petition_project' petition_project.reference %}">le
+          résultat de la simulation</a>) avant qu'il dépose sa demande.
         </p>
       </div>
     {% endif %}
@@ -36,7 +39,8 @@
       <div class="title-with-link-container">
         <h2 class="fr-mr-8w">Informations saisies par le demandeur</h2>
         <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
-           href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le dossier
+           href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}">Voir le
+          dossier
         complet</a>
       </div>
 
@@ -88,7 +92,7 @@
         </ul>
       {% endif %}
 
-      {% include 'hedges/_hedge_summary_table.html' with hedges=haies.hedges %}
+      {% include 'hedges/_hedge_summary_table.html' with hedges=haies.hedges caption="Détail par type de haie ou alignement " %}
 
     </section>
 
@@ -122,8 +126,10 @@
     <section id="section-plantation-evaluation" class="fr-my-4w fr-ml-5w">
       <h3 class="fr-h4 fr-mt-4w">Acceptabilité de la plantation</h3>
       <p class="fr-mb-3w">
-        <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la destruction.
-        Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été affiché :</em>
+        <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la
+          destruction.
+          Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été
+        affiché :</em>
       </p>
       {% if plantation_evaluation.result == "adequate" %}
         <div class="fr-alert fr-alert--success fr-mb-3w">
