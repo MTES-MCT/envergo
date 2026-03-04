@@ -8,7 +8,7 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.tests.factories import Department34Factory
+from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -426,9 +426,8 @@ def test_confighaie_home_view(
     response = client.get(url)
     # THEN department config page is displayed
     content = response.content.decode()
-    assert response.status_code == 200
-    assert "Loire-Atlantique (44)" in content
-    assert "Hérault (34)" not in content
+    assert response.status_code == 302
+    assert response.url == "/parametrage/44/permanent/"
 
     # GIVEN an admin user
     client.force_login(admin_user)
@@ -449,6 +448,8 @@ def test_confighaie_settings_view(
     admin_user,
 ):
     """Test config haie settings view"""
+    DepartmentFactory(department="24")
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     DCConfigHaieFactory(department=loire_atlantique_department)
     admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
@@ -488,6 +489,20 @@ def test_confighaie_settings_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Loire-Atlantique (44)" in content
+
+    # WHEN they visit not existing department setting page
+    url = reverse("confighaie_settings", kwargs={"department": "24"})
+    response = client.get(url)
+    # THEN redirect to confighaie list
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
+
+    # WHEN they visit existing department with no config setting page
+    url = reverse("confighaie_settings", kwargs={"department": "24"})
+    response = client.get(url)
+    # THEN redirect to confighaie list
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
 
 def test_confighaie_settings_view_map_display(
@@ -782,7 +797,7 @@ def test_confighaie_detail_permanent_slug(
     assert response.context["object"].pk == permanent_config.pk
 
 
-def test_confighaie_detail_invalid_slug_returns_404(
+def test_confighaie_detail_invalid_slug_redirects_to_confighaie_list_view(
     client,
     loire_atlantique_department,  # noqa
     haie_instructor_44,
@@ -798,7 +813,8 @@ def test_confighaie_detail_invalid_slug_returns_404(
         kwargs={"department": "44", "date_slug": "9999-01-01_9999-12-31"},
     )
     response = client.get(url)
-    assert response.status_code == 404
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
     # Malformed slug
     url = reverse(
@@ -806,7 +822,8 @@ def test_confighaie_detail_invalid_slug_returns_404(
         kwargs={"department": "44", "date_slug": "garbage"},
     )
     response = client.get(url)
-    assert response.status_code == 404
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
 
 def test_old_parametrage_url_redirects(
