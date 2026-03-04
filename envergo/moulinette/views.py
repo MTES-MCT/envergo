@@ -6,7 +6,7 @@ from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth.mixins import AccessMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -711,7 +711,7 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieListView(AccessMixin, ListView):
+class ConfigHaieListView(LoginRequiredMixin, ListView):
     """Home view for ConfigHaie settings"""
 
     queryset = ConfigHaie.objects.all()
@@ -733,17 +733,6 @@ class ConfigHaieListView(AccessMixin, ListView):
             queryset = queryset.filter(department__in=current_user.departments.all())
 
         return queryset
-
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
-
-        if (
-            not request.user.is_superuser
-            and not request.user.departments.defer("geometry").exists()
-        ):
-            return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         """Redirect to object detail if only one config is listed"""
