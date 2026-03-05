@@ -142,7 +142,7 @@ def parametrage_departments_menu(context, is_slim=False):
         "menu-settings-departments",
         is_slim=is_slim,
     )
-    return f"<li class='fr-nav__item'>{parametrage_departments_menu}</li>"
+    return mark_safe(f"<li class='fr-nav__item'>{parametrage_departments_menu}</li>")
 
 
 @register.simple_tag(takes_context=True)
