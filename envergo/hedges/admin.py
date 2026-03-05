@@ -11,7 +11,7 @@ from django.utils.html import mark_safe
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     HedgeData,
-    HedgeType,
+    HedgeTypeFactory,
     Pacage,
     Species,
     SpeciesMap,
@@ -115,7 +115,7 @@ class SpeciesAdmin(admin.ModelAdmin):
 
 class SpeciesMapAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
-        choices=HedgeType.build_from_context(
+        choices=HedgeTypeFactory.build_from_context(
             single_procedure=False
         ).choices,  # EP s'applique uniquement à "droit constant" pour le moment
         widget=forms.CheckboxSelectMultiple,

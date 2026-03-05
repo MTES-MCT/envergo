@@ -37,7 +37,7 @@ class HedgeTypeBase(models.TextChoices):
     MIXTE = "mixte", "Haie mixte"
 
 
-class HedgeType(models.TextChoices):
+class HedgeTypeFactory(models.TextChoices):
     @classmethod
     def build_from_context(cls, single_procedure: bool):
         choices = HedgeTypeBase.choices
@@ -51,7 +51,7 @@ class HedgeType(models.TextChoices):
         return models.TextChoices(
             "ContextualHedgeType",
             {key.upper(): (key, label) for key, label in choices},
-            type=HedgeType,
+            type=HedgeTypeFactory,
         )
 
 
@@ -180,7 +180,11 @@ class Hedge:
         specific zone
         """
         # if the hedge is recently planted, we consider it as a degradee hedge in a biodiversity point of view
-        hedge_type = "degradee" if self.prop("recemment_plantee") else self.hedge_type
+        hedge_type = (
+            HedgeTypeBase.DEGRADEE
+            if self.prop("recemment_plantee")
+            else self.hedge_type
+        )
 
         q_hedge_type = Q(species_maps__hedge_types__contains=[hedge_type])
 
@@ -251,30 +255,36 @@ class HedgeList(list[Hedge]):
 
     def pac(self) -> Self:
         return HedgeList(
-            [h for h in self if h.is_on_pac and h.hedge_type != "alignement"]
+            [
+                h
+                for h in self
+                if h.is_on_pac and h.hedge_type != HedgeTypeBase.ALIGNEMENT
+            ]
         )
 
     def mixte(self) -> Self:
-        return HedgeList([h for h in self if h.hedge_type == "mixte"])
+        return HedgeList([h for h in self if h.hedge_type == HedgeTypeBase.MIXTE])
 
     def arbustive(self) -> Self:
-        return HedgeList([h for h in self if h.hedge_type == "arbustive"])
+        return HedgeList([h for h in self if h.hedge_type == HedgeTypeBase.ARBUSTIVE])
 
     def buissonnante(self) -> Self:
-        return HedgeList([h for h in self if h.hedge_type == "buissonnante"])
+        return HedgeList(
+            [h for h in self if h.hedge_type == HedgeTypeBase.BUISSONNANTE]
+        )
 
     def degradee(self) -> Self:
-        return HedgeList([h for h in self if h.hedge_type == "degradee"])
+        return HedgeList([h for h in self if h.hedge_type == HedgeTypeBase.DEGRADEE])
 
     def alignement(self) -> Self:
-        return HedgeList([h for h in self if h.hedge_type == "alignement"])
+        return HedgeList([h for h in self if h.hedge_type == HedgeTypeBase.ALIGNEMENT])
 
     def n_alignement(self) -> Self:
         """Select all hedges that are of ALL types BUT alignement.
 
         Useful because we often need to separate "haies" from "alignements d'arbres".
         """
-        return HedgeList([h for h in self if h.hedge_type != "alignement"])
+        return HedgeList([h for h in self if h.hedge_type != HedgeTypeBase.ALIGNEMENT])
 
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
@@ -624,7 +634,7 @@ class SpeciesMap(models.Model):
         verbose_name="Types de haies considérés",
         base_field=models.CharField(
             max_length=32,
-            choices=HedgeType.build_from_context(single_procedure=False).choices,
+            choices=HedgeTypeFactory.build_from_context(single_procedure=False).choices,
         ),  # EP s'applique uniquement à "droit constant" pour le moment
     )
     hedge_properties = ArrayField(

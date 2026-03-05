@@ -10,7 +10,7 @@ from config.celery_app import app
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     IMPORT_STATUSES,
-    HedgeType,
+    HedgeTypeFactory,
     Species,
     SpeciesMap,
     SpeciesMapFile,
@@ -112,7 +112,7 @@ def process_species_file_map_row(row, smf):
         species = Species.objects.get(common_name=row["common_name"])
 
     hedge_types = []
-    for hedge_type in HedgeType.build_from_context(
+    for hedge_type in HedgeTypeFactory.build_from_context(
         single_procedure=False
     ).names:  # EP s'applique uniquement à "droit constant" pour le moment
         if bool(row[hedge_type]):

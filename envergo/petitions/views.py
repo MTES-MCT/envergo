@@ -57,7 +57,7 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
-from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT, HedgeType
+from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.moulinette.utils import MoulinetteUrl
@@ -810,7 +810,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         moulinette = self.object.get_moulinette()
         context["moulinette"] = moulinette
-        context["hedge_types"] = HedgeType.build_from_context(
+        context["hedge_types"] = HedgeTypeFactory.build_from_context(
             single_procedure=moulinette.config.single_procedure
         )
 
