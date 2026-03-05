@@ -93,7 +93,9 @@
                rel="noopener external">Questions fréquentes</a>
           </li>
         {% endif %}
-        {% parametrage_departments_menu %}
+        {% if user.is_instructor or user.is_superuser %}
+          {% parametrage_departments_menu %}
+        {% endif %}
       </ul>
     </nav>
   </div>
