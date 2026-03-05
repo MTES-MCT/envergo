@@ -91,9 +91,7 @@
                rel="noopener external">Questions fréquentes</a>
           </li>
         {% endif %}
-        {% if user.is_instructor or user.is_superuser %}
-          <li class="fr-nav__item">{% parametrage_departments_menu %}</li>
-        {% endif %}
+        {% parametrage_departments_menu %}
       </ul>
     </nav>
   </div>
