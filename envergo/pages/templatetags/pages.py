@@ -108,17 +108,18 @@ def faq_menu(context):
 
 @register.simple_tag(takes_context=True)
 def parametrage_departments_menu(context, is_slim=False):
-    """Generate html for the "Paramétrages" collapsible menu.
+    """Generate html for the "Paramétrages" collapsible menu entry.
 
     Lists all ConfigHaie objects visible to the current user, sorted by
-    department then by validity start date.  Each entry shows the department
-    name and, when applicable, the validity range as secondary text.
+    department then by validity start date.
+    Each entry shows the department name and, when applicable,
+    the validity range as secondary text.
     """
 
     current_user = context["user"]
 
     if not current_user.is_authenticated:
-        return None
+        return ""
 
     configs = (
         ConfigHaie.objects.select_related("department")
@@ -129,15 +130,26 @@ def parametrage_departments_menu(context, is_slim=False):
     if not current_user.is_superuser:
         configs = configs.filter(department__in=current_user.departments.all())
 
+    if not configs:
+        return ""
+
     links = (config_menu_link(config) for config in configs)
 
-    return collapsible_menu(
+    parametrage_departments_menu = collapsible_menu(
         context,
         links,
         "Paramétrage",
         "menu-settings-departments",
         is_slim=is_slim,
     )
+    return mark_safe(f"<li class='fr-nav__item'>{parametrage_departments_menu}</li>")
+
+
+@register.simple_tag(takes_context=True)
+def config_listitem(context, config):
+    """Returns list item with config info"""
+    url, label, _ = config_menu_link(config)
+    return mark_safe(f"""<a href="{url}">{label}</a>""")
 
 
 def config_menu_link(config):
@@ -163,7 +175,7 @@ def config_menu_link(config):
         validity_text = display_validity_range(config.validity_range)
         if validity_text:
             label = mark_safe(
-                f"{config.department}<br>"
+                f"{config.department} "
                 f'<span class="fr-text--xs">{validity_text}</span>'
             )
         else:

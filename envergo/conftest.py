@@ -57,6 +57,13 @@ def haie_instructor_44() -> User:
 
 
 @pytest.fixture
+def haie_instructor_no_dept() -> User:
+    """Haie user with no dept and is_instructor True"""
+    haie_instructor_no_dept = UserFactory(is_haie_instructor=True)
+    return haie_instructor_no_dept
+
+
+@pytest.fixture
 def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
 

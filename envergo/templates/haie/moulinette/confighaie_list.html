@@ -1,0 +1,28 @@
+{% extends 'haie/base.html' %}
+
+{% load pages %}
+
+{% block title %}
+  Paramétrage du portail
+{% endblock title %}
+
+{% block content %}
+  <div class="fr-grid-row fr-mb-3w">
+    <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-6">
+      <h1>Paramétrage du portail</h1>
+      {% if object_list %}
+        <ul>
+          {% for object in object_list %}
+            <li>{% config_listitem object %}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="fr-mb-3w">
+          <em>Vous n'avez pas les droits pour accéder aux pages de paramétrage du portail</em>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block after-content %}{% endblock %}

@@ -2,11 +2,13 @@ from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
 
+import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
+from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -392,14 +394,71 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
 
 
-def test_confighaie_settings_view(
+def test_confighaie_home_view(
     client,
     loire_atlantique_department,  # noqa
     haie_user,
     haie_instructor_44,
     admin_user,
 ):
+    """Test config haie settings homepage view"""
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    DCConfigHaieFactory(department=loire_atlantique_department)
+    url = reverse("confighaie_list")
+
+    # GIVEN an anonymous visitor
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is redirection to login page
+    content = response.content.decode()
+    assert response.status_code == 302
+
+    # GIVEN a connected user with no right to departements
+    client.force_login(haie_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is 200
+    assert response.status_code == 200
+    # AND no confighaie is listed, but a message with
+    content = response.content.decode()
+    assert "Loire-Atlantique (44)" not in content
+    assert "Hérault (34)" not in content
+    assert (
+        "Vous n'avez pas les droits pour accéder aux pages de paramétrage du portail"
+        in content
+    )
+
+    # GIVEN an instructor user
+    client.force_login(haie_instructor_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+    assert response.status_code == 302
+    assert response.url == "/parametrage/44/permanent/"
+
+    # GIVEN an admin user
+    client.force_login(admin_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert "Loire-Atlantique (44)" in content
+    assert "Hérault (34)" in content
+
+
+def test_confighaie_settings_view(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_user,
+    haie_user_44,
+    haie_instructor_44,
+    admin_user,
+):
     """Test config haie settings view"""
+    DepartmentFactory(department="24")
+    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     DCConfigHaieFactory(department=loire_atlantique_department)
     admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
@@ -415,8 +474,17 @@ def test_confighaie_settings_view(
     client.force_login(haie_user)
     # WHEN they visit department setting page
     response = client.get(url)
-    # THEN response is 403
-    assert response.status_code == 403
+    # THEN response is redirect to confighaie list view
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
+
+    # GIVEN a connected user with right to departement 44 but not instructor
+    client.force_login(haie_user_44)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is redirect to confighaie list view
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
     # GIVEN an instructor user
     client.force_login(haie_instructor_44)
@@ -439,6 +507,20 @@ def test_confighaie_settings_view(
     content = response.content.decode()
     assert response.status_code == 200
     assert "Loire-Atlantique (44)" in content
+
+    # WHEN they visit not existing department setting page
+    url = reverse("confighaie_settings", kwargs={"department": "24"})
+    response = client.get(url)
+    # THEN redirect to confighaie list
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
+
+    # WHEN they visit existing department with no config setting page
+    url = reverse("confighaie_settings", kwargs={"department": "24"})
+    response = client.get(url)
+    # THEN redirect to confighaie list
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
 
 def test_confighaie_settings_view_map_display(
@@ -733,7 +815,7 @@ def test_confighaie_detail_permanent_slug(
     assert response.context["object"].pk == permanent_config.pk
 
 
-def test_confighaie_detail_invalid_slug_returns_404(
+def test_confighaie_detail_invalid_slug_redirects_to_confighaie_list_view(
     client,
     loire_atlantique_department,  # noqa
     haie_instructor_44,
@@ -749,7 +831,8 @@ def test_confighaie_detail_invalid_slug_returns_404(
         kwargs={"department": "44", "date_slug": "9999-01-01_9999-12-31"},
     )
     response = client.get(url)
-    assert response.status_code == 404
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
     # Malformed slug
     url = reverse(
@@ -757,7 +840,8 @@ def test_confighaie_detail_invalid_slug_returns_404(
         kwargs={"department": "44", "date_slug": "garbage"},
     )
     response = client.get(url)
-    assert response.status_code == 404
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
 
 def test_old_parametrage_url_redirects(
