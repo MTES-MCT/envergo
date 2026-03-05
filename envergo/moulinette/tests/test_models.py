@@ -6,8 +6,6 @@ from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
-from envergo.geodata.conftest import loire_atlantique_department  # noqa
-from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
@@ -27,8 +25,6 @@ from envergo.moulinette.utils import (
     get_moulinette_class_from_site,
     get_moulinette_class_from_url,
 )
-
-pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)

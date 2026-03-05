@@ -5,6 +5,10 @@ With these settings, tests run faster.
 from .base import *  # noqa
 from .base import env
 
+# Disable warning for non-existing settings
+# (They are imported from .base)
+# flake8: noqa F405
+
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
@@ -22,7 +26,7 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # TEMPLATES
 # ------------------------------------------------------------------------------
-TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index] # noqa F405
+TEMPLATES[-1]["OPTIONS"]["loaders"] = [  # type: ignore[index]
     (
         "django.template.loaders.cached.Loader",
         [
@@ -49,3 +53,11 @@ ENV_NAME = "test"
 ENVERGO_AMENAGEMENT_DOMAIN = "testserver"
 
 RATELIMIT_ENABLE = False
+
+# LOGGING
+# ------------------------------------------------------------------------------
+# Silence the noisiest loggers during tests (DS API calls, GraphQL transport)
+# while keeping other log output visible for debugging.
+LOGGING.setdefault("loggers", {})
+LOGGING["loggers"]["envergo.petitions.demarches_simplifiees"] = {"level": "WARNING"}
+LOGGING["loggers"]["gql"] = {"level": "WARNING"}

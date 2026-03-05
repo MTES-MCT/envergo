@@ -3,7 +3,6 @@ from datetime import date, timedelta
 import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
-from django.test import override_settings
 
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
@@ -13,8 +12,7 @@ from envergo.pages.templatetags.utils import urlize_html
 pytestmark = pytest.mark.django_db
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_petition_department_list(
     inactive_haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
 ):
@@ -328,7 +326,7 @@ def test_urlize_html_known_limitations():
     assert "&amp;amp;" not in result
 
 
-@pytest.mark.urls("config.urls_haie")
+@pytest.mark.haie
 class TestConfigMenuLink:
     """Unit tests for config_menu_link: label content and validity display."""
 
@@ -393,13 +391,9 @@ class TestConfigMenuLink:
         assert "<br>" not in label_str
 
 
-@pytest.mark.urls("config.urls_haie")
+@pytest.mark.haie
 class TestParametrageDepartmentsMenu:
     """Test the content of the "Parametrage" menu."""
-
-    @pytest.fixture(autouse=True)
-    def _settings(self, settings):
-        settings.ENVERGO_HAIE_DOMAIN = "testserver"
 
     def test_anonymous_user_sees_no_menu(self, client):
         DCConfigHaieFactory()

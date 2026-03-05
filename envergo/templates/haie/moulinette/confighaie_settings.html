@@ -29,12 +29,20 @@
         <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
       </p>
 
-      <h2 id="title-cartes">Cartes</h2>
-      <p class="fr-hint-text">
-        Ici sont recensées toutes les cartes utilisées dans le simulateur pour le département.
-        Les fichiers sont téléchargeables pour consultation et vérification (format compatible QGIS).
-        Pour signaler une erreur ou poser une question, <a href="{% url 'contact_us' %}">l'équipe Envergo est disponible</a>.
-      </p>
+      <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
+
+      <div class="fr-callout">
+        <p class="fr-text--sm">
+          Ici sont recensées toutes les cartes utilisées dans le simulateur pour le département.
+          Les fichiers sont téléchargeables pour vérification par les services (format QGIS).
+        </p>
+        <p>
+          <a class="fr-btn fr-btn--secondary"
+             href="{{ department_settings_form }}"
+             target="_blank"
+             rel="noopener">Signaler une erreur / transmettre une carte</a>
+        </p>
+      </div>
 
       {% for regulation in regulation_list %}
         <h3 class="fr-h5">{{ regulation.title }}</h3>
@@ -68,11 +76,19 @@
         {% endif %}
       {% endfor %}
 
-      <h2 id="title-comptes">Comptes</h2>
+      <h2 id="title-comptes" class="fr-mb-4v">Comptes</h2>
+
+      <p>
+        <a class="fr-btn fr-btn--secondary"
+           href="{{ department_settings_form }}"
+           target="_blank"
+           rel="noopener">Ajouter / modifier les droits d'accès</a>
+      </p>
 
       <div class="fr-mb-2w">
         <p class="fr-mb-1w">
-          <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
+          <strong>Liste des comptes ayant les droits de modification (services coordonnateurs) sur tous les dossiers du
+          département :</strong>
         </p>
 
         {% if department_members.instructors_emails %}
@@ -81,14 +97,14 @@
           </ul>
         {% else %}
           <p>
-            <em>Pas de compte instructeur pour ce département.</em>
+            <em>Aucun compte</em>
           </p>
         {% endif %}
       </div>
 
       <div class="fr-mb-2w">
         <p class="fr-mb-1w">
-          <strong>Liste des comptes ayant les droits invités sur le département :</strong>
+          <strong>Liste des comptes ayant les droits de lecture sur tous les dossiers du département :</strong>
         </p>
         {% if department_members.invited_emails %}
           <ul>
@@ -96,11 +112,17 @@
           </ul>
         {% else %}
           <p>
-            <em>Pas de compte invité pour ce département.</em>
+            <em>Aucun compte</em>
           </p>
         {% endif %}
       </div>
-
+      <div class="fr-mb-2w">
+        <p class="fr-mb-1w">
+          <strong>Outre ceux listés ci-dessus, certains comptes peuvent avoir été invités en lecture sur des dossiers
+            individuels. Ces accès sont gérés et consultables directement dans la vue « Services consultés » de
+          chaque dossier.</strong>
+        </p>
+      </div>
     </div>
   </div>
 {% endblock %}

@@ -155,6 +155,7 @@ class FuzzyMultiPolygon(fuzzy.BaseFuzzyAttribute):
 class MapFactory(DjangoModelFactory):
     class Meta:
         model = Map
+        skip_postgeneration_save = True
 
     name = factory_Faker("name")
     map_type = ""
