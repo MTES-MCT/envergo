@@ -59,7 +59,8 @@ urlpatterns = [
     path("parametrage/", ConfigHaieListView.as_view(), name="confighaie_list"),
     path(
         "parametrage/<str:department>/",
-        RedirectView.as_view(pattern_name="confighaie_list"),
+        ConfigHaieSettingsView.as_view(),
+        name="confighaie_settings",
     ),
     path(
         "parametrage/<str:department>/<str:date_slug>/",
