@@ -452,6 +452,7 @@ def test_confighaie_settings_view(
     client,
     loire_atlantique_department,  # noqa
     haie_user,
+    haie_user_44,
     haie_instructor_44,
     admin_user,
 ):
@@ -471,6 +472,14 @@ def test_confighaie_settings_view(
 
     # GIVEN a connected user with no right to departement
     client.force_login(haie_user)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN response is redirect to confighaie list view
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
+
+    # GIVEN a connected user with right to departement 44 but not instructor
+    client.force_login(haie_user_44)
     # WHEN they visit department setting page
     response = client.get(url)
     # THEN response is redirect to confighaie list view

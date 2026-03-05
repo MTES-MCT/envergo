@@ -6,7 +6,6 @@ from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -710,7 +709,7 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieListView(LoginRequiredMixin, ListView):
+class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
     """Home view for ConfigHaie settings"""
 
     queryset = ConfigHaie.objects.all()
@@ -721,6 +720,8 @@ class ConfigHaieListView(LoginRequiredMixin, ListView):
 
         current_user = self.request.user
         if not current_user.is_authenticated:
+            return self.queryset.none()
+        if not current_user.is_superuser and not current_user.is_instructor:
             return self.queryset.none()
 
         queryset = (

@@ -30,13 +30,16 @@ class InstructorDepartmentAuthorised(AccessMixin):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
 
-        # Find department if exists and set object department attribute
-        if not self.department:
-            self.department = self.get_departement(**kwargs)
+        if "department" in kwargs:
+            # Find department if exists and set object department attribute
+            if not self.department:
+                self.department = self.get_departement(**kwargs)
 
-        if (
-            not request.user.is_superuser
-            and self.department not in request.user.departments.defer("geometry").all()
-        ):
-            return self.handle_no_permission()
+            if (
+                not request.user.is_superuser
+                and self.department
+                not in request.user.departments.defer("geometry").all()
+            ):
+                return self.handle_no_permission()
+
         return super().dispatch(request, *args, **kwargs)
