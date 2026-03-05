@@ -404,7 +404,7 @@ def test_confighaie_home_view(
     """Test config haie settings homepage view"""
     DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     DCConfigHaieFactory(department=loire_atlantique_department)
-    url = reverse("confighaie_settings_home")
+    url = reverse("confighaie_list")
 
     # GIVEN an anonymous visitor
     # WHEN they visit department setting page

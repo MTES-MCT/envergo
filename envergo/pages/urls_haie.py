@@ -56,11 +56,10 @@ urlpatterns = [
         name="contact_us",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),
-    path("parametrage/", ConfigHaieListView.as_view(), name="confighaie_settings_home"),
+    path("parametrage/", ConfigHaieListView.as_view(), name="confighaie_list"),
     path(
         "parametrage/<str:department>/",
-        ConfigHaieSettingsView.as_view(),
-        name="confighaie_settings",
+        RedirectView.as_view(pattern_name="confighaie_list"),
     ),
     path(
         "parametrage/<str:department>/<str:date_slug>/",
