@@ -119,7 +119,7 @@ def parametrage_departments_menu(context, is_slim=False):
     current_user = context["user"]
 
     if not current_user.is_authenticated:
-        return None
+        return ""
 
     configs = (
         ConfigHaie.objects.select_related("department")
@@ -131,7 +131,7 @@ def parametrage_departments_menu(context, is_slim=False):
         configs = configs.filter(department__in=current_user.departments.all())
 
     if not configs:
-        return None
+        return ""
 
     links = (config_menu_link(config) for config in configs)
 
