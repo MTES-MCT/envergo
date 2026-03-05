@@ -1,6 +1,5 @@
 import json
 from collections import defaultdict
-from datetime import date
 from itertools import groupby
 from operator import attrgetter
 from urllib.parse import urlencode
@@ -775,21 +774,24 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         config (by its validity_range lower bound). Otherwise the currently
         valid config is returned — same behaviour as before.
         """
-
+        if queryset is None:
+            queryset = self.get_queryset()
         if self.department is None:
             self.department = self.get_departement()
 
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
-            obj = self.queryset.get_by_date_slug(self.department, date_slug)
+            queryset = queryset.get_by_date_slug(self.department, date_slug)
         else:
-            obj = (
-                self.queryset.filter(department=self.department)
-                .valid_at(date.today())
-                .first()
-            )
+            queryset = queryset.filter(department=self.department)
 
-        return obj
+        try:
+            obj = queryset.get()
+            return obj
+        except ConfigHaie.DoesNotExist:
+            return None
+        except ConfigHaie.MultipleObjectsReturned:
+            return None
 
     def get(self, request, *args, **kwargs):
         """Redirect if not object"""
