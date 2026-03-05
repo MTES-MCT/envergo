@@ -6,7 +6,6 @@ from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
@@ -711,7 +710,7 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieListView(LoginRequiredMixin, ListView):
+class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
     """Home view for ConfigHaie settings"""
 
     queryset = ConfigHaie.objects.all()
@@ -722,6 +721,8 @@ class ConfigHaieListView(LoginRequiredMixin, ListView):
 
         current_user = self.request.user
         if not current_user.is_authenticated:
+            return self.queryset.none()
+        if not current_user.is_superuser and not current_user.is_instructor:
             return self.queryset.none()
 
         queryset = (
@@ -758,14 +759,14 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
 
     def handle_no_permission(self):
         """Redirect to confighaie list view when no permission is granted"""
-        return HttpResponseRedirect(reverse("confighaie_settings_home"))
+        return HttpResponseRedirect(reverse("confighaie_list"))
 
     def dispatch(self, request, *args, **kwargs):
         """Redirect to confighaie list view if 404 error, meanings no department with params"""
         try:
             res = super().dispatch(request, *args, **kwargs)
         except Http404:
-            return HttpResponseRedirect(reverse("confighaie_settings_home"))
+            return HttpResponseRedirect(reverse("confighaie_list"))
         return res
 
     def get_object(self, queryset=None):
@@ -795,7 +796,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         """Redirect if not object"""
         self.object = self.get_object()
         if not self.object:
-            return HttpResponseRedirect(reverse("confighaie_settings_home"))
+            return HttpResponseRedirect(reverse("confighaie_list"))
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
