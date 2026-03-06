@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeData, HedgeTypeFactory
 from envergo.moulinette.forms.fields import (
     DisplayCharField,
     DisplayChoiceField,
@@ -374,8 +374,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         },
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, single_procedure=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.single_procedure = single_procedure
 
         # We override the queryset here because it prevents a "models are not ready" exception
         self.fields["department"].queryset = Department.objects.defer(
@@ -433,6 +434,19 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                         comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
                         les haies ci-dessous.""",
                         code="inconsistent_hedges",
+                    ),
+                )
+
+        if haies:
+            HedgeType = HedgeTypeFactory.build_from_context(
+                single_procedure=self.single_procedure
+            )
+            if not all(hedge.hedge_type in HedgeType.values for hedge in haies):
+                self.add_error(
+                    "haies",
+                    ValidationError(
+                        "Certains types de haies sélectionnés ne respectent pas la doctrine du département.",
+                        code="not_supported",
                     ),
                 )
 

@@ -2455,6 +2455,25 @@ class MoulinetteHaie(Moulinette):
     main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
 
+    def _get_single_procedure(self):
+        config = self.config
+        return config.single_procedure if config else False
+
+    def get_main_form(self):
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **self.form_kwargs
+        )
+
+    @cached_property
+    def bound_main_form(self):
+        if self.main_form.is_bound:
+            return self.main_form
+        form_kwargs = self.form_kwargs.copy()
+        form_kwargs["data"] = form_kwargs.get("initial", {})
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **form_kwargs
+        )
+
     def get_config(self):
         if not self.department:
             return None
