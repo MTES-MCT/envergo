@@ -1462,14 +1462,11 @@ class ConfigHaie(ConfigBase):
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",
                 violation_error_message="Les paramètres de régime unique doivent comporter des coefficients de "
-                "compensation numérique pour chaque type de haies (degradee, buissonnante, "
+                "compensation numérique pour chaque type de haies (buissonnante, "
                 "arbustive et mixte).",
                 check=Q(single_procedure=False)
                 | (
                     Q(single_procedure_settings__has_key="coeff_compensation")
-                    & Q(
-                        single_procedure_settings__coeff_compensation__has_key="degradee"
-                    )
                     & Q(
                         single_procedure_settings__coeff_compensation__degradee__regex=r"^\d+(\.\d+)?$"
                     )
@@ -2459,6 +2456,25 @@ class MoulinetteHaie(Moulinette):
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
+
+    def _get_single_procedure(self):
+        config = self.config
+        return config.single_procedure if config else False
+
+    def get_main_form(self):
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **self.form_kwargs
+        )
+
+    @cached_property
+    def bound_main_form(self):
+        if self.main_form.is_bound:
+            return self.main_form
+        form_kwargs = self.form_kwargs.copy()
+        form_kwargs["data"] = form_kwargs.get("initial", {})
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **form_kwargs
+        )
 
     def get_config(self):
         if not self.department:

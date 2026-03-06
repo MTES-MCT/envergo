@@ -8,7 +8,7 @@ from django.core.validators import RegexValidator
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HEDGE_TYPES, PACAGE_RE, Pacage
+from envergo.hedges.models import PACAGE_RE, HedgeTypeFactory, Pacage
 from envergo.hedges.regulations import (
     HEDGE_KEYS,
     EssencesBocageresCondition,
@@ -130,7 +130,10 @@ def get_hedge_compensation_details(hedge, r):
 
     return {
         "id": hedge.id,
-        "hedge_type": get_human_readable_value(HEDGE_TYPES, hedge.hedge_type),
+        "hedge_type": get_human_readable_value(
+            HedgeTypeFactory.build_from_context(single_procedure=False).choices,
+            hedge.hedge_type,
+        ),  # EP s'applique uniquement à "droit constant" pour le moment
         "properties": ", ".join(hedge_properties) if hedge_properties else "-",
         "length": hedge.length,
         "r": r,

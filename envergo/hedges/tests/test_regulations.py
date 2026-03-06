@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
+from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.regulations import (
     EssencesBocageresCondition,
     MinLengthCondition,
@@ -13,13 +14,28 @@ from envergo.hedges.regulations import (
     TreeAlignmentsCondition,
 )
 from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
+from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
+from envergo.moulinette.tests.utils import make_moulinette_haie_data
 
 pytestmark = pytest.mark.django_db
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def criterion_evaluator():
-    return Mock
+    DCConfigHaieFactory()
+    data = make_moulinette_haie_data()
+    moulinette = MoulinetteHaie(data)
+    return EspecesProtegeesAisne(moulinette, 0, {})
+
+
+@pytest.fixture
+def criterion_evaluator_ru():
+    RUConfigHaieFactory()
+    data = make_moulinette_haie_data()
+    moulinette = MoulinetteHaie(data)
+    return EspecesProtegeesAisne(moulinette, 0, {})
 
 
 @pytest.fixture
@@ -187,7 +203,7 @@ def test_safety_condition(hedge_data):
     assert not condition.result
 
 
-def test_quality_condition_lengths_to_plant(hedge_data):
+def test_quality_condition_lengths_to_plant(hedge_data, criterion_evaluator):
     """Lengths to plant depends on R."""
 
     condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
@@ -207,7 +223,7 @@ def test_quality_condition_lengths_to_plant(hedge_data):
     assert round(minimum_lengths_to_plant["alignement"]) == 4 * 10
 
 
-def test_hedge_quality_should_be_sufficient():
+def test_hedge_quality_should_be_sufficient(criterion_evaluator):
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
@@ -236,15 +252,15 @@ def test_hedge_quality_should_be_sufficient():
 
     assert condition.result
     assert condition.context["missing_plantation"] == {
-        "mixte": 0,
-        "alignement": 0,
-        "arbustive": 0,
-        "buissonante": 0,
-        "degradee": 0,
+        HedgeTypeBase.MIXTE: 0,
+        HedgeTypeBase.ALIGNEMENT: 0,
+        HedgeTypeBase.ARBUSTIVE: 0,
+        HedgeTypeBase.BUISSONNANTE: 0,
+        HedgeTypeBase.DEGRADEE: 0,
     }
 
 
-def test_hedge_quality_should_not_be_sufficient():
+def test_hedge_quality_should_not_be_sufficient_dc(criterion_evaluator):
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
@@ -272,11 +288,45 @@ def test_hedge_quality_should_not_be_sufficient():
     condition.evaluate()
     assert not condition.result
     assert condition.context["missing_plantation"] == {
-        "mixte": 5,
-        "alignement": 5,
-        "arbustive": 5,
-        "buissonante": 5,
-        "degradee": 10,
+        HedgeTypeBase.MIXTE: 5,
+        HedgeTypeBase.ALIGNEMENT: 5,
+        HedgeTypeBase.ARBUSTIVE: 5,
+        HedgeTypeBase.BUISSONNANTE: 5,
+        HedgeTypeBase.DEGRADEE: 10,
+    }
+
+
+def test_hedge_quality_should_not_be_sufficient_ru(criterion_evaluator_ru):
+    hedge_data = Mock()
+    hedge_data.hedges_to_plant.return_value = []
+    hedge_data.length_to_plant.return_value = 0
+    hedge_data.length_to_plant_pac.return_value = 5
+    hedge_data.lineaire_detruit_pac.return_value = 10
+
+    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator_ru)
+    condition.get_minimum_lengths_to_plant = Mock(
+        return_value={
+            "buissonnante": 10,
+            "arbustive": 10,
+            "mixte": 10,
+            "alignement": 10,
+        }
+    )
+    condition.get_lengths_to_plant = Mock(
+        return_value={
+            "buissonnante": 5,
+            "arbustive": 5,
+            "mixte": 5,
+            "alignement": 5,
+        }
+    )
+    condition.evaluate()
+    assert not condition.result
+    assert condition.context["missing_plantation"] == {
+        HedgeTypeBase.MIXTE: 5,
+        HedgeTypeBase.ALIGNEMENT: 5,
+        HedgeTypeBase.ARBUSTIVE: 5,
+        HedgeTypeBase.BUISSONNANTE: 5,
     }
 
 

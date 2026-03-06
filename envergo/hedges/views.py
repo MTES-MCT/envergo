@@ -58,20 +58,26 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
     def get_hedge_to_plant_data_form(self, config=None):
         """Return hedge data form to plant from config"""
-        data_form = HedgeToPlantPropertiesForm(prefix="plantation")
+        data_form = HedgeToPlantPropertiesForm(
+            single_procedure=True,  # If the form is displayed without context, we presumed it is in "regime unique"
+            prefix="plantation",
+        )
         if config:
             data_form = import_string(config.hedge_to_plant_properties_form)(
-                prefix="plantation"
+                single_procedure=config.single_procedure, prefix="plantation"
             )
 
         return data_form
 
     def get_hedge_to_remove_data_form(self, config=None):
         """Return hedge data form to remove from config"""
-        data_form = HedgeToRemovePropertiesForm(prefix="removal")
+        data_form = HedgeToRemovePropertiesForm(
+            single_procedure=True,  # If the form is displayed without context, we presumed it is in "regime unique"
+            prefix="removal",
+        )
         if config:
             data_form = import_string(config.hedge_to_remove_properties_form)(
-                prefix="removal"
+                single_procedure=config.single_procedure, prefix="removal"
             )
 
         return data_form
