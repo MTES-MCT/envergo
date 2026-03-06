@@ -49,7 +49,7 @@ from envergo.evaluations.models import (
 )
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -2457,35 +2457,24 @@ class MoulinetteHaie(Moulinette):
     main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
 
-    def is_valid(self):
-        """The moulinette is valid if it can run the evaluation.
-        - MoulinetteBase is valid
-        - declared hedge types are supported
-        """
+    def _get_single_procedure(self):
+        config = self.config
+        return config.single_procedure if config else False
 
-        def support_hedge_types():
-            data = self.get_catalog_data()
-            if "haies" not in data:
-                return True
+    def get_main_form(self):
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **self.form_kwargs
+        )
 
-            HedgeType = HedgeTypeFactory.build_from_context(
-                single_procedure=self.config.single_procedure
-            )
-            hedges = data["haies"]
-            return all(hedge.hedge_type in HedgeType.values for hedge in hedges)
-
-        if not support_hedge_types():
-            if not hasattr(self.main_form, "cleaned_data"):
-                self.main_form.full_clean()
-            self.main_form.add_error(
-                "haies",
-                ValidationError(
-                    "Certains types de haies sélectionnés ne respectent pas la doctrine du département.",
-                    code="not_supported",
-                ),
-            )
-
-        return super().is_valid()
+    @cached_property
+    def bound_main_form(self):
+        if self.main_form.is_bound:
+            return self.main_form
+        form_kwargs = self.form_kwargs.copy()
+        form_kwargs["data"] = form_kwargs.get("initial", {})
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **form_kwargs
+        )
 
     def get_config(self):
         if not self.department:
