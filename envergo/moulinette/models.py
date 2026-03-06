@@ -1459,14 +1459,11 @@ class ConfigHaie(ConfigBase):
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",
                 violation_error_message="Les paramètres de régime unique doivent comporter des coefficients de "
-                "compensation numérique pour chaque type de haies (degradee, buissonnante, "
+                "compensation numérique pour chaque type de haies (buissonnante, "
                 "arbustive et mixte).",
                 check=Q(single_procedure=False)
                 | (
                     Q(single_procedure_settings__has_key="coeff_compensation")
-                    & Q(
-                        single_procedure_settings__coeff_compensation__has_key="degradee"
-                    )
                     & Q(
                         single_procedure_settings__coeff_compensation__degradee__regex=r"^\d+(\.\d+)?$"
                     )
