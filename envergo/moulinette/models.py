@@ -49,7 +49,7 @@ from envergo.evaluations.models import (
 )
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -2456,6 +2456,36 @@ class MoulinetteHaie(Moulinette):
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
+
+    def is_valid(self):
+        """The moulinette is valid if it can run the evaluation.
+        - MoulinetteBase is valid
+        - declared hedge types are supported
+        """
+
+        def support_hedge_types():
+            data = self.get_catalog_data()
+            if "haies" not in data:
+                return True
+
+            HedgeType = HedgeTypeFactory.build_from_context(
+                single_procedure=self.config.single_procedure
+            )
+            hedges = data["haies"]
+            return all(hedge.hedge_type in HedgeType.values for hedge in hedges)
+
+        if not support_hedge_types():
+            if not hasattr(self.main_form, "cleaned_data"):
+                self.main_form.full_clean()
+            self.main_form.add_error(
+                "haies",
+                ValidationError(
+                    "Certains types de haies sélectionnés ne respectent pas la doctrine du département.",
+                    code="not_supported",
+                ),
+            )
+
+        return super().is_valid()
 
     def get_config(self):
         if not self.department:
