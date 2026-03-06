@@ -138,7 +138,7 @@ jobs:
       - name: Install Playwright Browsers
         run: npm run playwright:install
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Create .env file for GUH
         run: echo "DJANGO_ENVERGO_HAIE_DOMAIN=localhost" >> .env
       - name: Launch services for GUH
