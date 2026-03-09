@@ -271,120 +271,6 @@ class PetitionProjectCreate(FormView):
 
     form_class = PetitionProjectForm
 
-    def pre_fill_demarche_simplifiee(self, project):
-        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
-
-        Return the url of the created dossier if successful, None otherwise
-        """
-
-        moulinette_url = project.moulinette_url
-        parsed_url = urlparse(moulinette_url)
-        moulinette_data = parse_qs(parsed_url.query)
-        # Flatten the dictionary
-        for key, value in moulinette_data.items():
-            if isinstance(value, list) and len(value) == 1:
-                moulinette_data[key] = value[0]
-        department = moulinette_data.get("department")  # department is mandatory
-        if not department:
-            logger.error(
-                "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
-                extra={"moulinette_url": moulinette_url},
-            )
-            return None
-
-        moulinette_data["haies"] = project.hedge_data
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
-        config = moulinette.config
-        if config is None:
-            logger.error(
-                "No valid ConfigHaie found for department",
-                extra={"department": department},
-            )
-            return None
-        self.request.alerts.config = config
-        demarche_id = config.demarche_simplifiee_number
-
-        if not demarche_id:
-            logger.error(
-                "An activated department should always have a demarche_simplifiee_number",
-                extra={"haie config": config.id, "department": department},
-            )
-
-            self.request.alerts.append(
-                PetitionProjectCreationProblem(
-                    "missing_demarche_simplifiee_number", is_fatal=True
-                )
-            )
-            return None
-
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
-        body = {}
-        for field in config.demarche_simplifiee_pre_fill_config:
-            if "id" not in field or "value" not in field:
-                logger.error(
-                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
-                    extra={"haie config": config.id, "field": field},
-                )
-
-                self.request.alerts.append(
-                    PetitionProjectCreationProblem(
-                        "invalid_prefill_field",
-                        {
-                            "field": field,
-                        },
-                    )
-                )
-                continue
-
-            body[f"champ_{field['id']}"] = self.get_value_from_source(
-                project,
-                moulinette,
-                field["value"],
-                field.get("mapping", {}),
-                config,
-            )
-
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
-                f"\nrequest.url: {api_url}"
-                f"\nrequest.body: {body}"
-            )
-            return None, None, None
-
-        response = requests.post(
-            api_url, json=body, headers={"Content-Type": "application/json"}
-        )
-        redirect_url, dossier_number = None, None
-        if 200 <= response.status_code < 400:
-            data = response.json()
-            redirect_url = data.get("dossier_url")
-            dossier_number = data.get("dossier_number")
-        else:
-            logger.error(
-                "Error while pre-filling a dossier on demarches-simplifiees.fr",
-                extra={
-                    "api_url": response.request.url,
-                    "request_body": response.request.body,
-                    "status_code": response.status_code,
-                    "response.text": response.text,
-                },
-            )
-            self.request.alerts.append(
-                PetitionProjectCreationProblem(
-                    "ds_api_http_error",
-                    {
-                        "response": response,
-                        "api_url": api_url,
-                        "request_body": body,
-                    },
-                    is_fatal=True,
-                )
-            )
-        return redirect_url, dossier_number
-
     def dispatch(self, request, *args, **kwargs):
         # store alerts in the request object to notify admins if needed
         if request.method == "GET":
@@ -462,6 +348,120 @@ class PetitionProjectCreate(FormView):
                 )
 
         return res
+
+    def pre_fill_demarche_simplifiee(self, project):
+        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
+
+        Return the url of the created dossier and its number if successful, None otherwise
+        """
+
+        moulinette_url = project.moulinette_url
+        parsed_url = urlparse(moulinette_url)
+        moulinette_data = parse_qs(parsed_url.query)
+        # Flatten the dictionary
+        for key, value in moulinette_data.items():
+            if isinstance(value, list) and len(value) == 1:
+                moulinette_data[key] = value[0]
+        department = moulinette_data.get("department")  # department is mandatory
+        if not department:
+            logger.error(
+                "Moulinette URL for guichet unique de la haie should always contain a department to "
+                "start a demarche simplifiée",
+                extra={"moulinette_url": moulinette_url},
+            )
+            return None, None
+
+        moulinette_data["haies"] = project.hedge_data
+        form_data = {"initial": moulinette_data, "data": moulinette_data}
+        moulinette = MoulinetteHaie(form_data)
+        config = moulinette.config
+        if config is None:
+            logger.error(
+                "No valid ConfigHaie found for department",
+                extra={"department": department},
+            )
+            return None, None
+        self.request.alerts.config = config
+        demarche_id = config.demarche_simplifiee_number
+
+        if not demarche_id:
+            logger.error(
+                "An activated department should always have a demarche_simplifiee_number",
+                extra={"haie config": config.id, "department": department},
+            )
+
+            self.request.alerts.append(
+                PetitionProjectCreationProblem(
+                    "missing_demarche_simplifiee_number", is_fatal=True
+                )
+            )
+            return None, None
+
+        api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
+        body = {}
+        for field in config.demarche_simplifiee_pre_fill_config:
+            if "id" not in field or "value" not in field:
+                logger.error(
+                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
+                    extra={"haie config": config.id, "field": field},
+                )
+
+                self.request.alerts.append(
+                    PetitionProjectCreationProblem(
+                        "invalid_prefill_field",
+                        {
+                            "field": field,
+                        },
+                    )
+                )
+                continue
+
+            body[f"champ_{field['id']}"] = self.get_value_from_source(
+                project,
+                moulinette,
+                field["value"],
+                field.get("mapping", {}),
+                config,
+            )
+
+        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            logger.warning(
+                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"\nrequest.url: {api_url}"
+                f"\nrequest.body: {body}"
+            )
+            return None, None
+
+        response = requests.post(
+            api_url, json=body, headers={"Content-Type": "application/json"}
+        )
+        redirect_url, dossier_number = None, None
+        if 200 <= response.status_code < 400:
+            data = response.json()
+            redirect_url = data.get("dossier_url")
+            dossier_number = data.get("dossier_number")
+        else:
+            logger.error(
+                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                extra={
+                    "api_url": response.request.url,
+                    "request_body": response.request.body,
+                    "status_code": response.status_code,
+                    "response.text": response.text,
+                },
+            )
+            self.request.alerts.append(
+                PetitionProjectCreationProblem(
+                    "ds_api_http_error",
+                    {
+                        "response": response,
+                        "api_url": api_url,
+                        "request_body": body,
+                    },
+                    is_fatal=True,
+                )
+            )
+        return redirect_url, dossier_number
 
     def get_value_from_source(
         self, petition_project, moulinette, source, mapping, config
