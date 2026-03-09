@@ -19,6 +19,7 @@ from envergo.moulinette.regulations import (  # noqa
     sage,
     sites_classes_haie,
     sites_inscrits_haie,
+    perimetres_protection_captages,
     sites_proteges_haie,
     urbanisme_haie,
 )
