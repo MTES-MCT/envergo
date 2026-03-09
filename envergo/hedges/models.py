@@ -48,11 +48,17 @@ class HedgeTypeFactory(models.TextChoices):
                 if key != HedgeTypeBase.DEGRADEE
             ]
 
-        return models.TextChoices(
+        from django.conf import settings
+
+        hedge_type = models.TextChoices(
             "ContextualHedgeType",
             {key.upper(): (key, label) for key, label in choices},
             type=HedgeTypeFactory,
         )
+        hedge_type.faq_url = settings.HAIE_FAQ_URLS[
+            "RU_HEDGES_TYPES" if single_procedure else "DC_HEDGES_TYPES"
+        ]
+        return hedge_type
 
 
 HEDGE_PROPERTIES = (
