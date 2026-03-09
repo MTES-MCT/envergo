@@ -747,7 +747,7 @@ def test_confighaie_settings_view_with_multiple_configs(
         department=loire_atlantique_department,
         validity_range=DateRange(one_year_ago, today, "[)"),
     )
-    current_config = DCConfigHaieFactory(
+    DCConfigHaieFactory(
         department=loire_atlantique_department,
         validity_range=DateRange(today, tomorrow, "[)"),
     )
@@ -755,9 +755,9 @@ def test_confighaie_settings_view_with_multiple_configs(
     client.force_login(haie_instructor_44)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
     response = client.get(url)
-
-    assert response.status_code == 200
-    assert response.context["object"].pk == current_config.pk
+    # THEN redirection to confighaie list page
+    assert response.status_code == 302
+    assert response.url == "/parametrage/"
 
 
 def test_confighaie_detail_by_date_slug(
