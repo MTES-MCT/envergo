@@ -282,7 +282,7 @@ def test_petition_project_detail(mock_post, client, site):
     assert response.context["has_hedges_outside_department"]
     assert "Le projet est hors du département sélectionné" in response.content.decode()
 
-    # Given hedges in department 44 and accross the department border
+    # Given hedges in department 44 and across the department border
     hedge_44 = HedgeFactory(
         latLngs=[
             {"lat": 47.202984120693635, "lng": -1.7100316286087038},
@@ -310,6 +310,9 @@ def test_petition_project_detail(mock_post, client, site):
     assert (
         "Le projet est hors du département sélectionné" not in response.content.decode()
     )
+
+    # THEN I should see prefill url
+    assert project.demarches_simplifiees_prefill_url in response.content.decode()
 
     # THEN I should not see instructor info for simulations
     assert "Vous souhaitez modifier votre simulation ?" in response.content.decode()
