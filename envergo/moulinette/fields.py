@@ -14,12 +14,12 @@ from envergo.moulinette.regulations import (  # noqa
     loisurleau,
     natura2000,
     natura2000_haie,
+    perimetres_protection_captages,
     regime_unique_haie,
     reserves_naturelles,
     sage,
     sites_classes_haie,
     sites_inscrits_haie,
-    perimetres_protection_captages,
     sites_proteges_haie,
     urbanisme_haie,
 )

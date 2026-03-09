@@ -68,7 +68,9 @@ def test_moulinette_evaluation(coords, expected_result):
     moulinette = MoulinetteHaie(data)
     assert moulinette.perimetres_protection_captages.result == expected_result
     if expected_result != "non_concerne":
-        criterion = moulinette.perimetres_protection_captages.perimetres_protection_captages
+        criterion = (
+            moulinette.perimetres_protection_captages.perimetres_protection_captages
+        )
         assert criterion.result == expected_result
 
 
