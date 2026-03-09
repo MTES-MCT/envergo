@@ -274,17 +274,6 @@ class QualityCondition(PlantationCondition):
         return mark_safe("<br />\n".join(t))
 
 
-HEDGE_KEYS = OrderedDict(
-    [
-        ("mixte", "Type 5 (mixte)"),
-        ("alignement", "Type 4 (alignement)"),
-        ("arbustive", "Type 3 (arbustive)"),
-        ("buissonnante", "Type 2 (buissonnante)"),
-        ("degradee", "Type 1 (dégradée)"),
-    ]
-)
-
-
 class NormandieQualityCondition(PlantationCondition):
     label = "Type de haie plantée"
     order = 2
@@ -302,6 +291,14 @@ class NormandieQualityCondition(PlantationCondition):
         "degradee": ["buissonnante", "arbustive", "mixte"],
     }
 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # get the available hedge types for this context
+        self.HedgeType = HedgeTypeFactory.build_from_context(
+            self.criterion_evaluator.moulinette.config.single_procedure
+        )
+
     def evaluate(self):
         LC = self.catalog["LC"].copy()  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
@@ -318,7 +315,7 @@ class NormandieQualityCondition(PlantationCondition):
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
 
-        for hedge_type in HEDGE_KEYS.keys():
+        for hedge_type in self.HedgeType.values:
             for compensation_type in self.compensations[hedge_type]:
 
                 # Si on compense avec un type de qualité supérieur, le taux

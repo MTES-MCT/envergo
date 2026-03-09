@@ -21,13 +21,6 @@ class HedgePropertiesBaseForm(forms.Form):
 
     type_haie = forms.ChoiceField(
         choices=[],
-        label=mark_safe(
-            f"""
-        <span>Type de haie</span>
-        <a href="{settings.HAIE_FAQ_URLS["FIVE_HEDGES_TYPES"]}"
-        target="_blank" rel="noopener">Aide</a>
-        """
-        ),
         widget=HedgeChoiceField,
     )
     sur_parcelle_pac = forms.BooleanField(
@@ -45,9 +38,17 @@ class HedgePropertiesBaseForm(forms.Form):
 
     def __init__(self, single_procedure, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["type_haie"].choices = HedgeTypeFactory.build_from_context(
+        HedgeType = HedgeTypeFactory.build_from_context(
             single_procedure=single_procedure
-        ).choices
+        )
+        self.fields["type_haie"].choices = HedgeType.choices
+        self.fields["type_haie"].label = mark_safe(
+            f"""
+        <span>Type de haie</span>
+        <a href="{HedgeType.faq_url}"
+        target="_blank" rel="noopener">Aide</a>
+        """
+        )
 
 
 MODE_DESTRUCTION_CHOICES = (
