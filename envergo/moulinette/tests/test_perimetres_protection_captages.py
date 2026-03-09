@@ -1,3 +1,5 @@
+"""Tests for the périmètres de protection de captages regulation."""
+
 import pytest
 
 from envergo.moulinette.models import MoulinetteHaie
@@ -15,7 +17,6 @@ from envergo.moulinette.tests.utils import (
     make_moulinette_haie_data,
 )
 
-REGULATION_SLUG = "perimetres_protection_captages"
 EVALUATOR_PATH = (
     "envergo.moulinette.regulations.perimetres_protection_captages"
     ".PerimetresProtectionCaptagesHaie"
@@ -26,38 +27,27 @@ REGULATION_EVALUATOR_PATH = (
 )
 
 
-@pytest.fixture()
-def captage_regulation():
-    return RegulationFactory(
-        regulation=REGULATION_SLUG,
+@pytest.fixture(autouse=True)
+def captage_criteria(bizous_town_center):  # noqa
+    regulation = RegulationFactory(
+        regulation="perimetres_protection_captages",
         evaluator=REGULATION_EVALUATOR_PATH,
         has_perimeters=True,
         show_map=False,
     )
-
-
-@pytest.fixture()
-def captage_perimeter(captage_regulation, bizous_town_center):
-    return PerimeterFactory(
+    perimeter = PerimeterFactory(
         name="Captage Bizous",
         activation_map=bizous_town_center,
-        regulations=[captage_regulation],
+        regulations=[regulation],
     )
-
-
-@pytest.fixture()
-def captage_criteria(captage_regulation, captage_perimeter, bizous_town_center):
-    criteria = [
-        CriterionFactory(
-            title="Périmètres de protection de captages",
-            regulation=captage_regulation,
-            perimeter=captage_perimeter,
-            evaluator=EVALUATOR_PATH,
-            activation_map=bizous_town_center,
-            activation_mode="hedges_intersection",
-        ),
-    ]
-    return criteria
+    CriterionFactory(
+        title="Périmètres de protection de captages",
+        regulation=regulation,
+        perimeter=perimeter,
+        evaluator=EVALUATOR_PATH,
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    )
 
 
 @pytest.mark.parametrize(
@@ -68,7 +58,7 @@ def captage_criteria(captage_regulation, captage_perimeter, bizous_town_center):
         (COORDS_BIZOUS_OUTSIDE, "non_concerne"),
     ],
 )
-def test_moulinette_evaluation(coords, expected_result, captage_criteria):
+def test_moulinette_evaluation(coords, expected_result):
     """Test that the regulation returns a_verifier when hedges intersect the perimeter."""
 
     DCConfigHaieFactory()
@@ -82,7 +72,7 @@ def test_moulinette_evaluation(coords, expected_result, captage_criteria):
         assert criterion.result == expected_result
 
 
-def test_procedure_type_is_always_declaration(captage_criteria):
+def test_procedure_type_is_always_declaration():
     """Whatever the result, the procedure type must stay 'declaration'."""
 
     DCConfigHaieFactory()
@@ -95,7 +85,7 @@ def test_procedure_type_is_always_declaration(captage_criteria):
     assert regulation._evaluator.procedure_type == "declaration"
 
 
-def test_map_never_displays(captage_criteria):
+def test_map_never_displays():
     """The map must never be displayed because the cartographic data is sensitive."""
 
     DCConfigHaieFactory()
@@ -108,7 +98,7 @@ def test_map_never_displays(captage_criteria):
     assert not regulation.display_map()
 
 
-def test_map_does_not_display_even_when_non_concerne(captage_criteria):
+def test_map_does_not_display_even_when_non_concerne():
     """The map must not display even when result is non_concerne."""
 
     DCConfigHaieFactory()
