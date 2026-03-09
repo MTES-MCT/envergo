@@ -501,7 +501,9 @@ class EspecesProtegeesNormandie(
         # Compensation rate cannot go below 1:1 though
         reduced_lpm = 0
 
-        HedgeType = HedgeTypeFactory.build_from_context(single_procedure=False) # EP normandie is under DC
+        HedgeType = HedgeTypeFactory.build_from_context(
+            single_procedure=False
+        )  # EP normandie is under DC
         for hedge_type in HedgeType.values:
             lc_type = LC[hedge_type]
             lc_type *= 0.8 if hedge_type != "mixte" else 1.0
