@@ -266,8 +266,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         return None
 
 
-class PetitionProjectPrefillMixin:
-    """Mixin for prefilling PetitionProject."""
+class PetitionProjectCreate(FormView):
+    """PetitionProject creation view, only used with POST method"""
+
+    form_class = PetitionProjectForm
 
     def pre_fill_demarche_simplifiee(self, project):
         """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
@@ -382,10 +384,6 @@ class PetitionProjectPrefillMixin:
                 )
             )
         return redirect_url, dossier_number
-
-
-class PetitionProjectCreate(PetitionProjectPrefillMixin, FormView):
-    form_class = PetitionProjectForm
 
     def dispatch(self, request, *args, **kwargs):
         # store alerts in the request object to notify admins if needed
@@ -655,7 +653,7 @@ class PetitionProjectCreate(PetitionProjectPrefillMixin, FormView):
         )
 
 
-class PetitionProjectDetail(PetitionProjectPrefillMixin, DetailView):
+class PetitionProjectDetail(DetailView):
     template_name = "haie/moulinette/petition_project.html"
     queryset = PetitionProject.objects.all()
     slug_field = "reference"
@@ -737,21 +735,8 @@ class PetitionProjectDetail(PetitionProjectPrefillMixin, DetailView):
         context["edit_url"] = edit_url
 
         if self.object.demarches_simplifiees_state == "draft":
-            if not self.object.demarches_simplifiees_prefill_url:
-                demarche_simplifiee_url, dossier_number = (
-                    self.pre_fill_demarche_simplifiee(self.object)
-                )
-                if demarche_simplifiee_url.startswith(
-                    "https://www.demarches-simplifiees.fr/commencer/"
-                ):
-                    self.object.demarches_simplifiees_prefill_url = (
-                        demarche_simplifiee_url
-                    )
-                    self.object.demarches_simplifiees_dossier_number = dossier_number
-                    self.object.save()
-
             context["demarches_simplifiees_prefill_url"] = (
-                self.object.demarches_simplifiees_prefill_url
+                self.object.demarches_simplifiees_prefill_url or ""
             )
         context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
