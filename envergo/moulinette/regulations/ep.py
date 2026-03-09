@@ -10,7 +10,6 @@ from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import PACAGE_RE, HedgeTypeFactory, Pacage
 from envergo.hedges.regulations import (
-    HEDGE_KEYS,
     EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
@@ -501,8 +500,9 @@ class EspecesProtegeesNormandie(
         # Compensation can be reduced when planting a better type
         # Compensation rate cannot go below 1:1 though
         reduced_lpm = 0
-        hedge_keys = HEDGE_KEYS.keys()
-        for hedge_type in hedge_keys:
+
+        HedgeType = HedgeTypeFactory.build_from_context(single_procedure=False) # EP normandie is under DC
+        for hedge_type in HedgeType.values:
             lc_type = LC[hedge_type]
             lc_type *= 0.8 if hedge_type != "mixte" else 1.0
             lc_type = max(lc_type, LD[hedge_type])
