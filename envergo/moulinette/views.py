@@ -781,17 +781,16 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
 
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
-            queryset = queryset.get_by_date_slug(self.department, date_slug)
+            obj = queryset.get_by_date_slug(self.department, date_slug)
         else:
             queryset = queryset.filter(department=self.department)
-
-        try:
-            obj = queryset.get()
-            return obj
-        except ConfigHaie.DoesNotExist:
-            return None
-        except ConfigHaie.MultipleObjectsReturned:
-            return None
+            try:
+                obj = queryset.get()
+            except ConfigHaie.DoesNotExist:
+                return None
+            except ConfigHaie.MultipleObjectsReturned:
+                return None
+        return obj
 
     def get(self, request, *args, **kwargs):
         """Redirect if not object"""
