@@ -366,3 +366,8 @@ def render_field(context, field, **kwargs):
     )
 
     return t.render(new_context)
+
+
+@register.filter
+def min_numeric(values):
+    return min(map(float, values))

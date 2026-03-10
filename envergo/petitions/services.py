@@ -316,7 +316,7 @@ def get_messages_and_senders_from_ds(
 
     dossier = Dossier.from_dict(dossier_with_messages_as_dict)
     petitioner_email = dossier.usager.email
-    instructor_emails = [i.email for i in dossier.instructeurs]
+    instructor_emails = dossier.instructor_emails
 
     messages = sorted(
         dossier.messages, key=lambda message: message.createdAt, reverse=True

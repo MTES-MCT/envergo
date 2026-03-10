@@ -17,7 +17,7 @@ Les outils principaux suivants sont utilisés :
 
 ## Démarrage
 
-Cookiecutter-Django est un initialiseur de projet, par les auteurs de [Two Scoops of Django](https://www.feldroy.com/books/two-scoops-of-django-3-x).
+Cookiecutter-Django est un initialiseur de projet.
 
 Par conséquent, [on se référera à sa doc](https://cookiecutter-django.readthedocs.io/en/latest/index.html) pour en savoir plus sur l'organisation du projet et les différents outils mis en place.
 

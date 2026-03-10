@@ -1,0 +1,35 @@
+{% load utils %}
+{% load evaluations %}
+{% load humanize %}
+
+<p>L'étude doit évaluer la surface de zones humides détruites ou affectées par le projet.</p>
+
+<p>
+  {% if moulinette.loi_sur_leau.zone_humide.result == 'action_requise' %}
+    Si cette surface dépasse 1 000 m², le projet est soumis à déclaration Loi sur l’eau.
+    <a title="Voir le détail de la réglementation « Loi sur l'eau »"
+       href="#criterion-loi_sur_leau__zone_humide"
+       class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
+  {% endif %}
+</p>
+<p>
+  {% if moulinette.sage.interdiction_impact_zh.result == 'action_requise' %}
+    {% get_from_evaluator_settings moulinette.sage "interdiction_impact_zh" "threshold" as sage_thresholds %}
+    Si cette surface dépasse {{ sage_thresholds|min_numeric|floatformat:0|intcomma }} m²,
+    le projet est susceptible d'être interdit par le règlement de SAGE.
+    <a title="Voir le détail de la réglementation « Règlement de SAGE »"
+       href="#regulation_sage"
+       class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
+  {% endif %}
+
+</p>
+{% if moulinette.natura2000.zone_humide.result == 'action_requise' %}
+  <p>
+    {% get_from_evaluator_settings moulinette.natura2000 "zone_humide" "threshold" as n2000_thresholds %}
+    Si cette surface dépasse {{ n2000_thresholds|min_numeric|floatformat:0|intcomma }} m², le
+    projet est soumis à Natura 2000.
+    <a title="Voir le détail de la réglementation « Natura 2000 »"
+       href="#criterion-natura2000__zone_humide"
+       class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
+  </p>
+{% endif %}
