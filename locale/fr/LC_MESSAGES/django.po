@@ -1157,14 +1157,6 @@ msgstr "Numéro de dossier dans demarches-simplifiees.fr"
 msgid "State of the dossier on demarches-simplifiees.fr"
 msgstr "Statut DS du dossier"
 
-#: envergo/petitions/models.py:58
-msgid "Petition project"
-msgstr "Projet de dossier"
-
-#: envergo/petitions/models.py:59
-msgid "Petition projects"
-msgstr "Projets de dossier"
-
 #: envergo/templates/admin/choice_filter.html:3
 #, python-format
 msgid "By %(filter_title)s"
