@@ -451,6 +451,7 @@ def test_confighaie_home_view(
 def test_confighaie_settings_view(
     client,
     loire_atlantique_department,  # noqa
+    herault_department,  # noqa
     haie_user,
     haie_user_44,
     haie_instructor_44,
@@ -458,7 +459,7 @@ def test_confighaie_settings_view(
 ):
     """Test config haie settings view"""
     DepartmentFactory(department="24")
-    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    DCConfigHaieFactory(department=herault_department)
     DCConfigHaieFactory(department=loire_atlantique_department)
     admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
