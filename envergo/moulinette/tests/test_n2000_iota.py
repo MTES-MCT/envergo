@@ -1,19 +1,12 @@
 import pytest
 
-from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
+from envergo.moulinette.tests.utils import make_amenagement_data
 
 
 @pytest.fixture(autouse=True)
@@ -41,24 +34,10 @@ def loisurleau_criteria(france_map):  # noqa
     return criteria
 
 
-@pytest.fixture
-def moulinette_data(footprint):
-    data = {
-        # Mouais coordinates
-        "lat": 47.696706,
-        "lng": -1.646947,
-        "existing_surface": 0,
-        "created_surface": footprint,
-        "final_surface": footprint,
-    }
-    return {"initial": data, "data": data}
-
-
-@pytest.mark.parametrize("footprint", [700])
-def test_zh_medium_footprint_inside_wetlands(moulinette_data):
+def test_zh_medium_footprint_inside_wetlands():
     """Project with 700 <= footprint <= 1000m² within a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    data = make_amenagement_data(created_surface=700, final_surface=700)
+    moulinette = MoulinetteAmenagement(data)
     assert moulinette.is_valid(), moulinette.form_errors()
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()

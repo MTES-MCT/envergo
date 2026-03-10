@@ -6,8 +6,6 @@ from django.contrib.gis.geos import MultiPolygon
 
 from envergo.evaluations.models import Evaluation
 from envergo.evaluations.tests.factories import EvaluationFactory
-from envergo.geodata.conftest import loire_atlantique_department  # noqa
-from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
@@ -15,8 +13,6 @@ from envergo.moulinette.tests.factories import (
     PerimeterFactory,
     RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)

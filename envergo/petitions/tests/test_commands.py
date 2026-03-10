@@ -34,8 +34,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
@@ -140,8 +139,7 @@ def test_dossier_submission_admin_alert(
     assert "date=2025-01-29" in project.moulinette_url
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")

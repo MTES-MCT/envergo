@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             model_name="petitionproject",
             name="latest_petitioner_msg",
             field=models.DateTimeField(
-                default=datetime.datetime(2000, 1, 1, 0, 0),
+                default=datetime.datetime(2000, 1, 1, 0, 0, tzinfo=datetime.timezone.utc),
                 verbose_name="Date du dernier message pétitionnaire",
             ),
         ),

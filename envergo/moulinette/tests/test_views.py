@@ -3,19 +3,11 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from envergo.analytics.models import Event
-from envergo.geodata.conftest import france_map  # noqa: F401
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
 )
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
 
 
 @pytest.fixture(autouse=True)
