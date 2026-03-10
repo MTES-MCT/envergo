@@ -348,7 +348,7 @@ query getDossier(
     $dossierNumber: Int!,
     $includeChamps: Boolean = true,
     $includeTraitements: Boolean = false,
-    $includeMessages: Boolean = false
+    $includeMessages: Boolean = true
   )
 {
   dossier(number: $dossierNumber) {
