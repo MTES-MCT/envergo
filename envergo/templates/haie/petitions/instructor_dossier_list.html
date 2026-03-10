@@ -131,8 +131,8 @@
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{% decision_badge project.decision True %}</td>
-                    <td class="messagerie-col {{ project.has_unread_messages|yesno:"unread,read" }}">
-                      {% if project.has_unread_messages %}
+                    <td class="messagerie-col {% if project.has_unread_messages and user|has_edit_permission:project %}unread{% else %}read{% endif %}">
+                      {% if project.has_unread_messages and user|has_edit_permission:project %}
                         <span class="fr-icon-mail-fill fr-icon--sm"></span>
                         <span style="font-size: 150%;" class="fr-ml-1v">●</span>
                       {% else %}

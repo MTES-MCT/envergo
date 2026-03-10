@@ -1,6 +1,6 @@
 import logging
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from dateutil import parser
@@ -293,9 +293,7 @@ class PetitionProject(models.Model):
                 [
                     msg.createdAt
                     for msg in parsed_dossier.messages
-                    if msg.email not in parsed_dossier.instructor_emails
-                    and msg.email
-                    != settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"]
+                    if msg.email == parsed_dossier.usager.email
                 ],
                 reverse=True,
             )
