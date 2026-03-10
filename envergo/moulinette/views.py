@@ -760,7 +760,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         return HttpResponseRedirect(reverse("confighaie_list"))
 
     def dispatch(self, request, *args, **kwargs):
-        """Redirect to confighaie list view if 404 error, meanings no department with params"""
+        """Redirect to confighaie list view if 404 error, meaning no department matches with params"""
         try:
             res = super().dispatch(request, *args, **kwargs)
         except Http404:
