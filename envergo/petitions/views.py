@@ -867,8 +867,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                 Les données proviennent d'un dossier factice.""",
             )
 
-        context["has_unread_messages"] = self.object.has_unread_messages
-
         return context
 
 
@@ -982,6 +980,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 
         context["regulation"] = regulation
         context["current_regulation"] = regulation
+        context["config"] = context["moulinette"].config
         return context
 
     def get_form_class(self):
@@ -1080,7 +1079,7 @@ class PetitionProjectInstructorMessagerieView(
         context["ds_sender_emails_categories"] = {
             "petitioner": ds_petitioner_email,
             "instructor": ds_instructeurs_emails,
-            "automatic": "contact@demarches-simplifiees.fr",
+            "automatic": settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"],
         }
 
         # Send message if info from DS is not in project details

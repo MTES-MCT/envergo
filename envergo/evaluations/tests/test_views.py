@@ -16,7 +16,6 @@ from envergo.evaluations.tests.factories import (
     RequestFactory,
     VersionFactory,
 )
-from envergo.moulinette.models import ActionToTake
 from envergo.moulinette.tests.factories import (
     ActionToTakeFactory,
     ConfigAmenagementFactory,
@@ -673,13 +672,12 @@ def test_admin_can_view_unpublished_content(admin_client):
 def test_actions_to_take_are_displayed_in_evaluations(mock_actions_to_take, client):
     # GIVEN an evaluation with display_actions_to_take set to True
     # and ActionToTake records exist in the DB
-    ActionToTakeFactory(slug="mention_arrete_lse")
-    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
+    mention_arrete_lse = ActionToTakeFactory(slug="mention_arrete_lse")
+    etude_zh = ActionToTakeFactory(slug="etude_zh", target="petitioner")
     eval = EvaluationFactory(display_actions_to_take=True)
     url = eval.get_absolute_url()
-    actions = ActionToTake.objects.all()
     actions_dict = defaultdict(list)
-    for action in actions:
+    for action in [mention_arrete_lse, etude_zh]:
         action_key = action.type if action.type == "pc" else action.target
         actions_dict[action_key].append(action)
 
@@ -693,4 +691,4 @@ def test_actions_to_take_are_displayed_in_evaluations(mock_actions_to_take, clie
     # THEN I see the actions to take section
     assert "Actions à mener" in res.content.decode()
     assert 'id="action-mention_arrete_lse"' in res.content.decode()
-    assert 'id="action-etude_zh_lse"' in res.content.decode()
+    assert 'id="action-etude_zh"' in res.content.decode()

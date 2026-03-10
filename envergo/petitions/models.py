@@ -1,13 +1,13 @@
 import logging
 import secrets
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from dateutil import parser
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.http import QueryDict
 from django.template.loader import render_to_string
@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from model_utils import Choices
+from model_utils import Choices, FieldTracker
 
 from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
@@ -28,6 +28,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
+from envergo.utils.models import ResultSnapshotBase
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,8 @@ class PetitionProject(models.Model):
     A petition project will store any data needed to follow up a request concerning a hedge.
     Both the project owner and the public administration will be able to follow up the request.
     """
+
+    tracker = FieldTracker()
 
     reference = models.CharField(
         _("Reference"),
@@ -186,14 +189,16 @@ class PetitionProject(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = _("Petition project")
-        verbose_name_plural = _("Petition projects")
+        verbose_name = "Dossier"
+        verbose_name_plural = "Dossiers"
 
     def __str__(self):
         return self.reference
 
     def save(self, *args, **kwargs):
-        """Set department code before saving"""
+        moulinette_changed = not self.pk or self.tracker.has_changed("moulinette_url")
+
+        # Set department code before saving
         if not self.department:
             department_code = self.get_department_code()
             try:
@@ -203,6 +208,12 @@ class PetitionProject(models.Model):
             except ObjectDoesNotExist:
                 self.department = None
         super().save(*args, **kwargs)
+
+        # Create a result snapshot
+        if moulinette_changed:
+            transaction.on_commit(
+                lambda: ResultSnapshot.create_for_project(project=self)
+            )
 
     @property
     def is_closed(self):
@@ -269,12 +280,12 @@ class PetitionProject(models.Model):
             return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
         def get_latest_petitioner_msg():
-            emails = [instructeur["email"] for instructeur in dossier["instructeurs"]]
+            parsed_dossier = Dossier.from_dict(dossier)
             dates = sorted(
                 [
-                    datetime.fromisoformat(msg["createdAt"])
-                    for msg in dossier["messages"]
-                    if msg["email"] in emails
+                    msg.createdAt
+                    for msg in parsed_dossier.messages
+                    if msg.email == parsed_dossier.usager.email
                 ],
                 reverse=True,
             )
@@ -346,6 +357,7 @@ class PetitionProject(models.Model):
                 haie_site,
                 **self.get_log_event_data(),
             )
+
         elif (
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
@@ -374,7 +386,7 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
-        if "instructeurs" in dossier and "messages" in dossier:
+        if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
 
         self.demarches_simplifiees_last_sync = timezone.now()
@@ -464,7 +476,7 @@ class PetitionProject(models.Model):
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 
-    @cached_property
+    @property
     def has_unread_messages(self):
         """Check if the current user has received unread messages.
 
@@ -517,8 +529,8 @@ class Simulation(models.Model):
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
 
     class Meta:
-        verbose_name = "Simulation"
-        verbose_name_plural = "Simulations"
+        verbose_name = "Simulation alternative"
+        verbose_name_plural = "Simulations alternatives"
         constraints = [
             models.UniqueConstraint(
                 fields=["project", "is_active"],
@@ -751,3 +763,27 @@ class LatestMessagerieAccess(models.Model):
                 fields=["user", "project"], name="access_unique_constraint"
             )
         ]
+
+
+class ResultSnapshot(ResultSnapshotBase):
+    """Snapshot of moulinette results for a PetitionProject."""
+
+    project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        related_name="result_snapshots",
+        verbose_name="Projet",
+    )
+
+    @classmethod
+    def create_for_project(cls, project):
+        """Create a snapshot for a PetitionProject."""
+        moulinette = project.get_moulinette()
+        payload = moulinette.summary()
+        # Convert HedgeData object to its UUID for JSON serialization
+        payload["haies"] = payload["haies"].id
+        return cls.objects.create(
+            project=project,
+            moulinette_url=project.moulinette_url,
+            payload=payload,
+        )
