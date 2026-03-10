@@ -3,6 +3,7 @@ from typing import Literal
 
 from django import template
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
@@ -142,14 +143,18 @@ def parametrage_departments_menu(context, is_slim=False):
         "menu-settings-departments",
         is_slim=is_slim,
     )
-    return mark_safe(f"<li class='fr-nav__item'>{parametrage_departments_menu}</li>")
+    return format_html(
+        "<li class='{}'>{}</li>",
+        "fr-nav__item",
+        parametrage_departments_menu,
+    )
 
 
 @register.simple_tag(takes_context=True)
 def config_listitem(context, config):
     """Returns list item with config info"""
     url, label, _ = config_menu_link(config)
-    return mark_safe(f"""<a href="{url}">{label}</a>""")
+    return format_html("<a href='{}'>{}</a>", url, label)
 
 
 def config_menu_link(config):
