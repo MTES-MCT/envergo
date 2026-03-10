@@ -24,7 +24,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 def test_conditionnalite_pac_only_for_agri_pac():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)]
     )
     for motif_choice in [
         "amelioration_culture",
@@ -50,7 +50,7 @@ def test_bcae8_impossible_case():
     """Impossible simulation data — prevented by form validation."""
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -65,7 +65,7 @@ def test_bcae8_impossible_case():
 def test_bcae8_not_activated(herault_map):  # noqa
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -76,6 +76,7 @@ def test_bcae8_not_activated(herault_map):  # noqa
         meilleur_emplacement="non",
     )
     moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid()
     assert moulinette.result == "non_soumis"
     assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit"
 
@@ -96,7 +97,7 @@ def test_bcae8_not_activated(herault_map):  # noqa
 def test_bcae8_small_dispense_petit():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -120,8 +121,8 @@ def test_bcae8_small_dispense_petit_2():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
-            HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True}),
-            HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False}),
+            HedgeFactory(length=4, additionalData__sur_parcelle_pac=True),
+            HedgeFactory(length=4, additionalData__sur_parcelle_pac=False),
         ]
     )
     moulinette_data = make_moulinette_haie_data(
@@ -146,7 +147,7 @@ def test_bcae8_small_dispense_petit_2():
 def test_bcae8_small_interdit_transfert_parcelles():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -169,7 +170,7 @@ def test_bcae8_small_interdit_transfert_parcelles():
 def test_bcae8_small_interdit_amelioration_culture():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -192,7 +193,7 @@ def test_bcae8_small_interdit_amelioration_culture():
 def test_bcae8_small_soumis_chemin_acces():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -211,7 +212,7 @@ def test_bcae8_small_soumis_chemin_acces():
 def test_bcae8_small_interdit_chemin_acces():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=11, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=11, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -231,7 +232,7 @@ def test_bcae8_multi_chemin_acces():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
-            HedgeFactory(length=length, additionalData={"sur_parcelle_pac": True})
+            HedgeFactory(length=length, additionalData__sur_parcelle_pac=True)
             for length in [9, 8, 7, 6, 5, 4, 3, 2, 1]
         ]
     )
@@ -252,7 +253,7 @@ def test_bcae8_multi_chemin_acces():
 def test_bcae8_small_interdit_securite():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -272,7 +273,7 @@ def test_bcae8_small_interdit_securite():
 def test_bcae8_small_soumis_amenagement():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -292,7 +293,7 @@ def test_bcae8_small_soumis_amenagement():
 def test_bcae8_small_interdit_amenagement():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -312,7 +313,7 @@ def test_bcae8_small_interdit_amenagement():
 def test_bcae8_small_interdit_embellissement():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -335,7 +336,7 @@ def test_bcae8_small_interdit_embellissement():
 def test_bcae8_big_soumis_remplacement():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -358,7 +359,7 @@ def test_bcae8_big_soumis_remplacement():
 def test_bcae8_big_soumis_transfer_parcelles():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -384,7 +385,7 @@ def test_bcae8_big_soumis_transfer_parcelles():
 def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -411,7 +412,7 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
 def test_bcae8_big_interdit_amelioration_culture():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -434,7 +435,7 @@ def test_bcae8_big_interdit_amelioration_culture():
 def test_bcae8_big_interdit_embellissement():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -452,7 +453,7 @@ def test_bcae8_big_interdit_embellissement():
 def test_bcae8_big_soumis_fosse():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -475,7 +476,7 @@ def test_bcae8_big_soumis_fosse():
 def test_bcae8_big_soumis_incendie():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -498,7 +499,7 @@ def test_bcae8_big_soumis_incendie():
 def test_bcae8_big_soumis_maladie():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -521,7 +522,7 @@ def test_bcae8_big_soumis_maladie():
 def test_bcae8_big_interdit_autre():
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
@@ -546,7 +547,7 @@ def test_bcae8_batiment_exploitation():
     # GIVEN a project of amenagement on PAC land
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4000, additionalData={"sur_parcelle_pac": True})]
+        hedges=[HedgeFactory(length=4000, additionalData__sur_parcelle_pac=True)]
     )
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,

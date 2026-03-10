@@ -165,7 +165,7 @@ def test_debug_result(client):
 
     DCConfigHaieFactory()
     haies = HedgeDataFactory(
-        hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)]
     )
 
     data = {
@@ -583,6 +583,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
             {"lat": 43.06930871579473, "lng": 0.4421436860179369},
             {"lat": 43.069162248282396, "lng": 0.44236765047068033},
         ],
+        additionalData__type_haie="mixte",
     )
     hedge_outside = HedgeFactory(
         type="TO_REMOVE",
@@ -590,6 +591,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
             {"lat": 43.09248072614743, "lng": 0.48007431760217484},
             {"lat": 43.09280782621999, "lng": 0.48095944654749073},
         ],
+        additionalData__type_haie="mixte",
     )
     hedges = HedgeDataFactory(hedges=[hedge_inside, hedge_outside])
     data = {

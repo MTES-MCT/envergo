@@ -1,5 +1,4 @@
 import datetime
-from collections import OrderedDict
 from decimal import Decimal
 from unittest.mock import ANY, patch
 
@@ -521,15 +520,6 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     )
 
     expected_result = {
-        "HEDGE_KEYS": OrderedDict(
-            [
-                ("mixte", "Type 5 (mixte)"),
-                ("alignement", "Type 4 (alignement)"),
-                ("arbustive", "Type 3 (arbustive)"),
-                ("buissonnante", "Type 2 (buissonnante)"),
-                ("degradee", "Type 1 (dégradée)"),
-            ]
-        ),
         "hedges_properties": {
             "essences_non_bocageres": {
                 "TO_PLANT": [],
