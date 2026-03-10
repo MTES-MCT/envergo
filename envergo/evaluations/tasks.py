@@ -190,7 +190,7 @@ def post_evaluation_to_automation(evaluation_uid):
         .first()
     )
     if snapshot:
-        extra_data["snapshot"] = snapshot.payload
+        extra_data["simulation_data"] = snapshot.payload
     post_a_model_to_automation(evaluation, webhook_url, **extra_data)
 
 

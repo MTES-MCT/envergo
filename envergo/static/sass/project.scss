@@ -1955,6 +1955,10 @@ img.moulinette-incentive-img {
   object-position: 50% 50%;
 }
 
+.fr-card.card--horizontal-1-5 > .fr-card__header {
+  background-color: var(--background-contrast-grey);
+}
+
 .fr-label--warning {
   color: var(--text-default-warning);
 }

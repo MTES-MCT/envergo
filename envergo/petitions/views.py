@@ -994,6 +994,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 
         context["regulation"] = regulation
         context["current_regulation"] = regulation
+        context["config"] = context["moulinette"].config
         return context
 
     def get_form_class(self):

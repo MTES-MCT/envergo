@@ -22,6 +22,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -568,6 +569,41 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert response.status_code == 403
     project.refresh_from_db()
     assert project.onagre_number == "1234567"
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_regulation_view_includes_config_in_context(
+    mock_post,
+    haie_instructor_44,
+    conditionnalite_pac_criteria,
+    client,
+    site,
+):
+    """Config must be in context so regulation templates can use it.
+
+    The sites_classes_haie/result_soumis.html template checks
+    config.single_procedure to decide which branch to render. Without config
+    in the context, the template silently falls through to the wrong branch.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(instructor_url)
+
+    assert response.status_code == 200
+    assert "config" in response.context
+    assert response.context["config"].single_procedure is True
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)

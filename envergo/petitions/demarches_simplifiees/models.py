@@ -27,14 +27,17 @@ from dateutil import parser
 
 
 def str_to_int(val):
+    """Try to parse a string into an integer."""
     return int(val) if isinstance(val, str) and val.isdigit() else val
 
 
 def str_to_datetime(val):
+    """Try to parse a string into a datetime object."""
     return parser.parse(val) if isinstance(val, str) else val
 
 
 def str_to_date(val):
+    """Try to parse a string into a date object."""
     return parser.parse(val).date() if isinstance(val, str) else val
 
 
