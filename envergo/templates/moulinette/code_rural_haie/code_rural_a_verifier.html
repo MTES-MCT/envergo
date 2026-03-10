@@ -1,0 +1,27 @@
+<p>
+  Certaines haies peuvent être protégées par arrêté préfectoral au titre du code rural. Dans ce cas, leur destruction
+  est soumise à autorisation.
+</p>
+
+<p>
+  Le simulateur n'intègre pas encore cette réglementation. C'est le service instructeur du guichet unique de la haie, en
+  examinant votre demande, qui déterminera si des dispositions s'appliquent.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>
+    Au titre de l’<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006581907"
+   target="_blank"
+   rel="noopener">article L126-3 du code rural et de la pêche maritime</a>, le Préfet peut prononcer
+    la protection de haies, boisements linéaires et plantations dans les deux cas suivants :
+  </p>
+  <ul>
+    <li>
+      s’ils sont situés dans les périmètres d’intérêt pour les continuités écologiques et les paysages, définis par la
+      commission communale d'aménagement foncier ;
+    </li>
+    <li>à la demande du propriétaire de la parcelle (demande conjointe avec le preneur du bail le cas échéant).</li>
+  </ul>
+</div>

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from math import ceil, isclose
 
+from django.conf import settings
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
@@ -430,7 +431,7 @@ class NormandieQualityCondition(PlantationCondition):
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
                 proposant de planter des haies de type supérieur à celui des haies à détruire
-                (<a href="https://www.notion.so/Normandie-quels-types-de-haie-permettent-une-r-duction-de-la-compensation-attendue-232fe5fe4766807f8029c78ca68d319e" target="_blank" rel="noopener">voir le guide</a>).
+                (<a href="{settings.HAIE_FAQ_URLS["NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION"]}" target="_blank" rel="noopener">voir le guide</a>).
                 """  # noqa: E501
             )
 

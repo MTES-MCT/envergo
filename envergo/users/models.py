@@ -1,7 +1,15 @@
+import hashlib
+import hmac
+import logging
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models import CharField
 from django.utils.translation import gettext_lazy as _
+
+logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
@@ -47,6 +55,12 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
+    is_instructor = models.BooleanField(
+        "En charge de l'instruction sur les départements",
+        default=False,
+        help_text="""Donne accès aux actions instructeur sur tous les dossiers des départements autorisés pour ce user.
+        Si cette case n'est pas cochée, la personne a le statut d'invitée.""",
+    )
     departments = models.ManyToManyField(
         "geodata.Department",
         verbose_name=_("Departements"),
@@ -69,11 +83,26 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.name}"
 
-    def is_instructor(self):
-        return self.is_superuser or all(
-            (
-                self.is_active,
-                self.access_haie,
-                self.departments.exists() or self.invitation_tokens.exists(),
+    def is_involved_in_guh(self):
+        """Returns True if user has instructor right or if user has department or token"""
+        # Check fast conditions first
+        if not self.is_authenticated:
+            return False
+        elif self.is_superuser or self.is_instructor:
+            return True
+        # Check if token or department exists for user
+        else:
+            return any(
+                (
+                    self.invitation_tokens.exists(),
+                    self.departments.defer("geometry").exists(),
+                )
             )
-        )
+
+    def get_unique_hash(self):
+        """Return unique hash from user email with a salt from env variable"""
+        salt_value = settings.HASH_SALT_KEY
+        if not salt_value:
+            raise ImproperlyConfigured("Missing setting: `HASH_SALT_KEY` is not set")
+        key = salt_value.encode()
+        return hmac.new(key, self.email.encode(), hashlib.sha256).hexdigest()

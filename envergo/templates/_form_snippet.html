@@ -5,5 +5,5 @@
 {% include '_form_header.html' with form=form %}
 
 {% for field in form.visible_fields %}
-  {% include '_field.html' with field=field %}
+  {% render_field field %}
 {% endfor %}

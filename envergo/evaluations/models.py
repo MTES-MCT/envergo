@@ -3,10 +3,9 @@ import secrets
 import uuid
 from enum import Enum
 from os.path import splitext
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 from django.conf import settings
-from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
@@ -14,7 +13,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
-from django.http import HttpRequest, QueryDict
+from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
@@ -24,10 +23,10 @@ from model_utils.choices import Choices
 from phonenumber_field.modelfields import PhoneNumberField
 
 from envergo.evaluations.validators import application_number_validator
-from envergo.geodata.models import Department
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.utils.markdown import markdown_to_html
 from envergo.utils.tools import get_base_url
-from envergo.utils.urls import update_qs
+from envergo.utils.urls import remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -47,28 +46,6 @@ USER_TYPES = Choices(
     ("petitioner", "Un porteur de projet ou maître d'œuvre"),
 )
 
-ACTIONS_TO_TAKE = Choices(
-    (
-        "mention_arrete_lse",
-        "Mentionner dans l’arrêté le différé de réalisation des travaux",
-    ),
-    ("depot_pac_lse", "Déposer un porter-à-connaissance auprès de la DDT(M)"),
-    ("depot_dossier_lse", "Déposer un dossier Loi sur l'eau"),
-    ("etude_zh_lse", "LSE > Réaliser un inventaire zones humides"),
-    ("etude_zi_lse", "LSE > Réaliser une étude hydraulique"),
-    ("etude_2150", "Réaliser une étude de gestion des eaux pluviales"),
-    ("depot_etude_impact", "Déposer un dossier d'évaluation environnementale"),
-    ("depot_cas_par_cas", "Déposer une demande d’examen au cas par cas"),
-    ("depot_ein", "Réaliser une évaluation des incidences Natura 2000"),
-    ("etude_zh_n2000", "Natura 2000 > Réaliser un inventaire zones humides"),
-    ("etude_zi_n2000", "Natura 2000 > Réaliser une étude hydraulique"),
-    (
-        "pc_cas_par_cas",
-        "L’arrêté préfectoral portant décision suite à l’examen au cas par cas",
-    ),
-    ("pc_ein", "L’évaluation des incidences Natura 2000"),
-)
-
 
 def evaluation_file_format(instance, filename):
     return f"evaluations/{instance.application_number}.pdf"
@@ -86,14 +63,6 @@ def generate_reference():
     reference = "".join(secrets.choice(alphabet) for i in range(length))
 
     return reference
-
-
-def params_from_url(url):
-    """Extract query string from url and return a dict."""
-
-    url = urlparse(url)
-    params = QueryDict(url.query)
-    return params.dict()
 
 
 PROBABILITIES = Choices(
@@ -198,6 +167,7 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.soumis_autorisation: TagStyleEnum.LightRed,
     "declaration": TagStyleEnum.Green,
     "autorisation": TagStyleEnum.LightRed,
+    "hors_regime_unique": TagStyleEnum.Grey,
 }
 _missing_results = [key for (key, label) in RESULTS if key not in TAG_STYLES_BY_RESULT]
 if _missing_results:
@@ -341,7 +311,7 @@ class Evaluation(models.Model):
     def save(self, *args, **kwargs):
         self.details_html = markdown_to_html(self.details_md)
         self.rr_mention_html = markdown_to_html(self.rr_mention_md)
-        self.moulinette_data = params_from_url(self.moulinette_url)
+        self.moulinette_data = MoulinetteUrl(self.moulinette_url).params
         super().save(*args, **kwargs)
 
     @property
@@ -353,17 +323,7 @@ class Evaluation(models.Model):
     @cached_property
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
-        return params_from_url(self.moulinette_url)
-
-    def get_moulinette_config(self):
-        params = self.moulinette_params
-        if "lng" not in params or "lat" not in params:
-            return None
-
-        lng, lat = params["lng"], params["lat"]
-        coords = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        department = Department.objects.filter(geometry__contains=coords).first()
-        return department.configamenagement if department else None
+        return MoulinetteUrl(self.moulinette_url).params
 
     def get_moulinette(self):
         """Return the moulinette instance for this evaluation."""
@@ -426,10 +386,12 @@ class Evaluation(models.Model):
 
         # Evaluations exist only for Envergo Amenagement:
         evaluation_url = f"{get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)}{self.get_absolute_url()}"
-        share_print_url = update_qs(evaluation_url, {"mtm_campaign": "print-ar"})
+        share_print_url = update_qs(
+            remove_mtm_params(evaluation_url), {"mtm_campaign": "print-ar"}
+        )
 
         emulated_request = HttpRequest()
-        emulated_request.GET = QueryDict(urlparse(self.moulinette_url).query)
+        emulated_request.GET = MoulinetteUrl(self.moulinette_url).querydict
 
         context = {
             "evaluation": self,
@@ -620,7 +582,7 @@ class EvaluationEmail:
     def get_bcc_recipients(self):
         evaluation = self.evaluation
         moulinette = self.moulinette
-        config = evaluation.get_moulinette_config()
+        config = moulinette.get_config()
 
         bcc_recipients = []
 
@@ -752,6 +714,11 @@ class Request(models.Model):
     send_eval_to_project_owner = models.BooleanField(
         _("Send evaluation to project sponsor"), default=True
     )
+    obfuscation_key = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        verbose_name="Clé d'obfuscation",
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -777,7 +744,7 @@ class Request(models.Model):
     @cached_property
     def moulinette_params(self):
         """Return the evaluation params as provided in the moulinette url."""
-        return params_from_url(self.moulinette_url)
+        return MoulinetteUrl(self.moulinette_url).params
 
     def is_from_instructor(self):
         """Shortcut property"""
@@ -821,6 +788,18 @@ class Request(models.Model):
             send_eval_to_project_owner=self.send_eval_to_project_owner,
         )
         return evaluation
+
+    @property
+    def upload_files_url(self):
+        """return the obfuscated url to the upload files UI"""
+        url = reverse("request_eval_wizard_step_3", args=[self.reference])
+        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
+
+    @property
+    def upload_files_api_url(self):
+        """return the obfuscated url to the upload files API"""
+        url = reverse("request_eval_wizard_step_3_upload", args=[self.reference])
+        return f"{url}?{urlencode({'clef': self.obfuscation_key})}"
 
 
 def request_file_format(instance, filename):
@@ -907,54 +886,3 @@ class RecipientStatus(models.Model):
                 name="unique_index", fields=["regulatory_notice_log", "recipient"]
             )
         ]
-
-
-class EvaluationAction(models.Model):
-    """Actions to take listed in an evaluation and debug page
-
-    Actions to take are displayed in an evaluation if :
-    - ACTIONS_TO_TAKE_MATRIX is setted in a related Regulation or Criterion evaluator class
-    - Display actions to take is True in Evaluation object
-    """
-
-    slug = models.CharField(
-        "Référence de l'action",
-        max_length=50,
-        choices=ACTIONS_TO_TAKE,
-        unique=True,
-    )
-    type = models.CharField(
-        "Type d'action",
-        max_length=20,
-        choices=Choices(
-            ("action", "Action"),
-            ("pc", "Pièce complémentaire"),
-        ),
-    )
-    target = models.CharField("Cible", max_length=20, choices=USER_TYPES)
-    order = models.PositiveIntegerField("Ordre", default=1)
-
-    label = models.TextField(
-        verbose_name="Titre affiché",
-        help_text="Texte de niveau 1",
-    )
-    details = models.TextField(
-        verbose_name="Détails",
-        help_text="Texte de niveau 2, contenu HTML évalué comme un template.",
-    )
-
-    documents_to_attach = ArrayField(
-        models.CharField(max_length=255),
-        verbose_name="référence des pièces complémentaires",
-        help_text="Valeurs séparées par des virgules sans espace",
-        blank=True,
-        default=list,
-    )
-
-    def __str__(self):
-        return self.get_slug_display()
-
-    class Meta:
-        verbose_name = "Action à mener"
-        verbose_name_plural = "Actions à mener"
-        ordering = ["order"]

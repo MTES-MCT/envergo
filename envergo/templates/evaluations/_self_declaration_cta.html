@@ -7,7 +7,10 @@
         via
         <a href="{% url 'self_declaration' evaluation.reference %}?source=page-ar&mtm_kwd={{ evaluation.reference }}"
            class="self-declaration-cta"
-           data-reference="{{ evaluation.reference }}">ce formulaire</a>
+           data-reference="{{ evaluation.reference }}"
+           data-sql-event-category="compliance"
+           data-sql-event-action="page-click"
+           data-sql-event-metadata='{ "request_reference": "{{ evaluation.reference }}" }'>ce formulaire</a>
         (durée : 3 min)
       </p>
     </div>

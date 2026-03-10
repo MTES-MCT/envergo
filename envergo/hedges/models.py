@@ -1,9 +1,10 @@
 import operator
 import uuid
 from functools import reduce
+from typing import Self
 
 import shapely
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models
@@ -15,12 +16,28 @@ from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
+    compute_hedge_density_around_lines,
     compute_hedge_density_around_point,
     get_department_from_coords,
 )
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
+
+HEDGE_TYPES = (
+    ("degradee", "Haie dégradée ou résiduelle basse"),
+    ("buissonnante", "Haie buissonnante basse"),
+    ("arbustive", "Haie arbustive"),
+    ("alignement", "Alignement d'arbres"),
+    ("mixte", "Haie mixte"),
+)
+
+HEDGE_PROPERTIES = (
+    ("proximite_mare", "Mare à moins de 200 m"),
+    ("proximite_point_eau", "Mare ou ruisseau à moins de 10 m"),
+    ("connexion_boisement", "Connectée à un boisement ou à une autre haie"),
+    ("vieil_arbre", "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"),
+)
 
 R = 1.5  # Coefficient de replantation exigée
 
@@ -181,17 +198,92 @@ class Hedge:
 
 
 class HedgeList(list[Hedge]):
+    """A class representing a list of Hedge objects.
+
+    This class is a basic list with some filtering api added, and a chainable api.
+
+    For example, for selecting the hedges to remove of type "haie mixte" with a
+    "vieilArbre" property:
+
+    hedges = HedgeList(hedges).to_remove().mixte().prop("vieilArbre")
+    """
+
     def __init__(self, *args, label=None, **kwargs):
         self.label = label
         super().__init__(*args, **kwargs)
 
     @property
+    def names(self):
+        return ", ".join(h.id for h in self)
+
+    @property
     def length(self):
         return sum(h.length for h in self)
 
-    @property
-    def names(self):
-        return ", ".join(h.id for h in self)
+    def to_plant(self) -> Self:
+        return HedgeList([h for h in self if h.type == TO_PLANT])
+
+    def to_remove(self) -> Self:
+        return HedgeList([h for h in self if h.type == TO_REMOVE])
+
+    def pac(self) -> Self:
+        return HedgeList(
+            [h for h in self if h.is_on_pac and h.hedge_type != "alignement"]
+        )
+
+    def mixte(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "mixte"])
+
+    def arbustive(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "arbustive"])
+
+    def buissonnante(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "buissonnante"])
+
+    def degradee(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "degradee"])
+
+    def alignement(self) -> Self:
+        return HedgeList([h for h in self if h.hedge_type == "alignement"])
+
+    def n_alignement(self) -> Self:
+        """Select all hedges that are of ALL types BUT alignement.
+
+        Useful because we often need to separate "haies" from "alignements d'arbres".
+        """
+        return HedgeList([h for h in self if h.hedge_type != "alignement"])
+
+    def filter(self, f) -> Self:
+        """Filter the hedge list using a specific filtering method."""
+        return HedgeList([h for h in self if f(h)])
+
+    def type(self, t) -> Self:
+        """Filter hedges by hedge type. Prefix with a "!" to negate the filter."""
+
+        # Make sure the type filter is valid
+        if t.replace("!", "") not in dict(HEDGE_TYPES).keys():
+            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+
+        if t.startswith("!"):
+            hedges = HedgeList([h for h in self if h.hedge_type != t.replace("!", "")])
+        else:
+            hedges = HedgeList([h for h in self if h.hedge_type == t])
+        return hedges
+
+    def prop(self, p) -> Self:
+        """Select hedges with a given prod. Prefix with "!" to negate the filter.
+
+        IMPORTANT! We don't filter out the hedges that DO NOT feature the property.
+        """
+
+        if p.startswith("!"):
+            p = p.replace("!", "")
+            hedges = HedgeList(
+                [h for h in self if not h.prop(p) or not h.has_property(p)]
+            )
+        else:
+            hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
+        return hedges
 
 
 class HedgeData(models.Model):
@@ -227,38 +319,22 @@ class HedgeData(models.Model):
         return box
 
     def hedges(self):
-        return [Hedge(**h) for h in self.data]
+        return HedgeList([Hedge(**h) for h in self.data])
 
     def hedges_to_plant(self):
-        return [Hedge(**h) for h in self.data if h["type"] == TO_PLANT]
+        return self.hedges().to_plant()
 
     def length_to_plant(self):
-        return sum(h.length for h in self.hedges_to_plant())
+        return self.hedges().to_plant().length
 
     def hedges_to_remove(self):
-        return [Hedge(**h) for h in self.data if h["type"] == TO_REMOVE]
+        return self.hedges().to_remove()
 
     def length_to_remove(self):
-        return sum(h.length for h in self.hedges_to_remove())
+        return self.hedges().to_remove().length
 
     def hedges_to_remove_pac(self):
-        return [
-            h
-            for h in self.hedges_to_remove()
-            if h.is_on_pac and h.hedge_type != "alignement"
-        ]
-
-    def get_centroid_to_remove(self):
-        hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
-        hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
-        return hedges_centroid
-
-    def get_department(self):
-        hedges_centroid = self.get_centroid_to_remove()
-        code_department = get_department_from_coords(
-            hedges_centroid.x, hedges_centroid.y
-        )
-        return code_department
+        return self.hedges().to_remove().pac()
 
     def hedges_to_plant_pac(self):
         def pac_selection(h):
@@ -268,13 +344,13 @@ class HedgeData(models.Model):
                 res = res and h.prop("mode_plantation") == "plantation"
             return res
 
-        return [h for h in self.hedges_to_plant() if pac_selection(h)]
+        return HedgeList([h for h in self.hedges_to_plant() if pac_selection(h)])
 
     def length_to_plant_pac(self):
-        return sum(h.length for h in self.hedges_to_plant_pac())
+        return self.hedges_to_plant_pac().length
 
     def lineaire_detruit_pac(self):
-        return sum(h.length for h in self.hedges_to_remove_pac())
+        return self.hedges_to_remove_pac().length
 
     def lineaire_detruit_pac_including_alignement(self):
         return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)
@@ -285,6 +361,28 @@ class HedgeData(models.Model):
             for h in self.hedges_to_remove()
             if h.is_on_pac and h.hedge_type == "alignement"
         )
+
+    def get_centroid_to_remove(self):
+        """Returns hedges to remove centroid"""
+        hedges_to_remove_geometries = [h.geometry for h in self.hedges_to_remove()]
+        hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
+        return hedges_centroid
+
+    def get_multilinestring_to_remove(self):
+        """Returns multilinestring from hedges to remove geometries"""
+        hedges_to_remove_mls = []
+        for hedge in self.hedges_to_remove():
+            geom = MultiLineString(hedge.geos_geometry)
+            if geom:
+                hedges_to_remove_mls.extend(geom)
+        return MultiLineString(hedges_to_remove_mls, srid=EPSG_WGS84)
+
+    def get_department(self):
+        hedges_centroid = self.get_centroid_to_remove()
+        code_department = get_department_from_coords(
+            hedges_centroid.x, hedges_centroid.y
+        )
+        return code_department
 
     def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
         """HedgeData filter
@@ -301,40 +399,22 @@ class HedgeData(models.Model):
             ValueError: If hedge to or type argument has a wrong value
         """
 
-        def hedge_selection(hedge):
-            """Select h in hedges to return"""
-            result = True
-
-            # Check type_haie
-            if "!" in hedge_type:
-                result = result and not hedge.hedge_type == hedge_type.replace("!", "")
-            else:
-                result = result and hedge.hedge_type == hedge_type
-
-            # Check for each prop if
-            for prop in props:
-                operator_not = False
-                if "!" in prop:
-                    operator_not = True
-                    prop = prop.replace("!", "")
-                if hedge.has_property(prop):
-                    if operator_not:
-                        result = result and not hedge.prop(prop)
-                    else:
-                        result = result and hedge.prop(prop)
-            return result
-
-        if hedge_to == TO_REMOVE:
-            hedges_filtered = self.hedges_to_remove()
-        elif hedge_to == TO_PLANT:
-            hedges_filtered = self.hedges_to_plant()
-        else:
+        if hedge_to not in (TO_REMOVE, TO_PLANT):
             raise ValueError(f"Argument hedge_to must ben in {TO_REMOVE} or {TO_PLANT}")
 
-        if hedge_type.replace("!", "") not in dict(HEDGE_TYPES).keys():
-            raise ValueError(f"Argument hedge_type must be in {HEDGE_TYPES}")
+        hedges = self.hedges()
 
-        return HedgeList([hedge for hedge in hedges_filtered if hedge_selection(hedge)])
+        if hedge_to == TO_REMOVE:
+            hedges = hedges.to_remove()
+        elif hedge_to == TO_PLANT:
+            hedges = hedges.to_plant()
+
+        hedges = hedges.type(hedge_type)
+
+        for prop in props:
+            hedges = hedges.prop(prop)
+
+        return hedges
 
     def is_removing_near_pond(self):
         """Return True if at least one hedge to remove is near a pond."""
@@ -357,7 +437,7 @@ class HedgeData(models.Model):
         )
         return species
 
-    def compute_density_with_artifacts(self):
+    def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
         # get two circles at 200m and 5000m from the centroid of the hedges to remove
@@ -369,18 +449,46 @@ class HedgeData(models.Model):
 
         return density_200, density_5000, centroid_geos
 
+    def compute_density_around_lines_with_artifacts(self):
+        """Compute the density of hedges around the hedges to remove in 400m buffer."""
+
+        hedges_to_remove_mls_merged = self.get_multilinestring_to_remove()
+        return compute_hedge_density_around_lines(hedges_to_remove_mls_merged, 400)
+
     @property
     def density(self):
-        """Returns pre-computed density of hedges if it exists, otherwise compute it."""
-        if not self._density:
-            density_200, density_5000, _ = self.compute_density_with_artifacts()
+        """Returns pre-computed density of hedges if it exists, otherwise compute it.
+
+        Two compute methods are existing:
+        - one around centroid
+        - one around lines, inside a buffer around hedges to remove
+        """
+        if (
+            not self._density
+            or "around_centroid" not in self._density
+            or "around_lines" not in self._density
+        ):
+            # Density around centroid
+            density_200, density_5000, _ = (
+                self.compute_density_around_points_with_artifacts()
+            )
+            # Density inside buffer
+            density_400_buffer = self.compute_density_around_lines_with_artifacts()
+
             self._density = {
-                "length_200": density_200["artifacts"]["length"],
-                "length_5000": density_5000["artifacts"]["length"],
-                "area_200_ha": density_200["artifacts"]["area_ha"],
-                "area_5000_ha": density_5000["artifacts"]["area_ha"],
-                "density_200": density_200["density"],
-                "density_5000": density_5000["density"],
+                "around_centroid": {
+                    "length_200": density_200["artifacts"]["length"],
+                    "length_5000": density_5000["artifacts"]["length"],
+                    "area_200_ha": density_200["artifacts"]["area_ha"],
+                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                    "density_200": density_200["density"],
+                    "density_5000": density_5000["density"],
+                },
+                "around_lines": {
+                    "length_400": density_400_buffer["artifacts"]["length"],
+                    "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
+                    "density_400": density_400_buffer["density"],
+                },
             }
             self.save()
 
@@ -396,27 +504,14 @@ class HedgeData(models.Model):
         Returns:
             bool: True if there are hedges outside the department geometry, False otherwise.
         """
+        if not department:
+            return True
         department_geom = GEOSGeometry(department.geometry.wkt)
         for hedge in self.hedges():
             if not department_geom.intersects(hedge.geos_geometry):
                 return True
         return False
 
-
-HEDGE_TYPES = (
-    ("degradee", "Haie dégradée ou résiduelle basse"),
-    ("buissonnante", "Haie buissonnante basse"),
-    ("arbustive", "Haie arbustive"),
-    ("alignement", "Alignement d'arbres"),
-    ("mixte", "Haie mixte"),
-)
-
-HEDGE_PROPERTIES = (
-    ("proximite_mare", "Mare à moins de 200 m"),
-    ("proximite_point_eau", "Mare ou ruisseau à moins de 10 m"),
-    ("connexion_boisement", "Connectée à un boisement ou à une autre haie"),
-    ("vieil_arbre", "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"),
-)
 
 SPECIES_GROUPS = Choices(
     ("amphibiens", "Amphibiens"),

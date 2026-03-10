@@ -1,6 +1,8 @@
 import json
+import logging
 from urllib.parse import urlparse
 
+from django.contrib.gis.db.models.functions import Centroid
 from django.http import JsonResponse, QueryDict
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -11,13 +13,31 @@ from django.views.generic import DetailView
 from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
+from envergo.decorators.csp import csp_override, csp_report_only_override
+from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 
+logger = logging.getLogger(__name__)
 
+
+# VueJS, in the full build, uses the `eval` js method to compile it's templates
+# This make it incompatible with csp unless we allow "unsafe-eval", which makes csp
+# pretty much useless.
+# To fix the problem, we should use the runtime vue build that requires that all templates are pre-compiled into
+# render functions
+# A temporary fix is to disable csp for this page, which is not ideal.
+@method_decorator(
+    csp_override(config={}),
+    name="get",
+)
+@method_decorator(
+    csp_report_only_override(config={}),
+    name="get",
+)
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
@@ -104,9 +124,24 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         department = self.kwargs.get("department", "")
         context["department"] = department
         if department:
-            config = ConfigHaie.objects.filter(
-                department__department=department
-            ).first()
+            config = (
+                ConfigHaie.objects.filter(department__department=department)
+                # Filter by validity date
+                # Note: moulinette is only valid for plantation view, where we pass
+                # simulation parameters, but the moulinette object exists anyway and
+                # the date defaults to today, which is what we want
+                .valid_at(self.moulinette.date)
+                .annotate(department_centroid=Centroid("department__geometry"))
+                .first()
+            )
+            if config:
+                centroid = config.department_centroid
+                if centroid.srid != EPSG_WGS84:
+                    centroid = centroid.transform(EPSG_WGS84, clone=True)
+                context["department_centroid"] = {
+                    "lat": centroid.y,
+                    "lng": centroid.x,
+                }
 
         context["hedge_to_plant_data_form"] = self.get_hedge_to_plant_data_form(config)
         context["hedge_to_remove_data_form"] = self.get_hedge_to_remove_data_form(
@@ -154,7 +189,8 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({"error": "An internal error has occurred"}, status=500)
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         return
@@ -175,6 +211,9 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         return kwargs
 
     def post(self, request, *args, **kwargs):
+        if not self.moulinette.is_valid():
+            return JsonResponse({"error": "Moulinette is not valid"}, status=400)
+
         try:
             data = json.loads(request.body)
             hedge_data = HedgeData(data=data)
@@ -184,7 +223,8 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({"error": "An internal error has occurred"}, status=500)
 
     def log_moulinette_event(self, moulinette, context, **kwargs):
         return

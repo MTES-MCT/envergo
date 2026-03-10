@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
 from envergo.moulinette.views import (
-    ConfigHaieSettingsView,
     MoulinetteHaieResult,
     MoulinetteResultPlantation,
     Triage,
@@ -68,8 +67,7 @@ urlpatterns = [
         ),
     ),
     path(
-        "parametrage/<str:department>",
-        ConfigHaieSettingsView.as_view(),
-        name="confighaie_settings",
+        "parametrage/<str:department>/",
+        RedirectView.as_view(pattern_name="confighaie_settings", permanent=True),
     ),
 ] + common_urlpatterns

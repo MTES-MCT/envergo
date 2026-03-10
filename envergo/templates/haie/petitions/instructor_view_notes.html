@@ -20,7 +20,7 @@
 
       <section class="fr-my-3w" id="instructor_free_mention">
         <div id="field-instructor_free_mention" class="fr-my-2w">
-          {% include '_field_snippet.html' with field=form.instructor_free_mention %}
+          {% render_field form.instructor_free_mention %}
           {% if is_department_instructor %}
             <button type="submit"
                     class="fr-btn fr-btn--secondary"

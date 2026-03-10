@@ -60,25 +60,23 @@
     <nav class="fr-nav" role="navigation" aria-label="Menu principal">
       <ul class="fr-nav__list">
         <li class="fr-nav__item">{% menu_item 'home' "Accueil" %}</li>
-        {% if user.is_authenticated %}
+        {% if user.is_involved_in_guh %}
           <li class="fr-nav__item">
             <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Dossiers</a>
           </li>
-        {% endif %}
-        {% if user.is_instructor %}
           <li class="fr-nav__item">
             <button class="fr-nav__btn" aria-expanded="false" aria-controls="faq_menu">Questions fréquentes</button>
             <div class="fr-collapse fr-menu" id="faq_menu">
               <ul class="fr-menu__list">
                 <li>
                   <a class="fr-nav__link"
-                     href="{{ HAIE_INSTRUCTORS_FAQ_URL }}"
+                     href="{{ HAIE_FAQ_URLS.INSTRUCTORS }}"
                      target="_blank"
                      rel="noopener external">Pour l'administration</a>
                 </li>
                 <li>
                   <a class="fr-nav__link"
-                     href="{{ HAIE_FAQ_URL }}"
+                     href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
                      target="_blank"
                      rel="noopener external">Pour les usagers</a>
                 </li>
@@ -88,12 +86,12 @@
         {% else %}
           <li class="fr-nav__item">
             <a class="fr-nav__link"
-               href="{{ HAIE_FAQ_URL }}"
+               href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
                target="_blank"
                rel="noopener external">Questions fréquentes</a>
           </li>
         {% endif %}
-        {% if user.is_instructor and user.departments.count > 0 or user.is_superuser %}
+        {% if user.is_instructor or user.is_superuser %}
           <li class="fr-nav__item">{% parametrage_departments_menu %}</li>
         {% endif %}
       </ul>

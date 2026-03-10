@@ -20,7 +20,7 @@ from django_ratelimit.decorators import ratelimit
 
 from envergo.analytics.forms import EventForm, FeedbackForm, FeedbackRespondForm
 from envergo.analytics.models import CSPReport
-from envergo.analytics.utils import log_event, set_visitor_id_cookie
+from envergo.analytics.utils import get_matomo_tags, log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_site_literal
@@ -75,6 +75,8 @@ class FeedbackRespond(ParseAddressMixin, BaseFormView):
         feedback = form.cleaned_data["feedback"]
         metadata = form.cleaned_data.get("moulinette_data", {})
         metadata["feedback"] = feedback
+        mtm_keys = get_matomo_tags(self.request)
+        metadata.update(mtm_keys)
 
         message_body = render_to_string(
             "analytics/mattermost_feedback_respond.txt",
@@ -123,6 +125,9 @@ class FeedbackSubmit(SuccessMessageMixin, ParseAddressMixin, FormView):
         moulinette_data = form.cleaned_data.get("moulinette_data", {})
         if moulinette_data:
             metadata.update(moulinette_data)
+
+        mtm_keys = get_matomo_tags(self.request)
+        metadata.update(mtm_keys)
 
         feedback_origin = self.request.META.get("HTTP_REFERER")
         address = self.parse_address()

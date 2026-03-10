@@ -21,38 +21,39 @@ def user() -> User:
 
 @pytest.fixture
 def amenagement_user() -> User:
-    return UserFactory(access_amenagement=True, access_haie=False)
+    return UserFactory(is_envergo_user=True)
 
 
 @pytest.fixture
 def haie_user() -> User:
-    return UserFactory(access_amenagement=False, access_haie=True)
+    return UserFactory(is_haie_user=True)
 
 
 @pytest.fixture
 def inactive_haie_user_44() -> User:
-    """Haie user with dept 44"""
-    haie_user_44 = UserFactory(
-        access_amenagement=False,
-        access_haie=True,
-        is_active=False,
-    )
+    """Inactive haie user with dept 44"""
+    haie_user_44 = UserFactory(is_haie_inactive_user=True)
     department_44 = DepartmentFactory.create()
     haie_user_44.departments.add(department_44)
     return haie_user_44
 
 
 @pytest.fixture
-def instructor_haie_user_44() -> User:
+def haie_user_44() -> User:
     """Haie user with dept 44"""
-    instructor_haie_user_44 = UserFactory(
-        is_active=True,
-        access_amenagement=False,
-        access_haie=True,
-    )
+    haie_user_44 = UserFactory(is_haie_user=True)
     department_44 = DepartmentFactory.create()
-    instructor_haie_user_44.departments.add(department_44)
-    return instructor_haie_user_44
+    haie_user_44.departments.add(department_44)
+    return haie_user_44
+
+
+@pytest.fixture
+def haie_instructor_44() -> User:
+    """Haie user with dept 44 and is_instructor True"""
+    haie_instructor_44 = UserFactory(is_haie_instructor=True)
+    department_44 = DepartmentFactory.create()
+    haie_instructor_44.departments.add(department_44)
+    return haie_instructor_44
 
 
 @pytest.fixture

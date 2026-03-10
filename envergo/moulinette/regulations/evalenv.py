@@ -1,15 +1,17 @@
 from django import forms
 from django.utils.html import mark_safe
-from django.utils.translation import gettext_lazy as _
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.forms.fields import (
     DisplayChoiceField,
     DisplayIntegerField,
+    UnitInput,
     extract_choices,
     extract_display_function,
 )
 from envergo.moulinette.regulations import (
+    TO_ADD,
+    TO_SUBTRACT,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -27,8 +29,11 @@ class EvalEnvRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Eval Env"
 
     ACTIONS_TO_TAKE_MATRIX = {
-        "systematique": ["depot_etude_impact"],
-        "cas_par_cas": ["depot_cas_par_cas", "pc_cas_par_cas"],
+        "systematique": {
+            TO_ADD: {"depot_etude_impact", "pc_etude_impact"},
+            TO_SUBTRACT: {"pc_ein"},
+        },
+        "cas_par_cas": {TO_ADD: {"depot_cas_par_cas", "pc_cas_par_cas"}},
     }
 
 
@@ -37,8 +42,8 @@ class EmpriseForm(forms.Form):
         label="Emprise au sol totale",
         help_text="Projection verticale du volume de la construction. "
         "Inclure l'existant autorisé depuis le 16 mai 2017.",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         required=True,
         display_unit="m²",
@@ -162,9 +167,12 @@ class TerrainAssietteForm(forms.Form):
 
     terrain_assiette = DisplayIntegerField(
         label="Terrain d'assiette du projet",
-        help_text="Ensemble des parcelles cadastrales concernées par le projet",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        help_text="""Surface couverte par les aménagements du projet dans leur étendue la plus large (enveloppe convexe),
+        <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf"
+        rel="noopener" target="_blank">voir p.&nbsp;50 du guide</a>.""",  # noqa 501
+        widget=UnitInput(
+            unit="m²",
+            attrs={"placeholder": "8000", "inputmode": "numeric"},
         ),
         required=True,
         display_unit="m²",
@@ -676,7 +684,7 @@ class DefrichementBoisementForm(OptionalFormMixin, forms.Form):
             Toute opération volontaire (coupe rase, dessouchage…) ayant pour effet de détruire l’état boisé d’un terrain
             (qu’il soit à usage forestier ou non), et qui en change la destination : mise en culture, habitation, activité tertiaire…
             Voir <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf" target="_blank" rel="noopener">
-            guide de la nomenclature p. 56</a>.
+            guide de la nomenclature p. 58</a>.
         """,  # noqa
         required=True,
         widget=forms.RadioSelect,

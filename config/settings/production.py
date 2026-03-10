@@ -130,11 +130,9 @@ ENV_NAME = env("ENV_NAME")
 IS_REVIEW_APP = env.bool("IS_REVIEW_APP", default=False)
 
 # Different settings between scalingo prod and review apps
-if ENV_NAME == "production":
-    EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-else:
-    # Send emails to stdout for logging purpose
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = env(
+    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+)
 
 ANYMAIL = {
     "SENDINBLUE_API_KEY": env("SENDINBLUE_API_KEY"),
@@ -227,9 +225,9 @@ CELERY_CACHE_BACKEND = "django-cache"
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID")
+SELF_DECLARATION_FORM_ID = env("DJANGO_SELF_DECLARATION_FORM_ID", default="")
 
-TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID")
+TRANSFER_EVAL_EMAIL_FORM_ID = env("DJANGO_TRANSFER_EVAL_EMAIL_FORM_ID", default="")
 
 ADMIN_OTP_REQUIRED = env.bool("DJANGO_ADMIN_OTP_REQUIRED", default=True)
 
@@ -262,7 +260,24 @@ SECURE_CSP = {}
 
 SECURE_CSP_REPORT_ONLY = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
+    "script-src": [
+        CSP.SELF,
+        CSP.UNSAFE_INLINE,
+        "https://*.crisp.chat",
+        "https://sentry.incubateur.net",
+        "https://browser.sentry-cdn.com",
+        "https://*.data.gouv.fr",
+        "https://*.beta.gouv.fr",
+    ],
+    "connect-src": [
+        CSP.SELF,
+        "https://data.geopf.fr",  # New address autocomplete api
+        "https://*.data.gouv.fr",  # Address autocomplete api
+        "https://*.beta.gouv.fr",  # Stats
+        "https://sentry.incubateur.net",
+        "https://*.crisp.chat",
+        "wss://*.relay.crisp.chat",
+    ],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "img-src": [
         CSP.SELF,
@@ -275,11 +290,9 @@ SECURE_CSP_REPORT_ONLY = {
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
     "frame-src": [CSP.SELF, "https://*.crisp.chat"],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
-    "connect-src": [
-        CSP.SELF,
-        "https://*.data.gouv.fr",  # Address autocomplete api
-        "https://*.crisp.chat",
-        "wss://*.relay.crisp.chat",
-    ],
     "report-uri": "/csp/reports/",
 }
+
+RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
+
+HASH_SALT_KEY = env.str("DJANGO_HASH_SALT_KEY")

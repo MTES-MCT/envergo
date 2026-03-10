@@ -1,0 +1,24 @@
+<span class="dossier--followers">
+  {% if followers %}
+    <span aria-describedby="tooltip-{{ reference }}-followers"
+          class="has-followers fr-icon-user-fill fr-icon--sm"
+          aria-hidden="true"></span>
+    <span class="fr-tooltip fr-placement"
+          id="tooltip-{{ reference }}-followers"
+          role="tooltip">
+      Suivi par :
+      <br>
+      {% for follower in followers %}
+        {{ follower }}
+        {% if not forloop.last %}<br>{% endif %}
+      {% endfor %}
+    </span>
+  {% else %}
+    <span aria-describedby="tooltip-{{ reference }}-followers"
+          class="fr-icon-user-line fr-icon--sm"
+          aria-hidden="true"></span>
+    <span class="fr-tooltip fr-placement"
+          id="tooltip-{{ reference }}-followers"
+          role="tooltip">Suivi par aucun instructeur</span>
+  {% endif %}
+</span>

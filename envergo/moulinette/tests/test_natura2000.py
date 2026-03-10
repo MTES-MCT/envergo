@@ -1,15 +1,21 @@
 import pytest
 
-from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import Criterion, MoulinetteAmenagement
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.utils import COORDS_BIZOU, make_amenagement_data
 
-pytestmark = pytest.mark.django_db
 
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
+def _bizou_data(created_surface, **extra):
+    """Shortcut for Bizou-located amenagement data with N2000 defaults."""
+    defaults = {"autorisation_urba": "none"}
+    defaults.update(extra)
+    return make_amenagement_data(
+        lat=COORDS_BIZOU[0],
+        lng=COORDS_BIZOU[1],
+        created_surface=created_surface,
+        final_surface=created_surface,
+        **defaults,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -55,79 +61,59 @@ def n2000_criteria(france_map):  # noqa
     return criteria
 
 
-@pytest.fixture
-def moulinette_data(footprint):
-    data = {
-        # Bizou coordinates
-        "lat": 48.496195,
-        "lng": 0.750409,
-        "existing_surface": 0,
-        "created_surface": footprint,
-        "final_surface": footprint,
-        "autorisation_urba": "none",
-    }
-    return {"initial": data, "data": data}
+# ---------------------------------------------------------------------------
+# Zone humide
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("footprint", [50])
-def test_zh_small_footprint_outside_wetlands(moulinette_data):
+def test_zh_small_footprint_outside_wetlands():
     """Project with footprint < 100m² are not subject to the 3310."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(50))
     assert moulinette.is_valid(), moulinette.form_errors()
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [50])
-def test_zh_small_footprint_inside_wetlands(moulinette_data):
+def test_zh_small_footprint_inside_wetlands():
     """Project with footprint < 100m² are not subject to the 3310."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(50))
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [150])
-def test_zh_small_footprint_inside_wetlands_with_custom_threshold(moulinette_data):
+def test_zh_small_footprint_inside_wetlands_with_custom_threshold():
     """Project with footprint < 100m² are not subject to the 3310."""
     Criterion.objects.filter(title="Zone humide 44").update(
         evaluator_settings={"threshold": 200}
     )
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(150))
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [150])
-def test_zh_large_footprint_within_wetlands(moulinette_data):
+def test_zh_large_footprint_within_wetlands():
     """Project with footprint >= 100m² within a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(150))
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [150])
-def test_zh_large_footprint_close_to_wetlands(moulinette_data):
+def test_zh_large_footprint_close_to_wetlands():
     """Project with footprint >= 100m² close to a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(150))
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [150])
-def test_zh_large_footprint_inside_potential_wetland(moulinette_data):
+def test_zh_large_footprint_inside_potential_wetland():
     """Project with footprint >= 100m² inside a potential wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(150))
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.catalog["wetlands_within_100m"] = False
     moulinette.catalog["potential_wetlands_within_10m"] = True
@@ -135,48 +121,47 @@ def test_zh_large_footprint_inside_potential_wetland(moulinette_data):
     assert moulinette.natura2000.zone_humide.result == "action_requise"
 
 
-@pytest.mark.parametrize("footprint", [150])
-def test_zh_large_footprint_outside_wetlands(moulinette_data):
+def test_zh_large_footprint_outside_wetlands():
     """Project with footprint > 100m² outside a wetland."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(150))
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [150])
-def test_zi_small_footprint(moulinette_data):
-    """Project with footprint < 200m² are not subject to the 3320."""
+# ---------------------------------------------------------------------------
+# Zone inondable
+# ---------------------------------------------------------------------------
 
-    # Make sure the project in in a flood zone
-    moulinette = MoulinetteAmenagement(moulinette_data)
+
+def test_zi_small_footprint():
+    """Project with footprint < 200m² are not subject to the 3320."""
+    moulinette = MoulinetteAmenagement(_bizou_data(150))
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "non_soumis"
 
 
-@pytest.mark.parametrize("footprint", [300])
-def test_zi_medium_footprint_within_flood_zones(moulinette_data):
+def test_zi_medium_footprint_within_flood_zones():
     """Project with footprint >= 200m² within a flood zone."""
-
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(300))
     moulinette.catalog["flood_zones_within_12m"] = True
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "soumis"
 
 
-@pytest.mark.parametrize("footprint", [300])
-def test_zi_medium_footprint_outside_flood_zones(moulinette_data):
+def test_zi_medium_footprint_outside_flood_zones():
     """Project footprint >= 200m² outside a flood zone."""
-
-    # Make sure the project in in a flood zone
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(300))
     moulinette.evaluate()
     assert moulinette.natura2000.zone_inondable.result == "non_concerne"
 
 
-@pytest.mark.parametrize("footprint", [300])
-def test_autorisation_urba_value(moulinette_data):
+# ---------------------------------------------------------------------------
+# Autorisation d'urbanisme
+# ---------------------------------------------------------------------------
+
+
+def test_autorisation_urba_value():
     """Check the custom "autorisation_urba" property.
 
     We need a custom property to check if the project requires an
@@ -184,22 +169,21 @@ def test_autorisation_urba_value(moulinette_data):
 
     It will always be the case unless the user explicitly states otherwise.
     """
-    moulinette_data["data"]["autorisation_urba"] = "pa"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(300, autorisation_urba="pa"))
     assert moulinette.natura2000.autorisation_urba.result == "soumis"
     assert moulinette.natura2000.autorisation_urba_needed() is True
 
-    moulinette_data["data"]["autorisation_urba"] = "other"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(300, autorisation_urba="other"))
     assert moulinette.natura2000.autorisation_urba.result == "a_verifier"
     assert moulinette.natura2000.autorisation_urba_needed() is True
 
-    moulinette_data["data"]["autorisation_urba"] = "none"
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    moulinette = MoulinetteAmenagement(_bizou_data(300, autorisation_urba="none"))
     assert moulinette.natura2000.autorisation_urba.result == "non_soumis"
     assert moulinette.natura2000.autorisation_urba_needed() is False
 
-    del moulinette_data["data"]["autorisation_urba"]
-    moulinette = MoulinetteAmenagement(moulinette_data)
+    # When autorisation_urba is missing from data
+    data = _bizou_data(300)
+    del data["data"]["autorisation_urba"]
+    moulinette = MoulinetteAmenagement(data)
     assert moulinette.natura2000.autorisation_urba.result == "non_disponible"
     assert moulinette.natura2000.autorisation_urba_needed() is True

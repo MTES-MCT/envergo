@@ -12,6 +12,7 @@ from envergo.evaluations.utils import extract_department_from_address
 from envergo.evaluations.validators import application_number_validator
 from envergo.geodata.models import Department
 from envergo.utils.fields import MultipleFileField, NoIdnEmailField
+from envergo.utils.validators import validate_mime
 
 
 class EvaluationFormMixin(forms.Form):
@@ -80,7 +81,14 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     )
     application_number = forms.CharField(
         label=_("Application number"),
-        help_text=_("If an application number was already submitted."),
+        help_text=(
+            "Si une demande de permis de construire ou d'aménager"
+            " a déjà été déposée."
+            "<br>"
+            "<strong>Format :</strong> 15 caractères commençant par"
+            " « PA », « PC »,"
+            " « DP » ou « CU »."
+        ),
         max_length=64,
     )
     project_description = forms.CharField(
@@ -106,9 +114,9 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["application_number"].required = False
-        self.fields["application_number"].widget.attrs["placeholder"] = _(
-            "15 caractères commençant par « PA », « PC », « DP » ou « CU »"
-        )
+        self.fields["application_number"].widget.attrs[
+            "placeholder"
+        ] = "PC0123456789012"
         self.fields["project_description"].widget.attrs["rows"] = 3
 
     def clean(self):
@@ -126,11 +134,7 @@ class WizardAddressForm(EvaluationFormMixin, forms.ModelForm):
             # We therefore add the department number
             data["address"] = f"{address} ({department_input})"
 
-        department = (
-            Department.objects.filter(department=department_input)
-            .select_related("configamenagement")
-            .first()
-        )
+        department = Department.objects.filter(department=department_input).first()
         if department and not department.is_amenagement_activated():
             self.add_error(
                 "department",
@@ -240,6 +244,15 @@ class WizardContactForm(EvaluationFormMixin, forms.ModelForm):
         return cleaned_data
 
 
+ALLOWED_MIME_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+    "application/pdf",
+    "application/zip",
+}
+
+
 class WizardFilesForm(forms.ModelForm):
     additional_files = MultipleFileField(
         label=_("Additional files you might deem useful for the evaluation"),
@@ -247,9 +260,21 @@ class WizardFilesForm(forms.ModelForm):
         help_text=f"""
             Formats autorisés : images (png, jpg), pdf, zip. <br>
             Maximum {settings.MAX_EVALREQ_FILES} fichiers. <br>
-            Maximum 20 Mo par fichier. <br>
+            Maximum {settings.MAX_EVALREQ_FILESIZE} Mo par fichier. <br>
         """,
     )
+
+    def clean_additional_files(self):
+        files = self.cleaned_data.get("additional_files") or []
+
+        for f in files:
+            validate_mime(f, ALLOWED_MIME_TYPES)
+            if f.size > settings.MAX_EVALREQ_FILESIZE * 1024 * 1024:
+                raise ValidationError(
+                    f"Ce fichier est trop volumineux({f.size} Mo). Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                )
+
+        return files
 
     class Meta:
         model = Request

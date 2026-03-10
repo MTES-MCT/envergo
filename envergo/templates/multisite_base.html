@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="fr"
       data-fr-scheme="system"
-      class="nojs {% block html-classes %}{% endblock %}">
+      class="nojs noclipboard {% block html-classes %}{% endblock %}">
 
   <head>
     <meta charset="utf-8">
@@ -73,6 +73,10 @@
       let html = document.documentElement;
       html.classList.remove('nojs');
       html.classList.add('js');
+
+      if (navigator.clipboard) {
+        html.classList.remove('noclipboard');
+      }
     </script>
 
     <script>
@@ -190,6 +194,19 @@
 
     <main role="main" class="{% block main-classes %}{% endblock %}">
       {% block main %}
+
+        {% if DISPLAY_TEACHING_TOPBAR %}
+          <div id="top-bar-teaching" class="fr-notice fr-notice--warning">
+            <div class="fr-container">
+              <div class="fr-notice__body">
+                <p class="fr-notice__title">Environnement de formation.</p>
+                <p class="fr-notice__desc">
+                  Ce portail est réservé à la formation des instructeurs. Les données présentées sont factices et peuvent être effacées.
+                </p>
+              </div>
+            </div>
+          </div>
+        {% endif %}
 
         {% block top-bar %}
           {% top_bar %}

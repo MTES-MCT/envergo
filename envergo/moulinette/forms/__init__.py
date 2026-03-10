@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib.gis.db.models.functions import Centroid
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import floatformat
@@ -11,6 +12,7 @@ from envergo.moulinette.forms.fields import (
     DisplayCharField,
     DisplayChoiceField,
     DisplayIntegerField,
+    UnitInput,
     extract_choices,
     extract_display_function,
 )
@@ -38,8 +40,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         min_value=0,
         max_value=10000000,
         help_text="Surface au sol nouvellement impactée par le projet",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         display_unit="m²",
         display_label="Surface nouvellement impactée par le projet :",
@@ -79,8 +81,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         min_value=0,
         max_value=10000000,
         help_text="Surface au sol impactée totale, en comptant l'existant",
-        widget=forms.TextInput(
-            attrs={"placeholder": _("In square meters"), "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m²", attrs={"placeholder": "8000", "inputmode": "numeric"}
         ),
         display_unit="m²",
         display_label="Surface impactée totale, y compris l'existant :",
@@ -256,7 +258,13 @@ ELEMENT_CHOICES = (
     ("bosquet", "Bosquets"),
     (
         "autre",
-        "Autre",
+        mark_safe(
+            """Autre<br />
+<span class="fr-hint-text">
+    Arbres isolés, bandes boisées, lisières forestières, fourrés, etc.
+</span>
+                    """
+        ),
     ),
 )
 
@@ -264,12 +272,12 @@ TRAVAUX_CHOICES = (
     (
         "destruction",
         mark_safe(
-            """Destruction<br />
+            f"""Destruction<br />
 <span class="fr-hint-text">
 Toute intervention supprimant définitivement la végétation :
 arrachage ; « déplacement » de haie ;
 coupe à blanc sur essences qui ne recèpent pas
-(<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+(<a href="{settings.HAIE_FAQ_URLS["TREE_SPECIES_COPPICING_CAPACITY"]}"
 target="_blank" rel="noopener">voir liste</a>) ;
 entretien sévère et récurrent ; etc.
 </span>
@@ -279,11 +287,11 @@ entretien sévère et récurrent ; etc.
     (
         "entretien",
         mark_safe(
-            """Entretien<br />
+            f"""Entretien<br />
 <span class="fr-hint-text">
-    Intervention qui permet la repousse durable de la végétation :
+    Intervention qui permet la repousse de la végétation :
     élagage, taille, coupe à blanc sur une essence capable de recéper
-    (<a href="https://www.notion.so/Liste-des-essences-et-leur-capacit-rec-per-1b6fe5fe47668041a5d9d22ac5be31e1"
+    (<a href="{settings.HAIE_FAQ_URLS["TREE_SPECIES_COPPICING_CAPACITY"]}"
     target="_blank" rel="noopener">voir liste</a>), etc.
 </span>
                     """
@@ -291,7 +299,14 @@ entretien sévère et récurrent ; etc.
     ),
     (
         "autre",
-        "Autre",
+        mark_safe(
+            """Autre<br />
+<span class="fr-hint-text">
+    Plantation d’une nouvelle haie sans destruction préalable, mise en défens, travaux de restauration écologique,
+    travaux de revégétalisation, etc.
+</span>
+                    """
+        ),
     ),
 )
 
@@ -335,7 +350,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         label="Linéaire de haies à détruire / planter",
         required=True,
         error_messages={
-            "required": """Aucune haie n’a été saisie. Cliquez sur le bouton ci-dessus pour
+            "required": """Aucune haie n'a été saisie. Cliquez sur le bouton ci-dessus pour
             localiser les haies à détruire."""
         },
     )
@@ -344,11 +359,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         super().__init__(*args, **kwargs)
 
         # We override the queryset here because it prevents a "models are not ready" exception
-        self.fields["department"].queryset = (
-            Department.objects.defer("geometry")
-            .select_related("confighaie")
-            .annotate(centroid=Centroid("geometry"))
-        )
+        self.fields["department"].queryset = Department.objects.defer(
+            "geometry"
+        ).annotate(centroid=Centroid("geometry"))
 
     def clean(self):
         data = super().clean()
@@ -382,12 +395,11 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if not any(on_pac_values):
                 self.add_error(
-                    "localisation_pac",
+                    "haies",
                     ValidationError(
-                        """Il est indiqué que « oui, au moins une des haies » est située
-                        sur une parcelle PAC, mais aucune des haies saisies n’est marquée
-                        comme située sur une parcelle PAC. Modifiez la réponse ou modifiez
-                        les haies.""",
+                        """ Aucune haie saisie n’a été marquée sur parcelle PAC. Cliquer sur "Modifier les
+                        haies" et indiquer lesquelles sont situées sur parcelle PAC (pour cela, cliquer sur le tracé de
+                        haie ou sur "Description").""",
                         code="inconsistent_hedges",
                     ),
                 )
@@ -440,3 +452,10 @@ class TriageFormHaie(forms.Form):
         required=True,
         display_label="Travaux envisagés :",
     )
+
+    def clean_department(self):
+        """Check if department exists"""
+        data = self.cleaned_data["department"]
+        if data not in dict(DEPARTMENT_CHOICES).keys():
+            raise ValidationError("Choisissez un departement existant")
+        return data

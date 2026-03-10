@@ -16,7 +16,10 @@
       <div id="slim-menu" class="fr-header__tools fr-nav">
         <div class="fr-header__tools-links">
           <ul class="fr-nav__list">
-            {% if user.is_instructor %}
+            {% if user.is_involved_in_guh %}
+              <li class="fr-nav__item">
+                <a class="fr-nav__link" href="{% url 'petition_project_list' %}">Dossiers</a>
+              </li>
               <li class="fr-nav__item">
                 <button id="faq-dropdown-btn"
                         class="fr-nav__btn"
@@ -26,13 +29,13 @@
                   <ul class="fr-menu__list">
                     <li>
                       <a class="fr-nav__link"
-                         href="{{ HAIE_INSTRUCTORS_FAQ_URL }}"
+                         href="{{ HAIE_FAQ_URLS.INSTRUCTORS }}"
                          target="_blank"
                          rel="noopener external">Pour l'administration</a>
                     </li>
                     <li>
                       <a class="fr-nav__link"
-                         href="{{ HAIE_FAQ_URL }}"
+                         href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
                          target="_blank"
                          rel="noopener external">Pour les usagers</a>
                     </li>
@@ -41,8 +44,8 @@
               </li>
             {% else %}
               <li>
-                <a class="fr-btn"
-                   href="{{ HAIE_FAQ_URL }}"
+                <a class="fr-nav__link"
+                   href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
                    target="_blank"
                    rel="noopener external">Questions fréquentes</a>
               </li>

@@ -16,7 +16,7 @@ REGISTER_SUBJECT = {
 
 
 @app.task
-def send_account_activation_email(user_email, side_id, activate_url):
+def send_account_activation_email(user_email, site_id, activate_url):
     """Send a login email to the user.
 
     The email contains a token that can be used once to login.
@@ -34,7 +34,7 @@ def send_account_activation_email(user_email, side_id, activate_url):
         return
 
     try:
-        site = Site.objects.get(id=side_id)
+        site = Site.objects.get(id=site_id)
     except Site.DoesNotExist:
         return
 
@@ -65,7 +65,7 @@ def send_account_activation_email(user_email, side_id, activate_url):
 
 
 @app.task
-def send_new_account_notification(user_id):
+def send_new_account_notification(user_id, site_id):
     """Warn admins of new haie account registrations."""
 
     try:
@@ -73,11 +73,16 @@ def send_new_account_notification(user_id):
     except User.DoesNotExist:
         return
 
+    try:
+        site = Site.objects.get(id=site_id)
+    except Site.DoesNotExist:
+        return
+
     user, domain = user.email.split("@")
     anon_email = f"{user[0]}***@{domain}"
 
     user_url = reverse("admin:users_user_change", args=[user_id])
-    base_url = get_base_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
+    base_url = get_base_url(site.domain)
     full_user_url = f"{base_url}{user_url}"
 
     message_body = render_to_string(

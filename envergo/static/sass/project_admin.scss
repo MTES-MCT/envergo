@@ -94,3 +94,23 @@ a#add_id_departments {
     opacity: 0.4;
   }
 }
+
+.model-criterion.change-list {
+  td.field-regulation {
+    white-space: normal;
+  }
+
+  td.field-regulation,
+  td.field-perimeter_list,
+  th.field-backend_title {
+    min-width: 12em;
+  }
+
+  td.field-validity_column {
+    min-width: 9em;
+  }
+
+  td.field-evaluator_column {
+    min-width: 10em;
+  }
+}

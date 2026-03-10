@@ -1,5 +1,6 @@
+from collections import defaultdict
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from django.core.exceptions import NON_FIELD_ERRORS
@@ -15,26 +16,11 @@ from envergo.evaluations.tests.factories import (
     RequestFactory,
     VersionFactory,
 )
-from envergo.geodata.conftest import loire_atlantique_department  # noqa
-from envergo.moulinette.tests.factories import ConfigAmenagementFactory
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
-
-
-@pytest.fixture()
-def moulinette_config(loire_atlantique_department):  # noqa
-    ConfigAmenagementFactory(
-        department=loire_atlantique_department,
-        is_activated=True,
-        ddtm_water_police_email="ddtm_email_test@example.org",
-        ddtm_n2000_email="ddtm_n2000@example.org",
-        dreal_eval_env_email="dreal_evalenv@example.org",
-    )
+from envergo.moulinette.models import ActionToTake
+from envergo.moulinette.tests.factories import (
+    ActionToTakeFactory,
+    ConfigAmenagementFactory,
+)
 
 
 @pytest.fixture()
@@ -287,7 +273,15 @@ def test_eval_wizard_all_steps(
     evalreq = qs[0]
     assert evalreq.submitted is False
 
+    # WHEN I call the step 3 without the obfuscation key
     url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    res = client.post(url, data=data)
+
+    # THEN I get a 404
+    assert res.status_code == 404
+    assert "Le lien de cette page a expiré." in res.content.decode()
+
+    url = evalreq.upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert res.status_code == 302
@@ -333,7 +327,7 @@ def test_eval_wizard_request_confirmation_recipient(
     assert res.status_code == 302
 
     evalreq = qs[0]
-    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    url = evalreq.upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert res.status_code == 302
@@ -378,7 +372,7 @@ def test_eval_is_only_submitted_once(
     assert res.status_code == 302
 
     evalreq = qs[0]
-    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    url = evalreq.upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert len(callbacks) == 2  # first time both on_commit are called
@@ -432,7 +426,7 @@ def test_eval_wizard_all_steps_with_test_email(
     evalreq = qs[0]
     assert evalreq.submitted is False
 
-    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    url = evalreq.upload_files_url
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
         res = client.post(url, data=data)
     assert res.status_code == 302
@@ -480,7 +474,7 @@ def test_confirmation_email_override(
     qs = Request.objects.all()
     evalreq = qs[0]
 
-    url = reverse("request_eval_wizard_step_3", args=[evalreq.reference])
+    url = evalreq.upload_files_url
     with django_capture_on_commit_callbacks(execute=True):
         res = client.post(url, data=data)
 
@@ -559,7 +553,7 @@ def test_eval_detail_shows_version_content(client):
     assert "<h1>Avis réglementaire</h1>" not in res.content.decode()
 
 
-def test_only_published_versions_are_shown(client):
+def test_only_published_versions_are_shown(client, moulinette_config):
     """Unpublished versions are not displayed."""
 
     version = VersionFactory(content="This is a version", published=False)
@@ -569,6 +563,9 @@ def test_only_published_versions_are_shown(client):
     assert res.status_code == 200
     assert "This is a version" not in res.content.decode()
     assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+    # assert a visit event is created with the complete result in it
+    event = Event.objects.get(category="evaluation", event="visit")
+    assert event.metadata.get("main_result")
 
 
 def test_eval_detail_shows_latest_published_version_content(client):
@@ -668,3 +665,32 @@ def test_admin_can_view_unpublished_content(admin_client):
     assert "This is a draft version" not in res.content.decode()
     assert "This is a published version" not in res.content.decode()
     assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+
+
+@patch(
+    "envergo.moulinette.models.Moulinette.actions_to_take", new_callable=PropertyMock
+)
+def test_actions_to_take_are_displayed_in_evaluations(mock_actions_to_take, client):
+    # GIVEN an evaluation with display_actions_to_take set to True
+    # and ActionToTake records exist in the DB
+    ActionToTakeFactory(slug="mention_arrete_lse")
+    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
+    eval = EvaluationFactory(display_actions_to_take=True)
+    url = eval.get_absolute_url()
+    actions = ActionToTake.objects.all()
+    actions_dict = defaultdict(list)
+    for action in actions:
+        action_key = action.type if action.type == "pc" else action.target
+        actions_dict[action_key].append(action)
+
+    mock_actions_to_take.return_value = actions_dict
+
+    # WHEN I display the evaluation detail page
+    res = client.get(url)
+    assert res.status_code == 200
+    assert "<h1>Avis réglementaire</h1>" in res.content.decode()
+
+    # THEN I see the actions to take section
+    assert "Actions à mener" in res.content.decode()
+    assert 'id="action-mention_arrete_lse"' in res.content.decode()
+    assert 'id="action-etude_zh_lse"' in res.content.decode()

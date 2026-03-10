@@ -1,8 +1,10 @@
+import ipaddress
 import logging
 import socket
 from datetime import timedelta
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from envergo.analytics.models import Event
 from envergo.utils.urls import extract_mtm_params, update_qs
@@ -31,6 +33,11 @@ def is_request_from_a_bot(request):
     if request_ip is None:
         return False
 
+    try:
+        ipaddress.ip_address(request_ip)
+    except ValueError:
+        return False
+
     # Find domain corresponding to ip
     socket.setdefaulttimeout(3)
     try:
@@ -38,7 +45,7 @@ def is_request_from_a_bot(request):
     except OSError:
         return False
 
-    logger.info(f"Request from ip {request_ip}, found matching domain {host}")
+    logger.info("Request from ip %s, found matching domain %r", request_ip, host)
 
     # Does the request's domain matches a known bot domain?
     for bot_domain in bot_domains:
@@ -55,10 +62,17 @@ def log_event(category, event, request, **kwargs):
 
 def log_event_raw(category, event, visitor_id, user, site, **kwargs):
     if visitor_id and not user.is_staff:
+        unique_id = None
+        if user.is_authenticated and user.access_haie:
+            try:
+                unique_id = user.get_unique_hash()
+            except ImproperlyConfigured as e:
+                logger.error(f"No `unique_id` is set to event: {e}")
         Event.objects.create(
             category=category,
             event=event,
             session_key=visitor_id,
+            unique_id=unique_id,
             metadata=kwargs,
             site=site,
         )
@@ -108,3 +122,15 @@ def update_url_with_matomo_params(url, request):
 
 def get_matomo_tags(request):
     return {k: v for k, v in request.session.items() if k.startswith("mtm_")}
+
+
+def get_user_type(user):
+    """Return the type of user as a string depending on its attributes."""
+    if not user or not user.is_authenticated:
+        return "anonymous"
+    if user.is_superuser or user.is_staff:
+        return "administrator"
+    elif user.is_instructor:
+        return "instructor"
+    else:
+        return "guest"

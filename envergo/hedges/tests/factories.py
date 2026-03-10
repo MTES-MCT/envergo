@@ -30,7 +30,7 @@ class HedgeFactory(factory.Factory):
 
     @factory.post_generation
     def length(obj, create, extracted, **kwargs):
-        """Force the hedge to be a specific (althougr very approximate) length."""
+        """Force the hedge to be a specific (although very approximate) length."""
         if extracted:
 
             # One degree of latitude is approx 111 km
@@ -44,6 +44,7 @@ class HedgeFactory(factory.Factory):
 class HedgeDataFactory(DjangoModelFactory):
     class Meta:
         model = HedgeData
+        skip_postgeneration_save = True
 
     data = factory.List([HedgeFactory().toDict()])
 
@@ -51,6 +52,8 @@ class HedgeDataFactory(DjangoModelFactory):
     def hedges(obj, create, extracted, **kwargs):
         if extracted:
             obj.data = [hedge.toDict() for hedge in extracted]
+            if create:
+                obj.save()
 
 
 class SpeciesFactory(DjangoModelFactory):

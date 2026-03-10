@@ -4,7 +4,7 @@
     e.stopImmediatePropagation();
     e.preventDefault();
     const button = e.currentTarget;
-    const currentUrl = window.location.href;
+    const currentUrl = button.getAttribute("data-clipboard-text") || window.location.href;
     const mapping = new UrlMapping();
     mapping.create(currentUrl).then((json) => {
       button.setAttribute("data-clipboard-text", json.short_url);

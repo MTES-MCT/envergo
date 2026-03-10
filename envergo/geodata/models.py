@@ -152,7 +152,7 @@ class Line(gis_models.Model):
     """Stores an annotated geographic Line(s)."""
 
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="lines")
-    geometry = gis_models.LineStringField(
+    geometry = gis_models.MultiLineStringField(
         geography=True,
         help_text=_(
             """DO NOT EDIT! We cannot easily deactivate this edition widget,
@@ -184,8 +184,15 @@ class Department(models.Model):
         return self.get_department_display()
 
     def is_amenagement_activated(self):
-        config = getattr(self, "configamenagement", None)
-        return config and config.is_activated
+        """Check if there's an active amenagement config for this department."""
+        # Import here to avoid circular imports
+        from envergo.moulinette.models import ConfigAmenagement
+
+        return (
+            ConfigAmenagement.objects.filter(department=self, is_activated=True)
+            .valid_at(timezone.now().date())
+            .exists()
+        )
 
 
 class CatchmentAreaTile(models.Model):

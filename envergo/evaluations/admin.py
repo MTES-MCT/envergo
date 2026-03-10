@@ -25,7 +25,6 @@ from envergo.analytics.models import Event
 from envergo.evaluations.forms import EvaluationFormMixin, EvaluationVersionForm
 from envergo.evaluations.models import (
     Evaluation,
-    EvaluationAction,
     EvaluationVersion,
     RecipientStatus,
     RegulatoryNoticeLog,
@@ -33,7 +32,7 @@ from envergo.evaluations.models import (
     RequestFile,
     generate_reference,
 )
-from envergo.moulinette.models import get_moulinette_class_from_url
+from envergo.moulinette.utils import get_moulinette_class_from_url
 from envergo.utils.fields import NoIdnEmailField
 
 logger = logging.getLogger(__name__)
@@ -194,8 +193,10 @@ class EvaluationAdmin(admin.ModelAdmin):
                 level=messages.WARNING,
             )
             published = False
-        elif latest_version.created_at < obj.updated_at:
-
+        elif (
+            latest_version.created_at < obj.updated_at
+            and latest_version.content != obj.render_content()
+        ):
             local_updated_at = localtime(obj.updated_at)
             local_published_at = localtime(latest_version.created_at)
             msg = f"""
@@ -550,7 +551,7 @@ class RequestAdmin(admin.ModelAdmin):
                 )
             },
         ),
-        (_("Meta info"), {"fields": ("created_at",)}),
+        (_("Meta info"), {"fields": ("created_at", "obfuscation_key")}),
     )
     actions = ["make_evaluation"]
     change_form_template = "evaluations/admin/request_change_form.html"
@@ -598,10 +599,9 @@ class RequestAdmin(admin.ModelAdmin):
             except Evaluation.DoesNotExist:
                 context["show_make_eval_button"] = True
 
-            upload_files_url = reverse(
-                "request_eval_wizard_step_3", args=[obj.reference]
+            context["upload_files_url"] = request.build_absolute_uri(
+                obj.upload_files_url
             )
-            context["upload_files_url"] = request.build_absolute_uri(upload_files_url)
 
         return super().render_change_form(request, context, add, change, form_url, obj)
 
@@ -719,14 +719,3 @@ class RegulatoryNoticeLogAdmin(admin.ModelAdmin):
         )
 
         return response
-
-
-@admin.register(EvaluationAction)
-class EvaluationAction(admin.ModelAdmin):
-
-    list_display = [
-        "slug",
-        "type",
-        "target",
-        "order",
-    ]

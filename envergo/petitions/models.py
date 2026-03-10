@@ -13,6 +13,7 @@ from django.http import QueryDict
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
@@ -23,10 +24,11 @@ from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
-from envergo.utils.urls import extract_param_from_url
+from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +58,12 @@ DECISIONS = Choices(
     ("express_agreement", "Accord exprès"),
     ("opposition", "Opposition"),
     ("dropped", "Classé sans suite"),
+)
+
+LOG_TYPES = Choices(
+    ("status_change", "Changement d'état"),
+    ("suspension", "Demande de compléments"),
+    ("resumption", "Compléments reçus"),
 )
 
 # This session key is used when we are not able to find the real user session key.
@@ -139,6 +147,40 @@ class PetitionProject(models.Model):
         blank=True,
         verbose_name="Instructeurs suivant le projet",
     )
+    latest_petitioner_msg = models.DateTimeField(
+        verbose_name="Date du dernier message pétitionnaire",
+        null=True,
+        blank=True,
+        default=None,
+    )
+
+    stage = models.CharField(
+        "Étape",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        max_length=30,
+        choices=STAGES,
+        default=STAGES.to_be_processed,
+    )
+    decision = models.CharField(
+        "Décision",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        max_length=30,
+        choices=DECISIONS,
+        default=DECISIONS.unset,
+    )
+
+    is_additional_information_requested = models.BooleanField(
+        "En attente d'informations complémentaires ?",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        default=False,
+    )
+
+    due_date = models.DateField(
+        "Date de prochaine échéance",
+        help_text="Ce champ est mis à jour automatiquement à la création des StatusLogs",
+        null=True,
+        blank=True,
+    )
 
     # Meta fields
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
@@ -161,6 +203,15 @@ class PetitionProject(models.Model):
             except ObjectDoesNotExist:
                 self.department = None
         super().save(*args, **kwargs)
+
+    @property
+    def is_closed(self):
+        return self.stage == STAGES.closed
+
+    @cached_property
+    def latest_suspension(self):
+        """Get the latest suspension log."""
+        return self.status_history.filter(type=LOG_TYPES.suspension).first()
 
     def get_department_code(self):
         """Get department from moulinette url"""
@@ -217,11 +268,32 @@ class PetitionProject(models.Model):
 
             return self.get_demarches_simplifiees_instructor_url(demarche_number)
 
+        def get_latest_petitioner_msg():
+            emails = [instructeur["email"] for instructeur in dossier["instructeurs"]]
+            dates = sorted(
+                [
+                    datetime.fromisoformat(msg["createdAt"])
+                    for msg in dossier["messages"]
+                    if msg["email"] in emails
+                ],
+                reverse=True,
+            )
+            return dates[0] if len(dates) else None
+
         logger.info(f"Synchronizing file {self.reference} with DS")
 
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
             department = extract_param_from_url(self.moulinette_url, "department")
+            if "dateDepot" in dossier and dossier["dateDepot"]:
+                date_depot = parser.isoparse(dossier["dateDepot"]).date()
+            else:
+                date_depot = timezone.localdate()
+            # add date in the url or overwrite it if there is already one
+            self.moulinette_url = update_qs(
+                self.moulinette_url, {"date": date_depot.isoformat()}
+            )
+
             usager_email = (
                 dossier["usager"]["email"]
                 if "usager" in dossier and "email" in dossier["usager"]
@@ -234,8 +306,8 @@ class PetitionProject(models.Model):
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
                     "dossier_number": self.demarches_simplifiees_dossier_number,
+                    "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
-                    "ds_url": get_ds_url(),
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
                     "usager_email": usager_email,
                     "length_to_remove": self.hedge_data.length_to_remove(),
@@ -247,7 +319,7 @@ class PetitionProject(models.Model):
                 Event.objects.order_by("-date_created")
                 .filter(
                     metadata__reference=self.reference,
-                    category="dossier",
+                    category="demande",
                     event="creation",
                 )
                 .first()
@@ -267,7 +339,7 @@ class PetitionProject(models.Model):
             user = User(is_staff=False)
 
             log_event_raw(
-                "dossier",
+                "demande",
                 "depot",
                 visitor_id,
                 user,
@@ -302,16 +374,20 @@ class PetitionProject(models.Model):
 
         self.demarches_simplifiees_raw_dossier = dossier
 
-        self.demarches_simplifiees_last_sync = datetime.now(timezone.utc)
+        if "instructeurs" in dossier and "messages" in dossier:
+            self.latest_petitioner_msg = get_latest_petitioner_msg()
+
+        self.demarches_simplifiees_last_sync = timezone.now()
         self.save()
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
-        moulinette_data = self._parse_moulinette_data()
-        moulinette_data["haies"] = self.hedge_data
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
-        return moulinette
+        if not hasattr(self, "_moulinette"):
+            moulinette_data = self._parse_moulinette_data()
+            moulinette_data["haies"] = self.hedge_data
+            form_data = {"initial": moulinette_data, "data": moulinette_data}
+            self._moulinette = MoulinetteHaie(form_data)
+        return self._moulinette
 
     def get_triage_form(self):
         """Recreate triage form from moulinette url"""
@@ -326,29 +402,38 @@ class PetitionProject(models.Model):
         moulinette_data = raw_data.dict()
         return moulinette_data
 
-    def has_user_as_department_instructor(self, user):
+    def has_view_permission(self, user):
+        """User has view permission on project, according to
+        - superuser
+        - user with access haie and invitation token
+        - user with access haie and right to project department
+        """
         department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
-                user.departments.filter(id=department.id).exists(),
+                (
+                    user.invitation_tokens.filter(petition_project_id=self.pk).exists()
+                    or user.departments.filter(id=department.id).exists()
+                ),
             )
         )
 
-    def has_user_as_invited_instructor(self, user):
+    def has_change_permission(self, user):
+        """User has edit permission on project, according to
+        - superuser
+        - user with access haie, is instructor for department
+        """
+        department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
-                user.invitation_tokens.filter(petition_project_id=self.pk).exists(),
+                user.is_instructor,
+                user.departments.filter(id=department.id).exists(),
             )
         )
-
-    def has_user_as_instructor(self, user):
-        return self.has_user_as_invited_instructor(
-            user
-        ) or self.has_user_as_department_instructor(user)
 
     @property
     def demarches_simplifiees_petitioner_url(self) -> str | None:
@@ -378,6 +463,108 @@ class PetitionProject(models.Model):
         """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
+
+    @cached_property
+    def has_unread_messages(self):
+        """Check if the current user has received unread messages.
+
+        Note: the `latest_access` property MUST be added with an annotation
+        in the queryset
+        """
+
+        has_unread_messages = (
+            self.latest_petitioner_msg is not None
+            and self.latest_access is not None
+            and self.latest_access < self.latest_petitioner_msg
+        )
+        return has_unread_messages
+
+    def update_status(self, status_log):
+        """Update the project status when a new status log is created"""
+        if status_log.type == LOG_TYPES.status_change:
+            self.stage = status_log.stage
+            self.decision = status_log.decision
+        elif status_log.type == LOG_TYPES.suspension:
+            self.is_additional_information_requested = True
+        elif status_log.type == LOG_TYPES.resumption:
+            self.is_additional_information_requested = False
+
+        self.due_date = status_log.due_date
+        self.save()
+
+
+USER_TYPE = Choices(
+    ("petitioner", "Demandeur"),
+    ("instructor", "Instructeur"),
+)
+
+
+class Simulation(models.Model):
+    """A single alternative set of simulation parameters for a given project."""
+
+    project = models.ForeignKey(
+        PetitionProject,
+        verbose_name="Simulation",
+        on_delete=models.CASCADE,
+        related_name="simulations",
+    )
+    is_initial = models.BooleanField("Initiale ?", default=False)
+    is_active = models.BooleanField("Active ?", default=False)
+    moulinette_url = models.URLField(_("Moulinette url"), max_length=2048)
+    source = models.CharField("Auteur", choices=USER_TYPE, default=USER_TYPE.petitioner)
+    comment = models.TextField("Commentaire")
+
+    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+
+    class Meta:
+        verbose_name = "Simulation"
+        verbose_name_plural = "Simulations"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "is_active"],
+                condition=Q(is_active=True),
+                name="single_active_simulation",
+            ),
+            models.UniqueConstraint(
+                fields=["project", "is_initial"],
+                condition=Q(is_initial=True),
+                name="single_initial_simulation",
+            ),
+        ]
+
+    def can_be_deleted(self):
+        return not (self.is_initial or self.is_active)
+
+    def can_be_activated(self):
+        return not self.project.is_closed
+
+    def custom_url(self, view_name, **kwargs):
+        """Generate an url with the given parameters."""
+
+        m_url = MoulinetteUrl(self.moulinette_url)
+        qt = m_url.querydict
+        # Use iteration instead of `qt.update` because qt is a MultiValueDict and
+        # update just adds more values instead of just updating them
+        for key, value in kwargs.items():
+            qt[key] = value
+        f_url = reverse(view_name)
+        url = f"{f_url}?{qt.urlencode()}"
+        return url
+
+    @property
+    def form_url(self):
+        """Return the moulinette form url with the simulation parameters."""
+        return self.custom_url("moulinette_form", alternative="true")
+
+    @property
+    def result_url(self):
+        """Return the result form url with the simulation parameters."""
+
+        if self.is_active:
+            url = reverse("petition_project", args=[self.project.reference])
+        else:
+            url = self.custom_url("moulinette_result_plantation", alternative="true")
+        return url
 
 
 def one_month_from_now():
@@ -428,19 +615,54 @@ class InvitationToken(models.Model):
         verbose_name = "Jeton d'invitation"
         verbose_name_plural = "Jetons d'invitation"
 
-    def is_valid(self):
+    def is_valid(self, user):
         """Check if the token is still valid."""
-        return self.user_id is None and self.valid_until >= timezone.now()
+
+        return all(
+            (
+                self.user_id is None,
+                self.created_by != user,
+                self.valid_until >= timezone.now(),
+            )
+        )
+
+
+# Some data constraints checks
+
+# Check that all request for info suspension data is set
+q_suspended = Q(type=LOG_TYPES.suspension) & Q(due_date__isnull=False)
+
+# Check that no single field is set
+q_not_suspended = (
+    Q(type=LOG_TYPES.status_change)
+    & Q(original_due_date__isnull=True)
+    & Q(info_receipt_date__isnull=True)
+)
+
+# Check that the receipt date is only set if the project is resumed
+q_resumed = Q(type=LOG_TYPES.resumption) & Q(info_receipt_date__isnull=False)
 
 
 class StatusLog(models.Model):
-    """A petition project status (stage + decision) change log entry."""
+    """A petition project status log entry.
+
+    Each entry represents one of:
+    - status_change: A change in stage and/or decision
+    - suspension: A request for additional information (pauses the process)
+    - resumption: Receipt of additional information (resumes the process)
+    """
 
     petition_project = models.ForeignKey(
         PetitionProject,
         on_delete=models.CASCADE,
         related_name="status_history",
         verbose_name="Projet",
+    )
+    type = models.CharField(
+        "Type de log",
+        max_length=20,
+        choices=LOG_TYPES,
+        default=LOG_TYPES.status_change,
     )
     created_by = models.ForeignKey(
         "users.User",
@@ -477,6 +699,14 @@ class StatusLog(models.Model):
         blank=True,
     )
 
+    # "Request for additional information" related fields
+    original_due_date = models.DateField(
+        "Date de prochaine échéance avant suspension", null=True, blank=True
+    )
+    info_receipt_date = models.DateField(
+        "Date de réception des pièces complémentaires", null=True, blank=True
+    )
+
     # Meta fields
     created_at = models.DateTimeField(
         "Date de saisie du changement de statut", default=timezone.now
@@ -489,5 +719,35 @@ class StatusLog(models.Model):
             models.CheckConstraint(
                 check=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
                 name="forbid_closed_with_unset_decision",
+            ),
+            models.CheckConstraint(
+                check=q_suspended | q_not_suspended | q_resumed,
+                name="suspension_data_is_consistent",
+            ),
+        ]
+        ordering = ["-created_at"]
+
+
+class LatestMessagerieAccess(models.Model):
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        verbose_name="Accès par",
+        related_name="messagerie_accesses",
+    )
+    project = models.ForeignKey(
+        PetitionProject,
+        on_delete=models.CASCADE,
+        verbose_name="Projet",
+        related_name="messagerie_accesses",
+    )
+    access = models.DateTimeField("Dernier accès messagerie", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Dernier accès messagerie"
+        verbose_name_plural = "Derniers accès messagerie"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"], name="access_unique_constraint"
             )
         ]

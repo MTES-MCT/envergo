@@ -1,104 +1,110 @@
 {% load moulinette %}
 {% load static %}
 
-{% if moulinette.actions_to_take %}
-  <section id="actions-to-take" class="alt fr-container fr-py-2w fr-mb-5w">
-    <h2 class="actions-to-take-title fr-h3">
-      <img src="{% static 'images/todo-light.svg' %}"
-           alt=""
-           class="light-only fr-mr-1w">
-      Actions à mener
-    </h2>
-    <div class="fr-tabs">
-      <ul class="fr-tabs__list" role="tablist" aria-label="Actions à mener">
-        <li role="presentation">
-          <button type="button"
-                  id="action-target-tab-0"
-                  class="fr-tabs__tab"
-                  tabindex="0"
-                  role="tab"
-                  aria-selected="true"
-                  aria-controls="action-target-tab-0-panel">Porteur de projet</button>
-        </li>
-        <li role="presentation">
-          <button type="button"
-                  id="action-target-tab-1"
-                  class="fr-tabs__tab"
-                  tabindex="-1"
-                  role="tab"
-                  aria-selected="false"
-                  aria-controls="action-target-tab-1-panel">Instruction urbanisme</button>
-        </li>
-      </ul>
-      <div id="action-target-tab-0-panel"
-           class="fr-tabs__panel fr-tabs__panel--selected"
-           role="tabpanel"
-           aria-labelledby="action-target-tab-0"
-           tabindex="0">
+<section id="actions-to-take" class="alt fr-container fr-py-2w fr-mb-5w">
+  <h2 class="actions-to-take-title fr-h3">
+    <img src="{% static 'images/todo-light.svg' %}"
+         alt=""
+         class="light-only fr-mr-1w">
+    <img src="{% static 'images/todo-dark.svg' %}"
+         alt=""
+         class="dark-only fr-mr-1w">
+    Actions à mener
+  </h2>
+  <div class="fr-tabs">
+    <ul class="fr-tabs__list fr-no-print"
+        role="tablist"
+        aria-label="Actions à mener">
+      <li role="presentation">
+        <button type="button"
+                id="actions-petitioner-tab-0"
+                class="fr-tabs__tab"
+                tabindex="0"
+                role="tab"
+                aria-selected="true"
+                aria-controls="actions-petitioner-tab-0-panel">Porteur de projet</button>
+      </li>
+      <li role="presentation">
+        <button type="button"
+                id="actions-instructor-tab-1"
+                class="fr-tabs__tab"
+                tabindex="-1"
+                role="tab"
+                aria-selected="false"
+                aria-controls="actions-instructor-tab-1-panel">Instruction urbanisme</button>
+      </li>
+    </ul>
+    <div id="actions-petitioner-tab-0-panel"
+         class="fr-tabs__panel fr-tabs__panel--selected"
+         role="tabpanel"
+         aria-labelledby="actions-petitioner-tab-0"
+         tabindex="0">
 
-        {% if moulinette.actions_to_take.petitioner %}
-          {% for action in moulinette.actions_to_take.petitioner %}
-            <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
-          {% endfor %}
-        {% else %}
-          Aucune action à mener.
-        {% endif %}
+      <h3 class="fr-h4 action-section-title">Porteur de projet</h3>
+      {% if moulinette.actions_to_take.petitioner %}
+        {% for action in moulinette.actions_to_take.petitioner %}
+          <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
+        {% endfor %}
+      {% else %}
+        Aucune action à mener.
+      {% endif %}
 
-        {% if evaluation.is_eligible_to_self_declaration %}
-          <hr>
-          {% include 'evaluations/_self_declaration_cta.html' %}
-        {% endif %}
-      </div>
-      <div id="action-target-tab-1-panel"
-           class="fr-tabs__panel"
-           role="tabpanel"
-           aria-labelledby="action-target-tab-1"
-           tabindex="0">
-        {% if moulinette.actions_to_take.pc %}
-          <section class="action-to-take fr-mb-2w">
-            <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
-                    aria-expanded="false"
-                    aria-controls="pieces-complementaires">
-              <span class="fr-sr-only">
-                <span class="fr-icon-arrow-right-line fr-icon--sm"></span>Pièces complémentaires à demander au pétitionnaire
-              </span>
+      {% if evaluation.is_eligible_to_self_declaration %}
+        <hr>
+        {% include 'evaluations/_self_declaration_cta.html' %}
+      {% endif %}
+    </div>
+    <div id="actions-instructor-tab-1-panel"
+         class="fr-tabs__panel"
+         role="tabpanel"
+         aria-labelledby="actions-instructor-tab-1"
+         tabindex="0">
+      <h3 class="fr-h4 action-section-title">Instruction urbanisme</h3>
+      {% if moulinette.actions_to_take.pc %}
+        <section class="action-to-take fr-mb-2w">
+          <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
+                  aria-expanded="false"
+                  aria-controls="pieces_complementaires">
+            <span class="fr-sr-only">
+              <span class="fr-icon-arrow-right-line fr-icon--sm"></span>Pièces complémentaires à demander au pétitionnaire
+            </span>
 
-              <span aria-hidden="true" class="concealed-label">
+            <span aria-hidden="true" class="concealed-label">
+              <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
+              Pièces complémentaires à demander au pétitionnaire
+              <span class="fr-icon-arrow-down-s-line fr-icon--sm"></span></span>
+              <span aria-hidden="true" class="expanded-label">
                 <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
                 Pièces complémentaires à demander au pétitionnaire
-                <span class="fr-icon-arrow-down-s-line fr-icon--sm"></span></span>
-                <span aria-hidden="true" class="expanded-label">
-                  <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
-                  Pièces complémentaires à demander au pétitionnaire
-                  <span class="fr-icon-arrow-up-s-line fr-icon--sm"></span></span>
-                </button>
-                <div class="fr-collapse fr-ml-5w" id="pieces-complementaires">
-                  <ul>
-                    {% for action in moulinette.actions_to_take.pc %}
-                      <li>
-                        <strong>{{ action.label }}</strong>
-                        <span class="fr-ml-2w action-pc-list">{{ action.documents_to_attach|join:", " }}</span>
-                        <div>{% render_action_to_take_details action.details %}</div>
-                      </li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </section>
-
-            {% else %}
-              <div class="fr-mb-2w">
-                Pas de pièce complémentaire à demander au titre des réglementations environnementales prises en compte dans
-                cet avis : Loi sur l’eau, Évaluation environnementale, Règlement de SAGE, Natura 2000.
+                <span class="fr-icon-arrow-up-s-line fr-icon--sm"></span></span>
+              </button>
+              <div class="fr-collapse fr-ml-5w" id="pieces_complementaires">
+                <ul>
+                  {% for action in moulinette.actions_to_take.pc %}
+                    <li>
+                      <strong>{{ action.label }}</strong>
+                      <span class="fr-ml-2w action-pc-list">{{ action.documents_to_attach|join:", " }}</span>
+                      {% if action.details %}
+                        <div>{% include action.details %}</div>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
               </div>
-            {% endif %}
-            {% if moulinette.actions_to_take.instructor %}
-              {% for action in moulinette.actions_to_take.instructor %}
-                <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
-              {% endfor %}
-            {% else %}
-              Aucune action à mener.
-            {% endif %}
-          </div>
+            </section>
+
+          {% else %}
+            <div class="{% if moulinette.actions_to_take.instructor %}fr-mb-2w{% endif %}">
+              Pas de pièce complémentaire à demander au titre des réglementations environnementales prises en
+              compte dans
+              cet avis : Loi sur l’eau, Évaluation environnementale, Règlement de SAGE, Natura 2000.
+            </div>
+          {% endif %}
+          {% if moulinette.actions_to_take.instructor %}
+            {% for action in moulinette.actions_to_take.instructor %}
+              <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
+            {% endfor %}
+          {% endif %}
         </div>
-      </section>
-    {% endif %}
+      </div>
+    </section>

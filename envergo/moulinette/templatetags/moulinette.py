@@ -1,6 +1,7 @@
 import json
 import logging
 import string
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django import template
@@ -10,12 +11,13 @@ from django.template import Context, Template
 from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
+from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.models import get_moulinette_class_from_site
 from envergo.moulinette.regulations import HedgeDensityMixin
+from envergo.moulinette.utils import get_moulinette_class_from_site
 
 register = template.Library()
 
@@ -345,15 +347,33 @@ def humanize_motif(motif):
     return dict(MOTIF_CHOICES).get(motif, "Motif non défini")
 
 
-@register.simple_tag(takes_context=True)
-def render_action_to_take_details(context, details):
+@register.filter
+def display_validity_range(validity_range):
+    """Format a DateRange for human-friendly display.
+
+    Ranges are stored as ``[lower, upper)`` (upper exclusive), but users
+    expect inclusive bounds on both sides.  The displayed upper date is
+    therefore shifted back by one day.
+
+    Returns an empty string when the range is None (always valid), so the
+    caller can hide the entire line with {% if ... %}.
     """
-    Render action details that may contain template tags.
-    """
-    try:
-        template_context = Context(context.flatten())
-        template_obj = Template(details)
-        return template_obj.render(template_context)
-    except Exception:
-        """To avoid error on action detail render, return action details without rendering."""
-        return details
+    if validity_range is None:
+        return ""
+
+    lower = validity_range.lower
+    upper = validity_range.upper
+    fmt = "d/m/Y"
+    # Convert the exclusive upper bound to an inclusive one for display.
+    inclusive_upper = upper - timedelta(days=1) if upper else None
+
+    if lower and inclusive_upper:
+        return f"du {date_format(lower, fmt)} au {date_format(inclusive_upper, fmt)}"
+
+    if inclusive_upper:
+        return f"jusqu'au {date_format(inclusive_upper, fmt)}"
+
+    # Only a lower bound
+    if lower <= date.today():
+        return f"depuis le {date_format(lower, fmt)}"
+    return f"à partir du {date_format(lower, fmt)}"

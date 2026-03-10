@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
-from envergo.moulinette.forms import DisplayIntegerField
+from envergo.moulinette.forms.fields import DisplayIntegerField, UnitInput
 from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 logger = logging.getLogger(__name__)
@@ -38,8 +38,8 @@ class Bcae8Form(forms.Form):
         help_text="Si la valeur exacte est inconnue, une estimation est suffisante",
         required=True,
         min_value=0,
-        widget=forms.TextInput(
-            attrs={"placeholder": "En mètres", "inputmode": "numeric"}
+        widget=UnitInput(
+            unit="m", attrs={"placeholder": "2500", "inputmode": "numeric"}
         ),
         display_unit="m",
         display_help_text="",
@@ -81,7 +81,7 @@ class Bcae8Form(forms.Form):
         help_text=f"""
         La liste des organismes habilités à délivrer un conseil environnemental est
         <a title="Liste des organismes habilités - ouvre une nouvelle fenêtre" target="_blank" rel="noopener external"
-        href="{settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST}">
+        href="{settings.HAIE_FAQ_URLS["BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST"]}">
         disponible ici</a>.""",
         widget=forms.RadioSelect,
         choices=(("oui", "Oui"), ("non", "Non")),
@@ -221,9 +221,9 @@ class Bcae8(PlantationConditionMixin, CriterionEvaluator):
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        catalog["authorized_organizations_list_url"] = (
-            settings.HAIE_BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST
-        )
+        catalog["authorized_organizations_list_url"] = settings.HAIE_FAQ_URLS[
+            "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST"
+        ]
         is_lte_2percent_pac = False
         haies = self.catalog.get("haies")
         if haies:

@@ -1,4 +1,5 @@
 import logging
+import uuid
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -50,7 +51,7 @@ from envergo.evaluations.tasks import (
 from envergo.evaluations.utils import extract_department_from_address_or_city_string
 from envergo.geodata.models import Department
 from envergo.moulinette.views import MoulinetteMixin
-from envergo.utils.urls import update_qs
+from envergo.utils.urls import remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -147,6 +148,13 @@ class EvaluationDetail(
 
         return moulinette_data
 
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        return {
+            "initial": self.get_initial(),
+            "data": self.get_form_data(),
+        }
+
     def get_template_names(self):
         """Check wich template to use depending on the moulinette result."""
 
@@ -157,9 +165,9 @@ class EvaluationDetail(
         context["is_map_static"] = True
         context["source"] = "evaluation"
         current_url = self.request.build_absolute_uri()
-
-        share_btn_url = update_qs(current_url, {"mtm_campaign": "share-ar"})
-        share_print_url = update_qs(current_url, {"mtm_campaign": "print-ar"})
+        current_url_mtm_free = remove_mtm_params(current_url)
+        share_btn_url = update_qs(current_url_mtm_free, {"mtm_campaign": "share-ar"})
+        share_print_url = update_qs(current_url_mtm_free, {"mtm_campaign": "print-ar"})
 
         context["current_url"] = current_url
         context["share_btn_url"] = share_btn_url
@@ -353,6 +361,25 @@ class WizardStepMixin:
         return context
 
 
+class WizardStep3Mixin:
+    """Mixin for step 3 of the request evaluation wizard.
+
+    This step handles file uploads and deletions via ajax.
+    """
+
+    def get_queryset(self):
+        raw_key = self.request.GET.get("clef")
+        if not raw_key:
+            return Request.objects.none()
+
+        try:
+            key = uuid.UUID(raw_key)
+        except ValueError:
+            return Request.objects.none()
+
+        return super().get_queryset().filter(obfuscation_key=key)
+
+
 class RequestEvalWizardHome(TemplateView):
     template_name = "evaluations/eval_request_wizard_home.html"
 
@@ -442,20 +469,30 @@ class RequestEvalWizardStep2(WizardStepMixin, FormView):
 
         request = form.save()
         self.reset_data()
-        success_url = reverse("request_eval_wizard_step_3", args=[request.reference])
-        return HttpResponseRedirect(success_url)
+        return HttpResponseRedirect(request.upload_files_url)
 
     def request_form_invalid(self, form):
         return HttpResponseRedirect(reverse("request_eval_wizard_reset"))
 
 
-class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
+class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
     template_name = "evaluations/eval_request_wizard_files.html"
     model = Request
     form_class = WizardFilesForm
     slug_field = "reference"
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return render(
+                request,
+                "evaluations/eval_request_wizard_files_404.html",
+                context={"reference": self.kwargs["reference"]},
+                status=404,
+            )
 
     def get_success_url(self):
         url = reverse("request_success", args=[self.object.reference])
@@ -521,6 +558,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
         context = super().get_context_data(**kwargs)
         context["max_files"] = settings.MAX_EVALREQ_FILES
+        context["max_filesize"] = settings.MAX_EVALREQ_FILESIZE
         context["uploaded_files"] = files
         context["request_submitted"] = self.object.submitted
         context["matomo_custom_url"] = update_url_with_matomo_params(
@@ -531,7 +569,7 @@ class RequestEvalWizardStep3(WizardStepMixin, UpdateView):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
+class RequestEvalWizardStep3Upload(WizardStep3Mixin, WizardStepMixin, UpdateView):
     """Handle ajax file uploads and deletions."""
 
     model = Request
@@ -539,6 +577,15 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
     slug_field = "reference"
     slug_url_kwarg = "reference"
     context_object_name = "evalreq"
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return JsonResponse(
+                {"error": "Cette demande d'avis n'existe pas."},
+                status=404,
+            )
 
     def form_valid(self, form):
         """This is called when a file is uploaded with dropzone."""
@@ -564,6 +611,16 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
                     status=400,
                 )
 
+            # Make sure that the file size limit is respected
+            max_size_bytes = settings.MAX_EVALREQ_FILESIZE * 1024 * 1024
+            if file.size > max_size_bytes:
+                return JsonResponse(
+                    {
+                        "error": f"Ce fichier est trop volumineux. Maximum : {settings.MAX_EVALREQ_FILESIZE} Mo."
+                    },
+                    status=400,
+                )
+
             evalreq = RequestFile.objects.create(
                 request=self.object,
                 file=file,
@@ -580,6 +637,12 @@ class RequestEvalWizardStep3Upload(WizardStepMixin, UpdateView):
             )
 
     def form_invalid(self, form):
+        if form.errors and "additional_files" in form.errors:
+            return JsonResponse(
+                {"error": "\n".join(form.errors["additional_files"])},
+                status=400,
+            )
+
         return JsonResponse(
             {"error": "Le fichier n'a pas pu être enregistré. Veuillez ré-essayer."},
             status=400,

@@ -41,6 +41,7 @@ def instructor_view_part(
         "plantation_condition_details",
         "key_elements",
         "instruction_guidelines",
+        "consultation",
     ],
     regulation,
     project,
@@ -58,6 +59,11 @@ def instructor_view_part(
                 get_instructor_view_context(
                     regulation_criterion.get_evaluator(), project, moulinette
                 )
+            )
+        regulation_evaluator = regulation.get_evaluator()
+        if regulation_evaluator:
+            context_dict.update(
+                get_instructor_view_context(regulation_evaluator, project, moulinette)
             )
     else:
         template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
@@ -158,11 +164,13 @@ def stage_badge(stage, is_small=True):
 
     color = color_map.get(stage, None)
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
+    badge_color_class = f"fr-badge--{color}" if color else ""
+    badge_size_class = "fr-badge--sm fr-ml-n1v" if is_small else "badge--lg fr-ml-n3v"
 
     return mark_safe(
-        f"""<p class="fr-badge {f'fr-badge--{color}' if color else ''}  {'fr-badge--sm' if is_small else 'badge--lg'}">
-                          {label}
-                        </p>"""
+        f"""<p class="fr-badge {badge_color_class}  {badge_size_class}">
+              {label}
+            </p>"""
     )
 
 
@@ -237,6 +245,24 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     return mark_safe(date_part + days_left_part)
 
 
+@register.simple_tag
+def display_pause(due_date):
+    days_left = (due_date - date.today()).days
+    if days_left >= 7:
+        icon_class = ""
+    elif days_left >= 0:
+        icon_class = "orange"
+    else:
+        icon_class = "red"
+
+    return mark_safe(
+        f"""<span class="due-date fr-text--sm">
+                <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
+                Attente de compléments
+              </span><br/>"""
+    )
+
+
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
 def display_ds_field(context, field_name):
     """Include tag to display a field from démarches simplifiées
@@ -260,3 +286,22 @@ def display_ds_field(context, field_name):
     if not item:
         return {}
     return {"item": item}
+
+
+@register.filter
+def has_edit_permission(user, project):
+    """Check if the user can edit the project."""
+    return project.has_change_permission(user)
+
+
+@register.simple_tag
+def created_by_display(log):
+    user = getattr(log, "created_by", None)
+
+    if not user:
+        return ""
+
+    if getattr(user, "is_staff", False):
+        return "Administrateur"
+
+    return getattr(user, "email", "")

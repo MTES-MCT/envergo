@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.widgets import AdminDateWidget
+from django.contrib.postgres.forms import DateRangeField, RangeWidget
 from django.template.defaultfilters import truncatechars
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -9,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
+    ActionToTake,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
@@ -17,8 +20,22 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.regulations import CriterionEvaluator, RegulationEvaluator
-from envergo.moulinette.utils import list_moulinette_templates
+from envergo.moulinette.utils import get_template_choices, list_moulinette_templates
+from envergo.utils.admin import OverlapValidationFormMixin
 from envergo.utils.widgets import JSONWidget
+
+
+def format_validity_range(validity_range):
+    """Format a DateRange for display in admin list columns."""
+    if not validity_range:
+        return ""
+
+    fmt = "%d/%m/%y"
+    lower = validity_range.lower
+    upper = validity_range.upper
+    lower_str = lower.strftime(fmt) if lower else ""
+    upper_str = upper.strftime(fmt) if upper else ""
+    return f"{lower_str} → {upper_str}"
 
 
 class MapDepartmentsListFilter(DepartmentsListFilter):
@@ -87,11 +104,34 @@ class RegulationAdmin(admin.ModelAdmin):
         return obj.regulation
 
 
-class CriterionAdminForm(forms.ModelForm):
+class AdminDateRangeWidget(RangeWidget):
+    template_name = "admin/widgets/date_range.html"
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        self.widgets = (
+            AdminDateWidget(),
+            AdminDateWidget(),
+        )
+
+
+class CriterionAdminForm(OverlapValidationFormMixin, forms.ModelForm):
+    overlap_identity_fields = ["evaluator", "activation_map", "regulation", "perimeter"]
+    overlap_error_message = (
+        "Ce critère chevauche un ou plusieurs critères existants avec le même "
+        "évaluateur, la même carte d'activation et la même réglementation : {links}"
+    )
+
     header = forms.CharField(
         label=_("Header"),
         required=False,
         widget=admin.widgets.AdminTextareaWidget(attrs={"rows": 3}),
+    )
+    validity_range = DateRangeField(
+        label="Dates de validité",
+        required=False,
+        widget=AdminDateRangeWidget,
+        help_text="Laisser les dates vides pour une validité illimitée",
     )
 
     def __init__(self, *args, **kwargs):
@@ -154,11 +194,11 @@ class MoulinetteTemplateInline(admin.StackedInline):
 class CriterionAdmin(admin.ModelAdmin):
     list_display = [
         "backend_title",
-        "is_optional",
         "regulation",
         "perimeter_list",
         "activation_map_column",
         "activation_distance_column",
+        "validity_column",
         "evaluator_column",
         "weight",
     ]
@@ -172,7 +212,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "activation_map__name",
     ]
     list_editable = ["weight"]
-    list_filter = ["regulation", "is_optional", MapDepartmentsListFilter, "evaluator"]
+    list_filter = ["regulation", MapDepartmentsListFilter, "evaluator"]
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
     inlines = [MoulinetteTemplateInline]
 
@@ -212,20 +252,21 @@ class CriterionAdmin(admin.ModelAdmin):
         html = f"<a href='{url}'>{content}</a>"
         return mark_safe(html)
 
+    @admin.display(description="Validité")
+    def validity_column(self, obj):
+        return format_validity_range(obj.validity_range)
+
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None
     ):
         if obj:
-            criterion = obj
-            settings_form = criterion.get_settings_form()
             context.update(
                 {
-                    "settings_form": settings_form,
-                    "subtitle": criterion.backend_title,
+                    "settings_form": obj.get_settings_form(),
+                    "subtitle": obj.backend_title,
                 }
             )
-        res = super().render_change_form(request, context, add, change, form_url, obj)
-        return res
+        return super().render_change_form(request, context, add, change, form_url, obj)
 
     def render_delete_form(self, request, context):
         criterion = context["object"]
@@ -301,9 +342,21 @@ class PerimeterAdmin(admin.ModelAdmin):
         return obj.activation_map.departments
 
 
-class ConfigAmenagementForm(forms.ModelForm):
+class ConfigAmenagementForm(OverlapValidationFormMixin, forms.ModelForm):
+    overlap_identity_fields = ["department"]
+    overlap_error_message = (
+        "Cette configuration chevauche une ou plusieurs configurations "
+        "existantes pour ce département : {links}"
+    )
+
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
+    )
+    validity_range = DateRangeField(
+        label="Dates de validité",
+        required=False,
+        widget=AdminDateRangeWidget,
+        help_text="Laisser les dates vides pour une validité illimitée",
     )
 
     def __init__(self, *args, **kwargs):
@@ -344,16 +397,25 @@ class MoulinetteConfigTemplateInline(MoulinetteTemplateInline):
 
 @admin.register(ConfigAmenagement)
 class ConfigAmenagementAdmin(admin.ModelAdmin):
-    list_display = ["department", "is_activated", "zh_doubt"]
+    list_display = [
+        "department",
+        "is_activated",
+        "validity_column",
+        "zh_doubt",
+    ]
     form = ConfigAmenagementForm
     inlines = [MoulinetteConfigTemplateInline]
-    list_filter = ["is_activated", "zh_doubt"]
+    list_filter = ["is_activated", "zh_doubt", DepartmentsListFilter]
+
+    @admin.display(description="Validité")
+    def validity_column(self, obj):
+        return format_validity_range(obj.validity_range)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department")
+            .order_by("department__department", "-validity_range")
             .defer("department__geometry")
         )
 
@@ -364,9 +426,21 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
-class ConfigHaieAdminForm(forms.ModelForm):
+class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
+    overlap_identity_fields = ["department"]
+    overlap_error_message = (
+        "Cette configuration chevauche une ou plusieurs configurations "
+        "existantes pour ce département : {links}"
+    )
+
     regulations_available = forms.MultipleChoiceField(
         label=_("Regulations available"), required=False, choices=REGULATIONS
+    )
+    validity_range = DateRangeField(
+        label="Dates de validité",
+        required=False,
+        widget=AdminDateRangeWidget,
+        help_text="Laisser les dates vides pour une validité illimitée",
     )
 
     class Meta:
@@ -407,8 +481,8 @@ class ConfigHaieAdminForm(forms.ModelForm):
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
-    list_display = ["department", "is_activated"]
-    list_filter = ["is_activated"]
+    list_display = ["department", "is_activated", "validity_column"]
+    list_filter = ["is_activated", DepartmentsListFilter]
     fieldsets = [
         (
             None,
@@ -416,10 +490,19 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "department",
                     "is_activated",
-                    "single_procedure",
+                    "validity_range",
                     "regulations_available",
                     "hedge_to_plant_properties_form",
                     "hedge_to_remove_properties_form",
+                ],
+            },
+        ),
+        (
+            "Régime unique",
+            {
+                "fields": [
+                    "single_procedure",
+                    "single_procedure_settings",
                 ],
             },
         ),
@@ -450,10 +533,36 @@ class ConfigHaieAdmin(admin.ModelAdmin):
         ),
     ]
 
+    @admin.display(description="Validité")
+    def validity_column(self, obj):
+        return format_validity_range(obj.validity_range)
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department")
+            .order_by("department__department", "-validity_range")
             .defer("department__geometry")
         )
+
+
+class ActionToTakeForm(forms.ModelForm):
+    details = forms.ChoiceField(
+        choices=get_template_choices(template_subdir="moulinette/actions_to_take/"),
+        required=False,
+    )
+
+    class Meta:
+        model = ActionToTake
+        fields = "__all__"
+
+
+@admin.register(ActionToTake)
+class ActionToTakeAdmin(admin.ModelAdmin):
+    form = ActionToTakeForm
+    list_display = [
+        "slug",
+        "type",
+        "target",
+        "order",
+    ]

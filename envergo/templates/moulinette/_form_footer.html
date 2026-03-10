@@ -25,20 +25,12 @@
       {% for form in optional_forms %}
 
         <div class="optional-form">
-          {% include '_checkbox_snippet.html' with field=form.activate %}
+          {% render_field form.activate %}
 
           <fieldset class="fr-fieldset">
             {% for field in form %}
               {% if field.name != "activate" %}
-                {% if field|is_checkbox %}
-                  {% include '_checkbox_snippet.html' with field=field %}
-                {% elif field|is_radio %}
-                  {% include '_radio_snippet.html' with field=field %}
-                {% elif field|is_input_file %}
-                  {% include '_input_file_snippet.html' with field=field %}
-                {% else %}
-                  {% include '_field_snippet.html' with field=field %}
-                {% endif %}
+                {% render_field field %}
               {% endif %}
             {% endfor %}
           </fieldset>
@@ -62,15 +54,7 @@
     </p>
 
     {% for field_name, field in additional_fields.items %}
-      {% if field|is_checkbox %}
-        {% include '_checkbox_snippet.html' with field=field %}
-      {% elif field|is_radio %}
-        {% include '_radio_snippet.html' with field=field %}
-      {% elif field|is_input_file %}
-        {% include '_input_file_snippet.html' with field=field %}
-      {% else %}
-        {% include '_field_snippet.html' with field=field %}
-      {% endif %}
+      {% render_field field %}
     {% endfor %}
   </section>
 {% endif %}

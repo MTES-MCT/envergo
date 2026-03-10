@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% load evaluations leaflet_tags static %}
+{% load evaluations leaflet_tags static utils %}
 
 {% block top-bar %}{% endblock %}
 
@@ -29,7 +29,7 @@
 
     {% include '_form_header.html' with form=form %}
 
-    {% include '_radio_snippet.html' with field=form.user_type %}
+    {% render_field form.user_type %}
 
     <div id="contact-section">
       <h2 class="fr-h6">Destinataires de l'avis :</h2>
@@ -37,8 +37,8 @@
       <fieldset id="instructor-fieldset" class="fr-fieldset fr-mb-3w">
         <legend class="fr-fieldset__legend">Service urbanisme</legend>
 
-        <div class="fr-fieldset__element">{% include '_field_snippet.html' with field=form.urbanism_department_emails %}</div>
-        <div class="fr-fieldset__element">{% include '_field_snippet.html' with field=form.urbanism_department_phone %}</div>
+        <div class="fr-fieldset__element">{% render_field form.urbanism_department_emails %}</div>
+        <div class="fr-fieldset__element">{% render_field form.urbanism_department_phone %}</div>
 
       </fieldset>
 
@@ -46,16 +46,10 @@
         <legend class="fr-fieldset__legend">Porteur de projet</legend>
 
         <div id="element-{{ form.send_eval_to_project_owner.name }}"
-             class="fr-fieldset__element">
-          {% include '_checkbox_snippet.html' with field=form.send_eval_to_project_owner %}
-        </div>
+             class="fr-fieldset__element">{% render_field form.send_eval_to_project_owner %}</div>
 
-        <div class="only-if-send-eval-checked fr-fieldset__element">
-          {% include '_field_snippet.html' with field=form.project_owner_emails %}
-        </div>
-        <div class="only-if-send-eval-checked fr-fieldset__element">
-          {% include '_field_snippet.html' with field=form.project_owner_phone %}
-        </div>
+        <div class="only-if-send-eval-checked fr-fieldset__element">{% render_field form.project_owner_emails %}</div>
+        <div class="only-if-send-eval-checked fr-fieldset__element">{% render_field form.project_owner_phone %}</div>
 
         <div id="send-eval-hint"
              class="only-if-send-eval-checked fr-fieldset__element">

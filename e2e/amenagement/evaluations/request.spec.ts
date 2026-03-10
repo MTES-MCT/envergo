@@ -4,10 +4,10 @@ test('User can request an evaluation', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Menu principal').getByRole('link', { name: 'Demander un avis réglementaire' }).click();
   await page.locator('p').filter({ hasText: 'Commencer la demande Durée : 1 min' }).getByRole('link').first().click();
-  await page.getByLabel('Address of the project Type').click();
-  await page.getByLabel('Address of the project Type').fill('44640 Vue');
-  await page.getByPlaceholder('15 caractères commençant par').click();
-  await page.getByPlaceholder('15 caractères commençant par').fill('PA1234567981011');
+  await page.getByLabel('Address of the project').click();
+  await page.getByLabel('Address of the project').fill('44640 Vue');
+  await page.getByPlaceholder('PC0123456789012').click();
+  await page.getByPlaceholder('PC0123456789012').fill('PA1234567981011');
   await page.getByLabel('Project description, comments').click();
   await page.getByLabel('Project description, comments').fill('Assainissement de marécage pour faire une belle dalle béton bien propre');
   await page.getByRole('button', { name: 'Poursuivre votre demande d\'' }).click();

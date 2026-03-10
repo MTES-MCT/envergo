@@ -9,7 +9,13 @@ from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.petitions.demarches_simplifiees.client import (
     DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH,
 )
-from envergo.petitions.models import DOSSIER_STATES, InvitationToken, PetitionProject
+from envergo.petitions.models import (
+    DOSSIER_STATES,
+    InvitationToken,
+    PetitionProject,
+    Simulation,
+    StatusLog,
+)
 from envergo.users.tests.factories import UserFactory
 
 DEMARCHES_SIMPLIFIEES_FAKE = {
@@ -80,8 +86,9 @@ FILE_TEST_NOK_PATH = Path(
 class PetitionProjectFactory(DjangoModelFactory):
     class Meta:
         model = PetitionProject
+        skip_postgeneration_save = True
 
-    reference = "ABC123"
+    reference = factory.Sequence(lambda n: f"ABC123{n}")
     moulinette_url = factory.LazyAttribute(
         lambda obj: (
             "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
@@ -91,6 +98,16 @@ class PetitionProjectFactory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
     demarches_simplifiees_state = DOSSIER_STATES.draft
+    status = factory.RelatedFactory(
+        "envergo.petitions.tests.factories.StatusLogFactory",
+        factory_related_name="petition_project",
+    )
+    simulation = factory.RelatedFactory(
+        "envergo.petitions.tests.factories.SimulationFactory",
+        factory_related_name="project",
+        is_initial=True,
+        is_active=True,
+    )
 
 
 class PetitionProject34Factory(DjangoModelFactory):
@@ -105,6 +122,22 @@ class PetitionProject34Factory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059676
     demarches_simplifiees_state = DOSSIER_STATES.draft
+
+
+class StatusLogFactory(DjangoModelFactory):
+    class Meta:
+        model = StatusLog
+
+    petition_project = factory.SubFactory(PetitionProjectFactory)
+
+
+class SimulationFactory(DjangoModelFactory):
+    class Meta:
+        model = Simulation
+
+    project = factory.SubFactory(PetitionProjectFactory)
+    moulinette_url = factory.SelfAttribute("project.moulinette_url")
+    comment = factory.Sequence(lambda n: f"Simulation alternative {n}")
 
 
 class InvitationTokenFactory(DjangoModelFactory):

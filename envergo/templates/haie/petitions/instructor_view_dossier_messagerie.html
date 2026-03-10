@@ -5,21 +5,29 @@
 {% block title %}Instruction du dossier – Messagerie{% endblock %}
 
 {% block project_view_title %}
-  <div class="fr-container--fluid">
-    <div class="fr-grid-row">
-      <div class="fr-col">
-        <h2>Messagerie</h2>
-      </div>
-      <div>
-        {% if has_send_message_permission %}
+  <h2>Messagerie</h2>
+
+  {% if has_send_message_permission %}
+    <div class="fr-container--fluid">
+      <div class="fr-grid-row">
+        <div class="fr-col">
+          {% if ds_messages %}
+            <form method="post"
+                  action="{% url 'petition_project_instructor_messagerie_mark_unread_view' object.reference %}">
+              {% csrf_token %}
+              <button type="submit" class="fr-btn fr-btn--secondary">Marquer les messages comme non lus</button>
+            </form>
+          {% endif %}
+        </div>
+        <div>
           <button aria-controls="modal-new-message"
                   data-fr-opened="false"
                   type="button"
                   class="fr-btn fr-icon-add-line fr-btn--icon-left">Nouveau message</button>
-        {% endif %}
+        </div>
       </div>
     </div>
-  </div>
+  {% endif %}
 {% endblock %}
 
 {% block project_content %}
@@ -27,16 +35,12 @@
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
       <p class="fr-mb-1w">
-        {% with num_messages=ds_messages|length num_messages_displayed=20 %}
-          {% if num_messages <= num_messages_displayed %}
-            {{ num_messages }} message{{ num_messages|pluralize }}
-          {% else %}
-            {{ num_messages_displayed }} messages affichés sur {{ num_messages }} messages
-          {% endif %}
+        {% with num_messages=ds_messages|length %}
+          {{ num_messages }} message{{ num_messages|pluralize }} affiché{{ num_messages|pluralize }}
         {% endwith %}
       </p>
 
-      {% for message in ds_messages|slice:":num_messages_displayed" %}
+      {% for message in ds_messages %}
         <div class="ds-message ds-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
           <div class="fr-mb-2w ds-message__metadata">
             <span class="ds-message__exp">{{ message.email }}</span> –
@@ -44,20 +48,25 @@
               <span class="ds-message__date">{{ message_date|date:"D\. j F Y" }} {{ message_date|time:"H\hi" }}</span>
             {% endwith %}
           </div>
-          <div class="ds-message__content">{{ message.body|safe|linebreaksbr }}</div>
+          <div class="ds-message__content">{{ message.body|safe|urlize_html|linebreaks }}</div>
 
           <div class="fr-mt-2w">
             {% for pj in message.attachments %}
               <div class="fr-download">
-                <a class="fr-link ds-message__pj" target="_blank" href="{{ pj.url }}">
+                <a class="fr-link ds-message__pj"
+                   target="_blank"
+                   href="{{ pj.url }}"
+                   data-sql-event-category="message"
+                   data-sql-event-action="lecture_pj"
+                   data-sql-event-metadata='{ "reference":"{{ petition_project.reference }}", "message_id":"{{ message.id }}", "message_sender":"{% ds_sender_category message.email ds_sender_emails_categories %}" }'>
                   <span class="fr-sr-only">Télécharger le fichier</span>
                   {{ pj.filename }}
                   <span class="fr-download__detail">{{ pj.contentType }} – {{ pj.byteSize|filesizeformat }}</span>
                 </a>
               </div>
             {% endfor %}
-
           </div>
+
         </div>
       {% endfor %}
     </section>

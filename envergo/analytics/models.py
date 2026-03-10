@@ -14,6 +14,7 @@ class Event(models.Model):
 
     # Connect several events by the same user
     session_key = models.CharField(_("Session key"), max_length=128)
+    unique_id = models.CharField("ID unique", max_length=128, null=True, blank=True)
 
     # Add additional info to describe the event
     metadata = models.JSONField(_("Metadata"), null=True, blank=True)

@@ -1,34 +1,130 @@
 {% extends 'haie/base.html' %}
 
+{% load moulinette utils %}
+
+{% block title %}
+  Paramétrage {{ department }}
+{% endblock title %}
+
 {% block content %}
   <div class="fr-grid-row fr-mb-3w">
-    <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-9">
+    <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-6">
       <h1>Paramétrage du portail</h1>
 
-      <p class="fr-text--lead">Département : {{ department }}</p>
+      <p class="fr-text--lead">Département : {{ department }}</p>
 
       <h2>Configuration</h2>
 
+      {% with vr=object.validity_range|display_validity_range %}
+        {% if vr %}
+          <p class="fr-mb-1w">
+            <strong>Validité de la configuration :</strong> {{ vr }}
+          </p>
+        {% endif %}
+      {% endwith %}
       <p class="fr-mb-1w">
-        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
+        <strong>Simulateur activé pour le département :</strong> {{ object.is_activated|yesno }}
       </p>
       <p>
-        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
+        <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
       </p>
 
-      <h2>Comptes</h2>
+      <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
 
-      <p class="fr-mb-1w">
-        <strong>Liste des comptes ayant les droits instructeur sur le département :</strong>
+      <div class="fr-callout">
+        <p class="fr-text--sm">
+          Ici sont recensées toutes les cartes utilisées dans le simulateur pour le département.
+          Les fichiers sont téléchargeables pour vérification par les services (format QGIS).
+        </p>
+        <p>
+          <a class="fr-btn fr-btn--secondary"
+             href="{{ department_settings_form }}"
+             target="_blank"
+             rel="noopener">Signaler une erreur / transmettre une carte</a>
+        </p>
+      </div>
+
+      {% for regulation in regulation_list %}
+        <h3 class="fr-h5">{{ regulation.title }}</h3>
+        {% if regulation.regulation in grouped_criteria %}
+          <ul class="fr-mb-3w">
+            {% for criterion in grouped_criteria|get_item:regulation.regulation %}
+              {% with map=criterion.activation_map %}
+                <li class="fr-mb-2w">
+                  <p class="fr-mb-1w">
+                    <strong>{{ map.name }}</strong>
+                  </p>
+                  <p class="fr-text--sm fr-mb-1w">
+                    <strong>Description :</strong> {{ map.description|safe|urlize_html|linebreaksbr }}
+                  </p>
+                  {% if map.file %}
+                    <div class="fr-mb-1w">
+                      <a class="fr-link fr-icon-download-line fr-link--icon-right"
+                         target="_self"
+                         href="{{ map.file.url }}">{{ map.file }}</a>
+                    </div>
+                  {% endif %}
+                </li>
+              {% endwith %}
+            {% endfor %}
+
+          </ul>
+        {% else %}
+          <p>
+            <em>Aucune carte paramétrée.</em>
+          </p>
+        {% endif %}
+      {% endfor %}
+
+      <h2 id="title-comptes" class="fr-mb-4v">Comptes</h2>
+
+      <p>
+        <a class="fr-btn fr-btn--secondary"
+           href="{{ department_settings_form }}"
+           target="_blank"
+           rel="noopener">Ajouter / modifier les droits d'accès</a>
       </p>
 
-      {% if department_members_emails %}
-        <ul>
-          {% for member in department_members_emails %}<li>{{ member.email }}</li>{% endfor %}
-        </ul>
-      {% else %}
-        <p>Pas de compte instructeur pour ce département.</p>
-      {% endif %}
+      <div class="fr-mb-2w">
+        <p class="fr-mb-1w">
+          <strong>Liste des comptes ayant les droits de modification (services coordonnateurs) sur tous les dossiers du
+          département :</strong>
+        </p>
+
+        {% if department_members.instructors_emails %}
+          <ul>
+            {% for member_email in department_members.instructors_emails %}<li>{{ member_email }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p>
+            <em>Aucun compte</em>
+          </p>
+        {% endif %}
+      </div>
+
+      <div class="fr-mb-2w">
+        <p class="fr-mb-1w">
+          <strong>Liste des comptes ayant les droits de lecture sur tous les dossiers du département :</strong>
+        </p>
+        {% if department_members.invited_emails %}
+          <ul>
+            {% for member_email in department_members.invited_emails %}<li>{{ member_email }}</li>{% endfor %}
+          </ul>
+        {% else %}
+          <p>
+            <em>Aucun compte</em>
+          </p>
+        {% endif %}
+      </div>
+      <div class="fr-mb-2w">
+        <p class="fr-mb-1w">
+          <strong>Outre ceux listés ci-dessus, certains comptes peuvent avoir été invités en lecture sur des dossiers
+            individuels. Ces accès sont gérés et consultables directement dans la vue « Services consultés » de
+          chaque dossier.</strong>
+        </p>
+      </div>
     </div>
   </div>
 {% endblock %}
+
+{% block after-content %}{% endblock %}

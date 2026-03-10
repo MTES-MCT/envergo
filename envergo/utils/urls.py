@@ -59,3 +59,11 @@ def update_fragment(url, fragment):
         fragment,
     )
     return urlunparse(new_parts)
+
+
+def remove_mtm_params(url):
+    """Remove mtm parameters from an url."""
+    mtm_params = extract_mtm_params(url)
+    for param in mtm_params.keys():
+        url = remove_from_qs(url, param)
+    return url

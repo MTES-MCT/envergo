@@ -712,7 +712,7 @@ class DemarchesSimplifieesClient:
 class DemarchesSimplifieesError(Exception):
     """Démarches Simplifiées client Exception"""
 
-    def __init__(self, query: str, variables: dict, message: str = None):
+    def __init__(self, query: str = None, variables: dict = None, message: str = None):
         super().__init__(message)
         self.message = message
         self.query = query

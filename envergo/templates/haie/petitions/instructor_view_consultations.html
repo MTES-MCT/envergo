@@ -1,0 +1,83 @@
+{% extends "haie/petitions/instructor_view_base.html" %}
+
+{% load static %}
+
+{% block title %}Instruction du dossier – Services consultés{% endblock %}
+
+{% block project_view_title %}<h1>Services consultés</h1>{% endblock %}
+
+{% block project_content %}
+  <div class="project-inner-content">
+    <section class="fr-my-3w">
+
+      <p>
+        Les personnes invitées ont accès en lecture seule à l’intégralité des données du dossier, y compris les messages échangés et les notes d’instruction.
+      </p>
+
+      <div id="copy-success-message-container"></div>
+
+      <button id="generate-invitation-btn"
+              class="fr-btn fr-btn--icon-left fr-icon-user-add-line fr-mb-4w">Inviter une nouvelle personne</button>
+
+      <p>
+        <strong>Liste des personnes ayant accédé au dossier :</strong>
+      </p>
+
+      <div class="fr-table fr-mb-3w">
+        <div class="fr-table__wrapper">
+          <div class="fr-table__container">
+            <div class="fr-table__content">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Premier accès</th>
+                    <th scope="col">Compte invité</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for token in invitation_tokens %}
+                    <tr>
+                      <td>{{ token.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+                      <td>{{ token.user.email }}</td>
+                      <td>
+                        <form method="POST"
+                              action="{% url 'petition_project_invitation_token_delete' petition_project.reference %}"
+                              class="revoke-token-form">
+                          {% csrf_token %}
+                          <input type="hidden" name="token_id" value="{{ token.id }}">
+                          <button type="submit" class="fr-btn fr-btn--sm fr-btn--tertiary">Révoquer l'accès</button>
+                        </form>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="3">Aucun invité n'a encore consulté le dossier</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="fr-hint-text">Seules les personnes ayant réellement accédé au dossier sont listées.</p>
+      <p class="fr-hint-text">
+        <a href="{% url 'confighaie_settings' department.department %}#title-comptes">Voir la liste des personnes ayant accès à tous les dossiers du département.</a>
+      </p>
+    </section>
+
+  </div>
+{% endblock %}
+
+{% block extra_body %}
+  {{ block.super }}
+  {% include 'haie/petitions/_invitation_token_modal_consultations.html' %}
+  {% include 'haie/petitions/_revoke_token_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>const INVITATION_TOKEN_CREATE_URL = '{{ invitation_token_create_url }}';</script>
+  <script defer src="{% static 'js/libs/invitation_token_consultations.js' %}"></script>
+{% endblock %}

@@ -138,11 +138,14 @@
 
     // Upon page printing, the map container width is reduced, so we need to
     // make sure the map displays correctly with the new size.
-    window.matchMedia('print').addEventListener("change", function (query) {
-      if (query.matches) {
-        map.invalidateSize();
-      }
-    });
+    const mql = window.matchMedia('print');
+    if (mql.addEventListener) {
+      mql.addEventListener("change", function (query) {
+        if (query.matches) {
+          map.invalidateSize();
+        }
+      });
+    }
 
     // Subsequently, when the print page is closed, we must reset the maps to
     // it's original size

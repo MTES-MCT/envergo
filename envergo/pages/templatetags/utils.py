@@ -1,3 +1,8 @@
+import re
+import warnings
+from collections.abc import Iterable, Mapping
+from html import unescape as html_unescape
+
 from django import template
 from django.db.models import NOT_PROVIDED
 from django.forms.widgets import (
@@ -8,57 +13,17 @@ from django.forms.widgets import (
     RadioSelect,
     Select,
 )
+from django.http import QueryDict
+from django.template.base import TemplateSyntaxError
+from django.template.defaultfilters import stringfilter
+from django.template.loader import get_template
 from django.utils.dateparse import parse_datetime
+from django.utils.deprecation import RemovedInDjango51Warning
+from django.utils.html import escape, strip_tags, urlize
+
+from envergo.utils.fields import HedgeChoiceField
 
 register = template.Library()
-
-
-@register.filter
-def has_custom_template(field):
-    """Should we use the field's own template.
-
-    This is a hack, since we should always override the field's templates instead
-    of defining "field snippets".
-
-    This should be fixed some day.
-    """
-
-    return hasattr(field.field.widget, "custom_template")
-
-
-@register.filter
-def is_checkbox(field):
-    """Is the given field a checkbox input?."""
-
-    return isinstance(field.field.widget, CheckboxInput)
-
-
-@register.filter
-def is_checkbox_multiple(field):
-    """Is the given field a multiple checkbox input?."""
-
-    return isinstance(field.field.widget, CheckboxSelectMultiple)
-
-
-@register.filter
-def is_radio(field):
-    """Is the given field a radio select?."""
-
-    return isinstance(field.field.widget, RadioSelect)
-
-
-@register.filter
-def is_select(field):
-    """Is the given field a select?."""
-
-    return isinstance(field.field.widget, Select)
-
-
-@register.filter
-def is_input_file(field):
-    """Is the given field an input[type=file] widget?."""
-
-    return isinstance(field.field.widget, FileInput)
 
 
 @register.filter
@@ -69,21 +34,6 @@ def add_classes(field, classes):
     all_classes.remove("")  # Prevent unwanted space in class list
     ret = field.as_widget(attrs={"class": " ".join(all_classes)})
     return ret
-
-
-@register.filter
-def compute_input_classes(field):
-    """Compute css classes for the field widget html."""
-    classes = "fr-input"
-    if hasattr(field, "errors") and field.errors:
-        classes = classes + " fr-input--error"
-    if (
-        hasattr(field.field.widget, "input_type")
-        and field.field.widget.input_type == "select"
-    ):
-        classes = classes + " fr-select"
-
-    return add_classes(field, classes)
 
 
 @register.inclusion_tag("admin/submit_line.html", takes_context=True)
@@ -173,3 +123,246 @@ def choice_default_label(model, field_name):
     else:
         default = field.default
     return dict(field.choices).get(default, default)
+
+
+_UNSAFE_HREF_SCHEME = re.compile(r"^(javascript|data|vbscript):", re.IGNORECASE)
+
+_A_TAG_RE = re.compile(
+    r"""
+        <a\s            # opening <a tag followed by a space
+        [^>]*           # any attributes before href
+        href\s*=\s*     # href attribute with optional whitespace around =
+        ["']            # opening quote
+        ([^"']*)        # capture the URL (group 1)
+        ["']            # closing quote
+        [^>]*>          # any attributes after href, then close tag
+        (.*?)           # link text (group 2, non-greedy)
+        </a>            # closing tag
+    """,
+    re.IGNORECASE | re.DOTALL | re.VERBOSE,
+)
+
+
+@register.filter(is_safe=True)
+@stringfilter
+def urlize_html(value, blank=True):
+    """Convert URLs in text into clickable links, stripping any HTML markup.
+
+    This filter is mainly used to parse and sanitize messages fetched from DS.
+
+    DS sends messages in inconsistent formats. Sometimes html, sometimes
+    markdown. We strip all tags while preserving paragraph boundaries as
+    newlines (so the downstream |linebreaks filter recreates the visual
+    structure), then linkify any bare URLs found in the resulting plain text.
+
+    Existing <a> tags with safe href schemes are preserved (sanitized to keep
+    only the href and link text). Unsafe schemes (javascript:, data:, …) are
+    discarded entirely.
+
+    This is a sensitive piece of code, since it's used to sanitize content that
+    we get from a third party, but it must output `safe` content that will be
+    integrated as-is in the page.
+    """
+    # Sanitize <a> tags: preserve safe links as placeholders that survive
+    # strip_tags and urlize, discard links with dangerous URI schemes.
+    preserved_links = []
+
+    def _sanitize_link(match):
+        """Replace an <a> tag with a placeholder (safe href) or plain text (unsafe)."""
+        href = html_unescape(match.group(1))
+        link_text = html_unescape(strip_tags(match.group(2)))
+        if _UNSAFE_HREF_SCHEME.match(href):
+            return link_text
+        idx = len(preserved_links)
+        preserved_links.append((href, link_text))
+        return f"ENVERGOLINK{idx}END"
+
+    text = _A_TAG_RE.sub(_sanitize_link, value)
+
+    # Convert block-level HTML boundaries to newlines before stripping tags,
+    # so paragraph structure is preserved through the |linebreaks filter.
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"</(?:p|div|h[1-6]|li|tr|blockquote)>",
+        "\n\n",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Strip all remaining HTML tags (placeholders are plain text, unaffected).
+    text = strip_tags(text)
+
+    # Unescape HTML entities (e.g. &amp; → &, &nbsp; → space) so they don't
+    # get double-escaped by urlize's autoescape. DS sends HTML where & in URLs
+    # is encoded as &amp;.
+    # This must happen AFTER strip_tags, because strip_tags uses HTMLParser
+    # which normalizes bare & as entity references (e.g. &element → &element;).
+    text = html_unescape(text)
+
+    # Collapse runs of multiple blank lines into a single paragraph break,
+    # preventing |linebreaks from generating empty paragraphs.
+    text = re.sub(r"\n(\s*\n)+", "\n\n", text)
+    text = text.strip()
+
+    # Linkify bare URLs. Placeholders are alphanumeric and won't be touched.
+    result = urlize(text, nofollow=False, autoescape=True)
+
+    # Restore preserved links as sanitized <a> tags (href + text only).
+    for idx, (href, link_text) in enumerate(preserved_links):
+        safe_href = escape(href)
+        safe_text = escape(link_text)
+        tag = f'<a href="{safe_href}">{safe_text}</a>'
+        result = result.replace(f"ENVERGOLINK{idx}END", tag)
+
+    if blank:
+        result = result.replace("<a", '<a target="_blank" rel="noopener"')
+    return result
+
+
+@register.simple_tag(name="querystring", takes_context=True)
+def querystring(context, *args, **kwargs):
+    """
+    Copy from django 5.1 querystring builtin templatetag
+    https://github.com/django/django/blob/4702b36120ea4c736d3f6b5595496f96e0021e46/django/template/defaulttags.py#L1286
+
+    Build a query string using `args` and `kwargs` arguments.
+
+    This tag constructs a new query string by adding, removing, or modifying
+    parameters from the given positional and keyword arguments. Positional
+    arguments must be mappings (such as `QueryDict` or `dict`), and
+    `request.GET` is used as the starting point if `args` is empty.
+
+    Keyword arguments are treated as an extra, final mapping. These mappings
+    are processed sequentially, with later arguments taking precedence.
+
+    Passing `None` as a value removes the corresponding key from the result.
+    For iterable values, `None` entries are ignored, but if all values are
+    `None`, the key is removed.
+
+    A query string prefixed with `?` is returned.
+
+    Raise TemplateSyntaxError if a positional argument is not a mapping or if
+    keys are not strings.
+
+    For example::
+
+        {# Set a parameter on top of `request.GET` #}
+        {% querystring foo=3 %}
+
+        {# Remove a key from `request.GET` #}
+        {% querystring foo=None %}
+
+        {# Use with pagination #}
+        {% querystring page=page_obj.next_page_number %}
+
+        {# Use a custom ``QueryDict`` #}
+        {% querystring my_query_dict foo=3 %}
+
+        {# Use multiple positional and keyword arguments #}
+        {% querystring my_query_dict my_dict foo=3 bar=None %}
+    """
+
+    warnings.warn(
+        "This template tag is a copy of querystring template tag implemented in django 5.1."
+        "Remove this when update.",
+        category=RemovedInDjango51Warning,
+    )
+    if not args:
+        args = [context.request.GET]
+    params = QueryDict(mutable=True)
+    for d in [*args, kwargs]:
+        if not isinstance(d, Mapping):
+            raise TemplateSyntaxError(
+                "querystring requires mappings for positional arguments (got "
+                "%r instead)." % d
+            )
+        items = d.lists() if isinstance(d, QueryDict) else d.items()
+        for key, value in items:
+            if not isinstance(key, str):
+                raise TemplateSyntaxError(
+                    "querystring requires strings for mapping keys (got %r "
+                    "instead)." % key
+                )
+            if value is None:
+                params.pop(key, None)
+            elif isinstance(value, Iterable) and not isinstance(value, str):
+                # Drop None values; if no values remain, the key is removed.
+                params.setlist(key, [v for v in value if v is not None])
+            else:
+                params[key] = value
+    query_string = params.urlencode() if params else ""
+    return f"?{query_string}"
+
+
+@register.inclusion_tag("_truncated_comment.html")
+def truncated_comment(text, uid, limit=50):
+    """
+    Display a truncated comment with DSFR-compatible expand/collapse.
+    """
+    if not text:
+        return {"text": None}
+
+    return {
+        "text": text,
+        "limit": limit,
+        "uid": uid,
+        "is_truncated": len(text) > limit,
+        "head": text[:limit],
+        "tail": text[limit:],
+    }
+
+
+@register.filter
+def join_ids(objects):
+    return ", ".join(str(o.id) for o in objects)
+
+
+def get_field_template_name(field):
+    """Determine which template to use for rendering a field wrapper.
+
+    Returns the template path based on the widget type.
+    This is for the field wrapper (label + widget + errors), not the widget itself.
+    """
+    widget = field.field.widget
+
+    # The hedge choice field is an hedge case, because it's a radio select
+    # but we must use the normal field template for rendering. All the specific
+    # radio code is in the widget template.
+    if isinstance(widget, HedgeChoiceField):
+        return "django/forms/fields/field.html"
+    elif isinstance(widget, CheckboxInput):
+        return "django/forms/fields/checkbox.html"
+    elif isinstance(widget, RadioSelect):
+        return "django/forms/fields/radio.html"
+    elif isinstance(widget, CheckboxSelectMultiple):
+        return "django/forms/fields/checkbox_multiple.html"
+    elif isinstance(widget, FileInput):
+        return "django/forms/fields/input_file.html"
+    elif isinstance(widget, Select):
+        return "django/forms/fields/select.html"
+    else:
+        return "django/forms/fields/field.html"
+
+
+@register.simple_tag(takes_context=True)
+def render_field(context, field, **kwargs):
+    """Render a form field with the appropriate DSFR template.
+
+    Usage:
+        {% render_field form.my_field %}
+
+    This replaces the old pattern:
+        {% include '_field_snippet.html' with field=form.my_field %}
+    """
+    template_name = get_field_template_name(field)
+    t = get_template(template_name)
+
+    new_context = context.flatten()
+    new_context.update(
+        {
+            "field": field,
+            "nest_field_class": kwargs.get("nest_field_class", ""),
+        }
+    )
+
+    return t.render(new_context)

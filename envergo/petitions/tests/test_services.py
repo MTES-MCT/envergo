@@ -13,8 +13,8 @@ from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
-    ConfigHaieFactory,
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
 )
 from envergo.petitions.demarches_simplifiees.models import Dossier, DossierState
@@ -53,9 +53,7 @@ from envergo.petitions.tests.factories import (
 pytestmark = pytest.mark.django_db
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -65,7 +63,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -77,7 +75,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     dossier = get_demarches_simplifiees_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
-    assert Event.objects.get(category="dossier", event="depot", session_key=SESSION_KEY)
+    assert Event.objects.get(category="demande", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
     project_details = get_context_from_ds(petition_project, moulinette)
@@ -111,7 +109,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # GIVEN a new dossier in Draft status With an existing creation event
     petition_project = PetitionProjectFactory(reference="DEF456")
     Event.objects.create(
-        category="dossier",
+        category="demande",
         event="creation",
         session_key="a given user",
         metadata={"reference": "DEF456"},
@@ -123,20 +121,18 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
     # THEN an event is created with the same session key as the creation event
     assert Event.objects.get(
-        category="dossier", event="depot", session_key="a given user"
+        category="demande", event="depot", session_key="a given user"
     )
     assert mock_post.call_count == 3
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
 ):
     petition_project = PetitionProjectFactory()
-    config = ConfigHaieFactory()
+    config = DCConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
@@ -156,9 +152,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     assert details == Dossier.from_dict(fake_dossier)
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@pytest.mark.haie
 @patch("envergo.petitions.services.notify")
 def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
@@ -205,7 +199,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
             },
         ]
     )
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
     data = {
         "motif": "chemin_acces",
         "reimplantation": "replantation",
@@ -240,7 +234,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     )
 
     petition_project = PetitionProjectFactory()
-    config = ConfigHaieFactory()
+    config = DCConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
@@ -268,7 +262,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 ):
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
     petition_project = PetitionProjectFactory()
-    config = ConfigHaieFactory()
+    config = DCConfigHaieFactory()
     config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
     config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
 
@@ -293,7 +287,7 @@ def test_compute_instructor_information(mock_get_dossier):
         GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
     )
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -401,7 +395,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
         activation_mode="department_centroid",
     )
     petition_project = PetitionProjectFactory(hedge_data=hedges)
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesAisneForm",
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesAisneForm",
     )
@@ -515,7 +509,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
         activation_mode="department_centroid",
     )
     petition_project = PetitionProjectFactory(hedge_data=hedges)
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
         hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
     )
@@ -666,7 +660,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         activation_mode="department_centroid",
     )
     petition_project = PetitionProjectFactory(hedge_data=hedges)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
@@ -803,7 +797,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         activation_mode="department_centroid",
     )
     petition_project = PetitionProjectFactory(hedge_data=hedges)
-    ConfigHaieFactory()
+    DCConfigHaieFactory()
 
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
@@ -852,9 +846,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     assert aa_bord_voie_to_plant_hedge.prop("bord_voie") is True
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
 def test_get_message_project_via_demarches_simplifiees(
@@ -864,7 +856,7 @@ def test_get_message_project_via_demarches_simplifiees(
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -886,9 +878,7 @@ def test_get_message_project_via_demarches_simplifiees(
     assert petitioner_email == "hedy.lamarr@example.com"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("gql.Client.execute")
 def test_send_message_project_via_demarches_simplifiees(
@@ -896,7 +886,7 @@ def test_send_message_project_via_demarches_simplifiees(
 ):
     """Test send message for project via demarches simplifiées"""
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )
@@ -930,9 +920,7 @@ def test_send_message_project_via_demarches_simplifiees(
     assert result is None
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-@override_settings(ENVERGO_AMENAGEMENT_DOMAIN="somethingelse")
+@pytest.mark.haie
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
 @patch("requests.sessions.Session.request")
 @patch("gql.Client.execute")
@@ -941,7 +929,7 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
 ):
     """Test send message for project via demarches simplifiées"""
 
-    ConfigHaieFactory(
+    DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
     )

@@ -5,7 +5,7 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.getByRole('link', { name: 'Simuler un projet' }).click();
     await page.getByRole('link', { name: 'Loire-Atlantique (44)' }).click();
     await page.getByText('Haies ou alignements d’arbres').click();
-    await page.getByText('Destruction').click();
+    await page.getByText('Toute intervention supprimant définitivement la végétation').click();
     await page.getByRole('button', { name: 'Valider' }).click();
     await page.getByText('Création d’un accès à la').click();
     await page.locator('label').filter({ hasText: 'Oui, en plantant une haie à' }).click();

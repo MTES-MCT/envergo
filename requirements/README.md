@@ -25,6 +25,16 @@ pip-sync (local.txt|production.txt)
 docker compose build
 ```
 
+## How to upgrade a single package
+
+```bash
+pip-compile -P <package_name> base.in
+pip-compile -P <package_name> local.in
+pip-compile -P <package_name> production.in
+```
+
+Then run pip-sync / dc build
+
 ## How to upgrade ALL packages
 
 ```bash

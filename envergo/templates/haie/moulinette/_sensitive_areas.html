@@ -1,0 +1,38 @@
+{% load utils %}
+
+{% if hedges_to_plant_intersecting_regulations_perimeter %}
+  <div class="fr-alert fr-alert--warning fr-my-3w">
+    <h3 class="fr-alert__title">La plantation se situe en zone sensible ou en site protégé</h3>
+    {% if moulinette.config.single_procedure %}
+      <p>
+        La localisation des linéaires à planter dans des zones sensibles ou réglementées fait basculer le projet en
+        régime d'autorisation, ce qui entraîne une procédure plus approfondie et plus longue.
+      </p>
+    {% else %}
+      <p>
+        La localisation des linéaires à planter dans des zones sensibles ou réglementées soumet le projet à une ou
+        plusieurs réglementations.
+      </p>
+
+    {% endif %}
+    <p>Zones concernées :</p>
+    <ul>
+      {% for regulation, hedges in hedges_to_plant_intersecting_regulations_perimeter.items %}
+        <li>
+          {{ regulation.title }} (<a href="#regulation_{{ regulation.slug }}"
+   title="Voir le détail de la réglementation « {{ regulation }} »">voir détail</a>) :
+          {{ hedges|join_ids }}
+        </li>
+      {% endfor %}
+    </ul>
+    {% if moulinette.config.single_procedure %}
+      <p>
+        Vous pouvez <a class="hedge-input-open-btn"
+    href="#"
+    data-fr-opened="false"
+    aria-controls="hedge-input-modal">modifier les haies à planter</a> pour maintenir le projet en
+        régime de déclaration.
+      </p>
+    {% endif %}
+  </div>
+{% endif %}

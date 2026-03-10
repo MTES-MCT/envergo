@@ -9,7 +9,7 @@
   <h6>{{ name }}</h6>
   {% for field_name in fields %}
     {% with form|get_item:field_name as field %}
-      {% include '_field.html' with field=field %}
+      {% render_field field %}
     {% endwith %}
   {% endfor %}
 {% endfor %}
