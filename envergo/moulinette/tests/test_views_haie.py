@@ -419,10 +419,11 @@ def test_confighaie_home_view(
     response = client.get(url)
     # THEN response is 200
     assert response.status_code == 200
-    # AND no confighaie is listed, but a message with
+    # AND no confighaie is listed
     content = response.content.decode()
     assert "Loire-Atlantique (44)" not in content
     assert "Hérault (34)" not in content
+    # AND text "you don't have the right" is displayed
     assert (
         "Vous n'avez pas les droits pour accéder aux pages de paramétrage du portail"
         in content
@@ -458,6 +459,8 @@ def test_confighaie_settings_view(
     admin_user,
 ):
     """Test config haie settings view"""
+
+    # Create two config haie and a department without config haie associated
     DepartmentFactory(department="24")
     DCConfigHaieFactory(department=herault_department)
     DCConfigHaieFactory(department=loire_atlantique_department)
@@ -509,14 +512,7 @@ def test_confighaie_settings_view(
     assert response.status_code == 200
     assert "Loire-Atlantique (44)" in content
 
-    # WHEN they visit not existing department setting page
-    url = reverse("confighaie_settings", kwargs={"department": "24"})
-    response = client.get(url)
-    # THEN redirect to confighaie list
-    assert response.status_code == 302
-    assert response.url == "/parametrage/"
-
-    # WHEN they visit existing department with no config setting page
+    # WHEN they visit existing department with no config haie
     url = reverse("confighaie_settings", kwargs={"department": "24"})
     response = client.get(url)
     # THEN redirect to confighaie list
