@@ -2,13 +2,12 @@ from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
 
-import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.tests.factories import Department34Factory, DepartmentFactory
+from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -396,13 +395,14 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
 def test_confighaie_home_view(
     client,
+    herault_department,  # noqa
     loire_atlantique_department,  # noqa
     haie_user,
     haie_instructor_44,
     admin_user,
 ):
     """Test config haie settings homepage view"""
-    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    DCConfigHaieFactory(department=herault_department)
     DCConfigHaieFactory(department=loire_atlantique_department)
     url = reverse("confighaie_list")
 
