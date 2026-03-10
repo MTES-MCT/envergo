@@ -747,7 +747,7 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
                 },
             )
             return HttpResponseRedirect(config_url)
-        return super().get(self, request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
