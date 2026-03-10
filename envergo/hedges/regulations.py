@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from math import ceil, isclose
 
 from django.conf import settings
@@ -291,7 +291,6 @@ class NormandieQualityCondition(PlantationCondition):
         "degradee": ["buissonnante", "arbustive", "mixte"],
     }
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # get the available hedge types for this context
@@ -315,7 +314,7 @@ class NormandieQualityCondition(PlantationCondition):
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
 
-        for hedge_type in self.HedgeType.values:
+        for hedge_type in reversed(self.HedgeType.values):
             for compensation_type in self.compensations[hedge_type]:
 
                 # Si on compense avec un type de qualité supérieur, le taux

@@ -131,7 +131,7 @@ def make_moulinette_haie_data(
         hedges = HedgeDataFactory(data=hedge_data)
     elif hedges is None:
         hedges = HedgeDataFactory(
-            hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
+            hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)]
         )
     elif isinstance(hedges, list):
         hedges = HedgeDataFactory(hedges=hedges)
