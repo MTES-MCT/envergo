@@ -350,7 +350,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         label="Linéaire de haies à détruire / planter",
         required=True,
         error_messages={
-            "required": """Aucune haie n’a été saisie. Cliquez sur le bouton ci-dessus pour
+            "required": """Aucune haie n'a été saisie. Cliquez sur le bouton ci-dessus pour
             localiser les haies à détruire."""
         },
     )
@@ -359,11 +359,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         super().__init__(*args, **kwargs)
 
         # We override the queryset here because it prevents a "models are not ready" exception
-        self.fields["department"].queryset = (
-            Department.objects.defer("geometry")
-            .select_related("confighaie")
-            .annotate(centroid=Centroid("geometry"))
-        )
+        self.fields["department"].queryset = Department.objects.defer(
+            "geometry"
+        ).annotate(centroid=Centroid("geometry"))
 
     def clean(self):
         data = super().clean()

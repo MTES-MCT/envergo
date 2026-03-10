@@ -155,6 +155,7 @@ class FuzzyMultiPolygon(fuzzy.BaseFuzzyAttribute):
 class MapFactory(DjangoModelFactory):
     class Meta:
         model = Map
+        skip_postgeneration_save = True
 
     name = factory_Faker("name")
     map_type = ""
@@ -188,7 +189,7 @@ class DepartmentFactory(DjangoModelFactory):
         model = Department
         django_get_or_create = ["department"]
 
-    department = 44
+    department = "44"
     geometry = loire_atlantique_multipolygon
 
 
@@ -197,5 +198,5 @@ class Department34Factory(DjangoModelFactory):
         model = Department
         django_get_or_create = ["department"]
 
-    department = 34
+    department = "34"
     geometry = herault_multipolygon

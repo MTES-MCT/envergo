@@ -16,27 +16,11 @@ from envergo.evaluations.tests.factories import (
     RequestFactory,
     VersionFactory,
 )
-from envergo.geodata.conftest import loire_atlantique_department  # noqa
 from envergo.moulinette.models import ActionToTake
-from envergo.moulinette.tests.factories import ConfigAmenagementFactory
-
-pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture(autouse=True)
-def autouse_site(site):
-    pass
-
-
-@pytest.fixture()
-def moulinette_config(loire_atlantique_department):  # noqa
-    ConfigAmenagementFactory(
-        department=loire_atlantique_department,
-        is_activated=True,
-        ddtm_water_police_email="ddtm_email_test@example.org",
-        ddtm_n2000_email="ddtm_n2000@example.org",
-        dreal_eval_env_email="dreal_evalenv@example.org",
-    )
+from envergo.moulinette.tests.factories import (
+    ActionToTakeFactory,
+    ConfigAmenagementFactory,
+)
 
 
 @pytest.fixture()
@@ -688,6 +672,9 @@ def test_admin_can_view_unpublished_content(admin_client):
 )
 def test_actions_to_take_are_displayed_in_evaluations(mock_actions_to_take, client):
     # GIVEN an evaluation with display_actions_to_take set to True
+    # and ActionToTake records exist in the DB
+    ActionToTakeFactory(slug="mention_arrete_lse")
+    ActionToTakeFactory(slug="etude_zh_lse", target="petitioner")
     eval = EvaluationFactory(display_actions_to_take=True)
     url = eval.get_absolute_url()
     actions = ActionToTake.objects.all()

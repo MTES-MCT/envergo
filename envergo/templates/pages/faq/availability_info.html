@@ -22,7 +22,7 @@
 
   {% if configs_soon %}
     <ul>
-      {% for config in configs_soon %}<li>{{ config.department }}</li>{% endfor %}
+      {% for department in configs_soon %}<li>{{ department }}</li>{% endfor %}
     </ul>
   {% else %}
     <p>Aucun département n'est en cours de déploiement.</p>

@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -47,6 +48,7 @@ from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
     PetitionProjectInstructorView,
+    PetitionProjectList,
 )
 from envergo.users.tests.factories import UserFactory
 
@@ -168,6 +170,55 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("requests.post")
+@patch("envergo.petitions.views.reverse")
+def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
+    """pre_fill_demarche_simplifiee uses the currently valid config when multiple exist."""
+    mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
+
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.json.return_value = {
+        "dossier_url": "demarche_simplifiee_url",
+        "state": "prefilled",
+        "dossier_id": "RG9zc2llci0yMTA3NTY2NQ==",
+        "dossier_number": 21075665,
+        "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
+    }
+
+    today = date.today()
+    # Expired config
+    DCConfigHaieFactory(
+        demarche_simplifiee_number=111111,
+        validity_range=DateRange(date(2020, 1, 1), today, "[)"),
+    )
+    # Current config
+    DCConfigHaieFactory(
+        demarche_simplifiee_number=222222,
+        validity_range=DateRange(today, date(2030, 1, 1), "[)"),
+    )
+
+    view = PetitionProjectCreate()
+    factory = RequestFactory()
+    request = factory.get("")
+    view.request = request
+    request.alerts = PetitionProjectCreationAlert(request)
+
+    hedge_to_plant = HedgeFactory(type=TO_PLANT)
+    hedge_data = HedgeDataFactory()
+    hedge_data.data = [hedge_to_plant.toDict()]
+
+    petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+        petition_project
+    )
+
+    assert demarche_simplifiee_url == "demarche_simplifiee_url"
+    assert dossier_number == 21075665
+    # Verify the correct demarche number was used (current config's 222222)
+    assert "222222" in mock_post.call_args[0][0]
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
@@ -671,11 +722,11 @@ def test_petition_project_list(
     DCConfigHaieFactory()
     DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
     # GIVEN two projects non draft, one in 34 and one in 44
-    today = date.today()
-    last_month = today - timedelta(days=30)
+    now = timezone.now()
+    last_month = now - timedelta(days=30)
     project_34 = PetitionProject34Factory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
@@ -750,28 +801,28 @@ def test_petition_project_list_filters(
     admin_user.save()
 
     # GIVEN projects non draft followed by users and instructors
-    today = date.today()
+    now = timezone.now()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
     project_44_followed_by_instructor2 = PetitionProjectFactory(
         reference="ACB132",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
     project_44_followed_by_invited = PetitionProjectFactory(
         reference="XYZ123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_invited.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2 = PetitionProjectFactory(
         reference="XYZ456",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2.followed_by.add(
@@ -780,13 +831,13 @@ def test_petition_project_list_filters(
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ789",
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=today,
+        demarches_simplifiees_date_depot=now,
     )
 
     # AS haie user with no project
@@ -1448,9 +1499,9 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     read_msg = '<td class="messagerie-col read">'
     unread_msg = '<td class="messagerie-col unread">'
 
-    today = date.today()
-    last_week = today - timedelta(days=7)
-    last_month = today - timedelta(days=30)
+    now = timezone.now()
+    last_week = now - timedelta(days=7)
+    last_month = now - timedelta(days=30)
     project = PetitionProjectFactory(
         demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         demarches_simplifiees_date_depot=last_month,
@@ -1472,7 +1523,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     # there is an existing message in the project before the user joined in
     project.latest_petitioner_msg = last_week
     project.save()
-    haie_instructor_44.date_joined = today
+    haie_instructor_44.date_joined = now
     haie_instructor_44.save()
     res = client.get(url)
     assert res.status_code == 200
@@ -1500,7 +1551,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg in res.content.decode()
 
     # The messagerie was accessed after the latest message
-    access.access = today
+    access.access = now
     access.save()
     res = client.get(url)
     assert res.status_code == 200
@@ -2516,3 +2567,97 @@ def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
         category="dossier", event="invitation_revocation"
     ).first()
     assert revocation_event is not None
+
+
+class TestGetProjectConfig:
+    """Tests for PetitionProjectList.get_project_config."""
+
+    def _make_view(self, projects):
+        """Create a PetitionProjectList instance with the given object_list."""
+        view = PetitionProjectList()
+        view.object_list = projects
+        return view
+
+    @pytest.mark.django_db
+    def test_returns_config_without_validity_range(self):
+        config = DCConfigHaieFactory(validity_range=None)
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) == config
+
+    @pytest.mark.django_db
+    def test_returns_config_matching_date(self):
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        config_old = DCConfigHaieFactory(
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_new = DCConfigHaieFactory(
+            department=config_old.department,
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            created_at=timezone.make_aware(datetime(2025, 6, 15)),
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) == config_new
+
+    @pytest.mark.django_db
+    def test_returns_old_config_for_old_project(self):
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        config_old = DCConfigHaieFactory(
+            validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+        )
+        config_new = DCConfigHaieFactory(  # noqa
+            department=config_old.department,
+            validity_range=DateRange(date(2025, 1, 1), None, "[)"),
+        )
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            created_at=timezone.make_aware(datetime(2024, 6, 15)),
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) == config_old
+
+    @pytest.mark.django_db
+    def test_returns_none_when_no_config_matches(self):
+        from django.db.backends.postgresql.psycopg_any import DateRange
+
+        DCConfigHaieFactory(
+            validity_range=DateRange(date(2026, 1, 1), None, "[)"),
+        )
+        project = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            created_at=timezone.make_aware(datetime(2025, 6, 15)),
+        )
+        view = self._make_view([project])
+
+        assert view.get_project_config(project) is None
+
+    @pytest.mark.django_db
+    def test_cache_is_built_once(self):
+        from envergo.moulinette.models import ConfigHaie
+
+        DCConfigHaieFactory(validity_range=None)
+        project1 = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        )
+        project2 = PetitionProjectFactory(
+            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+        )
+        view = self._make_view([project1, project2])
+
+        with patch.object(
+            ConfigHaie.objects, "filter", wraps=ConfigHaie.objects.filter
+        ) as mock_filter:
+            view.get_project_config(project1)
+            view.get_project_config(project2)
+
+            mock_filter.assert_called_once()

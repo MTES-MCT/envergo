@@ -2,20 +2,14 @@ import json
 import uuid
 
 import pytest
-from django.test import override_settings
 from django.urls import reverse
 
 from envergo.geodata.tests.factories import LineFactory
 from envergo.hedges.tests.factories import HedgeDataFactory
 
-pytestmark = pytest.mark.django_db
+pytestmark = [pytest.mark.django_db, pytest.mark.haie]
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver",
-    ENVERGO_AMENAGEMENT_DOMAIN="otherserver",
-)
 def test_hedges_density_around_point_demo(client):
     """Test hedge density demo"""
     LineFactory()
@@ -34,11 +28,6 @@ def test_hedges_density_around_point_demo(client):
     assert haies_polygon["legend"] == "Haies"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver",
-    ENVERGO_AMENAGEMENT_DOMAIN="otherserver",
-)
 def test_hedges_density_in_buffer_demo(client):
     """Test hedge density demo : inside a buffer around lines"""
     url = reverse("demo_density_project")
@@ -57,11 +46,6 @@ def test_hedges_density_in_buffer_demo(client):
     assert len(response.context["hedges_to_remove_mls"]) > 0
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver",
-    ENVERGO_AMENAGEMENT_DOMAIN="otherserver",
-)
 def test_hedges_density_in_buffer_demo_errors(client):
     """Test hedge density demo : inside a buffer around lines"""
     url = reverse("demo_density_project")

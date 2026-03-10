@@ -1,17 +1,12 @@
+from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
 
 import pytest
-from django.test import override_settings
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.conftest import (  # noqa
-    bizous_town_center,
-    france_map,
-    loire_atlantique_department,
-    loire_atlantique_map,
-)
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -21,18 +16,13 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 
-pytestmark = pytest.mark.django_db
+pytestmark = pytest.mark.haie
 
 
 HOME_TITLE = "Projet de destruction de haies ou alignements d'arbres"
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
 )
-
-
-@pytest.fixture(autouse=False)
-def autouse_site(site):
-    pass
 
 
 @pytest.fixture(autouse=True)
@@ -53,10 +43,6 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
     return criteria
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_triage(client):
     DCConfigHaieFactory(department_doctrine_html="<h2>Doctrine du département</h2>")
 
@@ -82,10 +68,6 @@ def test_triage(client):
     assert res.url == "/#simulateur"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_triage_result(client):
 
     DCConfigHaieFactory(
@@ -132,10 +114,6 @@ def test_triage_result(client):
     assert res.url == "/#simulateur"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_moulinette_form_with_invalid_triage(client):
 
     DCConfigHaieFactory(
@@ -152,10 +130,6 @@ def test_moulinette_form_with_invalid_triage(client):
     assert res.redirect_chain[0][0].startswith("/simulateur/triage/")
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_invalid_department_result(client):
     """Test simulation with querystring not valid department"""
 
@@ -185,10 +159,6 @@ def test_invalid_department_result(client):
     assert res.url == "/#simulateur"
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_debug_result(client):
     """WIP: Test for debug page.
     Missing fixtures criteria ep and pac for MoulinetteHaie"""
@@ -218,9 +188,6 @@ def test_debug_result(client):
     # assertTemplateUsed(res, "haie/moulinette/result_debug.html")
 
 
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_d_view_with_R_gt_0(mock_R, client):
     DCConfigHaieFactory()
@@ -248,10 +215,6 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_d_view_with_R_eq_0(mock_R, client):
     DCConfigHaieFactory()
@@ -277,10 +240,6 @@ def test_result_d_view_with_R_eq_0(mock_R, client):
     assert "Déposer une demande sans plantation" in res.content.decode()
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_result_d_view_non_soumis_with_r_gt_0(client):
     DCConfigHaieFactory()
     hedge_lt5m = HedgeFactory(
@@ -309,10 +268,6 @@ def test_result_d_view_non_soumis_with_r_gt_0(client):
     assert "Déposer une demande sans plantation" not in res.content.decode()
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_p_view(mock_R, client):
     DCConfigHaieFactory()
@@ -339,10 +294,6 @@ def test_result_p_view(mock_R, client):
     )
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_moulinette_post_form_error(client):
     DCConfigHaieFactory()
     url = reverse("moulinette_form")
@@ -365,7 +316,7 @@ def test_moulinette_post_form_error(client):
         "haies": [
             {
                 "code": "required",
-                "message": "Aucune haie n’a été saisie. Cliquez sur le bouton "
+                "message": "Aucune haie n'a été saisie. Cliquez sur le bouton "
                 "ci-dessus pour\n"
                 "            localiser les haies à détruire.",
             }
@@ -382,10 +333,6 @@ def test_moulinette_post_form_error(client):
     assert error_event.metadata["data"] == data
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_result_p_view_with_hedges_to_remove_outside_department(client):
     """Test if a warning is displayed on result pages when hedges to remove are outside department"""
 
@@ -445,10 +392,6 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_confighaie_settings_view(
     client,
     loire_atlantique_department,  # noqa
@@ -498,10 +441,6 @@ def test_confighaie_settings_view(
     assert "Loire-Atlantique (44)" in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_confighaie_settings_view_map_display(
     client,
     haie_instructor_44,
@@ -566,6 +505,7 @@ def test_confighaie_settings_view_map_display(
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
+        validity_range=DateRange(None, date(2020, 1, 1), "[)"),
     )
     CriterionFactory(
         title="Natura 2000 Haie > Haie Bizous après 2020",
@@ -575,6 +515,7 @@ def test_confighaie_settings_view_map_display(
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
         evaluator_settings={"result": "soumis"},
+        validity_range=DateRange(date(2020, 1, 1), None, "[)"),
     )
 
     # AS instructor user in 44
@@ -592,10 +533,6 @@ def test_confighaie_settings_view_map_display(
     assert france_map.name not in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(
-    ENVERGO_HAIE_DOMAIN="testserver", ENVERGO_AMENAGEMENT_DOMAIN="otherserver"
-)
 def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
     client, bizous_town_center  # noqa
 ):
@@ -707,3 +644,132 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         "La localisation des linéaires à planter dans des zones sensibles "
         in res.content.decode()
     )
+
+
+def test_confighaie_settings_view_with_multiple_configs(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """Settings view returns the currently valid config when multiple exist."""
+    from datetime import timedelta
+
+    today = date.today()
+    yesterday = today - timedelta(days=1)  # noqa
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    current_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == current_config.pk
+
+
+def test_confighaie_detail_by_date_slug(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """Accessing /parametrage/{dep}/{date_slug}/ returns the matching config."""
+    from datetime import timedelta
+
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    old_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # Access the old config by its date slug ({start}_{end})
+    slug = f"{one_year_ago.isoformat()}_{today.isoformat()}"
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": slug},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == old_config.pk
+
+
+def test_confighaie_detail_permanent_slug(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """The 'permanent' slug matches a config with no validity_range."""
+    permanent_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=None,
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": "permanent"},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == permanent_config.pk
+
+
+def test_confighaie_detail_invalid_slug_returns_404(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """An unknown date slug returns 404."""
+    DCConfigHaieFactory(department=loire_atlantique_department)
+
+    client.force_login(haie_instructor_44)
+
+    # Well-formed slug that matches no config
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": "9999-01-01_9999-12-31"},
+    )
+    response = client.get(url)
+    assert response.status_code == 404
+
+    # Malformed slug
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": "garbage"},
+    )
+    response = client.get(url)
+    assert response.status_code == 404
+
+
+def test_old_parametrage_url_redirects(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """The old /moulinette/parametrage/{dep}/ URL permanently redirects."""
+    DCConfigHaieFactory(department=loire_atlantique_department)
+
+    client.force_login(haie_instructor_44)
+    response = client.get("/simulateur/parametrage/44/")
+
+    assert response.status_code == 301
+    assert response.url == "/parametrage/44/"

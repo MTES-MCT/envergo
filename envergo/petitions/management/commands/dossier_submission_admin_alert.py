@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 from django.urls import set_urlconf
+from django.utils import timezone
 
 from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
@@ -38,14 +39,14 @@ class Command(BaseCommand):
         logging.info(f"Get DS files updated since {two_hours_ago_utc}")
 
         # As long as a demarche number is set, we run the sync
-        # (event if the dept is not activated yet)
-        departments_with_ds = ConfigHaie.objects.filter(
+        # (even if the dept is not activated yet)
+        configs_with_ds = ConfigHaie.objects.filter(
             demarche_simplifiee_number__isnull=False
-        )
-        for activated_department in departments_with_ds:
-            demarche_number = activated_department.demarche_simplifiee_number
+        ).valid_at(timezone.now().date())
+        for config in configs_with_ds:
+            demarche_number = config.demarche_simplifiee_number
 
-            logging.info(f"Handling demarche {demarche_number} ({activated_department}")
+            logging.info(f"Handling demarche {demarche_number} ({config})")
 
             if demarche_number in handled_demarches:
                 continue
@@ -69,7 +70,7 @@ class Command(BaseCommand):
                     self.handle_unlinked_dossier(
                         dossier,
                         demarche,
-                        activated_department,
+                        config,
                     )
                     continue
 

@@ -1,7 +1,6 @@
 import re
 
 import pytest
-from django.test import override_settings
 from django.urls import reverse
 
 from envergo.users.models import User
@@ -114,8 +113,7 @@ def test_register_with_existing_email_and_other_errors(
     assert "existe déjà" not in content
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_haie_register_view(client, mailoutbox):
     users = User.objects.all()
     assert users.count() == 0
@@ -150,8 +148,7 @@ def test_haie_register_view(client, mailoutbox):
     assert user.access_haie
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_haie_register_for_existing_amenagement_user(
     amenagement_user, client, mailoutbox
 ):
@@ -193,8 +190,7 @@ def test_haie_register_for_existing_amenagement_user(
     assert amenagement_user.access_haie
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_register_duplicate_email_with_other_errors(
     amenagement_user, client, mailoutbox
 ):
@@ -252,8 +248,7 @@ def test_haie_login_on_amenagement_site(haie_user, client):
     assert not res.wsgi_request.user.is_authenticated
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_amenagement_login_on_haie_site(amenagement_user, client):
     assert not amenagement_user.access_haie
 
@@ -268,8 +263,7 @@ def test_amenagement_login_on_haie_site(amenagement_user, client):
     assert not res.wsgi_request.user.is_authenticated
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_haie_login_on_haie_site(haie_user, client):
     assert haie_user.access_haie
     assert haie_user.is_active
@@ -323,8 +317,7 @@ def test_otp_can_be_deactivated(settings, admin_client):
     assert res.status_code == 200
 
 
-@pytest.mark.urls("config.urls_haie")
-@override_settings(ENVERGO_HAIE_DOMAIN="testserver")
+@pytest.mark.haie
 def test_haie_homepage_admin_faq(haie_user, haie_user_44, client):
     """Test display of admin FAQ according to user rights"""
     # AS anonymous visitor, WHEN I visit homepage

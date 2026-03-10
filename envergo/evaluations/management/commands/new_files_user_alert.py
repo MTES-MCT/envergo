@@ -25,10 +25,17 @@ class Command(BaseCommand):
         a_quarter_hr_ago = localtime() - timedelta(minutes=15)
         half_hour_ago = localtime() - timedelta(minutes=30)
 
+        # Only process files for requests that completed the full submission
+        # (step 3 validated). Without this filter, files uploaded during an
+        # incomplete or abandoned submission would be pushed to Make.com /
+        # Pipedrive, then the request would later be deleted by the
+        # delete_test_evalreqs cleanup job — leaving orphaned data in external
+        # systems with no matching record in our database.
         files = (
             RequestFile.objects.filter(uploaded_at__gte=half_hour_ago)
             .filter(uploaded_at__lte=a_quarter_hr_ago)
             .filter(request__created_at__lte=half_hour_ago)
+            .filter(request__submitted=True)  # gotcha
             .order_by("request")
             .select_related("request")
         )

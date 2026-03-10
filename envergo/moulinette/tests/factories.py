@@ -3,6 +3,7 @@ from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
 from envergo.moulinette.models import (
+    ActionToTake,
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
@@ -19,6 +20,12 @@ class ConfigAmenagementFactory(DjangoModelFactory):
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
     regulations_available = ["loi_sur_leau", "sage", "natura2000", "eval_env"]
+    validity_range = None
+    lse_contact_ddtm = "Contact DDTM"
+    n2000_contact_ddtm_info = "Contact N2000 info"
+    n2000_contact_ddtm_instruction = "Contact N2000 instruction"
+    n2000_procedure_ein = "Procédure EIN"
+    evalenv_procedure_casparcas = "Procédure cas par cas"
 
 
 class MoulinetteTemplateFactory(DjangoModelFactory):
@@ -38,11 +45,27 @@ class RegulationFactory(DjangoModelFactory):
     has_perimeters = False
 
 
+class ActionToTakeFactory(DjangoModelFactory):
+    class Meta:
+        model = ActionToTake
+        django_get_or_create = ("slug",)
+
+    slug = "mention_arrete_lse"
+    type = "action"
+    target = "instructor"
+    order = factory.Sequence(lambda n: n + 1)
+    label = factory.LazyAttribute(lambda o: o.slug.replace("_", " ").capitalize())
+    details = factory.LazyAttribute(
+        lambda o: f"moulinette/actions_to_take/{o.slug}.html"
+    )
+
+
 class CriterionFactory(DjangoModelFactory):
     class Meta:
         model = Criterion
 
     title = "Zone humide"
+    backend_title = "Zone humide"
     regulation = factory.SubFactory(RegulationFactory)
     activation_map = factory.SubFactory(MapFactory)
     evaluator = "envergo.moulinette.regulations.loisurleau.ZoneHumide"
@@ -51,6 +74,7 @@ class CriterionFactory(DjangoModelFactory):
 class PerimeterFactory(DjangoModelFactory):
     class Meta:
         model = Perimeter
+        skip_postgeneration_save = True
 
     name = "Loi sur l'eau Zone humide"
     activation_map = factory.SubFactory(MapFactory)
@@ -73,6 +97,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
     department = factory.SubFactory(DepartmentFactory)
     is_activated = True
     single_procedure = False
+    validity_range = None
     regulations_available = [
         "conditionnalite_pac",
         "ep",

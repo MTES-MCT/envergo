@@ -134,7 +134,7 @@ def test_new_files_user_alert_with_new_file_gt_15min_ago(
 ):
     """When a file was uploaded more than 15min ago, an alert is sent."""
 
-    request = RequestFactory(created_at=time_1h30_ago)
+    request = RequestFactory(created_at=time_1h30_ago, submitted=True)
     EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_20min_ago)
     call_command("new_files_user_alert")
@@ -156,10 +156,29 @@ def test_new_files_user_alert_with_new_file_gt_30min_ago(
     assert len(mailoutbox) == 0
 
 
+def test_new_files_user_alert_ignores_unsubmitted_requests(
+    mailoutbox, time_1h30_ago, time_20min_ago
+):
+    """Unsubmitted requests are ignored.
+
+    Without this guard, files uploaded during an incomplete submission would be
+    pushed to Make.com/Pipedrive, then the request would be deleted by the
+    delete_test_evalreqs cleanup — leaving orphaned data in external systems.
+    """
+
+    request = RequestFactory(created_at=time_1h30_ago, submitted=False)
+    RequestFileFactory(request=request, uploaded_at=time_20min_ago)
+    call_command("new_files_user_alert")
+
+    assert len(mailoutbox) == 0
+
+
 def test_new_files_user_alert_recipient(mailoutbox, time_1h30_ago, time_20min_ago):
     """The mail is sent to the right recipients."""
 
-    request = RequestFactory(user_type="instructor", created_at=time_1h30_ago)
+    request = RequestFactory(
+        user_type="instructor", created_at=time_1h30_ago, submitted=True
+    )
     EvaluationFactory(request=request)
     RequestFileFactory(request=request, uploaded_at=time_20min_ago)
     call_command("new_files_user_alert")
