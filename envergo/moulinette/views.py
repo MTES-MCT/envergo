@@ -793,7 +793,7 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         return obj
 
     def get(self, request, *args, **kwargs):
-        """Redirect if not object"""
+        """Redirect if no object found"""
         self.object = self.get_object()
         if not self.object:
             return HttpResponseRedirect(reverse("confighaie_list"))
