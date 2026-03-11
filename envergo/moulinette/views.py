@@ -713,18 +713,23 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieSettingsCustomForbiddenResponse(TemplateResponse):
-    """Custom 403 response for Config Haie settings view"""
-
-    status_code = 403
-    template_name = "confighaie_403.html"
-
-
 class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
     """Home view for ConfigHaie settings"""
 
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_list.html"
+
+    def handle_no_permission(self):
+        """Return custom 403 template if permission denied exception"""
+        try:
+            handle_no_permission = super().handle_no_permission()
+        except PermissionDenied:
+            return TemplateResponse(
+                request=self.request,
+                template="haie/moulinette/confighaie_403.html",
+                status=403,
+            )
+        return handle_no_permission
 
     def get_queryset(self):
         """Filter confighaie by user departments"""
