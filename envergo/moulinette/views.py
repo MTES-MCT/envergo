@@ -729,8 +729,6 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
         """Filter confighaie by user departments"""
 
         current_user = self.request.user
-        if not current_user.is_authenticated:
-            return self.queryset.none()
         if not current_user.is_superuser and not current_user.is_instructor:
             return self.queryset.none()
 
@@ -746,7 +744,7 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
 
     def get(self, request, *args, **kwargs):
         """Redirect to object detail if only one config is listed"""
-        self.object_list = self.get_queryset()
+        result = super().get(request, *args, **kwargs)
         if self.object_list.count() == 1:
             config = self.object_list.get()
             config_url = reverse(
@@ -757,7 +755,7 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
                 },
             )
             return HttpResponseRedirect(config_url)
-        return super().get(request, *args, **kwargs)
+        return result
 
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
