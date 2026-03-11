@@ -130,6 +130,7 @@ class EvaluationDetail(
 
     event_category = "evaluation"
     event_action_amenagement = "visit"
+    template_name = "evaluations/detail.html"
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
@@ -155,11 +156,6 @@ class EvaluationDetail(
             "data": self.get_form_data(),
         }
 
-    def get_template_names(self):
-        """Check wich template to use depending on the moulinette result."""
-
-        return ["evaluations/detail.html"]
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["is_map_static"] = True
@@ -176,6 +172,9 @@ class EvaluationDetail(
             "/avis/+ref_ar+/", self.request
         )
         context["evaluation_content"] = self.get_evaluation_content()
+        context["crisp_evaluation_scenario"] = settings.CRISP["AMENAGEMENT"].get(
+            "EVALUATION_SCENARIO_ID", None
+        )
         return context
 
     def get_evaluation_content(self):

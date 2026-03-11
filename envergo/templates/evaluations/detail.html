@@ -55,6 +55,8 @@
     var DEPARTMENT = "{{ department.department }}";
     var MAP_TYPE = "Content";  // This is only for analytics purpose
     var SHOW_PCI_LAYER = false;
+    var CRISP_EVALUATION_SCENARIO_ID = {% if crisp_evaluation_scenario %}"{{ crisp_evaluation_scenario }}"{% else %}null{% endif %};
+    var EVALUATION_REFERENCE = '{{ evaluation.reference }}';
 
   </script>
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
@@ -66,4 +68,7 @@
   <script defer src="{% static 'js/libs/moulinette_analytics.js' %}"></script>
   <script defer src="{% static 'js/libs/evaluation_analytics.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+  {% if CRISP_CHATBOX_ENABLED %}
+    <script defer src="{% static 'js/libs/chatbox_evaluation_scenario.js' %}"></script>
+  {% endif %}
 {% endblock %}

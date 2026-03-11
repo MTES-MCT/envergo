@@ -371,6 +371,9 @@ CRISP = {
     "AMENAGEMENT": {
         "CHATBOX_ENABLED": env("DJANGO_CRISP_CHATBOX_ENABLED", default=False),
         "WEBSITE_ID": env("DJANGO_CRISP_WEBSITE_ID", default=None),
+        "EVALUATION_SCENARIO_ID": env(
+            "DJANGO_CRISP_EVALUATION_SCENARIO_ID", default=None
+        ),
     },
     "HAIE": {
         "CHATBOX_ENABLED": env("DJANGO_CRISP_HAIE_CHATBOX_ENABLED", default=False),
