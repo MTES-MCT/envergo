@@ -6,8 +6,10 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -711,6 +713,13 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
+class ConfigHaieSettingsCustomForbiddenResponse(TemplateResponse):
+    """Custom 403 response for Config Haie settings view"""
+
+    status_code = 403
+    template_name = "confighaie_403.html"
+
+
 class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
     """Home view for ConfigHaie settings"""
 
@@ -758,6 +767,24 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_settings.html"
 
+    def dispatch(self, request, *args, **kwargs):
+        """Return custom 403 template if permission denied exception"""
+        try:
+            dispatch = super().dispatch(request, *args, **kwargs)
+        except PermissionDenied:
+            return TemplateResponse(
+                request=self.request,
+                template="haie/moulinette/confighaie_403.html",
+                status=403,
+            )
+        except Http404:
+            return TemplateResponse(
+                request=request,
+                template="haie/moulinette/confighaie_404.html",
+                status=404,
+            )
+        return dispatch
+
     def get_object(self, queryset=None):
         """Return ConfigHaie for the department, optionally by date slug.
 
@@ -788,14 +815,15 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         try:
             result = super().get(request, *args, **kwargs)
         except ConfigHaie.DoesNotExist:
-            raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": self.queryset.model._meta.verbose_name}
+            return TemplateResponse(
+                request=request,
+                template="haie/moulinette/confighaie_404.html",
+                status=404,
             )
         except ConfigHaie.MultipleObjectsReturned:
-            messages.warning(
+            messages.info(
                 self.request,
-                "Plusieurs paramétrages existent pour ce département."
+                "Plusieurs configurations existent pour ce département."
                 "votre navigateur a été redirigé vers la liste des paramétrages.",
             )
             return HttpResponseRedirect(reverse("confighaie_list"))
