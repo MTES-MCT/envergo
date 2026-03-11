@@ -750,7 +750,7 @@ def test_confighaie_settings_view_with_multiple_configs(
     response = client.get(url, follow=True)
     # THEN redirection to confighaie list page
     assert response.status_code == 200
-    assert "Plusieurs paramétrage" in response.content.decode()
+    assert "Plusieurs configurations" in response.content.decode()
     assert response.redirect_chain[0][0] == "/parametrage/"
 
 
@@ -828,6 +828,10 @@ def test_confighaie_detail_invalid_slug_returns_404_with_link_to_config_list_vie
     )
     response = client.get(url)
     assert response.status_code == 404
+    assert (
+        "Aucune configuration n'a été trouvée. Vous pouvez retrouver la liste des configurations en suivant"
+        in response.content.decode()
+    )
 
     # Malformed slug
     url = reverse(
@@ -836,6 +840,10 @@ def test_confighaie_detail_invalid_slug_returns_404_with_link_to_config_list_vie
     )
     response = client.get(url)
     assert response.status_code == 404
+    assert (
+        "Aucune configuration n'a été trouvée. Vous pouvez retrouver la liste des configurations en suivant"
+        in response.content.decode()
+    )
 
 
 def test_old_parametrage_url_redirects(
