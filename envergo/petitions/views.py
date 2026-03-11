@@ -701,6 +701,7 @@ class PetitionProjectDetail(DetailView):
             moulinette, moulinette.catalog["haies"]
         )
         context["demarches_simplifiees_state"] = self.object.demarches_simplifiees_state
+
         context["demarches_simplifiees_dossier_number"] = (
             self.object.demarches_simplifiees_dossier_number
         )
@@ -724,6 +725,7 @@ class PetitionProjectDetail(DetailView):
             remove_mtm_params(current_url), {"mtm_campaign": "share-simu"}
         )
 
+        context["moulinette_url"] = self.object.moulinette_url
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")

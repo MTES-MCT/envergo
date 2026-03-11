@@ -63,7 +63,7 @@ class User(AbstractUser):
     )
     departments = models.ManyToManyField(
         "geodata.Department",
-        verbose_name=_("Departements"),
+        verbose_name=_("Departments"),
         related_name="members",
         blank=True,
     )

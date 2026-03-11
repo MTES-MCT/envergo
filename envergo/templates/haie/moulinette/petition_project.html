@@ -28,7 +28,11 @@
           Pour finaliser votre demande, rendez-vous sur l'outil
           <a target="_blank"
              rel="noopener"
-             href="{{ demarches_simplifiees_prefill_url }}">Démarches numériques</a>.
+             href="{{ demarches_simplifiees_prefill_url }}">Démarche numérique</a>.
+        </p>
+      {% else %}
+        <p>
+          Retournez sur la <a href="{{ moulinette_url }}">page de résultat de simulation</a> pour finaliser votre demande.
         </p>
       {% endif %}
     </div>
