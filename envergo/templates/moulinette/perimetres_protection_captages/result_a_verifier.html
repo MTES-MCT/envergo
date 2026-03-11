@@ -1,0 +1,15 @@
+<p>
+  Le projet est susceptible d'être à proximité d'un captage d'eau potable ou d'eau minérale protégé par arrêté préfectoral. Il pourrait alors être concerné par certaines interdictions ou restrictions, visant à garantir la qualité de l'eau prélevée.
+</p>
+
+<p>
+  C'est le service instructeur du guichet unique de la haie, en examinant la demande, qui déterminera si des dispositions s'appliquent.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  <p>
+    Pour connaître les éventuelles prescriptions applicables aux travaux sur haies situées dans le périmètre de protection de captage concerné par votre projet, il est possible de se tourner vers la mairie en demandant s’il existe un point de captage protégé à proximité du projet. Les éventuelles restrictions seraient alors énoncées dans l’arrêté préfectoral de déclaration d’utilité publique (DUP) du captage.
+  </p>
+</div>
