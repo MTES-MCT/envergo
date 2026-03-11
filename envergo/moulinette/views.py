@@ -5,10 +5,14 @@ from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import DetailView, FormView, ListView
 
@@ -709,6 +713,13 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
+class ConfigHaieSettingsCustomForbiddenResponse(TemplateResponse):
+    """Custom 403 response for Config Haie settings view"""
+
+    status_code = 403
+    template_name = "confighaie_403.html"
+
+
 class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
     """Home view for ConfigHaie settings"""
 
@@ -747,7 +758,7 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
                 },
             )
             return HttpResponseRedirect(config_url)
-        return super().get(self, request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
@@ -756,17 +767,23 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_settings.html"
 
-    def handle_no_permission(self):
-        """Redirect to confighaie list view when no permission is granted"""
-        return HttpResponseRedirect(reverse("confighaie_list"))
-
     def dispatch(self, request, *args, **kwargs):
-        """Redirect to confighaie list view if 404 error, meanings no department with params"""
+        """Return custom 403 template if permission denied exception"""
         try:
-            res = super().dispatch(request, *args, **kwargs)
+            dispatch = super().dispatch(request, *args, **kwargs)
+        except PermissionDenied:
+            return TemplateResponse(
+                request=self.request,
+                template="haie/moulinette/confighaie_403.html",
+                status=403,
+            )
         except Http404:
-            return HttpResponseRedirect(reverse("confighaie_list"))
-        return res
+            return TemplateResponse(
+                request=request,
+                template="haie/moulinette/confighaie_404.html",
+                status=404,
+            )
+        return dispatch
 
     def get_object(self, queryset=None):
         """Return ConfigHaie for the department, optionally by date slug.
@@ -783,22 +800,35 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
             obj = queryset.get_by_date_slug(self.department, date_slug)
+            if obj is None:
+                raise Http404(
+                    _("No %(verbose_name)s found matching the query")
+                    % {"verbose_name": self.queryset.model._meta.verbose_name}
+                )
         else:
             queryset = queryset.filter(department=self.department)
-            try:
-                obj = queryset.get()
-            except ConfigHaie.DoesNotExist:
-                return None
-            except ConfigHaie.MultipleObjectsReturned:
-                return None
+            obj = queryset.get()
         return obj
 
     def get(self, request, *args, **kwargs):
-        """Redirect if not object"""
-        self.object = self.get_object()
-        if not self.object:
+        """Manage multiple objects returned"""
+        try:
+            result = super().get(request, *args, **kwargs)
+        except ConfigHaie.DoesNotExist:
+            return TemplateResponse(
+                request=request,
+                template="haie/moulinette/confighaie_404.html",
+                status=404,
+            )
+        except ConfigHaie.MultipleObjectsReturned:
+            messages.info(
+                self.request,
+                "Plusieurs configurations existent pour ce département."
+                "votre navigateur a été redirigé vers la liste des paramétrages.",
+            )
             return HttpResponseRedirect(reverse("confighaie_list"))
-        return super().get(request, *args, **kwargs)
+
+        return result
 
     def get_context_data(self, **kwargs):
         """Add department members emails and activation maps related to this department"""
