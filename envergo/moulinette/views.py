@@ -822,8 +822,8 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         except ConfigHaie.MultipleObjectsReturned:
             messages.info(
                 self.request,
-                "Plusieurs configurations existent pour ce département."
-                "votre navigateur a été redirigé vers la liste des paramétrages.",
+                "Plusieurs configurations existent pour ce département. "
+                "Votre navigateur a été redirigé vers la liste des paramétrages.",
             )
             return HttpResponseRedirect(reverse("confighaie_list"))
 
