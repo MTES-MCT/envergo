@@ -748,7 +748,7 @@ def test_confighaie_settings_view_with_multiple_configs(
     loire_atlantique_department,  # noqa
     haie_instructor_44,
 ):
-    """Settings view returns the currently valid config when multiple exist."""
+    """Settings view redirects to config list view when multiple exist."""
     from datetime import timedelta
 
     today = date.today()
