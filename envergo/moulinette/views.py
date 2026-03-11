@@ -770,7 +770,9 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     template_name = "haie/moulinette/confighaie_settings.html"
 
     def dispatch(self, request, *args, **kwargs):
-        """Return custom 403 template if permission denied exception"""
+        """Return custom 403 and 404 template if permission denied exception
+        or Http404 is raised.
+        """
         try:
             dispatch = super().dispatch(request, *args, **kwargs)
         except PermissionDenied:
