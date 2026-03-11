@@ -398,6 +398,7 @@ def test_confighaie_home_view(
     herault_department,  # noqa
     loire_atlantique_department,  # noqa
     haie_user,
+    haie_instructor_no_dept,
     haie_instructor_44,
     admin_user,
 ):
@@ -414,11 +415,28 @@ def test_confighaie_home_view(
     assert response.status_code == 302
     assert response.url.startswith("/comptes/connexion/")
 
-    # GIVEN a connected user with no right to departements
+    # GIVEN a connected user but not instructor
     client.force_login(haie_user)
     # WHEN they visit department setting page
     response = client.get(url)
-    # THEN response is 200
+    # THEN response is 403
+    assert response.status_code == 403
+    # AND no confighaie is listed
+    content = response.content.decode()
+    assert "Loire-Atlantique (44)" not in content
+    assert "Hérault (34)" not in content
+    # AND text "you don't have the right" is displayed
+    assert (
+        "Vous n'avez pas les droits pour accéder aux pages de paramétrage du portail"
+        in content
+    )
+
+    # GIVEN an instructor user with right to 0 department
+    client.force_login(haie_instructor_no_dept)
+    # WHEN they visit department setting page
+    response = client.get(url)
+    # THEN department config page is displayed
+    content = response.content.decode()
     assert response.status_code == 200
     # AND no confighaie is listed
     content = response.content.decode()
@@ -730,7 +748,7 @@ def test_confighaie_settings_view_with_multiple_configs(
     loire_atlantique_department,  # noqa
     haie_instructor_44,
 ):
-    """Settings view returns the currently valid config when multiple exist."""
+    """Settings view redirects to config list view when multiple exist."""
     from datetime import timedelta
 
     today = date.today()

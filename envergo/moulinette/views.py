@@ -713,25 +713,28 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieSettingsCustomForbiddenResponse(TemplateResponse):
-    """Custom 403 response for Config Haie settings view"""
-
-    status_code = 403
-    template_name = "confighaie_403.html"
-
-
 class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
     """Home view for ConfigHaie settings"""
 
     queryset = ConfigHaie.objects.all()
     template_name = "haie/moulinette/confighaie_list.html"
 
+    def handle_no_permission(self):
+        """Return custom 403 template if permission denied exception"""
+        try:
+            handle_no_permission = super().handle_no_permission()
+        except PermissionDenied:
+            return TemplateResponse(
+                request=self.request,
+                template="haie/moulinette/confighaie_403.html",
+                status=403,
+            )
+        return handle_no_permission
+
     def get_queryset(self):
         """Filter confighaie by user departments"""
 
         current_user = self.request.user
-        if not current_user.is_authenticated:
-            return self.queryset.none()
         if not current_user.is_superuser and not current_user.is_instructor:
             return self.queryset.none()
 
@@ -747,7 +750,7 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
 
     def get(self, request, *args, **kwargs):
         """Redirect to object detail if only one config is listed"""
-        self.object_list = self.get_queryset()
+        result = super().get(request, *args, **kwargs)
         if self.object_list.count() == 1:
             config = self.object_list.get()
             config_url = reverse(
@@ -758,7 +761,7 @@ class ConfigHaieListView(InstructorDepartmentAuthorised, ListView):
                 },
             )
             return HttpResponseRedirect(config_url)
-        return super().get(request, *args, **kwargs)
+        return result
 
 
 class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
@@ -768,7 +771,9 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
     template_name = "haie/moulinette/confighaie_settings.html"
 
     def dispatch(self, request, *args, **kwargs):
-        """Return custom 403 template if permission denied exception"""
+        """Return custom 403 and 404 template if permission denied exception
+        or Http404 is raised.
+        """
         try:
             dispatch = super().dispatch(request, *args, **kwargs)
         except PermissionDenied:
@@ -800,14 +805,15 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
             obj = queryset.get_by_date_slug(self.department, date_slug)
-            if obj is None:
-                raise Http404(
-                    _("No %(verbose_name)s found matching the query")
-                    % {"verbose_name": self.queryset.model._meta.verbose_name}
-                )
         else:
             queryset = queryset.filter(department=self.department)
             obj = queryset.get()
+
+        if obj is None:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": self.queryset.model._meta.verbose_name}
+            )
         return obj
 
     def get(self, request, *args, **kwargs):

@@ -28,9 +28,13 @@ class InstructorDepartmentAuthorised(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         """Check authorization for user
-        Ok for superuser and instructor user with permission on department
+        Authorised for superuser and instructor user.
+        If departement is in kwargs, check user permission on department.
+        Else let the inherited view manage the access.
         """
         if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not request.user.is_superuser and not request.user.is_instructor:
             return self.handle_no_permission()
 
         if "department" in kwargs:
@@ -39,9 +43,8 @@ class InstructorDepartmentAuthorised(AccessMixin):
                 if not self.department:
                     self.department = self.get_departement(**kwargs)
 
-                if not request.user.is_instructor or (
-                    request.user.is_instructor
-                    and self.department
+                if (
+                    self.department
                     not in request.user.departments.defer("geometry").all()
                 ):
                     return self.handle_no_permission()
