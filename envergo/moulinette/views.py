@@ -804,14 +804,15 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
             obj = queryset.get_by_date_slug(self.department, date_slug)
-            if obj is None:
-                raise Http404(
-                    _("No %(verbose_name)s found matching the query")
-                    % {"verbose_name": self.queryset.model._meta.verbose_name}
-                )
         else:
             queryset = queryset.filter(department=self.department)
             obj = queryset.get()
+
+        if obj is None:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": self.queryset.model._meta.verbose_name}
+            )
         return obj
 
     def get(self, request, *args, **kwargs):
