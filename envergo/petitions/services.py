@@ -569,12 +569,14 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
         super().append(item)
 
     def compute_message(self):
-        config_url = None
+        config_url, config_department = None, None
+
         if self.config:
             config_relative_url = reverse(
                 "admin:moulinette_confighaie_change", args=[self.config.id]
             )
             config_url = self.request.build_absolute_uri(config_relative_url)
+            config_department = self.config.department
 
         if self._petition_project:
             projet_relative_url = reverse(
@@ -605,7 +607,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                 "haie/petitions/mattermost_project_creation_erreur.txt",
                 context={
                     "config_url": config_url,
-                    "department": self.config.department,
+                    "department": config_department,
                     "user_error_reference": self.user_error_reference.upper(),
                     "form": display_form_details(self.form),
                 },

@@ -267,6 +267,8 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
 
 class PetitionProjectCreate(FormView):
+    """PetitionProject creation view, only used with POST method"""
+
     form_class = PetitionProjectForm
 
     def dispatch(self, request, *args, **kwargs):
@@ -309,6 +311,9 @@ class PetitionProjectCreate(FormView):
                 transaction.set_rollback(True)
             else:
                 petition_project.demarches_simplifiees_dossier_number = dossier_number
+                petition_project.demarches_simplifiees_prefill_url = (
+                    demarche_simplifiee_url
+                )
                 petition_project.save()
 
                 StatusLog.objects.create(
@@ -347,7 +352,7 @@ class PetitionProjectCreate(FormView):
     def pre_fill_demarche_simplifiee(self, project):
         """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
 
-        Return the url of the created dossier if successful, None otherwise
+        Return the url of the created dossier and its number if successful, None otherwise
         """
 
         moulinette_url = project.moulinette_url
@@ -364,7 +369,7 @@ class PetitionProjectCreate(FormView):
                 "start a demarche simplifiée",
                 extra={"moulinette_url": moulinette_url},
             )
-            return None
+            return None, None
 
         moulinette_data["haies"] = project.hedge_data
         form_data = {"initial": moulinette_data, "data": moulinette_data}
@@ -375,7 +380,7 @@ class PetitionProjectCreate(FormView):
                 "No valid ConfigHaie found for department",
                 extra={"department": department},
             )
-            return None
+            return None, None
         self.request.alerts.config = config
         demarche_id = config.demarche_simplifiee_number
 
@@ -390,7 +395,7 @@ class PetitionProjectCreate(FormView):
                     "missing_demarche_simplifiee_number", is_fatal=True
                 )
             )
-            return None
+            return None, None
 
         api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
@@ -695,6 +700,8 @@ class PetitionProjectDetail(DetailView):
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
+        context["demarches_simplifiees_state"] = self.object.demarches_simplifiees_state
+
         context["demarches_simplifiees_dossier_number"] = (
             self.object.demarches_simplifiees_dossier_number
         )
@@ -718,6 +725,7 @@ class PetitionProjectDetail(DetailView):
             remove_mtm_params(current_url), {"mtm_campaign": "share-simu"}
         )
 
+        context["moulinette_url"] = self.object.moulinette_url
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
@@ -727,6 +735,11 @@ class PetitionProjectDetail(DetailView):
 
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
+
+        if self.object.demarches_simplifiees_state == "draft":
+            context["demarches_simplifiees_prefill_url"] = (
+                self.object.demarches_simplifiees_prefill_url or ""
+            )
         context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 

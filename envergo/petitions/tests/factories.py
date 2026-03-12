@@ -99,6 +99,9 @@ class PetitionProjectFactory(DjangoModelFactory):
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
+    demarches_simplifiees_prefill_url = (
+        "https://exemple.com/commencer/21059675/token?1234"
+    )
     demarches_simplifiees_state = DOSSIER_STATES.draft
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
