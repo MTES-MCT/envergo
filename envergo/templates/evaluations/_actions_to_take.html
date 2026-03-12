@@ -50,8 +50,7 @@
       {% endif %}
 
       {% if evaluation.is_eligible_to_self_declaration %}
-        <hr>
-        {% include 'evaluations/_self_declaration_cta.html' %}
+        {% include 'evaluations/_self_declaration_cta.html' with version=2 %}
       {% endif %}
     </div>
     <div id="actions-instructor-tab-1-panel"

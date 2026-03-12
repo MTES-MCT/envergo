@@ -1,18 +1,60 @@
-<section id="self-declaration-cta"
-         class="hide-print fr-notice fr-notice--info">
-  <div class="fr-container">
-    <div class="fr-notice__body">
-      <p class="fr-notice__title">
-        Si vous avez déjà déposé un dossier ou réalisé les études environnementales nécessaires, vous pouvez nous l’indiquer
-        via
+{% if not version or version == 1 %}
+  <section id="self-declaration-cta"
+           class="hide-print fr-notice fr-notice--info">
+    <div class="fr-container">
+      <div class="fr-notice__body">
+        <p class="fr-notice__title">
+          Si vous avez déjà déposé un dossier ou réalisé les études environnementales nécessaires, vous pouvez nous
+          l'indiquer via
+          <a href="{% url 'self_declaration' evaluation.reference %}?source=page-ar&mtm_kwd={{ evaluation.reference }}"
+             class="self-declaration-cta"
+             data-reference="{{ evaluation.reference }}"
+             data-sql-event-category="compliance"
+             data-sql-event-action="page-click"
+             data-sql-event-metadata='{ "request_reference": "{{ evaluation.reference }}", "version": "v1" }'>ce formulaire</a>
+          (durée : 3 min)
+        </p>
+      </div>
+    </div>
+  </section>
+{% else %}
+  <div id="self-declaration-cta-v2" class="fr-tile fr-mt-2w">
+    <div class="fr-tile__body">
+      <button id="self-declaration-cta-close-btn"
+              class="fr-icon-close-line fr-btn fr-btn--tertiary-no-outline"
+              title="Masquer le message"></button>
+      <div class="fr-tile__content">
+        <h6>Vous avez déjà déposé un dossier ou mené les études nécessaires ?</h6>
+        <p>
+          Indiquez-le nous ! Le projet sera classé comme « conforme » par Envergo et les emails
+          de suivi cesseront.
+        </p>
         <a href="{% url 'self_declaration' evaluation.reference %}?source=page-ar&mtm_kwd={{ evaluation.reference }}"
-           class="self-declaration-cta"
+           class="self-declaration-cta fr-btn fr-mt-2w"
            data-reference="{{ evaluation.reference }}"
            data-sql-event-category="compliance"
            data-sql-event-action="page-click"
-           data-sql-event-metadata='{ "request_reference": "{{ evaluation.reference }}" }'>ce formulaire</a>
-        (durée : 3 min)
-      </p>
+           data-sql-event-metadata='{ "request_reference": "{{ evaluation.reference }}", "version": "v2" }'>Déclarer les actions réalisées</a>
+        <p class="fr-text--xs fr-mt-1w">
+          <i>Durée : 3 min</i>
+        </p>
+      </div>
     </div>
   </div>
-</section>
+  <script>
+    (function() {
+      const key = 'self-declaration-cta-dismissed';
+      const el = document.getElementById('self-declaration-cta-v2');
+      const dismissed = localStorage.getItem(key);
+      if (dismissed && Date.now() - parseInt(dismissed) < 48 * 3600 * 1000) {
+        el.style.display = 'none';
+      }
+      document.getElementById('self-declaration-cta-close-btn').addEventListener('click', function() {
+        el.style.display = 'none';
+        localStorage.setItem(key, Date.now().toString());
+
+        _paq.push(['trackEvent', 'Evaluation', "HideSelfDeclareClick"]);
+      });
+    })();
+  </script>
+{% endif %}
