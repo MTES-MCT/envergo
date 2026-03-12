@@ -150,7 +150,6 @@ def parametrage_departments_menu(context, is_slim=False):
     )
 
 
-@register.simple_tag(takes_context=True)
 def config_listitem(context, config):
     """Returns list item with config info"""
     url, label, _ = config_menu_link(config)
