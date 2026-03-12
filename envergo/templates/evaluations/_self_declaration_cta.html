@@ -52,6 +52,8 @@
       document.getElementById('self-declaration-cta-close-btn').addEventListener('click', function() {
         el.style.display = 'none';
         localStorage.setItem(key, Date.now().toString());
+
+        _paq.push(['trackEvent', 'Evaluation', "HideSelfDeclareClick"]);
       });
     })();
   </script>
