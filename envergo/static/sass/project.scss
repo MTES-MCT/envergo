@@ -2496,3 +2496,17 @@ section#actions-to-take {
 .form-actions {
   text-align: right;
 }
+
+section#pick-appointment > div {
+  display: flex;
+  flex-direction: row;
+  background-color: var(--grey-975-100);
+  border-radius: 5px;
+  padding: 1em;
+
+  .icon {
+    border-radius: 1rem;
+    background-color: var(--blue-france-sun-113-625);
+    color: var(--text-inverted-blue-france);
+  }
+}
