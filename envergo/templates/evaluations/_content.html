@@ -78,6 +78,22 @@
   </div>
 {% endif %}
 
+<section id="pick-appointment" class="hide-print fr-mb-5w">
+  <div>
+    <div>
+      <span class="icon fr-icon-customer-service-fill fr-mx-2w fr-p-1v"></span>
+    </div>
+    <div>
+      <h6>Une question sur cet avis réglementaire ?</h6>
+      <p>Vous pouvez en discuter par téléphone avec un membre de l'équipe Envergo</p>
+      <button id="pick-appointment-btn"
+              class="fr-btn fr-btn--icon-left fr-icon-calendar-2-line fr-btn--tertiary fr-btn--sm">
+        Choisir un rendez-vous
+      </button>
+    </div>
+  </div>
+</section>
+
 {% for regulation in moulinette.regulations %}
   {% include 'amenagement/moulinette/_result_regulation.html' with regulation=regulation %}
 {% endfor %}
