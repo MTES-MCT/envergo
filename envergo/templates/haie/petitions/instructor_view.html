@@ -42,37 +42,35 @@
       <div class="fr-collapse" id="accordion-identity">
         <div class="fr-mb-2w">
           <h4 class="fr-h6 fr-mb-0">Bénéficiaire</h4>
-          <ul>
-            <li>
-              <b>Identité :</b> M. NOM Prénom
-            </li>
-            <li>
-              <b>Structure :</b> Gaec des Pommes Vertes
-            </li>
-            <li>
-              <b>Profil :</b> Agriculteur, agricultrice
-            </li>
-            <li>
-              <b>Adresse postale :</b> Route de l'Église de Malloué 14350 Souleuvre en Bocage
-            </li>
-          </ul>
+          {% if applicant %}
+            <p>
+              <b>Identité :</b> {{ applicant }}
+            </p>
+          {% endif %}
+          {% if organization %}
+            <p>
+              <b>Structure :</b> {{ organization }}
+            </p>
+          {% endif %}
+          {% display_ds_field "profil_beneficiaire" %}
+          {% display_ds_field "adresse_beneficiaire" %}
         </div>
-        <div class="fr-mb-2w">
-          <h4 class="fr-h6 fr-mb-0">Mandataire</h4>
-          <ul>
-            <li>
-              <b>Identité :</b> NOM Prénom
-            </li>
-          </ul>
-        </div>
-        <div class="fr-mb-2w">
-          <h4 class="fr-h6 fr-mb-0">Contact</h4>
-          <ul>
-            <li>
-              <b>Numéro de téléphone :</b> 01 23 45 67 89
-            </li>
-          </ul>
-        </div>
+        {% if organization %}
+          <div class="fr-mb-2w">
+            <h4 class="fr-h6 fr-mb-0">Mandataire</h4>
+            <ul>
+              <li>
+                <b>Identité :</b> NOM Prénom
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+        {% if organization %}
+          <div class="fr-mb-2w">
+            <h4 class="fr-h6 fr-mb-0">Contact</h4>
+            {% display_ds_field "telephone_contact" %}
+          </div>
+        {% endif %}
       </div>
     </section>
 

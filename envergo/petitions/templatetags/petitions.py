@@ -265,10 +265,10 @@ def display_pause(due_date):
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
 def display_ds_field(context, field_name):
-    """Include tag to display a field from démarches simplifiées
+    """Includes tag to display a field from démarches simplifiées
     related to a given config and a given petition project.
 
-    Use _item_ds.html template, also included in full DS view template.
+    Uses _item_ds.html template, also included in full DS view template.
     """
 
     config = context.get("moulinette").config
