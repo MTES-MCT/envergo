@@ -11,7 +11,6 @@ from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import DetailView, FormView, ListView
 
@@ -736,11 +735,7 @@ class ConfigHaieListView(ConfigHaieBaseView, ListView):
 
     def get_queryset(self):
         """Filter confighaie by user departments"""
-
         current_user = self.request.user
-        if not current_user.is_superuser and not current_user.is_instructor:
-            return self.queryset.none()
-
         queryset = (
             self.queryset.select_related("department")
             .defer("department__geometry")
@@ -788,22 +783,19 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
             obj = queryset.get_by_date_slug(self.department, date_slug)
+            if obj is None:
+                raise ConfigHaie.DoesNotExist
         else:
             queryset = queryset.filter(department=self.department)
             obj = queryset.get()
 
-        if obj is None:
-            raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": self.queryset.model._meta.verbose_name}
-            )
         return obj
 
     def get(self, request, *args, **kwargs):
         """Manage multiple objects returned"""
         try:
             result = super().get(request, *args, **kwargs)
-        except ConfigHaie.DoesNotExist:
+        except (ConfigHaie.DoesNotExist, Http404):
             return TemplateResponse(
                 request=request,
                 template="haie/moulinette/confighaie_404.html",
