@@ -33,17 +33,22 @@ class HedgeTypeBase(models.TextChoices):
     DEGRADEE = "degradee", "Haie dégradée ou résiduelle basse"
     BUISSONNANTE = "buissonnante", "Haie buissonnante basse"
     ARBUSTIVE = "arbustive", "Haie arbustive"
-    ALIGNEMENT = "alignement", "Alignement d'arbres"
     MIXTE = "mixte", "Haie mixte"
+    ALIGNEMENT = "alignement", "Alignement d'arbres"
 
 
 class HedgeTypeFactory(models.TextChoices):
     @classmethod
     def build_from_context(cls, single_procedure: bool):
+
+        single_procedure_label_map = {
+            HedgeTypeBase.MIXTE: "Haie arborée",
+        }
+
         choices = HedgeTypeBase.choices
         if single_procedure:
             choices = [
-                (key, label if key != HedgeTypeBase.MIXTE else "Haie arborée")
+                (key, single_procedure_label_map.get(key, label))
                 for key, label in HedgeTypeBase.choices
                 if key != HedgeTypeBase.DEGRADEE
             ]
