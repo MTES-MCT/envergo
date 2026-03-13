@@ -19,23 +19,39 @@ window.addEventListener('load', function () {
   const ctaButtons = document.querySelectorAll('.self-declaration-cta');
   ctaButtons.forEach(btn => btn.addEventListener('click', function (evt) {
 
-    // Delay the click event so we have time to track the click event
-    // It's ugly but… ¯\_(ツ)_/¯
     evt.preventDefault();
     const btn = evt.currentTarget;
-    setTimeout(function () { window.location = btn.href }, 350);
 
-    // Log the event
-    const reference = btn.getAttribute('data-reference');
+    // Log the event, then navigate once the request completes (or fails)
     let url = EVENTS_URL;
     let token = CSRF_TOKEN;
     let headers = { "X-CSRFToken": token };
     let data = new FormData();
     data.append("category", "compliance");
     data.append("action", "page-click");
-    data.append("metadata", JSON.stringify({
-      "request_reference": reference,
-    }));
-    fetch(url, { headers: headers, body: data, method: 'POST' });
+    data.append("metadata", btn.getAttribute("data-sql-event-metadata"));
+    fetch(url, { headers: headers, body: data, method: 'POST' })
+      .finally(function () { window.location = btn.href; });
   }));
+});
+
+// Dismiss the self declaration block for 48 hours
+window.addEventListener('load', function () {
+  const key = "self-declaration-cta-dismissed";
+  const el = document.getElementById("self-declaration-cta-v2");
+  if(!el){
+    return
+  }
+  const dismissed = localStorage.getItem(key);
+  if (dismissed && Date.now() - parseInt(dismissed) < 48 * 3600 * 1000) {
+    el.style.display = "none";
+  }
+  document
+    .getElementById("self-declaration-cta-close-btn")
+    .addEventListener("click", function () {
+      el.style.display = "none";
+      localStorage.setItem(key, Date.now().toString());
+
+      _paq.push(["trackEvent", "Evaluation", "HideSelfDeclareClick"]);
+    });
 });

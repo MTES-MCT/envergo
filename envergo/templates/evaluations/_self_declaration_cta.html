@@ -8,37 +8,30 @@
           l'indiquer via
           <a href="{% url 'self_declaration' evaluation.reference %}?source=page-ar&mtm_kwd={{ evaluation.reference }}"
              class="self-declaration-cta"
-             data-reference="{{ evaluation.reference }}"
-             data-sql-event-category="compliance"
-             data-sql-event-action="page-click"
              data-sql-event-metadata='{ "request_reference": "{{ evaluation.reference }}", "version": "v1" }'>ce formulaire</a>
-          (durée : 3 min)
+          (durée : 2 min)
         </p>
       </div>
     </div>
   </section>
 {% else %}
-  <div id="self-declaration-cta-v2" class="hide-print fr-tile fr-mt-2w">
+  <section id="self-declaration-cta-v2"
+           class="hide-print fr-tile fr-mt-2w fr-pl-4w fr-pr-2w fr-pt-0 fr-pb-2w">
     <div class="fr-tile__body">
       <button id="self-declaration-cta-close-btn"
-              class="fr-icon-close-line fr-btn fr-btn--sm fr-btn--tertiary-no-outline"
+              class="fr-icon-close-line fr-btn fr-btn--sm fr-btn--tertiary-no-outline fr-mt-1w fr-mb-n3v"
               title="Masquer le message"></button>
       <div class="fr-tile__content">
-        <h6>Vous avez déjà déposé un dossier ou mené les études nécessaires ?</h6>
+        <h6>Vous avez déjà déposé un dossier ou mené les études nécessaires ?</h6>
         <p>
-          Indiquez-le nous ! Le projet sera classé comme « conforme » par Envergo et les emails
+          Indiquez-le nous ! Le projet sera classé comme « conforme » par Envergo et les emails
           de suivi cesseront.
         </p>
         <a href="{% url 'self_declaration' evaluation.reference %}?source=page-ar&mtm_kwd={{ evaluation.reference }}"
            class="self-declaration-cta fr-btn fr-mt-2w"
-           data-reference="{{ evaluation.reference }}"
-           data-sql-event-category="compliance"
-           data-sql-event-action="page-click"
            data-sql-event-metadata='{ "request_reference": "{{ evaluation.reference }}", "version": "v2" }'>Déclarer les actions réalisées</a>
-        <p class="fr-text--xs fr-mt-1w">
-          <i>Durée : 3 min</i>
-        </p>
+        <span class="fr-hint-text">Durée : 2 min</span>
       </div>
     </div>
-  </div>
+  </section>
 {% endif %}
