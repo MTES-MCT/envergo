@@ -54,8 +54,8 @@
             </tr>
           </thead>
           <tbody>
-            {% for choice in hedge_types reversed %}
-              {% if not forloop.last and choice.value != "buissonnante" %}
+            {% for choice in ordered_hedge_types %}
+              {% if choice.value != "degradee" and choice.value != "buissonnante" %}
                 <tr>
                   <th scope="row">{{ choice.label }}</th>
                   <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
