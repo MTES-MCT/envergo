@@ -445,7 +445,8 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                 self.add_error(
                     "haies",
                     ValidationError(
-                        "Certains types de haies sélectionnés ne respectent pas la doctrine du département.",
+                        "La configuration du simulateur a changé dans ce département. Cliquer sur « modifier "
+                        "les haies » et compléter les descriptions des haies.",
                         code="not_supported",
                     ),
                 )
