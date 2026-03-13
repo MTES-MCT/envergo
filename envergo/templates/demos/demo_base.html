@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% load static l10n evaluations moulinette %}
+
+{% block title %}Démonstrateur{% endblock %}
+
+{% block main-classes %}demos{% endblock %}
+
+{% block content %}
+  <article>
+    <h1>
+      {% block content-title %}Titre démonstrateur{% endblock %}
+    </h1>
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-7">
+
+        {% block content-demo-map %}
+          <form method="get" action="">
+            {{ form.lng.as_hidden }}
+            {{ form.lat.as_hidden }}
+            <label class="step">
+              Double-cliquez ou déplacez le marqueur sur la carte pour ajuster
+              l'emplacement du projet.
+            </label>
+
+            <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
+              <div class="ratio-content">
+                <div id="map"></div>
+              </div>
+            </div>
+
+            <button type="submit" class="fr-btn">Valider</button>
+          </form>
+        {% endblock %}
+      </div>
+      <div class="fr-col-5">
+        {% block content-demo-results %}
+          <h2 class="fr-h4">Résultats du démonstrateur</h2>
+          <p>Données</p>
+        {% endblock %}
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block extra_body %}
+  {% include '_share_url_modal.html' with shorten_url=False share_url=share_btn_url %}
+{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+{% endblock %}
