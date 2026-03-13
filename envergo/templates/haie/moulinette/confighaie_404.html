@@ -1,0 +1,21 @@
+{% extends 'haie/base.html' %}
+
+{% load pages %}
+
+{% block title %}
+  Paramétrage du portail
+{% endblock title %}
+
+{% block content %}
+  <div class="fr-grid-row fr-mb-3w">
+    <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-6">
+      <h1>Paramétrage du portail</h1>
+      <p class="fr-mb-3w">
+        Aucune configuration n'a été trouvée. Vous pouvez retrouver la liste des configurations en suivant
+        <a href="{% url 'confighaie_list' %}">ce lien</a>.
+      </p>
+    </div>
+  </div>
+{% endblock %}
+
+{% block after-content %}{% endblock %}
