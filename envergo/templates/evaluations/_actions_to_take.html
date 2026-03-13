@@ -45,13 +45,12 @@
         {% for action in moulinette.actions_to_take.petitioner %}
           <div class="action-wrapper">{% include 'evaluations/_action_to_take.html' with action=action %}</div>
         {% endfor %}
+
+        {% if evaluation.is_eligible_to_self_declaration %}
+          {% include 'evaluations/_self_declaration_cta.html' with version=2 %}
+        {% endif %}
       {% else %}
         Aucune action à mener.
-      {% endif %}
-
-      {% if evaluation.is_eligible_to_self_declaration %}
-        <hr>
-        {% include 'evaluations/_self_declaration_cta.html' %}
       {% endif %}
     </div>
     <div id="actions-instructor-tab-1-panel"

@@ -2016,6 +2016,23 @@ main.contrast-bg {
   }
 }
 
+#self-declaration-cta-v2 {
+  text-align: initial;
+
+  h6 {
+    font-size: 1.1rem;
+  }
+
+  #self-declaration-cta-close-btn {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .fr-tile__content {
+    align-items: normal;
+  }
+}
+
 main.demos {
   span.fr-tag.surface {
     font-family: Graduate, monospace;
