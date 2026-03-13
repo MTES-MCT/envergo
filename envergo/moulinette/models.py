@@ -49,7 +49,7 @@ from envergo.evaluations.models import (
 )
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -2865,6 +2865,15 @@ class MoulinetteHaie(Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
+
+    @property
+    def hedge_types(self):
+        if not hasattr(self, "_hedge_types"):
+            self._hedge_types = HedgeTypeFactory.build_from_context(
+                single_procedure=self.config.single_procedure
+            )
+
+        return self._hedge_types
 
 
 class ActionToTake(models.Model):

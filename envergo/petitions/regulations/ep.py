@@ -27,6 +27,18 @@ def ep_normandie_get_instructor_view_context(
         .context
     )
     context["replantation_coefficient"] = R
+
+    # swap Mixte and alignement for a specific table display
+    ordered_hedge_types = list(reversed(moulinette.hedge_types))
+    values = [choice.value for choice in ordered_hedge_types]
+    if "mixte" in values and "alignement" in values:
+        i, j = values.index("mixte"), values.index("alignement")
+        ordered_hedge_types[i], ordered_hedge_types[j] = (
+            ordered_hedge_types[j],
+            ordered_hedge_types[i],
+        )
+    context["ordered_hedge_types"] = ordered_hedge_types
+
     return context
 
 

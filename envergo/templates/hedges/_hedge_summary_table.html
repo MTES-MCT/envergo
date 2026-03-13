@@ -21,8 +21,8 @@
             </tr>
           </thead>
           <tbody>
-            {% for choice in hedge_types reversed %}
-              {% if choice.value != hedge_types.ALIGNEMENT %}
+            {% for choice in moulinette.hedge_types reversed %}
+              {% if choice.value != moulinette.hedge_types.ALIGNEMENT %}
                 {% with filtered_hedges=hedges|get_attr:choice.value %}
                   <tr>
                     <th class="fr-cell--fixed" scope="row">{{ choice.label }}</th>
@@ -39,9 +39,9 @@
               <td colspan="2">{{ hedges.n_alignement.to_remove.length|floatformat:"0g" }} m</td>
               <td colspan="2">{{ hedges.n_alignement.to_plant.length|floatformat:"0g" }} m</td>
             </tr>
-            {% if hedge_types.ALIGNEMENT in hedge_types %}
+            {% if moulinette.hedge_types.ALIGNEMENT in moulinette.hedge_types %}
               <tr>
-                <th class="fr-cell--fixed" scope="row">{{ hedge_types.ALIGNEMENT.label }}</th>
+                <th class="fr-cell--fixed" scope="row">{{ moulinette.hedge_types.ALIGNEMENT.label }}</th>
                 <td>{{ hedges.alignement.to_remove.length|floatformat:"0g" }} m</td>
                 <td>{{ hedges.alignement.to_remove.names|default:"-" }}</td>
                 <td>{{ hedges.alignement.to_plant.length|floatformat:"0g" }} m</td>
