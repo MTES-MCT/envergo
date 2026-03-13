@@ -23,7 +23,7 @@
 #
 #    Run the following command in a separate terminal:
 #
-#        scalingo --app envergo-haie db-tunnel SCALINGO_POSTGRESQL_URL
+#        scalingo --app envergo db-tunnel SCALINGO_POSTGRESQL_URL
 #
 #    It will print something like:
 #
@@ -50,31 +50,30 @@
 #
 #    LOCAL_DB="..." PROD_DB="..." bash bin/copy_lines_to_prod.sh
 #
-# To resume after a failure, set START_CHUNK to skip already-transferred
-# chunks:
+# To resume after a failure, set AFTER_ID to the last successfully transferred
+# Line id (shown in the script output):
 #
-#    LOCAL_DB="..." PROD_DB="..." START_CHUNK=1500 bash bin/copy_lines_to_prod.sh
+#    LOCAL_DB="..." PROD_DB="..." AFTER_ID=5000000 bash bin/copy_lines_to_prod.sh
+#
+# When resuming, Maps are skipped (they were already transferred in the first
+# run). If Maps also need re-transferring, set AFTER_ID=0 explicitly.
 #
 # Tuning: PAGE_SIZE defaults to 5000. Increase for speed, decrease if the
 # production DB struggles:
 #
 #    LOCAL_DB="..." PROD_DB="..." PAGE_SIZE=10000 bash bin/copy_lines_to_prod.sh
 #
-# Cleanup after failure
+# Starting from scratch
 # =====================
 #
-# If the script fails mid-run, some Lines will already be in production.
-# Since local PKs are newer than any existing production PK, you can delete
-# them with:
-#
-#    psql "$PROD_DB" -c "DELETE FROM geodata_line WHERE created_at >= '<import_start_time>';"
-#
-# Then re-run the script (optionally with START_CHUNK to skip Maps).
+# The script is safe to re-run. When AFTER_ID is not set, it deletes any
+# previously imported Lines and Maps from production (identified by the Map
+# IDs from the local database) before transferring again.
 
 set -euo pipefail
 
 PAGE_SIZE=${PAGE_SIZE:-5000}
-START_CHUNK=${START_CHUNK:-0}
+AFTER_ID=${AFTER_ID:-}
 
 if [ -z "${LOCAL_DB:-}" ] || [ -z "${PROD_DB:-}" ]; then
     echo "Error: LOCAL_DB and PROD_DB environment variables are required."
@@ -82,14 +81,35 @@ if [ -z "${LOCAL_DB:-}" ] || [ -z "${PROD_DB:-}" ]; then
     exit 1
 fi
 
-# ── Phase 1: Transfer Maps ──────────────────────────────────────────
+# ── Phase 0: Collect Map IDs to transfer ─────────────────────────────
 
-if [ "$START_CHUNK" -eq 0 ]; then
-    echo ">>> Phase 1: Transferring Maps referenced by Lines"
+map_ids=$(psql "$LOCAL_DB" -t -A -c "
+    SELECT DISTINCT map_id FROM geodata_line ORDER BY map_id;
+")
 
-    nb_maps=$(psql "$LOCAL_DB" -t -A -c "
-        SELECT COUNT(DISTINCT map_id) FROM geodata_line;
-    ")
+if [ -z "$map_ids" ]; then
+    echo "No Lines found in local database. Nothing to transfer."
+    exit 0
+fi
+
+map_ids_csv=$(echo "$map_ids" | paste -sd,)
+
+echo "  Map IDs to transfer: $map_ids_csv"
+
+# ── Phase 1: Cleanup + Transfer Maps ────────────────────────────────
+
+if [ -z "$AFTER_ID" ]; then
+    echo ">>> Phase 1: Cleaning up previous import (if any) and transferring Maps"
+
+    # Delete Lines referencing these Maps, then the Maps themselves.
+    # Lines must be deleted first (FK constraint). If this is the first run,
+    # the DELETEs are no-ops.
+    psql "$PROD_DB" -c "DELETE FROM geodata_line WHERE map_id IN ($map_ids_csv);"
+    psql "$PROD_DB" -c "DELETE FROM geodata_map WHERE id IN ($map_ids_csv);"
+
+    echo "  Previous data cleaned up."
+
+    nb_maps=$(echo "$map_ids" | wc -l)
     echo "  $nb_maps maps to transfer"
 
     psql "$LOCAL_DB" -c "
@@ -102,33 +122,64 @@ if [ "$START_CHUNK" -eq 0 ]; then
     " | psql "$PROD_DB" -c "COPY geodata_map FROM stdin;"
 
     echo "  Maps transferred."
+
+    AFTER_ID=0
 else
-    echo ">>> Phase 1: Skipped (START_CHUNK=$START_CHUNK)"
+    echo ">>> Phase 1: Skipped (resuming after id $AFTER_ID)"
 fi
 
-# ── Phase 2: Transfer Lines (paginated) ─────────────────────────────
+# ── Phase 2: Transfer Lines (paginated with keyset pagination) ──────
 
 echo ">>> Phase 2: Transferring Lines"
 
 nb_lines=$(psql "$LOCAL_DB" -t -A -c "SELECT COUNT(*) FROM geodata_line;")
-nb_steps=$(( (nb_lines + PAGE_SIZE - 1) / PAGE_SIZE ))
+echo "  $nb_lines total lines in local database"
 
-echo "  $nb_lines lines to transfer in $nb_steps chunks of $PAGE_SIZE"
+last_id=$AFTER_ID
+chunk=0
 
-i=$START_CHUNK
-while [ "$i" -lt "$nb_steps" ]; do
-    offset=$((i * PAGE_SIZE))
-    echo "  Chunk $((i + 1)) / $nb_steps (offset $offset)"
+while true; do
+    chunk=$((chunk + 1))
+
+    # Fetch a page of rows with id > last_id and capture the max id returned.
+    # COPY itself doesn't return values, so we run a separate query to get
+    # the upper bound of this chunk first.
+    next_max_id=$(psql "$LOCAL_DB" -t -A -c "
+        SELECT MAX(id) FROM (
+            SELECT id FROM geodata_line
+            WHERE id > $last_id
+            ORDER BY id
+            LIMIT $PAGE_SIZE
+        ) sub;
+    ")
+
+    # No more rows to transfer
+    if [ -z "$next_max_id" ]; then
+        break
+    fi
+
+    echo "  Chunk $chunk: ids $((last_id + 1))..$next_max_id"
 
     psql "$LOCAL_DB" -c "
         COPY (
             SELECT * FROM geodata_line
+            WHERE id > $last_id AND id <= $next_max_id
             ORDER BY id
-            LIMIT $PAGE_SIZE OFFSET $offset
         ) TO stdout
     " | psql "$PROD_DB" -c "COPY geodata_line FROM stdin;"
 
-    i=$((i + 1))
+    last_id=$next_max_id
 done
 
-echo ">>> Done. $nb_lines lines transferred."
+# ── Phase 3: Reset primary key sequences ────────────────────────────
+#
+# COPY inserts rows with explicit ids but does not advance the PostgreSQL
+# auto-increment sequences. Without this step, the next Django-created Map
+# or Line would collide with imported rows.
+
+echo ">>> Phase 3: Resetting primary key sequences"
+
+psql "$PROD_DB" -c "SELECT setval(pg_get_serial_sequence('geodata_map', 'id'), (SELECT MAX(id) FROM geodata_map));"
+psql "$PROD_DB" -c "SELECT setval(pg_get_serial_sequence('geodata_line', 'id'), (SELECT MAX(id) FROM geodata_line));"
+
+echo ">>> Done. Lines transferred up to id $last_id."
