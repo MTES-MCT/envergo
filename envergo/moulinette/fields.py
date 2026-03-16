@@ -14,7 +14,7 @@ from envergo.moulinette.regulations import (  # noqa
     loisurleau,
     natura2000,
     natura2000_haie,
-    perimetres_protection_captages,
+    protection_captages,
     regime_unique_haie,
     reserves_naturelles,
     sage,

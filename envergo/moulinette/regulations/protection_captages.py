@@ -2,10 +2,10 @@ from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 
-class PerimetresProtectionCaptagesRegulation(HaieRegulationEvaluator):
-    """Evaluate the périmètres de protection de captages regulation."""
+class ProtectionCaptagesRegulation(HaieRegulationEvaluator):
+    """Evaluate the protection de captages regulation."""
 
-    choice_label = "Haie > Périmètres de protection de captages"
+    choice_label = "Haie > Protection de captages"
 
     PROCEDURE_TYPE_MATRIX = {
         "a_verifier": "declaration",
@@ -13,17 +13,15 @@ class PerimetresProtectionCaptagesRegulation(HaieRegulationEvaluator):
     }
 
 
-class PerimetresProtectionCaptagesHaie(CriterionEvaluator):
-    """Evaluate the périmètres de protection de captages criterion.
+class ProtectionCaptagesHaie(CriterionEvaluator):
+    """Evaluate the "protection de captages" criterion.
 
     Returns a_verifier if any hedge (to remove or to plant) intersects
     the activation map, non_concerne otherwise.
     """
 
-    choice_label = (
-        "Périmètres de protection de captages > Périmètres de protection de captages"
-    )
-    slug = "perimetres_protection_captages"
+    choice_label = "Protection de captages > Protection de captages"
+    slug = "protection_captages"
     plantation_conditions = []
 
     RESULT_MATRIX = {

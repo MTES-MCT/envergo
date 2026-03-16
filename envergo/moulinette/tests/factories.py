@@ -108,7 +108,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "regime_unique_haie",
         "sites_proteges_haie",
         "sites_inscrits_haie",
-        "perimetres_protection_captages",
+        "protection_captages",
     ]
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [

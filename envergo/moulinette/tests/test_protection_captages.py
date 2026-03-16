@@ -18,19 +18,19 @@ from envergo.moulinette.tests.utils import (
 )
 
 EVALUATOR_PATH = (
-    "envergo.moulinette.regulations.perimetres_protection_captages"
-    ".PerimetresProtectionCaptagesHaie"
+    "envergo.moulinette.regulations.protection_captages"
+    ".ProtectionCaptagesHaie"
 )
 REGULATION_EVALUATOR_PATH = (
-    "envergo.moulinette.regulations.perimetres_protection_captages"
-    ".PerimetresProtectionCaptagesRegulation"
+    "envergo.moulinette.regulations.protection_captages"
+    ".ProtectionCaptagesRegulation"
 )
 
 
 @pytest.fixture(autouse=True)
 def captage_criteria(bizous_town_center):  # noqa
     regulation = RegulationFactory(
-        regulation="perimetres_protection_captages",
+        regulation="protection_captages",
         evaluator=REGULATION_EVALUATOR_PATH,
         has_perimeters=True,
         show_map=False,
@@ -66,11 +66,9 @@ def test_moulinette_evaluation(coords, expected_result):
         hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.perimetres_protection_captages.result == expected_result
+    assert moulinette.protection_captages.result == expected_result
     if expected_result != "non_concerne":
-        criterion = (
-            moulinette.perimetres_protection_captages.perimetres_protection_captages
-        )
+        criterion = moulinette.protection_captages.protection_captages
         assert criterion.result == expected_result
 
 
@@ -83,7 +81,7 @@ def test_procedure_type_is_always_declaration():
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    regulation = moulinette.perimetres_protection_captages
+    regulation = moulinette.protection_captages
     assert regulation._evaluator.procedure_type == "declaration"
 
 
@@ -96,7 +94,7 @@ def test_map_never_displays():
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    regulation = moulinette.perimetres_protection_captages
+    regulation = moulinette.protection_captages
     assert not regulation.display_map()
 
 
@@ -109,5 +107,5 @@ def test_map_does_not_display_even_when_non_concerne():
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    regulation = moulinette.perimetres_protection_captages
+    regulation = moulinette.protection_captages
     assert not regulation.display_map()
