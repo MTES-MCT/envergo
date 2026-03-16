@@ -589,3 +589,53 @@ class EspecesProtegeesNormandie(
             return 1.0
 
         return self.catalog.get("aggregated_r")
+
+
+class EspecesProtegeesRegimeUnique(
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+):
+    """EP criterion for the "régime unique" procedure.
+
+    Returns derogation_simplifiee when the department is in régime unique
+    and the project contains non-alignement hedges, non_concerne otherwise.
+    """
+
+    choice_label = "EP > EP Régime unique"
+    slug = "ep_regime_unique"
+    density_method = "around_lines"
+    plantation_conditions = []
+    form_class = None
+
+    CODE_MATRIX = {
+        ("regime_unique", "has_hedges"): "derogation_simplifiee",
+        ("regime_unique", "aa_only"): "non_concerne",
+        ("droit_constant", "has_hedges"): "non_concerne",
+        ("droit_constant", "aa_only"): "non_concerne",
+    }
+
+    RESULT_MATRIX = {
+        "derogation_simplifiee": RESULTS.derogation_simplifiee,
+        "non_concerne": RESULTS.non_concerne,
+    }
+
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        haies = self.catalog.get("haies")
+        if haies and self.moulinette.config.single_procedure:
+            density_data = haies.density.get("around_lines", {})
+            catalog["density_400"] = density_data.get("density_400")
+            catalog["density_400_length"] = density_data.get("length_400")
+            catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        return catalog
+
+    def get_result_data(self):
+        hedges = self.catalog["haies"].hedges_to_remove()
+        has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
+        regime_unique = self.moulinette.config.single_procedure
+
+        return "regime_unique" if regime_unique else "droit_constant", (
+            "aa_only" if not has_hedges else "has_hedges"
+        )
+
+    def get_replantation_coefficient(self):
+        return 0.0

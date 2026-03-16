@@ -2558,9 +2558,26 @@ class MoulinetteHaie(Moulinette):
 
     def get_debug_context(self):
         context = {}
-        if "haies" in self.catalog and self.requires_hedge_density:
-            haies = self.catalog["haies"]
+        if "haies" not in self.catalog or not self.requires_hedge_density:
+            return context
 
+        haies = self.catalog["haies"]
+
+        # Determine which density methods are needed by active evaluators
+        needs_centroid = any(
+            getattr(criterion._evaluator, "density_method", None) == "around_centroid"
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+            if isinstance(criterion._evaluator, HedgeDensityMixin)
+        )
+        needs_lines = any(
+            getattr(criterion._evaluator, "density_method", None) == "around_lines"
+            for regulation in self.regulations
+            for criterion in regulation.criteria.all()
+            if isinstance(criterion._evaluator, HedgeDensityMixin)
+        )
+
+        if needs_centroid:
             pre_computed_density = haies.density
             if pre_computed_density:
                 context.update(
@@ -2601,6 +2618,16 @@ class MoulinetteHaie(Moulinette):
                 truncated_circle_5000,
             )
             context["density_map"] = density_map
+
+        if needs_lines:
+            density_400_buffer = haies.compute_density_around_lines_with_artifacts()
+            context.update(
+                {
+                    "density_400_length": density_400_buffer["artifacts"]["length"],
+                    "density_400_area_ha": density_400_buffer["artifacts"]["area_ha"],
+                    "density_400": density_400_buffer["density"],
+                }
+            )
 
         return context
 

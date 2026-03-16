@@ -91,14 +91,14 @@
                   <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
-                {% if criterion|requires_hedge_density %}
+                {% if criterion|density_method == "around_centroid" %}
                   <br />
 
-                  <h6>Densité de haie</h6>
+                  <h6>Densité de haie (centroïde 200 m / 5 km)</h6>
 
                   <ul>
                     <li>Numéro de PACAGE : {{ numero_pacage|default:"ND" }}</li>
-                    <li>Densité de l'exploitation : {{ density_exploitation|default:"ND" }}</li>
+                    <li>Densité de l’exploitation : {{ density_exploitation|default:"ND" }}</li>
                     <li>Densité 5 km : {{ density_5000|floatformat:"2" }}</li>
                     <li>Rapport de densité exploitation / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
                     <li>Identifiant zone : {{ density_zone }}</li>
@@ -143,6 +143,21 @@
                   </table>
 
                   {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
+                {% endif %}
+                {% if criterion|density_method == "around_lines" %}
+                  <br />
+
+                  <h6>Densité de haie (buffer 400 m)</h6>
+
+                  <ul>
+                    <li>Linéaire : {{ density_400_length|floatformat:"0g" }} ml</li>
+                    <li>Surface : {{ density_400_area_ha|floatformat:"g" }} ha</li>
+                    <li>Densité : {{ density_400|floatformat:"1" }} ml/ha</li>
+                  </ul>
+                  <a class="fr-btn fr-btn--secondary"
+                     href="/demonstrateurs/densite-haie-2/?haies={{ haies.id }}">
+                    Voir le démonstrateur densité
+                  </a>
                 {% endif %}
               </li>
             {% endfor %}

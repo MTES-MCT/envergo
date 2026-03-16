@@ -7,6 +7,7 @@ from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
     EspecesProtegeesNormandie,
+    EspecesProtegeesRegimeUnique,
     EspecesProtegeesSimple,
 )
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
@@ -70,6 +71,19 @@ def ep_base_get_instructor_view_context(
 
     return {
         "hedges_properties": hedges_properties,
+    }
+
+
+@evaluator_instructor_view_context_getter(EspecesProtegeesRegimeUnique)
+def ep_regime_unique_get_instructor_view_context(
+    evaluator, petition_project, moulinette
+) -> dict:
+    """Build density context for the EP régime unique instructor view."""
+    return {
+        "density_400": moulinette.catalog.get("density_400"),
+        "density_400_length": moulinette.catalog.get("density_400_length"),
+        "density_400_area_ha": moulinette.catalog.get("density_400_area_ha"),
+        "hedge_data_id": petition_project.hedge_data.id,
     }
 
 
