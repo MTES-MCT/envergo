@@ -639,7 +639,7 @@ class SelfDeclarationMixin:
 class HedgeDensityMixin:
     """Mixin for criterion evaluators that need "hedge density" to be evaluated."""
 
-    pass
+    density_method = "around_centroid"
 
 
 TO_ADD = "to_add"

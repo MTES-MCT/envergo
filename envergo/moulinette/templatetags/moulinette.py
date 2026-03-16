@@ -334,6 +334,12 @@ def requires_hedge_density(criterion):
 
 
 @register.filter
+def density_method(criterion):
+    """Return the density method used by this criterion's evaluator."""
+    return getattr(criterion._evaluator, "density_method", None)
+
+
+@register.filter
 def display_remove_only_haies_field(field):
     """Display the haies field value as read only with only the hedges to remove."""
     hedge_data = field.field.clean(field.value())
