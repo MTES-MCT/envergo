@@ -1,8 +1,18 @@
-// Track a moulinette result page load
+// Track an AR page load
 window.addEventListener('load', function () {
   _paq.push(['trackEvent', 'Evaluation', 'Visit', DEPARTMENT]);
 });
 
+// Track when an appointment request button is clicked
+window.addEventListener("load", function () {
+  const pickAppointmentBtn = document.getElementById("pick-appointment-btn");
+  if (!pickAppointmentBtn) {
+    return;
+  }
+  pickAppointmentBtn.addEventListener("click", function (evt) {
+    _paq.push(["trackEvent", "Evaluation", "ChooseAppointmentClick"]);
+  });
+});
 
 // Track when a "self declaration" button is clicked
 window.addEventListener('load', function () {
