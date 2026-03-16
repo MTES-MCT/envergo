@@ -58,22 +58,18 @@
           {% display_ds_field "profil_beneficiaire" %}
           {% display_ds_field "adresse_beneficiaire" %}
         </div>
-        {% if organization %}
+        {% if representative %}
           <div class="fr-mb-2w">
             <h4 class="fr-h6 fr-mb-0">Mandataire</h4>
-            <ul>
-              <li>
-                <b>Identité :</b> NOM Prénom
-              </li>
-            </ul>
+            <p>
+              <b>Identité :</b> {{ representative }}
+            </p>
           </div>
         {% endif %}
-        {% if organization %}
-          <div class="fr-mb-2w">
-            <h4 class="fr-h6 fr-mb-0">Contact</h4>
-            {% display_ds_field "telephone_contact" %}
-          </div>
-        {% endif %}
+        <div class="fr-mb-2w">
+          <h4 class="fr-h6 fr-mb-0">Contact</h4>
+          {% display_ds_field "telephone_contact" %}
+        </div>
       </div>
     </section>
 

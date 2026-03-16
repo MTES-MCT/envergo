@@ -24,8 +24,8 @@
       "usager": {
         "email": "hedy.lamarr@example.com"
       },
-      "prenomMandataire": null,
-      "nomMandataire": null,
+      "prenomMandataire": "Jean",
+      "nomMandataire": "Dupont",
       "deposeParUnTiers": false,
       "demandeur": {
         "__typename": "PersonnePhysique",
