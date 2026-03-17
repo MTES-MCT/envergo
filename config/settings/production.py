@@ -209,11 +209,29 @@ sentry_logging = LoggingIntegration(
     event_level=logging.ERROR,  # Send errors as events
 )
 integrations = [sentry_logging, DjangoIntegration(), RedisIntegration()]
+
+
+def filter_sentry_events(event, hint):
+    """Drop known non-actionable events before they are sent to Sentry."""
+
+    # GDAL warns about newer GeoPackage versions it only partially supports.
+    # This happens everytime a gpk file is opened by an admin.
+    # The imports still succeed — this is not actionable until GDAL is upgraded.
+    # Sentry turns the warning into an error that we must safely ignore.
+    log_entry = event.get("logentry", {})
+    message = log_entry.get("message", "") or log_entry.get("formatted", "")
+    if "GeoPackage user_version" in message:
+        return None
+
+    return event
+
+
 sentry_sdk.init(
     dsn=SENTRY_DSN,
     integrations=integrations,
     environment=env("ENV_NAME", default="production"),
     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+    before_send=filter_sentry_events,
 )
 
 # CELERY
