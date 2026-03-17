@@ -3,10 +3,9 @@
 
   {% block block-content %}
     <hr class="fr-mt-2w">
-  </hr>
-  <p>
-    <a href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}"
-       class="fr-link fr-icon-arrow-right-line fr-link--icon-right">Gérer les consultations</a>
-  </p>
-{% endblock %}
+    <p>
+      <a href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}"
+         class="fr-link fr-icon-arrow-right-line fr-link--icon-right">Gérer les consultations</a>
+    </p>
+  {% endblock %}
 {% endblock %}
