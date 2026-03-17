@@ -208,7 +208,11 @@ class CSPReportView(View):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-        content = json.loads(request.body)
+        try:
+            content = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return HttpResponseBadRequest()
+
         visitor_id = request.COOKIES.get(settings.VISITOR_COOKIE_NAME, "")
         CSPReport.objects.create(
             content=content, site=request.site, session_key=visitor_id
