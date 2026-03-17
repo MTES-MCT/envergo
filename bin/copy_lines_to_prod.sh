@@ -135,6 +135,7 @@ echo ">>> Phase 2: Transferring Lines"
 nb_lines=$(psql "$LOCAL_DB" -t -A -c "SELECT COUNT(*) FROM geodata_line;")
 echo "  $nb_lines total lines in local database"
 
+# Starting the import at the set AFTER_ID value
 last_id=$AFTER_ID
 chunk=0
 
