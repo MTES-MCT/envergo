@@ -13,6 +13,7 @@ from envergo.petitions.models import (
     DOSSIER_STATES,
     InvitationToken,
     PetitionProject,
+    ResultSnapshot,
     Simulation,
     StatusLog,
 )
@@ -26,6 +27,7 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
     "GRAPHQL_API_BEARER_TOKEN": None,
     "DOSSIER_DOMAIN_BLACK_LIST": [],
     "INSTRUCTEUR_ID": "ABCD1234",
+    "AUTOMATIC_SENDER_EMAIL": "contact@test.gouv.fr",
 }
 
 DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
@@ -146,3 +148,12 @@ class InvitationTokenFactory(DjangoModelFactory):
 
     created_by = factory.SubFactory(UserFactory)
     petition_project = factory.SubFactory(PetitionProjectFactory)
+
+
+class ResultSnapshotFactory(DjangoModelFactory):
+    class Meta:
+        model = ResultSnapshot
+
+    project = factory.SubFactory(PetitionProjectFactory)
+    moulinette_url = factory.SelfAttribute("project.moulinette_url")
+    payload = factory.LazyAttribute(lambda obj: {"test": "data"})

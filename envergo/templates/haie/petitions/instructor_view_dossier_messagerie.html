@@ -44,9 +44,7 @@
         <div class="ds-message ds-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
           <div class="fr-mb-2w ds-message__metadata">
             <span class="ds-message__exp">{{ message.email }}</span> –
-            {% with message_date=message.createdAt|to_datetime %}
-              <span class="ds-message__date">{{ message_date|date:"D\. j F Y" }} {{ message_date|time:"H\hi" }}</span>
-            {% endwith %}
+            <span class="ds-message__date">{{ message.createdAt|date:"D\. j F Y" }} {{ message.createdAt|time:"H\hi" }}</span>
           </div>
           <div class="ds-message__content">{{ message.body|safe|urlize_html|linebreaks }}</div>
 

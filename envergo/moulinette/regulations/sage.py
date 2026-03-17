@@ -2,6 +2,9 @@ from django import forms
 
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
+    TO_ADD,
+    ActionsToTakeMixin,
+    AmenagementRegulationEvaluator,
     CriterionEvaluator,
     Map,
     MapPolygon,
@@ -12,6 +15,11 @@ from envergo.moulinette.regulations.mixins import ZoneHumideMixin
 BLUE = "#0000FF"
 LIGHTBLUE = "#00BFFF"
 BLACK = "#000000"
+
+
+class SageRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
+    choice_label = "Aménagement > Règlement de SAGE"
+    ACTIONS_TO_TAKE_MATRIX = {"interdit": {TO_ADD: {"interdit_sage"}}}
 
 
 class ImpactZHSettings(forms.Form):

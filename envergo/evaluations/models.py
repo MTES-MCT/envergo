@@ -10,7 +10,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.files.storage import storages
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import FileExtensionValidator
-from django.db import models
+from django.db import models, transaction
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
 from django.http import HttpRequest
@@ -25,6 +25,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from envergo.evaluations.validators import application_number_validator
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.utils.markdown import markdown_to_html
+from envergo.utils.models import ResultSnapshotBase
 from envergo.utils.tools import get_base_url
 from envergo.utils.urls import remove_mtm_params, update_qs
 
@@ -372,6 +373,11 @@ class Evaluation(models.Model):
         content = self.render_content()
         version = EvaluationVersion(
             evaluation=self, created_by=author, content=content, message=message
+        )
+
+        # create a result snapshot after each new version publication
+        transaction.on_commit(
+            lambda: EvaluationSnapshot.create_for_evaluation(evaluation=self)
         )
         return version
 
@@ -886,3 +892,25 @@ class RecipientStatus(models.Model):
                 name="unique_index", fields=["regulatory_notice_log", "recipient"]
             )
         ]
+
+
+class EvaluationSnapshot(ResultSnapshotBase):
+    """Snapshot of moulinette results for an Evaluation."""
+
+    evaluation = models.ForeignKey(
+        Evaluation,
+        on_delete=models.CASCADE,
+        related_name="result_snapshots",
+        verbose_name="Avis",
+    )
+
+    @classmethod
+    def create_for_evaluation(cls, evaluation):
+        """Create a snapshot for an Evaluation."""
+        moulinette = evaluation.get_moulinette()
+        payload = moulinette.summary()
+        return cls.objects.create(
+            evaluation=evaluation,
+            moulinette_url=evaluation.moulinette_url,
+            payload=payload,
+        )
