@@ -18,12 +18,10 @@ from envergo.moulinette.tests.utils import (
 )
 
 EVALUATOR_PATH = (
-    "envergo.moulinette.regulations.protection_captages"
-    ".ProtectionCaptagesHaie"
+    "envergo.moulinette.regulations.protection_captages" ".ProtectionCaptagesHaie"
 )
 REGULATION_EVALUATOR_PATH = (
-    "envergo.moulinette.regulations.protection_captages"
-    ".ProtectionCaptagesRegulation"
+    "envergo.moulinette.regulations.protection_captages" ".ProtectionCaptagesRegulation"
 )
 
 
