@@ -1008,6 +1008,30 @@ button .img-icon {
       margin-right: 1rem;
     }
   }
+
+  /**
+ * Custom class for an accordion without a "+" button
+ */
+  &--alt {
+    .fr-accordion__title {
+      padding: 0.5rem calc(1rem - 4px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fr-accordion__btn {
+      width: auto;
+      min-height: auto;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      border: 1px solid var(--border-default-grey);
+    }
+
+    .fr-accordion__footer {
+      text-align: right;
+    }
+  }
 }
 
 button[data-fr-js-collapse-button="true"] {
