@@ -83,8 +83,14 @@ fi
 
 # ── Phase 0: Collect Map IDs to transfer ─────────────────────────────
 
+MAP_TYPE="haies"
+
 map_ids=$(psql "$LOCAL_DB" -t -A -c "
-    SELECT DISTINCT map_id FROM geodata_line ORDER BY map_id;
+    SELECT DISTINCT l.map_id
+    FROM geodata_line l
+    JOIN geodata_map m ON l.map_id = m.id
+    WHERE m.map_type = '$MAP_TYPE'
+    ORDER BY l.map_id;
 ")
 
 if [ -z "$map_ids" ]; then
@@ -116,7 +122,7 @@ if [ -z "$AFTER_ID" ]; then
         COPY (
             SELECT *
             FROM geodata_map
-            WHERE id IN (SELECT DISTINCT map_id FROM geodata_line)
+            WHERE id IN ($map_ids_csv)
             ORDER BY id
         ) TO stdout
     " | psql "$PROD_DB" -c "COPY geodata_map FROM stdin;"
@@ -132,7 +138,9 @@ fi
 
 echo ">>> Phase 2: Transferring Lines"
 
-nb_lines=$(psql "$LOCAL_DB" -t -A -c "SELECT COUNT(*) FROM geodata_line;")
+nb_lines=$(psql "$LOCAL_DB" -t -A -c "
+    SELECT COUNT(*) FROM geodata_line WHERE map_id IN ($map_ids_csv);
+")
 echo "  $nb_lines total lines in local database"
 
 # Starting the import at the set AFTER_ID value
@@ -148,7 +156,7 @@ while true; do
     next_max_id=$(psql "$LOCAL_DB" -t -A -c "
         SELECT MAX(id) FROM (
             SELECT id FROM geodata_line
-            WHERE id > $last_id
+            WHERE id > $last_id AND map_id IN ($map_ids_csv)
             ORDER BY id
             LIMIT $PAGE_SIZE
         ) sub;
@@ -165,6 +173,7 @@ while true; do
         COPY (
             SELECT * FROM geodata_line
             WHERE id > $last_id AND id <= $next_max_id
+                AND map_id IN ($map_ids_csv)
             ORDER BY id
         ) TO stdout
     " | psql "$PROD_DB" -c "COPY geodata_line FROM stdin;"
