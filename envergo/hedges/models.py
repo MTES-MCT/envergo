@@ -4,6 +4,7 @@ from functools import reduce
 from typing import Self
 
 import shapely
+from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
@@ -28,7 +29,7 @@ TO_REMOVE = "TO_REMOVE"
 class HedgeTypeBase(models.TextChoices):
     """This enum should list all the existing type. But it should not be used directly.
 
-    Prefer using HedgeType.build_from_context."""
+    Prefer using HedgeTypeFactory.build_from_context."""
 
     DEGRADEE = "degradee", "Haie dégradée ou résiduelle basse"
     BUISSONNANTE = "buissonnante", "Haie buissonnante basse"
@@ -38,6 +39,8 @@ class HedgeTypeBase(models.TextChoices):
 
 
 class HedgeTypeFactory(models.TextChoices):
+    """Use this factory to build the hedge types enum depending on the context of your simulation"""
+
     @classmethod
     def build_from_context(cls, single_procedure: bool):
 
@@ -52,8 +55,6 @@ class HedgeTypeFactory(models.TextChoices):
                 for key, label in HedgeTypeBase.choices
                 if key != HedgeTypeBase.DEGRADEE
             ]
-
-        from django.conf import settings
 
         hedge_type = models.TextChoices(
             "ContextualHedgeType",

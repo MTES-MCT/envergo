@@ -2462,12 +2462,27 @@ class MoulinetteHaie(Moulinette):
         return config.single_procedure if config else False
 
     def get_main_form(self):
+        """Instantiate the main form with data.
+
+        Overridden to pass some context to the main form constructor
+        """
         return self.get_main_form_class()(
             single_procedure=self._get_single_procedure(), **self.form_kwargs
         )
 
     @cached_property
     def bound_main_form(self):
+        """Get the main form with forced bound data.
+
+        Overridden to pass some context to the main form constructor
+
+        When we display the moulinette form, we show the main form with
+        initial values. But if the initial data would be valid data, then we
+        want to also display the additional forms.
+
+        In that case, we force a form validation by creating a moulinette form
+        where we pass initial data as validation data.
+        """
         if self.main_form.is_bound:
             return self.main_form
         form_kwargs = self.form_kwargs.copy()

@@ -503,7 +503,7 @@ class EspecesProtegeesNormandie(
 
         HedgeType = HedgeTypeFactory.build_from_context(
             single_procedure=False
-        )  # EP normandie is under DC
+        )  # Cet évaluateur n'est utilisé qu'avant la mise en place du régime unique.
         for hedge_type in HedgeType.values:
             lc_type = LC[hedge_type]
             lc_type *= 0.8 if hedge_type != "mixte" else 1.0

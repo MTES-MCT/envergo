@@ -23,7 +23,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def criterion_evaluator():
+def ep_criterion_evaluator():
     DCConfigHaieFactory()
     data = make_moulinette_haie_data()
     moulinette = MoulinetteHaie(data)
@@ -31,7 +31,7 @@ def criterion_evaluator():
 
 
 @pytest.fixture
-def criterion_evaluator_ru():
+def ep_criterion_evaluator_ru():
     RUConfigHaieFactory()
     data = make_moulinette_haie_data()
     moulinette = MoulinetteHaie(data)
@@ -137,7 +137,7 @@ def calvados_hedge_data():
     return hedge_data
 
 
-def test_minimum_length_condition():
+def test_minimum_length_condition(ep_criterion_evaluator):
     """Length to plant depends on the replantation coefficient."""
 
     hedge_data = Mock()
@@ -150,16 +150,16 @@ def test_minimum_length_condition():
     hedge_data.lineaire_detruit_pac.return_value = 0
     hedge_data.length_to_plant_pac.return_value = 0
 
-    condition = MinLengthCondition(hedge_data, 2.0, criterion_evaluator)
+    condition = MinLengthCondition(hedge_data, 2.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 200
 
-    condition = MinLengthCondition(hedge_data, 4.0, criterion_evaluator)
+    condition = MinLengthCondition(hedge_data, 4.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 400
 
 
-def test_minimum_length_pac_condition():
+def test_minimum_length_pac_condition(ep_criterion_evaluator):
     """Length to plant on pac does not depends on R."""
 
     hedge_data = Mock()
@@ -172,23 +172,23 @@ def test_minimum_length_pac_condition():
     hedge_data.lineaire_detruit_pac.return_value = 100
     hedge_data.length_to_plant_pac.return_value = 0
 
-    condition = MinLengthPacCondition(hedge_data, 2.0, criterion_evaluator)
+    condition = MinLengthPacCondition(hedge_data, 2.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = MinLengthPacCondition(hedge_data, 4.0, criterion_evaluator)
+    condition = MinLengthPacCondition(hedge_data, 4.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = MinLengthPacCondition(hedge_data, 0.0, criterion_evaluator)
+    condition = MinLengthPacCondition(hedge_data, 0.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 0
 
 
-def test_safety_condition(hedge_data):
+def test_safety_condition(hedge_data, ep_criterion_evaluator):
     """Planting under power lines is not ok."""
 
-    condition = SafetyCondition(hedge_data, 1.0, criterion_evaluator)
+    condition = SafetyCondition(hedge_data, 1.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.result
 
@@ -198,15 +198,15 @@ def test_safety_condition(hedge_data):
             "sous_ligne_electrique": True,
         }
     )
-    condition = SafetyCondition(hedge_data, 1.0, criterion_evaluator)
+    condition = SafetyCondition(hedge_data, 1.0, ep_criterion_evaluator)
     condition.evaluate()
     assert not condition.result
 
 
-def test_quality_condition_lengths_to_plant(hedge_data, criterion_evaluator):
+def test_quality_condition_lengths_to_plant(hedge_data, ep_criterion_evaluator):
     """Lengths to plant depends on R."""
 
-    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
+    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
     minimum_lengths_to_plant = condition.get_minimum_lengths_to_plant()
     assert round(minimum_lengths_to_plant["degradee"]) == 2 * 50
     assert round(minimum_lengths_to_plant["buissonnante"]) == 2 * 40
@@ -214,7 +214,7 @@ def test_quality_condition_lengths_to_plant(hedge_data, criterion_evaluator):
     assert round(minimum_lengths_to_plant["mixte"]) == 2 * 20
     assert round(minimum_lengths_to_plant["alignement"]) == 2 * 10
 
-    condition = QualityCondition(hedge_data, 4.0, criterion_evaluator)
+    condition = QualityCondition(hedge_data, 4.0, ep_criterion_evaluator)
     minimum_lengths_to_plant = condition.get_minimum_lengths_to_plant()
     assert round(minimum_lengths_to_plant["degradee"]) == 4 * 50
     assert round(minimum_lengths_to_plant["buissonnante"]) == 4 * 40
@@ -223,14 +223,14 @@ def test_quality_condition_lengths_to_plant(hedge_data, criterion_evaluator):
     assert round(minimum_lengths_to_plant["alignement"]) == 4 * 10
 
 
-def test_hedge_quality_should_be_sufficient(criterion_evaluator):
+def test_hedge_quality_should_be_sufficient(ep_criterion_evaluator):
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
     hedge_data.lineaire_detruit_pac.return_value = 10
     hedge_data.length_to_plant_pac.return_value = 5
 
-    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
+    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
     condition.get_minimum_lengths_to_plant = Mock(
         return_value={
             "degradee": 12,
@@ -260,14 +260,14 @@ def test_hedge_quality_should_be_sufficient(criterion_evaluator):
     }
 
 
-def test_hedge_quality_should_not_be_sufficient_dc(criterion_evaluator):
+def test_hedge_quality_should_not_be_sufficient_dc(ep_criterion_evaluator):
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
 
-    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator)
+    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
     condition.get_minimum_lengths_to_plant = Mock(
         return_value={
             "degradee": 10,
@@ -296,14 +296,14 @@ def test_hedge_quality_should_not_be_sufficient_dc(criterion_evaluator):
     }
 
 
-def test_hedge_quality_should_not_be_sufficient_ru(criterion_evaluator_ru):
+def test_hedge_quality_should_not_be_sufficient_ru(ep_criterion_evaluator_ru):
     hedge_data = Mock()
     hedge_data.hedges_to_plant.return_value = []
     hedge_data.length_to_plant.return_value = 0
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
 
-    condition = QualityCondition(hedge_data, 2.0, criterion_evaluator_ru)
+    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator_ru)
     condition.get_minimum_lengths_to_plant = Mock(
         return_value={
             "buissonnante": 10,
@@ -330,14 +330,14 @@ def test_hedge_quality_should_not_be_sufficient_ru(criterion_evaluator_ru):
     }
 
 
-def test_strengthening_condition(calvados_hedge_data):
+def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
     hedge_data = calvados_hedge_data
     catalog = {
         "reimplantation": "replantation",
         "lpm": 120,
     }
 
-    condition = StrenghteningCondition(hedge_data, 1.0, criterion_evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
     condition.evaluate()
     assert condition.result
     assert condition.context["strengthening_length"] == 0.0
@@ -346,7 +346,7 @@ def test_strengthening_condition(calvados_hedge_data):
     hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
     hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
 
-    condition = StrenghteningCondition(hedge_data, 1.0, criterion_evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
     condition.evaluate()
     assert not condition.result
     assert condition.context["strengthening_length"] == 101.0
@@ -444,36 +444,40 @@ def test_alignement_arbres_condition():
             },
         ]
     )
-    criterion_evaluator = Mock(result_code="soumis_autorisation")
+    ep_criterion_evaluator = Mock(result_code="soumis_autorisation")
     catalog = {"reimplantation": "replantation"}
 
-    condition = TreeAlignmentsCondition(hedge_data, 2.0, criterion_evaluator, catalog)
+    condition = TreeAlignmentsCondition(
+        hedge_data, 2.0, ep_criterion_evaluator, catalog
+    )
     condition.evaluate()
     assert not condition.result
     assert condition.context["minimum_length_to_plant_aa_bord_voie"] == 180
     assert condition.context["aa_bord_voie_delta"] == 80
 
-    criterion_evaluator = Mock(result_code="soumis_esthetique")
+    ep_criterion_evaluator = Mock(result_code="soumis_esthetique")
 
-    condition = TreeAlignmentsCondition(hedge_data, 1.0, criterion_evaluator, catalog)
+    condition = TreeAlignmentsCondition(
+        hedge_data, 1.0, ep_criterion_evaluator, catalog
+    )
     condition.evaluate()
     assert condition.result
     assert condition.context["minimum_length_to_plant_aa_bord_voie"] == 90
     assert condition.context["aa_bord_voie_delta"] == 0.0
 
 
-def test_essences_bocageres_condition(calvados_hedge_data):
+def test_essences_bocageres_condition(calvados_hedge_data, ep_criterion_evaluator):
     hedge_data = calvados_hedge_data
     catalog = {}
     condition = EssencesBocageresCondition(
-        hedge_data, 1.0, criterion_evaluator, catalog
+        hedge_data, 1.0, ep_criterion_evaluator, catalog
     )
     condition.evaluate()
     assert condition.result
 
     hedge_data.data[-1]["additionalData"]["essences_non_bocageres"] = True
     condition = EssencesBocageresCondition(
-        hedge_data, 1.0, criterion_evaluator, catalog
+        hedge_data, 1.0, ep_criterion_evaluator, catalog
     )
     condition.evaluate()
     assert not condition.result
