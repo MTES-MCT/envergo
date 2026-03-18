@@ -27,7 +27,8 @@ window.addEventListener('load', function () {
 
 // Dismiss the self declaration block for 48 hours
 // Cette méthode utilise le local storage sans demander de permission explicite à l'utilisateur.
-// Cette permission n'est pas nécessaire au regard du RGPD car l'action est expressement demandées par l'utilisateur.
+// Cette permission n'est pas nécessaire au regard du RGPD car il s'agit d'une personnalisation de l'UI expressement demandées par l'utilisateur.
+// cf https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies/comment-mettre-mon-site-web-en-conformite
 // > "Les traceurs qui sont exemptés de consentement [sont les traceurs] strictement nécessaires à la fourniture
 // d'un service de communication en ligne expressément demandé par l'utilisateur…"
 // > "les traceurs de personnalisation de l'interface utilisateur…"
