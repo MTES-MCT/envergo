@@ -1,12 +1,8 @@
 {% if density_400 is not None %}
-  <h5 class="fr-mt-3w">Densité de haie (buffer 400 m)</h5>
-  <ul>
-    <li><strong>Linéaire de haies dans la zone :</strong> {{ density_400_length|floatformat:"0g" }} ml</li>
-    <li><strong>Surface de la zone :</strong> {{ density_400_area_ha|floatformat:"g" }} ha</li>
-    <li><strong>Densité :</strong> {{ density_400|floatformat:"1" }} ml/ha</li>
-  </ul>
+  <h5 class="fr-mt-3w">Densité bocagère</h5>
+  <p><strong>Densité du bocage — rayon 400m :</strong> {{ density_400|floatformat:"1" }} ml/ha</p>
   <a class="fr-btn fr-btn--secondary"
-     href="/demonstrateurs/densite-haie-2/?haies={{ hedge_data_id }}">
+     href="{% url 'demo_density_project' %}?haies={{ hedge_data_id }}">
     Voir le démonstrateur densité
   </a>
 {% endif %}
