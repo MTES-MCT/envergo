@@ -630,7 +630,7 @@ class EspecesProtegeesRegimeUnique(
 
     def get_result_data(self):
         hedges = self.catalog["haies"].hedges_to_remove()
-        has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
+        has_hedges = any(hedges.n_alignement())
         regime_unique = self.moulinette.config.single_procedure
 
         return "regime_unique" if regime_unique else "droit_constant", (
