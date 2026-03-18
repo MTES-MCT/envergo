@@ -596,8 +596,10 @@ class EspecesProtegeesRegimeUnique(
 ):
     """EP criterion for the "régime unique" procedure.
 
-    Returns derogation_simplifiee when the department is in régime unique
-    and the project contains non-alignement hedges, non_concerne otherwise.
+    This evaluator is attached only to departments in régime unique.
+    Temporary behaviour: the result is hardcoded to derogation_simplifiee.
+    The real logic (density, hedge length, hedge type, ZNIEFF 1) will be
+    implemented in a follow-up ticket (REP 2/5).
     """
 
     choice_label = "EP > EP Régime unique"
@@ -607,21 +609,17 @@ class EspecesProtegeesRegimeUnique(
     form_class = None
 
     CODE_MATRIX = {
-        ("regime_unique", "has_hedges"): "derogation_simplifiee",
-        ("regime_unique", "aa_only"): "non_concerne",
-        ("droit_constant", "has_hedges"): "non_concerne",
-        ("droit_constant", "aa_only"): "non_concerne",
+        "derogation_simplifiee": "derogation_simplifiee",
     }
 
     RESULT_MATRIX = {
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
-        "non_concerne": RESULTS.non_concerne,
     }
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
-        if haies and self.moulinette.config.single_procedure:
+        if haies:
             density_data = haies.density.get("around_lines", {})
             catalog["density_400"] = density_data.get("density_400")
             catalog["density_400_length"] = density_data.get("length_400")
@@ -629,13 +627,7 @@ class EspecesProtegeesRegimeUnique(
         return catalog
 
     def get_result_data(self):
-        hedges = self.catalog["haies"].hedges_to_remove()
-        has_hedges = any(hedges.n_alignement())
-        regime_unique = self.moulinette.config.single_procedure
-
-        return "regime_unique" if regime_unique else "droit_constant", (
-            "aa_only" if not has_hedges else "has_hedges"
-        )
+        return "derogation_simplifiee"
 
     def get_replantation_coefficient(self):
         return 0.0
