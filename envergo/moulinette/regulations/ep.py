@@ -168,6 +168,7 @@ class EspecesProtegeesNormandie(
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
+    debug_template = "haie/moulinette/debug/ep_normandie.html"
     plantation_conditions = [
         MinLengthCondition,
         SafetyCondition,
@@ -590,6 +591,51 @@ class EspecesProtegeesNormandie(
 
         return self.catalog.get("aggregated_r")
 
+    def get_debug_context(self):
+        """Return centroid-based density data for debug display."""
+        haies = self.catalog.get("haies")
+        if not haies:
+            return {}
+
+        density_200, density_5000, centroid_geos = (
+            haies.compute_density_around_points_with_artifacts()
+        )
+        truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
+        truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
+
+        context = {
+            "numero_pacage": self.catalog.get("numero_pacage"),
+            "density_exploitation": self.catalog.get("density_exploitation"),
+            "density_5000": self.catalog.get("density_5000"),
+            "density_ratio": self.catalog.get("density_ratio"),
+            "density_zone": self.catalog.get("density_zone"),
+            "length_200": density_200["artifacts"]["length"],
+            "length_5000": density_5000["artifacts"]["length"],
+            "area_200_ha": density_200["artifacts"]["area_ha"],
+            "area_5000_ha": density_5000["artifacts"]["area_ha"],
+            "density_200": density_200["density"],
+            "debug_density_5000": density_5000["density"],
+        }
+
+        pre_computed = haies.density
+        if pre_computed:
+            context["pre_computed_density_200"] = pre_computed["around_centroid"][
+                "density_200"
+            ]
+            context["pre_computed_density_5000"] = pre_computed["around_centroid"][
+                "density_5000"
+            ]
+
+        from envergo.hedges.services import create_density_map
+
+        context["density_map"] = create_density_map(
+            centroid_geos,
+            haies.hedges_to_remove(),
+            truncated_circle_200,
+            truncated_circle_5000,
+        )
+        return context
+
 
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
@@ -604,7 +650,7 @@ class EspecesProtegeesRegimeUnique(
 
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
-    density_method = "around_lines"
+    debug_template = "haie/moulinette/debug/density_around_lines.html"
     plantation_conditions = []
     form_class = None
 
@@ -628,6 +674,34 @@ class EspecesProtegeesRegimeUnique(
 
     def get_result_data(self):
         return "derogation_simplifiee"
+
+    def get_debug_context(self):
+        """Return line-buffer density data for debug display."""
+        haies = self.catalog.get("haies")
+        if not haies:
+            return {}
+
+        density_400 = haies.compute_density_around_lines_with_artifacts()
+        context = {
+            "density_400": density_400["density"],
+            "density_400_length": density_400["artifacts"]["length"],
+            "density_400_area_ha": density_400["artifacts"]["area_ha"],
+            "haies_id": haies.id,
+        }
+
+        pre_computed = haies.density.get("around_lines", {})
+        if pre_computed:
+            context["pre_computed_density_400"] = pre_computed.get("density_400")
+
+        from envergo.hedges.services import create_line_buffer_density_map
+
+        context["density_map"] = create_line_buffer_density_map(
+            haies.hedges_to_remove(),
+            density_400["artifacts"]["truncated_buffer_zone"],
+            density_400["artifacts"]["buffer_zone"],
+        )
+
+        return context
 
     def get_replantation_coefficient(self):
         return 0.0
