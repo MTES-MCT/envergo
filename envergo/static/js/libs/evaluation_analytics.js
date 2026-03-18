@@ -26,6 +26,11 @@ window.addEventListener('load', function () {
 });
 
 // Dismiss the self declaration block for 48 hours
+// Cette méthode utilise le local storage sans demander de permission explicite à l'utilisateur.
+// Cette permission n'est pas nécessaire au regard du RGPD car l'action est expressement demandées par l'utilisateur.
+// > "Les traceurs qui sont exemptés de consentement [sont les traceurs] strictement nécessaires à la fourniture
+// d'un service de communication en ligne expressément demandé par l'utilisateur…"
+// > "les traceurs de personnalisation de l'interface utilisateur…"
 window.addEventListener('load', function () {
   const key = "self-declaration-cta-dismissed";
   const el = document.getElementById("self-declaration-cta-v2");
