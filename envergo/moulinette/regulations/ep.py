@@ -8,9 +8,8 @@ from django.core.validators import RegexValidator
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HEDGE_TYPES, PACAGE_RE, Pacage
+from envergo.hedges.models import PACAGE_RE, HedgeTypeFactory, Pacage
 from envergo.hedges.regulations import (
-    HEDGE_KEYS,
     EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
@@ -130,7 +129,10 @@ def get_hedge_compensation_details(hedge, r):
 
     return {
         "id": hedge.id,
-        "hedge_type": get_human_readable_value(HEDGE_TYPES, hedge.hedge_type),
+        "hedge_type": get_human_readable_value(
+            HedgeTypeFactory.build_from_context(single_procedure=False).choices,
+            hedge.hedge_type,
+        ),  # EP s'applique uniquement à "droit constant" pour le moment
         "properties": ", ".join(hedge_properties) if hedge_properties else "-",
         "length": hedge.length,
         "r": r,
@@ -498,8 +500,11 @@ class EspecesProtegeesNormandie(
         # Compensation can be reduced when planting a better type
         # Compensation rate cannot go below 1:1 though
         reduced_lpm = 0
-        hedge_keys = HEDGE_KEYS.keys()
-        for hedge_type in hedge_keys:
+
+        HedgeType = HedgeTypeFactory.build_from_context(
+            single_procedure=False
+        )  # Cet évaluateur n'est utilisé qu'avant la mise en place du régime unique.
+        for hedge_type in HedgeType.values:
             lc_type = LC[hedge_type]
             lc_type *= 0.8 if hedge_type != "mixte" else 1.0
             lc_type = max(lc_type, LD[hedge_type])

@@ -67,7 +67,7 @@
     this.generateBtn.classList.remove('fr-icon-user-add-line');
     this.generateBtn.classList.add('spinner');
     this.generateBtn.classList.add('fr-icon-settings-5-line');
-    this.generateBtn.textContent = "Génération du message et du lien d'accès";
+    this.generateBtn.textContent = "Génération de l'invitation…";
 
     // Minimum delay of 2 seconds
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 2000));

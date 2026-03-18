@@ -369,5 +369,10 @@ def render_field(context, field, **kwargs):
 
 
 @register.filter
+def get_attr(obj, attr):
+    return getattr(obj, attr)
+
+
+@register.filter
 def min_numeric(values):
     return min(map(float, values))

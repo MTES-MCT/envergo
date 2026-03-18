@@ -78,6 +78,23 @@
   </div>
 {% endif %}
 
+<section id="pick-appointment" class="hide-print fr-mb-5w">
+  <div class="fr-px-2w fr-pt-5v fr-pb-2w">
+    <div class="fr-my-1w">
+      <span class="icon fr-icon-customer-service-fill fr-mx-2w fr-p-1v"></span>
+    </div>
+    <div class="fr-my-1w">
+      <h6 class="fr-mb-1w">Une question sur cet avis réglementaire ?</h6>
+      <p class="fr-mb-1w">Vous pouvez en discuter par téléphone avec un membre de l'équipe Envergo</p>
+      <a id="pick-appointment-btn"
+         class="fr-btn fr-btn--icon-left fr-icon-calendar-2-line fr-btn--tertiary fr-btn--sm fr-mt-2v"
+         href="https://calendly.com/envergo/echange-envergo-10min?utm_source=envergo&utm_medium=avis&a1={{ evaluation.reference }}"
+         target="_blank"
+         rel="noopener external">Choisir un rendez-vous</a>
+    </div>
+  </div>
+</section>
+
 {% for regulation in moulinette.regulations %}
   {% include 'amenagement/moulinette/_result_regulation.html' with regulation=regulation %}
 {% endfor %}

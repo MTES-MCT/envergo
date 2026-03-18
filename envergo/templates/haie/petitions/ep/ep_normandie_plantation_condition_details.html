@@ -54,18 +54,18 @@
             </tr>
           </thead>
           <tbody>
-            {% for key, label in HEDGE_KEYS.items %}
-              {% if not forloop.last and key != "buissonnante" %}
+            {% for choice in ordered_hedge_types %}
+              {% if choice.value != "degradee" and choice.value != "buissonnante" %}
                 <tr>
-                  <th scope="row">{{ label }}</th>
-                  <td>{{ quality_condition.LPm|get_item:key|floatformat:"0g" }} m</td>
-                  <td>{{ moulinette.catalog.LPm_r|get_item:key|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LP|get_item:key|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LC|get_item:key|floatformat:"0g" }} m</td>
+                  <th scope="row">{{ choice.label }}</th>
+                  <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
+                  <td>{{ moulinette.catalog.LPm_r|get_item:choice.value|floatformat:"0g" }} m</td>
+                  <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
+                  <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
                 </tr>
-              {% elif key == "buissonnante" %}
+              {% elif choice.value == "buissonnante" %}
                 <tr>
-                  <th scope="row">{{ label }}</th>
+                  <th scope="row">{{ choice.label }}</th>
                   <td>{{ quality_condition.LPm|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
                   <td>{{ moulinette.catalog.LPm_r|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
                   <td>{{ quality_condition.LP|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>

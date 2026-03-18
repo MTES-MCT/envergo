@@ -9,8 +9,8 @@ from django.utils import timezone
 from config.celery_app import app
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
-    HEDGE_TYPES,
     IMPORT_STATUSES,
+    HedgeTypeFactory,
     Species,
     SpeciesMap,
     SpeciesMapFile,
@@ -19,7 +19,6 @@ from envergo.hedges.models import (
 logger = logging.getLogger(__name__)
 
 
-ALL_HEDGE_TYPES = dict(HEDGE_TYPES).keys()
 ALL_HEDGE_PROPERTIES = dict(HEDGE_PROPERTIES).keys()
 
 
@@ -113,7 +112,9 @@ def process_species_file_map_row(row, smf):
         species = Species.objects.get(common_name=row["common_name"])
 
     hedge_types = []
-    for hedge_type in ALL_HEDGE_TYPES:
+    for hedge_type in HedgeTypeFactory.build_from_context(
+        single_procedure=False
+    ).names:  # EP s'applique uniquement à "droit constant" pour le moment
         if bool(row[hedge_type]):
             hedge_types.append(hedge_type)
 

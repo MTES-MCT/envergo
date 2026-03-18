@@ -45,6 +45,18 @@
         <p>
           Certains projets sont systématiquement soumis à cette procédure. D’autres doivent d’abord passer par un <strong>examen au cas par cas</strong>, une étape de vérification réalisée par l’administration. Le porteur de projet déclare ses intentions, et l’administration décide, en fonction des caractéristiques du projet et de la sensibilité de la zone, si une évaluation environnementale complète est nécessaire, avec étude d’impact et enquête publique.
         </p>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, vérifiez en quelques clics si un projet est soumis à étude d'impact
+              ou à examen au cas par cas, ou à une autre réglementation environnementale
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -80,6 +92,18 @@
         <p>
           Elle présente aussi les mesures prévues pour éviter, réduire ou compenser les impacts négatifs du projet. Ce principe est appelé la séquence <strong>« éviter – réduire – compenser »</strong> (ERC).
         </p>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, vérifiez en quelques clics si un projet est soumis à étude d'impact
+              ou à une autre réglementation environnementale
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -120,6 +144,18 @@
             <strong>soumission à évaluation environnementale</strong> : la procédure complète est alors obligatoire, avec étude d’impact et enquête publique.
           </li>
         </ul>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, vérifiez en quelques clics si un projet est soumis à étude d'impact
+              ou à examen au cas par cas, ou à une autre réglementation environnementale
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -128,14 +164,28 @@
         <button class="fr-accordion__btn"
                 aria-expanded="false"
                 aria-controls="accordion-savoir_si_soumis">
-          <span>Comment savoir si un projet est soumis à évaluation environnementale ou à examen au cas par cas ?</span>
+          <span>Comment savoir si un projet est soumis à étude d'impact ou à examen au cas par cas ?</span>
         </button>
       </h3>
       <div class="fr-collapse" id="accordion-savoir_si_soumis">
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, vérifiez en quelques clics si un projet est soumis à étude d'impact
+              ou à examen au cas par cas, ou à une autre réglementation environnementale
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
+
         <p>Cela dépend de la nature, de la taille et de la localisation du projet.</p>
 
         <p>
-          Certains projets sont <strong>systématiquement soumis</strong> à évaluation environnementale. D’autres doivent passer par un <strong>examen au cas par cas</strong>, pour que l’administration décide s’il faut réaliser une étude d’impact.
+          Certains projets sont <strong>systématiquement soumis</strong> à étude d'impact.
+          D’autres doivent passer par un <strong>examen au cas par cas</strong>, pour que l’administration décide s’il faut réaliser une étude d’impact.
         </p>
 
         <p>
@@ -145,10 +195,6 @@
           Cette liste est technique et nécessite une lecture attentive. Un <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/%C3%89valuation%20environnementale%20des%20projets%20%E2%80%93%20Guide%20de%20lecture%20de%20la%20nomenclature.pdf"
     target="_blank"
     rel="noopener">guide de lecture de la nomenclature</a> est également disponible.
-        </p>
-
-        <p>
-          <strong>💡 Pour les projets d’aménagement ou de construction, vous pouvez utiliser le <a href="/simulateur/formulaire">simulateur réglementaire Envergo</strong></a>. En quelques clics, il permet de vérifier si un projet entre dans le champ de la rubrique 39 de la nomenclature de l’évaluation environnementale, et s’il est concerné par d’autres réglementations environnementales (Loi sur l’eau, Natura 2000, etc.). Ce simulateur est un service public gratuit proposé par le Ministère de la transition écologique. Il est disponible dans <a href="{% url 'faq_availability_info' %}">{% nb_available_depts %} départements</a> et sera progressivement étendu à l'ensemble du territoire national.
         </p>
 
         <p>
@@ -209,13 +255,26 @@
             si elle considère que le projet <strong>n’a pas d’impact notable</strong>, il est <strong>dispensé d’étude d’impact</strong> ;
           </li>
           <li>
-            si elle estime que le projet <strong>présente des risques significatifs pour l’environnement ou la santé</strong>, une <strong>évaluation environnementale complète est exigée</strong>.
+            si elle estime que le projet <strong>présente des risques significatifs pour l’environnement ou la santé</strong>, une <strong>étude d'impact complète est exigée</strong>.
           </li>
         </ul>
 
         <p>
           Cette étape permet au porteur de projet d’anticiper ses obligations réglementaires avant de déposer une demande d’autorisation (permis de construire, permis d’aménager, déclaration Loi sur l’eau…).
         </p>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, obtenez en quelques clics les procédures à suivre
+              vis à vis de l'évaluation environnementale et des autres réglementations,
+              adaptées précisément à votre projet d'aménagement ou de construction
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -259,6 +318,19 @@
         <p>
           L’évaluation environnementale devient ainsi une étape essentielle pour éclairer la décision d’autoriser ou non un projet.
         </p>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, obtenez en quelques clics les procédures à suivre
+              vis à vis de l'évaluation environnementale et des autres réglementations,
+              adaptées précisément à votre projet d'aménagement ou de construction
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -463,6 +535,18 @@
         <p>
           <strong>Les travaux ne peuvent pas commencer</strong> tant que l’autorisation d’urbanisme n’a pas été délivrée.
         </p>
+
+        <div class="fr-card fr-card--horizontal fr-my-2w">
+          <div class="fr-card__body fr-p-4w">
+            <p>
+              Avec le simulateur réglementaire Envergo, vérifiez en quelques clics si un projet est soumis à étude d'impact
+              ou à examen au cas par cas, ou à une autre réglementation environnementale
+            </p>
+            <a href="{% url 'moulinette_form' %}"
+               class="fr-btn fr-btn--icon-left fr-icon-arrow-right-line">Simuler un projet</a>
+            <span class="fr-hint-text fr-mt-1w">Durée : 30 secondes</span>
+          </div>
+        </div>
       </div>
     </section>
 

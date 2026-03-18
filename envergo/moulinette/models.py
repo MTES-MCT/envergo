@@ -49,7 +49,7 @@ from envergo.evaluations.models import (
 )
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -115,6 +115,7 @@ REGULATIONS = Choices(
     ("sites_proteges_haie", "Sites protégés"),
     ("sites_inscrits_haie", "Sites inscrits"),
     ("sites_classes_haie", "Sites classés"),
+    ("protection_captages", "Protection de captages"),
 )
 
 
@@ -1458,14 +1459,11 @@ class ConfigHaie(ConfigBase):
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",
                 violation_error_message="Les paramètres de régime unique doivent comporter des coefficients de "
-                "compensation numérique pour chaque type de haies (degradee, buissonnante, "
+                "compensation numérique pour chaque type de haies (buissonnante, "
                 "arbustive et mixte).",
                 check=Q(single_procedure=False)
                 | (
                     Q(single_procedure_settings__has_key="coeff_compensation")
-                    & Q(
-                        single_procedure_settings__coeff_compensation__has_key="degradee"
-                    )
                     & Q(
                         single_procedure_settings__coeff_compensation__degradee__regex=r"^\d+(\.\d+)?$"
                     )
@@ -2446,6 +2444,7 @@ class MoulinetteHaie(Moulinette):
         "sites_proteges_haie",
         "sites_inscrits_haie",
         "sites_classes_haie",
+        "protection_captages",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
@@ -2455,6 +2454,40 @@ class MoulinetteHaie(Moulinette):
     form_template = "haie/moulinette/form.html"
     main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
+
+    def _get_single_procedure(self):
+        config = self.config
+        return config.single_procedure if config else False
+
+    def get_main_form(self):
+        """Instantiate the main form with data.
+
+        Overridden to pass some context to the main form constructor
+        """
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **self.form_kwargs
+        )
+
+    @cached_property
+    def bound_main_form(self):
+        """Get the main form with forced bound data.
+
+        Overridden to pass some context to the main form constructor
+
+        When we display the moulinette form, we show the main form with
+        initial values. But if the initial data would be valid data, then we
+        want to also display the additional forms.
+
+        In that case, we force a form validation by creating a moulinette form
+        where we pass initial data as validation data.
+        """
+        if self.main_form.is_bound:
+            return self.main_form
+        form_kwargs = self.form_kwargs.copy()
+        form_kwargs["data"] = form_kwargs.get("initial", {})
+        return self.get_main_form_class()(
+            single_procedure=self._get_single_procedure(), **form_kwargs
+        )
 
     def get_config(self):
         if not self.department:
@@ -2845,6 +2878,15 @@ class MoulinetteHaie(Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
+
+    @property
+    def hedge_types(self):
+        if not hasattr(self, "_hedge_types"):
+            self._hedge_types = HedgeTypeFactory.build_from_context(
+                single_procedure=self.config.single_procedure
+            )
+
+        return self._hedge_types
 
 
 class ActionToTake(models.Model):

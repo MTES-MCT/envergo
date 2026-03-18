@@ -974,7 +974,7 @@ section#moulinette-regulation-result {
   section.instruction-infos {
     --text-spacing: 0 0 1rem;
 
-    h6 {
+    h3 {
       font-size: 1rem;
       line-height: 1.5rem;
     }
@@ -1122,6 +1122,10 @@ button.hide-expanded[aria-expanded="true"] {
         var(--border-contrast-grey)
       );
   }
+}
+
+.procedure-history__table td {
+  vertical-align: top;
 }
 
 /* Density buffer */

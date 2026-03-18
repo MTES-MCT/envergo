@@ -1932,6 +1932,33 @@ li.btn-link {
   }
 }
 
+img.moulinette-incentive-img {
+  max-height: 120px;
+}
+
+@media (width >= 48em) {
+  .card--horizontal-1-5 .fr-card__header {
+    width: 20%;
+    flex: 0 0 20%;
+  }
+
+  img.moulinette-incentive-img {
+    max-height: unset;
+  }
+}
+
+.responsive-img,
+.fr-card--horizontal .fr-card__img img.responsive-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 50%;
+}
+
+.fr-card.card--horizontal-1-5 > .fr-card__header {
+  background-color: var(--background-contrast-grey);
+}
+
 .fr-label--warning {
   color: var(--text-default-warning);
 }
@@ -1941,16 +1968,16 @@ li.btn-link {
 }
 
 .dark-only {
-  display: none;
+  display: none !important;
 }
 
 :root[data-fr-theme="dark"] {
   .dark-only {
-    display: inherit;
+    display: inherit !important;
   }
 
   .light-only {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -1986,6 +2013,23 @@ main.contrast-bg {
       font-weight: normal;
       font-size: 90%;
     }
+  }
+}
+
+#self-declaration-cta-v2 {
+  text-align: initial;
+
+  h6 {
+    font-size: 1.1rem;
+  }
+
+  #self-declaration-cta-close-btn {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .fr-tile__content {
+    align-items: normal;
   }
 }
 
@@ -2455,4 +2499,18 @@ section#actions-to-take {
 
 .form-actions {
   text-align: right;
+}
+
+section#pick-appointment > div {
+  display: flex;
+  flex-direction: row;
+  background-color: var(--grey-975-100);
+  border-radius: 10px;
+  padding: 1em;
+
+  .icon {
+    border-radius: 1rem;
+    background-color: var(--blue-france-sun-113-625);
+    color: var(--text-inverted-blue-france);
+  }
 }
