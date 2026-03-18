@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-01-16 15:34+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2026-03-11 18:43+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -1153,7 +1153,18 @@ msgstr "Classé sans suite "
 msgid "Dossier number on demarches-simplifiees.fr"
 msgstr "Numéro de dossier dans demarches-simplifiees.fr"
 
-#: envergo/petitions/models.py:48
+#: envergo/petitions/models.py:110
+msgid "Dossier ID on demarches-simplifiees.fr"
+msgstr "Numéro de dossier dans demarches-simplifiees.fr"
+
+#: envergo/petitions/models.py:115
+msgid ""
+"Prefill dossier url on demarches-simplifiees.fr, used only when dossier is "
+"draft"
+msgstr "URL de remplissage du dossier sur demarches-simplifiees.fr, seulement "
+"utilisée quand le dossier est en brouillon"
+
+#: envergo/petitions/models.py:122
 msgid "State of the dossier on demarches-simplifiees.fr"
 msgstr "Statut DS du dossier"
 

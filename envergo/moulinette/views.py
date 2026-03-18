@@ -637,6 +637,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             )
             plantation_url = update_qs(plantation_url, self.request.GET)
             context["plantation_url"] = plantation_url
+            context["moulinette_url"] = self.request.build_absolute_uri()
 
         form_url = update_qs(reverse("moulinette_form"), self.request.GET)
         context["edit_url"] = form_url
