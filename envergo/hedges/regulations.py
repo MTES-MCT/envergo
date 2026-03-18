@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from math import ceil, isclose
 
 from django.conf import settings
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeTypeBase, HedgeTypeFactory
 
 
 class PlantationCondition(ABC):
@@ -134,111 +134,77 @@ class QualityCondition(PlantationCondition):
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
 
+    substitution_types = {
+        HedgeTypeBase.ALIGNEMENT: [HedgeTypeBase.MIXTE],
+        HedgeTypeBase.BUISSONNANTE: [HedgeTypeBase.ARBUSTIVE],
+        HedgeTypeBase.DEGRADEE: [
+            HedgeTypeBase.BUISSONNANTE,
+            HedgeTypeBase.ARBUSTIVE,
+            HedgeTypeBase.MIXTE,
+        ],
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # get the available hedge types for this context
+        self.HedgeType = HedgeTypeFactory.build_from_context(
+            self.criterion_evaluator.moulinette.config.single_procedure
+        )
+
     def evaluate(self):
-        """Evaluate the quality of the plantation project.
-        The quality of the hedge planted must be at least as good as that of the hedge destroyed:
-            Type 5 (mixte) hedges must be replaced by type 5 (mixte) hedges
-            Type 4 (alignement) hedges must be replaced by type 4 (alignement) or 5 (mixte) hedges.
-            Type 3 (arbustive) hedges must be replaced by type 3 (arbustive) hedges.
-            Type 2 (buissonnante) hedges must be replaced by type 2 (buissonnante) or 3 (arbustive) hedges.
-            Type 1 (degradee) hedges must be replaced by type 2 (buissonnante), 3 (arbustive) or 5 (mixte) hedges.
+        """Generic evaluation of plantation quality based on substitution rules."""
 
-        return: {
-            is_quality_sufficient: True if the plantation quality is sufficient, False otherwise,
-            missing_plantation: {
-                mixte: missing length of mixte hedges to plant,
-                alignement: missing length of alignement hedges to plant,
-                arbustive: missing length of arbustive hedges to plant,
-                buissonante: missing length of buissonante hedges to plant,
-                degradee: missing length of dégradée hedges to plant,
-            }
-        }
-        """
-        minimum_lengths_to_plant = self.get_minimum_lengths_to_plant()
-        lengths_to_plant = self.get_lengths_to_plant()
+        minimum = self.get_minimum_lengths_to_plant()
+        planted = self.get_lengths_to_plant()
 
-        reliquat = {
-            "mixte_remplacement_alignement": max(
-                0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"]
-            ),
-            "mixte_remplacement_dégradée": max(
-                0,
-                max(0, lengths_to_plant["mixte"] - minimum_lengths_to_plant["mixte"])
-                - max(
-                    0,
-                    minimum_lengths_to_plant["alignement"]
-                    - lengths_to_plant["alignement"],
-                ),
-            ),
-            "arbustive_remplacement_buissonnante": max(
-                0, lengths_to_plant["arbustive"] - minimum_lengths_to_plant["arbustive"]
-            ),
-            "arbustive_remplacement_dégradée": max(
-                0,
-                max(
-                    0,
-                    lengths_to_plant["arbustive"]
-                    - minimum_lengths_to_plant["arbustive"],
-                )
-                - max(
-                    0,
-                    minimum_lengths_to_plant["buissonnante"]
-                    - lengths_to_plant["buissonnante"],
-                ),
-            ),
-            "buissonnante_remplacement_dégradée": max(
-                0,
-                lengths_to_plant["buissonnante"]
-                - minimum_lengths_to_plant["buissonnante"],
-            ),
+        hedge_types = list(self.HedgeType)
+
+        # Initial deficit after direct matching
+        missing = {
+            type: max(0, minimum.get(type, 0) - planted.get(type, 0))
+            for type in hedge_types
         }
 
-        missing_plantation = {
-            "mixte": max(
-                0, minimum_lengths_to_plant["mixte"] - lengths_to_plant["mixte"]
-            ),
-            "alignement": max(
-                0,
-                minimum_lengths_to_plant["alignement"]
-                - lengths_to_plant["alignement"]
-                - reliquat["mixte_remplacement_alignement"],
-            ),
-            "arbustive": max(
-                0, minimum_lengths_to_plant["arbustive"] - lengths_to_plant["arbustive"]
-            ),
-            "buissonante": max(
-                0,
-                minimum_lengths_to_plant["buissonnante"]
-                - lengths_to_plant["buissonnante"]
-                - reliquat["arbustive_remplacement_buissonnante"],
-            ),
-            "degradee": max(
-                0,
-                minimum_lengths_to_plant["degradee"]
-                - reliquat["mixte_remplacement_dégradée"]
-                - reliquat["arbustive_remplacement_dégradée"]
-                - reliquat["buissonnante_remplacement_dégradée"],
-            ),
+        # Surplus available for substitution
+        surplus = {
+            type: max(0, planted.get(type, 0) - minimum.get(type, 0))
+            for type in hedge_types
         }
-        total_missing = sum(missing_plantation.values())
+
+        # Apply substitution rules
+        for target, substitutes in self.substitution_types.items():
+            deficit = missing.get(target, 0)
+            if deficit == 0:
+                continue
+
+            for source in substitutes:
+                available = surplus.get(source, 0)
+                if available <= 0:
+                    continue
+
+                used = min(deficit, available)
+
+                missing[target] -= used
+                surplus[source] -= used
+                deficit -= used
+
+                if deficit == 0:
+                    break
+
+        total_missing = sum(missing.values())
+
         self.result = total_missing == 0
         self.context = {
-            "missing_plantation": missing_plantation,
+            "missing_plantation": missing,
         }
+
         return self
 
     def get_minimum_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)
         for to_remove in self.hedge_data.hedges_to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
-
-        return {
-            "degradee": self.R * lengths_by_type["degradee"],
-            "buissonnante": self.R * lengths_by_type["buissonnante"],
-            "arbustive": self.R * lengths_by_type["arbustive"],
-            "mixte": self.R * lengths_by_type["mixte"],
-            "alignement": self.R * lengths_by_type["alignement"],
-        }
+        return {key: self.R * lengths_by_type[key] for key, _ in self.HedgeType.choices}
 
     def get_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)
@@ -246,10 +212,9 @@ class QualityCondition(PlantationCondition):
             lengths_by_type[to_plant.hedge_type] += to_plant.length
 
         return {
-            "buissonnante": lengths_by_type["buissonnante"],
-            "arbustive": lengths_by_type["arbustive"],
-            "mixte": lengths_by_type["mixte"],
-            "alignement": lengths_by_type["alignement"],
+            key: lengths_by_type[key]
+            for key, _ in self.HedgeType.choices
+            if key != HedgeTypeBase.DEGRADEE  # on ne peut pas planter de haie dégradée
         }
 
     def must_display(self):
@@ -268,49 +233,45 @@ class QualityCondition(PlantationCondition):
                 "Le type de haie plantée ne permet pas de compenser la qualité écologique des haies détruites."
             ]
 
-            if missing_plantation["alignement"] > 0:
+            if missing_plantation.get(HedgeTypeBase.ALIGNEMENT, 0) > 0:
                 t.append(
                     f"""
-                    Il manque au moins {ceil(missing_plantation['mixte'] + missing_plantation['alignement'])} m
-                    de haie mixte ou alignement d'arbres.
+                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.MIXTE, 0) +
+                                             missing_plantation.get(HedgeTypeBase.ALIGNEMENT, 0))} m
+                    de {self.HedgeType.MIXTE.name.lower()} ou alignement d'arbres.
                     """
                 )
 
-            if missing_plantation["mixte"] > 0 or missing_plantation["degradee"] > 0:
+            if (
+                missing_plantation.get(HedgeTypeBase.MIXTE, 0) > 0
+                or missing_plantation.get(HedgeTypeBase.DEGRADEE, 0) > 0
+            ):
                 t.append(
                     f"""
-                    Il manque au moins {ceil(missing_plantation['mixte'] + missing_plantation['degradee'])} m
+                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.MIXTE, 0) +
+                                             missing_plantation.get(HedgeTypeBase.DEGRADEE, 0))} m
                     de haie mixte.
                 """
                 )
 
-            if missing_plantation["buissonante"] > 0:
+            if missing_plantation.get(HedgeTypeBase.BUISSONNANTE, 0) > 0:
                 t.append(
                     f"""
-                    Il manque au moins {ceil(missing_plantation['buissonante'] + missing_plantation['arbustive'])} m
+                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.BUISSONNANTE, 0) +
+                                             missing_plantation.get(HedgeTypeBase.ARBUSTIVE, 0))} m
                     de haie basse ou arbustive.
                 """
                 )
 
-            if missing_plantation["arbustive"] > 0:
+            if missing_plantation.get(HedgeTypeBase.ARBUSTIVE, 0) > 0:
                 t.append(
                     f"""
-                    Il manque au moins {ceil(missing_plantation['arbustive'])} m de haie arbustive.
+                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.ARBUSTIVE, 0))} m de haie
+                    arbustive.
                 """
                 )
 
         return mark_safe("<br />\n".join(t))
-
-
-HEDGE_KEYS = OrderedDict(
-    [
-        ("mixte", "Type 5 (mixte)"),
-        ("alignement", "Type 4 (alignement)"),
-        ("arbustive", "Type 3 (arbustive)"),
-        ("buissonnante", "Type 2 (buissonnante)"),
-        ("degradee", "Type 1 (dégradée)"),
-    ]
-)
 
 
 class NormandieQualityCondition(PlantationCondition):
@@ -330,6 +291,13 @@ class NormandieQualityCondition(PlantationCondition):
         "degradee": ["buissonnante", "arbustive", "mixte"],
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # get the available hedge types for this context
+        self.HedgeType = HedgeTypeFactory.build_from_context(
+            self.criterion_evaluator.moulinette.config.single_procedure
+        )
+
     def evaluate(self):
         LC = self.catalog["LC"].copy()  # linéaire à compenser
         LP = defaultdict(int)  # linéaire à planter
@@ -346,7 +314,7 @@ class NormandieQualityCondition(PlantationCondition):
         # Pour chaque linéaire à compenser, on réparti les linéaires à planter
         # en fonction des substitutions possibles.
 
-        for hedge_type in HEDGE_KEYS.keys():
+        for hedge_type in reversed(self.HedgeType.values):
             for compensation_type in self.compensations[hedge_type]:
 
                 # Si on compense avec un type de qualité supérieur, le taux

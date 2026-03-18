@@ -1,72 +1,53 @@
+{% load utils %}
+
 <div class="fr-table fr-table--bordered hedge-summary-table"
      id="hedges-summary-table">
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
       <div class="fr-table__content">
         <table>
-          <caption>
-            <div class="fr-table__caption__desc">
-              <strong>Détail par type de haie ou alignement d'arbres</strong>
-            </div>
-          </caption>
+          {% if caption %}
+            <caption>
+              <div class="fr-table__caption__desc">
+                <strong>{{ caption }}</strong>
+              </div>
+            </caption>
+          {% endif %}
           <thead>
             <tr>
               <th class="fr-cell--fixed" role="columnheader">Type</th>
-              <th colspan="2">À détruire</th>
-              <th colspan="2">À planter</th>
+              <th colspan="2">{{ to_remove_header|default:"À détruire" }}</th>
+              <th colspan="2">{{ to_plant_header|default:"À planter" }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <th class="fr-cell--fixed" scope="row">
-                Mixte <span class="fr-text">(type 5)</span>
-              </th>
-              <td>{{ hedges.mixte.to_remove.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.mixte.to_remove.names|default:"-" }}</td>
-              <td>{{ hedges.mixte.to_plant.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.mixte.to_plant.names|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th class="fr-cell--fixed" scope="row">
-                Arbustive <span class="fr-text">(type 3)</span>
-              </th>
-              <td>{{ hedges.arbustive.to_remove.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.arbustive.to_remove.names|default:"-" }}</td>
-              <td>{{ hedges.arbustive.to_plant.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.arbustive.to_plant.names|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th class="fr-cell--fixed" scope="row">
-                Buissonnante basse <span class="fr-text">(type 2)</span>
-              </th>
-              <td>{{ hedges.buissonnante.to_remove.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.buissonnante.to_remove.names|default:"-" }}</td>
-              <td>{{ hedges.buissonnante.to_plant.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.buissonnante.to_plant.names|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th class="fr-cell--fixed" scope="row">
-                Dégradée ou résiduelle basse <span class="fr-text">(type 1)</span>
-              </th>
-              <td>{{ hedges.degradee.to_remove.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.degradee.to_remove.names|default:"-" }}</td>
-              <td>{{ hedges.degradee.to_plant.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.degradee.to_plant.names|default:"-" }}</td>
-            </tr>
+            {% for choice in moulinette.hedge_types reversed %}
+              {% if choice.value != moulinette.hedge_types.ALIGNEMENT %}
+                {% with filtered_hedges=hedges|get_attr:choice.value %}
+                  <tr>
+                    <th class="fr-cell--fixed" scope="row">{{ choice.label }}</th>
+                    <td>{{ filtered_hedges.to_remove.length|floatformat:"0g" }} m</td>
+                    <td>{{ filtered_hedges.to_remove.names|default:"-" }}</td>
+                    <td>{{ filtered_hedges.to_plant.length|floatformat:"0g" }} m</td>
+                    <td>{{ filtered_hedges.to_plant.names|default:"-" }}</td>
+                  </tr>
+                {% endwith %}
+              {% endif %}
+            {% endfor %}
             <tr class="total-row">
-              <th class="fr-cell--fixed" scope="row">Total haies</th>
+              <th class="fr-cell--fixed" scope="row">Linéaire total de haies</th>
               <td colspan="2">{{ hedges.n_alignement.to_remove.length|floatformat:"0g" }} m</td>
               <td colspan="2">{{ hedges.n_alignement.to_plant.length|floatformat:"0g" }} m</td>
             </tr>
-            <tr>
-              <th class="fr-cell--fixed" scope="row">
-                Alignement d'arbres <span class="fr-text">(type 4)</span>
-              </th>
-              <td>{{ hedges.alignement.to_remove.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.alignement.to_remove.names|default:"-" }}</td>
-              <td>{{ hedges.alignement.to_plant.length|floatformat:"0g" }} m</td>
-              <td>{{ hedges.alignement.to_plant.names|default:"-" }}</td>
-            </tr>
+            {% if moulinette.hedge_types.ALIGNEMENT in moulinette.hedge_types %}
+              <tr>
+                <th class="fr-cell--fixed" scope="row">{{ moulinette.hedge_types.ALIGNEMENT.label }}</th>
+                <td>{{ hedges.alignement.to_remove.length|floatformat:"0g" }} m</td>
+                <td>{{ hedges.alignement.to_remove.names|default:"-" }}</td>
+                <td>{{ hedges.alignement.to_plant.length|floatformat:"0g" }} m</td>
+                <td>{{ hedges.alignement.to_plant.names|default:"-" }}</td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
