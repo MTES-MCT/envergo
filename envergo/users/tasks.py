@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import reverse, set_urlconf
 
 from config.celery_app import app
 from envergo.users.models import User
@@ -90,3 +90,46 @@ def send_new_account_notification(user_id, site_id):
         context={"user_url": full_user_url, "anon_email": anon_email},
     )
     notify(message_body, "haie")
+
+
+@app.task
+def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
+    """Notify a GUH user that their instruction rights have been assigned or changed."""
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return
+
+    try:
+        site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+    except Site.DoesNotExist:
+        return
+
+    base_url = get_base_url(site.domain)
+    departments = user.departments.defer("geometry").order_by("department")
+    set_urlconf("config.urls_haie")
+    project_list_url = f"{base_url}{reverse('petition_project_list')}"
+    contact_url = f"{base_url}{reverse('contact_us')}"
+
+    context = {
+        "base_url": base_url,
+        "user": user,
+        "departments": departments,
+        "is_instructor": user.is_instructor,
+        "is_new_instructor": is_new_instructor,
+        "project_list_url": project_list_url,
+        "contact_url": contact_url,
+    }
+
+    frm = settings.FROM_EMAIL["haie"]["accounts"]
+    txt_body = render_to_string("haie/emails/rights_assigned.txt", context)
+    html_body = render_to_string("haie/emails/rights_assigned.html", context)
+    send_mail(
+        "Attribution de droits sur le portail numérique",
+        txt_body,
+        html_message=html_body,
+        recipient_list=[user.email],
+        from_email=frm,
+        fail_silently=False,
+    )
