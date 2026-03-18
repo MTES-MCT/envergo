@@ -194,6 +194,77 @@ def create_density_map(
     )
 
 
+def create_line_buffer_density_map(
+    hedges_to_remove, truncated_buffer_zone, buffer_zone
+):
+    """Build a Leaflet map showing line-buffer density artifacts.
+
+    Similar to `create_density_map` but for line-buffer (400 m) density
+    instead of centroid-based density.
+    """
+    display_zone = truncated_buffer_zone or buffer_zone
+
+    existing_hedges = (
+        Line.objects.filter(
+            map__map_type=MAP_TYPES.haies,
+            geometry__intersects=display_zone,
+        )
+        if display_zone
+        else []
+    )
+    existing_mls = []
+    for hedge in existing_hedges:
+        geom = hedge.geometry
+        if not geom:
+            continue
+        existing_mls.extend(geom)
+
+    hedges_to_remove_list = list(hedges_to_remove)
+    if not hedges_to_remove_list:
+        return None
+
+    centroid = hedges_to_remove_list[0].geos_geometry.centroid
+
+    entries = [
+        MapPolygon(
+            [SimpleNamespace(geometry=display_zone)],
+            "#457EAC",
+            "Zone tampon 400 m",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=MultiLineString(existing_mls, srid=EPSG_WGS84)
+                )
+            ],
+            "#f0f921",
+            "Haies existantes",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=GEOSGeometry(h.geometry.wkt, srid=EPSG_WGS84)
+                )
+                for h in hedges_to_remove_list
+            ],
+            "red",
+            "Haies à détruire",
+            class_name="hedge to-remove",
+        ),
+    ]
+
+    return Map(
+        type="regulation",
+        center=centroid,
+        entries=entries,
+        truncate=False,
+        display_marker_at_center=False,
+        zoom=None,
+        ratio_classes="ratio-2x1 ratio-sm-4x5",
+        fixed=False,
+    )
+
+
 @dataclass
 class EvaluationResult:
     result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]
