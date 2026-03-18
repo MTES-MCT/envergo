@@ -473,6 +473,9 @@ class HedgeData(models.Model):
         """Return the local list of protected species."""
 
         filters = [h.get_species_filter() for h in self.hedges_to_remove()]
+        if not filters:
+            return Species.objects.none()
+
         union = reduce(operator.or_, filters)
         species = (
             Species.objects.filter(union)

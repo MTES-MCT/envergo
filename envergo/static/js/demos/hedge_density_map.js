@@ -22,7 +22,12 @@
 
     this.registerEvents();
 
-    this.map.fitBounds(this.geoJSON.getBounds());
+    if (this.geoJSON) {
+      var bounds = this.geoJSON.getBounds();
+      if (bounds.isValid()) {
+        this.map.fitBounds(bounds);
+      }
+    }
   };
   exports.DemoMap = Map;
 
@@ -89,7 +94,7 @@
       };
     };
 
-    if (this.options.polygons) {
+    if (this.options.polygons && this.options.polygons.length > 0) {
       var features = this.options.polygons.map(function (polygon) {
         var polygonJSON = {
           type: "Feature",

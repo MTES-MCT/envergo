@@ -34,7 +34,7 @@
     });
 
     window.addEventListener('message', (e) => {
-      if (e?.data?.includes('Tally.FormSubmitted')) {
+      if (typeof e?.data === 'string' && e.data.includes('Tally.FormSubmitted')) {
 
         // We set a timeout before redirecting to the evaluation detail page
         // We had to do this because the form submission event could not be

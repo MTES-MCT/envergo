@@ -457,7 +457,7 @@ class EcoulementAvecBV(SelfDeclarationMixin, ActionsToTakeMixin, CriterionEvalua
         surface = get_catchment_area(self.catalog["lng"], self.catalog["lat"])
         if surface is None:
             surface = 0
-            logger.error(
+            logger.warning(
                 f"Pas de données bassin versant {self.catalog['lng']}, {self.catalog['lat']}"
             )
         surface = round(surface / 500) * 500

@@ -92,7 +92,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         status.latest_clicked = timestamp
 
     if on_error:
-        status.reject_reason = reject_reason
+        status.reject_reason = reject_reason or ""
         # We only warn admin if it's the first time we receive an error status
         if not status.on_error:
             warn_of_email_error = True
