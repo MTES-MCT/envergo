@@ -592,6 +592,19 @@ class CriterionEvaluator(ABC):
             form = None
         return form
 
+    # Override with a template path in subclasses that need debug rendering.
+    debug_template = None
+
+    def get_debug_context(self):
+        """Return extra context for the debug page.
+
+        Override in subclasses that need to display evaluator-specific
+        debug information (density data, maps, computed coefficients…).
+        The returned dict is merged into the template context when
+        rendering debug_template.
+        """
+        return {}
+
 
 SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.soumis: True,
@@ -638,8 +651,6 @@ class SelfDeclarationMixin:
 
 class HedgeDensityMixin:
     """Mixin for criterion evaluators that need "hedge density" to be evaluated."""
-
-    density_method = "around_centroid"
 
 
 TO_ADD = "to_add"
