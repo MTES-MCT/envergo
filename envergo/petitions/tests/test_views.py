@@ -16,7 +16,7 @@ from django.utils.functional import cached_property
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
 from envergo.geodata.tests.factories import Department34Factory
-from envergo.hedges.models import TO_PLANT
+from envergo.hedges.models import TO_PLANT, HedgeTypeBase
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -589,7 +589,9 @@ def test_regulation_view_includes_config_in_context(
 
     RUConfigHaieFactory()
     project = PetitionProjectFactory()
-
+    for hedge in project.hedge_data:
+        hedge.additionalData["type_haie"] = HedgeTypeBase.ARBUSTIVE
+    project.hedge_data.save()
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "conditionnalite_pac"},

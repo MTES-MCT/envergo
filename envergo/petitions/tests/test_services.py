@@ -9,6 +9,7 @@ from gql.transport.exceptions import TransportQueryError
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
+from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
@@ -560,6 +561,13 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "avec cavités",
             },
         },
+        "ordered_hedge_types": [
+            HedgeTypeBase.MIXTE,
+            HedgeTypeBase.ALIGNEMENT,
+            HedgeTypeBase.ARBUSTIVE,
+            HedgeTypeBase.BUISSONNANTE,
+            HedgeTypeBase.DEGRADEE,
+        ],
         "quality_condition": {
             "LC": {
                 "alignement": 0,
