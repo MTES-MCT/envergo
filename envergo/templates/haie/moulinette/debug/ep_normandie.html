@@ -46,4 +46,6 @@
   </tbody>
 </table>
 
-{% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
+{% if density_map %}
+  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
+{% endif %}
