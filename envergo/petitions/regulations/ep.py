@@ -10,7 +10,10 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesRegimeUnique,
     EspecesProtegeesSimple,
 )
-from envergo.petitions.regulations import evaluator_instructor_view_context_getter
+from envergo.petitions.regulations import (
+    evaluator_instructor_view_context_getter,
+    get_line_buffer_density_context,
+)
 
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesNormandie)
@@ -79,12 +82,7 @@ def ep_regime_unique_get_instructor_view_context(
     evaluator, petition_project, moulinette
 ) -> dict:
     """Build density context for the EP régime unique instructor view."""
-    return {
-        "density_400": moulinette.catalog.get("density_400"),
-        "density_400_length": moulinette.catalog.get("density_400_length"),
-        "density_400_area_ha": moulinette.catalog.get("density_400_area_ha"),
-        "hedge_data_id": petition_project.hedge_data.id,
-    }
+    return get_line_buffer_density_context(petition_project, moulinette)
 
 
 def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):
