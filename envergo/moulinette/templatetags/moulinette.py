@@ -336,7 +336,7 @@ def criterion_debug_snippet(context, criterion):
     Returns empty string when the evaluator has no debug template.
     """
     evaluator = criterion.get_evaluator()
-    template_name = getattr(evaluator, "debug_template", None)
+    template_name = evaluator.debug_template
     if not template_name:
         return ""
 
