@@ -66,6 +66,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_organization_id="Q2hhbXAtNDcyOTE3MQ==",
     )
 
     petition_project = PetitionProjectFactory()
@@ -80,9 +81,12 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # AND the project details are correctly populated
     project_details = get_context_from_ds(petition_project, moulinette)
 
-    assert project_details["applicant"] == "Mme LAMARR Hedy"
     assert project_details["city"] == "Laon (02000)"
     assert project_details["pacage"] == "123456789"
+    assert project_details["organization"] == "GAEC Choupi"
+    assert project_details["applicant"] == "Mme LAMARR Hedy"
+    assert project_details["usager"] == "hedy.lamarr@example.com"
+    assert project_details["representative"] == "DUPONT Jean"
 
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(

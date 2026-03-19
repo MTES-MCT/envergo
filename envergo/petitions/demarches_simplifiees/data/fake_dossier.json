@@ -26,7 +26,7 @@
       },
       "prenomMandataire": "Jean",
       "nomMandataire": "Dupont",
-      "deposeParUnTiers": false,
+      "deposeParUnTiers": true,
       "demandeur": {
         "__typename": "PersonnePhysique",
         "civilite": "Mme",

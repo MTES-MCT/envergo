@@ -1116,15 +1116,15 @@ class Dossier:
         Returns the name of the representative based on the type of applicant.
         French: mandataire
         """
-        representative_name = None
+        representative_name = ""
         if not self.deposeParUnTiers:
-            return None
+            return ""
         if self.nomMandataire or self.prenomMandataire:
             representative_name = (
                 f"{self.nomMandataire.upper()} {self.prenomMandataire}"
             )
             representative_name = representative_name.strip()
-        return None if representative_name is None else representative_name.strip()
+        return representative_name
 
     @property
     def instructor_emails(self) -> list[str]:
