@@ -31,7 +31,7 @@ from envergo.petitions.demarches_simplifiees.queries import (
     DOSSIER_REPASSER_EN_CONSTRUCTION_MUTATION,
     DOSSIER_REPASSER_EN_INSTRUCTION_MUTATION,
     GET_DOSSIER_MESSAGES_QUERY,
-    GET_DOSSIER_QUERY,
+    GET_DOSSIER_WITH_MESSAGES_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
 )
 from envergo.utils.mattermost import notify
@@ -174,17 +174,17 @@ class DemarchesSimplifieesClient:
 
         return data["dossier"]
 
-    def get_dossier(self, dossier_number):
+    def get_dossier_with_messages(self, dossier_number):
         """Get dossier"""
         fake_dossier_filename = "fake_dossier.json"
 
         data = self._fetch_dossier(
-            dossier_number, GET_DOSSIER_QUERY, fake_dossier_filename
+            dossier_number, GET_DOSSIER_WITH_MESSAGES_QUERY, fake_dossier_filename
         )
 
         return data
 
-    def get_dossier_messages(self, dossier_number):
+    def get_dossier_messages_only(self, dossier_number):
         """Get dossier messages only"""
         fake_dossier_filename = "fake_dossier_messages.json"
 

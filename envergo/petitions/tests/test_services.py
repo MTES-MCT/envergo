@@ -46,7 +46,6 @@ from envergo.petitions.tests.factories import (
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
     FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
-    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 
@@ -871,14 +870,14 @@ def test_get_message_project_via_demarches_simplifiees(
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I get messages for this dossier
-    mock_gql_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
         petition_project
     )
     # THEN Messages are returned
     assert len(messages) == 8
     assert instructor_emails == ["instructeur@guh.gouv.fr"]
-    assert petitioner_email == "hedy.lamarr@example.com"
+    assert petitioner_email == "grace.hopper@example.com"
 
 
 @pytest.mark.haie
