@@ -643,14 +643,11 @@ class EspecesProtegeesRegimeUnique(
     """EP criterion for the "régime unique" procedure.
 
     This evaluator is attached only to departments in régime unique.
-    Temporary behaviour: the result is hardcoded to derogation_simplifiee.
-    The real logic (density, hedge length, hedge type, ZNIEFF 1) will be
-    implemented in a follow-up ticket (REP 2/5).
+    It inherits line-buffer density debug rendering from HedgeDensityMixin.
     """
 
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
-    debug_template = "haie/moulinette/debug/density_around_lines.html"
     plantation_conditions = []
     form_class = None
 
@@ -674,34 +671,6 @@ class EspecesProtegeesRegimeUnique(
 
     def get_result_data(self):
         return "derogation_simplifiee"
-
-    def get_debug_context(self):
-        """Return line-buffer density data for debug display."""
-        haies = self.catalog.get("haies")
-        if not haies:
-            return {}
-
-        density_400 = haies.compute_density_around_lines_with_artifacts()
-        context = {
-            "density_400": density_400["density"],
-            "density_400_length": density_400["artifacts"]["length"],
-            "density_400_area_ha": density_400["artifacts"]["area_ha"],
-            "haies_id": haies.id,
-        }
-
-        pre_computed = haies.density.get("around_lines", {})
-        if pre_computed:
-            context["pre_computed_density_400"] = pre_computed.get("density_400")
-
-        from envergo.hedges.services import create_line_buffer_density_map
-
-        context["density_map"] = create_line_buffer_density_map(
-            haies.hedges_to_remove(),
-            density_400["artifacts"]["truncated_buffer_zone"],
-            density_400["artifacts"]["buffer_zone"],
-        )
-
-        return context
 
     def get_replantation_coefficient(self):
         return 0.0

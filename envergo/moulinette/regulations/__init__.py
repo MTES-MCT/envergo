@@ -650,7 +650,46 @@ class SelfDeclarationMixin:
 
 
 class HedgeDensityMixin:
-    """Mixin for criterion evaluators that need "hedge density" to be evaluated."""
+    """Mixin for criterion evaluators that need "hedge density" to be evaluated.
+
+    Provides a default get_debug_context() for line-buffer (400 m) density.
+    Evaluators that use centroid-based density (e.g. EspecesProtegeesNormandie)
+    override this method.
+    """
+
+    debug_template = "haie/moulinette/debug/density_around_lines.html"
+
+    def get_debug_context(self):
+        """Freshly compute line-buffer density and build a debug map.
+
+        Returns density values, pre-computed comparison data, and a
+        Leaflet map showing the 400 m buffer zone around hedges to remove.
+        """
+        haies = self.catalog.get("haies")
+        if not haies:
+            return {}
+
+        density_400 = haies.compute_density_around_lines_with_artifacts()
+        context = {
+            "density_400": density_400["density"],
+            "density_400_length": density_400["artifacts"]["length"],
+            "density_400_area_ha": density_400["artifacts"]["area_ha"],
+            "haies_id": haies.id,
+        }
+
+        pre_computed = haies.density.get("around_lines", {})
+        if pre_computed:
+            context["pre_computed_density_400"] = pre_computed.get("density_400")
+
+        from envergo.hedges.services import create_line_buffer_density_map
+
+        context["density_map"] = create_line_buffer_density_map(
+            haies.hedges_to_remove(),
+            density_400["artifacts"]["truncated_buffer_zone"],
+            density_400["artifacts"]["buffer_zone"],
+        )
+
+        return context
 
 
 TO_ADD = "to_add"
