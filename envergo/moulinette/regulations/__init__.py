@@ -681,6 +681,7 @@ class HedgeDensityMixin:
         if pre_computed:
             context["pre_computed_density_400"] = pre_computed.get("density_400")
 
+        # Must be imported here to prevent circular import
         from envergo.hedges.services import create_line_buffer_density_map
 
         context["density_map"] = create_line_buffer_density_map(
