@@ -138,6 +138,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "envergo.middleware.csp.ContentSecurityPolicyMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "envergo.middleware.rate_limiting.RateLimitingMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -148,7 +149,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "envergo.contrib.middleware.SetUrlConfBasedOnSite",
     "envergo.analytics.middleware.SetVisitorIdCookie",
-    "envergo.middleware.rate_limiting.RateLimitingMiddleware",
     "envergo.analytics.middleware.HandleMtmValues",
     "envergo.petitions.middleware.HandleInvitationTokenMiddleware",
 ]
