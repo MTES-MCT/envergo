@@ -85,8 +85,9 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert project_details["ds_info"]["pacage"] == "123456789"
     assert project_details["ds_info"]["organization"] == "GAEC Choupi"
     assert project_details["ds_info"]["applicant"] == "Mme LAMARR Hedy"
-    assert project_details["ds_info"]["usager"] == "hedy.lamarr@example.com"
-    assert project_details["ds_info"]["representative"] == "DUPONT Jean"
+    assert project_details["ds_info"]["applicant_email"] == "hedy.lamarr@example.com"
+    assert project_details["ds_info"]["usager"] == "grace.hopper@example.com"
+    assert project_details["ds_info"]["representative"] == "HOPPER Grace"
 
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(

@@ -188,6 +188,7 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
         city, organization, pacage = extract_data_from_fields(config, dossier)
         usager = dossier.usager.email or ""
         applicant = dossier.applicant_name or ""
+        applicant_email = dossier.demandeur.email or ""
         representative = dossier.representative_name or ""
 
     context = {
@@ -199,6 +200,7 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
             "pacage": pacage,
             "organization": organization,
             "applicant": applicant,
+            "applicant_email": applicant_email,
             "representative": representative,
         },
     }

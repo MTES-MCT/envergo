@@ -32,6 +32,13 @@
 
 {% block project_content %}
 
+  {% if ds_info.representative %}
+    {% if ds_info.applicant_email %}
+      <p class="fr-mb-1w">Les messages sont envoyés au mandataire et au bénéficiaire.</p>
+    {% else %}
+      <p class="fr-mb-1w">Les messages sont envoyés au mandataire uniquement.</p>
+    {% endif %}
+  {% endif %}
   {% if ds_messages is not None %}
     <section class="ds-messages fr-my-4w">
       <p class="fr-mb-1w">

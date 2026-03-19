@@ -22,17 +22,17 @@
         "createdAt": "2025-03-31T19:47:22+02:00"
       },
       "usager": {
-        "email": "hedy.lamarr@example.com"
+        "email": "grace.hopper@example.com"
       },
-      "prenomMandataire": "Jean",
-      "nomMandataire": "Dupont",
+      "prenomMandataire": "Grace",
+      "nomMandataire": "Hopper",
       "deposeParUnTiers": true,
       "demandeur": {
         "__typename": "PersonnePhysique",
         "civilite": "Mme",
         "nom": "Lamarr",
         "prenom": "Hedy",
-        "email": null
+        "email": "hedy.lamarr@example.com"
       },
       "traitements": [
         {
