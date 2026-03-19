@@ -763,6 +763,13 @@ div#instructor-view-side-menu {
   }
 }
 
+#section-identity {
+  .champ-label,
+  .champ-content {
+    display: inline-block;
+  }
+}
+
 #form-group-instructor_free_mention .label-content {
   font-weight: bold;
   font-size: 1.5rem;
