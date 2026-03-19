@@ -156,6 +156,7 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
     organization = ""
     usager = ""
     applicant = ""
+    applicant_email = ""
     representative = ""
 
     if (
