@@ -207,13 +207,13 @@ def create_line_buffer_density_map(
     if len(hedges_to_remove) == 0 or not display_zone:
         return None
 
-    existing_hedges = Line.objects.filter(
+    existing_lines = Line.objects.filter(
         map__map_type=MAP_TYPES.haies,
         geometry__intersects=display_zone,
     )
     existing_mls = []
-    for hedge in existing_hedges:
-        geom = hedge.geometry
+    for line in existing_lines:
+        geom = line.geometry
         if not geom:
             continue
         existing_mls.extend(geom)
