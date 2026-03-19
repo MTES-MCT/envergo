@@ -94,7 +94,20 @@ def send_new_account_notification(user_id, site_id):
 
 @app.task
 def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
-    """Notify a GUH user that their instruction rights have been assigned or changed."""
+    """Notify a GUH user that their instruction rights have been assigned or changed.
+
+    Note sur l’absence d’opt-out :
+    Cette fonctionnalité sera utilisée par les administrateurs du site GUH/Envergo. Elle sera utilisée quasi
+    systématiquement lors de la création d’un nouvel utilisateur, ce qui permet de l’informer que son compte est
+    désormais actif => fait partie du flow d’inscription.
+    Les autres cas (modification de droits) seront limités :
+      - A l’ajout de droit suite à une demande de l’utilisateur (donc l’action est bien déclenchée par l’utilisateur)
+      - A la suppression de droits suite à demande hiérarchique ou à la demande de l’utilisateur : il est important de
+      notifier l’utilisateur puisque cela a un impact sur son compte.
+
+    Considérant ces points, et considérants que les utilisateurs sont des agents de l’Etat, il est acté que ne nous
+    mettons pas en place de feature d’opt-out
+    """
 
     try:
         user = User.objects.get(id=user_id)
