@@ -204,13 +204,12 @@ def create_line_buffer_density_map(
     """
     display_zone = truncated_buffer_zone or buffer_zone
 
-    existing_hedges = (
-        Line.objects.filter(
-            map__map_type=MAP_TYPES.haies,
-            geometry__intersects=display_zone,
-        )
-        if display_zone
-        else []
+    if len(hedges_to_remove) == 0 or not display_zone:
+        return None
+
+    existing_hedges = Line.objects.filter(
+        map__map_type=MAP_TYPES.haies,
+        geometry__intersects=display_zone,
     )
     existing_mls = []
     for hedge in existing_hedges:
@@ -219,11 +218,7 @@ def create_line_buffer_density_map(
             continue
         existing_mls.extend(geom)
 
-    hedges_to_remove_list = list(hedges_to_remove)
-    if not hedges_to_remove_list:
-        return None
-
-    centroid = hedges_to_remove_list[0].geos_geometry.centroid
+    centroid = hedges_to_remove[0].geos_geometry.centroid
 
     entries = [
         MapPolygon(
@@ -232,20 +227,16 @@ def create_line_buffer_density_map(
             "Zone tampon 400 m",
         ),
         MapPolygon(
-            [
-                SimpleNamespace(
-                    geometry=MultiLineString(existing_mls, srid=EPSG_WGS84)
-                )
-            ],
+            [SimpleNamespace(geometry=MultiLineString(existing_mls, srid=EPSG_WGS84))],
             "#f0f921",
             "Haies existantes",
         ),
         MapPolygon(
             [
                 SimpleNamespace(
-                    geometry=GEOSGeometry(h.geometry.wkt, srid=EPSG_WGS84)
+                    geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                 )
-                for h in hedges_to_remove_list
+                for hedge in hedges_to_remove
             ],
             "red",
             "Haies à détruire",
