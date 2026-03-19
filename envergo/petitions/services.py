@@ -193,12 +193,14 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
     context = {
         "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
-        "usager": usager,
-        "city": city,
-        "pacage": pacage,
-        "organization": organization,
-        "applicant": applicant,
-        "representative": representative,
+        "ds_info": {
+            "usager": usager,
+            "city": city,
+            "pacage": pacage,
+            "organization": organization,
+            "applicant": applicant,
+            "representative": representative,
+        },
     }
 
     return context

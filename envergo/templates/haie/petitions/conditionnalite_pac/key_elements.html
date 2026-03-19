@@ -9,8 +9,8 @@
   <li>
     <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
   </li>
-  {% if pacage %}
-    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=pacage %}
+  {% if ds_info.pacage %}
+    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=ds_info.pacage %}
   {% endif %}
 </ul>
 <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>

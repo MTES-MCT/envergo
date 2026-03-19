@@ -48,33 +48,33 @@
       <div class="fr-collapse" id="accordion-identity">
         <div class="fr-mb-2w">
           <h4 class="fr-h6 fr-mb-0">Bénéficiaire</h4>
-          {% if applicant %}
+          {% if ds_info.applicant %}
             <div class="champ-row fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>Identité :</b>
               </p>
-              <div class="champ-content">{{ applicant }}</div>
+              <div class="champ-content">{{ ds_info.applicant }}</div>
             </div>
           {% endif %}
-          {% if organization %}
+          {% if ds_info.organization %}
             <div class="champ-row fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>Structure :</b>
               </p>
-              <div class="champ-content">{{ organization }}</div>
+              <div class="champ-content">{{ ds_info.organization }}</div>
             </div>
           {% endif %}
           {% display_ds_field "profil_beneficiaire" %}
           {% display_ds_field "adresse_beneficiaire" %}
         </div>
-        {% if representative %}
+        {% if ds_info.representative %}
           <div class="fr-mb-2w">
             <h4 class="fr-h6 fr-mb-0">Mandataire</h4>
             <div class="champ-row fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>Identité :</b>
               </p>
-              <div class="champ-content">{{ representative }}</div>
+              <div class="champ-content">{{ ds_info.representative }}</div>
             </div>
           </div>
         {% endif %}
