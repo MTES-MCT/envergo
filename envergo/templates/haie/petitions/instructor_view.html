@@ -49,14 +49,20 @@
         <div class="fr-mb-2w">
           <h4 class="fr-h6 fr-mb-0">Bénéficiaire</h4>
           {% if applicant %}
-            <p>
-              <b>Identité :</b> {{ applicant }}
-            </p>
+            <div class="champ-row fr-my-2w">
+              <p class="champ-label fr-mb-0">
+                <b>Identité :</b>
+              </p>
+              <div class="champ-content">{{ applicant }}</div>
+            </div>
           {% endif %}
           {% if organization %}
-            <p>
-              <b>Structure :</b> {{ organization }}
-            </p>
+            <div class="champ-row fr-my-2w">
+              <p class="champ-label fr-mb-0">
+                <b>Structure :</b>
+              </p>
+              <div class="champ-content">{{ organization }}</div>
+            </div>
           {% endif %}
           {% display_ds_field "profil_beneficiaire" %}
           {% display_ds_field "adresse_beneficiaire" %}
@@ -64,9 +70,12 @@
         {% if representative %}
           <div class="fr-mb-2w">
             <h4 class="fr-h6 fr-mb-0">Mandataire</h4>
-            <p>
-              <b>Identité :</b> {{ representative }}
-            </p>
+            <div class="champ-row fr-my-2w">
+              <p class="champ-label fr-mb-0">
+                <b>Identité :</b>
+              </p>
+              <div class="champ-content">{{ representative }}</div>
+            </div>
           </div>
         {% endif %}
         <div class="fr-mb-2w">
