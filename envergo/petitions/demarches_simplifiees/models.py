@@ -1117,10 +1117,13 @@ class Dossier:
         French: mandataire
         """
         representative_name = None
+        if not self.deposeParUnTiers:
+            return None
         if self.nomMandataire or self.prenomMandataire:
             representative_name = (
                 f"{self.nomMandataire.upper()} {self.prenomMandataire}"
             )
+            representative_name = representative_name.strip()
         return None if representative_name is None else representative_name.strip()
 
     @property

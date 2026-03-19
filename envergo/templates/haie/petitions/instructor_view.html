@@ -78,10 +78,13 @@
             </div>
           </div>
         {% endif %}
-        <div class="fr-mb-2w">
-          <h4 class="fr-h6 fr-mb-0">Contact</h4>
-          {% display_ds_field "telephone_contact" %}
-        </div>
+        {% get_ds_field "telephone_contact" as telephone_contact %}
+        {% if telephone_contact %}
+          <div class="fr-mb-2w">
+            <h4 class="fr-h6 fr-mb-0">Contact</h4>
+            {% display_ds_field "telephone_contact" %}
+          </div>
+        {% endif %}
 
         <div class="fr-accordion__footer">
           <button type="button"

@@ -6,7 +6,7 @@ from django.template import Context, Template
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.petitions.templatetags.petitions import display_due_date
+from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     GET_DOSSIER_FAKE_RESPONSE,
@@ -68,16 +68,25 @@ def test_display_ds_field(mock_post):
     petition_project = PetitionProjectFactory()
     # Given DS dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
-    # When I want to display this DS field in a template
-    template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
+
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
     }
+    # WHEN I want to get motivation DS field item
+    motivation_item = get_ds_field(context_data, "motivation")
+    assert (
+        motivation_item.label
+        == "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
+    )
+    assert motivation_item.value == "La motivation"
+
+    # WHEN I want to display this DS field in a template
+    template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
     content = Template(template_html).render(Context(context_data))
     # Then this DS field label and value are present in rendered page
     assert (
-        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
+        "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
         in content
     )
     assert "La motivation" in content
