@@ -600,6 +600,8 @@ class EspecesProtegeesNormandie(
         density_200, density_5000, centroid_geos = (
             haies.compute_density_around_points_with_artifacts()
         )
+        # Pop circles from artifacts so they don't leak into the template context
+        # dict, while keeping them available for the map builder below.
         truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
         truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
 
