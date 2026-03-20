@@ -763,11 +763,9 @@ div#instructor-view-side-menu {
   }
 }
 
-#section-identity {
-  .champ-label,
-  .champ-content {
-    display: inline-block;
-  }
+.champ-label.inline,
+.champ-content {
+  display: inline-block;
 }
 
 #form-group-instructor_free_mention .label-content {

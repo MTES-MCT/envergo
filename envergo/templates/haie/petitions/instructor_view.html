@@ -64,8 +64,8 @@
               <div class="champ-content">{{ ds_info.organization }}</div>
             </div>
           {% endif %}
-          {% display_ds_field "profil_beneficiaire" %}
-          {% display_ds_field "adresse_beneficiaire" %}
+          {% display_ds_field "profil_beneficiaire" "inline" %}
+          {% display_ds_field "adresse_beneficiaire" "inline" %}
         </div>
         {% if ds_info.representative %}
           <div class="fr-mb-2w">
@@ -82,7 +82,7 @@
         {% if telephone_contact %}
           <div class="fr-mb-2w">
             <h4 class="fr-h6 fr-mb-0">Contact</h4>
-            {% display_ds_field "telephone_contact" %}
+            {% display_ds_field "telephone_contact" "inline" %}
           </div>
         {% endif %}
 

@@ -286,7 +286,7 @@ def get_ds_field(context, field_name):
 
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
-def display_ds_field(context, field_name):
+def display_ds_field(context, field_name, inline=False):
     """Includes template to display a field from démarche numérique as an Item object,
     related to a given config and a given petition project.
 
@@ -297,7 +297,7 @@ def display_ds_field(context, field_name):
     item = get_ds_field(context, field_name)
     if not item:
         return {}
-    return {"item": item}
+    return {"item": item, "inline": bool(inline)}
 
 
 @register.filter
