@@ -29,12 +29,18 @@ def admin_post_data(user, **overrides):
     """Build a minimal valid POST payload for the user admin change form."""
     data = {
         "email": user.email,
+        "password": user.password,
         "name": user.name,
         "departments": [],
         "groups": [],
         "followed_petition_projects": [],
         "_save": "Save",
+        "invitation_tokens-TOTAL_FORMS": 0,
+        "invitation_tokens-INITIAL_FORMS": 0,
+        "invitation_tokens-MIN_NUM_FORMS": 0,
+        "invitation_tokens-MAX_NUM_FORMS": 1000,
     }
+
     if user.access_haie:
         data["access_haie"] = "on"
     if user.access_amenagement:
