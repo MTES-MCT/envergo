@@ -3,6 +3,23 @@
 import django.contrib.postgres.fields
 from django.db import migrations, models
 
+def switch_base_to_ru(apps, schema_editor):
+    ConfigHaie = apps.get_model("moulinette", "ConfigHaie")
+    (ConfigHaie.objects
+     .filter(hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesForm")
+     .update(hedge_to_plant_properties_form="envergo.hedges.forms.HedgeToPlantPropertiesRegimeUniqueForm"))
+
+    (ConfigHaie.objects
+     .filter(hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesForm")
+     .update(hedge_to_remove_properties_form="envergo.hedges.forms.HedgeToRemovePropertiesRegimeUniqueForm"))
+
+def switch_proximite_point_eau_to_ripisylve(apps, schema_editor):
+    schema_editor.execute(
+        'UPDATE hedges_hedgedata '
+        'SET data = REPLACE(data::text, \'"proximite_point_eau"\', \'"ripisylve"\')::jsonb '
+        'WHERE data::text LIKE \'%%proximite_point_eau%%\''
+    )
+
 
 class Migration(migrations.Migration):
 
@@ -986,5 +1003,13 @@ class Migration(migrations.Migration):
                 max_length=64,
                 verbose_name="Regulation",
             ),
+        ),
+        migrations.RunPython(
+            switch_base_to_ru,
+            migrations.RunPython.noop
+        ),
+        migrations.RunPython(
+            switch_proximite_point_eau_to_ripisylve,
+            migrations.RunPython.noop
         ),
     ]
