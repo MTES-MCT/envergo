@@ -1845,6 +1845,14 @@ main.home {
   }
 }
 
+/* Contact page style **
+ * */
+.contact-means {
+  [class*="fr-icon-"]::before {
+    background-color: var(--background-action-high-blue-france);
+  }
+}
+
 // Geometricians landing page styles
 :root[data-fr-theme="dark"] main.geometricians {
   section#hero {
