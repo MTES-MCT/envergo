@@ -367,6 +367,11 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         # There are some additional forms displayed
         if self.moulinette.additional_fields:
             matomo_url = reverse("moulinette_missing_data")
+            if (
+                self.moulinette.are_additional_forms_bound()
+                and not self.moulinette.is_valid()
+            ):
+                matomo_url = reverse("moulinette_invalid_form")
 
         form = context["form"]
         if form.is_bound and not form.is_valid():
