@@ -21,18 +21,24 @@
         "url": "https://www.demarches-simplifiees.fr/api/v2/dossiers/pdf/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaEpJaTluYVdRNkx5OTBjSE12Ukc5emMybGxjaTh5TXpFM09EUTBNejlsZUhCcGNtVnpYMmx1UFRNMk1EQUdPZ1pGVkE9PSIsImV4cCI6IjIwMjUtMDMtMzFUMTg6NDc6MjIuNTgxWiIsInB1ciI6ImFwaV92MiJ9fQ==--92cd920cdb505f07b968bb048ae393cc9da0009e",
         "createdAt": "2025-03-31T19:47:22+02:00"
       },
+      "instructeurs": [
+        {
+          "email": "instructeur@guh.gouv.fr",
+          "id": "IDINSTRUCTEUR1234"
+        }
+      ],
       "usager": {
-        "email": "hedy.lamarr@example.com"
+        "email": "grace.hopper@example.com"
       },
-      "prenomMandataire": null,
-      "nomMandataire": null,
-      "deposeParUnTiers": false,
+      "prenomMandataire": "Grace",
+      "nomMandataire": "Hopper",
+      "deposeParUnTiers": true,
       "demandeur": {
         "__typename": "PersonnePhysique",
         "civilite": "Mme",
         "nom": "Lamarr",
         "prenom": "Hedy",
-        "email": null
+        "email": "hedy.lamarr@example.com"
       },
       "traitements": [
         {

@@ -341,7 +341,7 @@ fragment DossierFragment on Dossier {
 """
 )
 
-GET_DOSSIER_QUERY = (
+GET_DOSSIER_WITH_MESSAGES_QUERY = (
     DOSSIER_FRAGMENT
     + """
 query getDossier(
@@ -391,6 +391,7 @@ query getDossiersForDemarche(
 }
 """
 )
+
 GET_DOSSIER_MESSAGES_QUERY = (
     FILE_FRAGMENT
     + MESSAGE_FRAGMENT

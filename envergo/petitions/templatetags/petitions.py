@@ -263,26 +263,38 @@ def display_pause(due_date):
     )
 
 
-@register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
-def display_ds_field(context, field_name):
-    """Include tag to display a field from démarches simplifiées
+@register.simple_tag(takes_context=True)
+def get_ds_field(context, field_name):
+    """Get field from démarche numérique as an Item object,
     related to a given config and a given petition project.
 
-    Use _item_ds.html template, also included in full DS view template.
+    `field_name` must be set in config.demarches_simplifiees_display_fields.
     """
 
     config = context.get("moulinette").config
     ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
     if ds_field_id is None:
-        return {}
+        return None
     petition_project = context.get("petition_project", None)
     if petition_project is None:
-        return {}
+        return None
     ds_dossier = get_demarches_simplifiees_dossier(petition_project)
     if ds_dossier is None:
-        return {}
+        return None
 
-    item = get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+    return get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+
+
+@register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
+def display_ds_field(context, field_name):
+    """Includes template to display a field from démarche numérique as an Item object,
+    related to a given config and a given petition project.
+
+    `field_name` must be set in config.demarches_simplifiees_display_fields.
+
+    Uses _item_ds.html template, also included in full DS view template.
+    """
+    item = get_ds_field(context, field_name)
     if not item:
         return {}
     return {"item": item}

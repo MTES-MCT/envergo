@@ -1111,6 +1111,19 @@ class Dossier:
         )
 
     @property
+    def representative_name(self) -> str:
+        """
+        Returns the name of the representative based on the type of applicant.
+        French: mandataire
+        """
+        representative_name = ""
+        if not self.deposeParUnTiers:
+            return ""
+        representative_name = f"{self.nomMandataire.upper()} {self.prenomMandataire}"
+        representative_name = representative_name.strip()
+        return representative_name
+
+    @property
     def instructor_emails(self) -> list[str]:
         if self.instructeurs:
             return [i.email for i in self.instructeurs]
