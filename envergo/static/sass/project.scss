@@ -1851,6 +1851,20 @@ main.home {
   [class*="fr-icon-"]::before {
     background-color: var(--background-action-high-blue-france);
   }
+
+  ul.not-list {
+    --ul-type: none;
+    --ul-start: 0;
+    --li-bottom: 0.75rem;
+
+    ul {
+      --ul-type: disc;
+      --ul-start: 3rem;
+      --li-bottom: 0.25rem;
+
+      margin-bottom: 0;
+    }
+  }
 }
 
 // Geometricians landing page styles
