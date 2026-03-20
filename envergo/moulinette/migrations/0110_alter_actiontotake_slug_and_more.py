@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
                 ],
                 default="envergo.hedges.forms.HedgeToPlantPropertiesRegimeUniqueForm",
                 max_length=256,
-                verbose_name="Caractéristiques demandées pour les haies à planter",
+                verbose_name="Caractéristiques haies à planter",
             ),
         ),
         migrations.AlterField(
@@ -126,7 +126,7 @@ class Migration(migrations.Migration):
                 ],
                 default="envergo.hedges.forms.HedgeToRemovePropertiesRegimeUniqueForm",
                 max_length=256,
-                verbose_name="Caractéristiques demandées pour les haies à détruire",
+                verbose_name="Caractéristiques haies à détruire",
             ),
         ),
         migrations.AlterField(
