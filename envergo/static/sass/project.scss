@@ -1010,7 +1010,7 @@ button .img-icon {
   }
 
   /**
- * Custom class for an accordion without a "+" button
+ * Custom class for an accordion with an explicit show details button
  */
   &--alt {
     .fr-accordion__btn {
@@ -1050,8 +1050,6 @@ button .img-icon {
         background-color: inherit;
 
         & > span {
-          background-color: var(--background-open-blue-france);
-
           &::before {
             content: "Masquer le détail";
           }
