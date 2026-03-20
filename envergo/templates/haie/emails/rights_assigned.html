@@ -1,0 +1,37 @@
+{% extends 'emails/_base.html' %}
+
+{% block email_title %}Attribution de droits sur le portail numérique{% endblock %}
+
+{% block content %}
+
+  <p>Bonjour,</p>
+
+  {% if is_new_instructor %}
+    <p>Votre compte sur le portail du guichet unique de la haie a été validé.</p>
+  {% else %}
+    <p>Des droits ont été modifiés sur votre compte du portail du guichet unique de la haie.</p>
+  {% endif %}
+
+  {% if is_instructor %}
+    <p>Vous avez les droits de modification (service coordonnateur) sur tous les dossiers des départements suivants :</p>
+  {% else %}
+    <p>Vous avez les droits de lecture (service consulté) sur tous les dossiers des départements suivants :</p>
+  {% endif %}
+
+  <ul>
+    {% for dept in departments %}<li>{{ dept }}</li>{% endfor %}
+  </ul>
+
+  <p>
+    <a href="{{ project_list_url }}">Consulter les dossiers sur le portail</a>
+  </p>
+
+  <p>Bien cordialement,</p>
+
+  <p>L'équipe du portail du guichet unique de la haie</p>
+
+  <p>
+    Pour toute question, n'hésitez pas à <a href="{{ contact_url }}">nous contacter</a>
+  </p>
+
+{% endblock %}
