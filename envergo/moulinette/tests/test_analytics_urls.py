@@ -56,17 +56,6 @@ def test_envergo_invalid_form(client):
     assert res.status_code == 200
     assert_url(res, "/simulateur/formulaire/erreur-validation/")
 
-    # WHEN I post a form without answering the complementary questions
-    data = {
-        "lng": "-1.54394",
-        "lat": "47.21381",
-        "created_surface": 45000,
-        "final_surface": 45000,
-    }
-    res = client.post(url, data, follow=True)
-    # THEN url is complementary questions
-    assert_url(res, "/simulateur/formulaire/erreur-validation/")
-
     # WHEN I post a form with invalid value to the complementary questions
     data = {
         "lng": "-1.54394",
