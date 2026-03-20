@@ -1251,7 +1251,7 @@ class ConfigHaie(ConfigBase):
     )
 
     hedge_to_plant_properties_form = models.CharField(
-        "Caractéristiques demandées pour les haies à planter",
+        "Caractéristiques haies à planter",
         choices=get_hedge_properties_form(TO_PLANT),
         max_length=256,
         default=(
@@ -1260,7 +1260,7 @@ class ConfigHaie(ConfigBase):
     )
 
     hedge_to_remove_properties_form = models.CharField(
-        "Caractéristiques demandées pour les haies à détruire",
+        "Caractéristiques haies à détruire",
         choices=get_hedge_properties_form(TO_REMOVE),
         max_length=256,
         default=(
