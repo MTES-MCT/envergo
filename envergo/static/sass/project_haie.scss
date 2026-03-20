@@ -763,9 +763,11 @@ div#instructor-view-side-menu {
   }
 }
 
-.champ-label.inline,
-.champ-content {
-  display: inline-block;
+.champ-row--inline {
+  .champ-label,
+  .champ-content {
+    display: inline-block;
+  }
 }
 
 #form-group-instructor_free_mention .label-content {
