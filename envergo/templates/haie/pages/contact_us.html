@@ -9,13 +9,16 @@
         <button type="button"
                 class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="contact-accordion-1">Les plus fréquentes</button>
+                aria-controls="contact-accordion-1">Questions les plus fréquentes</button>
       </h3>
       <div class="fr-collapse" id="contact-accordion-1">
-        <h4 class="fr-h4">Contenu</h4>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliquam purus sit amet luctus. Lorem ipsum dolor sit amet consectetur adipiscing elit ut.
+          La FAQ répond aux principales questions sur le fonctionnement du service, la réglementation applicable et le dépôt d’un dossier.
         </p>
+        <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
+           target="_blank"
+           rel="noopener external"
+           class="fr-btn fr-icon-icon-external-link-fill fr-btn--icon-right">Aller à la FAQ</a>
       </div>
     </section>
     <section class="fr-accordion">
@@ -26,10 +29,13 @@
                 aria-controls="contact-accordion-2">Sur le fonctionnement du portail</button>
       </h3>
       <div class="fr-collapse" id="contact-accordion-2">
-        <h4 class="fr-h4">Contenu</h4>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliquam purus sit amet luctus. Lorem ipsum dolor sit amet consectetur adipiscing elit ut.
-        </p>
+        <p>Pour toute question sur :</p>
+        <ul>
+          <li>L’utilisation du simulateur</li>
+          <li>Un bug technique</li>
+          <li>Le dépôt en ligne…</li>
+        </ul>
+        {% include 'haie/_contact_means.html' %}
       </div>
     </section>
     <section class="fr-accordion">
@@ -40,13 +46,16 @@
                 aria-controls="contact-accordion-3">Sur votre dossier</button>
       </h3>
       <div class="fr-collapse" id="contact-accordion-3">
-        <h4 class="fr-h4">Contenu</h4>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliquam purus sit amet luctus. Lorem ipsum dolor sit amet consectetur adipiscing elit ut.
-        </p>
+        <p>Pour toute question sur :</p>
+        <ul>
+          <li>Les règlementations applicables</li>
+          <li>Les délais</li>
+          <li>Les pièces complémentaires</li>
+          <li>La décision finale…</li>
+        </ul>
+        <p>Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
       </div>
     </section>
   </div>
 
-  {% block contact-means %}{% endblock %}
 {% endblock %}
