@@ -48,7 +48,10 @@ from envergo.evaluations.models import (
     TagStyleEnum,
 )
 from envergo.geodata.models import Department, Zone
-from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
+from envergo.hedges.forms import (
+    HedgeToPlantPropertiesRegimeUniqueForm,
+    HedgeToRemovePropertiesRegimeUniqueForm,
+)
 from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
@@ -1198,7 +1201,9 @@ def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
     TODO: move this in hedges/forms.py
     """
     self = (
-        HedgeToPlantPropertiesForm if type == TO_PLANT else HedgeToRemovePropertiesForm
+        HedgeToPlantPropertiesRegimeUniqueForm
+        if type == TO_PLANT
+        else HedgeToRemovePropertiesRegimeUniqueForm
     )
 
     return [
@@ -1248,14 +1253,18 @@ class ConfigHaie(ConfigBase):
         "Caractéristiques demandées pour les haies à planter",
         choices=get_hedge_properties_form(TO_PLANT),
         max_length=256,
-        default=f"{HedgeToPlantPropertiesForm.__module__}.{HedgeToPlantPropertiesForm.__name__}",
+        default=(
+            f"{HedgeToPlantPropertiesRegimeUniqueForm.__module__}.{HedgeToPlantPropertiesRegimeUniqueForm.__name__}"
+        ),
     )
 
     hedge_to_remove_properties_form = models.CharField(
         "Caractéristiques demandées pour les haies à détruire",
         choices=get_hedge_properties_form(TO_REMOVE),
         max_length=256,
-        default=f"{HedgeToRemovePropertiesForm.__module__}.{HedgeToRemovePropertiesForm.__name__}",
+        default=(
+            f"{HedgeToRemovePropertiesRegimeUniqueForm.__module__}.{HedgeToRemovePropertiesRegimeUniqueForm.__name__}"
+        ),
     )
 
     demarche_simplifiee_number = models.IntegerField(
