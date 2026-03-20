@@ -600,7 +600,9 @@ def trim_land(geom):
               JOIN input_poly i ON ST_Intersects(z.geometry, i.geom)
               WHERE m.map_type = %s
             )
-            SELECT ST_AsText(ST_Intersection(u.merged_geom, i.geom))
+            SELECT ST_AsText(
+                ST_CollectionExtract(ST_Intersection(u.merged_geom, i.geom), 3)
+            )
             FROM unioned_geom u, input_poly i;
         """,
             [geom.ewkt, MAP_TYPES.terres_emergees],
