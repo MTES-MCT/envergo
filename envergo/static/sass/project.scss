@@ -1016,11 +1016,20 @@ button .img-icon {
     .fr-accordion__btn {
       justify-content: space-between;
 
+      @media screen and (width < 576px) {
+        flex-wrap: wrap;
+        justify-content: end;
+
+        .accordion__title__content {
+          flex-basis: 100%;
+        }
+      }
+
       &::after {
         content: none;
       }
 
-      & > span {
+      & > span.accordion__fake-btn {
         padding: 0.25rem 0.75rem;
         font-size: 0.875rem;
         border: 1px solid var(--border-default-grey);
@@ -1049,7 +1058,7 @@ button .img-icon {
       &[aria-expanded="true"] {
         background-color: inherit;
 
-        & > span {
+        & > span.accordion__fake-btn {
           &::before {
             content: "Masquer le détail";
           }
