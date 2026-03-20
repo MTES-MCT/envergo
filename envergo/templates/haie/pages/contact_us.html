@@ -1,5 +1,52 @@
 {% extends 'pages/contact_us.html' %}
 
-{% block contact-means %}
-  {% include 'haie/_contact_means.html' %}
+{% block article %}
+  <h1>Une question ?</h1>
+
+  <div data-fr-group="true" class="fr-accordions-group">
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-1">Les plus fréquentes</button>
+      </h3>
+      <div class="fr-collapse" id="contact-accordion-1">
+        <h4 class="fr-h4">Contenu</h4>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliquam purus sit amet luctus. Lorem ipsum dolor sit amet consectetur adipiscing elit ut.
+        </p>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-2">Sur le fonctionnement du portail</button>
+      </h3>
+      <div class="fr-collapse" id="contact-accordion-2">
+        <h4 class="fr-h4">Contenu</h4>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliquam purus sit amet luctus. Lorem ipsum dolor sit amet consectetur adipiscing elit ut.
+        </p>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-3">Sur votre dossier</button>
+      </h3>
+      <div class="fr-collapse" id="contact-accordion-3">
+        <h4 class="fr-h4">Contenu</h4>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing, incididunt, ut labore et dolore magna aliqua. Vitae sapien pellentesque habitant morbi tristique senectus et. Diam maecenas sed enim ut. Accumsan lacus vel facilisis volutpat est. Ut aliquam purus sit amet luctus. Lorem ipsum dolor sit amet consectetur adipiscing elit ut.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  {% block contact-means %}{% endblock %}
 {% endblock %}
