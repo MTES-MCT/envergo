@@ -2,7 +2,11 @@ from collections import defaultdict
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    CriterionEvaluator,
+    HaieRegulationEvaluator,
+    HedgeDensityMixin,
+)
 
 
 class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
@@ -14,7 +18,7 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class RegimeUniqueHaie(PlantationConditionMixin, CriterionEvaluator):
+class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEvaluator):
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
     plantation_conditions = []
@@ -31,6 +35,16 @@ class RegimeUniqueHaie(PlantationConditionMixin, CriterionEvaluator):
         ("droit_constant", "aa_only"): "non_concerne",
         ("droit_constant", "has_hedges"): "non_concerne",
     }
+
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        haies = self.catalog.get("haies")
+        if haies and self.moulinette.config.single_procedure:
+            density_data = haies.density.get("around_lines", {})
+            catalog["density_400"] = density_data.get("density_400")
+            catalog["density_400_length"] = density_data.get("length_400")
+            catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        return catalog
 
     def get_result_data(self):
         hedges = self.catalog["haies"].hedges_to_remove()

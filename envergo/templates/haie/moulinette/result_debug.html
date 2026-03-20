@@ -91,59 +91,7 @@
                   <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
-                {% if criterion|requires_hedge_density %}
-                  <br />
-
-                  <h6>Densité de haie</h6>
-
-                  <ul>
-                    <li>Numéro de PACAGE : {{ ds_info.numero_pacage|default:"ND" }}</li>
-                    <li>Densité de l'exploitation : {{ density_exploitation|default:"ND" }}</li>
-                    <li>Densité 5 km : {{ density_5000|floatformat:"2" }}</li>
-                    <li>Rapport de densité exploitation / 5 km : {{ density_ratio|floatformat:"2g" }}</li>
-                    <li>Identifiant zone : {{ density_zone }}</li>
-                  </ul>
-
-                  <table>
-                    <thead>
-                      <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Rayon 200 m</th>
-                        <th scope="col">Rayon 5 km</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th scope="row">Linéaire</th>
-                        <td>{{ length_200|floatformat:"0g" }} ml</td>
-                        <td>{{ length_5000|floatformat:"0g" }} ml</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Surface</th>
-                        <td>{{ area_200_ha|floatformat:"g" }} ha</td>
-                        <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
-                      </tr>
-                      <tr>
-                        <th scope="row">Densité</th>
-                        <td>{{ density_200|floatformat:"g" }} ml/ha</td>
-                        <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
-                      </tr>
-                      {% if pre_computed_density_200 or pre_computed_density_5000 %}
-                        <tr>
-                          <th scope="row">
-                            Densité persistée en base
-                            <br />
-                            <span class="fr-hint-text">Peut ne pas être à jour</span>
-                          </th>
-                          <td>{{ pre_computed_density_200|floatformat:"g" }} ml/ha</td>
-                          <td>{{ pre_computed_density_5000|floatformat:"g" }} ml/ha</td>
-                        </tr>
-                      {% endif %}
-                    </tbody>
-                  </table>
-
-                  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
-                {% endif %}
+                {% criterion_debug_snippet criterion %}
               </li>
             {% endfor %}
           </ul>
