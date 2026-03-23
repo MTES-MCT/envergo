@@ -1,0 +1,29 @@
+{% extends 'haie/base.html' %}
+
+{% load pages %}
+
+{% block title %}
+  Paramétrage du portail
+{% endblock title %}
+
+{% block content %}
+  <div class="fr-grid-row fr-mb-3w">
+    <div class="fr-col fr-col-12 fr-col-offset-md-3 fr-col-md-6">
+      <h1>Paramétrage du portail</h1>
+      {% if request.resolver_match.url_name == "confighaie_settings" %}
+        <p>
+          <em>Vous n'avez pas les droits pour accéder à cette page de paramétrage du portail.</em>
+        </p>
+        <p class="fr-mb-3w">
+          Vous pouvez <a href="{% url 'confighaie_list' %}">retrouver la liste des configurations</a>.
+        </p>
+      {% elif request.resolver_match.url_name == "confighaie_list" %}
+        <p class="fr-mb-3w">
+          <em>Vous n'avez pas les droits pour accéder aux pages de paramétrage du portail.</em>
+        </p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block after-content %}{% endblock %}
