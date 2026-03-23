@@ -48,10 +48,13 @@ class DisplayFieldMixin:
     Used to get specific fields label and help texte displayed in results"""
 
     def __init__(self, *args, **kwargs):
+        display = kwargs.pop("display", None)
         display_label = kwargs.pop("display_label", None)
         display_unit = kwargs.pop("display_unit", None)
         display_help_text = kwargs.pop("display_help_text", None)
         get_display_value = kwargs.pop("get_display_value", None)
+        if display is not None:
+            self.display = display
         if display_label is not None:
             self.display_label = display_label
         if display_unit is not None:

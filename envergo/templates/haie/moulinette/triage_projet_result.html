@@ -1,0 +1,21 @@
+{% extends 'haie/moulinette/triage_result.html' %}
+
+{% block result %}
+  <ul>
+    <li>
+      Si projet soumis à autorisation d'urbanisme : permis de construire, permis d'aménager, déclaration préalable
+      <a class="fr-btn">continuer sur cette page</a>
+    </li>
+
+    <li>
+      Si projet soumis à autorisation environnementale :
+      rien à faire, l'impact sur la haie sera inclus dans l'instruction x
+    </li>
+
+    <li>
+      Si projet mais non soumis à PC, PA, DP, (par exemple remembrement)
+      <a class="fr-btn">continuer</a>
+    </li>
+
+  </ul>
+{% endblock %}

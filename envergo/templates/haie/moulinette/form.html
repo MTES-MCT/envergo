@@ -89,6 +89,10 @@
           </div>
         </div>
 
+        {% if form.application_number %}
+          <div class="form-section">{% render_field form.application_number %}</div>
+        {% endif %}
+
         {% include 'haie/moulinette/_form_footer.html' %}
       </form>
     </div>

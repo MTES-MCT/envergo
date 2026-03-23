@@ -310,6 +310,38 @@ entretien sévère et récurrent ; etc.
     ),
 )
 
+CONTEXT_CHOICES = (
+    (
+        "non",
+        mark_safe(
+            """Uniquement les travaux sur la végétation<br />
+<span class="fr-hint-text">Pas d'autre projet prévu</span>
+                    """
+        ),
+    ),
+    (
+        "projet",
+        mark_safe(
+            """Dans le cadre d'un projet plus large<br />
+<span class="fr-hint-text">
+    Par exemple : destruction de haie à l'occasion de l'extension d'un bâtiment, d'une construction nouvelle, d'un
+    aménagement…
+</span>"""
+        ),
+    ),
+)
+
+AUTORISATION_CHOICES = (
+    (
+        "non",
+        "non",
+    ),
+    (
+        "urba",
+        "oui",
+    ),
+)
+
 
 class MoulinetteFormHaie(BaseMoulinetteForm):
     department = forms.ModelChoiceField(
@@ -324,6 +356,18 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     travaux = forms.ChoiceField(
         choices=TRAVAUX_CHOICES,
         required=True,
+        widget=forms.HiddenInput,
+    )
+
+    contexte = forms.ChoiceField(
+        choices=CONTEXT_CHOICES,
+        required=True,
+        widget=forms.HiddenInput,
+    )
+
+    autorisation = forms.ChoiceField(
+        choices=AUTORISATION_CHOICES,
+        required=False,
         widget=forms.HiddenInput,
     )
     motif = forms.ChoiceField(
@@ -355,9 +399,22 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         },
     )
 
+    application_number = DisplayCharField(
+        label="Numéro de demande de permis (PC, PA, DP) :",
+        max_length=64,
+        widget=forms.TextInput(attrs={"placeholder": "PC0123456789012"}),
+        required=False,
+        get_display_value=lambda x: x if x else "non renseigné",
+    )
+
     def __init__(self, *args, single_procedure=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.single_procedure = single_procedure
+        data = kwargs.get("data", kwargs.get("initial", {}))
+        autorisation = data.get("autorisation")
+        contexte = data.get("contexte")
+        if contexte == "non" or autorisation == "non":
+            self.fields.pop("application_number")
 
         # We override the queryset here because it prevents a "models are not ready" exception
         self.fields["department"].queryset = Department.objects.defer(
@@ -466,6 +523,31 @@ class TriageFormHaie(forms.Form):
         choices=TRAVAUX_CHOICES,
         required=True,
         display_label="Travaux envisagés :",
+    )
+
+    contexte = DisplayChoiceField(
+        label="Dans quel contexte l'intervention est-elle prévue ?",
+        widget=forms.RadioSelect,
+        choices=CONTEXT_CHOICES,
+        required=True,
+        display=False,
+    )
+
+    autorisation = DisplayChoiceField(
+        label="Travaux dans le cadre d'un projet soumis à autorisation d'urbanisme :",
+        widget=forms.RadioSelect,
+        choices=(
+            (
+                "non",
+                "non",
+            ),
+            (
+                "urba",
+                "oui",
+            ),
+        ),
+        required=False,
+        get_display_value=lambda x: x if x else "non renseigné",
     )
 
     def clean_department(self):
