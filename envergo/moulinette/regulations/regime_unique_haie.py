@@ -40,7 +40,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies and self.moulinette.config.single_procedure:
-            density_data = haies.density.get("around_lines", {})
+            density_data = haies.density_around_lines
             catalog["density_400"] = density_data.get("density_400")
             catalog["density_400_length"] = density_data.get("length_400")
             catalog["density_400_area_ha"] = density_data.get("area_400_ha")

@@ -677,7 +677,7 @@ class HedgeDensityMixin:
             "haies_id": haies.id,
         }
 
-        pre_computed = haies.density.get("around_lines", {})
+        pre_computed = haies.density_around_lines
         if pre_computed:
             context["pre_computed_density_400"] = pre_computed.get("density_400")
 
