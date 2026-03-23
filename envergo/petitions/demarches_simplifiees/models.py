@@ -1119,7 +1119,9 @@ class Dossier:
         representative_name = ""
         if not self.deposeParUnTiers:
             return ""
-        representative_name = f"{self.nomMandataire.upper()} {self.prenomMandataire}"
+        if self.nomMandataire:
+            representative_name = self.nomMandataire.upper()
+        representative_name = f"{representative_name} {self.prenomMandataire}"
         representative_name = representative_name.strip()
         return representative_name
 
