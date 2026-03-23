@@ -30,8 +30,8 @@
       "usager": {
         "email": "grace.hopper@example.com"
       },
-      "prenomMandataire": null,
-      "nomMandataire": null,
+      "prenomMandataire": "Grace",
+      "nomMandataire": "Hopper",
       "deposeParUnTiers": true,
       "demandeur": {
         "__typename": "PersonnePhysique",
