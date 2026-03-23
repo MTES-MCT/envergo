@@ -96,9 +96,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 
     message_body = forms.CharField(
         label="Votre message",
-        help_text="""Au format HTML ou texte simple.
-            <br>À noter que les liens seront cliquables s'ils commencent par "https://" ou "www".
-        """,
+        help_text="",
         widget=forms.Textarea(
             attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
         ),
