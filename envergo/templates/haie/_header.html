@@ -94,7 +94,7 @@
           </li>
         {% endif %}
         {% if user.is_instructor or user.is_superuser %}
-          <li class="fr-nav__item">{% parametrage_departments_menu %}</li>
+          {% parametrage_departments_menu %}
         {% endif %}
       </ul>
     </nav>
