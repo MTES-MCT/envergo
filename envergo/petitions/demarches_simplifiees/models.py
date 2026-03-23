@@ -1121,7 +1121,8 @@ class Dossier:
             return ""
         if self.nomMandataire:
             representative_name = self.nomMandataire.upper()
-        representative_name = f"{representative_name} {self.prenomMandataire}"
+        if self.prenomMandataire:
+            representative_name = f"{representative_name} {self.prenomMandataire}"
         representative_name = representative_name.strip()
         return representative_name
 
