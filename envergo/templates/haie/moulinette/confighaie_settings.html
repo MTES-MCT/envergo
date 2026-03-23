@@ -29,6 +29,25 @@
         <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
       </p>
 
+      <h2 id="title-contact" class="fr-mb-4v">Informations de contact</h2>
+
+      <div class="fr-callout">
+        <p class="fr-text--sm">
+          Les informations de contact ci-dessous sont affichées aux usagers pour les guider sur le portail.
+        </p>
+        <p class="fr-text--sm">
+          Une mise à jour avec les nouvelles informations remontées sera réalisée dans les prochains jours.
+        </p>
+        <p>
+          <a class="fr-btn fr-btn--secondary"
+             href="{{ department_settings_form }}"
+             target="_blank"
+             rel="noopener">Modifier les informations de contact</a>
+        </p>
+      </div>
+
+      <div class="fr-mt-4w fr-p-2w">{{ object.contacts_and_links|safe }}</div>
+
       <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
 
       <div class="fr-callout">
