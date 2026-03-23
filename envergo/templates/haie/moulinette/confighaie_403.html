@@ -15,8 +15,7 @@
           <em>Vous n'avez pas les droits pour accéder à cette page de paramétrage du portail.</em>
         </p>
         <p class="fr-mb-3w">
-          Vous pouvez retrouver la liste des configurations en suivant
-          <a href="{% url 'confighaie_list' %}">ce lien</a>.
+          Vous pouvez <a href="{% url 'confighaie_list' %}">retrouver la liste des configurations</a>.
         </p>
       {% elif request.resolver_match.url_name == "confighaie_list" %}
         <p class="fr-mb-3w">
