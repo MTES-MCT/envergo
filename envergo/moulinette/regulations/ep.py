@@ -411,7 +411,7 @@ class EspecesProtegeesNormandie(
         density_exploitation = self.get_exploitation_density(
             catalog.get("numero_pacage")
         )
-        density_5000 = haies.density.get("around_centroid").get("density_5000")
+        density_5000 = haies.density_around_centroid["density_5000"]
         if density_exploitation:
             # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
             # We then pick a coefficient corresponding to the Normandie average : 1
@@ -619,14 +619,10 @@ class EspecesProtegeesNormandie(
             "debug_density_5000": density_5000["density"],
         }
 
-        pre_computed = haies.density
+        pre_computed = haies.density_around_centroid
         if pre_computed:
-            context["pre_computed_density_200"] = pre_computed["around_centroid"][
-                "density_200"
-            ]
-            context["pre_computed_density_5000"] = pre_computed["around_centroid"][
-                "density_5000"
-            ]
+            context["pre_computed_density_200"] = pre_computed["density_200"]
+            context["pre_computed_density_5000"] = pre_computed["density_5000"]
 
         from envergo.hedges.services import create_density_map
 
@@ -665,7 +661,7 @@ class EspecesProtegeesRegimeUnique(
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies:
-            density_data = haies.density.get("around_lines", {})
+            density_data = haies.density_around_lines
             catalog["density_400"] = density_data.get("density_400")
             catalog["density_400_length"] = density_data.get("length_400")
             catalog["density_400_area_ha"] = density_data.get("area_400_ha")
