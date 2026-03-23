@@ -747,8 +747,11 @@ class ConfigHaieListView(ConfigHaieBaseView, ListView):
         return queryset
 
     def get(self, request, *args, **kwargs):
-        """Redirect to object detail if only one config is listed"""
-        result = super().get(request, *args, **kwargs)
+        """Redirect to object detail if only one config is listed
+
+        Redefine method get completely, and don't check `BaseListView.allow_empty` param.
+        """
+        self.object_list = self.get_queryset()
         if self.object_list.count() == 1:
             config = self.object_list.get()
             config_url = reverse(
@@ -759,7 +762,8 @@ class ConfigHaieListView(ConfigHaieBaseView, ListView):
                 },
             )
             return HttpResponseRedirect(config_url)
-        return result
+        context = self.get_context_data()
+        return self.render_to_response(context)
 
 
 class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
