@@ -46,7 +46,6 @@ from envergo.petitions.tests.factories import (
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
     FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
-    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 
@@ -66,6 +65,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_organization_id="Q2hhbXAtNDcyOTE3MQ==",
     )
 
     petition_project = PetitionProjectFactory()
@@ -80,9 +80,13 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # AND the project details are correctly populated
     project_details = get_context_from_ds(petition_project, moulinette)
 
-    assert project_details["applicant"] == "Mme LAMARR Hedy"
-    assert project_details["city"] == "Laon (02000)"
-    assert project_details["pacage"] == "123456789"
+    assert project_details["ds_info"]["city"] == "Laon (02000)"
+    assert project_details["ds_info"]["pacage"] == "123456789"
+    assert project_details["ds_info"]["organization"] == "GAEC Choupi"
+    assert project_details["ds_info"]["applicant"] == "Mme LAMARR Hedy"
+    assert project_details["ds_info"]["applicant_email"] == "hedy.lamarr@example.com"
+    assert project_details["ds_info"]["usager"] == "grace.hopper@example.com"
+    assert project_details["ds_info"]["representative"] == "HOPPER Grace"
 
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
@@ -903,14 +907,14 @@ def test_get_message_project_via_demarches_simplifiees(
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I get messages for this dossier
-    mock_gql_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
         petition_project
     )
     # THEN Messages are returned
     assert len(messages) == 8
     assert instructor_emails == ["instructeur@guh.gouv.fr"]
-    assert petitioner_email == "hedy.lamarr@example.com"
+    assert petitioner_email == "grace.hopper@example.com"
 
 
 @pytest.mark.haie

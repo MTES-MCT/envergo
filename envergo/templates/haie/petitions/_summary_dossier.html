@@ -20,18 +20,18 @@
             {{ petition_project.created_at|date:"DATE_FORMAT" }}
           {% endif %}
         </li>
-        {% if city %}
+        {% if ds_info.city %}
           <li>
             <span class="fr-icon-map-pin-2-line fr-icon--sm" aria-hidden="true"></span>
-            {{ city }}
+            {{ ds_info.city }}
           </li>
         {% endif %}
-        {% if applicant or organization %}
+        {% if ds_info.applicant or ds_info.organization %}
           <li>
             <span class="fr-icon-user-line fr-icon--sm" aria-hidden="true"></span>
-            {% if applicant %}{{ applicant }}{% endif %}
-            {% if applicant and organization %}|{% endif %}
-            {% if organization %}{{ organization }}{% endif %}
+            {% if ds_info.applicant %}{{ ds_info.applicant }}{% endif %}
+            {% if ds_info.applicant and ds_info.organization %}|{% endif %}
+            {% if ds_info.organization %}{{ ds_info.organization }}{% endif %}
           </li>
         {% endif %}
         <li class="fr-hint-text">

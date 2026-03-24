@@ -15,12 +15,12 @@ class RateLimitingMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Global rate limit on POST, PUT, PATCH and DELETE: 100 req/min per IP
+        # Hard rate limit on POST, PUT, PATCH and DELETE: 100 req/min per IP
         limited = is_ratelimited(
             request,
             group="global",
             key="ip",
-            rate=settings.RATELIMIT_RATE,
+            rate=settings.RATELIMIT_HARD_RATE,
             method=UNSAFE,
             increment=True,
         )
@@ -36,19 +36,45 @@ class RateLimitingMiddleware:
             )
             return handler429(request)
 
-        # Rate limit on GET requests for moulinette routes
-        if request.method == "GET" and request.path.startswith(f'/{_("moulinette/")}'):
+        # Hard rate limit on GET requests for moulinette and avis routes
+        if request.method == "GET" and (
+            request.path.startswith(f'/{_("moulinette/")}')
+            or request.path.startswith("/avis/")
+        ):
             limited = is_ratelimited(
                 request,
                 group="limited_get",
                 key="ip",
-                rate=settings.RATELIMIT_RATE,
+                rate=settings.RATELIMIT_HARD_RATE,
                 method=["GET"],
                 increment=True,
             )
             if limited:
                 logger.warning(
-                    "Rate limit exceeded for a GET request",
+                    "Hard rate limit exceeded for a GET request",
+                    extra={
+                        "ip": _get_ip(request),
+                        "path": request.path,
+                        "visitor_id": request.COOKIES.get(
+                            settings.VISITOR_COOKIE_NAME, ""
+                        ),
+                    },
+                )
+                return handler429(request)
+
+        # Soft rate limit on all GET requests: 5000 req/min per IP
+        if request.method == "GET":
+            limited = is_ratelimited(
+                request,
+                group="soft_get",
+                key="ip",
+                rate=settings.RATELIMIT_SOFT_RATE,
+                method=["GET"],
+                increment=True,
+            )
+            if limited:
+                logger.warning(
+                    "Soft rate limit exceeded for a GET request",
                     extra={
                         "ip": _get_ip(request),
                         "path": request.path,

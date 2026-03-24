@@ -38,7 +38,6 @@ from envergo.petitions.tests.factories import (
     FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE,
-    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     InvitationTokenFactory,
     PetitionProject34Factory,
     PetitionProjectFactory,
@@ -667,7 +666,7 @@ def test_petition_project_instructor_messagerie_ds(
     client.force_login(haie_user_44)
     # WHEN I get messagerie page
     assert not Event.objects.filter(category="message", event="lecture").exists()
-    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     # THEN I can access to messagerie page
     assert response.status_code == 200
@@ -685,7 +684,7 @@ def test_petition_project_instructor_messagerie_ds(
 
     # GIVEN an instructor haie user 44
     client.force_login(haie_instructor_44)
-    mock_ds_query_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     response = client.get(instructor_messagerie_url)
     # THEN I can access to messagerie page
     assert response.status_code == 200
