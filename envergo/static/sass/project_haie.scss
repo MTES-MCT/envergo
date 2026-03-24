@@ -763,6 +763,20 @@ div#instructor-view-side-menu {
   }
 }
 
+.champ-row--inline {
+  .champ-label,
+  .champ-content {
+    display: inline-block;
+  }
+}
+
+#section-identity {
+  h4 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
 #form-group-instructor_free_mention .label-content {
   font-weight: bold;
   font-size: 1.5rem;

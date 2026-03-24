@@ -32,9 +32,18 @@
 
 {% block project_content %}
 
-  {% if ds_messages is not None %}
-    <section class="ds-messages fr-my-4w">
-      <p class="fr-mb-1w">
+  <section class="ds-messages fr-my-4w">
+    {% if ds_info.representative %}
+      <p class="fr-hint-text">
+        {% if ds_info.applicant_email %}
+          Les messages sont envoyés au mandataire et au bénéficiaire.
+        {% else %}
+          Les messages sont envoyés au mandataire uniquement.
+        {% endif %}
+      </p>
+    {% endif %}
+    {% if ds_messages is not None %}
+      <p class="fr-hint-text fr-mb-1w">
         {% with num_messages=ds_messages|length %}
           {{ num_messages }} message{{ num_messages|pluralize }} affiché{{ num_messages|pluralize }}
         {% endwith %}
@@ -67,8 +76,8 @@
 
         </div>
       {% endfor %}
-    </section>
-  {% endif %}
+    {% endif %}
+  </section>
 
   {% if has_send_message_permission %}
     {% include 'haie/petitions/_new_message_modal.html' %}

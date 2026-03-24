@@ -1,18 +1,18 @@
 import json
 from collections import defaultdict
-from datetime import date
 from itertools import groupby
 from operator import attrgetter
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.contrib import messages
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, ListView
 
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
@@ -637,6 +637,7 @@ class MoulinetteResultPlantation(MoulinetteHaieResult):
             )
             plantation_url = update_qs(plantation_url, self.request.GET)
             context["plantation_url"] = plantation_url
+            context["moulinette_url"] = self.request.build_absolute_uri()
 
         form_url = update_qs(reverse("moulinette_form"), self.request.GET)
         context["edit_url"] = form_url
@@ -710,7 +711,62 @@ class Triage(MoulinetteMixin, FormView):
         return HttpResponseRedirect(url_with_params)
 
 
-class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
+class ConfigHaieBaseView(InstructorDepartmentAuthorised):
+    """Define what to when user has no permission"""
+
+    def handle_no_permission(self):
+        """Return custom 403 template if permission denied exception"""
+        if self.request.user.is_authenticated:
+            return TemplateResponse(
+                request=self.request,
+                template="haie/moulinette/confighaie_403.html",
+                status=403,
+            )
+        else:
+            # user is not logged-in, fallback to default behaviour (redirect to login)
+            return super().handle_no_permission()
+
+
+class ConfigHaieListView(ConfigHaieBaseView, ListView):
+    """Home view for ConfigHaie settings"""
+
+    queryset = ConfigHaie.objects.all()
+    template_name = "haie/moulinette/confighaie_list.html"
+
+    def get_queryset(self):
+        """Filter confighaie by user departments"""
+        current_user = self.request.user
+        queryset = (
+            self.queryset.select_related("department")
+            .defer("department__geometry")
+            .order_by("department__department", "validity_range")
+        )
+        if not current_user.is_superuser:
+            queryset = queryset.filter(department__in=current_user.departments.all())
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        """Redirect to object detail if only one config is listed
+
+        Redefine method get completely, and don't check `BaseListView.allow_empty` param.
+        """
+        self.object_list = self.get_queryset()
+        if self.object_list.count() == 1:
+            config = self.object_list.get()
+            config_url = reverse(
+                "confighaie_detail",
+                kwargs={
+                    "department": config.department.department,
+                    "date_slug": config.date_slug,
+                },
+            )
+            return HttpResponseRedirect(config_url)
+        context = self.get_context_data()
+        return self.render_to_response(context)
+
+
+class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
     """Config haie settings view for a given department"""
 
     queryset = ConfigHaie.objects.all()
@@ -720,29 +776,44 @@ class ConfigHaieSettingsView(InstructorDepartmentAuthorised, DetailView):
         """Return ConfigHaie for the department, optionally by date slug.
 
         When a ``date_slug`` kwarg is present the lookup targets a specific
-        config (by its validity_range lower bound). Otherwise the currently
-        valid config is returned — same behaviour as before.
+        config (by its validity_range lower bound). Otherwise, the currently
+        valid config is returned — same behavior as before.
         """
-
+        if queryset is None:
+            queryset = self.get_queryset()
         if self.department is None:
             self.department = self.get_departement()
 
         date_slug = self.kwargs.get("date_slug")
         if date_slug:
-            obj = self.queryset.get_by_date_slug(self.department, date_slug)
+            obj = queryset.get_by_date_slug(self.department, date_slug)
+            if obj is None:
+                raise ConfigHaie.DoesNotExist
         else:
-            obj = (
-                self.queryset.filter(department=self.department)
-                .valid_at(date.today())
-                .first()
-            )
+            queryset = queryset.filter(department=self.department)
+            obj = queryset.get()
 
-        if obj is None:
-            raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": self.queryset.model._meta.verbose_name}
-            )
         return obj
+
+    def get(self, request, *args, **kwargs):
+        """Manage multiple objects returned"""
+        try:
+            result = super().get(request, *args, **kwargs)
+        except (ConfigHaie.DoesNotExist, Http404):
+            return TemplateResponse(
+                request=request,
+                template="haie/moulinette/confighaie_404.html",
+                status=404,
+            )
+        except ConfigHaie.MultipleObjectsReturned:
+            messages.info(
+                self.request,
+                "Plusieurs configurations existent pour ce département. "
+                "Votre navigateur a été redirigé vers la liste des paramétrages.",
+            )
+            return HttpResponseRedirect(reverse("confighaie_list"))
+
+        return result
 
     def get_context_data(self, **kwargs):
         """Add department members emails and activation maps related to this department"""

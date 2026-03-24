@@ -101,3 +101,9 @@ def loire_atlantique_department():
         department=44, geometry=MultiPolygon([loire_atlantique_polygon])
     )
     return loire_atlantique
+
+
+@pytest.fixture
+def herault_department():
+    herault = DepartmentFactory(department=34, geometry=MultiPolygon([herault_polygon]))
+    return herault

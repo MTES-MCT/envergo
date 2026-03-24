@@ -156,6 +156,8 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
     organization = ""
     usager = ""
     applicant = ""
+    applicant_email = ""
+    representative = ""
 
     if (
         not config.demarches_simplifiees_pacage_id
@@ -187,15 +189,22 @@ def get_context_from_ds(petition_project, moulinette) -> dict:
         city, organization, pacage = extract_data_from_fields(config, dossier)
         usager = dossier.usager.email or ""
         applicant = dossier.applicant_name or ""
+        if dossier.demandeur:
+            applicant_email = dossier.demandeur.email or ""
+        representative = dossier.representative_name or ""
 
     context = {
         "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
-        "usager": usager,
-        "city": city,
-        "pacage": pacage,
-        "organization": organization,
-        "applicant": applicant,
+        "ds_info": {
+            "usager": usager,
+            "city": city,
+            "pacage": pacage,
+            "organization": organization,
+            "applicant": applicant,
+            "applicant_email": applicant_email,
+            "representative": representative,
+        },
     }
 
     return context
@@ -305,21 +314,22 @@ def get_messages_and_senders_from_ds(
 
     # Get messages only from DS
     dossier_number = petition_project.demarches_simplifiees_dossier_number
-    ds_client = DemarchesSimplifieesClient()
-    dossier_with_messages_as_dict = ds_client.get_dossier_messages(dossier_number)
+    dossier_with_messages = get_demarches_simplifiees_dossier(
+        petition_project, force_update=True
+    )
 
-    if not dossier_with_messages_as_dict:
+    if not dossier_with_messages:
         logger.error(
             f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
         )
         return None, None, None
 
-    dossier = Dossier.from_dict(dossier_with_messages_as_dict)
-    petitioner_email = dossier.usager.email
-    instructor_emails = dossier.instructor_emails
-
+    petitioner_email = dossier_with_messages.usager.email
+    instructor_emails = dossier_with_messages.instructor_emails
     messages = sorted(
-        dossier.messages, key=lambda message: message.createdAt, reverse=True
+        dossier_with_messages.messages,
+        key=lambda message: message.createdAt,
+        reverse=True,
     )
     return messages, instructor_emails, petitioner_email
 
@@ -422,10 +432,8 @@ def get_demarches_simplifiees_dossier(
     ):
         # If the last sync is older than one hour, we fetch the dossier from Demarches Simplifiees
         dossier_number = petition_project.demarches_simplifiees_dossier_number
-
         ds_client = DemarchesSimplifieesClient()
-
-        dossier_as_dict = ds_client.get_dossier(dossier_number)
+        dossier_as_dict = ds_client.get_dossier_with_messages(dossier_number)
 
         if dossier_as_dict is not None:
             # we have got a dossier from DS for this petition project,
@@ -569,12 +577,14 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
         super().append(item)
 
     def compute_message(self):
-        config_url = None
+        config_url, config_department = None, None
+
         if self.config:
             config_relative_url = reverse(
                 "admin:moulinette_confighaie_change", args=[self.config.id]
             )
             config_url = self.request.build_absolute_uri(config_relative_url)
+            config_department = self.config.department
 
         if self._petition_project:
             projet_relative_url = reverse(
@@ -605,7 +615,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                 "haie/petitions/mattermost_project_creation_erreur.txt",
                 context={
                     "config_url": config_url,
-                    "department": self.config.department,
+                    "department": config_department,
                     "user_error_reference": self.user_error_reference.upper(),
                     "form": display_form_details(self.form),
                 },

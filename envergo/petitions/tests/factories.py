@@ -40,13 +40,7 @@ with open(
     GET_DOSSIER_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages.json"),
-    "r",
-) as file:
-    GET_DOSSIER_MESSAGES_FAKE_RESPONSE = json.load(file)
-
-with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_0.json"),
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_0_messages.json"),
     "r",
 ) as file:
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
@@ -58,7 +52,7 @@ with open(
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_error.json"),
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_error.json"),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
@@ -99,6 +93,9 @@ class PetitionProjectFactory(DjangoModelFactory):
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
+    demarches_simplifiees_prefill_url = (
+        "https://exemple.com/commencer/21059675/token?1234"
+    )
     demarches_simplifiees_state = DOSSIER_STATES.draft
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",

@@ -192,7 +192,7 @@ class MapAdmin(gis_admin.GISModelAdmin):
         return mark_safe(html)
 
     @admin.display(
-        ordering="imported_zones",
+        ordering="imported_geometries",
         description=mark_safe(
             "<abbr title='Nb de zones importées / attendues'>Zones</abbr>"
         ),
