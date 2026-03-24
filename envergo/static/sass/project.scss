@@ -2052,8 +2052,15 @@ img.moulinette-incentive-img {
   color: var(--text-default-warning);
 }
 
+/* Custom icons */
+
 .fr-icon-hourglass-2-fill::before {
-  mask-image: url("/static/images/hourglass-2-fill.svg");
+  mask-image: url("/static/icons/hourglass-2-fill.svg");
+}
+
+.fr-icon-crisp::before {
+  background-image: url("/static/icons/crisp.svg");
+  background-size: contain;
 }
 
 .dark-only {
