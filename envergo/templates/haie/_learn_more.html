@@ -3,15 +3,15 @@
   <p class="fr-mb-3v">Vous pouvez :</p>
   <ul>
     <li>
-      Consulter <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
+      Consulter <a href="{% url 'contact_us' %}#contact-accordion-1-faq"
     target="_blank"
     rel="noopener">l’aide en ligne et les questions fréquentes</a>
     </li>
     <li>
-      <a href="{% url 'contact_us' %}">Contacter l’équipe</a> pour toute question sur l’utilisation du portail
+      <a href="{% url 'contact_us' %}#contact-accordion-2-portail">Contacter l’équipe</a> pour toute question sur l’utilisation du portail
     </li>
     <li>
-      <a href="{% url 'contact_us' %}">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d’instruction
+      <a href="{% url 'contact_us' %}#contact-accordion-3-dossier">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d’instruction
     </li>
   </ul>
 </div>
