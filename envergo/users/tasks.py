@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.urls import reverse, set_urlconf
+from django.urls import reverse
 
 from config.celery_app import app
 from envergo.users.models import User
@@ -121,9 +121,10 @@ def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
 
     base_url = get_base_url(site.domain)
     departments = user.departments.defer("geometry").order_by("department")
-    set_urlconf("config.urls_haie")
-    project_list_url = f"{base_url}{reverse('petition_project_list')}"
-    contact_url = f"{base_url}{reverse('contact_us')}"
+    project_list_url = (
+        f"{base_url}{reverse('petition_project_list', urlconf='config.urls_haie')}"
+    )
+    contact_url = f"{base_url}{reverse('contact_us', urlconf='config.urls_haie')}"
 
     context = {
         "base_url": base_url,

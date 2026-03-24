@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from envergo.petitions.models import InvitationToken, PetitionProject
@@ -195,4 +196,8 @@ class UserAdmin(auth_admin.UserAdmin):
             and (is_instructor_changed or departments_changed)
         ):
             is_new_instructor = not original_is_instructor and obj.is_instructor
-            send_guh_instruction_rights_update_email.delay(obj.pk, is_new_instructor)
+            transaction.on_commit(
+                lambda: send_guh_instruction_rights_update_email.delay(
+                    obj.pk, is_new_instructor
+                )
+            )
