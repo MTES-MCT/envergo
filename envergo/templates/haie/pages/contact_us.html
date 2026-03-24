@@ -1,5 +1,77 @@
 {% extends 'pages/contact_us.html' %}
 
-{% block contact-means %}
-  {% include 'haie/_contact_means.html' %}
+{% block article %}
+  <h1>Une question ?</h1>
+
+  <div data-fr-group="true" class="fr-accordions-group">
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-1-faq">Questions les plus fréquentes</button>
+      </h3>
+      <div class="fr-collapse" id="contact-accordion-1-faq">
+        <p>
+          La FAQ répond aux principales questions sur le fonctionnement du service, la réglementation applicable et le dépôt d’un dossier.
+        </p>
+        <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
+           target="_blank"
+           rel="noopener external"
+           class="fr-btn fr-icon-icon-external-link-fill fr-btn--icon-right">Aller à la FAQ</a>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-2-equipe">Sur le fonctionnement du portail</button>
+      </h3>
+      <div class="fr-collapse" id="contact-accordion-2-equipe">
+        <p>Pour toute question sur :</p>
+        <ul>
+          <li>L’utilisation du simulateur</li>
+          <li>Un bug technique</li>
+          <li>Le dépôt en ligne…</li>
+        </ul>
+        <div class="contact-means">{% include 'haie/_contact_means.html' %}</div>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-3-dossier">Sur votre dossier</button>
+      </h3>
+      <div class="fr-collapse" id="contact-accordion-3-dossier">
+        <p>Pour toute question sur :</p>
+        <ul>
+          <li>Les règlementations applicables</li>
+          <li>Les délais</li>
+          <li>Les pièces complémentaires</li>
+          <li>La décision finale…</li>
+        </ul>
+        <p>Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
+      </div>
+    </section>
+  </div>
+
+{% endblock %}
+
+{% block after-content %}{% endblock %}
+
+{% block bottom_js %}
+  {{ block.super }}
+  <script type="text/javascript">
+    /* Open chat */
+    const openCrispChat = () => {
+      if (!window.$crisp) {
+        console.warn("Crisp is not loaded");
+      } else {
+        window.$crisp.push(["do", "chat:open"]);
+      }
+    }
+  </script>
 {% endblock %}
