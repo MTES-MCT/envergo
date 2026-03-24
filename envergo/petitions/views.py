@@ -1486,8 +1486,9 @@ class PetitionProjectInstructorProcedureView(
                     None,
                     mark_safe(
                         f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
-                        <a href='{reverse("contact_us")}'>contactez l'équipe du Guichet Unique de la Haie</a> en
-                        indiquant l'identifiant du dossier."""
+                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                            contactez l'équipe du Guichet Unique de la Haie
+                        </a> en indiquant l'identifiant du dossier."""
                     ),
                 )
                 return self.form_invalid(form)
