@@ -68,7 +68,7 @@
     /* Open chat */
     const openCrispChat = () => {
       if (!window.$crisp) {
-        console.error("Crisp is not loaded");
+        console.warn("Crisp is not loaded");
       } else {
         window.$crisp.push(["do", "chat:open"]);
       }
