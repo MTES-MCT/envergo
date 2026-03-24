@@ -1,0 +1,370 @@
+{# Regulation results and mentions mirror the email templates (eval_email_*.html). Keep in sync. #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-fr-js="true">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Avis réglementaire Envergo – {{ evaluation.reference }}</title>
+
+  <link href="{% static '@gouvfr/dsfr/dist/dsfr.css' %}" rel="stylesheet">
+  <link href="{% static '@gouvfr/dsfr/dist/utility/utility.css' %}" rel="stylesheet">
+
+  <style>
+    .highlight-obligation { background-color: #FFE8C5; padding: 2px 4px; border-radius: 2px; }
+    .highlight-action { background-color: #FFF3B0; padding: 2px 4px; border-radius: 2px; }
+    .highlight-restriction { background-color: #FFD6D6; padding: 2px 4px; border-radius: 2px; }
+    .highlight-non-soumis { background-color: #b1f0bd; padding: 2px 4px; border-radius: 2px; }
+
+    dl.fr-raw-list dt,
+    dl.fr-raw-list dd { display: inline; }
+    dl.fr-raw-list dt + dd + dt::before { content: "\A"; white-space: pre; }
+
+    address { font-style: normal; }
+
+    .rr-mention { font-style: italic; }
+
+    #avis-informatif > ul > li p { margin: 0.25rem 0 0; }
+
+    /* Print / PDF A4 */
+    @media print {
+      @page {
+        size: A4;
+        margin: 7.94mm 20.11mm 20.11mm 25.14mm;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body {
+        font-family: Marianne, Arial, sans-serif;
+        font-size: 11pt;
+        line-height: 1.45;
+        color: #000;
+        background: #fff;
+      }
+
+      p { widows: 3; orphans: 3; }
+
+      h2 {
+        break-after: avoid-page;
+        page-break-after: avoid;
+        break-inside: avoid;
+      }
+
+      .fr-container {
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      .fr-background-alt--grey {
+        background-color: #f5f5f5 !important;
+      }
+
+      .pdf-keep-together {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        break-after: auto;
+      }
+
+      #avis-informatif li {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .fr-btn {
+        display: inline !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        color: #000 !important;
+        font-weight: 700;
+        text-decoration: underline;
+      }
+
+      a[href]::after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        color: #555;
+        overflow-wrap: anywhere;
+      }
+
+      .fr-links-group a::after,
+      .fr-btn::after {
+        content: none;
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="fr-container fr-py-6w">
+
+  <!-- Logo -->
+  <div class="fr-mb-6w" style="max-width:260px">
+    <img src="{% static 'images/envergo_logo.svg' %}"
+         alt="Envergo – Ministère de la Transition Écologique"
+         width="260"
+         height="82">
+  </div>
+
+  <!-- Objet / Référence -->
+  <p class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</p>
+  <p>Référence : {{ evaluation.reference }}</p>
+
+  <!-- Projet concerné -->
+  <p class="fr-text--bold fr-mb-1w">Projet concerné :</p>
+  <dl class="fr-mb-0 fr-raw-list">
+    <dt class="fr-text--bold">Adresse : </dt>
+    <dd>{{ evaluation.address|default:"Non communiqué" }}</dd>
+    {% if evaluation.application_number %}
+      <dt class="fr-text--bold">N° de demande de permis : </dt>
+      <dd>{{ evaluation.application_number }}</dd>
+    {% endif %}
+  </dl>
+
+  <!-- Card : autorisation de transmission -->
+  {% if show_transmission_card %}
+    <div class="fr-background-alt--grey pdf-keep-together fr-p-4w fr-mt-6w">
+      <p>
+        <span aria-hidden="true">⚠️</span>
+        Le pétitionnaire a des obligations au titre d'une réglementation environnementale.
+        <strong>Acceptez-vous que nous lui transmettions cet avis ?</strong>
+        Cela nous permettra de l'accompagner dans ses démarches.
+      </p>
+
+      <p class="fr-text--bold fr-mb-1w">Coordonnées que nous avons identifiées :</p>
+      <dl class="fr-raw-list">
+        <dt class="fr-text--bold">Email : </dt>
+        <dd>{{ evaluation.project_owner_emails|join:", " }}</dd>
+        {% if evaluation.project_owner_phone %}
+          <dt class="fr-text--bold">Tél. : </dt>
+          <dd>{{ evaluation.project_owner_phone }}</dd>
+        {% endif %}
+        {% if evaluation.project_owner_company %}
+          <dt class="fr-text--bold">Société : </dt>
+          <dd>{{ evaluation.project_owner_company }}</dd>
+        {% endif %}
+      </dl>
+
+      <ul class="fr-links-group fr-raw-list">
+        <li>
+          <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
+             href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Oui, j'autorise la transmission de l'avis au pétitionnaire"|urlencode:""|iriencode }}">
+            <span aria-hidden="true">👌</span> Oui, j'autorise la transmission au pétitionnaire
+          </a>
+        </li>
+        <li>
+          <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
+             href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "J'autorise la transmission mais ce ne sont pas les bonnes coordonnées"|urlencode:""|iriencode }}">
+            <span aria-hidden="true">✏️</span> J'autorise la transmission mais ce ne sont pas les bonnes coordonnées
+          </a>
+        </li>
+        <li>
+          <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
+             href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo"|urlencode:""|iriencode }}">
+            <span aria-hidden="true">❌</span> Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo
+          </a>
+        </li>
+      </ul>
+    </div>
+  {% endif %}
+
+  <!-- Section : Avis à titre informatif -->
+  <section id="avis-informatif" class="fr-mt-6w">
+    <h2 class="fr-text--md fr-mb-1w">Avis à titre informatif</h2>
+
+    {% if result == "non_soumis" %}
+
+      <p>
+        Il apparaît que ce projet
+        <strong class="highlight-non-soumis">ne semble pas soumis</strong> :
+      </p>
+      <ul>
+        <li>ni à la Loi sur l'eau au titre des impacts suivants :
+          <ul>
+            <li>impact sur une zone humide ;</li>
+            <li>construction en zone inondable ;</li>
+            <li>interception de ruissellement d'eaux pluviales.</li>
+          </ul>
+        </li>
+        <li>ni à Natura 2000 ;</li>
+        <li>ni à examen au cas par cas ou à évaluation environnementale.</li>
+      </ul>
+
+    {% elif result == "interdit" %}
+
+      <p>
+        Au vu des informations qui nous ont été transmises, il apparaît que
+        <strong class="highlight-restriction">ce projet est interdit</strong>.
+      </p>
+      <p>
+        Ceci en raison d'un article du règlement de Schéma d'Aménagement et de
+        Gestion des Eaux (SAGE) qui interdit certains impacts sur zones humides.
+      </p>
+
+    {% elif result == "action_requise" %}
+
+      {% if required_actions_interdit %}
+        <p>
+          Au vu des informations qui nous ont été transmises, il apparaît que
+          <strong>ce projet est susceptible d'être interdit</strong> au titre du
+          règlement de SAGE (Schéma d'Aménagement et de Gestion des Eaux).
+        </p>
+        <p>
+          <strong class="highlight-action">Une action du porteur de projet est requise.</strong>
+          Celui-ci doit mener les études pour s'assurer que le projet :
+        </p>
+        <ul>
+          {% for action in required_actions_interdit %}
+            <li>{{ action }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>
+          Au vu des informations qui nous ont été transmises, il apparaît qu'<strong class="highlight-action">une action du porteur de projet est requise</strong>.
+        </p>
+
+        {% if moulinette.loi_sur_leau.required_actions_soumis %}
+          <p>
+            Pour s'assurer que le projet n'est pas soumis à la <strong>Loi sur l'eau</strong>,
+            le porteur doit mener les études prouvant que celui-ci :
+          </p>
+          <ul>
+            {% for action in moulinette.loi_sur_leau.required_actions_soumis %}
+              <li>{{ action }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if moulinette.natura2000.required_actions_soumis %}
+          <p>
+            Pour s'assurer que le projet n'est pas soumis à <strong>Natura 2000</strong>,
+            le porteur doit mener les études prouvant que celui-ci :
+          </p>
+          <ul>
+            {% for action in moulinette.natura2000.required_actions_soumis %}
+              <li>{{ action }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endif %}
+
+    {% else %}
+
+      <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
+
+      <ul class="fr-mb-0 fr-raw-list">
+
+        {% if moulinette.eval_env.result == "systematique" %}
+          <li class="fr-mb-5w">
+            <strong class="highlight-obligation">Le projet est soumis à évaluation environnementale.</strong>
+            <p>Le porteur de projet doit faire réaliser une étude d'impact.</p>
+          </li>
+        {% elif moulinette.eval_env.result == "cas_par_cas" %}
+          <li class="fr-mb-5w">
+            <strong class="highlight-obligation">Le projet est soumis à examen au cas par cas.</strong>
+            <p>Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.</p>
+          </li>
+        {% endif %}
+
+        {% if moulinette.loi_sur_leau.result == "soumis" or moulinette.loi_sur_leau.result == "soumis_ou_pac" %}
+          <li class="fr-mb-5w">
+            <strong class="highlight-obligation">Le projet est soumis à la Loi sur l'eau.</strong>
+            <p>Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à la DDT(M).</p>
+          </li>
+        {% elif moulinette.loi_sur_leau.required_actions_soumis %}
+          <li class="fr-mb-5w">
+            <p>Le projet est susceptible d'être soumis à la <strong>Loi sur l'eau</strong>.</p>
+            <p>
+              <strong class="highlight-action">Une action du porteur du projet est requise.</strong>
+              Celui-ci doit mener les études prouvant que le projet :
+            </p>
+            <ul>
+              {% for action in moulinette.loi_sur_leau.required_actions_soumis %}
+                <li class="fr-pl-1w">{{ action }}</li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if moulinette.natura2000.result == "soumis" and not moulinette.natura2000.ein_out_of_n2000_site %}
+          <li class="fr-mb-5w">
+            <strong class="highlight-obligation">Le projet est soumis à Natura 2000.</strong>
+            <p>Le porteur de projet doit réaliser une évaluation des incidences Natura 2000.</p>
+          </li>
+        {% endif %}
+
+        {% if moulinette.sage.required_actions_interdit %}
+          <li class="fr-mb-5w">
+            <p>
+              <strong>Le projet est susceptible d'être interdit</strong>
+              au titre du <strong>règlement de SAGE</strong>
+              (Schéma d'Aménagement et de Gestion des Eaux).
+            </p>
+            <p>
+              <strong class="highlight-action">Une action du porteur du projet est requise.</strong>
+              Des études doivent être menées pour s'assurer que le projet :
+            </p>
+            <ul>
+              {% for action in moulinette.sage.required_actions_interdit %}
+                <li class="fr-pl-1w">{{ action }}</li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endif %}
+
+      </ul>
+
+    {% endif %}
+
+    {% if is_icpe %}
+      <p class="fr-mt-4w">
+        <span aria-hidden="true">⚠️</span>
+        Le projet semble être une <strong>Installation Classée pour la Protection de l'Environnement (ICPE)</strong>. Cela peut modifier les procédures à suivre indiquées dans cet avis.
+      </p>
+    {% endif %}
+
+    {% if rr_mention_html %}
+      <div class="fr-mt-4w rr-mention">{{ rr_mention_html|safe }}</div>
+    {% endif %}
+  </section>
+
+  <!-- Section : Consulter l'avis -->
+  <section class="fr-mt-6w">
+    <h2 class="fr-text--md fr-mb-1w">Consulter l'avis détaillé</h2>
+
+    <p>Pour plus de détails sur cet avis réglementaire et sur la procédure à suivre :</p>
+
+    <a class="fr-btn" href="{{ evaluation_link }}">
+      Consulter l'avis en ligne
+    </a>
+
+    <p class="fr-mt-2w">
+      <a class="fr-link" href="{{ evaluation_link }}">{{ evaluation_link }}</a>
+    </p>
+
+    <p>N'hésitez pas à nous contacter pour toute question.</p>
+
+    <p>L'équipe Envergo, un service du Ministère de la Transition Écologique</p>
+
+    <address>
+      <span aria-hidden="true">📞</span> 07 56 81 02 11<br>
+      <span aria-hidden="true">📧</span> <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a><br>
+      <span aria-hidden="true">🌐</span> <a href="https://envergo.beta.gouv.fr">envergo.beta.gouv.fr</a>
+    </address>
+  </section>
+
+  <footer class="fr-mt-6w">
+    <small class="fr-text--xs">Envergo est un service du Ministère de la Transition Écologique. Il vise à aider les acteurs de l'aménagement en phase amont de leurs projets. Les avis sont rendus à titre indicatif, et ne valent pas position de l'administration. Ils ne couvrent pas l'exhaustivité des réglementations ni la spécificité de certains projets. Le porteur doit échanger directement avec les autorités administratives compétentes (collectivité en charge de l'urbanisme, DDT(M), DREAL…) pour obtenir une position officielle.</small>
+  </footer>
+
+</main>
+
+<script src="{% static '@gouvfr/dsfr/dist/dsfr.module.min.js' %}" type="module"></script>
+<script src="{% static '@gouvfr/dsfr/dist/dsfr.nomodule.min.js' %}" nomodule></script>
+</body>
+</html>
