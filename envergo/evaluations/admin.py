@@ -32,6 +32,7 @@ from envergo.evaluations.models import (
     RegulatoryNoticeLog,
     Request,
     RequestFile,
+    build_regulatory_notice_context,
     generate_reference,
 )
 from envergo.moulinette.utils import get_moulinette_class_from_url
@@ -261,6 +262,11 @@ class EvaluationAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.publish_view),
                 name="evaluations_evaluation_publish",
             ),
+            path(
+                "<path:object_id>/pdf/",
+                self.admin_site.admin_view(self.generate_pdf_view),
+                name="evaluations_evaluation_pdf",
+            ),
         ]
         return custom_urls + urls
 
@@ -461,6 +467,19 @@ class EvaluationAdmin(admin.ModelAdmin):
             )
 
         return response
+
+    def generate_pdf_view(self, request, object_id):
+        """Render the evaluation as a standalone page for print-to-PDF."""
+
+        if not self.has_view_or_change_permission(request):
+            raise PermissionDenied
+
+        evaluation = self.get_object(request, unquote(object_id))
+        moulinette = evaluation.get_moulinette()
+
+        context = build_regulatory_notice_context(evaluation, moulinette, request)
+
+        return TemplateResponse(request, "evaluations/admin/generate_pdf.html", context)
 
     @admin.display(description=_("Sent history"))
     def sent_history(self, obj):
