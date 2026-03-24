@@ -329,6 +329,7 @@ CONTEXT_CHOICES = (
 </span>"""
         ),
     ),
+    ("inconnu", "Inconnu"),
 )
 
 AUTORISATION_CHOICES = (
@@ -542,6 +543,10 @@ class TriageFormHaie(forms.Form):
             dict(AUTORISATION_CHOICES).get(x, "Inconnu") if x else "non renseigné"
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["contexte"].widget.choices = CONTEXT_CHOICES[:2]
 
     def clean_department(self):
         """Check if department exists"""
