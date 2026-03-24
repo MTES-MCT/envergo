@@ -274,7 +274,8 @@ nav#evaluation-summary {
   }
 }
 
-#moulinette-form {
+#moulinette-form,
+#triage-form {
   counter-reset: steps;
 
   #form-group-address label,

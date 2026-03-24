@@ -26,13 +26,18 @@
           </div>
         {% endif %}
 
-        <form class="fr-mb-3w spinner-form" method="post" novalidate>
+        <form class="fr-mb-3w spinner-form"
+              method="post"
+              novalidate
+              id="triage-form">
 
           {% csrf_token %}
           {{ form.department.as_hidden }}
+          {{ form.autorisation.as_hidden }}
 
-          {% render_field form.element %}
-          {% render_field form.travaux %}
+          <div class="form-section">{% render_field form.element %}</div>
+          <div class="form-section">{% render_field form.travaux %}</div>
+          <div class="form-section">{% render_field form.contexte %}</div>
 
           <div class="hide-print submit-section cta-group">
             <a href="{% url 'home' %}"
