@@ -457,6 +457,73 @@ class EvaluationVersion(models.Model):
         ]
 
 
+def build_regulatory_notice_context(evaluation, moulinette, request):
+    """Build template context shared between the email and PDF views.
+
+    Computes display flags (transmission links, ICPE warnings) and Tally form
+    parameters that both the regulatory-notice email and the PDF export need.
+    """
+
+    result = moulinette.result
+
+    to_be_transmitted = all(
+        (
+            not evaluation.is_icpe,
+            evaluation.user_type == USER_TYPES.instructor,
+            result != "non_soumis",
+            not evaluation.send_eval_to_project_owner,
+        )
+    )
+    display_transfer_links = all(
+        (
+            to_be_transmitted,
+            evaluation.project_owner_emails,
+        )
+    )
+    transfer_form_params = {
+        "societe": evaluation.project_owner_company,
+        "telephone": evaluation.project_owner_phone,
+        "email": ", ".join(evaluation.project_owner_emails),
+        "ref_envergo": evaluation.reference,
+        "adresse": evaluation.address,
+        "num_demande_permis": evaluation.application_number,
+    }
+    icpe_not_transmitted = all(
+        (
+            evaluation.is_icpe,
+            evaluation.send_eval_to_project_owner,
+            evaluation.user_type == USER_TYPES.instructor,
+        )
+    )
+    show_transmission_card = display_transfer_links and result in (
+        "soumis",
+        "interdit",
+        "action_requise",
+    )
+
+    return {
+        "evaluation": evaluation,
+        "moulinette": moulinette,
+        "result": result,
+        "is_icpe": evaluation.is_icpe,
+        "rr_mention_md": evaluation.rr_mention_md,
+        "rr_mention_html": evaluation.rr_mention_html,
+        "evaluation_link": request.build_absolute_uri(
+            evaluation.get_absolute_url()
+        ),
+        "to_be_transmitted": to_be_transmitted,
+        "display_transfer_links": display_transfer_links,
+        "transfer_eval_email_form_id": settings.TRANSFER_EVAL_EMAIL_FORM_ID,
+        "transfer_form_params": urlencode(transfer_form_params),
+        "icpe_not_transmitted": icpe_not_transmitted,
+        "show_transmission_card": show_transmission_card,
+        "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
+        "required_actions_interdit": list(
+            moulinette.all_required_actions_interdit()
+        ),
+    }
+
+
 class EvaluationEmail:
     """A custom object dedicated to handling "avis réglementaires" emails for evaluations."""
 
@@ -465,67 +532,19 @@ class EvaluationEmail:
         self.moulinette = evaluation.get_moulinette()
 
     def get_email(self, request):
+        """Generate the regulatory notice email for this evaluation."""
+
         evaluation = self.evaluation
         moulinette = evaluation.get_moulinette()
         result = moulinette.result
         txt_mail_template = f"evaluations/admin/eval_email_{result}.txt"
         html_mail_template = f"evaluations/admin/eval_email_{result}.html"
 
-        # Should we display the "à transmettre au porteur" mention?
-        to_be_transmitted = all(
-            (
-                not evaluation.is_icpe,
-                evaluation.user_type == USER_TYPES.instructor,
-                result != "non_soumis",
-                not evaluation.send_eval_to_project_owner,
-            )
+        context = build_regulatory_notice_context(evaluation, moulinette, request)
+        context["self_declaration_link"] = request.build_absolute_uri(
+            reverse("self_declaration", args=[evaluation.reference])
         )
-        # Should we display the links to self-transfer to the project owner?
-        display_transfer_links = all(
-            (
-                to_be_transmitted,
-                evaluation.project_owner_emails,
-            )
-        )
-        # Those as parameters to pass on to the Tally form
-        transfer_form_params = {
-            "societe": evaluation.project_owner_company,
-            "telephone": evaluation.project_owner_phone,
-            "email": ", ".join(evaluation.project_owner_emails),
-            "ref_envergo": evaluation.reference,
-            "adresse": evaluation.address,
-            "num_demande_permis": evaluation.application_number,
-        }
-        # Should we display the custom warning for icpe projects?
-        icpe_not_transmitted = all(
-            (
-                evaluation.is_icpe,
-                evaluation.send_eval_to_project_owner,
-                evaluation.user_type == USER_TYPES.instructor,
-            )
-        )
-        context = {
-            "evaluation": evaluation,
-            "is_icpe": evaluation.is_icpe,
-            "rr_mention_md": evaluation.rr_mention_md,
-            "rr_mention_html": evaluation.rr_mention_html,
-            "moulinette": moulinette,
-            "evaluation_link": request.build_absolute_uri(
-                evaluation.get_absolute_url()
-            ),
-            "self_declaration_link": request.build_absolute_uri(
-                reverse("self_declaration", args=[evaluation.reference])
-            ),
-            "to_be_transmitted": to_be_transmitted,
-            "display_transfer_links": display_transfer_links,
-            "transfer_eval_email_form_id": settings.TRANSFER_EVAL_EMAIL_FORM_ID,
-            "transfer_form_params": urlencode(transfer_form_params),
-            "icpe_not_transmitted": icpe_not_transmitted,
-            "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
-            "required_actions_interdit": list(
-                moulinette.all_required_actions_interdit()
-            ),
-        }
+
         txt_body = render_to_string(txt_mail_template, context)
         html_body = render_to_string(html_mail_template, context)
 
