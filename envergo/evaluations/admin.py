@@ -479,9 +479,7 @@ class EvaluationAdmin(admin.ModelAdmin):
 
         context = build_regulatory_notice_context(evaluation, moulinette, request)
 
-        return TemplateResponse(
-            request, "evaluations/admin/generate_pdf.html", context
-        )
+        return TemplateResponse(request, "evaluations/admin/generate_pdf.html", context)
 
     @admin.display(description=_("Sent history"))
     def sent_history(self, obj):

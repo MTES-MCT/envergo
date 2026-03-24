@@ -508,9 +508,7 @@ def build_regulatory_notice_context(evaluation, moulinette, request):
         "is_icpe": evaluation.is_icpe,
         "rr_mention_md": evaluation.rr_mention_md,
         "rr_mention_html": evaluation.rr_mention_html,
-        "evaluation_link": request.build_absolute_uri(
-            evaluation.get_absolute_url()
-        ),
+        "evaluation_link": request.build_absolute_uri(evaluation.get_absolute_url()),
         "to_be_transmitted": to_be_transmitted,
         "display_transfer_links": display_transfer_links,
         "transfer_eval_email_form_id": settings.TRANSFER_EVAL_EMAIL_FORM_ID,
@@ -518,9 +516,7 @@ def build_regulatory_notice_context(evaluation, moulinette, request):
         "icpe_not_transmitted": icpe_not_transmitted,
         "show_transmission_card": show_transmission_card,
         "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
-        "required_actions_interdit": list(
-            moulinette.all_required_actions_interdit()
-        ),
+        "required_actions_interdit": list(moulinette.all_required_actions_interdit()),
     }
 
 
