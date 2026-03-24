@@ -803,7 +803,9 @@ def test_triage_result_destruction_contexte_projet_no_autorisation(client):
     params = "department=44&element=haie&travaux=destruction&contexte=projet"
     res = client.get(f"{url}?{params}")
     assert res.status_code == 200
-    assert "triage_projet_result.html" in [t.name for t in res.templates]
+    assert "haie/moulinette/triage_projet_result.html" in [
+        t.name for t in res.templates
+    ]
 
 
 def test_triage_result_destruction_contexte_projet_with_autorisation(client):
