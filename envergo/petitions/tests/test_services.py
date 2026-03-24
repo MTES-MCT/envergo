@@ -579,7 +579,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "label": "Haie récemment plantée",
             },
             "ripisylve": {
-                "TO_PLANT": [],
+                "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
                 "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
                 "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
