@@ -33,11 +33,12 @@
 
       <div class="fr-callout">
         <p class="fr-text--sm">
-          Les informations de contact ci-dessous sont affichées aux usagers pour les guider sur le portail.
+          Les usagers ont la possibilité de vous contacter via
+          <a href="{% url 'contact_us' %}#contact-accordion-3-dossier">la page de contact</a>.
+          Ils verront les informations suivantes :
         </p>
-        <p class="fr-text--sm">
-          Une mise à jour avec les nouvelles informations remontées sera réalisée dans les prochains jours.
-        </p>
+        <div class="fr-mt-4w fr-p-2w">{{ object.contacts_info|safe }}</div>
+
         <p>
           <a class="fr-btn fr-btn--secondary"
              href="{{ department_settings_form }}"
@@ -45,8 +46,6 @@
              rel="noopener">Modifier les informations de contact</a>
         </p>
       </div>
-
-      <div class="fr-mt-4w fr-p-2w">{{ object.contacts_and_links|safe }}</div>
 
       <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
 
