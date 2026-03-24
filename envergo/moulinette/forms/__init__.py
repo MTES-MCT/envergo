@@ -535,19 +535,12 @@ class TriageFormHaie(forms.Form):
 
     autorisation = DisplayChoiceField(
         label="Travaux dans le cadre d'un projet soumis à autorisation d'urbanisme :",
-        widget=forms.RadioSelect,
-        choices=(
-            (
-                "non",
-                "non",
-            ),
-            (
-                "urba",
-                "oui",
-            ),
-        ),
+        widget=forms.HiddenInput,
+        choices=AUTORISATION_CHOICES,
         required=False,
-        get_display_value=lambda x: x if x else "non renseigné",
+        get_display_value=lambda x: (
+            dict(AUTORISATION_CHOICES).get(x, "Inconnu") if x else "non renseigné"
+        ),
     )
 
     def clean_department(self):

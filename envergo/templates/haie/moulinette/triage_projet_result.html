@@ -1,10 +1,13 @@
 {% extends 'haie/moulinette/triage_result.html' %}
 
+{% load utils %}
+
 {% block result %}
   <ul>
     <li>
       Si projet soumis à autorisation d'urbanisme : permis de construire, permis d'aménager, déclaration préalable
-      <a class="fr-btn">continuer sur cette page</a>
+      <a class="fr-btn"
+         href="{% url 'moulinette_form' %}{% querystring autorisation='urba' %}">continuer sur cette page</a>
     </li>
 
     <li>
@@ -14,7 +17,8 @@
 
     <li>
       Si projet mais non soumis à PC, PA, DP, (par exemple remembrement)
-      <a class="fr-btn">continuer</a>
+      <a class="fr-btn"
+         href="{% url 'moulinette_form' %}{% querystring autorisation='non' %}">continuer</a>
     </li>
 
   </ul>

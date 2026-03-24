@@ -48,6 +48,11 @@
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
 
+      <p>{% field_summary moulinette.triage_form.autorisation %}</p>
+      {% if moulinette.triage_form.autorisation.value == 'urba' %}
+        <p>{% field_summary moulinette.main_form.application_number %}</p>
+      {% endif %}
+
       <h6>Linéaires</h6>
 
       <div class="fr-my-3w">
