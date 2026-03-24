@@ -99,6 +99,7 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
         "localisation_pac": "non",
         "haies": hedges,
         "travaux": "destruction",
+        "contexte": "non",
         "element": "haie",
         "department": 44,
     }

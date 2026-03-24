@@ -3,8 +3,10 @@ from unittest.mock import patch
 
 from django.db.backends.postgresql.psycopg_any import DateRange
 
+from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.templatetags.moulinette import (
     display_validity_range,
+    field_summary,
     humanize_motif,
 )
 
@@ -50,3 +52,16 @@ class TestDisplayValidityRange:
         r = DateRange(date(2026, 6, 1), None, "[)")
         result = display_validity_range(r)
         assert result == "à partir du 01/06/2026"
+
+
+def test_field_summary_returns_empty_for_display_false_field():
+    """field_summary retourne '' pour un champ avec display=False."""
+    form = TriageFormHaie(
+        data={
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+        }
+    )
+    assert field_summary(form["contexte"]) == ""
