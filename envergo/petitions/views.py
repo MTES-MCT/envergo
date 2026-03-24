@@ -855,9 +855,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         context["invitation_contact_url"] = update_qs(
             self.request.build_absolute_uri(
-                reverse(
-                    "contact_us",
-                )
+                f"{reverse("contact_us")}#contact-accordion-2-equipe"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
@@ -1798,9 +1796,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
         # Return rendered modal HTML instead of JSON
         invitation_contact_url = update_qs(
             self.request.build_absolute_uri(
-                reverse(
-                    "contact_us",
-                )
+                f"{reverse("contact_us")}#contact-accordion-2-equipe"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
