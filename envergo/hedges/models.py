@@ -167,8 +167,8 @@ class Hedge:
         return self.additionalData.get("vieil_arbre", None)
 
     @property
-    def proximite_point_eau(self):
-        return self.additionalData.get("proximite_point_eau", None)
+    def ripisylve(self):
+        return self.additionalData.get("ripisylve", None)
 
     @property
     def connexion_boisement(self):
