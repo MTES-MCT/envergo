@@ -1,5 +1,6 @@
 import pytest
 from django.core import mail
+from django.test import TestCase
 from django.urls import reverse
 
 from envergo.contrib.sites.tests.factories import SiteFactory
@@ -65,7 +66,8 @@ def test_adding_department_to_haie_user_sends_email(
     url = reverse("admin:users_user_change", args=[haie_user.pk])
 
     data = admin_post_data(haie_user, departments=[department.pk])
-    client.post(url, data=data)
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        client.post(url, data=data)
 
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == [haie_user.email]
@@ -81,7 +83,8 @@ def test_activating_instructor_right_sends_email(
     url = reverse("admin:users_user_change", args=[haie_user.pk])
 
     data = admin_post_data(haie_user, is_instructor="on", departments=[department.pk])
-    client.post(url, data=data)
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        client.post(url, data=data)
 
     assert len(mail.outbox) == 1
     email = mail.outbox[0]
@@ -99,7 +102,8 @@ def test_no_email_when_no_rights_changed(client, admin_user, haie_user, departme
     url = reverse("admin:users_user_change", args=[haie_user.pk])
 
     data = admin_post_data(haie_user, departments=[department.pk])
-    client.post(url, data=data)
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        client.post(url, data=data)
 
     assert len(mail.outbox) == 0
 
@@ -110,7 +114,8 @@ def test_no_email_when_user_has_no_departments(client, admin_user, haie_user):
     url = reverse("admin:users_user_change", args=[haie_user.pk])
 
     data = admin_post_data(haie_user, is_instructor="on")
-    client.post(url, data=data)
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        client.post(url, data=data)
 
     assert len(mail.outbox) == 0
 
@@ -122,6 +127,7 @@ def test_no_email_for_non_haie_user(client, admin_user, department):
     url = reverse("admin:users_user_change", args=[amenagement_user.pk])
 
     data = admin_post_data(amenagement_user, departments=[department.pk])
-    client.post(url, data=data)
+    with TestCase.captureOnCommitCallbacks(execute=True):
+        client.post(url, data=data)
 
     assert len(mail.outbox) == 0
