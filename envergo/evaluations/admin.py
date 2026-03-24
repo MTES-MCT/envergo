@@ -263,9 +263,9 @@ class EvaluationAdmin(admin.ModelAdmin):
                 name="evaluations_evaluation_publish",
             ),
             path(
-                "<path:object_id>/generer-pdf/",
+                "<path:object_id>/pdf/",
                 self.admin_site.admin_view(self.generate_pdf_view),
-                name="evaluations_evaluation_generate_pdf",
+                name="evaluations_evaluation_pdf",
             ),
         ]
         return custom_urls + urls

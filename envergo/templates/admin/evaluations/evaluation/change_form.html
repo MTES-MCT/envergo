@@ -29,7 +29,7 @@
     </li>
   {% endif %}
   <li>
-    <a href="{% url 'admin:evaluations_evaluation_generate_pdf' original.pk %}"
+    <a href="{% url 'admin:evaluations_evaluation_pdf' original.pk %}"
        class="{% if not published %}disabled{% endif %} disableonchange">📄 Générer pdf</a>
   </li>
   {% if original.versions.count > 0 %}
