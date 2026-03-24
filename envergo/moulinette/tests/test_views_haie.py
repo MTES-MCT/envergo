@@ -77,7 +77,7 @@ def test_triage_result(client):
     )
 
     url = reverse("moulinette_result")
-    params = "department=44&element=haie&travaux=entretien"
+    params = "department=44&element=haie&travaux=entretien&contexte=non"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
 
@@ -89,7 +89,7 @@ def test_triage_result(client):
         category="simulateur", event="soumission_autre", metadata__user_type="anonymous"
     )
 
-    params = "department=44&element=bosquet&travaux=entretien"
+    params = "department=44&element=bosquet&travaux=entretien&contexte=non"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
 
@@ -98,7 +98,7 @@ def test_triage_result(client):
     assert "Votre projet n'est pas encore pris en compte par le simulateur" in content
     assert "<h2>kikoo</h2>" not in content
 
-    params = "department=44&element=haie&travaux=destruction"
+    params = "department=44&element=haie&travaux=destruction&contexte=non"
     full_url = f"{url}?{params}"
     res = client.get(full_url)
 
@@ -106,7 +106,7 @@ def test_triage_result(client):
     assert res["Location"].startswith("/simulateur/formulaire/")
 
     # GIVEN an invalid department code
-    params = "department=00&element=haie&travaux=destruction"
+    params = "department=00&element=haie&travaux=destruction&contexte=non"
     full_url = f"{url}?{params}"
     # WHEN visit triage form
     res = client.get(full_url)
@@ -148,6 +148,7 @@ def test_invalid_department_result(client):
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "travaux": "destruction",
+        "contexte": "inconnu",
         "haies": str(haies.id),
         "department": "00",
     }
@@ -176,6 +177,7 @@ def test_debug_result(client):
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "travaux": "destruction",
+        "contexte": "inconnu",
         "haies": str(haies.id),
         "department": "44",
         "debug": "true",
@@ -196,6 +198,7 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
     data = {
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "non",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -223,6 +226,7 @@ def test_result_d_view_with_R_eq_0(mock_R, client):
     data = {
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "non",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -253,6 +257,7 @@ def test_result_d_view_non_soumis_with_r_gt_0(client):
     data = {
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "inconnu",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -276,6 +281,7 @@ def test_result_p_view(mock_R, client):
     data = {
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "non",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -303,6 +309,7 @@ def test_moulinette_post_form_error(client):
         "department": "44",
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "inconnu",
     }
     res = client.post(f"{url}?department=44&element=haie&travaux=destruction", data)
 
@@ -349,6 +356,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     data = {
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "non",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -692,6 +700,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
     data = {
         "element": "haie",
         "travaux": "destruction",
+        "contexte": "non",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -873,3 +882,35 @@ def test_old_parametrage_url_redirects(
 
     assert response.status_code == 301
     assert response.url == "/parametrage/44/"
+
+
+def test_triage_result_destruction_contexte_non(client):
+    """destruction + contexte=non → redirige vers le formulaire principal."""
+    DCConfigHaieFactory()
+    url = reverse("moulinette_result")
+    params = "department=44&element=haie&travaux=destruction&contexte=non"
+    res = client.get(f"{url}?{params}")
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
+
+
+def test_triage_result_destruction_contexte_projet_no_autorisation(client):
+    """destruction + contexte=projet sans autorisation → triage_projet_result.html."""
+    DCConfigHaieFactory()
+    url = reverse("moulinette_result")
+    params = "department=44&element=haie&travaux=destruction&contexte=projet"
+    res = client.get(f"{url}?{params}")
+    assert res.status_code == 200
+    assert "haie/moulinette/triage_projet_result.html" in [
+        t.name for t in res.templates
+    ]
+
+
+def test_triage_result_destruction_contexte_projet_with_autorisation(client):
+    """destruction + contexte=projet + autorisation=urba → redirige vers le formulaire."""
+    DCConfigHaieFactory()
+    url = reverse("moulinette_result")
+    params = "department=44&element=haie&travaux=destruction&contexte=projet&autorisation=urba"
+    res = client.get(f"{url}?{params}")
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
