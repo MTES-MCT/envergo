@@ -303,6 +303,7 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.s3.fr-par.scw.cloud",
         "data:",
         "https://*.crisp.chat",
+        "https://static.demarches-simplifiees.fr",
     ],
     "font-src": [CSP.SELF, "https://*.crisp.chat"],
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
