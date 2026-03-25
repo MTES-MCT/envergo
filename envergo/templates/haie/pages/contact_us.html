@@ -55,19 +55,26 @@
         </ul>
         <p>Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
 
-        <form action="#department-search" method="post">
+        <form id="form-contact-department"
+              action="#contact-accordion-3-dossier"
+              method="post">
           {% csrf_token %}
-          <div class="fr-search-bar" role="search">
-            <label class="fr-label" for="department">Department</label>
-
-            <select class="fr-input"  name="department" id="department">
-              <option value="" disabled>--- Choisir un département ---</option>
+          <div class="fr-select-group">
+            <label class="fr-label fr-text--bold" for="department">Dans quel département le projet est-il situé ?</label>
+            <select class="fr-select  fr-col-md-7"
+                    aria-describedby="department-messages"
+                    name="department"
+                    id="department"
+                    onchange="submitDepartmentForm()">
+              <option value="" {% if not department %}selected{% endif %}>Rechercher ou choisir dans la liste</option>
               {% for option in departments %}
                 <option value="{{ option.id }}"
                         {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
               {% endfor %}
             </select>
-            <button type="submit" class="fr-btn">Rechercher</button>
+            <div class="fr-messages-group fr-sr-only"
+                 id="department-messages"
+                 aria-live="polite">Le formulaire sera soumis au changement dans la liste déroulante.</div>
           </div>
         </form>
 
@@ -99,5 +106,13 @@
         window.$crisp.push(["do", "chat:open"]);
       }
     }
+  </script>
+  <script type="text/javascript">
+    /* Submit form */
+    const renderContactSection = (evt) => {
+      evt.currentTarget.submit();
+    }
+    let form = document.getElementById("form-contact-department");
+    form.addEventListener('change', renderContactSection);
   </script>
 {% endblock %}

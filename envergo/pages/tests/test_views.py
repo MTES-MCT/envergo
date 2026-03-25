@@ -247,3 +247,59 @@ class TestHomeHaie:
         response = client.post(reverse("home"), {})
 
         assert response.status_code == 200
+
+
+@pytest.mark.haie
+class TestContactHaie:
+    """Tests for GUH contact page, using a view to display department contacts info"""
+
+    def test_department_config_display_contacts(self, client):
+        """Test if contact page displays contact infos for a selected department with a config."""
+
+        config = DCConfigHaieFactory(
+            contacts_info="Chez Ragadast, protecteur des haies"
+        )
+        response = client.post(
+            reverse("contact_us"),
+            {"department": config.department.id},
+        )
+        assert response.status_code == 200
+        assert "Chez Ragadast, protecteur des haies" in response.content.decode()
+
+    def test_department_config_no_contact_display_error(self, client):
+        """Test if contact page displays error message for a selected department with a config without contact."""
+
+        config = DCConfigHaieFactory()
+        response = client.post(
+            reverse("contact_us"),
+            {"department": config.department.id},
+        )
+        assert response.status_code == 200
+        assert (
+            "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
+            in response.content.decode()
+        )
+
+    def test_without_department(self, client):
+        """POST without selecting a department should render the page."""
+        response = client.get(reverse("contact_us"))
+        assert response.status_code == 200
+        response = client.post(reverse("contact_us"), {})
+        assert response.status_code == 200
+
+    def test_department_with_no_config(self, client):
+        """Selecting a department with no config should render the page (no redirect)."""
+        dept = DepartmentFactory()
+
+        response = client.post(
+            reverse("contact_us"),
+            {"department": dept.id},
+        )
+
+        assert response.status_code == 200
+        assert response.context["department"] == dept
+        assert response.context["config"] is None
+        assert (
+            "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
+            in response.content.decode()
+        )
