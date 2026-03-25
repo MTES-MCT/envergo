@@ -152,25 +152,25 @@
       </div>
 
       <!-- Objet / Référence -->
-      <p class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</p>
-      <p>Référence : {{ evaluation.reference }}</p>
+      <p class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</p>
+      <p>Référence : {{ evaluation.reference }}</p>
 
       <!-- Projet concerné -->
-      <p class="fr-text--bold fr-mb-1w">Projet concerné :</p>
+      <p class="fr-text--bold fr-mb-1w">Projet concerné :</p>
       <dl class="fr-mb-0 fr-raw-list">
-        <dt class="fr-text--bold">Adresse :</dt>
+        <dt class="fr-text--bold">Adresse :</dt>
         <dd>
           {{ evaluation.address|default:"Non communiqué" }}
         </dd>
         {% if evaluation.application_number %}
-          <dt class="fr-text--bold">N° de demande de permis :</dt>
+          <dt class="fr-text--bold">N° de demande de permis :</dt>
           <dd>
             {{ evaluation.application_number }}
           </dd>
         {% endif %}
       </dl>
 
-      <!-- Card : autorisation de transmission -->
+      <!-- Card : autorisation de transmission -->
       {% if show_transmission_card %}
         <div class="fr-background-alt--grey pdf-keep-together fr-p-4w fr-mt-6w">
           <p>
@@ -180,20 +180,20 @@
             Cela nous permettra de l'accompagner dans ses démarches.
           </p>
 
-          <p class="fr-text--bold fr-mb-1w">Coordonnées que nous avons identifiées :</p>
+          <p class="fr-text--bold fr-mb-1w">Coordonnées que nous avons identifiées :</p>
           <dl class="fr-raw-list">
-            <dt class="fr-text--bold">Email :</dt>
+            <dt class="fr-text--bold">Email :</dt>
             <dd>
               {{ evaluation.project_owner_emails|join:", " }}
             </dd>
             {% if evaluation.project_owner_phone %}
-              <dt class="fr-text--bold">Tél. :</dt>
+              <dt class="fr-text--bold">Tél. :</dt>
               <dd>
                 {{ evaluation.project_owner_phone }}
               </dd>
             {% endif %}
             {% if evaluation.project_owner_company %}
-              <dt class="fr-text--bold">Société :</dt>
+              <dt class="fr-text--bold">Société :</dt>
               <dd>
                 {{ evaluation.project_owner_company }}
               </dd>
@@ -223,7 +223,7 @@
         </div>
       {% endif %}
 
-      <!-- Section : Avis à titre informatif -->
+      <!-- Section : Avis à titre informatif -->
       <section id="avis-informatif" class="fr-mt-6w">
         <h2 class="fr-text--md fr-mb-1w">Avis à titre informatif</h2>
 
@@ -231,11 +231,11 @@
 
           <p>
             Il apparaît que ce projet
-            <strong class="highlight-non-soumis">ne semble pas soumis</strong> :
+            <strong class="highlight-non-soumis">ne semble pas soumis</strong> :
           </p>
           <ul>
             <li>
-              ni à la Loi sur l'eau au titre des impacts suivants :
+              ni à la Loi sur l'eau au titre des impacts suivants :
               <ul>
                 <li>impact sur une zone humide ;</li>
                 <li>construction en zone inondable ;</li>
@@ -267,7 +267,7 @@
             </p>
             <p>
               <strong class="highlight-action">Une action du porteur de projet est requise</strong>.
-              Celui-ci doit mener les études pour s'assurer que le projet :
+              Celui-ci doit mener les études pour s'assurer que le projet :
             </p>
             <ul>
               {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
@@ -280,7 +280,7 @@
             {% if moulinette.loi_sur_leau.required_actions_soumis %}
               <p>
                 Pour s'assurer que le projet n'est pas soumis à la <strong>Loi sur l'eau</strong>,
-                le porteur doit mener les études prouvant que celui-ci :
+                le porteur doit mener les études prouvant que celui-ci :
               </p>
               <ul>
                 {% for action in moulinette.loi_sur_leau.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
@@ -290,7 +290,7 @@
             {% if moulinette.natura2000.required_actions_soumis %}
               <p>
                 Pour s'assurer que le projet n'est pas soumis à <strong>Natura 2000</strong>,
-                le porteur doit mener les études prouvant que celui-ci :
+                le porteur doit mener les études prouvant que celui-ci :
               </p>
               <ul>
                 {% for action in moulinette.natura2000.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
@@ -300,7 +300,7 @@
 
         {% else %}
 
-          <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
+          <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
 
           <ul class="fr-mb-0 fr-raw-list">
 
@@ -328,7 +328,7 @@
                 </p>
                 <p>
                   <strong class="highlight-action">Une action du porteur du projet est requise.</strong>
-                  Celui-ci doit mener les études prouvant que le projet :
+                  Celui-ci doit mener les études prouvant que le projet :
 
                 </p>
                 <ul>
@@ -353,7 +353,7 @@
                 </p>
                 <p>
                   <strong class="highlight-action">Une action du porteur de projet est requise.</strong>
-                  Des études doivent être menées pour s'assurer que le projet :
+                  Des études doivent être menées pour s'assurer que le projet :
                 </p>
                 <ul>
                   {% for action in moulinette.sage.required_actions_interdit %}<li class="fr-pl-1w">{{ action }}</li>{% endfor %}
@@ -375,11 +375,11 @@
         {% if rr_mention_html %}<div class="fr-mt-4w rr-mention">{{ rr_mention_html|safe }}</div>{% endif %}
       </section>
 
-      <!-- Section : Consulter l'avis -->
+      <!-- Section : Consulter l'avis -->
       <section class="fr-mt-6w">
         <h2 class="fr-text--md fr-mb-1w">Consulter l'avis détaillé</h2>
 
-        <p>Pour plus de détails sur cet avis réglementaire et sur la procédure à suivre :</p>
+        <p>Pour plus de détails sur cet avis réglementaire et sur la procédure à suivre :</p>
 
         <a class="fr-btn" href="{{ evaluation_link }}">Consulter l'avis en ligne</a>
 
