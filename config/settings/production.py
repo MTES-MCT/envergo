@@ -294,7 +294,7 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.beta.gouv.fr",  # Stats
         "https://sentry.incubateur.net",
         "https://*.crisp.chat",
-        "wss://*.relay.crisp.chat",
+        "wss://*.crisp.chat",
     ],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "img-src": [
