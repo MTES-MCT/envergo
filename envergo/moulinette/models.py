@@ -2638,7 +2638,7 @@ class MoulinetteHaie(Moulinette):
         if hedge_id:
             try:
                 hedge_data = HedgeData.objects.get(id=hedge_id)
-            except HedgeData.DoesNotExist:
+            except (HedgeData.DoesNotExist, ValidationError):
                 pass
 
         context["hedge_data"] = hedge_data
