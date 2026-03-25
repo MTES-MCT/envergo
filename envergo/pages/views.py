@@ -82,6 +82,12 @@ class HomeHaieView(TemplateView):
         return self.render_to_response(context)
 
 
+class ContactHaieView(HomeHaieView):
+    """Contact page view for Haie to provide department form"""
+
+    template_name = "haie/pages/contact_us.html"
+
+
 class GeometriciansView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/geometricians.html"
 

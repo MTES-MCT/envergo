@@ -54,6 +54,32 @@
           <li>La décision finale…</li>
         </ul>
         <p>Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
+
+        <form action="#department-search" method="post">
+          {% csrf_token %}
+          <div class="fr-search-bar" role="search">
+            <label class="fr-label" for="department">Department</label>
+
+            <select class="fr-input"  name="department" id="department">
+              <option value="" disabled>--- Choisir un département ---</option>
+              {% for option in departments %}
+                <option value="{{ option.id }}"
+                        {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="fr-btn">Rechercher</button>
+          </div>
+        </form>
+
+        {% if department %}
+          {% if config and config.contacts_info %}
+            <div id="contacts_info" class="fr-highlight fr-mt-4w fr-p-2w">{{ config.contacts_info|safe }}</div>
+          {% else %}
+            <p class="fr-text--sm fr-my-2w fr-error-text">
+              Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles.
+            </p>
+          {% endif %}
+        {% endif %}
       </div>
     </section>
   </div>
