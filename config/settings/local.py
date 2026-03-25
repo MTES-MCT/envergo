@@ -101,6 +101,12 @@ RUNSERVER_PLUS_EXCLUDE_PATTERNS = [
     ".venv",
 ]
 
+# pyinstrument
+# ------------------------------------------------------------------------------
+# https://pyinstrument.readthedocs.io/en/latest/guide.html#django
+# Enable it to profile a slow page. To see the profiling result : http://haie.local:3000/your-slow-page?profile
+# MIDDLEWARE += ["pyinstrument.middleware.ProfilerMiddleware"]  # noqa F405
+
 # Your stuff...
 # ------------------------------------------------------------------------------
 
