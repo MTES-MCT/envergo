@@ -307,7 +307,12 @@ SECURE_CSP_REPORT_ONLY = {
     ],
     "font-src": [CSP.SELF, "https://*.crisp.chat"],
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
-    "frame-src": [CSP.SELF, "https://*.crisp.chat"],
+    "frame-src": [
+        CSP.SELF,
+        "https://*.crisp.chat",
+        "https://*.data.gouv.fr",  # Matomo iframe opt-out
+        "https://*.beta.gouv.fr",
+    ],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
     "report-uri": "/csp/reports/",
 }
