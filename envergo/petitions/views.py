@@ -136,6 +136,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                 demarches_simplifiees_state__exact=DOSSIER_STATES.draft
             )
             .select_related("hedge_data", "department")
+            .defer("department__geometry")
             .prefetch_related(
                 Prefetch(
                     "status_history",

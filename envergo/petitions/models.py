@@ -106,7 +106,10 @@ class PetitionProject(models.Model):
     )
 
     demarches_simplifiees_dossier_number = models.IntegerField(
-        help_text=_("Dossier number on demarches-simplifiees.fr"), blank=True, null=True
+        help_text=_("Dossier number on demarches-simplifiees.fr"),
+        blank=True,
+        null=True,
+        db_index=True,
     )
 
     demarches_simplifiees_dossier_id = models.CharField(
@@ -126,10 +129,11 @@ class PetitionProject(models.Model):
         max_length=20,
         choices=DOSSIER_STATES,
         default=DOSSIER_STATES.draft,
+        db_index=True,
     )
 
     demarches_simplifiees_date_depot = models.DateTimeField(
-        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True
+        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True, db_index=True
     )
 
     demarches_simplifiees_raw_dossier = models.JSONField(
@@ -194,11 +198,22 @@ class PetitionProject(models.Model):
     )
 
     # Meta fields
-    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    created_at = models.DateTimeField(
+        _("Date created"), default=timezone.now, db_index=True
+    )
 
     class Meta:
         verbose_name = "Dossier"
         verbose_name_plural = "Dossiers"
+        indexes = [
+            models.Index(
+                fields=[
+                    "demarches_simplifiees_state",
+                    "demarches_simplifiees_date_depot",
+                ],
+                name="pp_state_datedepot_idx",
+            ),
+        ]
 
     def __str__(self):
         return self.reference
@@ -478,7 +493,7 @@ class PetitionProject(models.Model):
             )
         return None
 
-    @property
+    @cached_property
     def prefetched_dossier(self) -> Dossier | None:
         """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
