@@ -314,6 +314,9 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.beta.gouv.fr",
     ],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "form-action": [CSP.SELF],
     "report-uri": "/csp/reports/",
 }
 
