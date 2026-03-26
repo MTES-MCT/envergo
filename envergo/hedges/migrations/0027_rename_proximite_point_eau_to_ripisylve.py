@@ -9,6 +9,12 @@ def update_speciesmap_hedge_properties(apps, schema_editor):
         "WHERE 'proximite_point_eau' = ANY(hedge_properties)"
     )
 
+def switch_proximite_point_eau_to_ripisylve(apps, schema_editor):
+    schema_editor.execute(
+        'UPDATE hedges_hedgedata '
+        'SET data = REPLACE(data::text, \'"proximite_point_eau"\', \'"ripisylve"\')::jsonb '
+        'WHERE data::text LIKE \'%%proximite_point_eau%%\''
+    )
 
 class Migration(migrations.Migration):
 
@@ -45,5 +51,9 @@ class Migration(migrations.Migration):
                 size=None,
                 verbose_name="Propriétés de la haie",
             ),
+        ),
+        migrations.RunPython(
+            switch_proximite_point_eau_to_ripisylve,
+            migrations.RunPython.noop
         ),
     ]
