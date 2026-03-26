@@ -1001,6 +1001,7 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_state == DossierState.accepte.value
+    del petition_project.prefetched_dossier  # refresh
     assert petition_project.prefetched_dossier.state == DossierState.accepte
 
     # WHEN I update its status to "Refusé"
@@ -1009,6 +1010,7 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_state == DossierState.refuse.value
+    del petition_project.prefetched_dossier  # refresh
     assert petition_project.prefetched_dossier.state == DossierState.refuse
 
     # WHEN I update its status to "Classé sans suite"
@@ -1017,4 +1019,5 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_state == DossierState.sans_suite.value
+    del petition_project.prefetched_dossier  # refresh
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
