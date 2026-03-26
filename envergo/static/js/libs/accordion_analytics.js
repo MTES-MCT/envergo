@@ -4,7 +4,7 @@
  * Whenever an accordion section is opened, we push a new state then update
  * stats using matomo.
  *
- * Note : in it's current state, there is no easy way to bind into dsfr's
+ * Note : in its current state, there is no easy way to bind into dsfr's
  * events, so we use MutationObservers to detect whenever a section is
  * opened.
  */

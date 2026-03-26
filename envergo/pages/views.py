@@ -31,8 +31,20 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
-class HomeHaieView(TemplateView):
-    template_name = "haie/pages/home.html"
+class DeparmentSearchMixin:
+    """Mixin to manage department and config search form in view"""
+
+    def get_department_and_config(self, request):
+        """Get department and config from post data"""
+        data = request.POST
+        department_id = data.get("department")
+        department = None
+        if department_id:
+            department = Department.objects.defer("geometry").get(id=department_id)
+
+        config = ConfigHaie.objects.get_valid_config(department) if department else None
+
+        return department, config
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -40,6 +52,15 @@ class HomeHaieView(TemplateView):
         # List all departments for the select input
         departments = Department.objects.defer("geometry").all()
         context["departments"] = departments
+
+        return context
+
+
+class HomeHaieView(DeparmentSearchMixin, TemplateView):
+    template_name = "haie/pages/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
         # Only show activated departments in the button list
         configs = (
@@ -53,13 +74,7 @@ class HomeHaieView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        data = request.POST
-        department_id = data.get("department")
-        department = None
-        if department_id:
-            department = Department.objects.defer("geometry").get(id=department_id)
-
-        config = ConfigHaie.objects.get_valid_config(department) if department else None
+        department, config = self.get_department_and_config(request)
 
         if config and config.is_activated:
             query_params = {"department": department.department}
@@ -79,6 +94,22 @@ class HomeHaieView(TemplateView):
                 department=department.department,
                 user_type=get_user_type(request.user),
             )
+        return self.render_to_response(context)
+
+
+class ContactHaieView(DeparmentSearchMixin, TemplateView):
+    """Contact page view for Haie to provide department form"""
+
+    template_name = "haie/pages/contact_us.html"
+
+    def post(self, request, *args, **kwargs):
+        """Just add department and config to context"""
+        department, config = self.get_department_and_config(request)
+
+        context = self.get_context_data()
+        context["department"] = department
+        context["config"] = config
+
         return self.render_to_response(context)
 
 
