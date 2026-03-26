@@ -34,14 +34,13 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
 class DeparmentSearchMixin:
     """Mixin to manage department and config search form in view"""
 
-    def get_department_and_config(self, request):
+    def get_department_and_config(self, department_id):
         """Get department and config from post data"""
-        data = request.POST
-        department_id = data.get("department")
-        department = None
-        if department_id:
-            department = Department.objects.defer("geometry").get(id=department_id)
+        if not department_id:
+            return None, None
 
+        department = None
+        department = Department.objects.defer("geometry").get(id=department_id)
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         return department, config
@@ -74,7 +73,9 @@ class HomeHaieView(DeparmentSearchMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        department, config = self.get_department_and_config(request)
+        data = request.POST
+        department_id = data.get("department")
+        department, config = self.get_department_and_config(department_id)
 
         if config and config.is_activated:
             query_params = {"department": department.department}
@@ -102,9 +103,23 @@ class ContactHaieView(DeparmentSearchMixin, TemplateView):
 
     template_name = "haie/pages/contact_us.html"
 
+    def get_context_data(self, **kwargs):
+        """Get param department"""
+        context = super().get_context_data(**kwargs)
+        if "department" in self.request.GET:
+            department_id = self.request.GET.get("department")
+            department = context["departments"].get(department=department_id)
+            config = (
+                ConfigHaie.objects.get_valid_config(department) if department else None
+            )
+            context["department"] = department
+            context["config"] = config
+        return context
+
     def post(self, request, *args, **kwargs):
         """Just add department and config to context"""
-        department, config = self.get_department_and_config(request)
+        department_id = request.POST.get("department")
+        department, config = self.get_department_and_config(department_id)
 
         context = self.get_context_data()
         context["department"] = department

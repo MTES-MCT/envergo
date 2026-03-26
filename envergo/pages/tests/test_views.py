@@ -259,6 +259,13 @@ class TestContactHaie:
         config = DCConfigHaieFactory(
             contacts_info="Chez Ragadast, protecteur des haies"
         )
+        response = client.get(
+            reverse("contact_us"),
+            {"department": config.department.department},
+        )
+        assert response.status_code == 200
+        assert "Chez Ragadast, protecteur des haies" in response.content.decode()
+
         response = client.post(
             reverse("contact_us"),
             {"department": config.department.id},
