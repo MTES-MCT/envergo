@@ -6,7 +6,7 @@ from django.views.generic import RedirectView, TemplateView
 
 from envergo.moulinette.views import ConfigHaieListView, ConfigHaieSettingsView
 from envergo.pages.models import HaieSitemap
-from envergo.pages.views import HomeHaieView, Outlinks
+from envergo.pages.views import ContactHaieView, HomeHaieView, Outlinks
 
 sitemaps = {"static_pages": HaieSitemap}
 
@@ -52,7 +52,7 @@ urlpatterns = [
     ),
     path(
         _("contact-us/"),
-        TemplateView.as_view(template_name="haie/pages/contact_us.html"),
+        ContactHaieView.as_view(),
         name="contact_us",
     ),
     path("admin/outlinks/", Outlinks.as_view(), name="outlinks"),

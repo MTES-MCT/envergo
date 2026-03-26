@@ -1,5 +1,7 @@
 {% extends 'pages/contact_us.html' %}
 
+{% load static %}
+
 {% block article %}
   <h1>Une question ?</h1>
 
@@ -54,6 +56,39 @@
           <li>La décision finale…</li>
         </ul>
         <p>Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
+
+        <form id="form-contact-department"
+              action="#contact-accordion-3-dossier"
+              method="post">
+          {% csrf_token %}
+          <div class="fr-select-group">
+            <label class="fr-label fr-text--bold" for="department">Dans quel département le projet est-il situé ?</label>
+            <select class="fr-select  fr-col-md-7"
+                    aria-describedby="department-messages"
+                    name="department"
+                    id="department"
+                    onchange="submitDepartmentForm()">
+              <option value="" {% if not department %}selected{% endif %}>Rechercher ou choisir dans la liste</option>
+              {% for option in departments %}
+                <option value="{{ option.id }}"
+                        {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+            <div class="fr-messages-group fr-sr-only"
+                 id="department-messages"
+                 aria-live="polite">Le formulaire sera soumis au changement dans la liste déroulante.</div>
+          </div>
+        </form>
+
+        {% if department %}
+          {% if config and config.contacts_info %}
+            <div id="contacts_info" class="fr-highlight fr-mt-4w fr-p-2w">{{ config.contacts_info|safe }}</div>
+          {% else %}
+            <p class="fr-text--sm fr-my-2w fr-error-text">
+              Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles.
+            </p>
+          {% endif %}
+        {% endif %}
       </div>
     </section>
   </div>
@@ -62,8 +97,11 @@
 
 {% block after-content %}{% endblock %}
 
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+{% endblock %}
+
 {% block bottom_js %}
-  {{ block.super }}
   <script type="text/javascript">
     /* Open chat */
     const openCrispChat = () => {
@@ -73,5 +111,13 @@
         window.$crisp.push(["do", "chat:open"]);
       }
     }
+  </script>
+  <script type="text/javascript">
+    /* Submit form */
+    const renderContactSection = (evt) => {
+      evt.currentTarget.submit();
+    }
+    let form = document.getElementById("form-contact-department");
+    form.addEventListener('change', renderContactSection);
   </script>
 {% endblock %}
