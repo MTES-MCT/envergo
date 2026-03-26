@@ -5,7 +5,9 @@
 {% block article %}
   <h1>Une question ?</h1>
 
-  <div data-fr-group="true" class="fr-accordions-group accordions-contact">
+  <div data-fr-group="true"
+       id="contactus-accordion"
+       class="fr-accordions-group">
     <section class="fr-accordion">
       <h2 class="fr-accordion__title">
         <button type="button"
@@ -98,7 +100,15 @@
 {% block after-content %}{% endblock %}
 
 {% block extra_js %}
-  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
+  <script>
+    /* Add analytics */
+    window.addEventListener('load', function() {
+      const elt = document.getElementById('contactus-accordion');
+      const accordion = new AccordionAnalytics(elt);
+      accordion.init();
+    });
+  </script>
 {% endblock %}
 
 {% block bottom_js %}
