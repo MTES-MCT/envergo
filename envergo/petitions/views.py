@@ -832,10 +832,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         context.update(moulinette.catalog)
 
-        context["plantation_evaluation"] = PlantationEvaluator(
-            context["moulinette"], context["moulinette"].catalog["haies"]
-        )
-
         plantation_url = reverse(
             "input_hedges",
             args=[
@@ -956,6 +952,10 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update(get_project_context(self.object, context["moulinette"]))
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         return context
 
     def get_success_url(self):
@@ -997,6 +997,9 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 
         context["regulation"] = regulation
         context["current_regulation"] = regulation
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         context["config"] = context["moulinette"].config
         return context
 
