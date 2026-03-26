@@ -1,5 +1,7 @@
 {% extends 'pages/contact_us.html' %}
 
+{% load static %}
+
 {% block article %}
   <h1>Une question ?</h1>
 
@@ -95,8 +97,11 @@
 
 {% block after-content %}{% endblock %}
 
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+{% endblock %}
+
 {% block bottom_js %}
-  {{ block.super }}
   <script type="text/javascript">
     /* Open chat */
     const openCrispChat = () => {
