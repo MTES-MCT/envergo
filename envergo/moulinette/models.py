@@ -1605,7 +1605,7 @@ class Moulinette(ABC):
         "alignement_arbres",
     ]
 
-    def __init__(self, form_kwargs):
+    def __init__(self, form_kwargs, evaluate=True):
         self.catalog = MoulinetteCatalog()
         # Maybe here department should be evaluated if existing
         if "initial" in form_kwargs:
@@ -1620,7 +1620,8 @@ class Moulinette(ABC):
             else:
                 self.templates = {}
 
-            self.evaluate()
+            if evaluate:
+                self.evaluate()
 
     def evaluate(self):
         for regulation in self.regulations:
@@ -1925,6 +1926,22 @@ class Moulinette(ABC):
     def regulations(self, value):
         self._regulations = value
 
+    @classmethod
+    def get_regulations_qs(cls):
+        """Get the Moulinette regulations queryset, without prefetched criteria
+
+        This qs should be kept lightweight to avoid consuming resources for rendering.
+        """
+        return Regulation.objects.filter(regulation__in=cls.REGULATIONS).order_by(
+            "weight"
+        )
+
+    def get_available_regulations(self):
+        qs = self.get_regulations_qs()
+        if self.has_config():
+            qs = qs.filter(regulation__in=self.config.regulations_available)
+        return qs
+
     def has_config(self):
         """Check if a valid, active config exists for this department."""
         return bool(self.config)
@@ -2016,10 +2033,8 @@ class Moulinette(ABC):
         """Find the activated regulations and their criteria."""
 
         criteria = self.get_criteria()
-        regulations = (
-            Regulation.objects.filter(regulation__in=self.REGULATIONS)
-            .order_by("weight")
-            .prefetch_related(Prefetch("criteria", queryset=criteria))
+        regulations = self.get_regulations_qs().prefetch_related(
+            Prefetch("criteria", queryset=criteria)
         )
         return regulations
 
