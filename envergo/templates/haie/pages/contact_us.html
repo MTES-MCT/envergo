@@ -68,8 +68,7 @@
             <select class="fr-select  fr-col-md-7"
                     aria-describedby="department-messages"
                     name="department"
-                    id="department"
-                    onchange="submitDepartmentForm()">
+                    id="department">
               <option value="" {% if not department %}selected{% endif %}>Rechercher ou choisir dans la liste</option>
               {% for option in departments %}
                 <option value="{{ option.id }}"
@@ -83,8 +82,8 @@
         </form>
 
         {% if department %}
-          {% if config and config.contacts_info %}
-            <div id="contacts_info" class="fr-highlight fr-mt-4w fr-p-2w">{{ config.contacts_info|safe }}</div>
+          {% if department.contacts_info %}
+            <div id="contacts_info" class="fr-highlight fr-mt-4w fr-p-2w">{{ department.contacts_info|safe }}</div>
           {% else %}
             <p class="fr-text--sm fr-my-2w fr-error-text">
               Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles.
