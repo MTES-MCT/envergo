@@ -1,0 +1,42 @@
+{% include 'haie/moulinette/debug/density_around_lines.html' %}
+
+{% if ep_ru_total_length is not None %}
+  <h6>Paramètres EP régime unique</h6>
+
+  <table>
+    <tbody>
+      <tr>
+        <th scope="row">Longueur totale détruite (hors alignements)</th>
+        <td>{{ ep_ru_total_length }} m</td>
+      </tr>
+      <tr>
+        <th scope="row">Longueur totale ripisylve</th>
+        <td>{{ ep_ru_ripisylve_length }} m</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if hedge_debug_rows %}
+    <h6>Détail par haie</h6>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Haie</th>
+          <th scope="col">Type</th>
+          <th scope="col">Zone sensible</th>
+          <th scope="col">Résultat partiel</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in hedge_debug_rows %}
+          <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.hedge_type }}</td>
+            <td>{% if row.in_zone_sensible %}Oui{% else %}Non{% endif %}</td>
+            <td>{{ row.partial_result }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endif %}
