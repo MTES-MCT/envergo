@@ -1,0 +1,15 @@
+<p>
+  Au vu des caractéristiques et de la localisation des haies à détruire, le projet n'est pas soumis à la procédure de demande de dérogation au titre de la réglementation sur les espèces protégées.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+
+<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+  {% if protected_species %}
+    <p>
+      <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire&nbsp;:</strong>
+    </p>
+    <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
+    {% include 'hedges/_species_table.html' with species=protected_species %}
+  {% endif %}
+</div>
