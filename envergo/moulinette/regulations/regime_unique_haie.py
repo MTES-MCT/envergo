@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
@@ -7,6 +5,26 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
+
+
+def compute_ru_compensation_ratio(moulinette):
+    """Compute the régime unique compensation ratio.
+
+    Returns the weighted average of per-hedge-type compensation coefficients
+    (from the department config), weighted by hedge length. Alignements are
+    excluded. Returns 0.0 when the department is not in régime unique.
+    """
+    if not moulinette.config.single_procedure:
+        return 0.0
+
+    haies = moulinette.catalog["haies"]
+    coeff_by_type = moulinette.config.single_procedure_settings["coeff_compensation"]
+
+    compensated_length = 0.0
+    for hedge in haies.hedges_to_remove().n_alignement():
+        compensated_length += hedge.length * coeff_by_type[hedge.hedge_type]
+
+    return round(compensated_length / haies.length_to_remove(), 2)
 
 
 class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
@@ -56,23 +74,4 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         )
 
     def get_replantation_coefficient(self):
-        if not self.moulinette.config.single_procedure:
-            return 0.0
-
-        haies = self.catalog["haies"]
-        minimum_length_to_plant = 0.0
-        lengths_by_type = defaultdict(int)
-        for to_remove in haies.hedges_to_remove():
-            lengths_by_type[to_remove.hedge_type] += to_remove.length
-
-        for hedge_type, length in lengths_by_type.items():
-            if hedge_type == "alignement":
-                continue
-
-            coeff = self.moulinette.config.single_procedure_settings[
-                "coeff_compensation"
-            ][hedge_type]
-            minimum_length_to_plant += length * coeff
-
-        R = minimum_length_to_plant / haies.length_to_remove()
-        return round(R, 2)
+        return compute_ru_compensation_ratio(self.moulinette)
