@@ -39,8 +39,12 @@ class DeparmentSearchMixin:
         data = request.POST
         department_id = data.get("department")
         department = None
+
         if department_id:
-            department = Department.objects.defer("geometry").get(id=department_id)
+            try:
+                department = Department.objects.defer("geometry").get(id=department_id)
+            except Department.DoesNotExist:
+                pass
 
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
