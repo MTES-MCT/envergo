@@ -6,6 +6,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
+from django.db.models import OuterRef, Q, Subquery
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
@@ -31,36 +32,47 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
-class DeparmentSearchMixin:
+class DepartmentSearchMixin:
     """Mixin to manage department and config search form in view"""
 
-    def get_department_and_config(self, request):
+    queryset = Department.objects.defer("geometry").all()
+
+    def get_queryset_with_contacts(self):
+        """List all departments for the select input with contact info"""
+        valid_config_qs = ConfigHaie.objects.filter(
+            Q(validity_range__contains=timezone.now().date())
+            | Q(validity_range__isnull=True),
+            department=OuterRef("pk"),
+        )
+        departments_qs = self.queryset.annotate(
+            contacts_info=Subquery(valid_config_qs.values("contacts_info"))
+        )
+        return departments_qs
+
+    def get_department(self, pk=None, department_code=None):
         """Get department and config from post data"""
-        data = request.POST
-        department_id = data.get("department")
-        department = None
+        if not pk and not department_code:
+            return None
 
-        if department_id:
-            try:
-                department = Department.objects.defer("geometry").get(id=department_id)
-            except Department.DoesNotExist:
-                pass
-
-        config = ConfigHaie.objects.get_valid_config(department) if department else None
-
-        return department, config
+        department_qs = self.get_queryset_with_contacts()
+        if pk:
+            department_qs = department_qs.filter(pk=pk)
+        elif department_code:
+            department_qs = department_qs.filter(department=department_code)
+        try:
+            department = department_qs.get()
+        except department_qs.model.DoesNotExist:
+            return None
+        return department
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # List all departments for the select input
-        departments = Department.objects.defer("geometry").all()
-        context["departments"] = departments
+        context["departments"] = self.queryset
 
         return context
 
 
-class HomeHaieView(DeparmentSearchMixin, TemplateView):
+class HomeHaieView(DepartmentSearchMixin, TemplateView):
     template_name = "haie/pages/home.html"
 
     def get_context_data(self, **kwargs):
@@ -78,7 +90,13 @@ class HomeHaieView(DeparmentSearchMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        department, config = self.get_department_and_config(request)
+        """Post response with department
+        TODO: use mixin queryset and update template
+        """
+        data = request.POST
+        department_id = data.get("department")
+        department = self.get_department(pk=department_id)
+        config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         if config and config.is_activated:
             query_params = {"department": department.department}
@@ -101,18 +119,25 @@ class HomeHaieView(DeparmentSearchMixin, TemplateView):
         return self.render_to_response(context)
 
 
-class ContactHaieView(DeparmentSearchMixin, TemplateView):
+class ContactHaieView(DepartmentSearchMixin, TemplateView):
     """Contact page view for Haie to provide department form"""
 
     template_name = "haie/pages/contact_us.html"
 
+    def get_context_data(self, **kwargs):
+        """Get param department"""
+        context = super().get_context_data(**kwargs)
+        if "department" in self.request.GET:
+            department_code = self.request.GET.get("department")
+            context["department"] = self.get_department(department_code=department_code)
+        return context
+
     def post(self, request, *args, **kwargs):
         """Just add department and config to context"""
-        department, config = self.get_department_and_config(request)
+        department_id = request.POST.get("department")
 
         context = self.get_context_data()
-        context["department"] = department
-        context["config"] = config
+        context["department"] = self.get_department(pk=department_id)
 
         return self.render_to_response(context)
 
