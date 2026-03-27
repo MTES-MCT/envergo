@@ -712,6 +712,14 @@ class Triage(MoulinetteMixin, FormView):
         url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
 
+    def get_initial(self):
+        """Switch specific "projet-*" contexte to "projet" to let the user choose again if needed"""
+        initial = super().get_initial()
+
+        if initial.get("contexte") in ("projet-autre", "projet-urba"):
+            initial["contexte"] = "projet"
+        return initial
+
 
 class ConfigHaieBaseView(InstructorDepartmentAuthorised):
     """Define what to when user has no permission"""

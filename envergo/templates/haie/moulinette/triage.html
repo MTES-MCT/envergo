@@ -32,8 +32,8 @@
               id="triage-form">
 
           {% csrf_token %}
+          {% include '_form_header.html' with form=form %}
           {{ form.department.as_hidden }}
-          {{ form.autorisation.as_hidden }}
 
           <div class="form-section">{% render_field form.element %}</div>
           <div class="form-section">{% render_field form.travaux %}</div>

@@ -2580,23 +2580,25 @@ class MoulinetteHaie(Moulinette):
         element = triage_form.cleaned_data.get("element")
         travaux = triage_form.cleaned_data.get("travaux")
         contexte = triage_form.cleaned_data.get("contexte")
-        autorisation = triage_form.cleaned_data.get("autorisation")
         return (
             element == "haie"
             and travaux == "destruction"
-            and (contexte == "non" or autorisation)
+            and contexte not in ["projet", "inconnu"]
         )
 
     def get_triage_result_template(self):
         """Return the template to display the triage out of scope result."""
-        if self.triage_form["element"].value() == "haie":
-            if self.triage_form["travaux"].value() == "entretien":
-                return "haie/moulinette/entretien_haies_result.html"
-            if (
-                self.triage_form["travaux"].value() == "destruction"
-                and self.triage_form["contexte"].value() == "projet"
-            ):
-                return "haie/moulinette/triage_projet_result.html"
+        travaux = self.triage_form["travaux"].value()
+
+        if (
+            self.triage_form["element"].value() == "haie"
+            and travaux == "destruction"
+            and self.triage_form["contexte"].value() == "projet"
+        ):
+            return "haie/moulinette/triage_projet_result.html"
+
+        if travaux == "entretien":
+            return "haie/moulinette/tirage_entretien_result.html"
 
         return "haie/moulinette/triage_result.html"
 

@@ -96,7 +96,7 @@ def test_triage_result(client):
     assert res.status_code == 200
     content = res.content.decode()
     assert "Votre projet n'est pas encore pris en compte par le simulateur" in content
-    assert "<h2>kikoo</h2>" not in content
+    assert "<h2>kikoo</h2>" in content
 
     params = "department=44&element=haie&travaux=destruction&contexte=non"
     full_url = f"{url}?{params}"
@@ -906,11 +906,45 @@ def test_triage_result_destruction_contexte_projet_no_autorisation(client):
     ]
 
 
-def test_triage_result_destruction_contexte_projet_with_autorisation(client):
-    """destruction + contexte=projet + autorisation=urba → redirige vers le formulaire."""
+def test_triage_result_destruction_contexte_projet_urba(client):
+    """destruction + contexte=projet-urba → redirige vers le formulaire principal."""
     DCConfigHaieFactory()
     url = reverse("moulinette_result")
-    params = "department=44&element=haie&travaux=destruction&contexte=projet&autorisation=urba"
+    params = "department=44&element=haie&travaux=destruction&contexte=projet-urba"
     res = client.get(f"{url}?{params}")
     assert res.status_code == 302
     assert res["Location"].startswith("/simulateur/formulaire/")
+
+
+def test_triage_result_destruction_contexte_projet_autre(client):
+    """destruction + contexte=projet-autre → redirige vers le formulaire principal."""
+    DCConfigHaieFactory()
+    url = reverse("moulinette_result")
+    params = "department=44&element=haie&travaux=destruction&contexte=projet-autre"
+    res = client.get(f"{url}?{params}")
+    assert res.status_code == 302
+    assert res["Location"].startswith("/simulateur/formulaire/")
+
+
+def test_triage_result_destruction_contexte_inconnu(client):
+    """destruction + contexte=inconnu → affiche triage_result.html (hors périmètre)."""
+    DCConfigHaieFactory()
+    url = reverse("moulinette_result")
+    params = "department=44&element=haie&travaux=destruction&contexte=inconnu"
+    res = client.get(f"{url}?{params}")
+    assert res.status_code == 200
+    assert "haie/moulinette/triage_result.html" in [t.name for t in res.templates]
+
+
+def test_triage_get_initial_normalizes_projet_specifique_to_projet(client):
+    """Visiter le triage avec contexte=projet-urba ou projet-autre préremplit contexte=projet."""
+    DCConfigHaieFactory()
+    triage_url = reverse("triage")
+
+    for contexte in ("projet-urba", "projet-autre"):
+        res = client.get(f"{triage_url}?department=44&contexte={contexte}")
+        assert res.status_code == 200
+        form = res.context["form"]
+        assert (
+            form.initial.get("contexte") == "projet"
+        ), f"Expected initial contexte='projet' when URL has contexte='{contexte}'"
