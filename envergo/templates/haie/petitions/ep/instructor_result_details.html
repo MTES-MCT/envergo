@@ -9,6 +9,48 @@
      href="{% url 'demo_density_project' %}?haies={{ hedge_data_id }}">Voir le calcul de densité</a>
 {% endif %}
 
+{% if ep_ru_total_length is not None %}
+  <h5 class="fr-mt-3w">Paramètres pour le niveau de procédure</h5>
+  <p>
+    Les caractéristiques du projet et des haies détruites permettent de déterminer le niveau de procédure pour l'instruction espèces protégées.
+  </p>
+  <ul>
+    <li>Longueur totale à détruire : {{ ep_ru_total_length }} mètres</li>
+    <li>Longueur totale de ripisylves : {{ ep_ru_ripisylve_length }} mètres</li>
+    <li>Densité bocagère : {{ density_400|floatformat:"1" }} ml/ha</li>
+  </ul>
+
+  {% if ep_ru_hedge_rows %}
+    <div class="fr-table fr-table--no-caption">
+      <div class="fr-table__wrapper">
+        <div class="fr-table__container">
+          <div class="fr-table__content">
+            <table>
+              <caption>Caractéristiques des haies détruites</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Haie</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">En zone sensible</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in ep_ru_hedge_rows %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.hedge_type }}</td>
+                    <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+
 <h5 class="fr-mt-3w">Liste des espèces</h5>
 <form method="post"
       action="{% url 'petition_project_instructor_regulation_view' petition_project.reference current_regulation.slug %}">
