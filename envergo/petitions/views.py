@@ -821,8 +821,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        moulinette = self.object.get_moulinette()
+        evaluate = kwargs.pop("evaluate", False)
+        moulinette = self.object.get_moulinette(evaluate=evaluate)
         context["moulinette"] = moulinette
         context["hedge_types"] = HedgeTypeFactory.build_from_context(
             single_procedure=moulinette.config.single_procedure
@@ -950,7 +950,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
     event_action = "consultation"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(evaluate=True, **kwargs)
         context.update(get_project_context(self.object, context["moulinette"]))
 
         context["plantation_evaluation"] = PlantationEvaluator(
@@ -984,7 +984,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(evaluate=True, **kwargs)
 
         hedge_data = context["petition_project"].hedge_data
         context["ign_url"] = get_ign_centered_url(hedge_data)

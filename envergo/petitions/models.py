@@ -415,13 +415,13 @@ class PetitionProject(models.Model):
         self.demarches_simplifiees_last_sync = timezone.now()
         self.save()
 
-    def get_moulinette(self):
+    def get_moulinette(self, evaluate=True):
         """Recreate moulinette from moulinette url and hedge data"""
         if not hasattr(self, "_moulinette"):
             moulinette_data = self._parse_moulinette_data()
             moulinette_data["haies"] = self.hedge_data
             form_data = {"initial": moulinette_data, "data": moulinette_data}
-            self._moulinette = MoulinetteHaie(form_data)
+            self._moulinette = MoulinetteHaie(form_data, evaluate=evaluate)
         return self._moulinette
 
     def get_triage_form(self):
