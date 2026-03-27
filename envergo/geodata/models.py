@@ -24,6 +24,7 @@ MAP_TYPES = Choices(
     ("haies", "Haies"),
     ("terres_emergees", "Délimitation terres + France"),
     ("zonage", "Identifiant zonage"),
+    ("zone_sensible_ep", "Zone sensible EP"),
 )
 
 # Sometimes, there are map with different certainty values.
