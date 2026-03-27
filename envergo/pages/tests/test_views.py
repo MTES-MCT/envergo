@@ -294,8 +294,8 @@ class TestContactHaie:
         response = client.post(reverse("contact_us"), {})
         assert response.status_code == 200
 
-    def test_department_with_no_config(self, client):
-        """Selecting a department with no config should render the page (no redirect)."""
+    def test_department_with_no_contacts(self, client):
+        """Selecting a department with no contact should render the page (no redirect)."""
         dept = DepartmentFactory()
 
         response = client.post(
@@ -305,7 +305,6 @@ class TestContactHaie:
 
         assert response.status_code == 200
         assert response.context["department"] == dept
-        assert response.context["config"] is None
         assert (
             "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
             in response.content.decode()

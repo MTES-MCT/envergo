@@ -37,8 +37,8 @@ class DepartmentSearchMixin:
 
     queryset = Department.objects.defer("geometry").all()
 
-    def get_queryset(self):
-        # List all departments for the select input with contact info
+    def get_queryset_with_contacts(self):
+        """List all departments for the select input with contact info"""
         valid_config_qs = ConfigHaie.objects.filter(
             Q(validity_range__contains=timezone.now().date())
             | Q(validity_range__isnull=True),
@@ -49,18 +49,25 @@ class DepartmentSearchMixin:
         )
         return departments_qs
 
-    def get_department(self, department_id):
+    def get_department(self, pk=None, department_code=None):
         """Get department and config from post data"""
-        if not department_id:
+        if not pk and not department_code:
             return None
-        department_qs = self.get_queryset()
-        department = department_qs.get(id=department_id)
+
+        department_qs = self.get_queryset_with_contacts()
+        if pk:
+            department_qs = department_qs.filter(pk=pk)
+        elif department_code:
+            department_qs = department_qs.filter(department=department_code)
+        try:
+            department = department_qs.get()
+        except department_qs.model.DoesNotExist:
+            return None
         return department
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        departments_qs = self.get_queryset()
-        context["departments"] = departments_qs
+        context["departments"] = self.queryset
 
         return context
 
@@ -84,11 +91,11 @@ class HomeHaieView(DepartmentSearchMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         """Post response with department
-        TODO: use mixin queryset and upate template
+        TODO: use mixin queryset and update template
         """
         data = request.POST
         department_id = data.get("department")
-        department = self.get_department(department_id)
+        department = self.get_department(pk=department_id)
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         if config and config.is_activated:
@@ -122,8 +129,7 @@ class ContactHaieView(DepartmentSearchMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         if "department" in self.request.GET:
             department_code = self.request.GET.get("department")
-            department = context["departments"].get(department=department_code)
-            context["department"] = department
+            context["department"] = self.get_department(department_code=department_code)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -131,8 +137,7 @@ class ContactHaieView(DepartmentSearchMixin, TemplateView):
         department_id = request.POST.get("department")
 
         context = self.get_context_data()
-        department = context["departments"].get(id=department_id)
-        context["department"] = department
+        context["department"] = self.get_department(pk=department_id)
 
         return self.render_to_response(context)
 
