@@ -3,23 +3,35 @@
 {% load utils %}
 
 {% block result %}
-  <ul>
-    <li>
-      Si projet soumis à autorisation d'urbanisme : permis de construire, permis d'aménager, déclaration préalable
+  <section id="project-result-content" class="fr-py-4w fr-px-2w">
+    <p class="fr-text--lead fr-mt-8w fr-mb-4w">
+      La destruction de haies ou d'alignements d'arbres a lieu <strong>dans le cadre d'un projet plus large</strong>.
+      <br>
+      Les procédures à suivre dépendent du <strong>type d'autorisation</strong> auquel est soumis ce projet.
+    </p>
+
+    <h6>Projet soumis à permis de construire ou permis d'aménager</h6>
+
+    <p>
       <a class="fr-btn"
-         href="{% url 'moulinette_form' %}{% querystring autorisation='urba' %}">continuer sur cette page</a>
-    </li>
+         href="{% url 'moulinette_form' %}{% querystring contexte='projet-urba' %}">continuer</a>
+    </p>
 
-    <li>
-      Si projet soumis à autorisation environnementale :
-      rien à faire, l'impact sur la haie sera inclus dans l'instruction x
-    </li>
+    <h6>Projet soumis à permis de démolir</h6>
 
-    <li>
-      Si projet mais non soumis à PC, PA, DP, (par exemple remembrement)
+    <p>
       <a class="fr-btn"
-         href="{% url 'moulinette_form' %}{% querystring autorisation='non' %}">continuer</a>
-    </li>
+         href="{% url 'moulinette_form' %}{% querystring contexte='projet-urba' %}">continuer</a>
+    </p>
 
-  </ul>
+    <h6>Projet soumis à Autorisation Environnementale</h6>
+
+    <p>Rien à faire, l'impact sur la haie sera inclus dans l'instruction x</p>
+
+    <h6>Projet soumis à aucune autorisation, ni en mairie, ni en préfecture</h6>
+    <p>
+      <a class="fr-btn"
+         href="{% url 'moulinette_form' %}{% querystring contexte='projet-autre' %}">continuer</a>
+    </p>
+  </section>
 {% endblock %}
