@@ -3,14 +3,14 @@
 </p>
 
 <p>
-  Au vu des caractéristiques des haies détruites, une procédure allégée peut être suivie : l'inventaire de terrain pour recenser les espèces présentes dans les haies détruites n'est pas nécessaire.
+  Au vu des caractéristiques des haies détruites, une procédure allégée peut être suivie : l'inventaire de terrain pour recenser les espèces présentes dans les haies détruites n'est pas nécessaire.
 </p>
 
-<p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>
+<p>Pour obtenir une dérogation, le porteur de projet devra justifier dans son dossier :</p>
 
 <ul>
-  <li>de la raison pour laquelle la haie est détruite ;</li>
-  <li>de l'absence de solution alternative qui permettrait d'éviter la destruction ;</li>
+  <li>de la raison pour laquelle la haie est détruite ;</li>
+  <li>de l'absence de solution alternative qui permettrait d'éviter la destruction ;</li>
   <li>
     des mesures mises en œuvre pour réduire, et à défaut pour compenser, les impacts du projet sur les espèces et les habitats abrités par les haies détruites.
   </li>
@@ -19,11 +19,9 @@
 {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 
 <div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
-  {% if protected_species %}
-    <p>
-      <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire&nbsp;:</strong>
-    </p>
-    <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
-    {% include 'hedges/_species_table.html' with species=protected_species %}
-  {% endif %}
+  <p>
+    <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire&nbsp;:</strong>
+  </p>
+  <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
+  {% include 'hedges/_species_table.html' with species=protected_species %}
 </div>
