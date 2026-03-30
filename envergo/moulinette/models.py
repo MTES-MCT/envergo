@@ -2631,7 +2631,7 @@ class MoulinetteHaie(Moulinette):
             return "haie/moulinette/triage_projet_result.html"
 
         if travaux == "entretien":
-            return "haie/moulinette/tirage_entretien_result.html"
+            return "haie/moulinette/triage_entretien_result.html"
 
         return "haie/moulinette/triage_result.html"
 
