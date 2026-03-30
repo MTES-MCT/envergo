@@ -151,9 +151,6 @@ def field_summary(field):
 
     This tag is used to format a single field from the additional or optional forms.
     """
-    if hasattr(field.field, "display") and not field.field.display:
-        return ""
-
     value_help_text = None
     if hasattr(field.field, "get_display_value"):
         value = field.field.get_display_value(field.value())
