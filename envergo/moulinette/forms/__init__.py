@@ -317,8 +317,8 @@ CONTEXT_CHOICES = (
         mark_safe(
             """Dans le cadre d'un projet plus large<br />
 <span class="fr-hint-text">
-    Par exemple : destruction de haie à l'occasion de l'extension d'un bâtiment, d'une construction nouvelle, d'un
-    aménagement…
+    Destruction de haie à l'occasion de l'extension d'un bâtiment, d'une construction nouvelle, d'un aménagement, ou de
+    la démolition d’un bâtiment, etc.
 </span>"""
         ),
     ),
