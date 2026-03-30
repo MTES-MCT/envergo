@@ -2617,11 +2617,7 @@ class MoulinetteHaie(Moulinette):
         element = triage_form.cleaned_data.get("element")
         travaux = triage_form.cleaned_data.get("travaux")
         contexte = triage_form.cleaned_data.get("contexte")
-        return (
-            element == "haie"
-            and travaux == "destruction"
-            and contexte not in ["projet", "inconnu"]
-        )
+        return element == "haie" and travaux == "destruction" and contexte != "projet"
 
     def get_triage_result_template(self):
         """Return the template to display the triage out of scope result."""

@@ -81,7 +81,7 @@ def test_moulinette_droit_constant():
     data = {
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "profil": "autre",
         "motif": "securite",
         "reimplantation": "remplacement",
@@ -124,7 +124,7 @@ def test_moulinette_result_alignement():
     data = {
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "profil": "autre",
         "motif": "securite",
         "reimplantation": "remplacement",
@@ -165,7 +165,7 @@ def test_moulinette_result_non_alignement():
     data = {
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "profil": "autre",
         "motif": "securite",
         "reimplantation": "remplacement",
@@ -197,7 +197,7 @@ def test_moulinette_result_interdit():
     data = {
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "profil": "autre",
         "motif": "amelioration_culture",
         "reimplantation": "non",
@@ -253,7 +253,7 @@ def test_moulinette_result_autorisation(ep_criteria):
     data = {
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "profil": "autre",
         "motif": "chemin_acces",
         "reimplantation": "replantation",

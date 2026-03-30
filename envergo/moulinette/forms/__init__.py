@@ -311,7 +311,7 @@ entretien sévère et récurrent ; etc.
 )
 
 CONTEXT_CHOICES = (
-    ("non", "Uniquement les travaux sur la végétation"),
+    ("non", "Uniquement les travaux sur la végétation", "Non"),
     (
         "projet",
         mark_safe(
@@ -321,16 +321,18 @@ CONTEXT_CHOICES = (
     la démolition d’un bâtiment, etc.
 </span>"""
         ),
+        "Non renseigné",
     ),
     (
         "projet-autre",
         "Dans le cadre d'un projet plus large, non soumis à autorisation d'urbanisme",
+        "Non",
     ),
     (
         "projet-urba",
         "Dans le cadre d'un projet plus large, soumis à autorisation d'urbanisme",
+        "Oui",
     ),
-    ("inconnu", "Inconnu"),
 )
 
 
@@ -352,7 +354,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
 
     contexte = forms.ChoiceField(
         choices=tuple(
-            c for c in CONTEXT_CHOICES if c[0] != "projet"
+            (key, label) for key, label, _ in CONTEXT_CHOICES if key != "projet"
         ),  # projet is not a valid final choice
         required=True,
         widget=forms.HiddenInput,
@@ -503,14 +505,18 @@ class TriageFormHaie(forms.Form):
     contexte = DisplayChoiceField(
         label="Dans quel contexte l'intervention est-elle prévue ?",
         widget=forms.RadioSelect,
-        choices=CONTEXT_CHOICES,
+        choices=extract_choices(CONTEXT_CHOICES),
         required=True,
-        display_label="Contexte de l'intervention :",
+        display_label="Travaux dans le cadre d’un projet soumis à autorisation urbanisme :",
+        get_display_value=extract_display_function(CONTEXT_CHOICES),
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["contexte"].widget.choices = CONTEXT_CHOICES[:2]
+        # for the triage form widget, there is only two valid choices
+        self.fields["contexte"].widget.choices = tuple(
+            c for c in extract_choices(CONTEXT_CHOICES) if c[0] in ["non", "projet"]
+        )
 
     def clean_department(self):
         """Check if department exists"""

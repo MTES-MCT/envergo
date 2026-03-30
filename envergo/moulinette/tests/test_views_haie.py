@@ -148,7 +148,7 @@ def test_invalid_department_result(client):
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "haies": str(haies.id),
         "department": "00",
     }
@@ -177,7 +177,7 @@ def test_debug_result(client):
         "reimplantation": "remplacement",
         "localisation_pac": "non",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "haies": str(haies.id),
         "department": "44",
         "debug": "true",
@@ -257,7 +257,7 @@ def test_result_d_view_non_soumis_with_r_gt_0(client):
     data = {
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
         "motif": "amelioration_culture",
         "reimplantation": "remplacement",
         "localisation_pac": "oui",
@@ -309,7 +309,7 @@ def test_moulinette_post_form_error(client):
         "department": "44",
         "element": "haie",
         "travaux": "destruction",
-        "contexte": "inconnu",
+        "contexte": "non",
     }
     res = client.post(f"{url}?department=44&element=haie&travaux=destruction", data)
 
@@ -924,16 +924,6 @@ def test_triage_result_destruction_contexte_projet_autre(client):
     res = client.get(f"{url}?{params}")
     assert res.status_code == 302
     assert res["Location"].startswith("/simulateur/formulaire/")
-
-
-def test_triage_result_destruction_contexte_inconnu(client):
-    """destruction + contexte=inconnu → affiche triage_result.html (hors périmètre)."""
-    DCConfigHaieFactory()
-    url = reverse("moulinette_result")
-    params = "department=44&element=haie&travaux=destruction&contexte=inconnu"
-    res = client.get(f"{url}?{params}")
-    assert res.status_code == 200
-    assert "haie/moulinette/triage_result.html" in [t.name for t in res.templates]
 
 
 def test_triage_get_initial_normalizes_projet_specifique_to_projet(client):
