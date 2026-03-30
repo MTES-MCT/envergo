@@ -221,7 +221,7 @@
             {% if evaluation.project_owner_phone %}
               <dt class="fr-text--bold">Tél. :</dt>
               <dd>
-                {{ evaluation.project_owner_phone }}
+                {{ evaluation.project_owner_phone.as_national }}
               </dd>
             {% endif %}
             {% if evaluation.project_owner_company %}
