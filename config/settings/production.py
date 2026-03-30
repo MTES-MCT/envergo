@@ -219,8 +219,10 @@ def filter_sentry_events(event, hint):
     # The imports still succeed — this is not actionable until GDAL is upgraded.
     # Sentry turns the warning into an error that we must safely ignore.
     log_entry = event.get("logentry", {})
-    message = log_entry.get("message", "") or log_entry.get("formatted", "")
-    if "GeoPackage user_version" in message:
+    raw_and_formatted = (
+        log_entry.get("message", "") + " " + log_entry.get("formatted", "")
+    )
+    if "GeoPackage user_version" in raw_and_formatted:
         return None
 
     return event
