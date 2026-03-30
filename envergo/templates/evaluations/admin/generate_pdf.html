@@ -46,6 +46,10 @@
         display: inline;
       }
 
+      ul.fr-links-group.fr-raw-list {
+        margin-top: 1rem;
+      }
+
       dl.fr-raw-list dt+dd+dt::before {
         content: "\A";
         white-space: pre;
@@ -63,11 +67,22 @@
         margin: 0.25rem 0 0;
       }
 
+      #avis-informatif ul ul {
+        --ul-type: disc;
+        --ul-start: 1rem;
+      }
+
       /* Print / PDF A4 */
       @media print {
         @page {
           size: A4;
           margin: 7.94mm 20.11mm 20.11mm 25.14mm;
+        }
+
+        :root {
+          font-size: 9pt;
+          --text-spacing: 0 0 0.5rem;
+          --title-spacing: 0 0 0.5rem;
         }
 
         * {
@@ -77,10 +92,34 @@
 
         body {
           font-family: Marianne, Arial, sans-serif;
-          font-size: 11pt;
-          line-height: 1.45;
+          line-height: 1.35;
           color: #000;
           background: #fff;
+        }
+
+        .fr-py-6w {
+          padding-top: 1.5rem !important;
+          padding-bottom: 1.5rem !important;
+        }
+
+        .fr-mb-6w {
+          margin-bottom: 1rem !important;
+        }
+
+        .fr-mt-6w {
+          margin-top: 1.5rem !important;
+        }
+
+        .fr-mb-5w {
+          margin-bottom: 0.75rem !important;
+        }
+
+        .fr-mt-4w {
+          margin-top: 1rem !important;
+        }
+
+        .fr-p-4w {
+          padding: 1rem !important;
         }
 
         p {
@@ -127,14 +166,6 @@
         }
 
         a[href]::after {
-          content: " (" attr(href) ")";
-          font-size: 9pt;
-          color: #555;
-          overflow-wrap: anywhere;
-        }
-
-        .fr-links-group a::after,
-        .fr-btn::after {
           content: none;
         }
       }
@@ -152,25 +183,26 @@
       </div>
 
       <!-- Objet / Référence -->
-      <p class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</p>
-      <p>Référence : {{ evaluation.reference }}</p>
+      <p class="fr-mb-0 fr-text--bold">Objet : avis réglementaire Envergo</p>
+      <p>Référence : {{ evaluation.reference }}</p>
+      <p>Le {{ published_version.created_at|date:"j F Y" }}</p>
 
       <!-- Projet concerné -->
-      <p class="fr-text--bold fr-mb-1w">Projet concerné :</p>
+      <p class="fr-text--bold fr-mb-1w">Projet concerné :</p>
       <dl class="fr-mb-0 fr-raw-list">
-        <dt class="fr-text--bold">Adresse :</dt>
+        <dt class="fr-text--bold">Adresse :</dt>
         <dd>
           {{ evaluation.address|default:"Non communiqué" }}
         </dd>
         {% if evaluation.application_number %}
-          <dt class="fr-text--bold">N° de demande de permis :</dt>
+          <dt class="fr-text--bold">N° de demande de permis :</dt>
           <dd>
             {{ evaluation.application_number }}
           </dd>
         {% endif %}
       </dl>
 
-      <!-- Card : autorisation de transmission -->
+      <!-- Card : autorisation de transmission -->
       {% if show_transmission_card %}
         <div class="fr-background-alt--grey pdf-keep-together fr-p-4w fr-mt-6w">
           <p>
@@ -180,20 +212,20 @@
             Cela nous permettra de l'accompagner dans ses démarches.
           </p>
 
-          <p class="fr-text--bold fr-mb-1w">Coordonnées que nous avons identifiées :</p>
+          <p class="fr-text--bold fr-mb-1w">Coordonnées que nous avons identifiées :</p>
           <dl class="fr-raw-list">
-            <dt class="fr-text--bold">Email :</dt>
+            <dt class="fr-text--bold">Email :</dt>
             <dd>
               {{ evaluation.project_owner_emails|join:", " }}
             </dd>
             {% if evaluation.project_owner_phone %}
-              <dt class="fr-text--bold">Tél. :</dt>
+              <dt class="fr-text--bold">Tél. :</dt>
               <dd>
-                {{ evaluation.project_owner_phone }}
+                {{ evaluation.project_owner_phone.as_national }}
               </dd>
             {% endif %}
             {% if evaluation.project_owner_company %}
-              <dt class="fr-text--bold">Société :</dt>
+              <dt class="fr-text--bold">Société :</dt>
               <dd>
                 {{ evaluation.project_owner_company }}
               </dd>
@@ -203,19 +235,19 @@
           <ul class="fr-links-group fr-raw-list">
             <li>
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
-                 href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Oui, j'autorise la transmission de l'avis au pétitionnaire"|urlencode:""|iriencode }}">
+                 href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&source=email-pdf&reponse_transmission={{ "Oui, j'autorise la transmission de l'avis au pétitionnaire"|urlencode:""|iriencode }}">
                 <span aria-hidden="true">👌</span> Oui, j'autorise la transmission au pétitionnaire
               </a>
             </li>
             <li>
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
-                 href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "J'autorise la transmission mais ce ne sont pas les bonnes coordonnées"|urlencode:""|iriencode }}">
+                 href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&source=email-pdf&reponse_transmission={{ "J'autorise la transmission mais ce ne sont pas les bonnes coordonnées"|urlencode:""|iriencode }}">
                 <span aria-hidden="true">✏️</span> J'autorise la transmission mais ce ne sont pas les bonnes coordonnées
               </a>
             </li>
             <li>
               <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
-                 href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo"|urlencode:""|iriencode }}">
+                 href="https://tally.so/r/{{ transfer_eval_email_form_id }}?{{ transfer_form_params|safe }}&source=email-pdf&reponse_transmission={{ "Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo"|urlencode:""|iriencode }}">
                 <span aria-hidden="true">❌</span> Non, je ne souhaite pas que le pétitionnaire soit contacté par Envergo
               </a>
             </li>
@@ -223,7 +255,7 @@
         </div>
       {% endif %}
 
-      <!-- Section : Avis à titre informatif -->
+      <!-- Section : Avis à titre informatif -->
       <section id="avis-informatif" class="fr-mt-6w">
         <h2 class="fr-text--md fr-mb-1w">Avis à titre informatif</h2>
 
@@ -231,11 +263,11 @@
 
           <p>
             Il apparaît que ce projet
-            <strong class="highlight-non-soumis">ne semble pas soumis</strong> :
+            <strong class="highlight-non-soumis">ne semble pas soumis</strong> :
           </p>
           <ul>
             <li>
-              ni à la Loi sur l'eau au titre des impacts suivants :
+              ni à la Loi sur l'eau au titre des impacts suivants :
               <ul>
                 <li>impact sur une zone humide ;</li>
                 <li>construction en zone inondable ;</li>
@@ -267,7 +299,7 @@
             </p>
             <p>
               <strong class="highlight-action">Une action du porteur de projet est requise</strong>.
-              Celui-ci doit mener les études pour s'assurer que le projet :
+              Celui-ci doit mener les études pour s'assurer que le projet :
             </p>
             <ul>
               {% for action in required_actions_interdit %}<li>{{ action }}</li>{% endfor %}
@@ -280,7 +312,7 @@
             {% if moulinette.loi_sur_leau.required_actions_soumis %}
               <p>
                 Pour s'assurer que le projet n'est pas soumis à la <strong>Loi sur l'eau</strong>,
-                le porteur doit mener les études prouvant que celui-ci :
+                le porteur doit mener les études prouvant que celui-ci :
               </p>
               <ul>
                 {% for action in moulinette.loi_sur_leau.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
@@ -290,7 +322,7 @@
             {% if moulinette.natura2000.required_actions_soumis %}
               <p>
                 Pour s'assurer que le projet n'est pas soumis à <strong>Natura 2000</strong>,
-                le porteur doit mener les études prouvant que celui-ci :
+                le porteur doit mener les études prouvant que celui-ci :
               </p>
               <ul>
                 {% for action in moulinette.natura2000.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
@@ -300,7 +332,7 @@
 
         {% else %}
 
-          <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
+          <p>Au vu des informations qui nous ont été transmises, il apparaît que :</p>
 
           <ul class="fr-mb-0 fr-raw-list">
 
@@ -328,7 +360,7 @@
                 </p>
                 <p>
                   <strong class="highlight-action">Une action du porteur du projet est requise.</strong>
-                  Celui-ci doit mener les études prouvant que le projet :
+                  Celui-ci doit mener les études prouvant que le projet :
 
                 </p>
                 <ul>
@@ -353,7 +385,7 @@
                 </p>
                 <p>
                   <strong class="highlight-action">Une action du porteur de projet est requise.</strong>
-                  Des études doivent être menées pour s'assurer que le projet :
+                  Des études doivent être menées pour s'assurer que le projet :
                 </p>
                 <ul>
                   {% for action in moulinette.sage.required_actions_interdit %}<li class="fr-pl-1w">{{ action }}</li>{% endfor %}
@@ -375,11 +407,9 @@
         {% if rr_mention_html %}<div class="fr-mt-4w rr-mention">{{ rr_mention_html|safe }}</div>{% endif %}
       </section>
 
-      <!-- Section : Consulter l'avis -->
+      <!-- Section : Consulter l'avis -->
       <section class="fr-mt-6w">
-        <h2 class="fr-text--md fr-mb-1w">Consulter l'avis détaillé</h2>
-
-        <p>Pour plus de détails sur cet avis réglementaire et sur la procédure à suivre :</p>
+        <p>Pour plus de détails sur cet avis réglementaire et sur la procédure à suivre :</p>
 
         <a class="fr-btn" href="{{ evaluation_link }}">Consulter l'avis en ligne</a>
 
