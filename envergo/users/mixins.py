@@ -27,16 +27,26 @@ class InstructorDepartmentAuthorised(AccessMixin):
         return current_department
 
     def dispatch(self, request, *args, **kwargs):
+        """Check authorization for user
+        Authorised for superuser and instructor user.
+        If departement is in kwargs, check user permission on department.
+        Else let the inherited view manage the access.
+        """
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-
-        # Find department if exists and set object department attribute
-        if not self.department:
-            self.department = self.get_departement(**kwargs)
-
-        if (
-            not request.user.is_superuser
-            and self.department not in request.user.departments.defer("geometry").all()
-        ):
+        if not request.user.is_superuser and not request.user.is_instructor:
             return self.handle_no_permission()
+
+        if "department" in kwargs:
+            if not request.user.is_superuser:
+                # Find department if exists and set object department attribute
+                if not self.department:
+                    self.department = self.get_departement(**kwargs)
+
+                if (
+                    self.department
+                    not in request.user.departments.defer("geometry").all()
+                ):
+                    return self.handle_no_permission()
+
         return super().dispatch(request, *args, **kwargs)

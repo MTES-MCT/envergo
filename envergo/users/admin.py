@@ -3,10 +3,12 @@ from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from envergo.petitions.models import InvitationToken, PetitionProject
 from envergo.users.forms import UserCreationForm
+from envergo.users.tasks import send_guh_instruction_rights_update_email
 from envergo.utils.fields import NoIdnEmailField
 
 User = get_user_model()
@@ -174,3 +176,28 @@ class UserAdmin(auth_admin.UserAdmin):
             # department select widget
             kwargs["queryset"] = qs.defer("geometry")
         return super().formfield_for_manytomany(db_field, request=request, **kwargs)
+
+    def save_related(self, request, form, formsets, change):
+        original_is_instructor = form.initial.get("is_instructor", False)
+        original_departments = set(
+            dept.id for dept in form.initial.get("departments") or []
+        )
+
+        super().save_related(request, form, formsets, change)
+
+        obj = form.instance
+        new_departments = set(obj.departments.values_list("pk", flat=True))
+        is_instructor_changed = original_is_instructor != obj.is_instructor
+        departments_changed = original_departments != new_departments
+
+        if (
+            obj.access_haie
+            and new_departments
+            and (is_instructor_changed or departments_changed)
+        ):
+            is_new_instructor = not original_is_instructor and obj.is_instructor
+            transaction.on_commit(
+                lambda: send_guh_instruction_rights_update_email.delay(
+                    obj.pk, is_new_instructor
+                )
+            )

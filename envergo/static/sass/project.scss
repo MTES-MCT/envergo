@@ -1009,6 +1009,73 @@ button .img-icon {
       margin-right: 1rem;
     }
   }
+
+  /**
+ * Custom class for an accordion with an explicit show details button
+ */
+  &--alt {
+    .fr-accordion__btn {
+      justify-content: space-between;
+
+      &::after {
+        content: none;
+      }
+
+      & > span {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--border-default-grey);
+
+        &::before {
+          content: "Voir le détail";
+        }
+
+        &::after {
+          --icon-size: 1rem;
+
+          display: inline-block;
+          vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
+          background-color: currentcolor;
+          width: var(--icon-size);
+          height: var(--icon-size);
+          mask-size: 100% 100%;
+          mask-image: url("/static/icons/arrow-down-s-line.svg");
+          content: "";
+          transition: transform 0.3s;
+          margin-right: 0;
+          margin-left: auto;
+        }
+      }
+
+      &[aria-expanded="true"] {
+        background-color: inherit;
+
+        & > span {
+          &::before {
+            content: "Masquer le détail";
+          }
+
+          &::after {
+            transform: rotate(-180deg);
+          }
+        }
+      }
+    }
+
+    .fr-accordion__footer {
+      text-align: right;
+
+      .fr-accordion__btn {
+        padding: 0;
+        min-height: auto;
+        width: auto;
+      }
+    }
+
+    .fr-collapse {
+      margin: 0;
+    }
+  }
 }
 
 button[data-fr-js-collapse-button="true"] {

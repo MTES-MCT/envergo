@@ -23,7 +23,7 @@ class HedgeFactory(factory.Factory):
             "sur_parcelle_pac": True,
             "proximite_mare": False,
             "vieil_arbre": False,
-            "proximite_point_eau": False,
+            "ripisylve": False,
             "connexion_boisement": False,
         }
     )

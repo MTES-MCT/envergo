@@ -499,6 +499,36 @@ $ npm run e2e-haie:ui # pour lancer les tests dans un navigateur
 $ npm run e2e-haie # pour lancer les tests dans un shell
 ```
 
+## Limitation de débit (rate limiting)
+
+Un middleware de limitation de débit (`envergo/middleware/rate_limiting.py`) est en place pour
+protéger l'application contre les abus. Il repose sur la librairie
+[django-ratelimit](https://django-ratelimit.readthedocs.io/).
+
+Trois règles sont appliquées, par adresse IP :
+
+| Type | Méthodes | Routes concernées | Limite |
+|------|----------|-------------------|--------|
+| Hard | `POST`, `PUT`, `PATCH`, `DELETE` | Toutes | `RATELIMIT_HARD_RATE` (défaut : 100/min) |
+| Hard | `GET` | `/moulinette/*`, `/avis/*` | `RATELIMIT_HARD_RATE` (défaut : 100/min) |
+| Soft | `GET` | Toutes les autres | `RATELIMIT_SOFT_RATE` (défaut : 5000/min) |
+
+En cas de dépassement, l'application retourne une réponse HTTP **429** et affiche le
+template `429.html`. Un message de warning est également loggué avec l'IP, le chemin
+et l'identifiant visiteur.
+
+La valeur par défaut de la limite soft de 5000/min est très permissive. Elle permet de répondre au genre d'attaque que
+nous avons essuyé jusqu'à présent (aux alentour de 30 000 requêtes).
+
+### Variables de configuration
+
+| Variable | Valeur par défaut | Description |
+|----------|-------------------|-------------|
+| `RATELIMIT_HARD_RATE` | `"100/m"` | Limite stricte (unsafe methods + routes sensibles GET) |
+| `RATELIMIT_SOFT_RATE` | `"5000/m"` | Limite souple (tous les autres GET) |
+| `RATELIMIT_IP_META_KEY` | *(non défini)* | Clé HTTP pour l'IP réelle derrière un reverse proxy (ex. `HTTP_X_REAL_IP` en production) |
+| `RATELIMIT_ENABLE` | `True` | Mettre à `False` pour désactiver (automatiquement désactivé dans les tests) |
+
 ## Recette et déploiement
 
 ### Environnement de recette

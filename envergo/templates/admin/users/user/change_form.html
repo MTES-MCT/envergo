@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+  <ul class="messagelist">
+    <li class="warning">
+      Pour les utilisateurs du Guichet Unique de la Haie, si les droits d'instruction ou la liste des départements sont modifiées, un e-mail sera envoyé à l'utilisateur.
+    </li>
+  </ul>
+  {{ block.super }}
+{% endblock %}

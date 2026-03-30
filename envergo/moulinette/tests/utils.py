@@ -97,7 +97,7 @@ def make_hedge(
             "vieil_arbre": False,
             "proximite_mare": False,
             "sur_parcelle_pac": sur_parcelle_pac,
-            "proximite_point_eau": False,
+            "ripisylve": False,
             "connexion_boisement": False,
             **additional_data_overrides,
         },
