@@ -415,7 +415,7 @@ class ConfigAmenagementAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department", "-validity_range")
+            .order_by("department__department", "validity_range")
             .defer("department__geometry")
         )
 
@@ -542,7 +542,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         return (
             qs.select_related("department")
-            .order_by("department__department", "-validity_range")
+            .order_by("department__department", "validity_range")
             .defer("department__geometry")
         )
 
