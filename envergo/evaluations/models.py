@@ -517,6 +517,9 @@ def build_regulatory_notice_context(evaluation, moulinette, request):
         "show_transmission_card": show_transmission_card,
         "required_actions_soumis": list(moulinette.all_required_actions_soumis()),
         "required_actions_interdit": list(moulinette.all_required_actions_interdit()),
+        "published_version": next(
+            (v for v in evaluation.versions.all() if v.published), None
+        ),
     }
 
 
