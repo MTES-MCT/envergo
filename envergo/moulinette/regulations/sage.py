@@ -29,7 +29,7 @@ class ImpactZHSettings(forms.Form):
     )
     exceptions = forms.CharField(
         label="Texte exceptions (html)",
-        help_text="Indiquez la liste des exceptions mentionnées dans l'arrêté préfectoral d'interdiction.",
+        help_text="Indiquez la liste des exceptions mentionnées dans le règlement de SAGE.",
         required=False,
     )
 
