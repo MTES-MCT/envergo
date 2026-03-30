@@ -582,7 +582,7 @@ class MoulinetteHaieResult(
         context = super().get_context_data(**kwargs)
         moulinette = context.get("moulinette", None)
 
-        if moulinette and "haies" in moulinette.catalog:
+        if moulinette and moulinette.is_valid() and "haies" in moulinette.catalog:
             hedge_data = moulinette.catalog["haies"]
             evaluator = PlantationEvaluator(moulinette, hedge_data)
             context["plantation_evaluation"] = evaluator
