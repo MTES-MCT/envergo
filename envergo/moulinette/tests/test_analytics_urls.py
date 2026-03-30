@@ -109,7 +109,7 @@ def test_haie_triage_prefilled_form(client):
 def test_haie_triage_invalid(client):
     url = reverse("moulinette_result")
     res = client.get(
-        f"{url}?department=44&element=bosquet&travaux=entretien&contexte=inconnu"
+        f"{url}?department=44&element=bosquet&travaux=entretien&contexte=non"
     )
 
     assert res.status_code == 200

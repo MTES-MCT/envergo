@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 from django.db import migrations
 
 
-def add_contexte_inconnu(apps, schema_editor):
+def add_contexte_non(apps, schema_editor):
     PetitionProject = apps.get_model("petitions", "PetitionProject")
     Simulation = apps.get_model("petitions", "Simulation")
 
@@ -12,8 +12,8 @@ def add_contexte_inconnu(apps, schema_editor):
             return url
         bits = urlsplit(url)
         query = parse_qs(bits.query)
-        if "contexte" not in query:
-            query["contexte"] = ["inconnu"]
+        if "contexte" not in query or query["contexte"] == ["inconnu"]:
+            query["contexte"] = ["non"]
             new_bits = bits._replace(query=urlencode(query, doseq=True))
             return urlunsplit(new_bits)
         return url
@@ -42,5 +42,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(add_contexte_inconnu, migrations.RunPython.noop),
+        migrations.RunPython(add_contexte_non, migrations.RunPython.noop),
     ]
