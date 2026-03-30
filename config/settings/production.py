@@ -266,7 +266,7 @@ FROM_EMAIL = {
     },
     "haie": {
         "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",
-        "accounts": "Compte GUH <comptes@haie.beta.gouv.fr>",
+        "accounts": "Guichet unique de la haie <comptes@haie.beta.gouv.fr>",
     },
 }
 
