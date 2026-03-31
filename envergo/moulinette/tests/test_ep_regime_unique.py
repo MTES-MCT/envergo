@@ -35,7 +35,12 @@ def _make_density_return(density):
 
 
 def _make_hedge_factory(length, type_haie="buissonnante", **extra):
-    """Create a HedgeFactory with sur_parcelle_pac=False to avoid form validation issues."""
+    """Create a HedgeFactory with sur_parcelle_pac=False.
+
+    The default HedgeFactory sets sur_parcelle_pac=True, which conflicts
+    with localisation_pac="non" (the default in make_moulinette_haie_data)
+    and causes the moulinette form to be invalid.
+    """
     return HedgeFactory(
         length=length,
         additionalData__type_haie=type_haie,
