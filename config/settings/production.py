@@ -296,7 +296,7 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.beta.gouv.fr",  # Stats
         "https://sentry.incubateur.net",
         "https://*.crisp.chat",
-        "wss://*.relay.crisp.chat",
+        "wss://*.crisp.chat",
     ],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "img-src": [
@@ -305,11 +305,20 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.s3.fr-par.scw.cloud",
         "data:",
         "https://*.crisp.chat",
+        "https://static.demarches-simplifiees.fr",
     ],
     "font-src": [CSP.SELF, "https://*.crisp.chat"],
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
-    "frame-src": [CSP.SELF, "https://*.crisp.chat"],
+    "frame-src": [
+        CSP.SELF,
+        "https://*.crisp.chat",
+        "https://*.data.gouv.fr",  # Matomo iframe opt-out
+        "https://*.beta.gouv.fr",
+    ],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "form-action": [CSP.SELF],
     "report-uri": "/csp/reports/",
 }
 

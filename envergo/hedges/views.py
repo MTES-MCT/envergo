@@ -33,14 +33,10 @@ logger = logging.getLogger(__name__)
 # To fix the problem, we should use the runtime vue build that requires that all templates are pre-compiled into
 # render functions
 # A temporary fix is to disable csp for this page, which is not ideal.
-@method_decorator(
-    csp_override(config={}),
-    name="get",
-)
-@method_decorator(
-    csp_report_only_override(config={}),
-    name="get",
-)
+@method_decorator(csp_override(config={}), name="get")
+@method_decorator(csp_report_only_override(config={}), name="get")
+@method_decorator(csp_override(config={}), name="post")
+@method_decorator(csp_report_only_override(config={}), name="post")
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
