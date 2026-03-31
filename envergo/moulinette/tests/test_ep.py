@@ -568,7 +568,7 @@ def test_get_hedge_compensation_details():
                 "bord_voie": True,
                 "essences_non_bocageres": True,
                 "recemment_plantee": True,
-                "proximite_point_eau": False,
+                "ripisylve": False,
                 "connexion_boisement": False,
             }
         ),
@@ -593,7 +593,7 @@ def test_get_hedge_compensation_details():
                 "bord_voie": True,
                 "essences_non_bocageres": False,
                 "recemment_plantee": False,
-                "proximite_point_eau": False,
+                "ripisylve": False,
                 "connexion_boisement": False,
             }
         ),
@@ -615,7 +615,7 @@ def test_get_hedge_compensation_details():
                 "bord_voie": False,
                 "essences_non_bocageres": False,
                 "recemment_plantee": False,
-                "proximite_point_eau": False,
+                "ripisylve": False,
                 "connexion_boisement": False,
             }
         ),

@@ -27,7 +27,7 @@ class SetUrlConfBasedOnSite:
             # link lost somewhere in the wild.
             # We try to redirect to the amenagement site to mitigate the problem as
             # best as we can
-            logger.error(
+            logger.warning(
                 f"Found url with bad domain in the wild: {request.get_host()}{request.get_full_path()}"
             )
             new_url = f"https://{settings.ENVERGO_AMENAGEMENT_DOMAIN}{request.get_full_path()}"

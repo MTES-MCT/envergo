@@ -176,7 +176,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -194,7 +194,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -351,7 +351,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -369,7 +369,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -412,25 +412,41 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
 
     expected_result = {
         "hedges_properties": {
+            "bord_batiment": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "En bordure de bâtiment",
+            },
             "connexion_boisement": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "Connectée à un " "boisement ou à une " "autre haie",
+                "label": "Connectée à un boisement ou à une autre haie",
+            },
+            "parc_jardin": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Dans le parc ou jardin d'une habitation",
+            },
+            "place_publique": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Sur une place publique",
             },
             "bord_voie": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Bord de route, voie ou chemin " "ouvert au public",
+                "label": "En bordure de route, voie ou chemin ouvert au public",
             },
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Mare à moins de 200\xa0m",
             },
-            "proximite_point_eau": {
+            "ripisylve": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "Mare ou ruisseau à " "moins de 10\xa0m",
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
+                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -465,7 +481,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -483,7 +499,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -526,6 +542,11 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
 
     expected_result = {
         "hedges_properties": {
+            "bord_batiment": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "En bordure de bâtiment",
+            },
             "essences_non_bocageres": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
@@ -534,12 +555,22 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "bord_voie": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Bord de route, voie ou chemin " "ouvert au public",
+                "label": "En bordure de route, voie ou chemin " "ouvert au public",
             },
             "interchamp": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [ANY],
                 "label": "Haie inter-champ",
+            },
+            "parc_jardin": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Dans le parc ou jardin d'une " "habitation",
+            },
+            "place_publique": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Sur une place publique",
             },
             "proximite_mare": {
                 "TO_PLANT": [],
@@ -550,6 +581,12 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "TO_PLANT": None,
                 "TO_REMOVE": [],
                 "label": "Haie récemment plantée",
+            },
+            "ripisylve": {
+                "TO_PLANT": [ANY],
+                "TO_REMOVE": [],
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
+                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -613,7 +650,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -631,7 +668,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -701,7 +738,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "sous_ligne_electrique": False,
                 },
             },
@@ -718,7 +755,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "sous_ligne_electrique": False,
                 },
             },
@@ -737,7 +774,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "mode_destruction": "arrachage",
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                 },
             },
             {
@@ -755,7 +792,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "mode_destruction": "arrachage",
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                 },
             },
             {
@@ -773,7 +810,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "mode_destruction": "arrachage",
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                 },
             },
         ]

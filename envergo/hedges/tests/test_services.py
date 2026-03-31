@@ -86,7 +86,7 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
                     "vieil_arbre": False,
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "connexion_boisement": False,
                     "bord_voie": True,
                 },

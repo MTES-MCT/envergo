@@ -15,7 +15,10 @@ from django.views.generic.edit import FormMixin, FormView
 from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.decorators.csp import csp_override, csp_report_only_override
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.forms import HedgeToPlantPropertiesForm, HedgeToRemovePropertiesForm
+from envergo.hedges.forms import (
+    HedgeToPlantPropertiesRegimeUniqueForm,
+    HedgeToRemovePropertiesRegimeUniqueForm,
+)
 from envergo.hedges.models import HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
@@ -30,14 +33,10 @@ logger = logging.getLogger(__name__)
 # To fix the problem, we should use the runtime vue build that requires that all templates are pre-compiled into
 # render functions
 # A temporary fix is to disable csp for this page, which is not ideal.
-@method_decorator(
-    csp_override(config={}),
-    name="get",
-)
-@method_decorator(
-    csp_report_only_override(config={}),
-    name="get",
-)
+@method_decorator(csp_override(config={}), name="get")
+@method_decorator(csp_report_only_override(config={}), name="get")
+@method_decorator(csp_override(config={}), name="post")
+@method_decorator(csp_report_only_override(config={}), name="post")
 @method_decorator(csrf_exempt, name="dispatch")
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
@@ -58,7 +57,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
     def get_hedge_to_plant_data_form(self, config=None):
         """Return hedge data form to plant from config"""
-        data_form = HedgeToPlantPropertiesForm(
+        data_form = HedgeToPlantPropertiesRegimeUniqueForm(
             single_procedure=True,  # If the form is displayed without context, we presumed it is in "regime unique"
             prefix="plantation",
         )
@@ -71,7 +70,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
     def get_hedge_to_remove_data_form(self, config=None):
         """Return hedge data form to remove from config"""
-        data_form = HedgeToRemovePropertiesForm(
+        data_form = HedgeToRemovePropertiesRegimeUniqueForm(
             single_procedure=True,  # If the form is displayed without context, we presumed it is in "regime unique"
             prefix="removal",
         )

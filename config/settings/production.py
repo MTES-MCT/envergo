@@ -219,8 +219,10 @@ def filter_sentry_events(event, hint):
     # The imports still succeed — this is not actionable until GDAL is upgraded.
     # Sentry turns the warning into an error that we must safely ignore.
     log_entry = event.get("logentry", {})
-    message = log_entry.get("message", "") or log_entry.get("formatted", "")
-    if "GeoPackage user_version" in message:
+    raw_and_formatted = (
+        log_entry.get("message", "") + " " + log_entry.get("formatted", "")
+    )
+    if "GeoPackage user_version" in raw_and_formatted:
         return None
 
     return event
@@ -266,7 +268,7 @@ FROM_EMAIL = {
     },
     "haie": {
         "default": "Guichet unique de la haie <contact@haie.beta.gouv.fr>",
-        "accounts": "Compte GUH <comptes@haie.beta.gouv.fr>",
+        "accounts": "Guichet unique de la haie <comptes@haie.beta.gouv.fr>",
     },
 }
 
@@ -294,7 +296,7 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.beta.gouv.fr",  # Stats
         "https://sentry.incubateur.net",
         "https://*.crisp.chat",
-        "wss://*.relay.crisp.chat",
+        "wss://*.crisp.chat",
     ],
     "style-src": [CSP.SELF, CSP.UNSAFE_INLINE, "https://*.crisp.chat"],
     "img-src": [
@@ -303,11 +305,20 @@ SECURE_CSP_REPORT_ONLY = {
         "https://*.s3.fr-par.scw.cloud",
         "data:",
         "https://*.crisp.chat",
+        "https://static.demarches-simplifiees.fr",
     ],
     "font-src": [CSP.SELF, "https://*.crisp.chat"],
     "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
-    "frame-src": [CSP.SELF, "https://*.crisp.chat"],
+    "frame-src": [
+        CSP.SELF,
+        "https://*.crisp.chat",
+        "https://*.data.gouv.fr",  # Matomo iframe opt-out
+        "https://*.beta.gouv.fr",
+    ],
     "worker-src": [CSP.SELF, "blob:", "https://*.crisp.chat"],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "form-action": [CSP.SELF],
     "report-uri": "/csp/reports/",
 }
 
