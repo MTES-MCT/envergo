@@ -90,3 +90,60 @@ def send_new_account_notification(user_id, site_id):
         context={"user_url": full_user_url, "anon_email": anon_email},
     )
     notify(message_body, "haie")
+
+
+@app.task
+def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
+    """Notify a GUH user that their instruction rights have been assigned or changed.
+
+    Note sur l’absence d’opt-out :
+    Cette fonctionnalité sera utilisée par les administrateurs du site GUH/Envergo. Elle sera utilisée quasi
+    systématiquement lors de la création d’un nouvel utilisateur, ce qui permet de l’informer que son compte est
+    désormais actif => fait partie du flow d’inscription.
+    Les autres cas (modification de droits) seront limités :
+      - A l’ajout de droit suite à une demande de l’utilisateur (donc l’action est bien déclenchée par l’utilisateur)
+      - A la suppression de droits suite à demande hiérarchique ou à la demande de l’utilisateur : il est important de
+      notifier l’utilisateur puisque cela a un impact sur son compte.
+
+    Considérant ces points, et considérants que les utilisateurs sont des agents de l’Etat, il est acté que ne nous
+    mettons pas en place de feature d’opt-out
+    """
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return
+
+    try:
+        site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+    except Site.DoesNotExist:
+        return
+
+    base_url = get_base_url(site.domain)
+    departments = user.departments.defer("geometry").order_by("department")
+    project_list_url = (
+        f"{base_url}{reverse('petition_project_list', urlconf='config.urls_haie')}"
+    )
+    contact_url = f"{base_url}{reverse('contact_us', urlconf='config.urls_haie')}"
+
+    context = {
+        "base_url": base_url,
+        "user": user,
+        "departments": departments,
+        "is_instructor": user.is_instructor,
+        "is_new_instructor": is_new_instructor,
+        "project_list_url": project_list_url,
+        "contact_url": contact_url,
+    }
+
+    frm = settings.FROM_EMAIL["haie"]["accounts"]
+    txt_body = render_to_string("haie/emails/rights_assigned.txt", context)
+    html_body = render_to_string("haie/emails/rights_assigned.html", context)
+    send_mail(
+        "Attribution de droits sur le portail numérique",
+        txt_body,
+        html_message=html_body,
+        recipient_list=[user.email],
+        from_email=frm,
+        fail_silently=False,
+    )
