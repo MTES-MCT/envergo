@@ -739,7 +739,10 @@ class EspecesProtegeesRegimeUnique(
 
         # Treat missing density (None) as zero — this steers toward the most
         # constraining path (derogation_inventaire) when data is unavailable.
-        density = catalog.get("density_400") or 0
+        density = catalog.get("density_400")
+        if density is None:
+            density = 0
+        catalog["ep_ru_density"] = density
         catalog["ep_ru_per_hedge_results"] = self.compute_per_hedge_results(
             hedges,
             catalog["ep_ru_total_length"],
@@ -774,7 +777,7 @@ class EspecesProtegeesRegimeUnique(
             "aa_only": self.catalog.get("ep_ru_aa_only", False),
             "total_length": self.catalog.get("ep_ru_total_length", 0),
             "ripisylve_length": self.catalog.get("ep_ru_ripisylve_length", 0),
-            "density": self.catalog.get("density_400") or 0,
+            "density": self.catalog.get("ep_ru_density", 0),
             "per_hedge_results": self.catalog.get("ep_ru_per_hedge_results", {}),
         }
 
