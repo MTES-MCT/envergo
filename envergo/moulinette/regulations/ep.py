@@ -784,40 +784,37 @@ class EspecesProtegeesRegimeUnique(
     def get_result_code(self, result_data):
         """Cascade algorithm for the EP régime unique procedure level.
 
-        Project-level rules are tried first. If none match, the most
-        constraining per-hedge result wins.
+        Project-level rules (steps 1-5) are tried first. If none match, the
+        most constraining per-hedge result wins (step 6).
         """
         aa_only = result_data["aa_only"]
         total_length = result_data["total_length"]
         ripisylve_length = result_data["ripisylve_length"]
         density = result_data["density"]
-
-        # 1. Only tree-row hedges -> derogation_inventaire
-        if aa_only:
-            return "derogation_inventaire"
-
-        # 2. Ripisylve threshold exceeded
-        if ripisylve_length > EP_RU_L_RIPISYLVE:
-            return "derogation_inventaire"
-
-        # 3. Very short total -> dispense
-        if total_length <= EP_RU_L_BAS:
-            return "dispense"
-
-        # 4. Medium total with moderate density
-        if total_length <= EP_RU_L_HAUT and density < EP_RU_D_HAUT:
-            return "derogation_simplifiee"
-
-        # 5. Long total with low density
-        if total_length > EP_RU_L_HAUT and density < EP_RU_D_BAS:
-            return "derogation_inventaire"
-
-        # 6. Per-hedge evaluation — pick the most constraining
         per_hedge_results = result_data["per_hedge_results"]
-        if not per_hedge_results:
-            return "derogation_simplifiee"
 
-        return max(per_hedge_results.values(), key=lambda r: EP_RU_RESULT_RANK[r])
+        # 1. Only tree-row hedges
+        if aa_only:
+            result = "derogation_inventaire"
+        # 2. Ripisylve threshold exceeded
+        elif ripisylve_length > EP_RU_L_RIPISYLVE:
+            result = "derogation_inventaire"
+        # 3. Very short total
+        elif total_length <= EP_RU_L_BAS:
+            result = "dispense"
+        # 4. Medium total with moderate density
+        elif total_length <= EP_RU_L_HAUT and density < EP_RU_D_HAUT:
+            result = "derogation_simplifiee"
+        # 5. Long total with low density
+        elif total_length > EP_RU_L_HAUT and density < EP_RU_D_BAS:
+            result = "derogation_inventaire"
+        # 6. Per-hedge evaluation — pick the most constraining
+        else:
+            result = max(
+                per_hedge_results.values(), key=lambda r: EP_RU_RESULT_RANK[r]
+            )
+
+        return result
 
     def get_replantation_coefficient(self):
         """Base RU coefficient plus a bonus depending on the EP result level."""
