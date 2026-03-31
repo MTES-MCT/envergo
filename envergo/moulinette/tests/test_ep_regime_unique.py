@@ -202,43 +202,27 @@ def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
 # ---------------------------------------------------------------------------
 
 
-def test_ep_ru_replantation_coefficient_dispense(
-    ep_ru_criterion, regime_unique_haie_criterion
+@pytest.mark.parametrize(
+    "length, density, expected_code, expected_coeff",
+    [
+        (8, 60, "dispense", 1.5),  # R_ru=1.5 + bonus=0.0
+        (50, 60, "derogation_simplifiee", 1.75),  # R_ru=1.5 + bonus=0.25
+        (120, 40, "derogation_inventaire", 2.0),  # R_ru=1.5 + bonus=0.5
+    ],
+)
+def test_ep_ru_replantation_coefficient(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+    length,
+    density,
+    expected_code,
+    expected_coeff,
 ):
-    """Dispense → R_ru + 0.0."""
+    """Replantation coefficient = R_ru + bonus per result level."""
     RUConfigHaieFactory()
-    hedge = _make_hedge_factory(length=8)
+    hedge = _make_hedge_factory(length=length)
     hedges = HedgeDataFactory(hedges=[hedge])
-    moulinette = _build_moulinette(hedges, density=60)
+    moulinette = _build_moulinette(hedges, density=density)
     criterion = moulinette.ep.ep_regime_unique
-    assert criterion.result_code == "dispense"
-    # R_ru = 1.5 (from RUConfigHaieFactory), bonus = 0.0
-    assert criterion.get_evaluator().get_replantation_coefficient() == 1.5
-
-
-def test_ep_ru_replantation_coefficient_derogation_simplifiee(
-    ep_ru_criterion, regime_unique_haie_criterion
-):
-    """Dérogation simplifiée → R_ru + 0.25."""
-    RUConfigHaieFactory()
-    hedge = _make_hedge_factory(length=50)
-    hedges = HedgeDataFactory(hedges=[hedge])
-    moulinette = _build_moulinette(hedges, density=60)
-    criterion = moulinette.ep.ep_regime_unique
-    assert criterion.result_code == "derogation_simplifiee"
-    # R_ru = 1.5, bonus = 0.25
-    assert criterion.get_evaluator().get_replantation_coefficient() == 1.75
-
-
-def test_ep_ru_replantation_coefficient_derogation_inventaire(
-    ep_ru_criterion, regime_unique_haie_criterion
-):
-    """Dérogation inventaire → R_ru + 0.5."""
-    RUConfigHaieFactory()
-    hedge = _make_hedge_factory(length=120)
-    hedges = HedgeDataFactory(hedges=[hedge])
-    moulinette = _build_moulinette(hedges, density=40)
-    criterion = moulinette.ep.ep_regime_unique
-    assert criterion.result_code == "derogation_inventaire"
-    # R_ru = 1.5, bonus = 0.5
-    assert criterion.get_evaluator().get_replantation_coefficient() == 2.0
+    assert criterion.result_code == expected_code
+    assert criterion.get_evaluator().get_replantation_coefficient() == expected_coeff
