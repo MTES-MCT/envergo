@@ -717,6 +717,11 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
+        """Populate the catalog with EP régime unique inputs.
+
+        Computes hedge lengths, ripisylve length, zone sensible flags,
+        line-buffer density, and per-hedge procedure-level results.
+        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
@@ -778,6 +783,7 @@ class EspecesProtegeesRegimeUnique(
         return per_hedge_results
 
     def get_result_data(self):
+        """Return project-level EP parameters for the cascade algorithm."""
         return {
             "aa_only": self.catalog.get("ep_ru_aa_only", False),
             "total_length": self.catalog.get("ep_ru_total_length", 0),
