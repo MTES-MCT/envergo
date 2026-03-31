@@ -5,6 +5,7 @@ from pathlib import Path
 import factory
 from factory.django import DjangoModelFactory
 
+from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.petitions.demarches_simplifiees.client import (
     DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH,
@@ -91,6 +92,7 @@ class PetitionProjectFactory(DjangoModelFactory):
             f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie&contexte=non"
         )
     )
+    department = factory.SubFactory(DepartmentFactory)
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059675
     demarches_simplifiees_prefill_url = (

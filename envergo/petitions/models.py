@@ -23,7 +23,7 @@ from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
@@ -71,7 +71,7 @@ LOG_TYPES = Choices(
 SESSION_KEY = "untracked_dossier_submission"
 
 
-class PetitionProject(models.Model):
+class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
     A petition project will store any data needed to follow up a request concerning a hedge.
@@ -408,6 +408,8 @@ class PetitionProject(models.Model):
             )
 
         self.demarches_simplifiees_raw_dossier = dossier
+        if hasattr(self, "prefetched_dossier"):
+            del self.prefetched_dossier
 
         if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
@@ -415,13 +417,13 @@ class PetitionProject(models.Model):
         self.demarches_simplifiees_last_sync = timezone.now()
         self.save()
 
-    def get_moulinette(self, evaluate=True):
+    def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
         if not hasattr(self, "_moulinette"):
             moulinette_data = self._parse_moulinette_data()
             moulinette_data["haies"] = self.hedge_data
             form_data = {"initial": moulinette_data, "data": moulinette_data}
-            self._moulinette = MoulinetteHaie(form_data, evaluate=evaluate)
+            self._moulinette = MoulinetteHaie(form_data)
         return self._moulinette
 
     def get_triage_form(self):
@@ -436,6 +438,17 @@ class PetitionProject(models.Model):
         raw_data = QueryDict(query_string)
         moulinette_data = raw_data.dict()
         return moulinette_data
+
+    @cached_property
+    def moulinette_data(self):
+        data = self._parse_moulinette_data()
+        if "haies" in data:
+            try:
+                data["haies"] = HedgeData.objects.get(id=data["haies"])
+            except HedgeData.DoesNotExist:
+                pass
+
+        return data
 
     def has_view_permission(self, user):
         """User has view permission on project, according to
@@ -526,6 +539,11 @@ class PetitionProject(models.Model):
 
         self.due_date = status_log.due_date
         self.save()
+
+    def get_available_regulations(self):
+        return Regulation.objects.filter(
+            regulation__in=self.config.regulations_available
+        ).order_by("weight")
 
 
 USER_TYPE = Choices(

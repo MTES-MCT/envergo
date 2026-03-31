@@ -69,7 +69,6 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     petition_project = PetitionProjectFactory()
-    moulinette = petition_project.get_moulinette()
 
     # WHEN I fetch it from DS for the first time
     dossier = get_demarches_simplifiees_dossier(petition_project)
@@ -78,7 +77,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert Event.objects.get(category="demande", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
-    project_details = get_context_from_ds(petition_project, moulinette)
+    project_details = get_context_from_ds(petition_project)
 
     assert project_details["ds_info"]["city"] == "Laon (02000)"
     assert project_details["ds_info"]["pacage"] == "123456789"
@@ -162,61 +161,8 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify, haie_user
 ):
     petition_project = PetitionProjectFactory()
-    hedges = HedgeDataFactory(
-        data=[
-            {
-                "id": "D1",
-                "type": "TO_REMOVE",
-                "latLngs": [
-                    {"lat": 43.0693, "lng": 0.4421},
-                    {"lat": 43.0691, "lng": 0.4423},
-                ],
-                "additionalData": {
-                    "interchamp": True,
-                    "sur_talus": False,
-                    "vieil_arbre": True,
-                    "type_haie": "arbustive",
-                    "ripisylve": False,
-                    "mode_plantation": "plantation",
-                    "sur_parcelle_pac": True,
-                    "sous_ligne_electrique": True,
-                    "connexion_boisement": False,
-                },
-            },
-            {
-                "id": "P1",
-                "type": "TO_PLANT",
-                "latLngs": [
-                    {"lat": 43.0693, "lng": 0.4421},
-                    {"lat": 43.0691, "lng": 0.4423},
-                ],
-                "additionalData": {
-                    "interchamp": True,
-                    "sur_talus": False,
-                    "type_haie": "arbustive",
-                    "ripisylve": True,
-                    "mode_destruction": "coupe_a_blanc",
-                    "sur_parcelle_pac": True,
-                    "recemment_plantee": False,
-                    "connexion_boisement": True,
-                },
-            },
-        ]
-    )
     DCConfigHaieFactory()
-    data = {
-        "motif": "chemin_acces",
-        "reimplantation": "replantation",
-        "localisation_pac": "non",
-        "haies": hedges,
-        "travaux": "destruction",
-        "contexte": "non",
-        "element": "haie",
-        "department": 44,
-    }
-    moulinette_data = {"initial": data, "data": data}
-    moulinette = MoulinetteHaie(moulinette_data)
-    get_context_from_ds(petition_project, moulinette)
+    get_context_from_ds(petition_project)
 
     args, kwargs = mock_notify.call_args
     assert (
@@ -1043,7 +989,6 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_state == DossierState.accepte.value
-    del petition_project.prefetched_dossier  # refresh
     assert petition_project.prefetched_dossier.state == DossierState.accepte
 
     # WHEN I update its status to "Refusé"
@@ -1052,7 +997,6 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_state == DossierState.refuse.value
-    del petition_project.prefetched_dossier  # refresh
     assert petition_project.prefetched_dossier.state == DossierState.refuse
 
     # WHEN I update its status to "Classé sans suite"
@@ -1061,5 +1005,4 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_state == DossierState.sans_suite.value
-    del petition_project.prefetched_dossier  # refresh
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite

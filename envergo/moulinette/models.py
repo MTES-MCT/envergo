@@ -1585,7 +1585,77 @@ class MoulinetteCatalog(dict):
         return value
 
 
-class Moulinette(ABC):
+class MoulinetteUrlMixin:
+    """A mixin for object containing a moulinette url
+
+    Share some property/method based on moulinette url without instanciating/evaluating a Moulinette
+    """
+
+    @property
+    @abstractmethod
+    def moulinette_data(self):
+        """Return the moulinette data."""
+        pass
+
+    @abstractmethod
+    def get_department(self):
+        pass
+
+    @cached_property
+    def department(self):
+        return self.get_department()
+
+    @abstractmethod
+    def get_config(self):
+        pass
+
+    @cached_property
+    def config(self):
+        return self.get_config()
+
+    @cached_property
+    def date(self):
+        """Date for the simulation. Today by default."""
+        date_str = self.moulinette_data.get("date")
+        if date_str:
+            try:
+                return parser.isoparse(date_str).date()
+            except (ValueError, TypeError):
+                pass
+        return date.today()
+
+
+class MoulinetteHaieUrlMixin(MoulinetteUrlMixin):
+    """A mixin for object containing a moulinette Haie url"""
+
+    def get_department(self):
+        dept = self.moulinette_data.get("department", None)
+        if dept is None:
+            return None
+
+        qs = (
+            Department.objects.defer("geometry")
+            .annotate(centroid=Centroid("geometry"))
+            .filter(department=dept)
+        )
+        return qs.first()
+
+    def get_config(self):
+        if not self.department:
+            return None
+        return ConfigHaie.objects.get_valid_config(self.department, self.date)
+
+    @property
+    def hedge_types(self):
+        if not hasattr(self, "_hedge_types"):
+            self._hedge_types = HedgeTypeFactory.build_from_context(
+                single_procedure=self.config.single_procedure
+            )
+
+        return self._hedge_types
+
+
+class Moulinette(MoulinetteUrlMixin, ABC):
     """Automatic environment law evaluation processing tool.
 
     Given a bunch of relevant user provided data, we try to perform an
@@ -1605,7 +1675,7 @@ class Moulinette(ABC):
         "alignement_arbres",
     ]
 
-    def __init__(self, form_kwargs, evaluate=True):
+    def __init__(self, form_kwargs):
         self.catalog = MoulinetteCatalog()
         # Maybe here department should be evaluated if existing
         if "initial" in form_kwargs:
@@ -1620,8 +1690,7 @@ class Moulinette(ABC):
             else:
                 self.templates = {}
 
-            if evaluate:
-                self.evaluate()
+            self.evaluate()
 
     def evaluate(self):
         for regulation in self.regulations:
@@ -1630,14 +1699,6 @@ class Moulinette(ABC):
 
     def is_evaluated(self):
         return self._is_evaluated
-
-    @cached_property
-    def department(self):
-        return self.get_department()
-
-    @cached_property
-    def config(self):
-        return self.get_config()
 
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
@@ -1836,6 +1897,10 @@ class Moulinette(ABC):
         return self.form_kwargs.get("data", {})
 
     @property
+    def moulinette_data(self):
+        return self.data or self.initial
+
+    @property
     def cleaned_data(self):
         """Return the moulinette data as cleaned by all existing forms."""
 
@@ -1926,29 +1991,9 @@ class Moulinette(ABC):
     def regulations(self, value):
         self._regulations = value
 
-    @classmethod
-    def get_regulations_qs(cls):
-        """Get the Moulinette regulations queryset, without prefetched criteria
-
-        This qs should be kept lightweight to avoid consuming resources for rendering.
-        """
-        return Regulation.objects.filter(regulation__in=cls.REGULATIONS).order_by(
-            "weight"
-        )
-
-    def get_available_regulations(self):
-        qs = self.get_regulations_qs()
-        if self.has_config():
-            qs = qs.filter(regulation__in=self.config.regulations_available)
-        return qs
-
     def has_config(self):
         """Check if a valid, active config exists for this department."""
         return bool(self.config)
-
-    @abstractmethod
-    def get_config(self):
-        pass
 
     def get_template(self, template_key):
         """Return the MoulinetteTemplate with the given key."""
@@ -2033,8 +2078,10 @@ class Moulinette(ABC):
         """Find the activated regulations and their criteria."""
 
         criteria = self.get_criteria()
-        regulations = self.get_regulations_qs().prefetch_related(
-            Prefetch("criteria", queryset=criteria)
+        regulations = (
+            Regulation.objects.filter(regulation__in=self.REGULATIONS)
+            .order_by("weight")
+            .prefetch_related(Prefetch("criteria", queryset=criteria))
         )
         return regulations
 
@@ -2218,17 +2265,6 @@ class Moulinette(ABC):
             action_key = action.type if action.type == "pc" else action.target
             result[action_key].append(action)
         return dict(result)
-
-    @cached_property
-    def date(self):
-        """Date for the simulation. Today by default."""
-        date_str = self.data.get("date") or self.initial.get("date")
-        if date_str:
-            try:
-                return parser.isoparse(date_str).date()
-            except (ValueError, TypeError):
-                pass
-        return date.today()
 
 
 class MoulinetteAmenagement(Moulinette):
@@ -2458,7 +2494,7 @@ class MoulinetteAmenagement(Moulinette):
         return self.catalog["lng_lat"]
 
 
-class MoulinetteHaie(Moulinette):
+class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     REGULATIONS = [
         "conditionnalite_pac",
         "ep",
@@ -2515,11 +2551,6 @@ class MoulinetteHaie(Moulinette):
         return self.get_main_form_class()(
             single_procedure=self._get_single_procedure(), **form_kwargs
         )
-
-    def get_config(self):
-        if not self.department:
-            return None
-        return ConfigHaie.objects.get_valid_config(self.department, self.date)
 
     @property
     def result(self):
@@ -2668,18 +2699,6 @@ class MoulinetteHaie(Moulinette):
             )
 
         return data
-
-    def get_department(self):
-        dept = self.data.get("department", self.initial.get("department", None))
-        if dept is None:
-            return None
-
-        qs = (
-            Department.objects.defer("geometry")
-            .annotate(centroid=Centroid("geometry"))
-            .filter(department=dept)
-        )
-        return qs.first()
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
@@ -2863,15 +2882,6 @@ class MoulinetteHaie(Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
-
-    @property
-    def hedge_types(self):
-        if not hasattr(self, "_hedge_types"):
-            self._hedge_types = HedgeTypeFactory.build_from_context(
-                single_procedure=self.config.single_procedure
-            )
-
-        return self._hedge_types
 
 
 class ActionToTake(models.Model):
