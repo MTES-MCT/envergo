@@ -481,8 +481,8 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
 @admin.register(ConfigHaie)
 class ConfigHaieAdmin(admin.ModelAdmin):
     form = ConfigHaieAdminForm
-    list_display = ["department", "is_activated", "validity_column"]
-    list_filter = ["is_activated", DepartmentsListFilter]
+    list_display = ["department", "is_activated", "single_procedure", "validity_column"]
+    list_filter = ["is_activated", "single_procedure", DepartmentsListFilter]
     fieldsets = [
         (
             None,
