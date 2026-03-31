@@ -23,7 +23,7 @@ from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
@@ -71,7 +71,7 @@ LOG_TYPES = Choices(
 SESSION_KEY = "untracked_dossier_submission"
 
 
-class PetitionProject(models.Model):
+class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
     A petition project will store any data needed to follow up a request concerning a hedge.
@@ -437,6 +437,17 @@ class PetitionProject(models.Model):
         moulinette_data = raw_data.dict()
         return moulinette_data
 
+    @cached_property
+    def moulinette_data(self):
+        data = self._parse_moulinette_data()
+        if "haies" in data:
+            try:
+                data["haies"] = HedgeData.objects.get(id=data["haies"])
+            except HedgeData.DoesNotExist:
+                pass
+
+        return data
+
     def has_view_permission(self, user):
         """User has view permission on project, according to
         - superuser
@@ -526,6 +537,11 @@ class PetitionProject(models.Model):
 
         self.due_date = status_log.due_date
         self.save()
+
+    def get_available_regulations(self):
+        return Regulation.objects.filter(
+            regulation__in=self.config.regulations_available
+        ).order_by("weight")
 
 
 USER_TYPE = Choices(

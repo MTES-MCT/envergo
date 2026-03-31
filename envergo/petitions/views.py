@@ -822,20 +822,18 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        moulinette = self.object.get_moulinette()
-        context["moulinette"] = moulinette
         context["hedge_types"] = HedgeTypeFactory.build_from_context(
-            single_procedure=moulinette.config.single_procedure
+            single_procedure=self.object.config.single_procedure
         )
 
-        context.update(get_context_from_ds(self.object, moulinette))
+        context.update(get_context_from_ds(self.object))
 
-        context.update(moulinette.catalog)
+        context.update(self.object.moulinette_data)
 
         plantation_url = reverse(
             "input_hedges",
             args=[
-                moulinette.department.department,
+                self.object.department.department,
                 "read_only",
                 self.object.hedge_data.id,
             ],
@@ -869,7 +867,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
-            moulinette.config.demarche_simplifiee_number
+            self.object.config.demarche_simplifiee_number
         )
 
         # Send message if info from DS is not in project details
@@ -951,6 +949,9 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
+
         context.update(get_project_context(self.object, context["moulinette"]))
 
         context["plantation_evaluation"] = PlantationEvaluator(
@@ -985,6 +986,8 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
         context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
 
         hedge_data = context["petition_project"].hedge_data
         context["ign_url"] = get_ign_centered_url(hedge_data)
