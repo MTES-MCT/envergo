@@ -709,7 +709,12 @@ class EspecesProtegeesRegimeUnique(
             return set()
 
         geom = shapely.from_wkt(multipolygon.wkt)
-        return {h.id for h in hedges if not h.geometry.intersection(geom).is_empty}
+        result = set()
+        for h in hedges:
+            intersection = h.geometry.intersection(geom)
+            if not intersection.is_empty:
+                result.add(h.id)
+        return result
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
