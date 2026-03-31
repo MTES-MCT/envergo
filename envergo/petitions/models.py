@@ -408,6 +408,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
 
         self.demarches_simplifiees_raw_dossier = dossier
+        if hasattr(self, "prefetched_dossier"):
+            del self.prefetched_dossier
 
         if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
