@@ -330,8 +330,6 @@ pygments==2.19.2
     #   ipython
     #   ipython-pygments-lexers
     #   pytest
-pyinstrument==5.1.2
-    # via -r local.in
 pylint==3.3.7
     # via
     #   pylint-django
