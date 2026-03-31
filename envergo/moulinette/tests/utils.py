@@ -97,7 +97,7 @@ def make_hedge(
             "vieil_arbre": False,
             "proximite_mare": False,
             "sur_parcelle_pac": sur_parcelle_pac,
-            "proximite_point_eau": False,
+            "ripisylve": False,
             "connexion_boisement": False,
             **additional_data_overrides,
         },
@@ -113,6 +113,7 @@ def make_moulinette_haie_data(
     travaux="destruction",
     element="haie",
     department="44",
+    contexte="non",
     **extra,
 ):
     """Build a MoulinetteHaie-compatible data dict.
@@ -144,6 +145,7 @@ def make_moulinette_haie_data(
         "localisation_pac": localisation_pac,
         "haies": hedges,
         "department": department,
+        "contexte": contexte,
         **extra,
     }
     return {"initial": data, "data": data}

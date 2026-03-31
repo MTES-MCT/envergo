@@ -46,7 +46,6 @@ from envergo.petitions.tests.factories import (
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
     FILE_TEST_PATH,
     GET_DOSSIER_FAKE_RESPONSE,
-    GET_DOSSIER_MESSAGES_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
 
@@ -66,6 +65,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     DCConfigHaieFactory(
         demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
         demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_organization_id="Q2hhbXAtNDcyOTE3MQ==",
     )
 
     petition_project = PetitionProjectFactory()
@@ -80,9 +80,13 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # AND the project details are correctly populated
     project_details = get_context_from_ds(petition_project, moulinette)
 
-    assert project_details["applicant"] == "Mme LAMARR Hedy"
-    assert project_details["city"] == "Laon (02000)"
-    assert project_details["pacage"] == "123456789"
+    assert project_details["ds_info"]["city"] == "Laon (02000)"
+    assert project_details["ds_info"]["pacage"] == "123456789"
+    assert project_details["ds_info"]["organization"] == "GAEC Choupi"
+    assert project_details["ds_info"]["applicant"] == "Mme LAMARR Hedy"
+    assert project_details["ds_info"]["applicant_email"] == "hedy.lamarr@example.com"
+    assert project_details["ds_info"]["usager"] == "grace.hopper@example.com"
+    assert project_details["ds_info"]["representative"] == "HOPPER Grace"
 
     petition_project.refresh_from_db()
     assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
@@ -172,7 +176,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -190,7 +194,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -206,6 +210,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
         "localisation_pac": "non",
         "haies": hedges,
         "travaux": "destruction",
+        "contexte": "non",
         "element": "haie",
         "department": 44,
     }
@@ -347,7 +352,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -365,7 +370,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -380,6 +385,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
         "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
+        "contexte": "non",
         "element": "haie",
         "department": 44,
         "numero_pacage": "123456789",
@@ -408,25 +414,41 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
 
     expected_result = {
         "hedges_properties": {
+            "bord_batiment": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "En bordure de bâtiment",
+            },
             "connexion_boisement": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "Connectée à un " "boisement ou à une " "autre haie",
+                "label": "Connectée à un boisement ou à une autre haie",
+            },
+            "parc_jardin": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Dans le parc ou jardin d'une habitation",
+            },
+            "place_publique": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Sur une place publique",
             },
             "bord_voie": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Bord de route, voie ou chemin " "ouvert au public",
+                "label": "En bordure de route, voie ou chemin ouvert au public",
             },
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Mare à moins de 200\xa0m",
             },
-            "proximite_point_eau": {
+            "ripisylve": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [],
-                "label": "Mare ou ruisseau à " "moins de 10\xa0m",
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
+                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -461,7 +483,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -479,7 +501,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -494,6 +516,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
         "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
+        "contexte": "non",
         "element": "haie",
         "department": 44,
         "numero_pacage": "123456789",
@@ -522,6 +545,11 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
 
     expected_result = {
         "hedges_properties": {
+            "bord_batiment": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "En bordure de bâtiment",
+            },
             "essences_non_bocageres": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
@@ -530,12 +558,22 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "bord_voie": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Bord de route, voie ou chemin " "ouvert au public",
+                "label": "En bordure de route, voie ou chemin " "ouvert au public",
             },
             "interchamp": {
                 "TO_PLANT": [ANY],
                 "TO_REMOVE": [ANY],
                 "label": "Haie inter-champ",
+            },
+            "parc_jardin": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Dans le parc ou jardin d'une " "habitation",
+            },
+            "place_publique": {
+                "TO_PLANT": None,
+                "TO_REMOVE": [],
+                "label": "Sur une place publique",
             },
             "proximite_mare": {
                 "TO_PLANT": [],
@@ -546,6 +584,12 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "TO_PLANT": None,
                 "TO_REMOVE": [],
                 "label": "Haie récemment plantée",
+            },
+            "ripisylve": {
+                "TO_PLANT": [ANY],
+                "TO_REMOVE": [],
+                "label": "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)<span "
+                "class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>",
             },
             "sous_ligne_electrique": {
                 "TO_PLANT": [],
@@ -609,7 +653,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
                     "sur_talus": False,
                     "vieil_arbre": True,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "mode_plantation": "plantation",
                     "sur_parcelle_pac": True,
                     "sous_ligne_electrique": True,
@@ -627,7 +671,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
                     "interchamp": True,
                     "sur_talus": False,
                     "type_haie": "arbustive",
-                    "proximite_point_eau": True,
+                    "ripisylve": True,
                     "mode_destruction": "coupe_a_blanc",
                     "sur_parcelle_pac": True,
                     "recemment_plantee": False,
@@ -642,6 +686,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
         "localisation_pac": "oui",
         "haies": hedges,
         "travaux": "destruction",
+        "contexte": "non",
         "element": "haie",
         "department": 44,
         "lineaire_total": 5000,
@@ -697,7 +742,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "sous_ligne_electrique": False,
                 },
             },
@@ -714,7 +759,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "proximite_mare": False,
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                     "sous_ligne_electrique": False,
                 },
             },
@@ -733,7 +778,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "mode_destruction": "arrachage",
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                 },
             },
             {
@@ -751,7 +796,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "mode_destruction": "arrachage",
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                 },
             },
             {
@@ -769,7 +814,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
                     "mode_destruction": "arrachage",
                     "sur_parcelle_pac": False,
                     "connexion_boisement": False,
-                    "proximite_point_eau": False,
+                    "ripisylve": False,
                 },
             },
         ]
@@ -781,6 +826,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
         "localisation_pac": "non",
         "haies": hedges,
         "travaux": "destruction",
+        "contexte": "non",
         "element": "haie",
         "department": 44,
     }
@@ -866,14 +912,14 @@ def test_get_message_project_via_demarches_simplifiees(
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I get messages for this dossier
-    mock_gql_execute.return_value = GET_DOSSIER_MESSAGES_FAKE_RESPONSE["data"]
+    mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     messages, instructor_emails, petitioner_email = get_messages_and_senders_from_ds(
         petition_project
     )
     # THEN Messages are returned
     assert len(messages) == 8
     assert instructor_emails == ["instructeur@guh.gouv.fr"]
-    assert petitioner_email == "hedy.lamarr@example.com"
+    assert petitioner_email == "grace.hopper@example.com"
 
 
 @pytest.mark.haie

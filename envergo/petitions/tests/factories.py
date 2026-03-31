@@ -40,13 +40,7 @@ with open(
     GET_DOSSIER_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages.json"),
-    "r",
-) as file:
-    GET_DOSSIER_MESSAGES_FAKE_RESPONSE = json.load(file)
-
-with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_0.json"),
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_0_messages.json"),
     "r",
 ) as file:
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
@@ -58,7 +52,7 @@ with open(
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_messages_error.json"),
+    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_error.json"),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
@@ -94,7 +88,7 @@ class PetitionProjectFactory(DjangoModelFactory):
     moulinette_url = factory.LazyAttribute(
         lambda obj: (
             "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
-            f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie"
+            f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie&contexte=non"
         )
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)

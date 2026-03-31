@@ -24,11 +24,18 @@ class HedgePropertiesBaseForm(forms.Form):
         widget=HedgeChoiceField,
     )
     sur_parcelle_pac = forms.BooleanField(
-        label="Située sur une parcelle PAC",
+        label="Sur une parcelle PAC",
         required=False,
     )
     bord_voie = forms.BooleanField(
-        label="Bord de route, voie ou chemin ouvert au public",
+        label="En bordure de route, voie ou chemin ouvert au public",
+        required=False,
+    )
+    ripisylve = forms.BooleanField(
+        label=mark_safe(
+            "En bordure de cours d'eau ou de plan d'eau (haie ripisylve)"
+            "<span class=\"fr-hint-text\">Y compris d'un canal ou d'une mare</span>"
+        ),
         required=False,
     )
     proximite_mare = forms.BooleanField(
@@ -69,7 +76,7 @@ MODE_DESTRUCTION_CHOICES = (
 )
 
 
-class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
+class HedgeToRemovePropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
     """Hedge to remove properties form"""
 
     mode_destruction = DisplayChoiceField(
@@ -83,20 +90,43 @@ class HedgeToRemovePropertiesForm(HedgePropertiesBaseForm):
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
         required=False,
     )
+    bord_batiment = forms.BooleanField(
+        label="En bordure de bâtiment",
+        required=False,
+    )
+    parc_jardin = forms.BooleanField(
+        label="Dans le parc ou jardin d'une habitation",
+        required=False,
+    )
+    place_publique = forms.BooleanField(
+        label="Sur une place publique",
+        required=False,
+    )
 
     fieldsets = {
         "Mode de destruction": ["mode_destruction"],
-        "Caractéristiques de la haie": ["type_haie", "vieil_arbre"],
-        "Situation de la haie": ["sur_parcelle_pac", "bord_voie", "proximite_mare"],
+        "Caractéristiques naturelles": [
+            "type_haie",
+            "vieil_arbre",
+            "ripisylve",
+            "proximite_mare",
+        ],
+        "Situation": [
+            "sur_parcelle_pac",
+            "bord_voie",
+            "bord_batiment",
+            "parc_jardin",
+            "place_publique",
+        ],
     }
 
     @classmethod
     @abstractmethod
     def human_readable_name(cls):
-        return "Caractéristiques de base"
+        return "Régime unique"
 
 
-class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
+class HedgeToPlantPropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
     """Hedge to plant properties form"""
 
     sous_ligne_electrique = forms.BooleanField(
@@ -105,13 +135,14 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
     )
 
     fieldsets = {
-        "Caractéristiques de la haie": [
+        "Caractéristiques naturelles": [
             "type_haie",
+            "ripisylve",
+            "proximite_mare",
         ],
-        "Situation de la haie": [
+        "Situation": [
             "sur_parcelle_pac",
             "bord_voie",
-            "proximite_mare",
             "sous_ligne_electrique",
         ],
     }
@@ -128,7 +159,7 @@ class HedgeToPlantPropertiesForm(HedgePropertiesBaseForm):
     @classmethod
     @abstractmethod
     def human_readable_name(cls):
-        return "Caractéristiques de base"
+        return "Régime unique"
 
 
 class EssencesNonBocageresMixin(forms.Form):
@@ -163,7 +194,7 @@ class HedgeToRemovePropertiesCalvadosForm(
     EssencesNonBocageresMixin,
     SurTalusMixin,
     InterchampMixin,
-    HedgeToRemovePropertiesForm,
+    HedgeToRemovePropertiesRegimeUniqueForm,
 ):
     """Hedge to remove properties form : Calvados specific"""
 
@@ -175,16 +206,16 @@ class HedgeToRemovePropertiesCalvadosForm(
         display_label="Haie récemment plantée",
     )
 
-    fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)
+    fieldsets = copy.deepcopy(HedgeToRemovePropertiesRegimeUniqueForm.fieldsets)
 
-    fieldsets["Caractéristiques de la haie"].insert(1, "recemment_plantee")
-    fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
-    fieldsets["Caractéristiques de la haie"].append("sur_talus")
-    fieldsets["Situation de la haie"].insert(1, "interchamp")
+    fieldsets["Caractéristiques naturelles"].insert(1, "recemment_plantee")
+    fieldsets["Caractéristiques naturelles"].insert(3, "essences_non_bocageres")
+    fieldsets["Caractéristiques naturelles"].insert(4, "sur_talus")
+    fieldsets["Situation"].insert(1, "interchamp")
 
     @classmethod
     def human_readable_name(cls):
-        return "Caractéristiques du Calvados ( + talus, essences non bocagères, récemment plantée)"
+        return "Calvados avant r.u. (interchamp, talus, essences non bocagères, type de plantation)"
 
 
 MODE_PLANTATION_CHOICES = (
@@ -219,7 +250,7 @@ class HedgeToPlantPropertiesCalvadosForm(
     EssencesNonBocageresMixin,
     SurTalusMixin,
     InterchampMixin,
-    HedgeToPlantPropertiesForm,
+    HedgeToPlantPropertiesRegimeUniqueForm,
 ):
     """Hedge to plant properties form : Calvados specific"""
 
@@ -232,22 +263,15 @@ class HedgeToPlantPropertiesCalvadosForm(
 
     fieldsets = {
         "Type de plantation": ["mode_plantation"],
-        **copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets),
+        **copy.deepcopy(HedgeToPlantPropertiesRegimeUniqueForm.fieldsets),
     }
-    fieldsets["Caractéristiques de la haie"].append("essences_non_bocageres")
-    fieldsets["Caractéristiques de la haie"].append("sur_talus")
-    fieldsets["Situation de la haie"].insert(1, "interchamp")
+    fieldsets["Caractéristiques naturelles"].insert(1, "essences_non_bocageres")
+    fieldsets["Caractéristiques naturelles"].insert(1, "sur_talus")
+    fieldsets["Situation"].insert(1, "interchamp")
 
     @classmethod
     def human_readable_name(cls):
-        return "Caractéristiques du Calvados ( + interchamp, talus, essences non bocagères, type de plantation)"
-
-
-class ProximitePointEauMixin(forms.Form):
-    proximite_point_eau = forms.BooleanField(
-        label="Mare ou ruisseau à moins de 10 m",
-        required=False,
-    )
+        return "Calvados avant r.u. (interchamp, talus, essences non bocagères, type de plantation)"
 
 
 class ConnexionBoisementMixin(forms.Form):
@@ -258,31 +282,29 @@ class ConnexionBoisementMixin(forms.Form):
 
 
 class HedgeToRemovePropertiesAisneForm(
-    ProximitePointEauMixin, ConnexionBoisementMixin, HedgeToRemovePropertiesForm
+    ConnexionBoisementMixin, HedgeToRemovePropertiesRegimeUniqueForm
 ):
     """Hedge to remove properties form : Aisne specific"""
 
-    fieldsets = copy.deepcopy(HedgeToRemovePropertiesForm.fieldsets)
-    fieldsets["Situation de la haie"].append("connexion_boisement")
-    fieldsets["Situation de la haie"].insert(3, "proximite_point_eau")
+    fieldsets = copy.deepcopy(HedgeToRemovePropertiesRegimeUniqueForm.fieldsets)
+    fieldsets["Situation"].append("connexion_boisement")
 
     @classmethod
     def human_readable_name(cls):
-        return "Caractéristiques de l'Aisne ( + proximité point d'eau, connexion boisement)"
+        return "Aisne avant r.u. (connexion boisement)"
 
 
 class HedgeToPlantPropertiesAisneForm(
-    ProximitePointEauMixin, ConnexionBoisementMixin, HedgeToPlantPropertiesForm
+    ConnexionBoisementMixin, HedgeToPlantPropertiesRegimeUniqueForm
 ):
     """Hedge to plant properties form : Aisne specific"""
 
-    fieldsets = copy.deepcopy(HedgeToPlantPropertiesForm.fieldsets)
-    fieldsets["Situation de la haie"].append("connexion_boisement")
-    fieldsets["Situation de la haie"].insert(3, "proximite_point_eau")
+    fieldsets = copy.deepcopy(HedgeToPlantPropertiesRegimeUniqueForm.fieldsets)
+    fieldsets["Situation"].append("connexion_boisement")
 
     @classmethod
     def human_readable_name(cls):
-        return "Caractéristiques de l'Aisne ( + proximité point d'eau, connexion boisement)"
+        return "Aisne avant r.u. (connexion boisement)"
 
 
 class HedgeForm(forms.Form):

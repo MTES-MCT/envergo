@@ -35,6 +35,68 @@
       </div>
     {% endif %}
 
+    <section id="section-identity" class="fr-accordion fr-accordion--alt">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="accordion-identity">
+          Informations sur le bénéficiaire
+          <span>&nbsp;</span>
+        </button>
+      </h3>
+      <div class="fr-collapse" id="accordion-identity">
+        <div class="fr-mb-2w">
+          <h4 class="fr-mb-0">Bénéficiaire</h4>
+          {% if ds_info.applicant %}
+            <div class="champ-row--inline fr-my-2w">
+              <p class="champ-label fr-mb-0">
+                <b>Identité :</b>
+              </p>
+              <div class="champ-content">{{ ds_info.applicant }}</div>
+            </div>
+          {% endif %}
+          {% if ds_info.organization %}
+            <div class="champ-row--inline fr-my-2w">
+              <p class="champ-label fr-mb-0">
+                <b>Structure :</b>
+              </p>
+              <div class="champ-content">{{ ds_info.organization }}</div>
+            </div>
+          {% endif %}
+          {% display_ds_field "profil_beneficiaire" "inline" %}
+          {% display_ds_field "adresse_beneficiaire" "inline" %}
+        </div>
+        {% if ds_info.representative %}
+          <div class="fr-mb-2w">
+            <h4 class="fr-mb-0">Mandataire</h4>
+            <div class="champ-row--inline fr-my-2w">
+              <p class="champ-label fr-mb-0">
+                <b>Identité :</b>
+              </p>
+              <div class="champ-content">{{ ds_info.representative }}</div>
+            </div>
+          </div>
+        {% endif %}
+        {% get_ds_field "telephone_contact" as telephone_contact %}
+        {% if telephone_contact %}
+          <div class="fr-mb-2w">
+            <h4 class="fr-mb-0">Contact</h4>
+            {% display_ds_field "telephone_contact" "inline" %}
+          </div>
+        {% endif %}
+
+        <div class="fr-accordion__footer">
+          <button type="button"
+                  class="fr-accordion__btn"
+                  aria-expanded="false"
+                  aria-controls="accordion-identity">
+            <span class="accordion__fake-btn">&nbsp;</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <section id="section-key-elements" class="fr-my-4w">
       <div class="title-with-link-container">
         <h2 class="fr-mr-8w">Informations saisies par le demandeur</h2>
@@ -47,6 +109,34 @@
       <p>
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
+
+      <ul class="instructor-view-list fr-mb-3w">
+        <li>{% field_summary moulinette.triage_form.contexte %}</li>
+        {% if moulinette.triage_form.contexte.value == "projet-urba" %}
+          <li>
+            <span><b>Description du projet de construction ou d’aménagement :</b></span>
+            {% get_ds_field "description_projet_urba" as desc_urba_field %}
+            <span>
+              {% if desc_urba_field and desc_urba_field.value %}
+                {{ desc_urba_field.value }}
+              {% else %}
+                <i>Non renseignée</i>
+              {% endif %}
+            </span>
+          </li>
+          <li>
+            <span><b>N° d’autorisation d’urbanisme :</b></span>
+            {% get_ds_field "numero_auto_urba" as auto_urba_field %}
+            <span>
+              {% if auto_urba_field and auto_urba_field.value %}
+                {{ auto_urba_field.value }}
+              {% else %}
+                <i>Non renseigné</i>
+              {% endif %}
+            </span>
+          </li>
+        {% endif %}
+      </ul>
 
       <h6>Linéaires</h6>
 

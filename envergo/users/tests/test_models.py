@@ -9,7 +9,9 @@ from envergo.petitions.tests.factories import (
 pytestmark = pytest.mark.django_db
 
 
-def test_user_is_involved(haie_user, haie_user_44, haie_instructor_44, admin_user):
+def test_user_is_involved_in_guh(
+    haie_user, haie_user_44, haie_instructor_44, admin_user
+):
     """Test when user is involved in GUH"""
     # AS superuser, user is involved in GUH
     assert admin_user.is_involved_in_guh()

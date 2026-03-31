@@ -6,6 +6,7 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.getByRole('link', { name: 'Loire-Atlantique (44)' }).click();
     await page.getByText('Haies ou alignements d’arbres').click();
     await page.getByText('Toute intervention supprimant définitivement la végétation').click();
+    await page.getByText('Uniquement les travaux sur la végétation').click();
     await page.getByRole('button', { name: 'Valider' }).click();
     await page.getByText('Création d’un accès à la').click();
     await page.locator('label').filter({ hasText: 'Oui, en plantant une haie à' }).click();
@@ -18,15 +19,15 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 300, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 310, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D1' }).getByText("Alignement d'arbres").check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('Bord de route, voie ou chemin').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('Située sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('En bordure de route, voie ou chemin').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByText('Sur une parcelle PAC').click();
     await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D1').getByRole('button', { name: 'Enregistrer' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('button', { name: 'Tracer une haie à détruire' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 400, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 410, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie D2' }).getByText('Haie mixte').check();
     await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText('Mare à moins de 200 m').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText('Située sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByText('Sur une parcelle PAC').click();
     await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie D2').getByRole('button', { name: 'Enregistrer' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
@@ -50,8 +51,8 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 440, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 400, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P1' }).getByText("Alignement d'arbres").check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('Bord de route, voie ou chemin').click();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('Située sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('En bordure de route, voie ou chemin').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByText('Sur une parcelle PAC').click();
     await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P1').getByRole('button', { name: 'Enregistrer' }).click();
 
     const condition = page.locator('#hedge-input-iframe').contentFrame().locator('div.condition-content', {
@@ -65,7 +66,7 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').click({ position: { x: 400, y: 215 } });
     await page.locator('#hedge-input-iframe').contentFrame().locator('#map').dblclick({ position: { x: 440, y: 275 } });
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('dialog', { name: 'Description de la haie P2' }).getByText('Haie mixte').check();
-    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByText('Située sur une parcelle PAC').click();
+    await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByText('Sur une parcelle PAC').click();
     await page.locator('#hedge-input-iframe').contentFrame().getByLabel('Description de la haie P2').getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.locator('#hedge-input-iframe').contentFrame().getByText('Plantation adéquate')).toBeVisible();
 

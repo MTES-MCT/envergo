@@ -196,7 +196,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
 
         form = context["form"]
         context["result_available"] = False
-        if form.is_bound and "haies" in form.cleaned_data:
+        if form.is_bound and form.cleaned_data.get("haies"):
             hedges = form.cleaned_data["haies"]
             centroid = hedges.get_centroid_to_remove()
             context["display_marker"] = False

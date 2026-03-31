@@ -30,6 +30,7 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
+from envergo.decorators.csp import csp_report_only_update, csp_update
 from envergo.evaluations.forms import (
     EvaluationSearchForm,
     RequestForm,
@@ -684,7 +685,18 @@ class RequestSuccess(DetailView):
         return context
 
 
+# Extra CSP directives needed by pages that embed Tally.so forms.
+TALLY_CSP_EXTRAS = {
+    "script-src": ["https://tally.so"],
+    "frame-src": ["https://tally.so"],
+}
+
+
+@method_decorator(csp_update(config=TALLY_CSP_EXTRAS), name="get")
+@method_decorator(csp_report_only_update(config=TALLY_CSP_EXTRAS), name="get")
 class SelfDeclaration(EvaluationDetailMixin, DetailView):
+    """Display the self-declaration (conformité) page with an embedded Tally form."""
+
     template_name = "evaluations/self_declaration.html"
 
     def get(self, request, *args, **kwargs):
