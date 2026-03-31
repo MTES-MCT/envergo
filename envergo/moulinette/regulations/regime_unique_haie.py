@@ -18,13 +18,17 @@ def compute_ru_compensation_ratio(moulinette):
         return 0.0
 
     haies = moulinette.catalog["haies"]
+    total_length = haies.length_to_remove()
+    if total_length == 0:
+        return 0.0
+
     coeff_by_type = moulinette.config.single_procedure_settings["coeff_compensation"]
 
     compensated_length = 0.0
     for hedge in haies.hedges_to_remove().n_alignement():
         compensated_length += hedge.length * coeff_by_type[hedge.hedge_type]
 
-    return round(compensated_length / haies.length_to_remove(), 2)
+    return round(compensated_length / total_length, 2)
 
 
 class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
