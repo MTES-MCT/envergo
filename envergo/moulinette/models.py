@@ -2616,15 +2616,22 @@ class MoulinetteHaie(Moulinette):
 
         element = triage_form.cleaned_data.get("element")
         travaux = triage_form.cleaned_data.get("travaux")
-        return element == "haie" and travaux == "destruction"
+        contexte = triage_form.cleaned_data.get("contexte")
+        return element == "haie" and travaux == "destruction" and contexte != "projet"
 
     def get_triage_result_template(self):
         """Return the template to display the triage out of scope result."""
+        travaux = self.triage_form["travaux"].value()
+
         if (
             self.triage_form["element"].value() == "haie"
-            and self.triage_form["travaux"].value() != "destruction"
+            and travaux == "destruction"
+            and self.triage_form["contexte"].value() == "projet"
         ):
-            return "haie/moulinette/entretien_haies_result.html"
+            return "haie/moulinette/triage_projet_result.html"
+
+        if travaux == "entretien":
+            return "haie/moulinette/triage_entretien_result.html"
 
         return "haie/moulinette/triage_result.html"
 

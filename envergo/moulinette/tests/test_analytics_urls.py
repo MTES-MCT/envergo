@@ -96,7 +96,9 @@ def test_haie_triage_prefilled_form(client):
 @pytest.mark.haie
 def test_haie_triage_invalid(client):
     url = reverse("moulinette_result")
-    res = client.get(f"{url}?department=44&element=bosquet&travaux=entretien")
+    res = client.get(
+        f"{url}?department=44&element=bosquet&travaux=entretien&contexte=non"
+    )
 
     assert res.status_code == 200
     assert_url(res, "/simulateur/resultat_nspp/")
@@ -105,7 +107,9 @@ def test_haie_triage_invalid(client):
 @pytest.mark.haie
 def test_envergo_form_with_only_triage_values(client):
     url = reverse("moulinette_form")
-    res = client.get(f"{url}?department=14&element=haie&travaux=destruction")
+    res = client.get(
+        f"{url}?department=14&element=haie&travaux=destruction&contexte=non"
+    )
     assert res.status_code == 200
     assert_url(res, "/simulateur/formulaire/")
 
@@ -114,7 +118,7 @@ def test_envergo_form_with_only_triage_values(client):
 def test_envergo_form_with_more_than_triage_values(client):
     url = reverse("moulinette_form")
     res = client.get(
-        f"{url}?department=14&element=haie&travaux=destruction&created_surface=10000"
+        f"{url}?department=14&element=haie&travaux=destruction&contexte=non&created_surface=10000"
     )
     assert res.status_code == 200
     assert_url(res, "/simulateur/formulaire/pre-rempli/")
