@@ -6,7 +6,6 @@ from django.db import migrations
 def add_contexte_non(apps, schema_editor):
     PetitionProject = apps.get_model("petitions", "PetitionProject")
     Simulation = apps.get_model("petitions", "Simulation")
-    UrlMapping = apps.get_model("urlmappings", "UrlMapping")
 
     def add_param(url):
         if not url:
@@ -34,14 +33,6 @@ def add_contexte_non(apps, schema_editor):
             simulation.moulinette_url = new_url
             simulations_to_update.append(simulation)
     Simulation.objects.bulk_update(simulations_to_update, ["moulinette_url"])
-
-    mappings_to_update = []
-    for mapping in UrlMapping.objects.filter(url__contains="://haie.").filter(url__contains="element=").all():
-        new_url = add_param(mapping.url)
-        if new_url != mapping.url:
-            mapping.url = new_url
-            mappings_to_update.append(mapping)
-    UrlMapping.objects.bulk_update(mappings_to_update, ["url"])
 
 
 class Migration(migrations.Migration):
