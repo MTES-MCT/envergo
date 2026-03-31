@@ -580,7 +580,7 @@ class MoulinetteHaieResult(
         context = super().get_context_data(**kwargs)
         moulinette = context.get("moulinette", None)
 
-        if moulinette and "haies" in moulinette.catalog:
+        if moulinette and moulinette.is_valid() and "haies" in moulinette.catalog:
             hedge_data = moulinette.catalog["haies"]
             evaluator = PlantationEvaluator(moulinette, hedge_data)
             context["plantation_evaluation"] = evaluator
@@ -709,6 +709,14 @@ class Triage(MoulinetteMixin, FormView):
         url_with_params = f"{url}?{qs}"
         url_with_params = update_qs(url_with_params, form.cleaned_data)
         return HttpResponseRedirect(url_with_params)
+
+    def get_initial(self):
+        """Switch specific "projet-*" contexte to "projet" to let the user choose again if needed"""
+        initial = super().get_initial()
+
+        if initial.get("contexte") in ("projet-autre", "projet-urba"):
+            initial["contexte"] = "projet"
+        return initial
 
 
 class ConfigHaieBaseView(InstructorDepartmentAuthorised):
