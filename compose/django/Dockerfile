@@ -10,11 +10,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
   build-essential \
   # GDAL dev libraries required to build GDAL Python wheels on arm64
-  libgdal-dev
+  libgdal-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 # build assets
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs
+  && apt-get install -y --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
 
@@ -54,7 +56,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 
 # Install Node.js and npm
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs
+  && apt-get install -y --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen fr_FR.UTF-8 && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
 
