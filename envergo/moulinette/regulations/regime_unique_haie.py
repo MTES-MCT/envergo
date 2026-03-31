@@ -32,6 +32,8 @@ def compute_ru_compensation_ratio(moulinette):
 
 
 class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
+    """Regulation-level evaluator for the régime unique haie procedure."""
+
     choice_label = "Haie > Régime unique"
 
     PROCEDURE_TYPE_MATRIX = {
@@ -41,6 +43,13 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
 
 
 class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEvaluator):
+    """Criterion evaluator for the régime unique haie procedure.
+
+    Determines whether a hedge project falls under the régime unique
+    (single procedure) or droit constant, and whether it is soumis or
+    non concerné based on hedge types.
+    """
+
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
     plantation_conditions = []
@@ -59,6 +68,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
     }
 
     def get_catalog_data(self):
+        """Inject 400m line-buffer density into the catalog when in régime unique."""
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies and self.moulinette.config.single_procedure:
@@ -69,6 +79,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         return catalog
 
     def get_result_data(self):
+        """Return a (procedure_mode, hedge_presence) tuple for CODE_MATRIX lookup."""
         hedges = self.catalog["haies"].hedges_to_remove()
         has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
         regime_unique = self.moulinette.config.single_procedure
@@ -78,4 +89,5 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         )
 
     def get_replantation_coefficient(self):
+        """Return the RU compensation ratio for replantation requirements."""
         return compute_ru_compensation_ratio(self.moulinette)
