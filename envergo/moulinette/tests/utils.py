@@ -4,32 +4,9 @@ Provides helpers to reduce boilerplate when constructing moulinette test data,
 creating regulation/criterion combos, and building hedge scenarios.
 """
 
-from unittest.mock import patch
-
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
-
-# ---------------------------------------------------------------------------
-# Density mock helpers
-# ---------------------------------------------------------------------------
-
-DENSITY_PATCH = (
-    "envergo.hedges.models.HedgeData.compute_density_around_lines_with_artifacts"
-)
-
-
-def make_density_return(density):
-    """Build a mock return value for compute_density_around_lines_with_artifacts."""
-    return {
-        "density": density,
-        "artifacts": {
-            "length": 3000,
-            "area_ha": 50.0,
-            "buffer_zone": None,
-            "truncated_buffer_zone": None,
-        },
-    }
 
 # ---------------------------------------------------------------------------
 # Coordinate presets
@@ -191,18 +168,30 @@ def make_moulinette_haie_data(
 
 
 def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **extra):
-    """Build a MoulinetteHaie with mocked line-buffer density.
+    """Build a MoulinetteHaie with pre-populated line-buffer density.
 
-    Wraps make_moulinette_haie_data and patches the density computation so
-    tests can control the density value without needing real geographic data.
+    Pre-fills the HedgeData density cache so evaluators that read
+    density_around_lines get the supplied value without hitting the
+    database or needing an active mock.
     """
     data = make_moulinette_haie_data(
         hedges=hedges,
         hedge_data=hedge_data,
         **extra,
     )
-    with patch(DENSITY_PATCH, return_value=make_density_return(density)):
-        moulinette = MoulinetteHaie(data)
+    # Pre-populate the lazy cache so density_around_lines returns our value
+    # without calling compute_density_around_lines_with_artifacts.
+    hedge_data_instance = data["data"]["haies"]
+    hedge_data_instance._density = {
+        "around_lines": {
+            "density_400": density,
+            "length_400": 3000,
+            "area_400_ha": 50.0,
+        },
+    }
+    hedge_data_instance.save()
+
+    moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
     return moulinette
 
