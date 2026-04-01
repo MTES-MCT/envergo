@@ -369,7 +369,9 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             matomo_url = reverse("moulinette_missing_data")
 
         form = context["form"]
-        if form.is_bound and not form.is_valid():
+        if (
+            form.is_bound or self.moulinette.are_additional_forms_bound()
+        ) and not self.moulinette.is_valid():
             matomo_url = reverse("moulinette_invalid_form")
 
         full_matomo_url = self.request.build_absolute_uri(matomo_url)
