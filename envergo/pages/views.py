@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import date, timedelta
 from urllib.parse import urlencode, urljoin
@@ -6,7 +7,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import OuterRef, Subquery
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
@@ -39,40 +40,31 @@ class DepartmentSearchMixin:
 
     def get_queryset_with_contacts(self):
         """List all departments for the select input with contact info"""
-        valid_config_qs = ConfigHaie.objects.filter(
-            Q(validity_range__contains=timezone.now().date())
-            | Q(validity_range__isnull=True),
-            department=OuterRef("pk"),
+        valid_config_qs = ConfigHaie.objects.valid_at(timezone.now().date()).filter(
+            is_activated=True, department=OuterRef("pk")
         )
+
         departments_qs = self.queryset.annotate(
             contacts_info=Subquery(valid_config_qs.values("contacts_info"))
         )
         return departments_qs
 
-    def get_department(self, pk=None, department_code=None):
-        """Get department and config from post data"""
-        if not pk and not department_code:
-            return None
-
-        department_qs = self.get_queryset_with_contacts()
-        if pk:
-            department_qs = department_qs.filter(pk=pk)
-        elif department_code:
-            department_qs = department_qs.filter(department=department_code)
-        try:
-            department = department_qs.get()
-        except department_qs.model.DoesNotExist:
-            return None
-        return department
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["departments"] = self.queryset
-
+        departments_data = [
+            {
+                "id": d.id,
+                "code": d.department,
+                "label": str(d),
+                "contacts_info": d.contacts_info or "",
+            }
+            for d in self.get_queryset_with_contacts()
+        ]
+        context["departments_json"] = json.dumps(departments_data)
         return context
 
 
-class HomeHaieView(DepartmentSearchMixin, TemplateView):
+class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
 
     def get_context_data(self, **kwargs):
@@ -123,23 +115,6 @@ class ContactHaieView(DepartmentSearchMixin, TemplateView):
     """Contact page view for Haie to provide department form"""
 
     template_name = "haie/pages/contact_us.html"
-
-    def get_context_data(self, **kwargs):
-        """Get param department"""
-        context = super().get_context_data(**kwargs)
-        if "department" in self.request.GET:
-            department_code = self.request.GET.get("department")
-            context["department"] = self.get_department(department_code=department_code)
-        return context
-
-    def post(self, request, *args, **kwargs):
-        """Just add department and config to context"""
-        department_id = request.POST.get("department")
-
-        context = self.get_context_data()
-        context["department"] = self.get_department(pk=department_id)
-
-        return self.render_to_response(context)
 
 
 class GeometriciansView(MoulinetteMixin, FormView):

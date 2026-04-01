@@ -17,7 +17,7 @@
       </h2>
       <div class="fr-collapse" id="contact-accordion-1-faq">
         <p>
-          La FAQ répond aux principales questions sur le fonctionnement du service, la réglementation applicable et le dépôt d’un dossier.
+          La FAQ répond aux principales questions sur le fonctionnement du service, la réglementation applicable et le dépôt d'un dossier.
         </p>
         <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
            target="_blank"
@@ -35,7 +35,7 @@
       <div class="fr-collapse" id="contact-accordion-2-equipe">
         <p>Pour toute question sur :</p>
         <ul>
-          <li>L’utilisation du simulateur</li>
+          <li>L'utilisation du simulateur</li>
           <li>Un bug technique</li>
           <li>Le dépôt en ligne…</li>
         </ul>
@@ -59,37 +59,14 @@
         </ul>
         <p>Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
 
-        <form id="form-contact-department"
-              action="#contact-accordion-3-dossier"
-              method="post">
-          {% csrf_token %}
-          <div class="fr-select-group">
-            <label class="fr-label fr-text--bold" for="department">Dans quel département le projet est-il situé ?</label>
-            <select class="fr-select  fr-col-md-7"
-                    aria-describedby="department-messages"
-                    name="department"
-                    id="department">
-              <option value="" {% if not department %}selected{% endif %}>Rechercher ou choisir dans la liste</option>
-              {% for option in departments %}
-                <option value="{{ option.id }}"
-                        {% if option.id == department.id %}selected{% endif %}>{{ option }}</option>
-              {% endfor %}
-            </select>
-            <div class="fr-messages-group fr-sr-only"
-                 id="department-messages"
-                 aria-live="polite">Le formulaire sera soumis au changement dans la liste déroulante.</div>
-          </div>
-        </form>
+        <script type="application/json" id="departments-data">{{ departments_json|safe }}</script>
 
-        {% if department %}
-          {% if department.contacts_info %}
-            <div id="contacts_info" class="fr-highlight fr-mt-4w fr-p-2w">{{ department.contacts_info|safe }}</div>
-          {% else %}
-            <p class="fr-text--sm fr-my-2w fr-error-text">
-              Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles.
-            </p>
-          {% endif %}
-        {% endif %}
+        <div>
+          <label class="fr-label fr-text--bold" for="department">Dans quel département le projet est-il situé ?</label>
+          <div id="department-combobox"></div>
+          <div class="fr-messages-group" id="department-messages" aria-live="polite"></div>
+        </div>
+        <div id="contacts-info-container" aria-live="polite"></div>
       </div>
     </section>
   </div>
@@ -100,6 +77,9 @@
 
 {% block extra_js %}
   <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/department_combobox.js' %}"></script>
   <script>
     /* Add analytics */
     window.addEventListener('load', function() {
@@ -121,12 +101,10 @@
       }
     }
   </script>
-  <script type="text/javascript">
-    /* Submit form */
-    const renderContactSection = (evt) => {
-      evt.currentTarget.submit();
-    }
-    let form = document.getElementById("form-contact-department");
-    form.addEventListener('change', renderContactSection);
-  </script>
 {% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}">
+{% endblock extra_css %}
