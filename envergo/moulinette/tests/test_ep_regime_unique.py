@@ -114,6 +114,23 @@ def test_ep_ru_aa_only(ep_ru_criterion):
     assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
 
 
+def test_ep_ru_lengths_exclude_alignements(ep_ru_criterion):
+    """Lengths used in the cascade only count non-AA hedges."""
+    RUConfigHaieFactory()
+    hedge_data = [
+        make_hedge(hedge_id="D1", type_haie="alignement"),
+        make_hedge(hedge_id="D2", type_haie="buissonnante"),
+    ]
+    moulinette = _build_moulinette(None, density=60, hedge_data=hedge_data)
+    # Both hedges use the same default coordinates (~25m), so total_length
+    # should reflect only the non-AA hedge, not both.
+    total = moulinette.catalog["ep_ru_total_length"]
+    assert total <= 30, (
+        f"Expected length of a single hedge (~25m), got {total}. "
+        "Alignement hedge should be excluded."
+    )
+
+
 def test_ep_ru_ripisylve_above_threshold(ep_ru_criterion):
     """Ripisylve length > 20m → derogation_inventaire."""
     RUConfigHaieFactory()

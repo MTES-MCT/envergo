@@ -738,7 +738,6 @@ class EspecesProtegeesRegimeUnique(
         catalog["ep_ru_aa_only"] = not hedges
 
         # Total length and ripisylve length (excluding alignements)
-        # TODO: vérifier si alignements inclus
         total_length = hedges.length
         ripisylve_length = hedges.filter(lambda h: h.prop("ripisylve")).length
         catalog["ep_ru_total_length"] = ceil(total_length)
