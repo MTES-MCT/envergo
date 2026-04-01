@@ -4,8 +4,32 @@ Provides helpers to reduce boilerplate when constructing moulinette test data,
 creating regulation/criterion combos, and building hedge scenarios.
 """
 
+from unittest.mock import patch
+
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
+from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+
+# ---------------------------------------------------------------------------
+# Density mock helpers
+# ---------------------------------------------------------------------------
+
+DENSITY_PATCH = (
+    "envergo.hedges.models.HedgeData.compute_density_around_lines_with_artifacts"
+)
+
+
+def make_density_return(density):
+    """Build a mock return value for compute_density_around_lines_with_artifacts."""
+    return {
+        "density": density,
+        "artifacts": {
+            "length": 3000,
+            "area_ha": 50.0,
+            "buffer_zone": None,
+            "truncated_buffer_zone": None,
+        },
+    }
 
 # ---------------------------------------------------------------------------
 # Coordinate presets
@@ -104,6 +128,21 @@ def make_hedge(
     }
 
 
+def make_hedge_factory(length, type_haie="buissonnante", **extra):
+    """Create a HedgeFactory with sur_parcelle_pac=False.
+
+    The default HedgeFactory sets sur_parcelle_pac=True, which conflicts
+    with localisation_pac="non" (the default in make_moulinette_haie_data)
+    and causes the moulinette form to be invalid.
+    """
+    return HedgeFactory(
+        length=length,
+        additionalData__type_haie=type_haie,
+        additionalData__sur_parcelle_pac=False,
+        **extra,
+    )
+
+
 def make_moulinette_haie_data(
     hedges=None,
     hedge_data=None,
@@ -149,6 +188,23 @@ def make_moulinette_haie_data(
         **extra,
     }
     return {"initial": data, "data": data}
+
+
+def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **extra):
+    """Build a MoulinetteHaie with mocked line-buffer density.
+
+    Wraps make_moulinette_haie_data and patches the density computation so
+    tests can control the density value without needing real geographic data.
+    """
+    data = make_moulinette_haie_data(
+        hedges=hedges,
+        hedge_data=hedge_data,
+        **extra,
+    )
+    with patch(DENSITY_PATCH, return_value=make_density_return(density)):
+        moulinette = MoulinetteHaie(data)
+    assert moulinette.is_valid(), moulinette.form_errors()
+    return moulinette
 
 
 # ---------------------------------------------------------------------------
@@ -290,6 +346,36 @@ def setup_natura2000(activation_map):
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.natura2000.IOTA",
             activation_map=activation_map,
+        ),
+    ]
+    return regulation, criteria
+
+
+def setup_ep_regime_unique(activation_map):
+    """Create EP regulation with EspecesProtegeesRegimeUnique criterion."""
+    regulation = RegulationFactory(regulation="ep")
+    criteria = [
+        CriterionFactory(
+            title="EP Régime Unique",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return regulation, criteria
+
+
+def setup_regime_unique_haie(activation_map):
+    """Create Régime unique haie regulation with standard criterion."""
+    regulation = RegulationFactory(regulation="regime_unique_haie")
+    criteria = [
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaie",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
         ),
     ]
     return regulation, criteria
