@@ -338,8 +338,6 @@ class HedgeList(list[Hedge]):
         """Select hedges with a given prod. Prefix with "!" to negate the filter.
 
         IMPORTANT! We don't filter out the hedges that DO NOT feature the property.
-
-        TODO This is a bad api and will lead to errors one day.
         """
 
         if p.startswith("!"):
