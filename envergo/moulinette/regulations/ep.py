@@ -1,9 +1,14 @@
 from collections import defaultdict
 from decimal import Decimal as D
+from math import ceil
 
+import shapely
 from django import forms
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.db.models import MultiPolygonField
+from django.contrib.gis.db.models.aggregates import Union
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from django.core.validators import RegexValidator
+from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
@@ -25,6 +30,9 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
+from envergo.moulinette.regulations.regime_unique_haie import (
+    compute_ru_compensation_ratio,
+)
 from envergo.utils.fields import get_human_readable_value
 
 
@@ -33,7 +41,7 @@ class EPRegulation(HaieRegulationEvaluator):
 
     PROCEDURE_TYPE_MATRIX = {
         "interdit": "interdit",
-        "derogation": "autorisation",
+        "derogation_inventaire": "autorisation",
         "derogation_simplifiee": "autorisation",
         "dispense_sous_condition": "declaration",
         "a_verifier": "declaration",
@@ -635,40 +643,230 @@ class EspecesProtegeesNormandie(
         return context
 
 
+# Thresholds for the EP régime unique algorithm.
+EP_RU_L_RIPISYLVE = 20  # metres
+EP_RU_L_BAS = 10  # metres
+EP_RU_L_HAUT = 100  # metres
+EP_RU_D_BAS = 50  # ml/ha
+EP_RU_D_HAUT = 80  # ml/ha
+
+# Severity ranking used to pick the most constraining per-hedge result.
+EP_RU_RESULT_RANK = {
+    "dispense": 1,
+    "derogation_simplifiee": 2,
+    "derogation_inventaire": 3,
+}
+
+# Replantation coefficient bonus per result level (added to R_ru).
+EP_RU_REPLANTATION_BONUS = {
+    "derogation_inventaire": 0.5,
+    "derogation_simplifiee": 0.25,
+    "dispense": 0.0,
+}
+
+
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
 ):
     """EP criterion for the "régime unique" procedure.
 
-    This evaluator is attached only to departments in régime unique.
-    It inherits line-buffer density debug rendering from HedgeDensityMixin.
+    Determines the required procedure level (dispense / dérogation simplifiée /
+    dérogation with field inventory) based on hedge lengths, riparian status,
+    bocage density and sensitive-zone intersection.
     """
 
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
+    debug_template = "haie/moulinette/debug/ep_regime_unique.html"
     plantation_conditions = []
     form_class = None
 
-    CODE_MATRIX = {
-        "derogation_simplifiee": "derogation_simplifiee",
+    RESULT_MATRIX = {
+        "dispense": RESULTS.dispense,
+        "derogation_simplifiee": RESULTS.derogation_simplifiee,
+        "derogation_inventaire": RESULTS.derogation_inventaire,
     }
 
-    RESULT_MATRIX = {
-        "derogation_simplifiee": RESULTS.derogation_simplifiee,
-    }
+    def get_hedges_in_zone_sensible(self, hedges):
+        """Return the set of hedge IDs that intersect a "Zone sensible EP" map.
+
+        Aggregates all matching zones into a single multipolygon, then tests
+        each hedge for intersection in Python (shapely).
+        """
+        if not hedges:
+            return set()
+
+        hedges_geom = MultiLineString(
+            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
+        )
+        qs = Zone.objects.filter(
+            map__map_type=MAP_TYPES.zone_sensible_ep,
+            geometry__intersects=hedges_geom,
+        ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+        multipolygon = qs["geom"]
+
+        if not multipolygon:
+            return set()
+
+        geom = shapely.from_wkt(multipolygon.wkt)
+        result = set()
+        for h in hedges:
+            intersection = h.geometry.intersection(geom)
+            if not intersection.is_empty:
+                result.add(h.id)
+        return result
 
     def get_catalog_data(self):
+        """Populate the catalog with EP régime unique inputs.
+
+        Computes hedge lengths, ripisylve length, zone sensible flags,
+        line-buffer density, and per-hedge procedure-level results.
+        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
-        if haies:
-            density_data = haies.density_around_lines
-            catalog["density_400"] = density_data.get("density_400")
-            catalog["density_400_length"] = density_data.get("length_400")
-            catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        if not haies:
+            return catalog
+
+        # Line-buffer density (400 m)
+        density_data = haies.density_around_lines
+        catalog["density_400"] = density_data.get("density_400")
+        catalog["density_400_length"] = density_data.get("length_400")
+        catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+
+        hedges = haies.hedges_to_remove().n_alignement()
+
+        catalog["ep_ru_aa_only"] = not hedges
+
+        # Total length and ripisylve length (excluding alignements)
+        total_length = hedges.length
+        ripisylve_length = hedges.filter(lambda h: h.prop("ripisylve")).length
+        catalog["ep_ru_total_length"] = ceil(total_length)
+        catalog["ep_ru_ripisylve_length"] = ceil(ripisylve_length)
+
+        hedges_in_zone_sensible = self.get_hedges_in_zone_sensible(hedges)
+        catalog["ep_ru_zone_sensible"] = hedges_in_zone_sensible
+
+        # Treat missing density (None) as zero — low density steers the cascade
+        # toward more constraining procedure levels when data is unavailable.
+        density = catalog.get("density_400")
+        if density is None:
+            density = 0
+        catalog["ep_ru_density"] = density
+        catalog["ep_ru_per_hedge_results"] = self.compute_per_hedge_results(
+            hedges,
+            catalog["ep_ru_total_length"],
+            density,
+            hedges_in_zone_sensible,
+        )
+
         return catalog
 
+    def compute_per_hedge_results(
+        self, hedges, total_length, density, hedges_in_zone_sensible
+    ):
+        """Assign a procedure level to each hedge based on length, density and zone.
+
+        Only meaningful when the project-level cascade falls through to
+        step 6 (per-hedge evaluation). Called unconditionally so the debug
+        view always has data to display.
+        """
+        per_hedge_results = {}
+        for h in hedges:
+            in_zone = h.id in hedges_in_zone_sensible
+            if total_length > EP_RU_L_HAUT and in_zone:
+                per_hedge_results[h.id] = "derogation_inventaire"
+            elif density > EP_RU_D_HAUT and not in_zone:
+                per_hedge_results[h.id] = "dispense"
+            else:
+                per_hedge_results[h.id] = "derogation_simplifiee"
+        return per_hedge_results
+
     def get_result_data(self):
-        return "derogation_simplifiee"
+        """Return project-level EP parameters for the cascade algorithm."""
+        return {
+            "aa_only": self.catalog.get("ep_ru_aa_only", False),
+            "total_length": self.catalog.get("ep_ru_total_length", 0),
+            "ripisylve_length": self.catalog.get("ep_ru_ripisylve_length", 0),
+            "density": self.catalog.get("ep_ru_density", 0),
+            "per_hedge_results": self.catalog.get("ep_ru_per_hedge_results", {}),
+        }
+
+    def get_result_code(self, result_data):
+        """Cascade algorithm for the EP régime unique procedure level.
+
+        Project-level rules (steps 1-5) are tried first. If none match, the
+        most constraining per-hedge result wins (step 6).
+        """
+        aa_only = result_data["aa_only"]
+        total_length = result_data["total_length"]
+        ripisylve_length = result_data["ripisylve_length"]
+        density = result_data["density"]
+        per_hedge_results = result_data["per_hedge_results"]
+
+        # 1. Only tree-row hedges
+        if aa_only:
+            result = "derogation_inventaire"
+        # 2. Ripisylve threshold exceeded
+        elif ripisylve_length > EP_RU_L_RIPISYLVE:
+            result = "derogation_inventaire"
+        # 3. Very short total
+        elif total_length <= EP_RU_L_BAS:
+            result = "dispense"
+        # 4. Medium total with moderate density
+        elif total_length <= EP_RU_L_HAUT and density < EP_RU_D_HAUT:
+            result = "derogation_simplifiee"
+        # 5. Long total with low density
+        elif total_length > EP_RU_L_HAUT and density < EP_RU_D_BAS:
+            result = "derogation_inventaire"
+        # 6. Per-hedge evaluation — pick the most constraining
+        else:
+            result = max(per_hedge_results.values(), key=lambda r: EP_RU_RESULT_RANK[r])
+
+        return result
 
     def get_replantation_coefficient(self):
-        return 0.0
+        """Base RU coefficient plus a bonus depending on the EP result level."""
+        r_ru = compute_ru_compensation_ratio(self.moulinette)
+        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
+        return round(r_ru + bonus, 2)
+
+    def build_hedge_rows(self):
+        """Build per-hedge display rows for non-alignement hedges.
+
+        Returns a list of dicts with id, hedge_type (human-readable), and
+        in_zone_sensible — used by both the debug page and the instructor view.
+        """
+        haies = self.catalog.get("haies")
+        if not haies:
+            return []
+
+        hedges_in_zone_sensible = self.catalog.get("ep_ru_zone_sensible", set())
+        hedges = haies.hedges_to_remove().n_alignement()
+        HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
+
+        rows = []
+        for h in hedges:
+            rows.append(
+                {
+                    "id": h.id,
+                    "hedge_type": get_human_readable_value(
+                        HedgeType.choices, h.hedge_type
+                    ),
+                    "in_zone_sensible": h.id in hedges_in_zone_sensible,
+                }
+            )
+        return rows
+
+    def get_debug_context(self):
+        """Return density + EP-specific debug data."""
+        context = super().get_debug_context()
+
+        per_hedge_results = self.catalog.get("ep_ru_per_hedge_results", {})
+        hedge_rows = self.build_hedge_rows()
+        for row in hedge_rows:
+            row["partial_result"] = per_hedge_results.get(row["id"], "-")
+
+        context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
+        context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
+        context["hedge_debug_rows"] = hedge_rows
+        return context

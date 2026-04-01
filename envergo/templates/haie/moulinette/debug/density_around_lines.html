@@ -1,41 +1,16 @@
-<h6>Densité de haie (buffer 400 m)</h6>
+<h6>Densité bocagère (400 m)</h6>
 
-<table>
-  <thead>
-    <tr>
-      <th scope="col"></th>
-      <th scope="col">Buffer 400 m</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">Linéaire</th>
-      <td>{{ density_400_length|floatformat:"0g" }} ml</td>
-    </tr>
-    <tr>
-      <th scope="row">Surface</th>
-      <td>{{ density_400_area_ha|floatformat:"g" }} ha</td>
-    </tr>
-    <tr>
-      <th scope="row">Densité</th>
-      <td>{{ density_400|floatformat:"1" }} ml/ha</td>
-    </tr>
-    {% if pre_computed_density_400 %}
-      <tr>
-        <th scope="row">
-          Densité persistée en base
-          <br />
-          <span class="fr-hint-text">Peut ne pas être à jour</span>
-        </th>
-        <td>{{ pre_computed_density_400|floatformat:"1" }} ml/ha</td>
-      </tr>
-    {% endif %}
-  </tbody>
-</table>
+<p>
+  <strong>Densité :</strong> {{ density_400|floatformat:"1" }} ml/ha
+</p>
 
-{% if density_map %}
-  {% include '_map_snippet.html' with map=density_map map_id=criterion.unique_slug %}
+{% if pre_computed_density_400 %}
+  <p>
+    <strong>Densité persistée en base :</strong> {{ pre_computed_density_400|floatformat:"1" }} ml/ha
+    <br />
+    <span class="fr-hint-text">Peut ne pas être à jour</span>
+  </p>
 {% endif %}
 
-<a class="fr-btn fr-btn--secondary"
+<a class="fr-btn fr-btn--secondary fr-mb-3w"
    href="{% url 'demo_density_project' %}?haies={{ haies_id }}">Voir le calcul de densité</a>
