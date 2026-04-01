@@ -5,7 +5,6 @@ from django.contrib.gis.geos import MultiPolygon
 
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, france_polygon
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.tests.factories import RUConfigHaieFactory
 from envergo.moulinette.tests.utils import (
     make_hedge,
@@ -84,10 +83,9 @@ def test_ep_ru_ripisylve_above_threshold(ep_ru_criterion):
 def test_ep_ru_short_total_dispense(ep_ru_criterion):
     """Total length <= 10m → dispense."""
     RUConfigHaieFactory()
-    hedge = make_hedge_factory(length=8)
-    hedges = HedgeDataFactory(hedges=[hedge])
     moulinette = make_moulinette_haie_with_density(
-        density=60, hedges=hedges, reimplantation="replantation",
+        density=60, hedges=[make_hedge_factory(length=8)],
+        reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] <= 10
     assert moulinette.ep.ep_regime_unique.result_code == "dispense"
@@ -96,10 +94,9 @@ def test_ep_ru_short_total_dispense(ep_ru_criterion):
 def test_ep_ru_medium_total_moderate_density(ep_ru_criterion):
     """10m < total <= 100m and density < 80 → derogation_simplifiee."""
     RUConfigHaieFactory()
-    hedge = make_hedge_factory(length=50)
-    hedges = HedgeDataFactory(hedges=[hedge])
     moulinette = make_moulinette_haie_with_density(
-        density=60, hedges=hedges, reimplantation="replantation",
+        density=60, hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
     )
     total = moulinette.catalog["ep_ru_total_length"]
     assert 10 < total <= 100
@@ -109,10 +106,9 @@ def test_ep_ru_medium_total_moderate_density(ep_ru_criterion):
 def test_ep_ru_long_total_low_density(ep_ru_criterion):
     """Total > 100m and density < 50 → derogation_inventaire."""
     RUConfigHaieFactory()
-    hedge = make_hedge_factory(length=120)
-    hedges = HedgeDataFactory(hedges=[hedge])
     moulinette = make_moulinette_haie_with_density(
-        density=40, hedges=hedges, reimplantation="replantation",
+        density=40, hedges=[make_hedge_factory(length=120)],
+        reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] > 100
     assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
@@ -131,11 +127,10 @@ def test_ep_ru_per_hedge_zone_sensible(ep_ru_criterion):
         map_type=MAP_TYPES.zone_sensible_ep,
         zones__geometry=MultiPolygon([france_polygon]),
     )
-    hedge = make_hedge_factory(length=120)
-    hedges = HedgeDataFactory(hedges=[hedge])
     # density between D_BAS and D_HAUT so project-level rules don't short-circuit
     moulinette = make_moulinette_haie_with_density(
-        density=65, hedges=hedges, reimplantation="replantation",
+        density=65, hedges=[make_hedge_factory(length=120)],
+        reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] > 100
     assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
@@ -144,10 +139,9 @@ def test_ep_ru_per_hedge_zone_sensible(ep_ru_criterion):
 def test_ep_ru_per_hedge_high_density_no_zone_sensible(ep_ru_criterion):
     """High density + no zone sensible → dispense via per-hedge."""
     RUConfigHaieFactory()
-    hedge = make_hedge_factory(length=120)
-    hedges = HedgeDataFactory(hedges=[hedge])
     moulinette = make_moulinette_haie_with_density(
-        density=90, hedges=hedges, reimplantation="replantation",
+        density=90, hedges=[make_hedge_factory(length=120)],
+        reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] > 100
     assert moulinette.ep.ep_regime_unique.result_code == "dispense"
@@ -156,11 +150,10 @@ def test_ep_ru_per_hedge_high_density_no_zone_sensible(ep_ru_criterion):
 def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
     """Medium density, long total, no zone sensible → derogation_simplifiee."""
     RUConfigHaieFactory()
-    hedge = make_hedge_factory(length=120)
-    hedges = HedgeDataFactory(hedges=[hedge])
     # density between D_BAS and D_HAUT, no zone sensible → fallback
     moulinette = make_moulinette_haie_with_density(
-        density=65, hedges=hedges, reimplantation="replantation",
+        density=65, hedges=[make_hedge_factory(length=120)],
+        reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] > 100
     assert moulinette.ep.ep_regime_unique.result_code == "derogation_simplifiee"
@@ -189,10 +182,9 @@ def test_ep_ru_replantation_coefficient(
 ):
     """Replantation coefficient = R_ru + bonus per result level."""
     RUConfigHaieFactory()
-    hedge = make_hedge_factory(length=length)
-    hedges = HedgeDataFactory(hedges=[hedge])
     moulinette = make_moulinette_haie_with_density(
-        density=density, hedges=hedges, reimplantation="replantation",
+        density=density, hedges=[make_hedge_factory(length=length)],
+        reimplantation="replantation",
     )
     criterion = moulinette.ep.ep_regime_unique
     assert criterion.result_code == expected_code
