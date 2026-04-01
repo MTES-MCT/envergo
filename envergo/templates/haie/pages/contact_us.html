@@ -12,10 +12,11 @@
       <h2 class="fr-accordion__title">
         <button type="button"
                 class="fr-accordion__btn"
-                aria-expanded="false"
+                aria-expanded="true"
                 aria-controls="contact-accordion-1-faq">Questions les plus fréquentes</button>
       </h2>
-      <div class="fr-collapse" id="contact-accordion-1-faq">
+      <div class="fr-collapse fr-collapse--expanded"
+           id="contact-accordion-1-faq">
         <p>
           La FAQ répond aux principales questions sur le fonctionnement du service, la réglementation applicable et le dépôt d'un dossier.
         </p>
@@ -100,6 +101,22 @@
         window.$crisp.push(["do", "chat:open"]);
       }
     }
+  </script>
+  <script>
+    /* Open the accordion targeted by the URL hash, close the default one */
+    (function () {
+      var hash = window.location.hash.slice(1);
+      if (!hash) return;
+      var target = document.getElementById(hash);
+      if (!target || !target.classList.contains("fr-collapse")) return;
+      var faq = document.getElementById("contact-accordion-1-faq");
+      if (faq) {
+        faq.classList.remove("fr-collapse--expanded");
+        document.querySelector('[aria-controls="contact-accordion-1-faq"]').setAttribute("aria-expanded", "false");
+      }
+      target.classList.add("fr-collapse--expanded");
+      document.querySelector('[aria-controls="' + hash + '"]').setAttribute("aria-expanded", "true");
+    })();
   </script>
 {% endblock %}
 

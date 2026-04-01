@@ -32,7 +32,7 @@
    */
   AccordionAnalytics.prototype.observeCollapsible = function (collapsible) {
     collapsible.addEventListener('dsfr.disclose', this.trackAccordionDisplay.bind(this, collapsible));
-    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this));
+    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this, collapsible));
   };
 
   AccordionAnalytics.prototype.trackAccordionDisplay = function (collapsible) {
@@ -57,8 +57,11 @@
     }
   };
 
-  AccordionAnalytics.prototype.untrackAccordionDisplay = function () {
-    history.replaceState(null, '', '#');
+  AccordionAnalytics.prototype.untrackAccordionDisplay = function (collapsible) {
+    // remove hash only if it is the accordion id
+    if (window.location.hash === `#${collapsible.id}`) {
+      history.replaceState(null, '', '#');
+    }
   };
 
 })(this, window._paq);
