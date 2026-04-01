@@ -88,7 +88,9 @@ def _build_moulinette(hedges, density, hedge_data=None):
     of dicts from make_hedge). Exactly one must be provided.
     """
     data = make_moulinette_haie_data(
-        hedges=hedges, hedge_data=hedge_data, reimplantation="replantation",
+        hedges=hedges,
+        hedge_data=hedge_data,
+        reimplantation="replantation",
     )
     with patch(DENSITY_PATCH, return_value=_make_density_return(density)):
         moulinette = MoulinetteHaie(data)

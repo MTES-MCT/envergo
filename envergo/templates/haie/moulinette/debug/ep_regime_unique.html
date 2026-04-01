@@ -32,7 +32,7 @@
           <tr>
             <td>{{ row.id }}</td>
             <td>{{ row.hedge_type }}</td>
-            <td>{% if row.in_zone_sensible %}Oui{% else %}Non{% endif %}</td>
+            <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
             <td>{{ row.partial_result }}</td>
           </tr>
         {% endfor %}
