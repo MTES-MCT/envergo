@@ -746,8 +746,8 @@ class EspecesProtegeesRegimeUnique(
         hedges_in_zone_sensible = self.get_hedges_in_zone_sensible(hedges)
         catalog["ep_ru_zone_sensible"] = hedges_in_zone_sensible
 
-        # Treat missing density (None) as zero — this steers toward the most
-        # constraining path (derogation_inventaire) when data is unavailable.
+        # Treat missing density (None) as zero — low density steers the cascade
+        # toward more constraining procedure levels when data is unavailable.
         density = catalog.get("density_400")
         if density is None:
             density = 0
