@@ -821,9 +821,7 @@ class EspecesProtegeesRegimeUnique(
             result = "derogation_inventaire"
         # 6. Per-hedge evaluation — pick the most constraining
         else:
-            result = max(
-                per_hedge_results.values(), key=lambda r: EP_RU_RESULT_RANK[r]
-            )
+            result = max(per_hedge_results.values(), key=lambda r: EP_RU_RESULT_RANK[r])
 
         return result
 
