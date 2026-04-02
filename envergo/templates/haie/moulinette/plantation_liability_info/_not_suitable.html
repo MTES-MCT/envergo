@@ -19,7 +19,7 @@
 
   <p>
     N'hésitez pas à
-    <a href="{% url 'contact_us' %}#contact-accordion-3-dossier">contacter le guichet unique</a>
+    <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}#contact-accordion-3-dossier">contacter le guichet unique</a>
     pour discuter de votre projet et envisager d’autres façons de le réaliser.
   </p>
 </div>

@@ -8,13 +8,12 @@
  * events, so we use MutationObservers to detect whenever a section is
  * opened.
  */
-(function (exports, _paq) {
+(function (exports) {
   'use strict';
 
   const AccordionAnalytics = function (accordionElt) {
     this.accordionElt = accordionElt;
     this.currentHash = window.location.hash.substring(1);
-    this.init();
 
     if (this.currentHash) {
       this.openSection(this.currentHash);
@@ -32,7 +31,7 @@
    */
   AccordionAnalytics.prototype.observeCollapsible = function (collapsible) {
     collapsible.addEventListener('dsfr.disclose', this.trackAccordionDisplay.bind(this, collapsible));
-    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this));
+    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this, collapsible));
   };
 
   AccordionAnalytics.prototype.trackAccordionDisplay = function (collapsible) {
@@ -57,8 +56,11 @@
     }
   };
 
-  AccordionAnalytics.prototype.untrackAccordionDisplay = function () {
-    history.replaceState(null, '', '#');
+  AccordionAnalytics.prototype.untrackAccordionDisplay = function (collapsible) {
+    // remove hash only if it is the accordion id
+    if (window.location.hash === `#${collapsible.id}`) {
+      history.replaceState(null, '', '#');
+    }
   };
 
-})(this, window._paq);
+})(this);

@@ -84,7 +84,7 @@
     <h3 class="fr-mt-4w">Besoin d’échanger sur votre projet ?</h3>
 
     <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
-       href="{% url 'contact_us' %}#contact-accordion-3-dossier">Contacter le guichet unique</a>
+       href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}#contact-accordion-3-dossier">Contacter le guichet unique</a>
   {% endif %}
 
   <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>

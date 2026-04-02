@@ -6,7 +6,7 @@
  *
  * Note that UrlMapping can be undefined if the file was not loaded
  */
-(function (exports, _paq, UrlMapping) {
+(function (exports, UrlMapping) {
   'use strict';
 
   const ShareModal = function (dialogElt, shortenUrl) {
@@ -56,7 +56,7 @@
     _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy']);
   };
 
-})(this, window._paq, window.UrlMapping);
+})(this, window.UrlMapping);
 
 window.addEventListener('load', function () {
   const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);

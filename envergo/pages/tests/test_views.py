@@ -253,59 +253,21 @@ class TestHomeHaie:
 class TestContactHaie:
     """Tests for GUH contact page, using a view to display department contacts info"""
 
-    def test_department_config_display_contacts(self, client):
-        """Test if contact page displays contact infos for a selected department with a config."""
+    def test_department_contacts_in_json(self, client):
+        """Test that contacts_info is embedded in the page JSON for client-side rendering."""
 
-        config = DCConfigHaieFactory(
-            contacts_info="Chez Ragadast, protecteur des haies"
-        )
-        response = client.get(
-            reverse("contact_us"),
-            {"department": config.department.department},
-        )
-        assert response.status_code == 200
-        assert "Chez Ragadast, protecteur des haies" in response.content.decode()
-
-        response = client.post(
-            reverse("contact_us"),
-            {"department": config.department.id},
-        )
-        assert response.status_code == 200
-        assert "Chez Ragadast, protecteur des haies" in response.content.decode()
-
-    def test_department_config_no_contact_display_error(self, client):
-        """Test if contact page displays error message for a selected department with a config without contact."""
-
-        config = DCConfigHaieFactory()
-        response = client.post(
-            reverse("contact_us"),
-            {"department": config.department.id},
-        )
-        assert response.status_code == 200
-        assert (
-            "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
-            in response.content.decode()
-        )
-
-    def test_without_department(self, client):
-        """POST without selecting a department should render the page."""
+        DCConfigHaieFactory(contacts_info="Chez Ragadast, protecteur des haies")
         response = client.get(reverse("contact_us"))
         assert response.status_code == 200
+        assert "Chez Ragadast, protecteur des haies" in response.content.decode()
+
+    def test_without_department(self, client):
+        """GET without a department param should render the page with departments JSON."""
+        response = client.get(reverse("contact_us"))
+        assert response.status_code == 200
+        assert "departments-data" in response.content.decode()
+
+    def test_post_not_allowed(self, client):
+        """POST is no longer supported; contact info is handled client-side."""
         response = client.post(reverse("contact_us"), {})
-        assert response.status_code == 200
-
-    def test_department_with_no_contacts(self, client):
-        """Selecting a department with no contact should render the page (no redirect)."""
-        dept = DepartmentFactory()
-
-        response = client.post(
-            reverse("contact_us"),
-            {"department": dept.id},
-        )
-
-        assert response.status_code == 200
-        assert response.context["department"] == dept
-        assert (
-            "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
-            in response.content.decode()
-        )
+        assert response.status_code == 405
