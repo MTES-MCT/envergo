@@ -8,13 +8,12 @@
  * events, so we use MutationObservers to detect whenever a section is
  * opened.
  */
-(function (exports, _paq) {
+(function (exports) {
   'use strict';
 
   const AccordionAnalytics = function (accordionElt) {
     this.accordionElt = accordionElt;
     this.currentHash = window.location.hash.substring(1);
-    this.init();
 
     if (this.currentHash) {
       this.openSection(this.currentHash);
@@ -64,4 +63,4 @@
     }
   };
 
-})(this, window._paq);
+})(this);
