@@ -1,3 +1,5 @@
+{% load pages %}
+
 <div class="fr-col hide-print">
   <h2>Une question ?</h2>
   <p class="fr-mb-3v">Vous pouvez :</p>
@@ -5,13 +7,14 @@
     <li>
       Consulter <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
     target="_blank"
-    rel="noopener">l’aide en ligne et les questions fréquentes</a>
+    rel="noopener">l'aide en ligne et les questions fréquentes</a>
     </li>
     <li>
-      <a href="{% url 'contact_us' %}#contact-accordion-2-equipe">Contacter l’équipe</a> pour toute question sur l’utilisation du portail
+      <a href="{% url 'contact_us' %}#contact-accordion-2-equipe">Contacter l'équipe</a> pour toute question sur l'utilisation du portail
     </li>
+    {% try_get_department_code as dept_code %}
     <li>
-      <a href="{% url 'contact_us' %}#contact-accordion-3-dossier">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d’instruction
+      <a href="{% url 'contact_us' %}{% if dept_code %}?department={{ dept_code }}{% endif %}#contact-accordion-3-dossier">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d'instruction
     </li>
   </ul>
 </div>

@@ -24,6 +24,7 @@ from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
+from envergo.utils.context_processors import multi_sites_context, settings_context
 from envergo.utils.tools import get_site_literal
 
 logger = logging.getLogger(__name__)
@@ -87,7 +88,10 @@ class HomeHaieView(TemplateView):
         """
         data = request.POST
         department_id = data.get("department")
-        department = self.get_department(pk=department_id)
+        try:
+            department = Department.objects.defer("geometry").get(pk=department_id)
+        except Department.DoesNotExist:
+            department = None
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         if config and config.is_activated:
@@ -354,14 +358,12 @@ def server_error(request, template_name=ERROR_500_TEMPLATE_NAME):
         return HttpResponseServerError(
             ERROR_PAGE_TEMPLATE % {"title": "Server Error (500)", "details": ""},
         )
-    return HttpResponseServerError(
-        template.render({"base_template": request.base_template})
-    )
+    context = {**multi_sites_context(request), **settings_context(request)}
+    return HttpResponseServerError(template.render(context))
 
 
 def rate_limited(request):
     """429 error handler."""
+    context = {**multi_sites_context(request), **settings_context(request)}
     template = loader.get_template("429.html")
-    return HttpResponse(
-        template.render({"base_template": request.base_template}), status=429
-    )
+    return HttpResponse(template.render(context), status=429)

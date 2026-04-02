@@ -56,6 +56,8 @@ def multi_sites_context(_request):
     # _request.base_template has been populated by a middleware
     return {
         "base_template": _request.base_template,
+        "contact_url": f"{reverse("contact_us")}"
+        f"{'#contact-accordion-2-equipe' if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN else ''}",
         "preview_image_url": (
             _request.build_absolute_uri(static("images/preview_haie.png"))
             if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN

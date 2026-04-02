@@ -252,3 +252,28 @@ def page_tracking_name(context):
         return "ResultPage"
     else:
         return view_name
+
+
+@register.simple_tag(takes_context=True)
+def try_get_department_code(context):
+    """Return the department code from whatever shape it exists in context.
+
+    Handles:
+    - department = "02" (string)
+    - department = Department(department="02") (object)
+    - config = ConfigHaie(department=Department(department="02"))
+    - moulinette = Moulinette(config=ConfigHaie(department=Department(department="02")))
+    """
+    department = context.get("department")
+    if department:
+        return getattr(department, "department", department)
+    config = context.get("config")
+    if not config:
+        moulinette = context.get("moulinette")
+        if moulinette:
+            config = getattr(moulinette, "config", None)
+    if config:
+        dept = getattr(config, "department", None)
+        if dept:
+            return getattr(dept, "department", None)
+    return ""
