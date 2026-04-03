@@ -45,20 +45,32 @@
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
-    L.tileLayer("https://data.geopf.fr/wmts?" +
-      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
-      "&STYLE=normal" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/jpeg" +
-      "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-      maxZoom: 22,
-      maxNativeZoom: 19,
-      tileSize: 256,
-      attribution: '&copy; <a href="https://geoservices.ign.fr/bdhaie">BD Haie IGN</a>'
-    }).addTo(map);
+    const ignWmtsLayer = (layer, format) => L.tileLayer(
+      "https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal&TILEMATRIXSET=PM" +
+      `&FORMAT=${format}&LAYER=${layer}` +
+      "&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://geoservices.ign.fr/bdhaie">BD Haie IGN</a>'
+      });
+
+    const planLayer = ignWmtsLayer("GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "image/png");
+    const pciLayer = ignWmtsLayer("CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "image/png");
+    const satelliteLayer = ignWmtsLayer("ORTHOIMAGERY.ORTHOPHOTOS", "image/jpeg").addTo(map);
+
+     const baseMaps = {
+      "Plan": planLayer,
+      "Satellite": satelliteLayer
+    };
+
+    const overlayMaps = {
+      "Cadastre": pciLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps, overlayMaps);
+    layerControl.addTo(map);
 
     return map;
   };
