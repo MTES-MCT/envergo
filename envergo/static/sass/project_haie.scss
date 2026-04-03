@@ -1154,3 +1154,13 @@ button.hide-expanded[aria-expanded="true"] {
     margin-top: 0;
   }
 }
+
+#department-combobox {
+  position: relative;
+
+  .department-combobox-clear {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
+  }
+}

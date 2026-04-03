@@ -59,10 +59,28 @@ window.addEventListener("load", function () {
       var url = new URL(window.location);
       url.searchParams.set("department", dept.code);
       history.replaceState({}, "", url);
+      clearBtn.style.display = "";
     },
   });
 
   if (preSelected) showContactInfo(preSelected);
+
+  var clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-btn--icon-only fr-icon-close-line department-combobox-clear";
+  clearBtn.title = "Effacer";
+  clearBtn.setAttribute("aria-label", "Effacer le département sélectionné");
+  clearBtn.style.display = preSelected ? "" : "none";
+  container.appendChild(clearBtn);
+
+  clearBtn.addEventListener("click", function () {
+    document.getElementById("department").value = "";
+    infoContainer.innerHTML = "";
+    var url = new URL(window.location);
+    url.searchParams.delete("department");
+    history.replaceState({}, "", url);
+    clearBtn.style.display = "none";
+  });
 
   function showContactInfo(dept) {
     if (dept.contacts_info) {
