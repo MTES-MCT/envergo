@@ -21,7 +21,9 @@
       this.marker.addTo(this.map);
     }
 
-    this.registerEvents();
+    if(this.options.interactive){
+      this.registerEvents();
+    }
 
     if (this.geoJSON) {
       var bounds = this.geoJSON.getBounds();
