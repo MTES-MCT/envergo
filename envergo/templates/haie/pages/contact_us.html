@@ -76,6 +76,17 @@
 
 {% block after-content %}{% endblock %}
 
+{% block javascript %}
+  <script>
+    var url = new URL(window.location.href);
+    if (url.searchParams.has('department')) {
+      url.searchParams.set('department', 'X');
+      var MATOMO_CUSTOM_URL = url.toString();
+    }
+  </script>
+  {{ block.super }}
+{% endblock %}
+
 {% block extra_js %}
   <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
   <script defer
