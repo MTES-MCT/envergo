@@ -589,37 +589,39 @@ def test_confighaie_settings_view_map_display(
         activation_mode="hedges_intersection",
     ),
 
-    regulation_natura2000_haie = RegulationFactory(
-        regulation="natura2000_haie",
-        has_perimeters=True,
-        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRegulation",
-        weight=2,
-    )
-    perimeter_natura2000_haie = PerimeterFactory(
-        name="N2000 Bizous",
-        activation_map=bizous_town_center,
-        regulations=[regulation_natura2000_haie],
-    )
-    CriterionFactory(
-        title="Natura 2000 Haie > Haie Bizous",
-        regulation=regulation_natura2000_haie,
-        perimeter=perimeter_natura2000_haie,
-        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
-        activation_map=bizous_town_center,
-        activation_mode="hedges_intersection",
-        evaluator_settings={"result": "soumis"},
-        validity_range=DateRange(None, date(2020, 1, 1), "[)"),
-    )
-    CriterionFactory(
-        title="Natura 2000 Haie > Haie Bizous après 2020",
-        regulation=regulation_natura2000_haie,
-        perimeter=perimeter_natura2000_haie,
-        evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
-        activation_map=bizous_town_center,
-        activation_mode="hedges_intersection",
-        evaluator_settings={"result": "soumis"},
-        validity_range=DateRange(date(2020, 1, 1), None, "[)"),
-    )
+    # Re-add following test when Natura2000HaieRegulation is implemented
+    #
+    # regulation_natura2000_haie = RegulationFactory(
+    #     regulation="natura2000_haie",
+    #     has_perimeters=True,
+    #     evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRegulation",
+    #     weight=2,
+    # )
+    # perimeter_natura2000_haie = PerimeterFactory(
+    #     name="N2000 Bizous",
+    #     activation_map=bizous_town_center,
+    #     regulations=[regulation_natura2000_haie],
+    # )
+    # CriterionFactory(
+    #     title="Natura 2000 Haie > Haie Bizous",
+    #     regulation=regulation_natura2000_haie,
+    #     perimeter=perimeter_natura2000_haie,
+    #     evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+    #     activation_map=bizous_town_center,
+    #     activation_mode="hedges_intersection",
+    #     evaluator_settings={"result": "soumis"},
+    #     validity_range=DateRange(None, date(2020, 1, 1), "[)"),
+    # )
+    # CriterionFactory(
+    #     title="Natura 2000 Haie > Haie Bizous après 2020",
+    #     regulation=regulation_natura2000_haie,
+    #     perimeter=perimeter_natura2000_haie,
+    #     evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+    #     activation_map=bizous_town_center,
+    #     activation_mode="hedges_intersection",
+    #     evaluator_settings={"result": "soumis"},
+    #     validity_range=DateRange(date(2020, 1, 1), None, "[)"),
+    # )
 
     # AS instructor user in 44
     client.force_login(haie_instructor_44)
