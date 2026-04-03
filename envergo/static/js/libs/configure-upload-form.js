@@ -68,16 +68,9 @@ window.addEventListener('load', function () {
         file.id = response.id;
       });
 
-      this.on("error", function (file, message, xhr) {
+      this.on("error", function (file, message) {
         this.errors[file.upload.uuid] = file;
         form.classList.add('has-errors');
-
-        if (xhr && xhr.status >= 500) {
-          var errorSpan = file.previewElement && file.previewElement.querySelector('.dz-error-message span');
-          if (errorSpan) {
-            errorSpan.textContent = "Une erreur serveur s'est produite lors de l'envoi. Réessayez, ou contactez-nous si le problème persiste.";
-          }
-        }
       }.bind(this));
 
       this.on('maxfilesreached', function () { }.bind(this));
@@ -87,7 +80,7 @@ window.addEventListener('load', function () {
       // Send a request to the server to request the file deletion
       this.on("removedfile", function (file) {
 
-        // If the file had failed to upload, remove it from the errors lists
+        // If the file had failed to upload, remove it from the errors list
         if (file.upload) {
           let uuid = file.upload.uuid;
           if (uuid in this.errors) {
