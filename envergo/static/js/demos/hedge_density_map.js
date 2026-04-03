@@ -13,8 +13,9 @@
       this.drawEnvelope();
     }
     this.drawPolygons();
-    this.addLegend();
     this.addScaleControl();
+    this.addLegend();
+    this.addZoomControl();
 
     if (this.options.displayMarker) {
       this.marker.addTo(this.map);
@@ -42,6 +43,7 @@
   Map.prototype.initializeMap = function () {
     const map = L.map('map', {
       maxZoom: 21,
+      zoomControl: false,
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
@@ -71,6 +73,14 @@
 
     const layerControl = L.control.layers(baseMaps, overlayMaps);
     layerControl.addTo(map);
+
+    // Zoom on the selected address
+    window.addEventListener('Envergo:citycode_selected', function (event) {
+      const coordinates = event.detail.coordinates;
+      const latLng = [coordinates[1], coordinates[0]];
+      let zoomLevel = 16;
+      map.setView(latLng, zoomLevel);
+    });
 
     return map;
   };
@@ -174,6 +184,12 @@
       return div;
     }.bind(this);
     legend.addTo(this.map);
+  };
+
+  Map.prototype.addZoomControl = function () {
+      L.control.zoom({
+        position: 'bottomleft'
+      }).addTo(this.map);
   };
 
   Map.prototype.addScaleControl = function () {

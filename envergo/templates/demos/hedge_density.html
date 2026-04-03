@@ -7,7 +7,7 @@
 {% block main-classes %}demos{% endblock %}
 
 {% block content %}
-  <article>
+  <article id="hedge-density-demo">
     <h1>Calcul de densité de haie : démonstrateur</h1>
     <div class="fr-grid-row fr-grid-row--gutters">
       <div class="fr-col-7">
@@ -22,6 +22,21 @@
           <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
             <div class="ratio-content">
               <div id="map"></div>
+              <div id="controls-container"
+                   class="leaflet-top leaflet-left inline-controls">
+                <div class="controls inline-controls">
+                  <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
+                       role="search">
+                    <label class="fr-label" for="id_address">Rechercher un lieu</label>
+                    <input class="fr-input"
+                           placeholder="Rechercher un lieu"
+                           type="search"
+                           id="id_address"
+                           name="address">
+                    <button class="fr-btn fr-btn--sm" type="button" title="Rechercher un lieu">Rechercher un lieu</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -122,14 +137,20 @@
 {% block extra_css %}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
   <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
+  <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
 
 
   <script>
