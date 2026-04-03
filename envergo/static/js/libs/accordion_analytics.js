@@ -11,8 +11,9 @@
 (function (exports) {
   'use strict';
 
-  const AccordionAnalytics = function (accordionElt) {
+  const AccordionAnalytics = function (accordionElt, customizeMatomoUrl=(url)=>url) {
     this.accordionElt = accordionElt;
+    this.customizeMatomoUrl = customizeMatomoUrl;
     this.currentHash = window.location.hash.substring(1);
 
     if (this.currentHash) {
@@ -36,7 +37,7 @@
 
   AccordionAnalytics.prototype.trackAccordionDisplay = function (collapsible) {
     history.replaceState(null, '', `#${collapsible.id}`);
-    _paq.push(['setCustomUrl', window.location.href]);
+    _paq.push(['setCustomUrl',  this.customizeMatomoUrl(window.location.href)]);
     _paq.push(['trackPageView']);
   };
 

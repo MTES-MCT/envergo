@@ -78,11 +78,14 @@
 
 {% block javascript %}
   <script>
-    var url = new URL(window.location.href);
-    if (url.searchParams.has('department')) {
-      url.searchParams.set('department', 'X');
-      var MATOMO_CUSTOM_URL = url.toString();
-    }
+    const customizeMatomoUrl = (url) => {
+      const parsedUrl=new URL(url);
+      if (parsedUrl.searchParams.has("department")) {
+        parsedUrl.searchParams.set("department", "X");
+      }
+      return parsedUrl.toString();
+    };
+    var MATOMO_CUSTOM_URL = customizeMatomoUrl(window.location.href);
   </script>
   {{ block.super }}
 {% endblock %}
@@ -96,7 +99,7 @@
     /* Add analytics */
     window.addEventListener('load', function() {
       const elt = document.getElementById('contactus-accordion');
-      const accordion = new AccordionAnalytics(elt);
+      const accordion = new AccordionAnalytics(elt, customizeMatomoUrl);
       accordion.init();
     });
   </script>
