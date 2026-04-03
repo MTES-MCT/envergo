@@ -13,8 +13,9 @@
       this.drawEnvelope();
     }
     this.drawPolygons();
-    this.addLegend();
     this.addScaleControl();
+    this.addLegend();
+    this.addZoomControl();
 
     if (this.options.displayMarker) {
       this.marker.addTo(this.map);
@@ -47,23 +48,44 @@
   Map.prototype.initializeMap = function () {
     const map = L.map('map', {
       maxZoom: 21,
+      zoomControl: false,
     }).setView(this.options.centerMap, this.options.defaultZoom);
     map.doubleClickZoom.disable();
 
-    L.tileLayer("https://data.geopf.fr/wmts?" +
-      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
-      "&STYLE=normal" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/jpeg" +
-      "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-      maxZoom: 22,
-      maxNativeZoom: 19,
-      tileSize: 256,
-      attribution: '&copy; <a href="https://geoservices.ign.fr/bdhaie">BD Haie IGN</a>'
-    }).addTo(map);
+    const ignWmtsLayer = (layer, format) => L.tileLayer(
+      "https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal&TILEMATRIXSET=PM" +
+      `&FORMAT=${format}&LAYER=${layer}` +
+      "&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://geoservices.ign.fr/bdhaie">BD Haie IGN</a>'
+      });
+
+    const planLayer = ignWmtsLayer("GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "image/png");
+    const pciLayer = ignWmtsLayer("CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "image/png");
+    const satelliteLayer = ignWmtsLayer("ORTHOIMAGERY.ORTHOPHOTOS", "image/jpeg").addTo(map);
+
+     const baseMaps = {
+      "Plan": planLayer,
+      "Satellite": satelliteLayer
+    };
+
+    const overlayMaps = {
+      "Cadastre": pciLayer
+    };
+
+    const layerControl = L.control.layers(baseMaps, overlayMaps);
+    layerControl.addTo(map);
+
+    // Zoom on the selected address
+    window.addEventListener('Envergo:citycode_selected', function (event) {
+      const coordinates = event.detail.coordinates;
+      const latLng = [coordinates[1], coordinates[0]];
+      let zoomLevel = 16;
+      map.setView(latLng, zoomLevel);
+    });
 
     return map;
   };
@@ -167,6 +189,12 @@
       return div;
     }.bind(this);
     legend.addTo(this.map);
+  };
+
+  Map.prototype.addZoomControl = function () {
+      L.control.zoom({
+        position: 'bottomleft'
+      }).addTo(this.map);
   };
 
   Map.prototype.addScaleControl = function () {

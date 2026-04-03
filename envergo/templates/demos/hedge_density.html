@@ -7,7 +7,7 @@
 {% block main-classes %}demos{% endblock %}
 
 {% block content %}
-  <article>
+  <article id="hedge-density-demo">
     <h1>Calcul de densité de haie : démonstrateur</h1>
     <div class="fr-grid-row fr-grid-row--gutters">
       <div class="fr-col-7">
@@ -22,6 +22,21 @@
           <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
             <div class="ratio-content">
               <div id="map"></div>
+              <div id="controls-container"
+                   class="leaflet-top leaflet-left inline-controls">
+                <div class="controls inline-controls">
+                  <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
+                       role="search">
+                    <label class="fr-label" for="id_address">Rechercher un lieu</label>
+                    <input class="fr-input"
+                           placeholder="Rechercher un lieu"
+                           type="search"
+                           id="id_address"
+                           name="address">
+                    <button class="fr-btn fr-btn--sm" type="button" title="Rechercher un lieu">Rechercher un lieu</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -31,40 +46,46 @@
       <div class="fr-col-5">
 
         {% if result_available %}
-          <h2 class="fr-h4">Résultat du calcul</h2>
+          <div class="fr-table fr-mb-3w">
+            <div class="fr-table__wrapper">
+              <div class="fr-table__container">
+                <div class="fr-table__content">
+                  <table>
+                    <caption> Résultat du calcul</caption>
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Rayon 200 m</th>
+                        <th>Rayon 400 m</th>
+                        <th>Rayon 5 km</th>
+                      </tr>
+                    </thead>
 
-          <table class="fr-mb-3w">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Rayon 200 m</th>
-                <th>Rayon 400 m</th>
-                <th>Rayon 5 km</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <th scope="row">Linéaire</th>
-                <td>{{ length_200|floatformat:"0g" }} ml</td>
-                <td>{{ length_400|floatformat:"0g" }} ml</td>
-                <td>{{ length_5000|floatformat:"0g" }} ml</td>
-              </tr>
-              <tr>
-                <th scope="row">Surface</th>
-                <td>{{ area_200_ha|floatformat:"g" }} ha</td>
-                <td>{{ area_400_ha|floatformat:"g" }} ha</td>
-                <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
-              </tr>
-              <tr>
-                <th scope="row">Densité</th>
-                <td>{{ density_200|floatformat:"g" }} ml/ha</td>
-                <td>{{ density_400|floatformat:"g" }} ml/ha</td>
-                <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
-              </tr>
-            </tbody>
-          </table>
-
+                    <tbody>
+                      <tr>
+                        <th scope="row">Linéaire</th>
+                        <td>{{ length_200|floatformat:"0g" }} ml</td>
+                        <td>{{ length_400|floatformat:"0g" }} ml</td>
+                        <td>{{ length_5000|floatformat:"0g" }} ml</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Surface</th>
+                        <td>{{ area_200_ha|floatformat:"g" }} ha</td>
+                        <td>{{ area_400_ha|floatformat:"g" }} ha</td>
+                        <td>{{ area_5000_ha|floatformat:"g" }} ha</td>
+                      </tr>
+                      <tr>
+                        <th scope="row">Densité</th>
+                        <td>{{ density_200|floatformat:"g" }} ml/ha</td>
+                        <td>{{ density_400|floatformat:"g" }} ml/ha</td>
+                        <td>{{ density_5000|floatformat:"g" }} ml/ha</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
         {% else %}
           {% if form.is_bound %}
             <h2 class="fr-h4">Département non disponible</h2>
@@ -99,7 +120,8 @@
         </p>
 
         <p>
-          Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
+          Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton
+          ci-dessous : il vous permet de partager avec nous une simulation.
         </p>
 
         <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
@@ -115,28 +137,34 @@
 {% block extra_css %}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
   <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
+  <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
 
 
   <script>
     var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
-    var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
+    var CENTER_MAP = { lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }} };
     var DEFAULT_ZOOM = {{ default_zoom }};
-    var LAT_FIELD_ID = 'id_lat';
-    var LNG_FIELD_ID = 'id_lng';
+    var LAT_FIELD_ID = "id_lat";
+    var LNG_FIELD_ID = "id_lng";
     var POLYGONS = {{ polygons|default:"[]"|safe }};
     var ENVELOPE = {{ envelope|default:"{}"|safe }};
     var DEBUG = {{ debug|yesno:'true,false' }};
     var LEGEND = [];
 
-    window.addEventListener('load', function () {
+    window.addEventListener("load", function() {
       const options = {
         displayMarker: DISPLAY_MARKER,
         centerMap: CENTER_MAP,
@@ -146,8 +174,8 @@
         polygons: POLYGONS,
         envelope: ENVELOPE,
         legend: LEGEND,
-        debug: DEBUG,
-      }
+        debug: DEBUG
+      };
 
       let map = new DemoMap(options);
     });
