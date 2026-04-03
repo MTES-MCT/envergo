@@ -21,7 +21,9 @@
       this.marker.addTo(this.map);
     }
 
-    this.registerEvents();
+    if(this.options.interactive){
+      this.registerEvents();
+    }
 
     this.map.fitBounds(this.geoJSON.getBounds());
   };

@@ -89,7 +89,6 @@ class HedgeDensity(LatLngDemoMixin, FormView):
     def get_result_data(self, lng, lat):
         """Return context with data to display map"""
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        density_200 = compute_hedge_density_around_point(lng_lat, 200)
         density_400 = compute_hedge_density_around_point(lng_lat, 400)
         density_5000 = compute_hedge_density_around_point(lng_lat, 5000)
 
@@ -123,17 +122,6 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         polygons.append(
             {
                 "polygon": to_geojson(
-                    density_200["artifacts"]["truncated_circle"]
-                    or density_200["artifacts"]["circle"]
-                ),
-                "color": "#f89540",
-                "legend": "200m",
-                "opacity": 1.0,
-            }
-        )
-        polygons.append(
-            {
-                "polygon": to_geojson(
                     density_400["artifacts"]["truncated_circle"]
                     or density_400["artifacts"]["circle"]
                 ),
@@ -155,10 +143,6 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         )
         context = {
             "result_available": True,
-            "length_200": density_200["artifacts"]["length"],
-            "area_200_ha": density_200["artifacts"]["area_ha"],
-            "truncated_circle_200": density_200["artifacts"]["truncated_circle"],
-            "density_200": density_200["density"],
             "length_400": density_400["artifacts"]["length"],
             "area_400_ha": density_400["artifacts"]["area_ha"],
             "truncated_circle_400": density_400["artifacts"]["truncated_circle"],

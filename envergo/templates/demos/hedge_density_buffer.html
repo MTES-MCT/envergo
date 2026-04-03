@@ -14,21 +14,6 @@
         <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
           <div class="ratio-content">
             <div id="map"></div>
-            <div id="controls-container"
-                 class="leaflet-top leaflet-left inline-controls">
-              <div class="controls inline-controls">
-                <div class="leaflet-control fr-search-bar fr-search-bar--sm fr-mr-1w"
-                     role="search">
-                  <label class="fr-label" for="id_address">Rechercher un lieu</label>
-                  <input class="fr-input"
-                         placeholder="Rechercher un lieu"
-                         type="search"
-                         id="id_address"
-                         name="address">
-                  <button class="fr-btn fr-btn--sm" type="button" title="Rechercher un lieu">Rechercher un lieu</button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -41,25 +26,18 @@
                 <div class="fr-table__content">
 
                   <table>
-
                     <caption> Résultat du calcul </caption>
-                    <thead>
-                      <tr>
-                        <th colspan="2">Distance 400 m</th>
-                      </tr>
-                    </thead>
-
                     <tbody>
                       <tr>
-                        <th scope="row">Linéaire</th>
+                        <th scope="row">Linéaire (L)</th>
                         <td>{{ length_400|floatformat:"0g" }} ml</td>
                       </tr>
                       <tr>
-                        <th scope="row">Surface</th>
+                        <th scope="row">Surface (S)</th>
                         <td>{{ area_400_ha|floatformat:"g" }} ha</td>
                       </tr>
                       <tr>
-                        <th scope="row">Densité</th>
+                        <th scope="row">Densité (L / S)</th>
                         <td>{{ density_400|floatformat:"g" }} ml/ha</td>
                       </tr>
                     </tbody>
@@ -89,33 +67,28 @@
           {% endif %}
 
         {% endif %}
-
+        <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
       </div>
     </div>
   </article>
 {% endblock %}
 
 {% block extra_body %}
-  {% include '_share_url_modal.html' with shorten_url=False share_url=share_btn_url %}
+  {% include '_share_url_modal.html' with shorten_url=True share_url=share_btn_url analytics_event_name="DemoDensiteProjet" %}
 {% endblock %}
 
 {% block extra_css %}
   <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
   <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
-  <link rel="stylesheet"
-        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}" />
 {% endblock %}
 
 {% block extra_js %}
-  <script>var ADDRESS_AUTOCOMPLETE_FIELD_NAME = 'address';</script>
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
-  <script defer
-          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
-  <script defer src="{% static 'js/libs/address_autocomplete.js' %}"></script>
 
 
   <script>
@@ -140,6 +113,7 @@
         envelope: ENVELOPE,
         legend: LEGEND,
         debug: DEBUG,
+        interactive: false,
       };
 
       let map = new DemoMap(options);
