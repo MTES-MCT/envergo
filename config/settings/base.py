@@ -472,7 +472,7 @@ HAIE_FAQ_URLS = {
     "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/organismes-agrees-pour-delivrer-une-attestation-de-meilleur-emplacement-environnemental",  # noqa: E501
     "TREE_SPECIES_COPPICING_CAPACITY": "https://aide.haie.beta.gouv.fr/haies-types-et-bonnes-pratiques/liste-des-essences-et-leur-capacite-a-receper",  # noqa: E501
     "DC_HEDGES_TYPES": "https://aide.haie.beta.gouv.fr/haies-types-et-bonnes-pratiques/les-cinq-types-de-haies",  # noqa: E501
-    "RU_HEDGES_TYPES": "https://equatorial-red-4c6.notion.site/Les-diff-rents-types-de-haies-303fe5fe4766806189e0cb4be01cb64f",  # noqa: E501
+    "RU_HEDGES_TYPES": "https://aide.haie.beta.gouv.fr/haies-types-et-bonnes-pratiques/les-differents-types-de-haies",  # noqa: E501
     "NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/normandie-prise-en-compte-des-especes-protegees-pour-les-demandes-de-travaux-sur-les-haies/normandie-quels-types-de-haie-permettent-une-reduction-de-la-compensation-attendue",  # noqa: E501
     "NORMANDIE_EP_FOR_WORKS": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/normandie-prise-en-compte-des-especes-protegees-pour-les-demandes-de-travaux-sur-les-haies",  # noqa: E501
     "IDENTIFY_NATURAL_AREA_MANAGER": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-une-reserve-naturelle-et-son-gestionnaire",  # noqa: E501
