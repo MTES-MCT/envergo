@@ -645,8 +645,9 @@ class PetitionProjectCreate(FormView):
                 <br/>
                 Identifiant de l’erreur : {self.request.alerts.user_error_reference.upper()}
                 <br/>
-                Merci de vous faire connaître en nous transmettant cet identifiant en nous écrivant à \
-                contact@haie.beta.gouv.fr
+                Merci de <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                contacter l'équipe du guichet unique de la haie
+                </a> en nous transmettant cet identifiant
                 <br/>
                 Nous vous accompagnerons pour vous permettre de déposer votre demande sans encombres.""",
             },
@@ -1040,8 +1041,11 @@ class PetitionProjectInstructorDossierDSView(
         if not context["project_details"]:
             messages.warning(
                 self.request,
-                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
-                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                        Si le problème persiste,
+                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                            contacter l'équipe du guichet unique de la haie
+                        </a> en indiquant l'identifiant du dossier.""",
             )
 
         context["triage_form"] = self.object.get_triage_form()
@@ -1111,8 +1115,11 @@ class PetitionProjectInstructorMessagerieView(
         if context["ds_messages"] is None:
             messages.warning(
                 self.request,
-                """Impossible de récupérer les informations du dossier Démarches Simplifiées.
-                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                        Si le problème persiste,
+                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                            contacter l'équipe du guichet unique de la haie
+                        </a> en indiquant l'identifiant du dossier.""",
             )
 
         # Invited instructors cannot send messages
@@ -1158,8 +1165,11 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
         ):
             messages.warning(
                 self.request,
-                """Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
-                Si le problème persiste, contactez le support en indiquant l'identifiant du dossier.""",
+                f"""Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
+                        Si le problème persiste,
+                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                            contacter l'équipe du guichet unique de la haie
+                        </a> en indiquant l'identifiant du dossier.""",
             )
 
         elif "message" in ds_response and ds_response["message"] is not None:
@@ -1496,7 +1506,7 @@ class PetitionProjectInstructorProcedureView(
                     mark_safe(
                         f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
                         <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
-                            contactez l'équipe du Guichet Unique de la Haie
+                            contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier."""
                     ),
                 )
@@ -1631,9 +1641,12 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             return res
 
         except DemarchesSimplifieesError:
-            error_message = """Le message n'a pas pu être envoyé.
+            error_message = f"""Le message n'a pas pu être envoyé.
             Merci de ré-essayer dans quelques minutes.
-            Si le problème persiste, contacter le support en indiquant l'identifiant du dossier.
+            Si le problème persiste,
+            <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                contacter l'équipe du guichet unique de la haie
+            </a> en indiquant l'identifiant du dossier.
             """
             messages.error(self.request, error_message)
             res = HttpResponseRedirect(self.get_success_url())
