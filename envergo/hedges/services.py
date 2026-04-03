@@ -194,6 +194,68 @@ def create_density_map(
     )
 
 
+def create_line_buffer_density_map(
+    hedges_to_remove, truncated_buffer_zone, buffer_zone
+):
+    """Build a Leaflet map showing line-buffer density artifacts.
+
+    Similar to `create_density_map` but for line-buffer (400 m) density
+    instead of centroid-based density.
+    """
+    display_zone = truncated_buffer_zone or buffer_zone
+
+    if len(hedges_to_remove) == 0 or not display_zone:
+        return None
+
+    existing_lines = Line.objects.filter(
+        map__map_type=MAP_TYPES.haies,
+        geometry__intersects=display_zone,
+    )
+    existing_mls = []
+    for line in existing_lines:
+        geom = line.geometry
+        if not geom:
+            continue
+        existing_mls.extend(geom)
+
+    centroid = hedges_to_remove[0].geos_geometry.centroid
+
+    entries = [
+        MapPolygon(
+            [SimpleNamespace(geometry=display_zone)],
+            "#457EAC",
+            "Zone tampon 400 m",
+        ),
+        MapPolygon(
+            [SimpleNamespace(geometry=MultiLineString(existing_mls, srid=EPSG_WGS84))],
+            "#f0f921",
+            "Haies existantes",
+        ),
+        MapPolygon(
+            [
+                SimpleNamespace(
+                    geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
+                )
+                for hedge in hedges_to_remove
+            ],
+            "red",
+            "Haies à détruire",
+            class_name="hedge to-remove",
+        ),
+    ]
+
+    return Map(
+        type="regulation",
+        center=centroid,
+        entries=entries,
+        truncate=False,
+        display_marker_at_center=False,
+        zoom=None,
+        ratio_classes="ratio-2x1 ratio-sm-4x5",
+        fixed=False,
+    )
+
+
 @dataclass
 class EvaluationResult:
     result: Literal[PlantationResults.Adequate, PlantationResults.Inadequate]

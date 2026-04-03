@@ -110,6 +110,34 @@
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
 
+      <ul class="instructor-view-list fr-mb-3w">
+        <li>{% field_summary moulinette.triage_form.contexte %}</li>
+        {% if moulinette.triage_form.contexte.value == "projet-urba" %}
+          <li>
+            <span><b>Description du projet de construction ou d’aménagement :</b></span>
+            {% get_ds_field "description_projet_urba" as desc_urba_field %}
+            <span>
+              {% if desc_urba_field and desc_urba_field.value %}
+                {{ desc_urba_field.value }}
+              {% else %}
+                <i>Non renseignée</i>
+              {% endif %}
+            </span>
+          </li>
+          <li>
+            <span><b>N° d’autorisation d’urbanisme :</b></span>
+            {% get_ds_field "numero_auto_urba" as auto_urba_field %}
+            <span>
+              {% if auto_urba_field and auto_urba_field.value %}
+                {{ auto_urba_field.value }}
+              {% else %}
+                <i>Non renseigné</i>
+              {% endif %}
+            </span>
+          </li>
+        {% endif %}
+      </ul>
+
       <h6>Linéaires</h6>
 
       <div class="fr-my-3w">

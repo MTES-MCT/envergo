@@ -56,6 +56,18 @@ def test_envergo_invalid_form(client):
     assert res.status_code == 200
     assert_url(res, "/simulateur/formulaire/erreur-validation/")
 
+    # WHEN I post a form with invalid value to the complementary questions
+    data = {
+        "lng": "-1.54394",
+        "lat": "47.21381",
+        "created_surface": 45000,
+        "final_surface": 45000,
+        "terrain_assiette": "azerty",
+    }
+    res = client.post(url, data, follow=True)
+    # THEN url is erreur validation
+    assert_url(res, "/simulateur/formulaire/erreur-validation/")
+
 
 def test_envergo_result(client):
     url = reverse("moulinette_result")
@@ -96,7 +108,9 @@ def test_haie_triage_prefilled_form(client):
 @pytest.mark.haie
 def test_haie_triage_invalid(client):
     url = reverse("moulinette_result")
-    res = client.get(f"{url}?department=44&element=bosquet&travaux=entretien")
+    res = client.get(
+        f"{url}?department=44&element=bosquet&travaux=entretien&contexte=non"
+    )
 
     assert res.status_code == 200
     assert_url(res, "/simulateur/resultat_nspp/")
@@ -105,7 +119,9 @@ def test_haie_triage_invalid(client):
 @pytest.mark.haie
 def test_envergo_form_with_only_triage_values(client):
     url = reverse("moulinette_form")
-    res = client.get(f"{url}?department=14&element=haie&travaux=destruction")
+    res = client.get(
+        f"{url}?department=14&element=haie&travaux=destruction&contexte=non"
+    )
     assert res.status_code == 200
     assert_url(res, "/simulateur/formulaire/")
 
@@ -114,7 +130,7 @@ def test_envergo_form_with_only_triage_values(client):
 def test_envergo_form_with_more_than_triage_values(client):
     url = reverse("moulinette_form")
     res = client.get(
-        f"{url}?department=14&element=haie&travaux=destruction&created_surface=10000"
+        f"{url}?department=14&element=haie&travaux=destruction&contexte=non&created_surface=10000"
     )
     assert res.status_code == 200
     assert_url(res, "/simulateur/formulaire/pre-rempli/")

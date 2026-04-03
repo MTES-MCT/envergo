@@ -447,7 +447,7 @@
     "pk": 1,
     "fields": {
       "reference": "EGRAZY",
-      "moulinette_url": "http://localhost:3000/moulinette/result_p/?motif=chemin_acces&reimplantation=replantation&localisation_pac=oui&haies=91774784-9563-4b3f-ab48-e19cec574df3&lineaire_total=5000&travaux=destruction&element=haie&department=44",
+      "moulinette_url": "http://localhost:3000/moulinette/result_p/?motif=chemin_acces&reimplantation=replantation&localisation_pac=oui&haies=91774784-9563-4b3f-ab48-e19cec574df3&lineaire_total=5000&travaux=destruction&element=haie&contexte=projet-urba&department=44",
       "hedge_data_id": "91774784-9563-4b3f-ab48-e19cec574df3",
       "demarches_simplifiees_dossier_number": "123456",
       "demarches_simplifiees_state": "en_construction",

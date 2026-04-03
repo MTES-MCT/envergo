@@ -88,7 +88,7 @@ class PetitionProjectFactory(DjangoModelFactory):
     moulinette_url = factory.LazyAttribute(
         lambda obj: (
             "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
-            f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie"
+            f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie&contexte=non"
         )
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)

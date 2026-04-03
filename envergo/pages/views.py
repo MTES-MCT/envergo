@@ -88,10 +88,13 @@ class HomeHaieView(TemplateView):
         """
         data = request.POST
         department_id = data.get("department")
-        try:
-            department = Department.objects.defer("geometry").get(pk=department_id)
-        except Department.DoesNotExist:
-            department = None
+        department = None
+        if department_id:
+            try:
+                department = Department.objects.defer("geometry").get(id=department_id)
+            except Department.DoesNotExist:
+                pass  # Invalid id submitted — department stays None, handled gracefully below
+
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
         if config and config.is_activated:
