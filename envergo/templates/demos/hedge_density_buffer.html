@@ -1,96 +1,77 @@
 {% extends 'base.html' %}
 
-{% load static l10n evaluations moulinette %}
+{% load static l10n %}
 
 {% block title %}Démonstrateur densité de haie{% endblock %}
 
-{% block main-classes %}demos{% endblock %}
+{% block content-title %}Densité bocagère du projet{% endblock %}
 
-{% block content %}
-  <article>
-    <h1>Densité bocagère du projet</h1>
-    <div class="fr-grid-row fr-grid-row--gutters">
-      <div class="fr-col-7">
-        <form method="get" action="">
-          {{ form.haies.as_hidden }}
+{% block content-demo-map %}
+  <form method="get" action="">
+    {{ form.haies.as_hidden }}
 
-          <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
-            <div class="ratio-content">
-              <div id="map"></div>
-            </div>
-          </div>
-
-        </form>
-      </div>
-      <div class="fr-col-5">
-
-        {% if result_available %}
-          <h2 class="fr-h4 fr-my-3w">Résultat du calcul</h2>
-
-          <table class="demo-hedge-density-buffer">
-            <thead>
-              <tr>
-                <th colspan="2">Distance 400 m</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr>
-                <th scope="row">Linéaire</th>
-                <td>{{ length_400|floatformat:"0g" }} ml</td>
-              </tr>
-              <tr>
-                <th scope="row">Surface</th>
-                <td>{{ area_400_ha|floatformat:"g" }} ha</td>
-              </tr>
-              <tr>
-                <th scope="row">Densité</th>
-                <td>{{ density_400|floatformat:"g" }} ml/ha</td>
-              </tr>
-            </tbody>
-          </table>
-
-        {% else %}
-          <p>Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation.</p>
-        {% endif %}
-
-        {% if debug %}
-          <h2 class="fr-h4">Données de calcul</h2>
-
-          {% if values %}
-            <table class="fr-table">
-              {% for row in values %}
-                <tr>
-                  {% for value in row %}<td>{{ value }}</td>{% endfor %}
-                </tr>
-              {% endfor %}
-            </table>
-          {% elif flat_values %}
-            {% for value in flat_values %}<span>{{ value }}&nbsp;</span>{% endfor %}
-          {% endif %}
-
-        {% endif %}
-
+    <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
+      <div class="ratio-content">
+        <div id="map"></div>
       </div>
     </div>
-  </article>
+
+  </form>
 {% endblock %}
 
-{% block extra_body %}
-  {% include '_share_url_modal.html' with shorten_url=False share_url=share_btn_url %}
-{% endblock %}
+{% block content-demo-results %}
+  {% if result_available %}
+    <h2 class="fr-h4 fr-my-3w">Résultat du calcul</h2>
 
-{% block extra_css %}
-  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
-  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+    <table class="demo-hedge-density-buffer">
+      <thead>
+        <tr>
+          <th colspan="2">Distance 400 m</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <th scope="row">Linéaire</th>
+          <td>{{ length_400|floatformat:"0g" }} ml</td>
+        </tr>
+        <tr>
+          <th scope="row">Surface</th>
+          <td>{{ area_400_ha|floatformat:"g" }} ha</td>
+        </tr>
+        <tr>
+          <th scope="row">Densité</th>
+          <td>{{ density_400|floatformat:"g" }} ml/ha</td>
+        </tr>
+      </tbody>
+    </table>
+
+  {% else %}
+    <p>Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation.</p>
+  {% endif %}
+
+  {% if debug %}
+    <h2 class="fr-h4">Données de calcul</h2>
+
+    {% if values %}
+      <table class="fr-table">
+        {% for row in values %}
+          <tr>
+            {% for value in row %}<td>{{ value }}</td>{% endfor %}
+          </tr>
+        {% endfor %}
+      </table>
+    {% elif flat_values %}
+      {% for value in flat_values %}<span>{{ value }}&nbsp;</span>{% endfor %}
+    {% endif %}
+
+  {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}
-  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
-  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
-  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  {{ super }}
   <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
-  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 
 
   <script>
