@@ -124,7 +124,7 @@ def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
     project_list_url = (
         f"{base_url}{reverse('petition_project_list', urlconf='config.urls_haie')}"
     )
-    contact_url = f"{base_url}{reverse('contact_us', urlconf='config.urls_haie')}#contact-accordion-2-equipe"
+    contact_url = f"{base_url}{reverse('contact_us', urlconf='config.urls_haie')}{settings.CONTACT_TEAM_ANCHOR}"
 
     context = {
         "base_url": base_url,

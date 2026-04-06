@@ -33,7 +33,7 @@
 
       <p>
         Les usagers ont la possibilité de vous contacter via
-        <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}#contact-accordion-3-dossier">la page de contact</a>.
+        <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}{{ contact_dossier_anchor }}">la page de contact</a>.
         Ils verront les informations suivantes :
       </p>
       <p>

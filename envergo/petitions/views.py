@@ -644,7 +644,7 @@ class PetitionProjectCreate(FormView):
                 <br/>
                 Identifiant de l’erreur : {self.request.alerts.user_error_reference.upper()}
                 <br/>
-                Merci de <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                Merci de <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                 contacter l'équipe du guichet unique de la haie
                 </a> en nous transmettant cet identifiant
                 <br/>
@@ -856,7 +856,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         context["invitation_contact_url"] = update_qs(
             self.request.build_absolute_uri(
-                f"{reverse("contact_us")}#contact-accordion-2-equipe"
+                f"{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
@@ -1032,7 +1032,7 @@ class PetitionProjectInstructorDossierDSView(
                 self.request,
                 f"""Impossible de récupérer les informations du dossier Démarche Numérique.
                         Si le problème persiste,
-                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier.""",
             )
@@ -1106,7 +1106,7 @@ class PetitionProjectInstructorMessagerieView(
                 self.request,
                 f"""Impossible de récupérer les informations du dossier Démarche Numérique.
                         Si le problème persiste,
-                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier.""",
             )
@@ -1156,7 +1156,7 @@ Vérifiez que la pièce jointe respecte les conditions suivantes :
                 self.request,
                 f"""Le message n'a pas pu être envoyé, réessayez dans quelques minutes.
                         Si le problème persiste,
-                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier.""",
             )
@@ -1494,7 +1494,7 @@ class PetitionProjectInstructorProcedureView(
                     None,
                     mark_safe(
                         f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
-                        <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier."""
                     ),
@@ -1633,7 +1633,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             error_message = f"""Le message n'a pas pu être envoyé.
             Merci de ré-essayer dans quelques minutes.
             Si le problème persiste,
-            <a href='{reverse("contact_us")}#contact-accordion-2-equipe'>
+            <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                 contacter l'équipe du guichet unique de la haie
             </a> en indiquant l'identifiant du dossier.
             """
@@ -1809,7 +1809,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
         # Return rendered modal HTML instead of JSON
         invitation_contact_url = update_qs(
             self.request.build_absolute_uri(
-                f"{reverse("contact_us")}#contact-accordion-2-equipe"
+                f"{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
