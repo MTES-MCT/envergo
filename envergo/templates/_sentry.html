@@ -1,6 +1,11 @@
 {% load static %}
 
 {% if SENTRY_KEY %}
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({ environment: "{{ ENV_NAME }}" });
+    };
+  </script>
   <script src="https://sentry.incubateur.net/js-sdk-loader/{{ SENTRY_KEY }}.min.js"
           crossorigin="anonymous"></script>
 {% endif %}
