@@ -20,7 +20,8 @@
        data-hedges-data='{{ hedge_data_json|safe }}'
        data-department-lat='{{ department_centroid.lat|unlocalize }}'
        data-department-lng='{{ department_centroid.lng|unlocalize }}'
-       data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
+       data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}"
+       data-max-drawing-total-length="{{ max_hedges_total_length }}">
     {% if is_alternative %}
       <div class="fr-notice fr-notice--info">
         <div class="fr-notice__body fr-ml-2w">
@@ -38,7 +39,8 @@
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
           <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
           <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
-          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l’emplacement des haies</span>
+          <span v-else-if="helpBubble === 'maxLengthReached'">Pour des raisons de performance, la somme des longueurs des haies est limitée à 10 kilomètres. Si cette condition est bloquante pour votre simulation, <a href="{{ contact_url }}" target="_blank">contactez-nous</a>.</span>
+          <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l'emplacement des haies</span>
         </div>
       </div>
       <div id="tooltip" style="display: none"></div>
@@ -277,7 +279,7 @@
                 <div class="fr-modal__content">
                   <h1 class="fr-modal__title">Complétez la description des haies pour pouvoir poursuivre</h1>
                   <p>
-                    Pour que le simulateur détermine les réglementations qui s’appliquent au projet, toutes les haies
+                    Pour que le simulateur détermine les réglementations qui s'appliquent au projet, toutes les haies
                     doivent être décrites complètement.
                   </p>
                   <p>Ces haies sont incomplètes : [[ invalidHedges ]]</p>
