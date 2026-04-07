@@ -2,15 +2,13 @@
 
 <p>
   <strong>Densité :</strong> {{ density_400|floatformat:"1" }} ml/ha
-</p>
-
-{% if pre_computed_density_400 %}
-  <p>
+  {% if pre_computed_density_400 %}
+    <br />
     <strong>Densité persistée en base :</strong> {{ pre_computed_density_400|floatformat:"1" }} ml/ha
     <br />
     <span class="fr-hint-text">Peut ne pas être à jour</span>
-  </p>
-{% endif %}
+  {% endif %}
+</p>
 
 <a class="fr-btn fr-btn--secondary fr-mb-3w"
    href="{% url 'demo_density_project' %}?haies={{ haies_id }}">Voir le calcul de densité</a>

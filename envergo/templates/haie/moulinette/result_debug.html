@@ -91,7 +91,9 @@
                   <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
-                {% criterion_debug_snippet criterion %}
+
+                {% criterion_debug_snippet criterion as debug_content %}
+                {% if debug_content %}<div class="criterion-debug">{{ debug_content }}</div>{% endif %}
               </li>
             {% endfor %}
           </ul>
