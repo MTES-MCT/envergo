@@ -7,6 +7,7 @@ from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, france_polygon
 from envergo.moulinette.tests.factories import RUConfigHaieFactory
 from envergo.moulinette.tests.utils import (
+    EP_RU_DEFAULT_SETTINGS,
     make_hedge,
     make_hedge_factory,
     make_moulinette_haie_with_density,
@@ -146,8 +147,47 @@ def test_ep_ru_per_hedge_zone_sensible(ep_ru_criterion):
     assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
 
 
-def test_ep_ru_per_hedge_high_density_no_zone_sensible(ep_ru_criterion):
-    """High density + no zone sensible → dispense via per-hedge."""
+def test_ep_ru_per_hedge_short_high_density_non_mixte_dispense(ep_ru_criterion):
+    """Short total + high density + non-mixte + no zone → dispense via per-hedge.
+
+    Reaches step 6 with total ∈ (L_BAS, L_HAUT] and density > D_HAUT, where
+    the per-hedge dispense branch is exercised.
+    """
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=90,
+        hedges=[make_hedge_factory(length=50, type_haie="buissonnante")],
+        reimplantation="replantation",
+    )
+    total = moulinette.catalog["ep_ru_total_length"]
+    assert 10 < total <= 100
+    assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+
+
+def test_ep_ru_per_hedge_short_high_density_mixte_no_dispense(ep_ru_criterion):
+    """Short total + high density + mixte + no zone → derogation_simplifiee.
+
+    Mixte hedges are excluded from the per-hedge dispense branch even when
+    every other condition is met.
+    """
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=90,
+        hedges=[make_hedge_factory(length=50, type_haie="mixte")],
+        reimplantation="replantation",
+    )
+    total = moulinette.catalog["ep_ru_total_length"]
+    assert 10 < total <= 100
+    assert moulinette.ep.ep_regime_unique.result_code == "derogation_simplifiee"
+
+
+def test_ep_ru_per_hedge_long_high_density_no_dispense(ep_ru_criterion):
+    """Long total + high density + no zone → derogation_simplifiee.
+
+    Regression: long-total projects must NOT fall into the dispense branch,
+    even with high density and no sensitive zone. The L_HAUT cap on the
+    dispense path was missing in an earlier version of the spec.
+    """
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=90,
@@ -155,7 +195,7 @@ def test_ep_ru_per_hedge_high_density_no_zone_sensible(ep_ru_criterion):
         reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] > 100
-    assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+    assert moulinette.ep.ep_regime_unique.result_code == "derogation_simplifiee"
 
 
 def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
@@ -202,3 +242,40 @@ def test_ep_ru_replantation_coefficient(
     criterion = moulinette.ep.ep_regime_unique
     assert criterion.result_code == expected_code
     assert criterion.get_evaluator().get_replantation_coefficient() == expected_coeff
+
+
+# ---------------------------------------------------------------------------
+# Settings form (admin-configurable thresholds)
+# ---------------------------------------------------------------------------
+
+
+def test_ep_ru_missing_settings_yields_non_disponible(france_map):
+    """Empty evaluator_settings → criterion result is non_disponible."""
+    setup_ep_regime_unique(france_map, evaluator_settings={})
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=65,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    assert moulinette.ep.ep_regime_unique.result_code == "non_disponible"
+
+
+def test_ep_ru_settings_override_thresholds(france_map):
+    """Overriding l_haut shifts a project from step 4 into step 6 territory.
+
+    With the default l_haut=100, a 50 m project hits step 4
+    (derogation_simplifiee). Lowering l_haut to 30 makes the same project
+    "long", and combined with high density it falls into step 5
+    (derogation_inventaire).
+    """
+    custom = dict(EP_RU_DEFAULT_SETTINGS, l_haut=30, d_bas=80)
+    setup_ep_regime_unique(france_map, evaluator_settings=custom)
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=65,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    assert moulinette.catalog["ep_ru_total_length"] > 30
+    assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
