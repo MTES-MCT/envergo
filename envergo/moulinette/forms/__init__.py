@@ -453,6 +453,17 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                 )
 
         if haies:
+            total_length = haies.length_to_remove() + haies.length_to_plant()
+            if total_length > settings.MAX_HEDGES_DRAWING_TOTAL_LENGTH:
+                self.add_error(
+                    "haies",
+                    ValidationError(
+                        "Pour des raisons de performance, la somme des longueurs des haies "
+                        "est limitée à 10 kilomètres.",
+                        code="max_length_exceeded",
+                    ),
+                )
+
             HedgeType = HedgeTypeFactory.build_from_context(
                 single_procedure=self.single_procedure
             )
