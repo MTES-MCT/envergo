@@ -764,7 +764,7 @@ class EspecesProtegeesRegimeUnique(
     def compute_per_hedge_results(
         self, hedges, total_length, density, hedges_in_zone_sensible
     ):
-        """Assign a procedure level to each hedge based on length, density and zone.
+        """Assign a procedure level to each hedge based on length, density, type and zone.
 
         Only meaningful when the project-level cascade falls through to
         step 6 (per-hedge evaluation). Called unconditionally so the debug
@@ -773,12 +773,18 @@ class EspecesProtegeesRegimeUnique(
         per_hedge_results = {}
         for h in hedges:
             in_zone = h.id in hedges_in_zone_sensible
-            if total_length > EP_RU_L_HAUT and in_zone:
-                per_hedge_results[h.id] = "derogation_inventaire"
-            elif density > EP_RU_D_HAUT and not in_zone:
-                per_hedge_results[h.id] = "dispense"
+            is_mixte = h.hedge_type == "mixte"
+            long_total = total_length > EP_RU_L_HAUT
+            high_density = density > EP_RU_D_HAUT
+
+            if long_total and in_zone:
+                result = "derogation_inventaire"
+            elif high_density and not long_total and not is_mixte and not in_zone:
+                result = "dispense"
             else:
-                per_hedge_results[h.id] = "derogation_simplifiee"
+                result = "derogation_simplifiee"
+
+            per_hedge_results[h.id] = result
         return per_hedge_results
 
     def get_result_data(self):
