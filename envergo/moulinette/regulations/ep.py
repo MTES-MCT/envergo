@@ -976,4 +976,8 @@ class EspecesProtegeesRegimeUnique(
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
         context["hedge_debug_rows"] = hedge_rows
+        # Surface the admin-configured thresholds so the debug page shows
+        # exactly which values drove the cascade. None when settings are
+        # missing/invalid — the template hides the table in that case.
+        context["ep_ru_settings"] = self.params
         return context
