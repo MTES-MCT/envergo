@@ -1,7 +1,7 @@
-FROM docker.io/python:3.12.8-slim-bookworm as python
+FROM docker.io/python:3.12.8-slim-bookworm AS python
 
 # Python build stage
-FROM python as python-build-stage
+FROM python AS python-build-stage
 
 ARG BUILD_ENVIRONMENT=local
 
@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   build-essential \
   # GDAL dev libraries required to build GDAL Python wheels on arm64
   libgdal-dev \
+  # required for NodeSource setup
+  curl \
   && rm -rf /var/lib/apt/lists/*
 
 # build assets
@@ -26,7 +28,7 @@ RUN python -m ensurepip --upgrade && pip wheel --wheel-dir /usr/src/app/wheels  
 
 
 # Python 'run' stage
-FROM python as python-run-stage
+FROM python AS python-run-stage
 
 ARG BUILD_ENVIRONMENT=local
 ARG APP_HOME=/app
@@ -50,6 +52,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   curl \
   # python-magic mimetype detection dependencies
   libmagic1 \
+  # image optimization
+  optipng \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
