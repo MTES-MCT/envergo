@@ -1,5 +1,6 @@
 from collections import defaultdict
 from decimal import Decimal as D
+from functools import cached_property
 from math import ceil
 
 import shapely
@@ -643,12 +644,66 @@ class EspecesProtegeesNormandie(
         return context
 
 
-# Thresholds for the EP régime unique algorithm.
-EP_RU_L_RIPISYLVE = 20  # metres
-EP_RU_L_BAS = 10  # metres
-EP_RU_L_HAUT = 100  # metres
-EP_RU_D_BAS = 50  # ml/ha
-EP_RU_D_HAUT = 80  # ml/ha
+class EspecesProtegeesRegimeUniqueSettings(forms.Form):
+    """Configurable thresholds for the EP régime unique cascade algorithm.
+
+    All thresholds are required: missing or invalid values cause the
+    criterion to evaluate to ``non_disponible`` (the admin must populate
+    them per criterion).
+    """
+
+    l_ripisylve = forms.IntegerField(
+        label="L_ripisylve (m)",
+        help_text=(
+            "Seuil de longueur de ripisylve détruite au-delà duquel "
+            "le projet bascule en dérogation standard."
+        ),
+        required=True,
+        min_value=0,
+    )
+    l_bas = forms.IntegerField(
+        label="L_bas (m)",
+        help_text=(
+            "Seuil bas de longueur totale détruite : en deçà, le projet "
+            "obtient une dispense."
+        ),
+        required=True,
+        min_value=0,
+    )
+    l_haut = forms.IntegerField(
+        label="L_haut (m)",
+        help_text=(
+            "Seuil haut de longueur totale détruite : au-delà, le projet "
+            "est considéré comme à fort impact."
+        ),
+        required=True,
+        min_value=0,
+    )
+    d_bas = forms.IntegerField(
+        label="D_bas (ml/ha)",
+        help_text="Seuil bas de densité bocagère (mètres linéaires par hectare).",
+        required=True,
+        min_value=0,
+    )
+    d_haut = forms.IntegerField(
+        label="D_haut (ml/ha)",
+        help_text="Seuil haut de densité bocagère (mètres linéaires par hectare).",
+        required=True,
+        min_value=0,
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        l_bas = cleaned.get("l_bas")
+        l_haut = cleaned.get("l_haut")
+        d_bas = cleaned.get("d_bas")
+        d_haut = cleaned.get("d_haut")
+        if l_bas is not None and l_haut is not None and l_bas > l_haut:
+            raise forms.ValidationError("L_bas doit être inférieur ou égal à L_haut.")
+        if d_bas is not None and d_haut is not None and d_bas > d_haut:
+            raise forms.ValidationError("D_bas doit être inférieur ou égal à D_haut.")
+        return cleaned
+
 
 # Severity ranking used to pick the most constraining per-hedge result.
 EP_RU_RESULT_RANK = {
@@ -680,12 +735,27 @@ class EspecesProtegeesRegimeUnique(
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
     plantation_conditions = []
     form_class = None
+    settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
     RESULT_MATRIX = {
         "dispense": RESULTS.dispense,
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
         "derogation_inventaire": RESULTS.derogation_inventaire,
     }
+
+    @cached_property
+    def params(self):
+        """Validated, typed threshold settings.
+
+        Returns ``None`` when the admin-supplied settings are missing or
+        invalid; in that case the criterion is reported as ``non_disponible``
+        by ``CriterionEvaluator.evaluate`` (which re-validates the form),
+        and methods that need the thresholds simply bail out.
+        """
+        form = self.get_settings_form()
+        if form is None or not form.is_valid():
+            return None
+        return form.cleaned_data
 
     def get_hedges_in_zone_sensible(self, hedges):
         """Return the set of hedge IDs that intersect a "Zone sensible EP" map.
@@ -721,6 +791,11 @@ class EspecesProtegeesRegimeUnique(
 
         Computes hedge lengths, ripisylve length, zone sensible flags,
         line-buffer density, and per-hedge procedure-level results.
+
+        When the admin-supplied threshold settings are missing or invalid,
+        per-hedge results are skipped: the criterion is going to be
+        reported as ``non_disponible`` by ``evaluate()`` regardless, so
+        bailing out keeps the catalog free of meaningless values.
         """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
@@ -752,30 +827,45 @@ class EspecesProtegeesRegimeUnique(
         if density is None:
             density = 0
         catalog["ep_ru_density"] = density
+
+        params = self.params
+        if params is None:
+            return catalog
+
         catalog["ep_ru_per_hedge_results"] = self.compute_per_hedge_results(
             hedges,
             catalog["ep_ru_total_length"],
             density,
             hedges_in_zone_sensible,
+            l_haut=params["l_haut"],
+            d_haut=params["d_haut"],
         )
 
         return catalog
 
     def compute_per_hedge_results(
-        self, hedges, total_length, density, hedges_in_zone_sensible
+        self, hedges, total_length, density, hedges_in_zone_sensible, l_haut, d_haut
     ):
         """Assign a procedure level to each hedge based on length, density, type and zone.
 
         Only meaningful when the project-level cascade falls through to
         step 6 (per-hedge evaluation). Called unconditionally so the debug
         view always has data to display.
+
+        Args:
+            hedges: iterable of non-alignement hedges to classify.
+            total_length: total length of the destruction project (m).
+            density: project-wide bocage density (ml/ha).
+            hedges_in_zone_sensible: set of hedge ids intersecting a zone sensible.
+            l_haut: high length threshold (m), from settings.
+            d_haut: high density threshold (ml/ha), from settings.
         """
         per_hedge_results = {}
         for h in hedges:
             in_zone = h.id in hedges_in_zone_sensible
             is_mixte = h.hedge_type == "mixte"
-            long_total = total_length > EP_RU_L_HAUT
-            high_density = density > EP_RU_D_HAUT
+            long_total = total_length > l_haut
+            high_density = density > d_haut
 
             if long_total and in_zone:
                 result = "derogation_inventaire"
@@ -801,7 +891,11 @@ class EspecesProtegeesRegimeUnique(
         """Cascade algorithm for the EP régime unique procedure level.
 
         Project-level rules (steps 1-5) are tried first. If none match, the
-        most constraining per-hedge result wins (step 6).
+        most constraining per-hedge result wins (step 6). All thresholds
+        come from the admin-configurable settings (validated by
+        ``EspecesProtegeesRegimeUniqueSettings``); ``self.params`` is
+        guaranteed non-None here because ``evaluate()`` short-circuits to
+        ``non_disponible`` whenever the form is invalid.
         """
         aa_only = result_data["aa_only"]
         total_length = result_data["total_length"]
@@ -809,20 +903,27 @@ class EspecesProtegeesRegimeUnique(
         density = result_data["density"]
         per_hedge_results = result_data["per_hedge_results"]
 
+        params = self.params
+        l_ripisylve = params["l_ripisylve"]
+        l_bas = params["l_bas"]
+        l_haut = params["l_haut"]
+        d_bas = params["d_bas"]
+        d_haut = params["d_haut"]
+
         # 1. Only tree-row hedges
         if aa_only:
             result = "derogation_inventaire"
         # 2. Ripisylve threshold exceeded
-        elif ripisylve_length > EP_RU_L_RIPISYLVE:
+        elif ripisylve_length > l_ripisylve:
             result = "derogation_inventaire"
         # 3. Very short total
-        elif total_length <= EP_RU_L_BAS:
+        elif total_length <= l_bas:
             result = "dispense"
         # 4. Medium total with moderate density
-        elif total_length <= EP_RU_L_HAUT and density < EP_RU_D_HAUT:
+        elif total_length <= l_haut and density < d_haut:
             result = "derogation_simplifiee"
         # 5. Long total with low density
-        elif total_length > EP_RU_L_HAUT and density < EP_RU_D_BAS:
+        elif total_length > l_haut and density < d_bas:
             result = "derogation_inventaire"
         # 6. Per-hedge evaluation — pick the most constraining
         else:

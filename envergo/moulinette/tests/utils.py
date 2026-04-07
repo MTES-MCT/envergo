@@ -340,14 +340,34 @@ def setup_natura2000(activation_map):
     return regulation, criteria
 
 
-def setup_ep_regime_unique(activation_map):
-    """Create EP regulation with EspecesProtegeesRegimeUnique criterion."""
+#: Default thresholds used by tests when wiring up the EP régime unique
+#: criterion. Mirrors the historical hard-coded constants so existing test
+#: scenarios keep their semantics now that the thresholds are admin settings.
+EP_RU_DEFAULT_SETTINGS = {
+    "l_ripisylve": 20,
+    "l_bas": 10,
+    "l_haut": 100,
+    "d_bas": 50,
+    "d_haut": 80,
+}
+
+
+def setup_ep_regime_unique(activation_map, evaluator_settings=None):
+    """Create EP regulation with EspecesProtegeesRegimeUnique criterion.
+
+    The criterion is configured with ``EP_RU_DEFAULT_SETTINGS`` unless the
+    caller passes a custom ``evaluator_settings`` dict (e.g. to test the
+    non_disponible path).
+    """
+    if evaluator_settings is None:
+        evaluator_settings = EP_RU_DEFAULT_SETTINGS
     regulation = RegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
             title="EP Régime Unique",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique",
+            evaluator_settings=evaluator_settings,
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),
