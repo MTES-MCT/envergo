@@ -7,6 +7,7 @@ from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, france_polygon
 from envergo.moulinette.tests.factories import RUConfigHaieFactory
 from envergo.moulinette.tests.utils import (
+    EP_RU_DEFAULT_SETTINGS,
     make_hedge,
     make_hedge_factory,
     make_moulinette_haie_with_density,
@@ -241,3 +242,40 @@ def test_ep_ru_replantation_coefficient(
     criterion = moulinette.ep.ep_regime_unique
     assert criterion.result_code == expected_code
     assert criterion.get_evaluator().get_replantation_coefficient() == expected_coeff
+
+
+# ---------------------------------------------------------------------------
+# Settings form (admin-configurable thresholds)
+# ---------------------------------------------------------------------------
+
+
+def test_ep_ru_missing_settings_yields_non_disponible(france_map):
+    """Empty evaluator_settings → criterion result is non_disponible."""
+    setup_ep_regime_unique(france_map, evaluator_settings={})
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=65,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    assert moulinette.ep.ep_regime_unique.result_code == "non_disponible"
+
+
+def test_ep_ru_settings_override_thresholds(france_map):
+    """Overriding l_haut shifts a project from step 4 into step 6 territory.
+
+    With the default l_haut=100, a 50 m project hits step 4
+    (derogation_simplifiee). Lowering l_haut to 30 makes the same project
+    "long", and combined with high density it falls into step 5
+    (derogation_inventaire).
+    """
+    custom = dict(EP_RU_DEFAULT_SETTINGS, l_haut=30, d_bas=80)
+    setup_ep_regime_unique(france_map, evaluator_settings=custom)
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=65,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    assert moulinette.catalog["ep_ru_total_length"] > 30
+    assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
