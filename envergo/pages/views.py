@@ -80,6 +80,9 @@ class HomeHaieView(TemplateView):
             .order_by("department__department")
         )
         context["activated_configs"] = configs
+        context["departments"] = Department.objects.defer("geometry").order_by(
+            "department"
+        )
         return context
 
     def post(self, request, *args, **kwargs):
