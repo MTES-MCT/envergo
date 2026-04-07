@@ -146,8 +146,47 @@ def test_ep_ru_per_hedge_zone_sensible(ep_ru_criterion):
     assert moulinette.ep.ep_regime_unique.result_code == "derogation_inventaire"
 
 
-def test_ep_ru_per_hedge_high_density_no_zone_sensible(ep_ru_criterion):
-    """High density + no zone sensible → dispense via per-hedge."""
+def test_ep_ru_per_hedge_short_high_density_non_mixte_dispense(ep_ru_criterion):
+    """Short total + high density + non-mixte + no zone → dispense via per-hedge.
+
+    Reaches step 6 with total ∈ (L_BAS, L_HAUT] and density > D_HAUT, where
+    the per-hedge dispense branch is exercised.
+    """
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=90,
+        hedges=[make_hedge_factory(length=50, type_haie="buissonnante")],
+        reimplantation="replantation",
+    )
+    total = moulinette.catalog["ep_ru_total_length"]
+    assert 10 < total <= 100
+    assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+
+
+def test_ep_ru_per_hedge_short_high_density_mixte_no_dispense(ep_ru_criterion):
+    """Short total + high density + mixte + no zone → derogation_simplifiee.
+
+    Mixte hedges are excluded from the per-hedge dispense branch even when
+    every other condition is met.
+    """
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=90,
+        hedges=[make_hedge_factory(length=50, type_haie="mixte")],
+        reimplantation="replantation",
+    )
+    total = moulinette.catalog["ep_ru_total_length"]
+    assert 10 < total <= 100
+    assert moulinette.ep.ep_regime_unique.result_code == "derogation_simplifiee"
+
+
+def test_ep_ru_per_hedge_long_high_density_no_dispense(ep_ru_criterion):
+    """Long total + high density + no zone → derogation_simplifiee.
+
+    Regression: long-total projects must NOT fall into the dispense branch,
+    even with high density and no sensitive zone. The L_HAUT cap on the
+    dispense path was missing in an earlier version of the spec.
+    """
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=90,
@@ -155,7 +194,7 @@ def test_ep_ru_per_hedge_high_density_no_zone_sensible(ep_ru_criterion):
         reimplantation="replantation",
     )
     assert moulinette.catalog["ep_ru_total_length"] > 100
-    assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+    assert moulinette.ep.ep_regime_unique.result_code == "derogation_simplifiee"
 
 
 def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
