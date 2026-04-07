@@ -1,0 +1,8 @@
+{% if density_400 is not None %}
+  <h5 class="fr-mt-3w">Densité bocagère</h5>
+  <p>
+    <strong>Densité du bocage — rayon 400m :</strong> {{ density_400|floatformat:"1" }} ml/ha
+  </p>
+  <a class="fr-btn fr-btn--secondary"
+     href="{% url 'demo_density_project' %}?haies={{ hedge_data_id }}">Voir le calcul de densité</a>
+{% endif %}

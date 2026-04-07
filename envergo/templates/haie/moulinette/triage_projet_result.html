@@ -1,0 +1,88 @@
+{% extends 'haie/moulinette/triage_result.html' %}
+
+{% load utils %}
+
+{% block result %}
+  <section id="project-result-content" class="fr-py-4w fr-px-2w">
+    <p class="fr-text--lead fr-mt-8w fr-mb-4w">
+      La destruction de haies ou d'alignements d'arbres a lieu <strong>dans le cadre d'un projet plus large</strong>.
+
+      Les procédures à suivre dépendent du <strong>type d'autorisation</strong> auquel est soumis ce projet.
+    </p>
+
+    <h6>
+      La destruction de haie a lieu dans le cadre d'un projet de construction ou d'aménagement soumis à permis de
+      construire (PC), permis d'aménager (PA) ou à déclaration préalable (DP) ?
+    </h6>
+    <p class="fr-mb-1w">➔ Vous devez :</p>
+    <ul class="fr-mb-4w">
+      <li>
+        <strong>auprès de la mairie :</strong> déposer la demande de permis (PC, PA, ou DP).
+        <br>
+        Le service
+        d'instruction urbanisme examine le projet dans son ensemble, y compris la destruction de haies pour les
+        réglementations qui sont de sa compétence.
+      </li>
+      <li>
+        <strong>sur ce site :</strong> déposer une déclaration auprès du guichet unique de la haie.
+        <br>
+        Le guichet unique
+        instruit le projet de destruction de haies pour les réglementations de la compétence de l'État.
+        <br>
+        <a class="fr-btn fr-mt-1w fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+           href="{% url 'moulinette_form' %}{% querystring contexte='projet-urba' %}">Continuer sur ce site</a>
+      </li>
+    </ul>
+
+    <h6>La destruction de haie a lieu dans le cadre d'un projet soumis à permis de démolir ?</h6>
+
+    <p class="fr-mb-1w">➔ Vous devez :</p>
+    <ul class="fr-mb-4w">
+      <li>
+        <strong>auprès de la mairie :</strong> déposer la demande de permis de démolir.
+        <br>
+        Le service d'instruction
+        urbanisme examine le projet dans son ensemble, y compris la destruction de haies pour les réglementations qui
+        sont de sa compétence.
+      </li>
+      <li>
+        <strong>sur ce site :</strong> déposer une déclaration auprès du guichet unique de la haie.
+        <br>
+        Le guichet unique
+        instruit le projet de destruction de haies pour les réglementations de la compétence de l'État.
+        <br>
+        <a class="fr-mt-1w fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+           href="{% url 'moulinette_form' %}{% querystring contexte='projet-urba' %}">Continuer sur ce site</a>
+      </li>
+    </ul>
+
+    <h6>Le projet est soumis à Autorisation Environnementale ?</h6>
+
+    <p>
+      <i>L'Autorisation Environnementale est la procédure s'appliquant aux grandes installations et aménagements (par
+        exemple élevage industriel, usine, lotissement de plus de 20 ha, parc éolien…). Elle est une procédure approfondie
+      qui nécessite systématiquement l'intervention d'un bureau d'études spécialisé et une enquête publique.</i>
+    </p>
+
+    <p>
+      ➔ Aucun dossier n'a à être déposé au guichet unique de la haie. L'instruction de la destruction de haie est
+      embarquée dans la procédure de l'Autorisation Environnementale.
+    </p>
+
+    <h6>Le projet n'est soumis à aucune autre autorisation, ni en mairie, ni en préfecture ou DDT ?</h6>
+    <p>
+      <i>Par exemple remembrement de parcelles agricoles, opération de maintenance réseaux, ou de gestion hydraulique,
+      aménagement d'une installation légère…</i>
+
+    </p>
+    <p>
+      ➔ Vous ne déposez qu'un dossier de déclaration de la destruction de haies ou alignements d'arbres, sur ce
+      site.
+      <br>
+      Le guichet unique de la haie instruit la demande pour toutes les réglementations.
+      <br>
+      <a class="fr-mt-1w fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line"
+         href="{% url 'moulinette_form' %}{% querystring contexte='projet-autre' %}">Continuer sur ce site</a>
+    </p>
+  </section>
+{% endblock %}

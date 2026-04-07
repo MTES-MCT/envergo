@@ -7,9 +7,13 @@ from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
     EspecesProtegeesNormandie,
+    EspecesProtegeesRegimeUnique,
     EspecesProtegeesSimple,
 )
-from envergo.petitions.regulations import evaluator_instructor_view_context_getter
+from envergo.petitions.regulations import (
+    evaluator_instructor_view_context_getter,
+    get_line_buffer_density_context,
+)
 
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesNormandie)
@@ -71,6 +75,14 @@ def ep_base_get_instructor_view_context(
     return {
         "hedges_properties": hedges_properties,
     }
+
+
+@evaluator_instructor_view_context_getter(EspecesProtegeesRegimeUnique)
+def ep_regime_unique_get_instructor_view_context(
+    evaluator, petition_project, moulinette
+) -> dict:
+    """Build density context for the EP régime unique instructor view."""
+    return get_line_buffer_density_context(petition_project, moulinette)
 
 
 def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):

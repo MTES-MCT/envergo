@@ -28,6 +28,12 @@ main.home {
   }
 }
 
+#contactus-accordion {
+  .fr-accordion__title {
+    font-size: 1.5rem;
+  }
+}
+
 html.saisie {
   height: 100%;
 
@@ -1146,5 +1152,15 @@ button.hide-expanded[aria-expanded="true"] {
 .demo-hedge-density-buffer {
   thead th {
     text-align: left;
+  }
+}
+
+#department-combobox {
+  position: relative;
+
+  .department-combobox-clear {
+    position: absolute;
+    top: 0.2rem;
+    right: 0.2rem;
   }
 }

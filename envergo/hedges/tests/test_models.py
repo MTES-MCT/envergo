@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.contrib.gis.geos import MultiPolygon
 from shapely import centroid
@@ -659,3 +661,114 @@ class TestHedgeList:
         assert len(hedge_list.mixte()) == 0
         assert len(hedge_list.type("mixte")) == 0
         assert len(hedge_list.prop("vieil_arbre")) == 0
+
+
+MOCK_DENSITY_CENTROID_200 = {
+    "density": 42.0,
+    "artifacts": {"length": 1000, "area_ha": 23.8, "truncated_circle": None},
+}
+
+MOCK_DENSITY_CENTROID_5000 = {
+    "density": 55.0,
+    "artifacts": {"length": 50000, "area_ha": 909.0, "truncated_circle": None},
+}
+
+MOCK_DENSITY_LINES_400 = {
+    "density": 60.0,
+    "artifacts": {
+        "length": 3000,
+        "area_ha": 50.0,
+        "buffer_zone": None,
+        "truncated_buffer_zone": None,
+    },
+}
+
+CENTROID_PATCH = (
+    "envergo.hedges.models.HedgeData.compute_density_around_points_with_artifacts"
+)
+LINES_PATCH = (
+    "envergo.hedges.models.HedgeData.compute_density_around_lines_with_artifacts"
+)
+
+
+class TestDensityLazyComputation:
+    """Verify that each density type is computed independently on demand.
+
+    The two computation methods (centroid-based and line-buffer) are expensive.
+    Evaluators that only need one type should never trigger the other.
+    """
+
+    def test_density_around_lines_does_not_trigger_centroid_computation(self):
+        """Accessing density_around_lines must not compute centroid density."""
+        hedge_data = HedgeDataFactory()
+        assert hedge_data._density is None
+
+        with (
+            patch(CENTROID_PATCH) as mock_centroid,
+            patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines,
+        ):
+            result = hedge_data.density_around_lines
+
+        mock_lines.assert_called_once()
+        mock_centroid.assert_not_called()
+        assert result["density_400"] == 60.0
+        assert "around_centroid" not in hedge_data._density
+
+    def test_density_around_centroid_does_not_trigger_lines_computation(self):
+        """Accessing density_around_centroid must not compute line-buffer density."""
+        hedge_data = HedgeDataFactory()
+        assert hedge_data._density is None
+
+        centroid_return = (
+            MOCK_DENSITY_CENTROID_200,
+            MOCK_DENSITY_CENTROID_5000,
+            None,
+        )
+        with (
+            patch(CENTROID_PATCH, return_value=centroid_return) as mock_centroid,
+            patch(LINES_PATCH) as mock_lines,
+        ):
+            result = hedge_data.density_around_centroid
+
+        mock_centroid.assert_called_once()
+        mock_lines.assert_not_called()
+        assert result["density_5000"] == 55.0
+        assert "around_lines" not in hedge_data._density
+
+    def test_density_properties_compute_incrementally(self):
+        """Accessing both properties computes each type exactly once."""
+        hedge_data = HedgeDataFactory()
+
+        centroid_return = (
+            MOCK_DENSITY_CENTROID_200,
+            MOCK_DENSITY_CENTROID_5000,
+            None,
+        )
+        with (
+            patch(CENTROID_PATCH, return_value=centroid_return) as mock_centroid,
+            patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines,
+        ):
+            hedge_data.density_around_lines
+            hedge_data.density_around_centroid
+
+        mock_lines.assert_called_once()
+        mock_centroid.assert_called_once()
+        assert "around_lines" in hedge_data._density
+        assert "around_centroid" in hedge_data._density
+
+    def test_density_uses_cache(self):
+        """Second access to the same property must not recompute."""
+        hedge_data = HedgeDataFactory()
+
+        with patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines:
+            hedge_data.density_around_lines
+            hedge_data.density_around_lines
+
+        mock_lines.assert_called_once()
+
+    def test_density_property_raises_error(self):
+        """The legacy density property must raise to prevent accidental use."""
+        hedge_data = HedgeDataFactory()
+
+        with pytest.raises(AttributeError, match="density_around_centroid"):
+            hedge_data.density

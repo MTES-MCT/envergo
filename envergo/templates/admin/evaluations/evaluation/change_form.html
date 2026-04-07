@@ -10,7 +10,7 @@
     <a href="{{ original.get_absolute_url }}?preview"
        class="viewsitelink disableonchange"
        target="_blank"
-       rel="noopener">👀 Prévisualiser</a>
+       rel="noopener">👀 Prévisualiser</a>
   </li>
   <li>
     <a href="{% url 'admin:evaluations_evaluation_publish' original.pk %}"
@@ -25,9 +25,13 @@
   {% if original.can_send_regulatory_reminder %}
     <li>
       <a href="{% url 'admin:evaluations_evaluation_email_avis' original.pk %}"
-         class="disableonchange">✉️ Envoyer e-mail avis</a>
+         class="disableonchange">✉️ Envoyer e-mail</a>
     </li>
   {% endif %}
+  <li>
+    <a href="{% url 'admin:evaluations_evaluation_pdf' original.pk %}"
+       class="{% if not published %}disabled{% endif %} disableonchange">📄 Générer pdf</a>
+  </li>
   {% if original.versions.count > 0 %}
     <li>
       <a href="{{ absolute_url }}"
@@ -37,7 +41,7 @@
     </li>
   {% else %}
     <li>
-      <a href="" class="disabled">⚠️ Aucun avis publié</a>
+      <a href="" class="disabled">⚠️ Aucun avis publié</a>
     </li>
   {% endif %}
 {% endblock %}

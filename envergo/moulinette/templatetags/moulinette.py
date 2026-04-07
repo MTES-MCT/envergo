@@ -16,7 +16,6 @@ from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.regulations import HedgeDensityMixin
 from envergo.moulinette.utils import get_moulinette_class_from_site
 
 register = template.Library()
@@ -328,9 +327,35 @@ def show_haie_plantation_evaluation(context, moulinette, plantation_evaluation):
     return content
 
 
-@register.filter
-def requires_hedge_density(criterion):
-    return isinstance(criterion._evaluator, HedgeDensityMixin)
+@register.simple_tag(takes_context=True)
+def criterion_debug_snippet(context, criterion):
+    """Render evaluator-specific debug info for a criterion.
+
+    Each evaluator may declare a debug_template and override
+    get_debug_context() to provide the data for that template.
+    Returns empty string when the evaluator has no debug template.
+    """
+    evaluator = criterion.get_evaluator()
+    template_name = evaluator.debug_template
+    if not template_name:
+        return ""
+
+    debug_context = evaluator.get_debug_context()
+    context_data = context.flatten()
+    context_data.update(debug_context)
+    context_data["criterion"] = criterion
+
+    try:
+        content = render_to_string(template_name, context_data)
+    except TemplateDoesNotExist:
+        logger.warning(
+            "Debug template %s not found for evaluator %s.",
+            template_name,
+            type(evaluator).__name__,
+        )
+        content = ""
+
+    return mark_safe(content)
 
 
 @register.filter

@@ -47,6 +47,7 @@ if settings.DEBUG:
             default_views.page_not_found,
             kwargs={"exception": Exception("Page not Found")},
         ),
+        path("429/", rate_limited),
         path("500/", server_error),
     ]
     if "debug_toolbar" in settings.INSTALLED_APPS:

@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import date, timedelta
 from urllib.parse import urlencode, urljoin
@@ -6,6 +7,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
+from django.db.models import OuterRef, Subquery
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
@@ -22,6 +24,7 @@ from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
+from envergo.utils.context_processors import multi_sites_context, settings_context
 from envergo.utils.tools import get_site_literal
 
 logger = logging.getLogger(__name__)
@@ -31,15 +34,42 @@ class HomeAmenagementView(MoulinetteMixin, FormView):
     template_name = "amenagement/pages/home.html"
 
 
+class DepartmentSearchMixin:
+    """Mixin to manage department and config search form in view"""
+
+    queryset = Department.objects.defer("geometry").all()
+
+    def get_queryset_with_contacts(self):
+        """List all departments for the select input with contact info"""
+        valid_config_qs = ConfigHaie.objects.valid_at(timezone.now().date()).filter(
+            is_activated=True, department=OuterRef("pk")
+        )
+
+        departments_qs = self.queryset.annotate(
+            contacts_info=Subquery(valid_config_qs.values("contacts_info"))
+        )
+        return departments_qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        departments_data = [
+            {
+                "id": d.id,
+                "code": d.department,
+                "label": str(d),
+                "contacts_info": d.contacts_info or "",
+            }
+            for d in self.get_queryset_with_contacts()
+        ]
+        context["departments_json"] = json.dumps(departments_data)
+        return context
+
+
 class HomeHaieView(TemplateView):
     template_name = "haie/pages/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # List all departments for the select input
-        departments = Department.objects.defer("geometry").all()
-        context["departments"] = departments
 
         # Only show activated departments in the button list
         configs = (
@@ -53,6 +83,9 @@ class HomeHaieView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
+        """Post response with department
+        TODO: use mixin queryset and update template
+        """
         data = request.POST
         department_id = data.get("department")
         department = None
@@ -83,6 +116,12 @@ class HomeHaieView(TemplateView):
                 user_type=get_user_type(request.user),
             )
         return self.render_to_response(context)
+
+
+class ContactHaieView(DepartmentSearchMixin, TemplateView):
+    """Contact page view for Haie to provide department form"""
+
+    template_name = "haie/pages/contact_us.html"
 
 
 class GeometriciansView(MoulinetteMixin, FormView):
@@ -322,14 +361,12 @@ def server_error(request, template_name=ERROR_500_TEMPLATE_NAME):
         return HttpResponseServerError(
             ERROR_PAGE_TEMPLATE % {"title": "Server Error (500)", "details": ""},
         )
-    return HttpResponseServerError(
-        template.render({"base_template": request.base_template})
-    )
+    context = {**multi_sites_context(request), **settings_context(request)}
+    return HttpResponseServerError(template.render(context))
 
 
 def rate_limited(request):
     """429 error handler."""
+    context = {**multi_sites_context(request), **settings_context(request)}
     template = loader.get_template("429.html")
-    return HttpResponse(
-        template.render({"base_template": request.base_template}), status=429
-    )
+    return HttpResponse(template.render(context), status=429)

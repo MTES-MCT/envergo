@@ -68,7 +68,6 @@ from envergo.moulinette.regulations import (
     TO_ADD,
     TO_SUBTRACT,
     HaieRegulationEvaluator,
-    HedgeDensityMixin,
     MapFactory,
 )
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
@@ -1238,6 +1237,10 @@ class ConfigHaie(ConfigBase):
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
+    )
+
+    contacts_info = models.TextField(
+        "Champ html des informations de contact", blank=True
     )
 
     contacts_and_links = models.TextField(
@@ -2557,52 +2560,12 @@ class MoulinetteHaie(Moulinette):
         return summary
 
     def get_debug_context(self):
-        context = {}
-        if "haies" in self.catalog and self.requires_hedge_density:
-            haies = self.catalog["haies"]
+        """Return moulinette-wide debug context.
 
-            pre_computed_density = haies.density
-            if pre_computed_density:
-                context.update(
-                    {
-                        "pre_computed_density_200": pre_computed_density[
-                            "around_centroid"
-                        ]["density_200"],
-                        "pre_computed_density_5000": pre_computed_density[
-                            "around_centroid"
-                        ]["density_5000"],
-                    }
-                )
-
-            density_200, density_5000, centroid_geos = (
-                haies.compute_density_around_points_with_artifacts()
-            )
-            truncated_circle_200 = density_200["artifacts"].pop("truncated_circle")
-            truncated_circle_5000 = density_5000["artifacts"].pop("truncated_circle")
-
-            context.update(
-                {
-                    "length_200": density_200["artifacts"]["length"],
-                    "length_5000": density_5000["artifacts"]["length"],
-                    "area_200_ha": density_200["artifacts"]["area_ha"],
-                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
-                    "density_200": density_200["density"],
-                    "density_5000": density_5000["density"],
-                }
-            )
-
-            # Create the density map
-            from envergo.hedges.services import create_density_map
-
-            density_map = create_density_map(
-                centroid_geos,
-                haies.hedges_to_remove(),
-                truncated_circle_200,
-                truncated_circle_5000,
-            )
-            context["density_map"] = density_map
-
-        return context
+        Criterion-specific debug data is provided by each evaluator's
+        get_debug_context() method, rendered via {% criterion_debug_snippet %}.
+        """
+        return {}
 
     def get_triage_params(self):
         return set(TriageFormHaie.base_fields.keys())
@@ -2616,15 +2579,22 @@ class MoulinetteHaie(Moulinette):
 
         element = triage_form.cleaned_data.get("element")
         travaux = triage_form.cleaned_data.get("travaux")
-        return element == "haie" and travaux == "destruction"
+        contexte = triage_form.cleaned_data.get("contexte")
+        return element == "haie" and travaux == "destruction" and contexte != "projet"
 
     def get_triage_result_template(self):
         """Return the template to display the triage out of scope result."""
+        travaux = self.triage_form["travaux"].value()
+
         if (
             self.triage_form["element"].value() == "haie"
-            and self.triage_form["travaux"].value() != "destruction"
+            and travaux == "destruction"
+            and self.triage_form["contexte"].value() == "projet"
         ):
-            return "haie/moulinette/entretien_haies_result.html"
+            return "haie/moulinette/triage_projet_result.html"
+
+        if travaux == "entretien":
+            return "haie/moulinette/triage_entretien_result.html"
 
         return "haie/moulinette/triage_result.html"
 
@@ -2825,15 +2795,6 @@ class MoulinetteHaie(Moulinette):
         """Returns at what coordinates is the perimeter."""
 
         return self.department.centroid
-
-    @property
-    def requires_hedge_density(self):
-        """Check if the moulinette requires the hedge density to be evaluated."""
-        return any(
-            isinstance(criterion._evaluator, HedgeDensityMixin)
-            for regulation in self.regulations
-            for criterion in regulation.criteria.all()
-        )
 
     @cached_property
     def hedges_intersecting_regulations_perimeter(self):
