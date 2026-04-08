@@ -1846,6 +1846,28 @@ main.home {
   }
 }
 
+/* Contact page style **
+ * */
+.contact-means {
+  [class*="fr-icon-"]::before {
+    background-color: var(--background-action-high-blue-france);
+  }
+
+  ul.not-list {
+    --ul-type: none;
+    --ul-start: 0;
+    --li-bottom: 0.75rem;
+
+    ul {
+      --ul-type: disc;
+      --ul-start: 3rem;
+      --li-bottom: 0.25rem;
+
+      margin-bottom: 0;
+    }
+  }
+}
+
 // Geometricians landing page styles
 :root[data-fr-theme="dark"] main.geometricians {
   section#hero {
@@ -2031,8 +2053,16 @@ img.moulinette-incentive-img {
   color: var(--text-default-warning);
 }
 
+/* Custom icons */
+
 .fr-icon-hourglass-2-fill::before {
-  mask-image: url("/static/images/hourglass-2-fill.svg");
+  mask-image: url("/static/icons/hourglass-2-fill.svg");
+}
+
+.fr-icon-crisp::before {
+  background-image: url("/static/icons/crisp.svg");
+  background-size: contain;
+  border-radius: 50%;
 }
 
 .dark-only {

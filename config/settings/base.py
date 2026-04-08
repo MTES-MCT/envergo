@@ -408,6 +408,9 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
 )
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
 
+CONTACT_TEAM_ANCHOR = "#contact-accordion-2-equipe"
+CONTACT_DOSSIER_ANCHOR = "#contact-accordion-3-dossier"
+
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage

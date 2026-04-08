@@ -1,6 +1,20 @@
+{% load pages %}
+
 <div class="fr-col hide-print">
-  <h2>Pour en savoir plus…</h2>
-  Consultez notre <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
+  <h2>Une question ?</h2>
+  <p class="fr-mb-3v">Vous pouvez :</p>
+  <ul>
+    <li>
+      Consulter <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
     target="_blank"
-    rel="noopener">page d'information</a> ou <a href="{% url 'contact_us' %}">contactez l'équipe du portail du guichet unique de la haie</a>.
+    rel="noopener">l'aide en ligne et les questions fréquentes</a>
+    </li>
+    <li>
+      <a href="{{ contact_url }}">Contacter l'équipe</a> pour toute question sur l'utilisation du portail
+    </li>
+    {% try_get_department_code as dept_code %}
+    <li>
+      <a href="{% url 'contact_us' %}{% if dept_code %}?department={{ dept_code }}{% endif %}{{ contact_dossier_anchor }}">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d'instruction
+    </li>
+  </ul>
 </div>

@@ -1,5 +1,141 @@
 {% extends 'pages/contact_us.html' %}
 
-{% block contact-means %}
-  {% include 'haie/_contact_means.html' %}
+{% load static %}
+
+{% block article %}
+  <h1>Contactez-nous</h1>
+
+  <div data-fr-group="true"
+       id="contactus-accordion"
+       class="fr-accordions-group">
+    <section class="fr-accordion">
+      <h2 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="true"
+                aria-controls="contact-accordion-1-faq">Questions les plus fréquentes</button>
+      </h2>
+      <div class="fr-collapse fr-collapse--expanded"
+           id="contact-accordion-1-faq">
+        <p>
+          La FAQ répond aux principales questions sur le fonctionnement du guichet unique et du portail numérique, et sur la réglementation qui encadre les destructions de haie et d'alignements d'arbres.
+        </p>
+        <a href="{{ HAIE_FAQ_URLS.SERVICE_USERS }}"
+           target="_blank"
+           rel="noopener external"
+           class="fr-btn fr-icon-icon-external-link-fill fr-btn--icon-right">Aller à la FAQ</a>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h2 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-2-equipe">Fonctionnement du portail</button>
+      </h2>
+      <div class="fr-collapse" id="contact-accordion-2-equipe">
+        <p class="fr-mb-1w">Pour toute question sur le fonctionnement du portail numérique :</p>
+        <ul>
+          <li>l'utilisation du simulateur</li>
+          <li>une erreur technique</li>
+          <li>le dépôt de votre dossier en ligne</li>
+        </ul>
+        <div class="contact-means">{% include 'haie/_contact_means.html' %}</div>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h2 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-3-dossier">Instruction de votre dossier</button>
+      </h2>
+      <div class="fr-collapse" id="contact-accordion-3-dossier">
+        <p class="fr-mb-1w">Pour toute question sur l'instruction de votre dossier :</p>
+        <ul>
+          <li>les réglementations applicables à votre projet</li>
+          <li>les délais d'instruction</li>
+          <li>les pièces complémentaires qui vous sont demandées</li>
+          <li>la décision de l'administration</li>
+        </ul>
+        <p>➔ Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
+
+        <script type="application/json" id="departments-data">{{ departments_json|safe }}</script>
+
+        <div>
+          <label class="fr-label fr-text--bold" for="department">Dans quel département le projet est-il situé ?</label>
+          <div id="department-combobox"></div>
+          <div class="fr-messages-group" id="department-messages" aria-live="polite"></div>
+        </div>
+        <div id="contacts-info-container" aria-live="polite"></div>
+      </div>
+    </section>
+  </div>
+
 {% endblock %}
+
+{% block after-content %}{% endblock %}
+
+{% block javascript %}
+  <script>
+    const customizeMatomoUrl = (url) => {
+      const parsedUrl=new URL(url);
+      if (parsedUrl.searchParams.has("department")) {
+        parsedUrl.searchParams.set("department", "X");
+      }
+      return parsedUrl.toString();
+    };
+    var MATOMO_CUSTOM_URL = customizeMatomoUrl(window.location.href);
+  </script>
+  {{ block.super }}
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/accordion_analytics.js' %}"></script>
+  <script defer
+          src="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.js' %}"></script>
+  <script defer src="{% static 'js/libs/department_combobox.js' %}"></script>
+  <script>
+    /* Add analytics */
+    window.addEventListener('load', function() {
+      const elt = document.getElementById('contactus-accordion');
+      const accordion = new AccordionAnalytics(elt, customizeMatomoUrl);
+      accordion.init();
+    });
+  </script>
+{% endblock %}
+
+{% block bottom_js %}
+  <script type="text/javascript">
+    /* Open chat */
+    const openCrispChat = () => {
+      if (!window.$crisp) {
+        console.warn("Crisp is not loaded");
+      } else {
+        window.$crisp.push(["do", "chat:open"]);
+      }
+    }
+  </script>
+  <script>
+    /* Open the accordion targeted by the URL hash, close the default one */
+    (function () {
+      var hash = window.location.hash.slice(1);
+      if (!hash) return;
+      var target = document.getElementById(hash);
+      if (!target || !target.classList.contains("fr-collapse")) return;
+      var faq = document.getElementById("contact-accordion-1-faq");
+      if (faq) {
+        faq.classList.remove("fr-collapse--expanded");
+        document.querySelector('[aria-controls="contact-accordion-1-faq"]').setAttribute("aria-expanded", "false");
+      }
+      target.classList.add("fr-collapse--expanded");
+      document.querySelector('[aria-controls="' + hash + '"]').setAttribute("aria-expanded", "true");
+    })();
+  </script>
+{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'accessible-autocomplete/dist/accessible-autocomplete.min.css' %}">
+{% endblock extra_css %}

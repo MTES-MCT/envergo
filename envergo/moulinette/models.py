@@ -1239,6 +1239,10 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
+    contacts_info = models.TextField(
+        "Champ html des informations de contact", blank=True
+    )
+
     contacts_and_links = models.TextField(
         "Champ html d’information fléchage", blank=True
     )

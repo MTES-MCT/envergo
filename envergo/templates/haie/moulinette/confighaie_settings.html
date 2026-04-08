@@ -31,22 +31,19 @@
 
       <h2 id="title-contact" class="fr-mb-4v">Informations de contact</h2>
 
-      <div class="fr-callout">
-        <p class="fr-text--sm">
-          Les informations de contact ci-dessous sont affichées aux usagers pour les guider sur le portail.
-        </p>
-        <p class="fr-text--sm">
-          Une mise à jour avec les nouvelles informations remontées sera réalisée dans les prochains jours.
-        </p>
-        <p>
-          <a class="fr-btn fr-btn--secondary"
-             href="{{ department_settings_form }}"
-             target="_blank"
-             rel="noopener">Modifier les informations de contact</a>
-        </p>
-      </div>
+      <p>
+        Les usagers ont la possibilité de vous contacter via
+        <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}{{ contact_dossier_anchor }}">la page de contact</a>.
+        Ils verront les informations suivantes :
+      </p>
+      <p>
+        <a class="fr-btn fr-btn--secondary"
+           href="{{ department_settings_form }}"
+           target="_blank"
+           rel="noopener">Modifier les informations de contact</a>
+      </p>
 
-      <div class="fr-mt-4w fr-mb-4w fr-highlight fr-highlight--beige-gris-galet">{{ object.contacts_and_links|safe }}</div>
+      <div class="fr-mt-4w fr-mb-4w fr-highlight fr-highlight--beige-gris-galet">{{ object.contacts_info|safe }}</div>
 
       <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
 

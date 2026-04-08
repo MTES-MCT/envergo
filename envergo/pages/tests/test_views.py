@@ -247,3 +247,48 @@ class TestHomeHaie:
         response = client.post(reverse("home"), {})
 
         assert response.status_code == 200
+
+
+@pytest.mark.haie
+class TestContactHaie:
+    """Tests for GUH contact page, using a view to display department contacts info"""
+
+    def test_department_contacts_in_json(self, client):
+        """Test that contacts_info is embedded in the page JSON for client-side rendering."""
+
+        DCConfigHaieFactory(contacts_info="Chez Ragadast, protecteur des haies")
+        response = client.get(reverse("contact_us"))
+        assert response.status_code == 200
+        assert "Chez Ragadast, protecteur des haies" in response.content.decode()
+
+    def test_without_department(self, client):
+        """GET without a department param should render the page with departments JSON."""
+        response = client.get(reverse("contact_us"))
+        assert response.status_code == 200
+        assert "departments-data" in response.content.decode()
+
+    def test_multiple_valid_configs_for_same_department(self, client):
+        """Subquery must not break when multiple ConfigHaie exist for the same dept."""
+        dept = DepartmentFactory()
+        today = date.today()
+        DCConfigHaieFactory(
+            department=dept,
+            contacts_info="Contact A",
+            validity_range=DateRange(
+                today - timedelta(days=30), today + timedelta(days=1)
+            ),
+        )
+        DCConfigHaieFactory(
+            department=dept,
+            contacts_info="Contact B",
+            validity_range=DateRange(
+                today + timedelta(days=1), today + timedelta(days=60)
+            ),
+        )
+        response = client.get(reverse("contact_us"))
+        assert response.status_code == 200
+
+    def test_post_not_allowed(self, client):
+        """POST is no longer supported; contact info is handled client-side."""
+        response = client.post(reverse("contact_us"), {})
+        assert response.status_code == 405
