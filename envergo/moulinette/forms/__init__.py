@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.gis.db.models.functions import Centroid
 from django.core.exceptions import ValidationError
 from django.template.defaultfilters import floatformat
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -455,11 +456,17 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         if haies:
             total_length = haies.length_to_remove() + haies.length_to_plant()
             if total_length > settings.MAX_HEDGES_DRAWING_TOTAL_LENGTH:
+                contact_url = f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
                 self.add_error(
                     "haies",
                     ValidationError(
-                        "Pour des raisons de performance, la somme des longueurs des haies "
-                        "est limitée à 10 kilomètres.",
+                        mark_safe(
+                            # Le <span> évite que le <a> soit traité comme un
+                            # flex item séparé par le DSFR (.fr-error-text)
+                            f"""<span>Pour des raisons de performance, la somme des longueurs des haies
+                            est limitée à 10 kilomètres. Si cette condition est bloquante pour votre simulation,
+                            <a href="{contact_url}" target="_blank">contactez-nous</a>.</span>"""
+                        ),
                         code="max_length_exceeded",
                     ),
                 )

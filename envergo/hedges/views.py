@@ -2,7 +2,6 @@ import json
 import logging
 from urllib.parse import urlparse
 
-from django.conf import settings
 from django.contrib.gis.db.models.functions import Centroid
 from django.http import JsonResponse, QueryDict
 from django.urls import reverse
@@ -173,7 +172,6 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         )
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
         context["is_alternative"] = bool(self.request.GET.get("alternative", False))
-        context["max_hedges_total_length"] = settings.MAX_HEDGES_DRAWING_TOTAL_LENGTH
 
         return context
 
