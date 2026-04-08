@@ -20,7 +20,6 @@ const styles = {
     hovered: { color: 'darkred' },
   },
 };
-const MAX_DRAWING_TOTAL_LENGTH = parseFloat(document.getElementById('app').dataset.maxDrawingTotalLength);
 const fitBoundsOptions = { padding: [10, 10] };
 
 const mode = document.getElementById('app').dataset.mode;
@@ -204,6 +203,10 @@ class Hedge {
    * will trigger reactivity.
    */
   init(latLngs = [], additionalData = {}) {
+    // this.polyline = L.polyline(latLngs || [], styles[type].normal);
+    // this.polyline.addTo(map);
+    // this.polyline.enableEdit(map);
+    // this.polyline.editor.continueForward();
 
     this.polyline = this.map.editTools.startPolyline(null, styles[this.type].normal);
 
@@ -451,8 +454,6 @@ createApp({
       onHedgesToPlantChange();
     });
 
-    const getTotalLength = () => hedges[TO_PLANT].totalLength + hedges[TO_REMOVE].totalLength;
-
     const addHedge = (type, latLngs = [], additionalData = {}, isDrawingCompleted = false) => {
       let hedgeList = hedges[type];
       let onRemove = hedgeList.removeHedge.bind(hedgeList);
@@ -463,18 +464,6 @@ createApp({
       helpBubble.value = "initHedgeHelp";
       const newHedge = addHedge(type);
       hedgeBeingDrawn.value = newHedge;
-
-      newHedge.polyline.on('editable:drawing:click', (e) => {
-        // Check if adding this point would exceed the max allowed length
-        const currentLatLngs = newHedge.polyline.getLatLngs();
-        const candidateLatLngs = [...currentLatLngs, e.latlng];
-        const additionalLength = latLngsLength(candidateLatLngs) - newHedge.length;
-        if (getTotalLength() + additionalLength > MAX_DRAWING_TOTAL_LENGTH) {
-          e.cancel();
-          helpBubble.value = "maxLengthReached";
-          return;
-        }
-      });
 
       newHedge.polyline.on('editable:vertex:new', (event) => {
         styleDrawGuide();
@@ -505,11 +494,7 @@ createApp({
       helpBubble.value = null;
     };
 
-    let restoringDrag = false;
-
     const onDrawingEnd = () => {
-      // disableEdit() triggers editable:drawing:end — skip it during drag restore
-      if (restoringDrag) return;
       showHedgeModal(hedgeBeingDrawn.value, mode === PLANTATION_MODE ? TO_PLANT : TO_REMOVE);
       stopDrawing();
     };
@@ -846,42 +831,6 @@ createApp({
       map.on('editable:vertex:dragstart', addTooltip);
       map.on('editable:vertex:dragend', removeTooltip);
       map.on("editable:drawing:move", updateTooltip);
-
-      // Max length enforcement on vertex drag
-      // Unlike editable:drawing:click, drag events are not cancelable,
-      // so we save/restore coordinates manually.
-      let savedLatLngs = null;
-      map.on('editable:vertex:dragstart', (e) => {
-        const polyline = e.layer;
-        savedLatLngs = polyline.getLatLngs().map(ll => L.latLng(ll.lat, ll.lng));
-      });
-      map.on('editable:vertex:dragend', (e) => {
-        if (getTotalLength() > MAX_DRAWING_TOTAL_LENGTH && savedLatLngs) {
-          const polyline = e.layer;
-          restoringDrag = true;
-          polyline.disableEdit();
-          polyline.setLatLngs(savedLatLngs);
-          polyline.enableEdit();
-
-          // Only resume drawing if this is the hedge currently being drawn
-          if (hedgeBeingDrawn.value && hedgeBeingDrawn.value.polyline === polyline) {
-            polyline.editor.continueForward();
-            styleDrawGuide();
-          }
-
-          // Update the hedge's internal state after restore
-          for (const hedge of [...hedges[TO_PLANT], ...hedges[TO_REMOVE]]) {
-            if (hedge.polyline === polyline) {
-              hedge.updateProperties();
-              hedge.syncHitbox();
-              break;
-            }
-          }
-
-          restoringDrag = false;
-        }
-        savedLatLngs = null;
-      });
 
       isSetupDone = true;
     });
