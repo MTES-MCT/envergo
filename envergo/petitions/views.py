@@ -136,6 +136,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                 demarches_simplifiees_state__exact=DOSSIER_STATES.draft
             )
             .select_related("hedge_data", "department")
+            .defer("department__geometry")
             .prefetch_related(
                 Prefetch(
                     "status_history",
@@ -822,24 +823,22 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        moulinette = self.object.get_moulinette()
-        context["moulinette"] = moulinette
         context["hedge_types"] = HedgeTypeFactory.build_from_context(
-            single_procedure=moulinette.config.single_procedure
+            single_procedure=self.object.config.single_procedure
         )
 
-        context.update(get_context_from_ds(self.object, moulinette))
+        context.update(get_context_from_ds(self.object))
 
-        context.update(moulinette.catalog)
-
-        context["plantation_evaluation"] = PlantationEvaluator(
-            context["moulinette"], context["moulinette"].catalog["haies"]
-        )
+        context.update(self.object.moulinette_data)
+        if "haies" in context:
+            context["has_hedges_outside_department"] = context[
+                "haies"
+            ].has_hedges_outside_department(self.object.department)
 
         plantation_url = reverse(
             "input_hedges",
             args=[
-                moulinette.department.department,
+                self.object.department.department,
                 "read_only",
                 self.object.hedge_data.id,
             ],
@@ -871,7 +870,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
-            moulinette.config.demarche_simplifiee_number
+            self.object.config.demarche_simplifiee_number
         )
 
         # Send message if info from DS is not in project details
@@ -953,7 +952,14 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
+
         context.update(get_project_context(self.object, context["moulinette"]))
+
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         return context
 
     def get_success_url(self):
@@ -983,6 +989,8 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
         context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
 
         hedge_data = context["petition_project"].hedge_data
         context["ign_url"] = get_ign_centered_url(hedge_data)
@@ -995,6 +1003,9 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 
         context["regulation"] = regulation
         context["current_regulation"] = regulation
+        context["plantation_evaluation"] = PlantationEvaluator(
+            context["moulinette"], context["moulinette"].catalog["haies"]
+        )
         context["config"] = context["moulinette"].config
         return context
 
@@ -1021,6 +1032,9 @@ class PetitionProjectInstructorDossierDSView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
 
         project_details = compute_instructor_informations_ds(
             self.object

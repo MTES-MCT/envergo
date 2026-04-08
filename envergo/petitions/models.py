@@ -23,7 +23,7 @@ from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
 from envergo.hedges.models import HedgeData
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.models import Dossier
 from envergo.users.models import User
@@ -71,7 +71,7 @@ LOG_TYPES = Choices(
 SESSION_KEY = "untracked_dossier_submission"
 
 
-class PetitionProject(models.Model):
+class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
     A petition project will store any data needed to follow up a request concerning a hedge.
@@ -106,7 +106,10 @@ class PetitionProject(models.Model):
     )
 
     demarches_simplifiees_dossier_number = models.IntegerField(
-        help_text=_("Dossier number on demarches-simplifiees.fr"), blank=True, null=True
+        help_text=_("Dossier number on demarches-simplifiees.fr"),
+        blank=True,
+        null=True,
+        db_index=True,
     )
 
     demarches_simplifiees_dossier_id = models.CharField(
@@ -126,10 +129,11 @@ class PetitionProject(models.Model):
         max_length=20,
         choices=DOSSIER_STATES,
         default=DOSSIER_STATES.draft,
+        db_index=True,
     )
 
     demarches_simplifiees_date_depot = models.DateTimeField(
-        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True
+        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True, db_index=True
     )
 
     demarches_simplifiees_raw_dossier = models.JSONField(
@@ -194,11 +198,22 @@ class PetitionProject(models.Model):
     )
 
     # Meta fields
-    created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    created_at = models.DateTimeField(
+        _("Date created"), default=timezone.now, db_index=True
+    )
 
     class Meta:
         verbose_name = "Dossier"
         verbose_name_plural = "Dossiers"
+        indexes = [
+            models.Index(
+                fields=[
+                    "demarches_simplifiees_state",
+                    "demarches_simplifiees_date_depot",
+                ],
+                name="pp_state_datedepot_idx",
+            ),
+        ]
 
     def __str__(self):
         return self.reference
@@ -393,6 +408,8 @@ class PetitionProject(models.Model):
             )
 
         self.demarches_simplifiees_raw_dossier = dossier
+        if hasattr(self, "prefetched_dossier"):
+            del self.prefetched_dossier
 
         if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
@@ -421,6 +438,13 @@ class PetitionProject(models.Model):
         raw_data = QueryDict(query_string)
         moulinette_data = raw_data.dict()
         return moulinette_data
+
+    @cached_property
+    def moulinette_data(self):
+        data = self._parse_moulinette_data()
+        # use the HedgeData object instead of the uuid to emulate a form like behavior usually used by the moulinette
+        data["haies"] = self.hedge_data
+        return data
 
     def has_view_permission(self, user):
         """User has view permission on project, according to
@@ -478,7 +502,7 @@ class PetitionProject(models.Model):
             )
         return None
 
-    @property
+    @cached_property
     def prefetched_dossier(self) -> Dossier | None:
         """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
@@ -511,6 +535,11 @@ class PetitionProject(models.Model):
 
         self.due_date = status_log.due_date
         self.save()
+
+    def get_available_regulations(self):
+        return Regulation.objects.filter(
+            regulation__in=self.config.regulations_available
+        ).order_by("weight")
 
 
 USER_TYPE = Choices(

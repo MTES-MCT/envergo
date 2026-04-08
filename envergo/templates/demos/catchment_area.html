@@ -126,7 +126,7 @@
 {% endblock %}
 
 {% block extra_body %}
-  {% include '_share_url_modal.html' with shorten_url=False share_url=share_btn_url %}
+  {% include '_share_url_modal.html' with shorten_url=False share_url=share_btn_url analytics_event_name="DemoBV" %}
 {% endblock %}
 
 {% block extra_css %}

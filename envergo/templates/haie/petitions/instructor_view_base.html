@@ -32,7 +32,7 @@
                               class="fr-sidemenu__btn">Réglementations</button>
                       <div class="fr-collapse" id="sidemenu-3">
                         <ul class="fr-sidemenu__list">
-                          {% for regulation in moulinette.regulations|dictsort:"display_order" %}
+                          {% for regulation in petition_project.get_available_regulations|dictsort:"display_order" %}
                             <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
                               <a class="fr-sidemenu__link"
                                  href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
