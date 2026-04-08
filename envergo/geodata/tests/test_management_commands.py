@@ -3,6 +3,7 @@ import pathlib
 
 import pytest
 from django.core.management.base import CommandError
+from django.db import connection
 
 from envergo.geodata.management.commands.batch_import_maps import (
     Command as BatchImportCommand,
@@ -170,8 +171,6 @@ def test_detect_geometry_table_zone():
     ZoneFactory(map=map_obj)
     ZoneFactory(map=map_obj)
 
-    from django.db import connection
-
     table, count = detect_geometry_table(connection, [map_obj.id])
     assert table == "geodata_zone"
     assert count == 2
@@ -182,8 +181,6 @@ def test_detect_geometry_table_line():
     map_obj = MapFactory(map_type="haies", zones=[])
     LineFactory(map=map_obj)
 
-    from django.db import connection
-
     table, count = detect_geometry_table(connection, [map_obj.id])
     assert table == "geodata_line"
     assert count == 1
@@ -192,8 +189,6 @@ def test_detect_geometry_table_line():
 def test_detect_geometry_table_raises_on_empty():
     """detect_geometry_table raises if neither table has rows."""
     map_obj = MapFactory(map_type="haies", zones=[])
-
-    from django.db import connection
 
     with pytest.raises(CommandError, match="no zones and no lines"):
         detect_geometry_table(connection, [map_obj.id])
@@ -218,6 +213,20 @@ def test_collect_local_map_ids_filters_by_import_status():
     assert nb_skipped == 3
 
 
+def test_collect_local_map_ids_returns_empty_when_all_skipped():
+    """When every local map has non-success status, return ([], total)."""
+    MapFactory(map_type="terres_emergees", import_status="failure", zones=[])
+    MapFactory(map_type="terres_emergees", import_status=None, zones=[])
+    MapFactory(
+        map_type="terres_emergees", import_status="partial_success", zones=[]
+    )
+
+    map_ids, nb_skipped = collect_local_map_ids("terres_emergees")
+
+    assert map_ids == []
+    assert nb_skipped == 3
+
+
 def test_count_existing_prod_maps_filters_by_map_type():
     """count_existing_prod_maps only counts rows of the matching map_type.
 
@@ -227,8 +236,6 @@ def test_count_existing_prod_maps_filters_by_map_type():
     same_type = MapFactory(map_type="terres_emergees", zones=[])
     other_type = MapFactory(map_type="haies", zones=[])
     not_in_batch = MapFactory(map_type="terres_emergees", zones=[])  # noqa: F841
-
-    from django.db import connection
 
     count = count_existing_prod_maps(
         connection, [same_type.id, other_type.id], "terres_emergees"
@@ -245,8 +252,6 @@ def test_count_pending_detail_rows_respects_after_id():
     z2 = ZoneFactory(map=map_obj)
     z3 = ZoneFactory(map=map_obj)
 
-    from django.db import connection
-
     # No after_id: all 3 rows are pending.
     assert count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], 0) == 3
 
@@ -262,22 +267,18 @@ def test_count_pending_detail_rows_respects_after_id():
 
 def test_count_pending_detail_rows_rejects_unsafe_table():
     """count_pending_detail_rows interpolates `table` into SQL — guard."""
-    from django.db import connection
-
     with pytest.raises(CommandError, match="Refusing to operate"):
         count_pending_detail_rows(connection, "geodata_map", [1], 0)
 
 
 def test_get_table_columns_raises_on_unknown_table():
     """An unknown table name produces a clear error rather than silent ''."""
-    from django.db import connection
-
     with pytest.raises(CommandError, match="not found"):
         get_table_columns(connection, "this_table_does_not_exist")
 
 
 def test_positive_int_validator():
-    """positive_int rejects zero and negatives."""
+    """positive_int rejects zero, negatives, and non-numeric input."""
     assert positive_int("1") == 1
     assert positive_int("5000") == 5000
 
@@ -285,15 +286,28 @@ def test_positive_int_validator():
         positive_int("0")
     with pytest.raises(argparse.ArgumentTypeError):
         positive_int("-1")
+    # Non-numeric input must produce the custom error, not a bare ValueError.
+    with pytest.raises(argparse.ArgumentTypeError):
+        positive_int("abc")
+    with pytest.raises(argparse.ArgumentTypeError):
+        positive_int("1.5")
+    with pytest.raises(argparse.ArgumentTypeError):
+        positive_int("")
 
 
 def test_non_negative_int_validator():
-    """non_negative_int accepts zero, rejects negatives."""
+    """non_negative_int accepts zero, rejects negatives and non-numeric input."""
     assert non_negative_int("0") == 0
     assert non_negative_int("42") == 42
 
     with pytest.raises(argparse.ArgumentTypeError):
         non_negative_int("-1")
+    with pytest.raises(argparse.ArgumentTypeError):
+        non_negative_int("abc")
+    with pytest.raises(argparse.ArgumentTypeError):
+        non_negative_int("1.5")
+    with pytest.raises(argparse.ArgumentTypeError):
+        non_negative_int("")
 
 
 # ── diff_schemas (schema drift comparison) ────────────────────────────
@@ -394,8 +408,6 @@ def test_check_no_id_collisions_flags_empty_map_type():
     """
     legacy = MapFactory(map_type="", zones=[])
 
-    from django.db import connection
-
     with pytest.raises(CommandError, match="Id collision detected"):
         check_no_id_collisions(connection, [legacy.id], "terres_emergees")
 
@@ -407,8 +419,6 @@ def test_check_no_id_collisions_returns_clean_on_matching_type():
     count_existing_prod_maps and surfaced separately in the banner).
     """
     same_type = MapFactory(map_type="terres_emergees", zones=[])
-
-    from django.db import connection
 
     # Should return cleanly (no exception).
     check_no_id_collisions(connection, [same_type.id], "terres_emergees")

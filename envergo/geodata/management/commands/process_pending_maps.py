@@ -47,6 +47,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Schedule async processing for every Map that hasn't been processed.
+
+        Refuses to run with a production-flavoured settings module before
+        querying anything. Always asks for an interactive confirmation
+        showing the destination database, since each scheduled task
+        deletes existing zones/lines for its map before re-importing.
+        """
         refuse_production_settings()
 
         qs = Map.objects.filter(import_status__isnull=True)

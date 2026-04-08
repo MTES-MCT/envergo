@@ -137,6 +137,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Validate the CSV, optionally purge existing maps, then import each row.
+
+        Refuses to run with a production-flavoured settings module before
+        any work happens. The validation pass aborts cleanly on any
+        missing file or invalid map_type / data_type so a partial import
+        can never leave half-created Map rows pointing at the wrong files.
+        """
         refuse_production_settings()
 
         csv_path = options["csv_file"]

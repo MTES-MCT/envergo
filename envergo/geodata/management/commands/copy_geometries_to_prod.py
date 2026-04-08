@@ -164,8 +164,18 @@ def assert_table_safe(table):
 
 
 def positive_int(value):
-    """argparse type validator: accept only integers >= 1."""
-    n = int(value)
+    """argparse type validator: accept only integers >= 1.
+
+    Wraps the int() call so non-numeric input ('abc', '1.5', '') produces
+    a consistent custom error message instead of the generic ValueError
+    that argparse would otherwise re-render.
+    """
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        raise argparse.ArgumentTypeError(
+            f"must be a positive integer, got {value!r}"
+        )
     if n < 1:
         raise argparse.ArgumentTypeError(
             f"must be a positive integer, got {n}"
@@ -174,8 +184,18 @@ def positive_int(value):
 
 
 def non_negative_int(value):
-    """argparse type validator: accept only integers >= 0."""
-    n = int(value)
+    """argparse type validator: accept only integers >= 0.
+
+    Wraps the int() call so non-numeric input ('abc', '1.5', '') produces
+    a consistent custom error message instead of the generic ValueError
+    that argparse would otherwise re-render.
+    """
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        raise argparse.ArgumentTypeError(
+            f"must be a non-negative integer, got {value!r}"
+        )
     if n < 0:
         raise argparse.ArgumentTypeError(
             f"must be a non-negative integer, got {n}"
@@ -549,6 +569,32 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Run every safety check, build the plan, then execute the three phases.
+
+        The destructive path is gated by FIVE independent guards, all of
+        which must pass before the operator is even shown the typed
+        confirmation:
+
+          1. DJANGO_SETTINGS_MODULE must not contain 'production'.
+          2. Local and prod must resolve to different physical databases
+             (server-side identity comparison, robust to alias differences).
+          3. Local must have at least one successfully-imported map of
+             the requested type. Failed/pending imports are excluded.
+          4. Local and prod schemas must match column-by-name (with type
+             and nullability verification).
+          5. No prod row may have an id in the local batch with a
+             different map_type (would mean local is not a fresh dump).
+
+        After the guards pass, a CopyPlan is computed once and passed to
+        the warning banner, the dry-run summary, and the typed
+        confirmation prompt — they can never disagree on what was decided.
+
+        Without --apply the command exits cleanly after the banner. With
+        --apply, the operator must still type a confirmation phrase
+        before any DELETE or COPY happens. Then the three phases run:
+        Phase 1 (atomic DELETE+COPY of Maps), Phase 2 (chunked detail
+        copy with per-chunk commits), Phase 3 (sequence reset).
+        """
         map_type = options["map_type"]
         page_size = options["page_size"]
         after_id = options["after_id"]
