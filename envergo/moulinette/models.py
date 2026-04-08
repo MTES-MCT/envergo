@@ -1595,19 +1595,15 @@ class MoulinetteUrlMixin:
     @abstractmethod
     def moulinette_data(self):
         """Return the moulinette data."""
-        pass
-
-    @abstractmethod
-    def get_department(self):
-        pass
+        raise NotImplementedError
 
     @cached_property
     def department(self):
-        return self.get_department()
+        raise NotImplementedError
 
     @abstractmethod
     def get_config(self):
-        pass
+        raise NotImplementedError
 
     @cached_property
     def config(self):
@@ -1627,18 +1623,6 @@ class MoulinetteUrlMixin:
 
 class MoulinetteHaieUrlMixin(MoulinetteUrlMixin):
     """A mixin for object containing a moulinette Haie url"""
-
-    def get_department(self):
-        dept = self.moulinette_data.get("department", None)
-        if dept is None:
-            return None
-
-        qs = (
-            Department.objects.defer("geometry")
-            .annotate(centroid=Centroid("geometry"))
-            .filter(department=dept)
-        )
-        return qs.first()
 
     def get_config(self):
         if not self.department:
@@ -1699,6 +1683,14 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
     def is_evaluated(self):
         return self._is_evaluated
+
+    @cached_property
+    def department(self):
+        return self.get_department()
+
+    @abstractmethod
+    def get_department(self):
+        raise NotImplementedError
 
     def get_main_form(self):
         """Return the instanciated main moulinette form."""
@@ -2699,6 +2691,18 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
 
         return data
+
+    def get_department(self):
+        dept = self.moulinette_data.get("department", None)
+        if dept is None:
+            return None
+
+        qs = (
+            Department.objects.defer("geometry")
+            .annotate(centroid=Centroid("geometry"))
+            .filter(department=dept)
+        )
+        return qs.first()
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
