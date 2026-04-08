@@ -442,12 +442,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     @cached_property
     def moulinette_data(self):
         data = self._parse_moulinette_data()
-        if "haies" in data:
-            try:
-                data["haies"] = HedgeData.objects.get(id=data["haies"])
-            except HedgeData.DoesNotExist:
-                pass
-
+        # use the HedgeData object instead of the uuid to emulate a form like behavior usually used by the moulinette
+        data["haies"] = self.hedge_data
         return data
 
     def has_view_permission(self, user):

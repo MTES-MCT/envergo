@@ -1033,6 +1033,9 @@ class PetitionProjectInstructorDossierDSView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
+
         project_details = compute_instructor_informations_ds(
             self.object
         )  # compute DS details first as it will force update the dossier cache
