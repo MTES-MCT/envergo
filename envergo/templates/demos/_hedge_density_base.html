@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% load static l10n evaluations moulinette %}
+
+{% block title %}Démonstrateur densité de haie{% endblock %}
+
+{% block main-classes %}demos{% endblock %}
+
+{% block content %}
+  <article id="{% block article_id %}{% endblock %}">
+    <h1>
+      {% block article_heading %}{% endblock %}
+    </h1>
+    <div class="fr-grid-row fr-grid-row--gutters">
+      <div class="fr-col-7">
+        {% block map_column %}
+          <div class="ratio-4x3 ratio-sm-4x5 fr-my-3w">
+            <div class="ratio-content">
+              <div id="map"></div>
+            </div>
+          </div>
+        {% endblock %}
+      </div>
+      <div class="fr-col-5">
+
+        {% if result_available %}
+          <div class="fr-table fr-mb-3w">
+            <div class="fr-table__wrapper">
+              <div class="fr-table__container">
+                <div class="fr-table__content">
+                  {% block table %}{% endblock %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          {% block no_result %}{% endblock %}
+        {% endif %}
+
+        {% block feedback %}{% endblock %}
+
+        <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
+      </div>
+    </div>
+  </article>
+{% endblock %}
+
+{% block extra_body %}{% endblock %}
+
+{% block extra_css %}
+  <link href="{% static 'leaflet/dist/leaflet.css' %}" rel="stylesheet">
+  <link href="{% static 'leaflet/draw/leaflet.draw.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
+  <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
+  <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
+  <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
+  <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
+  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+  <script>
+    var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
+    var CENTER_MAP = { lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }} };
+    var DEFAULT_ZOOM = {{ default_zoom }};
+    var LAT_FIELD_ID = "id_lat";
+    var LNG_FIELD_ID = "id_lng";
+    var POLYGONS = {{ polygons|default:"[]"|safe }};
+    var ENVELOPE = {{ envelope|default:"{}"|safe }};
+    var DEBUG = {{ debug|yesno:'true,false' }};
+    var LEGEND = [];
+
+    window.addEventListener("load", function() {
+      const options = {
+        displayMarker: DISPLAY_MARKER,
+        centerMap: CENTER_MAP,
+        defaultZoom: DEFAULT_ZOOM,
+        latFieldId: LAT_FIELD_ID,
+        lngFieldId: LNG_FIELD_ID,
+        polygons: POLYGONS,
+        envelope: ENVELOPE,
+        legend: LEGEND,
+        debug: DEBUG,
+        interactive: typeof IS_MAP_INTERACTIVE === "undefined" ? false : IS_MAP_INTERACTIVE,
+      };
+
+      let map = new DemoMap(options);
+    });
+  </script>
+{% endblock %}

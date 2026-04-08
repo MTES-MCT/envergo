@@ -9,12 +9,13 @@
 (function (exports, UrlMapping) {
   'use strict';
 
-  const ShareModal = function (dialogElt, shortenUrl) {
+  const ShareModal = function (dialogElt, shortenUrl, analyticEventName) {
     this.dialogElt = dialogElt;
     this.urlInput = dialogElt.querySelector("input[type=url]");
     this.shareBtn = dialogElt.querySelector("button[type=submit]");
     this.firstDisclosed = true;
     this.shortenUrl = shortenUrl;
+    this.analyticEventName = analyticEventName;
   };
   exports.ShareModal = ShareModal;
 
@@ -25,7 +26,7 @@
   };
 
   ShareModal.prototype.onModalDisclose = function () {
-    _paq.push(['trackEvent', 'ShareDialog', 'Disclose']);
+    _paq.push(['trackEvent', 'ShareDialog', 'Disclose', this.analyticEventName]);
 
     // Optionaly replacing current url with a short url
     if (this.firstDisclosed && this.shortenUrl && UrlMapping) {
@@ -41,7 +42,7 @@
   };
 
   ShareModal.prototype.onModalConceal = function () {
-    _paq.push(['trackEvent', 'ShareDialog', 'Conceal']);
+    _paq.push(['trackEvent', 'ShareDialog', 'Conceal', this.analyticEventName]);
   };
 
   ShareModal.prototype.copyUrlToClipboard = function () {
@@ -53,7 +54,7 @@
     this.shareBtn.classList.add('fr-btn--icon-left');
     this.shareBtn.classList.add('fr-icon-thumb-up-fill');
 
-    _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy']);
+    _paq.push(['trackEvent', 'ShareDialog', 'UrlCopy', this.analyticEventName]);
   };
 
 })(this, window.UrlMapping);
@@ -61,6 +62,7 @@
 window.addEventListener('load', function () {
   const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
   const shortenUrl = dialogElt.getAttribute('data-shorten-url') == "true";
-  var shareModal = new ShareModal(dialogElt, shortenUrl);
+  const analyticEventName = dialogElt.getAttribute('data-event-name');
+  const shareModal = new ShareModal(dialogElt, shortenUrl, analyticEventName);
   shareModal.init();
 });

@@ -1148,10 +1148,10 @@ button.hide-expanded[aria-expanded="true"] {
   vertical-align: top;
 }
 
-/* Density buffer */
-.demo-hedge-density-buffer {
-  thead th {
-    text-align: left;
+#hedge-density-demo,
+#hedge-density-buffer-demo {
+  .fr-search-bar .autocomplete__wrapper {
+    margin-top: 0;
   }
 }
 

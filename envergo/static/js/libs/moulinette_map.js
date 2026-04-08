@@ -48,50 +48,20 @@
    * Create and initialize the leaflet map and add default layers.
    */
   MoulinetteMap.prototype.initializeMap = function () {
-    const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
-      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
-      "&STYLE=normal" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/png" +
-      "&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-      maxZoom: 22,
-      maxNativeZoom: 19,
-      tileSize: 256,
-      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
-    });
+    const ignWmtsLayer = (layer, format) => L.tileLayer(
+      "https://data.geopf.fr/wmts?REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
+      "&STYLE=normal&TILEMATRIXSET=PM" +
+      `&FORMAT=${format}&LAYER=${layer}` +
+      "&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}", {
+        maxZoom: 22,
+        maxNativeZoom: 19,
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
+      });
 
-    const satelliteLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
-      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
-      "&STYLE=normal" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/jpeg" +
-      "&LAYER=ORTHOIMAGERY.ORTHOPHOTOS" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-      maxZoom: 22,
-      maxNativeZoom: 19,
-      tileSize: 256,
-      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
-    });
-
-    const pciLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
-      "&REQUEST=GetTile&SERVICE=WMTS&VERSION=1.0.0" +
-      "&STYLE=normal" +
-      "&TILEMATRIXSET=PM" +
-      "&FORMAT=image/png" +
-      "&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS" +
-      "&TILEMATRIX={z}" +
-      "&TILEROW={y}" +
-      "&TILECOL={x}", {
-      maxZoom: 22,
-      maxNativeZoom: 19,
-      tileSize: 256,
-      attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
-    });
+    const planLayer = ignWmtsLayer("GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "image/png");
+    const satelliteLayer = ignWmtsLayer("ORTHOIMAGERY.ORTHOPHOTOS", "image/jpeg");
+    const pciLayer = ignWmtsLayer("CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "image/png");
 
     var layers = [planLayer];
     if (this.options.showPciLayer) {
