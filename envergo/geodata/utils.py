@@ -652,7 +652,7 @@ def compute_hedge_density_around_point(point_geos, radius):
     # Check if the circle center is on land
     on_land = (
         Zone.objects.filter(map__map_type=MAP_TYPES.terres_emergees)
-        .filter(geometry__contains=point_geos)
+        .filter(geometry__covers=point_geos)
         .exists()
     )
     truncated_circle = None
