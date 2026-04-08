@@ -267,6 +267,27 @@ class TestContactHaie:
         assert response.status_code == 200
         assert "departments-data" in response.content.decode()
 
+    def test_multiple_valid_configs_for_same_department(self, client):
+        """Subquery must not break when multiple ConfigHaie exist for the same dept."""
+        dept = DepartmentFactory()
+        today = date.today()
+        DCConfigHaieFactory(
+            department=dept,
+            contacts_info="Contact A",
+            validity_range=DateRange(
+                today - timedelta(days=30), today + timedelta(days=1)
+            ),
+        )
+        DCConfigHaieFactory(
+            department=dept,
+            contacts_info="Contact B",
+            validity_range=DateRange(
+                today + timedelta(days=1), today + timedelta(days=60)
+            ),
+        )
+        response = client.get(reverse("contact_us"))
+        assert response.status_code == 200
+
     def test_post_not_allowed(self, client):
         """POST is no longer supported; contact info is handled client-side."""
         response = client.post(reverse("contact_us"), {})

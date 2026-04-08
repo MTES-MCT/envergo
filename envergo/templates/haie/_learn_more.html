@@ -10,11 +10,11 @@
     rel="noopener">l'aide en ligne et les questions fréquentes</a>
     </li>
     <li>
-      <a href="{% url 'contact_us' %}#contact-accordion-2-equipe">Contacter l'équipe</a> pour toute question sur l'utilisation du portail
+      <a href="{{ contact_url }}">Contacter l'équipe</a> pour toute question sur l'utilisation du portail
     </li>
     {% try_get_department_code as dept_code %}
     <li>
-      <a href="{% url 'contact_us' %}{% if dept_code %}?department={{ dept_code }}{% endif %}#contact-accordion-3-dossier">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d'instruction
+      <a href="{% url 'contact_us' %}{% if dept_code %}?department={{ dept_code }}{% endif %}{{ contact_dossier_anchor }}">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d'instruction
     </li>
   </ul>
 </div>

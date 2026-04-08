@@ -1,23 +1,35 @@
-window.addEventListener("load", function () {
-  var raw = document.getElementById("departments-data");
-  if (!raw) return;
-  var departments = JSON.parse(raw.textContent);
+document.addEventListener("DOMContentLoaded", function () {
+  const raw = document.getElementById("departments-data");
+  if (!raw) {
+    return;
+  }
+  const departments = JSON.parse(raw.textContent);
 
-  var byLabel = {};
-  departments.forEach(function (d) {
-    byLabel[d.label] = d;
-  });
-
-  var container = document.getElementById("department-combobox");
-  var infoContainer = document.getElementById("contacts-info-container");
+  const container = document.getElementById("department-combobox");
+  const infoContainer = document.getElementById("contacts-info-container");
   if (!container || !infoContainer) return;
 
-  var urlCode = new URLSearchParams(window.location.search).get("department");
-  var preSelected = urlCode
+  const urlCode = new URLSearchParams(window.location.search).get("department");
+  const preSelected = urlCode
     ? departments.find(function (d) {
         return d.code === urlCode;
       })
     : null;
+
+  const clearBtn = document.createElement("button");
+  function showContactInfo(dept) {
+    if (dept.contacts_info) {
+      infoContainer.innerHTML =
+        '<div class="fr-highlight fr-mt-4w fr-p-2w">' +
+        dept.contacts_info +
+        "</div>";
+    } else {
+      infoContainer.innerHTML =
+        '<p class="fr-text--sm fr-my-2w fr-error-text">' +
+        "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles." +
+        "</p>";
+    }
+  }
 
   accessibleAutocomplete({
     element: container,
@@ -36,7 +48,7 @@ window.addEventListener("load", function () {
           })
         );
       } else {
-        var q = query.toLowerCase();
+        const q = query.toLowerCase();
         populateResults(
           departments
             .filter(function (d) {
@@ -52,11 +64,16 @@ window.addEventListener("load", function () {
       }
     },
     onConfirm: function (value) {
-      if (!value) return;
-      var dept = byLabel[value];
-      if (!dept) return;
+      if (!value) {
+        return;
+      }
+      const dept = departments.find((d) => d.label === value);
+      if (!dept) {
+        console.warn("department_combobox: département introuvable pour", value);
+        return;
+      }
       showContactInfo(dept);
-      var url = new URL(window.location);
+      const url = new URL(window.location);
       url.searchParams.set("department", dept.code);
       history.replaceState({}, "", url);
       clearBtn.style.display = "";
@@ -65,7 +82,7 @@ window.addEventListener("load", function () {
 
   if (preSelected) showContactInfo(preSelected);
 
-  var clearBtn = document.createElement("button");
+
   clearBtn.type = "button";
   clearBtn.className = "fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-btn--icon-only fr-icon-close-line department-combobox-clear";
   clearBtn.title = "Effacer";
@@ -76,23 +93,9 @@ window.addEventListener("load", function () {
   clearBtn.addEventListener("click", function () {
     document.getElementById("department").value = "";
     infoContainer.innerHTML = "";
-    var url = new URL(window.location);
+    const url = new URL(window.location);
     url.searchParams.delete("department");
     history.replaceState({}, "", url);
     clearBtn.style.display = "none";
   });
-
-  function showContactInfo(dept) {
-    if (dept.contacts_info) {
-      infoContainer.innerHTML =
-        '<div class="fr-highlight fr-mt-4w fr-p-2w">' +
-        dept.contacts_info +
-        "</div>";
-    } else {
-      infoContainer.innerHTML =
-        '<p class="fr-text--sm fr-my-2w fr-error-text">' +
-        "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles." +
-        "</p>";
-    }
-  }
 });

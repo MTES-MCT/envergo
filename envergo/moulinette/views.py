@@ -662,7 +662,7 @@ class Triage(MoulinetteMixin, FormView):
 
         config = self.moulinette.get_config()
         if not config:
-            return HttpResponseRedirect(f"{reverse("home")}#simulateur")
+            return HttpResponseRedirect(f"{reverse('home')}#simulateur")
 
         event_params = {
             "department": self.moulinette.department.department,
@@ -849,8 +849,9 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["department_members"] = departement_members_dict
 
         # Get activation maps for criteria in regulations related to this department
+        #   natura2000_haie map is displayed with custom message : "Map import processing"
+        #   protection_captages map is displayed with custom message : "Data not publicly available"
         MAPS_REGULATION_LIST = [
-            "natura2000_haie",
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
