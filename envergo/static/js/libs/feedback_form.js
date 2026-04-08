@@ -1,5 +1,5 @@
 // This module handles the "Is this evaluation useful" feedback form
-(function (exports, _paq) {
+(function (exports) {
   'use strict';
 
   const FeedbackModal = function (dialogElt) {
@@ -64,7 +64,7 @@
 
   };
 
-})(this, window._paq);
+})(this);
 
 window.addEventListener('load', function () {
   const dialogs = document.querySelectorAll(FEEDBACK_MODAL_DIALOGS);

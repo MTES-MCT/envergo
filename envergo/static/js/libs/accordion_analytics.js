@@ -4,17 +4,17 @@
  * Whenever an accordion section is opened, we push a new state then update
  * stats using matomo.
  *
- * Note : in it's current state, there is no easy way to bind into dsfr's
+ * Note : in its current state, there is no easy way to bind into dsfr's
  * events, so we use MutationObservers to detect whenever a section is
  * opened.
  */
-(function (exports, _paq) {
+(function (exports) {
   'use strict';
 
-  const AccordionAnalytics = function (accordionElt) {
+  const AccordionAnalytics = function (accordionElt, customizeMatomoUrl=(url)=>url) {
     this.accordionElt = accordionElt;
+    this.customizeMatomoUrl = customizeMatomoUrl;
     this.currentHash = window.location.hash.substring(1);
-    this.init();
 
     if (this.currentHash) {
       this.openSection(this.currentHash);
@@ -32,12 +32,12 @@
    */
   AccordionAnalytics.prototype.observeCollapsible = function (collapsible) {
     collapsible.addEventListener('dsfr.disclose', this.trackAccordionDisplay.bind(this, collapsible));
-    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this));
+    collapsible.addEventListener('dsfr.conceal', this.untrackAccordionDisplay.bind(this, collapsible));
   };
 
   AccordionAnalytics.prototype.trackAccordionDisplay = function (collapsible) {
     history.replaceState(null, '', `#${collapsible.id}`);
-    _paq.push(['setCustomUrl', window.location.href]);
+    _paq.push(['setCustomUrl',  this.customizeMatomoUrl(window.location.href)]);
     _paq.push(['trackPageView']);
   };
 
@@ -57,8 +57,11 @@
     }
   };
 
-  AccordionAnalytics.prototype.untrackAccordionDisplay = function () {
-    history.replaceState(null, '', '#');
+  AccordionAnalytics.prototype.untrackAccordionDisplay = function (collapsible) {
+    // remove hash only if it is the accordion id
+    if (window.location.hash === `#${collapsible.id}`) {
+      history.replaceState(null, '', '#');
+    }
   };
 
-})(this, window._paq);
+})(this);

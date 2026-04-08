@@ -46,3 +46,13 @@ def get_instructor_view_context(
         )
     # if there is no specific function registered for this evaluator class, return an empty context
     return {}
+
+
+def get_line_buffer_density_context(petition_project, moulinette):
+    """Build the shared density context used by line-buffer evaluator instructor views."""
+    return {
+        "density_400": moulinette.catalog.get("density_400"),
+        "density_400_length": moulinette.catalog.get("density_400_length"),
+        "density_400_area_ha": moulinette.catalog.get("density_400_area_ha"),
+        "hedge_data_id": petition_project.hedge_data.id,
+    }

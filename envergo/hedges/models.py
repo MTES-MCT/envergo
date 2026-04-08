@@ -504,43 +504,49 @@ class HedgeData(models.Model):
         return compute_hedge_density_around_lines(hedges_to_remove_mls_merged, 400)
 
     @property
-    def density(self):
-        """Returns pre-computed density of hedges if it exists, otherwise compute it.
+    def density_around_centroid(self):
+        """Lazily compute and cache centroid-based density (200m + 5000m circles)."""
 
-        Two compute methods are existing:
-        - one around centroid
-        - one around lines, inside a buffer around hedges to remove
-        """
-        if (
-            not self._density
-            or "around_centroid" not in self._density
-            or "around_lines" not in self._density
-        ):
-            # Density around centroid
+        if not self._density or "around_centroid" not in self._density:
             density_200, density_5000, _ = (
                 self.compute_density_around_points_with_artifacts()
             )
-            # Density inside buffer
-            density_400_buffer = self.compute_density_around_lines_with_artifacts()
-
-            self._density = {
-                "around_centroid": {
-                    "length_200": density_200["artifacts"]["length"],
-                    "length_5000": density_5000["artifacts"]["length"],
-                    "area_200_ha": density_200["artifacts"]["area_ha"],
-                    "area_5000_ha": density_5000["artifacts"]["area_ha"],
-                    "density_200": density_200["density"],
-                    "density_5000": density_5000["density"],
-                },
-                "around_lines": {
-                    "length_400": density_400_buffer["artifacts"]["length"],
-                    "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
-                    "density_400": density_400_buffer["density"],
-                },
+            if not self._density:
+                self._density = {}
+            self._density["around_centroid"] = {
+                "length_200": density_200["artifacts"]["length"],
+                "length_5000": density_5000["artifacts"]["length"],
+                "area_200_ha": density_200["artifacts"]["area_ha"],
+                "area_5000_ha": density_5000["artifacts"]["area_ha"],
+                "density_200": density_200["density"],
+                "density_5000": density_5000["density"],
             }
             self.save()
+        return self._density["around_centroid"]
 
-        return self._density
+    @property
+    def density_around_lines(self):
+        """Lazily compute and cache line-buffer density (400m buffer)."""
+
+        if not self._density or "around_lines" not in self._density:
+            density_400_buffer = self.compute_density_around_lines_with_artifacts()
+            if not self._density:
+                self._density = {}
+            self._density["around_lines"] = {
+                "length_400": density_400_buffer["artifacts"]["length"],
+                "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
+                "density_400": density_400_buffer["density"],
+            }
+            self.save()
+        return self._density["around_lines"]
+
+    @property
+    def density(self):
+        """Legacy method, deprecated."""
+
+        raise AttributeError(
+            "Use density_around_centroid or density_around_lines instead of density."
+        )
 
     def has_hedges_outside_department(self, department: Department):
         """
