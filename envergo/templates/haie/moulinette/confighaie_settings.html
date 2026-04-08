@@ -43,7 +43,7 @@
            rel="noopener">Modifier les informations de contact</a>
       </p>
 
-      <div class="fr-highlight fr-mb-3w">{{ object.contacts_info|safe }}</div>
+      <div class="fr-mt-4w fr-mb-4w fr-highlight fr-highlight--beige-gris-galet">{{ object.contacts_info|safe }}</div>
 
       <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
 
@@ -59,6 +59,12 @@
              rel="noopener">Signaler une erreur / transmettre une carte</a>
         </p>
       </div>
+
+      <h3 class="fr-h5">Natura 2000</h3>
+
+      <p>
+        <em>Carte en cours d'import dans le portail.</em>
+      </p>
 
       {% for regulation in regulation_list %}
         <h3 class="fr-h5">{{ regulation.title }}</h3>
