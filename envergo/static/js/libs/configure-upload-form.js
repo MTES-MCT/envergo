@@ -68,9 +68,16 @@ window.addEventListener('load', function () {
         file.id = response.id;
       });
 
-      this.on("error", function (file, message) {
+      this.on("error", function (file, message, xhr) {
         this.errors[file.upload.uuid] = file;
         form.classList.add('has-errors');
+
+        if (!xhr || xhr.status === 0 || xhr.status >= 500) {
+          var errorSpan = file.previewElement && file.previewElement.querySelector('.dz-error-message span');
+          if (errorSpan) {
+            errorSpan.textContent = "Le fichier a mis trop de temps à être envoyé. Réessayez, ou contactez-nous si le problème persiste.";
+          }
+        }
       }.bind(this));
 
       this.on('maxfilesreached', function () { }.bind(this));
@@ -80,7 +87,7 @@ window.addEventListener('load', function () {
       // Send a request to the server to request the file deletion
       this.on("removedfile", function (file) {
 
-        // If the file had failed to upload, remove it from the errors list
+        // If the file had failed to upload, remove it from the errors lists
         if (file.upload) {
           let uuid = file.upload.uuid;
           if (uuid in this.errors) {
