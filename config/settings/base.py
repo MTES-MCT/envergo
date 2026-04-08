@@ -415,6 +415,10 @@ MAX_HEDGES_DRAWING_TOTAL_LENGTH = env.int(
 CONTACT_TEAM_ANCHOR = "#contact-accordion-2-equipe"
 CONTACT_DOSSIER_ANCHOR = "#contact-accordion-3-dossier"
 
+MAX_HEDGES_DRAWING_TOTAL_LENGTH = env.int(
+    "MAX_HEDGES_DRAWING_TOTAL_LENGTH", default=10000
+)  # meters
+
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
