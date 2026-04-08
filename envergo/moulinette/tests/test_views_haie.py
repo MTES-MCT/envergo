@@ -629,7 +629,8 @@ def test_confighaie_settings_view_map_display(
     # THEN department config page is displayed
     assert response.status_code == 200
     # AND only one criterion is in context_data
-    assert len(response.context_data["grouped_criteria"]) == 2
+    # When re-adding Natura2000Haie maps, change following assertion to == 2
+    assert len(response.context_data["grouped_criteria"]) == 1
     # AND activation map bizou is in page
     content = response.content.decode()
     assert bizous_town_center.name in content

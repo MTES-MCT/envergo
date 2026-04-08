@@ -507,7 +507,7 @@ class TriageFormHaie(forms.Form):
         widget=forms.RadioSelect,
         choices=extract_choices(CONTEXT_CHOICES),
         required=True,
-        display_label="Travaux dans le cadre d’un projet soumis à autorisation urbanisme :",
+        display_label="Travaux réalisés dans le cadre d’un projet soumis à autorisation d'urbanisme :",
         get_display_value=extract_display_function(CONTEXT_CHOICES),
     )
 
