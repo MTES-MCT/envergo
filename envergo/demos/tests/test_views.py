@@ -79,10 +79,7 @@ def test_hedges_density_around_point_demo_off_land(client):
     1. Off-land density is the sentinel `1.0` and `truncated_circle` is
        `None`.
     2. The display geometry is STILL populated — clicking outside any land
-       zone must not strip nearby hedges from the map. This is critical
-       once the display fetch is folded into the same SQL query as the
-       length aggregation: the bundle function must use the largest
-       *untruncated* circle for the WHERE clause.
+       zone must not strip nearby hedges from the map.
     """
     LineFactory()
     TerresEmergeesZoneFactory(geometry=herault_multipolygon)
