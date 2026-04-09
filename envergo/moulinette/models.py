@@ -2587,14 +2587,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         if "haies" in self.catalog:
             haies = self.catalog["haies"]
-            summary["longueur_detruite"] = haies.length_to_remove()
-            summary["longueur_plantee"] = haies.length_to_plant()
-            hedge_centroid_coords = haies.get_centroid_to_remove()
-            summary["lnglat_centroide_haie_detruite"] = (
-                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
-            )
-            summary["dept_haie_detruite"] = haies.get_department()
-
+            summary.update(haies.get_statistics())
         return summary
 
     def get_debug_context(self):

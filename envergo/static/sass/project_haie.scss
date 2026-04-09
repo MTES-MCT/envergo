@@ -7,6 +7,12 @@ div#moulinette {
   fieldset .fr-fieldset__legend.fr-text--regular {
     font-weight: bold !important;
   }
+
+  #statistics {
+    p {
+      margin-bottom: 0.5rem;
+    }
+  }
 }
 
 main.home {

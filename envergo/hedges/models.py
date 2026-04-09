@@ -298,6 +298,25 @@ class HedgeList(list[Hedge]):
         """
         return HedgeList([h for h in self if h.hedge_type != HedgeTypeBase.ALIGNEMENT])
 
+    def ru(self) -> Self:
+        """Select all hedges that are covered by the single procedure (régime unique, RU)."""
+        return (
+            self.n_alignement()
+            .prop("!bord_batiment")
+            .prop("!parc_jardin")
+            .prop("!place_publique")
+        )
+
+    def l350_3(self) -> Self:
+        """Select all tree alignment that are covered the L350-3 regulation."""
+        return self.alignement().prop("bord_voie")
+
+    def hru(self) -> Self:
+        """Select all hedges are not covered by either the single procedure or L350-3"""
+        ru = self.ru()
+        l350_3 = self.l350_3()
+        return HedgeList([h for h in self if h not in ru and h not in l350_3])
+
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
         return HedgeList([h for h in self if f(h)])
@@ -565,6 +584,32 @@ class HedgeData(models.Model):
             if not department_geom.intersects(hedge.geos_geometry):
                 return True
         return False
+
+    def get_statistics(self):
+        hedge_centroid_coords = self.get_centroid_to_remove()
+        return {
+            "longueur_detruite": round(self.length_to_remove(), 1),
+            "longueur_plantee": round(self.length_to_plant(), 1),
+            "nb_traces_categ": {
+                "ru": len(self.hedges().ru()),
+                "l350-3": len(self.hedges().l350_3()),
+                "hru": len(self.hedges().hru()),
+            },
+            "longueur_detruite_categ": {
+                "ru": round(self.hedges_to_remove().ru().length, 1),
+                "l350-3": round(self.hedges_to_remove().l350_3().length, 1),
+                "hru": round(self.hedges_to_remove().hru().length, 1),
+            },
+            "longueur_plantee_categ": {
+                "ru": round(self.hedges_to_plant().ru().length, 1),
+                "l350-3": round(self.hedges_to_plant().l350_3().length, 1),
+                "hru": round(self.hedges_to_plant().hru().length, 1),
+            },
+            "lnglat_centroide_haie_detruite": (
+                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
+            ),
+            "dept_haie_detruite": self.get_department(),
+        }
 
 
 SPECIES_GROUPS = Choices(
