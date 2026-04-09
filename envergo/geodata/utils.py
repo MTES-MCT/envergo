@@ -694,6 +694,189 @@ def compute_hedge_density_around_point(point_geos, radius):
     }
 
 
+WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
+EMPTY_POLYGON_EWKT = "SRID=4326;POLYGON EMPTY"
+
+
+def buffer_to_ewkt(geom):
+    """Return EWKT for a buffer geometry, or POLYGON EMPTY if None/empty."""
+
+    if geom is not None and not geom.empty:
+        return geom.ewkt
+    return EMPTY_POLYGON_EWKT
+
+
+def query_hedge_lengths_for_buffers(truncated_buffers, bbox_filter_buffer):
+    """Aggregate clipped hedge length for several buffers in a single SQL query.
+
+    Returns {radius: length_in_meters}.
+    """
+
+    radii = list(truncated_buffers.keys())
+    params = {"bbox": bbox_filter_buffer.ewkt, "map_type": MAP_TYPES.haies}
+
+    # One SUM(clipped length) column per radius
+    columns = []
+    for i, r in enumerate(radii):
+        param = f"b_{i}"
+        params[param] = buffer_to_ewkt(truncated_buffers[r])
+        columns.append(
+            f"COALESCE(SUM(ST_LengthSpheroid("
+            f"ST_Intersection(l.geometry, ST_GeomFromEWKT(%({param})s))"
+            f"::geometry(GEOMETRY,4326),"
+            f"'{WGS84_SPHEROID}'"
+            f")), 0) AS l_{i}"
+        )
+
+    sql = f"""
+        SELECT {', '.join(columns)}
+        FROM geodata_line l
+        JOIN geodata_map m ON l.map_id = m.id
+        WHERE m.map_type = %(map_type)s
+          AND ST_Intersects(l.geometry, ST_GeomFromEWKT(%(bbox)s));
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params)
+        row = cursor.fetchone()
+
+    return {r: row[i] for i, r in enumerate(radii)}
+
+
+def query_hedges_display_geojson(buffer_geos, simplify_tolerance):
+    """Return simplified hedge geometries inside `buffer_geos` as GeoJSON.
+
+    Returns a parsed MultiLineString dict, or None if no haies match.
+    ST_Multi wraps the ST_Collect result to guarantee MultiLineString
+    output (ST_Collect alone can return GeometryCollection).
+
+    This is a separate query from `query_hedge_lengths_for_buffers` because
+    combining them into a single scan was empirically ~430 ms slower.
+    """
+
+    sql = """
+        SELECT ST_AsGeoJSON(ST_Multi(ST_Collect(
+            ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s)
+        )))
+        FROM geodata_line l
+        JOIN geodata_map m ON l.map_id = m.id
+        WHERE m.map_type = %(map_type)s
+          AND ST_Intersects(l.geometry, ST_GeomFromEWKT(%(buffer)s));
+    """
+    params = {
+        "tol": simplify_tolerance,
+        "map_type": MAP_TYPES.haies,
+        "buffer": buffer_geos.ewkt,
+    }
+    with connection.cursor() as cursor:
+        cursor.execute(sql, params)
+        raw = cursor.fetchone()[0]
+    if raw is None:
+        return None
+    return json.loads(raw)
+
+
+def build_circles(point_geos, radii):
+    """Build WGS84 circle polygons for each radius by buffering in UTM."""
+
+    epsg_utm = get_best_epsg_for_location(point_geos.x, point_geos.y)
+    centroid_m = point_geos.transform(epsg_utm, clone=True)
+    circles = {r: centroid_m.buffer(r).transform(EPSG_WGS84, clone=True) for r in radii}
+    return circles, epsg_utm
+
+
+def trim_circles_to_land(circles):
+    """Trim each circle to land, calling `trim_land` only once (on the largest).
+
+    Smaller truncated circles are derived via GEOS intersection with the
+    largest result, which is mathematically equivalent to calling
+    `trim_land` on each circle individually.
+
+    Returns {radius: truncated_geom | None}.
+    """
+
+    max_r = max(circles)
+    truncated_max = trim_land(circles[max_r])
+    if truncated_max is None:
+        return {r: None for r in circles}
+
+    result = {}
+    for r in circles:
+        if r == max_r:
+            result[r] = truncated_max
+            continue
+        t = truncated_max.intersection(circles[r])
+        if t.empty:
+            result[r] = None
+        else:
+            t.srid = EPSG_WGS84
+            result[r] = t
+    return result
+
+
+def area_in_ha(geom, epsg_utm):
+    """Compute area in hectares by projecting to the given UTM zone."""
+
+    if geom is None:
+        return 0.0
+    return geom.transform(epsg_utm, clone=True).area * 0.0001
+
+
+def compute_hedge_densities_around_point(
+    point_geos,
+    radii,
+    *,
+    display_simplify_tolerance=None,
+):
+    """Compute hedge density at multiple concentric radii around a point.
+
+    For the given point, for each radius:
+     - build a circle polygon
+     - trim it to land (sea excluded)
+     - get the hedges length inside that circle
+     - divide length by land area to get density
+
+    Returns {radius: {"density", "artifacts": {...}}, "display_geojson": ...}.
+    Off-land radii get the sentinel (density=1.0, length=0, area_ha=0).
+    """
+
+    if not radii:
+        raise ValueError("radii must be a non-empty iterable")
+    radii = list(radii)
+
+    # Build the multiple land-intersecting circle geometries
+    circles, epsg_utm = build_circles(point_geos, radii)
+    truncated = trim_circles_to_land(circles)
+    max_circle = circles[max(radii)]
+
+    # Compute the sum of hedge lengths for each circle
+    lengths = query_hedge_lengths_for_buffers(truncated, max_circle)
+
+    # Build the result dict
+    result = {}
+    for r in radii:
+        ha = area_in_ha(truncated[r], epsg_utm)
+        density = lengths[r] / ha if truncated[r] and ha > 0 else 1.0
+        result[r] = {
+            "density": density,
+            "artifacts": {
+                "circle": circles[r],
+                "truncated_circle": truncated[r],
+                "length": lengths[r],
+                "area_ha": ha,
+            },
+        }
+
+    # Run a distinct query for the hedges lines to display with leaflet
+    # It's quicker and lighter to display simplified geometries
+    if display_simplify_tolerance is not None:
+        result["display_geojson"] = query_hedges_display_geojson(
+            max_circle, display_simplify_tolerance
+        )
+
+    return result
+
+
 def compute_hedge_density_around_lines(line_geos, radius):
     """Compute the density of hedges in buffer radius."""
 

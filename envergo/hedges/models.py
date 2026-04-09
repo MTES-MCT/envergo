@@ -17,8 +17,8 @@ from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import Department, Zone
 from envergo.geodata.utils import (
+    compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
-    compute_hedge_density_around_point,
     get_department_from_coords,
 )
 
@@ -488,14 +488,11 @@ class HedgeData(models.Model):
     def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
-        # get two circles at 200m and 5000m from the centroid of the hedges to remove
         centroid_shapely = self.get_centroid_to_remove()
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
+        bundle = compute_hedge_densities_around_point(centroid_geos, radii=[200, 5000])
 
-        density_200 = compute_hedge_density_around_point(centroid_geos, 200)
-        density_5000 = compute_hedge_density_around_point(centroid_geos, 5000)
-
-        return density_200, density_5000, centroid_geos
+        return bundle[200], bundle[5000], centroid_geos
 
     def compute_density_around_lines_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove in 400m buffer."""
