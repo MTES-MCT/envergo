@@ -658,42 +658,6 @@ def compute_hedge_density_data(buffer_zone, epsg_utm):
     return length, area_ha, density
 
 
-def compute_hedge_density_around_point(point_geos, radius):
-    """Compute the density of hedges around a point."""
-
-    # use specific projection to be able to use meters for buffering
-    epsg_utm = get_best_epsg_for_location(point_geos.x, point_geos.y)
-    centroid_meter = point_geos.transform(epsg_utm, clone=True)
-    circle = centroid_meter.buffer(radius)
-    circle = circle.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
-
-    # Initially, we were first running a pre-check to see if the project was
-    # actually in land. Otherwise, would would return a sentinel density of 1.0
-    # That pre-check was measured to add query time instead of saving it,
-    # so it was removed.
-    truncated_circle = trim_land(circle)
-
-    if truncated_circle:
-        length, area_ha, density = compute_hedge_density_data(
-            truncated_circle, epsg_utm
-        )
-    else:
-        # there is no land in the circle (e.g. sea or foreign country)
-        length = Distance(0)
-        area_ha = 0.0
-        density = 1.0
-
-    return {
-        "density": density,
-        "artifacts": {
-            "circle": circle,
-            "truncated_circle": truncated_circle,
-            "length": length.standard,
-            "area_ha": area_ha,
-        },
-    }
-
-
 WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
 EMPTY_POLYGON_EWKT = "SRID=4326;POLYGON EMPTY"
 

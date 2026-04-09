@@ -15,7 +15,6 @@ from envergo.geodata.tests.factories import (
 from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
-    compute_hedge_density_around_point,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.haie]
@@ -51,26 +50,13 @@ APPROX = {"rel": 1e-9, "abs": 1e-9}
 def test_density_around_point_pinned_values(hedge_density_fixture, radius):
     """Per-radius density/length/area_ha must match pinned values."""
     expected = EXPECTED_AROUND_POINT[radius]
-    result = compute_hedge_density_around_point(hedge_density_fixture, radius)
+    bundle = compute_hedge_densities_around_point(hedge_density_fixture, radii=[radius])
+    result = bundle[radius]
 
     assert result["density"] == pytest.approx(expected["density"], **APPROX)
     assert result["artifacts"]["length"] == pytest.approx(expected["length"], **APPROX)
     assert result["artifacts"]["area_ha"] == pytest.approx(expected["area_ha"], **APPROX)
     assert result["artifacts"]["truncated_circle"] is not None
-
-
-def test_bundle_matches_legacy(hedge_density_fixture):
-    """Bundle function produces the same values as per-radius calls."""
-    radii = [200, 400, 5000]
-    bundle = compute_hedge_densities_around_point(hedge_density_fixture, radii)
-
-    for r in radii:
-        legacy = compute_hedge_density_around_point(hedge_density_fixture, r)
-        assert bundle[r]["density"] == pytest.approx(legacy["density"], **APPROX)
-        assert bundle[r]["artifacts"]["length"] == pytest.approx(legacy["artifacts"]["length"], **APPROX)
-        assert bundle[r]["artifacts"]["area_ha"] == pytest.approx(legacy["artifacts"]["area_ha"], **APPROX)
-
-    assert "display_geojson" not in bundle
 
 
 def test_bundle_display_geojson(hedge_density_fixture):
