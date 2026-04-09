@@ -10,16 +10,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
-from django.contrib.gis.db.models import GeometryField
-from django.contrib.gis.db.models.functions import Intersection, Length
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
-from django.contrib.gis.measure import Distance
 from django.contrib.gis.utils.layermapping import LayerMapping
 from django.core.serializers import serialize
 from django.db import connection
-from django.db.models import QuerySet, Sum
-from django.db.models.functions import Cast
+from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
@@ -632,32 +628,6 @@ def trim_land(geom):
         return trimmed_geom
 
 
-def compute_hedge_density_data(buffer_zone, epsg_utm):
-    """Compute hedge length, area in Ha and density"""
-
-    # compute the area in square meters with specific projection
-    truncated_buffer_zone_m = buffer_zone.transform(epsg_utm, clone=True)
-
-    area = truncated_buffer_zone_m.area
-    area_ha = area * 0.0001
-
-    # get the length of the hedges in the circles
-    length = (
-        Line.objects.filter(
-            geometry__intersects=buffer_zone,
-            map__map_type=MAP_TYPES.haies,
-        )
-        .annotate(clipped=Intersection("geometry", buffer_zone))
-        .annotate(length=Length(Cast("clipped", GeometryField())))
-        .aggregate(total=Sum("length"))["total"]
-    )
-    length = length if length else Distance(0)
-
-    density = length.standard / area_ha if area_ha > 0 else 0.0
-
-    return length, area_ha, density
-
-
 WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
 EMPTY_POLYGON_EWKT = "SRID=4326;POLYGON EMPTY"
 
@@ -856,22 +826,16 @@ def compute_hedge_density_around_lines(
     buffer_zone = line_meter.buffer(radius)
     buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)
 
-    truncated_buffer_zone = trim_land(buffer_zone)
-
-    if truncated_buffer_zone:
-        length, area_ha, density = compute_hedge_density_data(
-            truncated_buffer_zone, epsg_utm
-        )
-    else:
-        length = Distance(0)
-        area_ha = 0.0
-        density = 1.0
+    truncated = trim_land(buffer_zone)
+    lengths = query_hedge_lengths_for_buffers({radius: truncated}, buffer_zone)
+    ha = area_in_ha(truncated, epsg_utm)
+    density = lengths[radius] / ha if truncated and ha > 0 else 1.0
 
     artifacts = {
         "buffer_zone": buffer_zone,
-        "truncated_buffer_zone": truncated_buffer_zone,
-        "length": length.standard,
-        "area_ha": area_ha,
+        "truncated_buffer_zone": truncated,
+        "length": lengths[radius],
+        "area_ha": ha,
     }
 
     if display_simplify_tolerance is not None:
