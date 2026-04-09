@@ -629,70 +629,41 @@ def trim_land(geom):
 
 
 WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
-EMPTY_POLYGON_EWKT = "SRID=4326;POLYGON EMPTY"
 
 
-def buffer_to_ewkt(geom):
-    """Return EWKT for a buffer geometry, or POLYGON EMPTY if None/empty."""
+def query_hedge_length(truncated_buffer, untruncated_circle):
+    """Sum the clipped hedge length inside a buffer.
 
-    if geom is not None and not geom.empty:
-        return geom.ewkt
-    return EMPTY_POLYGON_EWKT
+    We need to compute lengths of hedges clipped to the circle, BUT running
+    ST_Intersection on every hedge is expensive. In many cases, most hedges
+    are fully INSIDE the circle.
 
+    So we use a CASE statement, and only run the intersection when the hedge
+    is not fully inside the circle.
 
-def query_hedge_lengths_for_buffers(truncated_buffers, untruncated_circle):
-    """Aggregate clipped hedge length for several buffers in a single SQL query.
-
-    We need to compute lengths of hedge clipped to the circles, BUT running
-    ST_Intersect on every hedge is expensive. In many cases, most hedges are fully
-    INSIDE the circle.
-
-    So we use a switch statement, and only run the intersection when the hedge is
-    not fully inside the circle.
-
-    In a simulation with heavy hedge density, we saw a ~10x speedup on the query.
+    In a simulation with heavy hedge density, it significantly improves the query perf.
 
     Args:
-        truncated_buffers: {radius: land-trimmed polygon | None}. Each hedge
-            is clipped to this shape before its length is summed.
+        truncated_buffer: land-trimmed polygon, or None if off-land.
         untruncated_circle: the raw circle before land trimming. Used for
             row filtering (WHERE) and as a fast containment check.
 
-    Returns {radius: length_in_meters}.
+    Returns length in meters (float).
     """
 
-    radii = list(truncated_buffers.keys())
+    if truncated_buffer is None or truncated_buffer.empty:
+        return 0.0
 
-    # No land in any buffer → all lengths are zero, skip the query.
-    if not any(t is not None and not t.empty for t in truncated_buffers.values()):
-        return {r: 0.0 for r in radii}
-
-    bbox_ewkt = untruncated_circle.ewkt
-
-    columns = []
-    query_params = []
-    for i, r in enumerate(radii):
-
-        # Build the conditional query
-        truncated = truncated_buffers[r]
-        columns.append(
-            f"""\
-            COALESCE(SUM(CASE
+    circle_ewkt = untruncated_circle.ewkt
+    sql = f"""
+        SELECT COALESCE(SUM(CASE
             WHEN ST_CoveredBy(l.geometry, ST_GeomFromEWKT(%s))
             THEN ST_LengthSpheroid(
                 l.geometry::geometry(GEOMETRY,4326), '{WGS84_SPHEROID}')
             ELSE ST_LengthSpheroid(
                 ST_Intersection(l.geometry, ST_GeomFromEWKT(%s))
                 ::geometry(GEOMETRY,4326), '{WGS84_SPHEROID}')
-            END), 0) AS l_{i}"""
-        )
-        query_params.extend([bbox_ewkt, buffer_to_ewkt(truncated)])
-
-    query_params.extend([MAP_TYPES.haies, bbox_ewkt])
-
-    # Run a single query to compute lenghs for each truncated buffer
-    sql = f"""
-        SELECT {', '.join(columns)}
+        END), 0)
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
         WHERE m.map_type = %s
@@ -700,10 +671,16 @@ def query_hedge_lengths_for_buffers(truncated_buffers, untruncated_circle):
     """
 
     with connection.cursor() as cursor:
-        cursor.execute(sql, query_params)
-        row = cursor.fetchone()
-
-    return {r: row[i] for i, r in enumerate(radii)}
+        cursor.execute(
+            sql,
+            [
+                circle_ewkt,
+                truncated_buffer.ewkt,
+                MAP_TYPES.haies,
+                circle_ewkt,
+            ],
+        )
+        return cursor.fetchone()[0]
 
 
 def query_hedges_display_geojson(buffer_geos, simplify_tolerance):
@@ -812,8 +789,8 @@ def compute_hedge_densities_around_point(
     truncated = trim_circles_to_land(circles)
     max_circle = circles[max(radii)]
 
-    # Compute the sum of hedge lengths for each circle
-    lengths = query_hedge_lengths_for_buffers(truncated, max_circle)
+    # One length query per radius, each focused on its own hedge set
+    lengths = {r: query_hedge_length(truncated[r], circles[r]) for r in radii}
 
     # Build the result dict
     result = {}
@@ -856,14 +833,14 @@ def compute_hedge_density_around_lines(
     buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)
 
     truncated = trim_land(buffer_zone)
-    lengths = query_hedge_lengths_for_buffers({radius: truncated}, buffer_zone)
+    length_m = query_hedge_length(truncated, buffer_zone)
     ha = area_in_ha(truncated, epsg_utm)
-    density = lengths[radius] / ha if truncated and ha > 0 else 1.0
+    density = length_m / ha if truncated and ha > 0 else 1.0
 
     artifacts = {
         "buffer_zone": buffer_zone,
         "truncated_buffer_zone": truncated,
-        "length": lengths[radius],
+        "length": length_m,
         "area_ha": ha,
     }
 

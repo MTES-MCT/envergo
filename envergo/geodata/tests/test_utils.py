@@ -46,17 +46,24 @@ EXPECTED_AROUND_LINES_400 = {
 APPROX = {"rel": 1e-9, "abs": 1e-9}
 
 
-@pytest.mark.parametrize("radius", [200, 400, 5000])
-def test_density_around_point_pinned_values(hedge_density_fixture, radius):
-    """Per-radius density/length/area_ha must match pinned values."""
-    expected = EXPECTED_AROUND_POINT[radius]
-    bundle = compute_hedge_densities_around_point(hedge_density_fixture, radii=[radius])
-    result = bundle[radius]
+def test_density_around_point_pinned_values(hedge_density_fixture):
+    """Per-radius density/length/area_ha must match pinned values.
 
-    assert result["density"] == pytest.approx(expected["density"], **APPROX)
-    assert result["artifacts"]["length"] == pytest.approx(expected["length"], **APPROX)
-    assert result["artifacts"]["area_ha"] == pytest.approx(expected["area_ha"], **APPROX)
-    assert result["artifacts"]["truncated_circle"] is not None
+    All radii are bundled in a single call — this is critical because
+    the query uses the largest circle for row filtering and fast-path
+    containment. A per-radius parameterized test would hide bugs where
+    smaller radii get inflated by the larger circle's containment check.
+    """
+    bundle = compute_hedge_densities_around_point(
+        hedge_density_fixture, radii=[200, 400, 5000]
+    )
+
+    for radius, expected in EXPECTED_AROUND_POINT.items():
+        result = bundle[radius]
+        assert result["density"] == pytest.approx(expected["density"], **APPROX)
+        assert result["artifacts"]["length"] == pytest.approx(expected["length"], **APPROX)
+        assert result["artifacts"]["area_ha"] == pytest.approx(expected["area_ha"], **APPROX)
+        assert result["artifacts"]["truncated_circle"] is not None
 
 
 def test_bundle_display_geojson(hedge_density_fixture):
