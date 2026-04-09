@@ -33,8 +33,16 @@ def hedge_density_fixture():
 
 EXPECTED_AROUND_POINT = {
     200: {"density": 0.0, "length": 0.0, "area_ha": 12.485780609039368},
-    400: {"density": 20.041485812958307, "length": 1000.9343797592853, "area_ha": 49.943122436167236},
-    5000: {"density": 1.2553400466934896, "length": 9796.187757968033, "area_ha": 7803.612880645973},
+    400: {
+        "density": 20.041485812958307,
+        "length": 1000.9343797592853,
+        "area_ha": 49.943122436167236,
+    },
+    5000: {
+        "density": 1.2553400466934896,
+        "length": 9796.187757968033,
+        "area_ha": 7803.612880645973,
+    },
 }
 
 EXPECTED_AROUND_LINES_400 = {
@@ -61,15 +69,21 @@ def test_density_around_point_pinned_values(hedge_density_fixture):
     for radius, expected in EXPECTED_AROUND_POINT.items():
         result = bundle[radius]
         assert result["density"] == pytest.approx(expected["density"], **APPROX)
-        assert result["artifacts"]["length"] == pytest.approx(expected["length"], **APPROX)
-        assert result["artifacts"]["area_ha"] == pytest.approx(expected["area_ha"], **APPROX)
+        assert result["artifacts"]["length"] == pytest.approx(
+            expected["length"], **APPROX
+        )
+        assert result["artifacts"]["area_ha"] == pytest.approx(
+            expected["area_ha"], **APPROX
+        )
         assert result["artifacts"]["truncated_circle"] is not None
 
 
 def test_bundle_display_geojson(hedge_density_fixture):
     """Display geometry is a MultiLineString when tolerance is set."""
     bundle = compute_hedge_densities_around_point(
-        hedge_density_fixture, radii=[200, 400, 5000], display_simplify_tolerance=0.00005,
+        hedge_density_fixture,
+        radii=[200, 400, 5000],
+        display_simplify_tolerance=0.00005,
     )
     display = bundle["display_geojson"]
     assert display is not None
@@ -82,7 +96,9 @@ def test_bundle_off_land():
     LineFactory()
     p = Point(TEST_LNG, TEST_LAT, srid=4326)
     bundle = compute_hedge_densities_around_point(
-        p, radii=[200, 400, 5000], display_simplify_tolerance=0.00005,
+        p,
+        radii=[200, 400, 5000],
+        display_simplify_tolerance=0.00005,
     )
 
     for r in [200, 400, 5000]:
@@ -104,7 +120,13 @@ def test_density_around_lines_pinned_values(hedge_density_fixture):
 
     result = compute_hedge_density_around_lines(input_mls, 400)
 
-    assert result["density"] == pytest.approx(EXPECTED_AROUND_LINES_400["density"], **APPROX)
-    assert result["artifacts"]["length"] == pytest.approx(EXPECTED_AROUND_LINES_400["length"], **APPROX)
-    assert result["artifacts"]["area_ha"] == pytest.approx(EXPECTED_AROUND_LINES_400["area_ha"], **APPROX)
+    assert result["density"] == pytest.approx(
+        EXPECTED_AROUND_LINES_400["density"], **APPROX
+    )
+    assert result["artifacts"]["length"] == pytest.approx(
+        EXPECTED_AROUND_LINES_400["length"], **APPROX
+    )
+    assert result["artifacts"]["area_ha"] == pytest.approx(
+        EXPECTED_AROUND_LINES_400["area_ha"], **APPROX
+    )
     assert result["artifacts"]["truncated_buffer_zone"] is not None
