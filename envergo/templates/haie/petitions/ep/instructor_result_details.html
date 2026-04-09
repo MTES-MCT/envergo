@@ -2,22 +2,21 @@
 
 {% if density_400 is not None %}
   <h5 class="fr-mt-3w">Densité bocagère</h5>
-  <p>
-    <strong>Densité du bocage — rayon 400m :</strong> {{ density_400|floatformat:"1" }} ml/ha
+  <p class="fr-mb-1w">
+    <strong>Densité bocagère autour des haies à détruire (rayon 400 m) :</strong> {{ density_400|floatformat:"1" }} ml/ha
   </p>
-  <a class="fr-btn fr-btn--secondary"
+  <a class="fr-btn fr-btn--secondary fr-btn--sm"
      href="{% url 'demo_density_project' %}?haies={{ hedge_data_id }}">Voir le calcul de densité</a>
 {% endif %}
 
 {% if ep_ru_total_length is not None %}
-  <h5 class="fr-mt-3w">Paramètres pour le niveau de procédure</h5>
-  <p>
-    Les caractéristiques du projet et des haies détruites permettent de déterminer le niveau de procédure pour l'instruction espèces protégées.
-  </p>
-  <ul>
-    <li>Longueur totale à détruire : {{ ep_ru_total_length }} m</li>
-    <li>Longueur totale de ripisylves : {{ ep_ru_ripisylve_length }} m</li>
-    <li>Densité bocagère : {{ density_400|floatformat:"1" }} ml/ha</li>
+  <h5 class="fr-mt-3w">Niveau de procédure</h5>
+  <p><i>Le niveau de procédure espèces protégées (dispense de dérogation / dérogation « allégée » / dérogation « standard ») est déterminé
+    par les caractéristiques du projet dans son ensemble (linéaires, densité) et le type et la localisation de chacune des haies à détruire.</i></p>
+  <ul class="fr-mb-1w">
+    <li>Linéaire total haies à détruire : {{ ep_ru_total_length }} m</li>
+    <li>Linéaire total de ripisylves : {{ ep_ru_ripisylve_length }} m</li>
+    <li>Densité bocagère (rayon 400 m) : {{ density_400|floatformat:"1" }} ml/ha</li>
   </ul>
 
   {% if ep_ru_hedge_rows %}
@@ -26,7 +25,7 @@
         <div class="fr-table__container">
           <div class="fr-table__content">
             <table>
-              <caption>Caractéristiques des haies détruites</caption>
+              <caption>Caractéristiques des haies à détruire</caption>
               <thead>
                 <tr>
                   <th scope="col">Haie</th>
