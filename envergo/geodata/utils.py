@@ -877,17 +877,21 @@ def compute_hedge_densities_around_point(
     return result
 
 
-def compute_hedge_density_around_lines(line_geos, radius):
-    """Compute the density of hedges in buffer radius."""
+def compute_hedge_density_around_lines(
+    line_geos, radius, *, display_simplify_tolerance=None
+):
+    """Compute the density of hedges in buffer radius.
 
-    # use specific projection to be able to use meters for buffering
+    If `display_simplify_tolerance` is set, `artifacts` also contains a
+    `display_geojson` key with the simplified hedges inside the buffer.
+    """
+
     line_centroid = line_geos.centroid
     epsg_utm = get_best_epsg_for_location(line_centroid.x, line_centroid.y)
     line_meter = line_geos.transform(epsg_utm, clone=True)
     buffer_zone = line_meter.buffer(radius)
-    buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
+    buffer_zone = buffer_zone.transform(EPSG_WGS84, clone=True)
 
-    # Remove the sea from the circle
     truncated_buffer_zone = trim_land(buffer_zone)
 
     if truncated_buffer_zone:
@@ -895,20 +899,23 @@ def compute_hedge_density_around_lines(line_geos, radius):
             truncated_buffer_zone, epsg_utm
         )
     else:
-        # there is no land in the circle (e.g. sea or foreign country)
         length = Distance(0)
         area_ha = 0.0
         density = 1.0
 
-    return {
-        "density": density,
-        "artifacts": {
-            "buffer_zone": buffer_zone,
-            "truncated_buffer_zone": truncated_buffer_zone,
-            "length": length.standard,
-            "area_ha": area_ha,
-        },
+    artifacts = {
+        "buffer_zone": buffer_zone,
+        "truncated_buffer_zone": truncated_buffer_zone,
+        "length": length.standard,
+        "area_ha": area_ha,
     }
+
+    if display_simplify_tolerance is not None:
+        artifacts["display_geojson"] = query_hedges_display_geojson(
+            buffer_zone, display_simplify_tolerance
+        )
+
+    return {"density": density, "artifacts": artifacts}
 
 
 def _get_centered_url(url, hedges: "HedgeData"):
