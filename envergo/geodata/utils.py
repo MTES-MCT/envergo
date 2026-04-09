@@ -667,19 +667,13 @@ def compute_hedge_density_around_point(point_geos, radius):
     circle = centroid_meter.buffer(radius)
     circle = circle.transform(EPSG_WGS84, clone=True)  # switch back to WGS84
 
-    # Check if the circle center is on land
-    on_land = (
-        Zone.objects.filter(map__map_type=MAP_TYPES.terres_emergees)
-        .filter(geometry__covers=point_geos)
-        .exists()
-    )
-    truncated_circle = None
+    # Initially, we were first running a pre-check to see if the project was
+    # actually in land. Otherwise, would would return a sentinel density of 1.0
+    # That pre-check was measured to add query time instead of saving it,
+    # so it was removed.
+    truncated_circle = trim_land(circle)
 
-    if on_land:
-        # Remove the sea from the circle
-        truncated_circle = trim_land(circle)
-
-    if on_land and truncated_circle:
+    if truncated_circle:
         length, area_ha, density = compute_hedge_density_data(
             truncated_circle, epsg_utm
         )
