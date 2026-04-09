@@ -454,8 +454,10 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                 )
 
         if haies:
-            total_length = haies.length_to_remove() + haies.length_to_plant()
-            if total_length > settings.MAX_HEDGES_DRAWING_TOTAL_LENGTH:
+            if (
+                haies.length_to_remove()
+                > settings.MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH
+            ):
                 contact_url = f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
                 self.add_error(
                     "haies",
@@ -463,8 +465,9 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                         mark_safe(
                             # Le <span> évite que le <a> soit traité comme un
                             # flex item séparé par le DSFR (.fr-error-text)
-                            f"""<span>Pour des raisons de performance, la somme des longueurs des haies
-                            est limitée à 10 kilomètres. Si cette condition est bloquante pour votre simulation,
+                            f"""<span>La somme des longueurs des haies à détruire est limitée à 10&nbsp;km,
+                            pour des raisons de performance du simulateur.<br>
+                            Si cette condition est bloquante pour votre simulation,
                             <a href="{contact_url}" target="_blank">contactez-nous</a>.</span>"""
                         ),
                         code="max_length_exceeded",
