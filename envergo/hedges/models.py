@@ -298,6 +298,25 @@ class HedgeList(list[Hedge]):
         """
         return HedgeList([h for h in self if h.hedge_type != HedgeTypeBase.ALIGNEMENT])
 
+    def ru(self) -> Self:
+        """Select all hedges that are covered by the single procedure (régime unique, RU)."""
+        return (
+            self.n_alignement()
+            .prop("!bord_batiment")
+            .prop("!parc_jardin")
+            .prop("!place_publique")
+        )
+
+    def l350_3(self) -> Self:
+        """Select all tree alignment that are covered the L350-3 regulation."""
+        return self.alignement().prop("bord_voie")
+
+    def hru(self) -> Self:
+        """Select all hedges are not covered by either the single procedure or L350-3"""
+        ru = self.ru()
+        l350_3 = self.l350_3()
+        return HedgeList([h for h in self if h not in ru and h not in l350_3])
+
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
         return HedgeList([h for h in self if f(h)])

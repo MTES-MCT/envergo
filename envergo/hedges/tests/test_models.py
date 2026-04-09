@@ -662,6 +662,147 @@ class TestHedgeList:
         assert len(hedge_list.type("mixte")) == 0
         assert len(hedge_list.prop("vieil_arbre")) == 0
 
+    def test_ru_includes_non_alignement_without_exclusion_props(self):
+        hedge = HedgeFactory(id="D1", additionalData__type_haie="degradee")
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.ru()) == 1
+
+    def test_ru_excludes_alignement(self):
+        hedge = HedgeFactory(id="D1", additionalData__type_haie="alignement")
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.ru()) == 0
+
+    def test_ru_excludes_bord_batiment(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="degradee",
+            additionalData__bord_batiment=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.ru()) == 0
+
+    def test_ru_excludes_parc_jardin(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="degradee",
+            additionalData__parc_jardin=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.ru()) == 0
+
+    def test_ru_excludes_place_publique(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="degradee",
+            additionalData__place_publique=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.ru()) == 0
+
+    def test_l350_3_includes_alignement_with_bord_voie(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="alignement",
+            additionalData__bord_voie=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.l350_3()) == 1
+
+    def test_l350_3_excludes_non_alignement(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="degradee",
+            additionalData__bord_voie=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.l350_3()) == 0
+
+    def test_l350_3_excludes_alignement_without_bord_voie(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="alignement",
+            additionalData__bord_voie=False,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.l350_3()) == 0
+
+    def test_hru_includes_non_alignement_excluded_from_ru(self):
+        # Non-alignement with bord_batiment=True: not in ru, not in l350_3
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="degradee",
+            additionalData__bord_batiment=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.hru()) == 1
+
+    def test_hru_includes_alignement_without_bord_voie(self):
+        # Alignement with bord_voie=False: not in ru (alignement), not in l350_3 (no bord_voie)
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="alignement",
+            additionalData__bord_voie=False,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.hru()) == 1
+
+    def test_hru_excludes_ru_hedges(self):
+        hedge = HedgeFactory(id="D1", additionalData__type_haie="degradee")
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.hru()) == 0
+
+    def test_hru_excludes_l350_3_hedges(self):
+        hedge = HedgeFactory(
+            id="D1",
+            additionalData__type_haie="alignement",
+            additionalData__bord_voie=True,
+        )
+        hedge_list = HedgeList([hedge])
+
+        assert len(hedge_list.hru()) == 0
+
+    def test_ru_l350_3_hru_are_a_partition(self):
+        hedge_ru = HedgeFactory(id="D1", additionalData__type_haie="degradee")
+        hedge_l350_3 = HedgeFactory(
+            id="D2",
+            additionalData__type_haie="alignement",
+            additionalData__bord_voie=True,
+        )
+        hedge_hru_bord_batiment = HedgeFactory(
+            id="D3",
+            additionalData__type_haie="mixte",
+            additionalData__bord_batiment=True,
+        )
+        hedge_hru_alignement = HedgeFactory(
+            id="D4",
+            additionalData__type_haie="alignement",
+            additionalData__bord_voie=False,
+        )
+        hedge_list = HedgeList(
+            [hedge_ru, hedge_l350_3, hedge_hru_bord_batiment, hedge_hru_alignement]
+        )
+
+        ru = hedge_list.ru()
+        l350_3 = hedge_list.l350_3()
+        hru = hedge_list.hru()
+
+        assert {h.id for h in ru} == {"D1"}
+        assert {h.id for h in l350_3} == {"D2"}
+        assert {h.id for h in hru} == {"D3", "D4"}
+        # Full partition: every hedge belongs to exactly one group
+        assert len(ru) + len(l350_3) + len(hru) == len(hedge_list)
+
 
 MOCK_DENSITY_CENTROID_200 = {
     "density": 42.0,

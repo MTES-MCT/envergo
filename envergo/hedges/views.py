@@ -188,6 +188,8 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 "hedges_to_remove": len(hedge_data.hedges_to_remove()),
                 "length_to_remove": hedge_data.length_to_remove(),
                 "lineaire_detruit_pac": hedge_data.lineaire_detruit_pac_including_alignement(),
+                "l350_3_to_remove": hedge_data.hedges_to_remove().l350_3().length,
+                "hru_to_remove": hedge_data.hedges_to_remove().hru().length,
             }
             status_code = 201 if created else 200
             return JsonResponse(response_data, status=status_code)
