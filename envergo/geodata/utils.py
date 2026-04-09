@@ -580,30 +580,48 @@ def get_best_epsg_for_location(longitude, latitude) -> int:
 def trim_land(geom):
     """Keep only the part of the geometry that is in France and not in the sea.
 
-    Django ORM does not support cumulative intersection (reduce(ST_Intersection)) across multiple geometries
-    so it uses raw SQL
+    Django ORM does not support cumulative intersection (reduce(ST_Intersection))
+    across multiple geometries so this uses raw SQL.
+
+    How the query works:
+
+     - Select all the "Terres emergées" polygons that intersect the geometry
+     - Clip the polygons to the geometry bounding box (cheap operation)
+     - Merge the remaining polygons
+     - Intersects the merged polygon with the input geometry
+
+    The clipping step is an optimization: it reduces the size of the polygons
+    before merging them (which is a costly operation).
+
     Returns:
-        - the intersection of the circle with the map zones
-        - None if there is no intersection
+        - the intersection of the input geometry with the union of land zones
+        - None if there is no intersection (input is entirely off-land)
     """
 
     with connection.cursor() as cursor:
         cursor.execute(
             """
             WITH input_poly AS (
-              SELECT ST_GeomFromEWKT(%s) AS geom
+              SELECT
+                ST_GeomFromEWKT(%s) AS geom,
+                ST_Envelope(ST_GeomFromEWKT(%s)) AS bbox
             ),
-            unioned_geom AS (
-              SELECT ST_Union(z.geometry::geometry) AS merged_geom
+            clipped AS (
+              SELECT ST_MakeValid(ST_ClipByBox2D(z.geometry::geometry, i.bbox)) AS g
               FROM geodata_zone z
               JOIN geodata_map m ON z.map_id = m.id
               JOIN input_poly i ON ST_Intersects(z.geometry, i.geom)
               WHERE m.map_type = %s
+            ),
+            unioned AS (
+              SELECT ST_Union(g) AS merged
+              FROM clipped
+              WHERE NOT ST_IsEmpty(g)
             )
-            SELECT ST_AsText(ST_Intersection(u.merged_geom, i.geom))
-            FROM unioned_geom u, input_poly i;
+            SELECT ST_AsText(ST_Intersection(u.merged, i.geom))
+            FROM unioned u, input_poly i;
         """,
-            [geom.ewkt, MAP_TYPES.terres_emergees],
+            [geom.ewkt, geom.ewkt, MAP_TYPES.terres_emergees],
         )
         wkt = cursor.fetchone()[0]
         if wkt:
