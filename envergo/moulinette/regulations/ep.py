@@ -47,6 +47,7 @@ class EPRegulation(HaieRegulationEvaluator):
         "dispense_sous_condition": "declaration",
         "a_verifier": "declaration",
         "dispense": "declaration",
+        "non_concerne": "declaration",
     }
 
 
@@ -738,6 +739,7 @@ class EspecesProtegeesRegimeUnique(
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
     RESULT_MATRIX = {
+        "non_concerne": RESULTS.non_concerne,
         "dispense": RESULTS.dispense,
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
         "derogation_inventaire": RESULTS.derogation_inventaire,
@@ -880,6 +882,7 @@ class EspecesProtegeesRegimeUnique(
     def get_result_data(self):
         """Return project-level EP parameters for the cascade algorithm."""
         return {
+            "is_regime_unique": self.moulinette.config.single_procedure,
             "aa_only": self.catalog.get("ep_ru_aa_only", False),
             "total_length": self.catalog.get("ep_ru_total_length", 0),
             "ripisylve_length": self.catalog.get("ep_ru_ripisylve_length", 0),
@@ -890,13 +893,17 @@ class EspecesProtegeesRegimeUnique(
     def get_result_code(self, result_data):
         """Cascade algorithm for the EP régime unique procedure level.
 
-        Project-level rules (steps 1-5) are tried first. If none match, the
+        Project-level rules (steps 0-5) are tried first. If none match, the
         most constraining per-hedge result wins (step 6). All thresholds
         come from the admin-configurable settings (validated by
         ``EspecesProtegeesRegimeUniqueSettings``); ``self.params`` is
         guaranteed non-None here because ``evaluate()`` short-circuits to
         ``non_disponible`` whenever the form is invalid.
         """
+        # 0. Department not in régime unique → not concerned
+        if not result_data["is_regime_unique"]:
+            return "non_concerne"
+
         aa_only = result_data["aa_only"]
         total_length = result_data["total_length"]
         ripisylve_length = result_data["ripisylve_length"]
