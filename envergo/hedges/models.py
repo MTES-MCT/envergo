@@ -358,6 +358,12 @@ class HedgeData(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     data = models.JSONField()
     _density = models.JSONField(null=True, default=None)
+    _length_to_remove = models.FloatField(
+        verbose_name="Longueur détruite", null=True, default=None
+    )
+    _length_to_plant = models.FloatField(
+        verbose_name="Longueur plantée", null=True, default=None
+    )
 
     class Meta:
         verbose_name = "Hedge data"
@@ -368,6 +374,11 @@ class HedgeData(models.Model):
 
     def __iter__(self):
         return iter(self.hedges())
+
+    def save(self, *args, **kwargs):
+        self._length_to_remove = self.length_to_remove()
+        self._length_to_plant = self.length_to_plant()
+        super().save(*args, **kwargs)
 
     def get_bounding_box(self, hedges):
         """Return the bounding box of the given hedge set."""
@@ -587,23 +598,34 @@ class HedgeData(models.Model):
 
     def get_statistics(self):
         hedge_centroid_coords = self.get_centroid_to_remove()
+        ru_to_plant = self.hedges_to_plant().ru()
+        l350_3_to_plant = self.hedges_to_plant().l350_3()
+        hru_to_plant = self.hedges_to_plant().hru()
+        ru_to_remove = self.hedges_to_remove().ru()
+        l350_3_to_remove = self.hedges_to_remove().l350_3()
+        hru_to_remove = self.hedges_to_remove().hru()
         return {
             "longueur_detruite": round(self.length_to_remove(), 1),
             "longueur_plantee": round(self.length_to_plant(), 1),
-            "nb_traces_categ": {
-                "ru": len(self.hedges().ru()),
-                "l350-3": len(self.hedges().l350_3()),
-                "hru": len(self.hedges().hru()),
+            "nb_traces_d_categ": {
+                "ru": len(ru_to_remove),
+                "l350-3": len(l350_3_to_remove),
+                "hru": len(hru_to_remove),
             },
-            "longueur_detruite_categ": {
-                "ru": round(self.hedges_to_remove().ru().length, 1),
-                "l350-3": round(self.hedges_to_remove().l350_3().length, 1),
-                "hru": round(self.hedges_to_remove().hru().length, 1),
+            "nb_traces_p_categ": {
+                "ru": len(ru_to_plant),
+                "l350-3": len(l350_3_to_plant),
+                "hru": len(hru_to_plant),
             },
-            "longueur_plantee_categ": {
-                "ru": round(self.hedges_to_plant().ru().length, 1),
-                "l350-3": round(self.hedges_to_plant().l350_3().length, 1),
-                "hru": round(self.hedges_to_plant().hru().length, 1),
+            "longueur_d_categ": {
+                "ru": round(ru_to_remove.length, 1),
+                "l350-3": round(l350_3_to_remove.length, 1),
+                "hru": round(hru_to_remove.length, 1),
+            },
+            "longueur_p_categ": {
+                "ru": round(ru_to_plant.length, 1),
+                "l350-3": round(l350_3_to_plant.length, 1),
+                "hru": round(hru_to_plant.length, 1),
             },
             "lnglat_centroide_haie_detruite": (
                 f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
