@@ -43,12 +43,12 @@
               {% with hedges_to_remove=hedge_data.hedges_to_remove %}
                 {% if hedges_to_remove|length > 0 %}
                   <div id="statistics-container" class="fr-mb-3w">
-                    <div id="statistics" class="fr-mb-3w fr-ml-0 fr-pl-2w fr-highlight">
+                    <div id="statistics" class="fr-ml-0 fr-highlight">
                       <p>
                         {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                       </p>
                       <p>
-                        Linéaire total : <span id="length-to-remove">{{ hedge_data.length_to_remove|floatformat:0 }}</span> m
+                        Linéaire total : <span id="length-to-remove">{{ hedge_data.length_to_remove|floatformat:0|intcomma }}</span> m
                       </p>
                       {% with hedge_data.hedges.to_remove.l350_3 as l350_3 %}
                         {% with hedge_data.hedges.to_remove.hru as hru %}
@@ -117,7 +117,7 @@
 {% include 'haie/moulinette/_hedge_input_modal.html' %}
 
 <template id="hedge-data-statistics">
-  <div id="statistics" class="fr-mb-3w fr-ml-0 fr-pl-2w fr-highlight">
+  <div id="statistics" class="fr-ml-0 fr-highlight">
     <p id="hedges-to-remove-count">Aucun tracé</p>
     <p>
       Linéaire total : <span id="length-to-remove">0</span> m
