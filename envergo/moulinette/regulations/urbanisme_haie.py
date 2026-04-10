@@ -1,5 +1,8 @@
 from envergo.geodata.utils import get_geoportail_urbanisme_centered_url
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class UrbanismeHaieRegulation(HaieRegulationEvaluator):
@@ -10,7 +13,7 @@ class UrbanismeHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class UrbanismeHaie(CriterionEvaluator):
+class UrbanismeHaie(HaieCriterionEvaluator):
     choice_label = "Urbanisme Haie > Urbanisme Haie"
     slug = "urbanisme_haie"
 

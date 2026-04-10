@@ -1,5 +1,8 @@
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class ProtectionCaptagesRegulation(HaieRegulationEvaluator):
@@ -13,7 +16,7 @@ class ProtectionCaptagesRegulation(HaieRegulationEvaluator):
     }
 
 
-class ProtectionCaptagesHaie(CriterionEvaluator):
+class ProtectionCaptagesHaie(HaieCriterionEvaluator):
     """Evaluate the "protection de captages" criterion.
 
     Returns a_verifier if any hedge (to remove or to plant) intersects

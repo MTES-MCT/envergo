@@ -9,7 +9,10 @@ from django.db.models.functions import Cast
 from pyproj import Geod
 
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class Natura2000HaieRegulation(HaieRegulationEvaluator):
@@ -35,7 +38,7 @@ EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
 
 
-class Natura2000Haie(CriterionEvaluator):
+class Natura2000Haie(HaieCriterionEvaluator):
     choice_label = "Natura 2000 > Haie"
     slug = "natura2000_haie"
     settings_form_class = Natura2000HaieSettings

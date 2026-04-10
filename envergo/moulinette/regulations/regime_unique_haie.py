@@ -3,7 +3,7 @@ from collections import defaultdict
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
-    CriterionEvaluator,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -18,7 +18,16 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEvaluator):
+class RegimeUniqueHaie(
+    PlantationConditionMixin, HedgeDensityMixin, HaieCriterionEvaluator
+):
+    """Criterion evaluator for the régime unique haie procedure.
+
+    Determines whether a hedge project falls under the régime unique
+    (single procedure) or droit constant, and whether it is soumis or
+    non concerné based on hedge types.
+    """
+
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
     plantation_conditions = []

@@ -606,6 +606,23 @@ class CriterionEvaluator(ABC):
         return {}
 
 
+class HaieCriterionScope(Enum):
+    RU = "Régime unique"
+    L350_3 = "L350-3"
+    HRU = "Hors régime unique"
+
+
+class HaieCriterionEvaluator(CriterionEvaluator, ABC):
+    """Add a scope for criterion evaluator on GUH to filter the hedges to evaluate."""
+
+    scope: HaieCriterionScope = HaieCriterionScope.HRU
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if "choice_label" in cls.__dict__:
+            cls.choice_label = f"{cls.__dict__['choice_label']} - {cls.scope.value}"
+
+
 SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.soumis: True,
     RESULTS.soumis_ou_pac: True,

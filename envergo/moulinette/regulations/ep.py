@@ -21,7 +21,7 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import (
-    CriterionEvaluator,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -52,7 +52,7 @@ class EPMixin:
         return catalog
 
 
-class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluator):
+class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, HaieCriterionEvaluator):
     """Basic criterion: always returns "soumis."""
 
     choice_label = "EP > EP simple"
@@ -67,7 +67,7 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluat
         return "soumis"
 
 
-class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluator):
+class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEvaluator):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Aisne"
@@ -162,7 +162,7 @@ class EPNormandieForm(forms.Form):
 
 
 class EspecesProtegeesNormandie(
-    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
 ):
     """Check for protected species living in hedges."""
 
@@ -636,7 +636,7 @@ class EspecesProtegeesNormandie(
 
 
 class EspecesProtegeesRegimeUnique(
-    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
 ):
     """EP criterion for the "régime unique" procedure.
 

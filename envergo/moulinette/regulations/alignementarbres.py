@@ -2,7 +2,10 @@ import logging
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +20,9 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
     }
 
 
-class AlignementsArbres(PlantationConditionMixin, CriterionEvaluator):
+class AlignementsArbres(PlantationConditionMixin, HaieCriterionEvaluator):
 
-    choice_label = "Alignements d'arbres > L250-3"
+    choice_label = "Alignements d'arbres > L350-3"
     slug = "alignement_arbres"
     plantation_conditions = [TreeAlignmentsCondition]
 
