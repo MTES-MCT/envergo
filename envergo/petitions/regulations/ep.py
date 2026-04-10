@@ -87,6 +87,9 @@ def ep_regime_unique_get_instructor_view_context(
     )
     context.update(get_line_buffer_density_context(petition_project, moulinette))
 
+    is_regime_unique = moulinette.config.single_procedure
+    ep_ru_aa_only = moulinette.catalog.get("ep_ru_aa_only", True)
+    context["show_ep_ru_params"] = is_regime_unique and not ep_ru_aa_only
     context["ep_ru_total_length"] = moulinette.catalog.get("ep_ru_total_length")
     context["ep_ru_ripisylve_length"] = moulinette.catalog.get("ep_ru_ripisylve_length")
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
