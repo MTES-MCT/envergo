@@ -17,8 +17,8 @@ from envergo.moulinette.tests.utils import (
 )
 
 
-@pytest.fixture(autouse=True)
-def n2000_criteria(bizous_town_center):  # noqa
+@pytest.fixture
+def n2000_criteria(bizous_town_center):
     regulation = RegulationFactory(regulation="natura2000_haie", has_perimeters=True)
 
     perimeter = PerimeterFactory(
@@ -47,7 +47,7 @@ def n2000_criteria(bizous_town_center):  # noqa
         (COORDS_BIZOUS_OUTSIDE, "non_concerne"),
     ],
 )
-def test_moulinette_evaluation(coords, expected_result):
+def test_moulinette_evaluation(coords, expected_result, n2000_criteria):
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
@@ -65,7 +65,7 @@ def test_moulinette_evaluation(coords, expected_result):
         (COORDS_BIZOUS_EDGE, "non_soumis_aa"),  # edge inside but vertices outside
     ],
 )
-def test_moulinette_evaluation_alignement(coords, expected_result):
+def test_moulinette_evaluation_alignement(coords, expected_result, n2000_criteria):
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords, type_haie="alignement")],
@@ -77,11 +77,6 @@ def test_moulinette_evaluation_alignement(coords, expected_result):
 
 class TestConcerneAAParam:
     """Test the concerne_aa parameter across all combinations of settings and hedge types."""
-
-    @pytest.fixture(autouse=True)
-    def n2000_criteria(self):
-        """Override the module-level autouse fixture to prevent interference."""
-        pass
 
     # fmt: off
     @pytest.mark.parametrize(
