@@ -83,82 +83,44 @@ class TestConcerneAAParam:
         """Override the module-level autouse fixture to prevent interference."""
         pass
 
+    # fmt: off
     @pytest.mark.parametrize(
         "concerne_aa, result, hedge_types, expected_result_code",
         [
             # concerne_aa=True, result=soumis
             (True, "soumis", [HedgeTypeBase.ALIGNEMENT], "soumis"),
-            (
-                True,
-                "soumis",
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "soumis",
-            ),
+            (True, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
             (True, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
             # concerne_aa=True, result=non_soumis
             (True, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis"),
-            (
-                True,
-                "non_soumis",
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "non_soumis",
-            ),
+            (True, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             (True, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
             # concerne_aa=False, result=soumis
             (False, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (
-                False,
-                "soumis",
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "soumis",
-            ),
+            (False, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
             (False, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
             # concerne_aa=False, result=non_soumis
             (False, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (
-                False,
-                "non_soumis",
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "non_soumis",
-            ),
+            (False, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             (False, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
             # result non renseigné, concerne_aa renseigné → settings form invalide → non_disponible
             (True, None, [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
-            (
-                True,
-                None,
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "non_disponible",
-            ),
+            (True, None, [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
             (True, None, [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
             # concerne_aa non renseigné, result renseigné → concerne_aa=False par défaut
             (None, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (
-                None,
-                "soumis",
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "soumis",
-            ),
+            (None, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
             (None, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
             (None, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (
-                None,
-                "non_soumis",
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "non_soumis",
-            ),
+            (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
             # ni concerne_aa ni result renseignés → settings form invalide → non_disponible
             (None, None, [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
-            (
-                None,
-                None,
-                [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT],
-                "non_disponible",
-            ),
+            (None, None, [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
             (None, None, [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
         ],
     )
+    # fmt: on
     def test_result_code(
         self,
         concerne_aa,
@@ -206,4 +168,4 @@ class TestConcerneAAParam:
         assert (
             moulinette.natura2000_haie.natura2000_haie.result_code
             == expected_result_code
-        )
+        )  # noqa: E501
