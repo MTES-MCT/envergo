@@ -1,4 +1,5 @@
 from math import ceil
+from typing import Literal
 
 import shapely
 from django import forms
@@ -28,6 +29,12 @@ class Natura2000HaieSettings(forms.Form):
         help_text="Indique si l’arrachage de haies est soumis à évaluation des incidences Natura 2000 pour ce critère.",
         required=True,
         choices=RESULTS,
+    )
+    concerne_aa = forms.BooleanField(
+        label="Concerne les alignements d'arbres",
+        help_text="Indique si ce critère concerne les alignements d'arbres.",
+        required=False,
+        initial=False,
     )
 
 
@@ -102,20 +109,44 @@ class Natura2000Haie(CriterionEvaluator):
 
         return data
 
-    def get_result_data(self):
-        """Returns if a non-alignement hedge intersects the n2000 zone.
+    def get_result_data(self) -> bool:
+        """Returns if a hedge intersects the n2000 zone.
 
         If we are evaluating this criterion, it means that *some* hedges have intersected
-        a n2000 zone. But since some hedge types are excluded, we have to run a more
+        a n2000 zone. But since some hedge types may be excluded, we have to run a more
         specific check again.
         """
-
+        if self.settings.get("concerne_aa", False):
+            return (
+                self.catalog["l_n2000_hors_aa"] > 0.0
+                or self.catalog["l_n2000_aa"] > 0.0
+            )
         return self.catalog["l_n2000_hors_aa"] > 0.0
 
-    def get_result_code(self, intersects_n2000):
-        if intersects_n2000:
-            code = self.settings.get("result", "non_soumis")
-        else:
-            code = "non_soumis_aa"
+    def get_result_code(self, _) -> Literal[
+        "soumis",
+        "non_soumis",
+        "non_soumis_aa",
+    ]:
+        has_non_aa_hedges = self.catalog["l_n2000_hors_aa"] > 0.0
+        has_aa_hedges = self.catalog["l_n2000_aa"] > 0.0
+        result = self.settings.get("result")
+        concerne_aa = self.settings.get("concerne_aa")
 
-        return code
+        if has_non_aa_hedges:
+            # Non-soumis par défaut, le critère doit être manuellement activé
+            return result or "non_soumis"
+
+        if has_aa_hedges and not concerne_aa:
+            """
+            S'il y a uniquement des alignements d'arbres, ils sont non soumis
+            par défaut et doivent être activé manuellement avec concerne_aa
+
+            Note : pour une prise en compte des alignements d'arbre,
+            result doit valoir "soumis" ET concerne_aa doit valoir true
+            """
+            return "non_soumis_aa"
+        elif has_aa_hedges and concerne_aa:
+            return result or "non_soumis"
+
+        return "non_soumis"
