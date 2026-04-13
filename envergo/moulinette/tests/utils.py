@@ -108,7 +108,7 @@ def make_moulinette_haie_data(
     hedges=None,
     hedge_data=None,
     motif="chemin_acces",
-    reimplantation="remplacement",
+    reimplantation="replantation",
     localisation_pac="non",
     travaux="destruction",
     element="haie",
