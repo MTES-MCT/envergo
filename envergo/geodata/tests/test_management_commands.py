@@ -71,8 +71,10 @@ def test_batch_import_maps_uses_csv_columns_and_ignores_extras(tmp_path):
         csv_path,
         "statut,code_id,tri_colonne,code_id_carto,file,name,display_name,"
         "source,map_type,data_type,description,departments",
-        ["À déposer,A26,1|A26,A26_0001,real.gpkg,Test,Test display,,"
-         "terres_emergees,certain,Some description,\"59,62\""],
+        [
+            "À déposer,A26,1|A26,A26_0001,real.gpkg,Test,Test display,,"
+            'terres_emergees,certain,Some description,"59,62"'
+        ],
     )
 
     cmd = BatchImportCommand()
@@ -201,9 +203,7 @@ def test_collect_local_map_ids_filters_by_import_status():
     )
     MapFactory(map_type="terres_emergees", import_status="failure", zones=[])
     MapFactory(map_type="terres_emergees", import_status=None, zones=[])
-    MapFactory(
-        map_type="terres_emergees", import_status="partial_success", zones=[]
-    )
+    MapFactory(map_type="terres_emergees", import_status="partial_success", zones=[])
     # A different map_type should be ignored entirely.
     MapFactory(map_type="haies", import_status="success", zones=[])
 
@@ -217,9 +217,7 @@ def test_collect_local_map_ids_returns_empty_when_all_skipped():
     """When every local map has non-success status, return ([], total)."""
     MapFactory(map_type="terres_emergees", import_status="failure", zones=[])
     MapFactory(map_type="terres_emergees", import_status=None, zones=[])
-    MapFactory(
-        map_type="terres_emergees", import_status="partial_success", zones=[]
-    )
+    MapFactory(map_type="terres_emergees", import_status="partial_success", zones=[])
 
     map_ids, nb_skipped = collect_local_map_ids("terres_emergees")
 
@@ -256,13 +254,19 @@ def test_count_pending_detail_rows_respects_after_id():
     assert count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], 0) == 3
 
     # After the first id: only the last 2.
-    assert count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], z1.id) == 2
+    assert (
+        count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], z1.id) == 2
+    )
 
     # After the second: only the last 1.
-    assert count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], z2.id) == 1
+    assert (
+        count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], z2.id) == 1
+    )
 
     # After the last: none.
-    assert count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], z3.id) == 0
+    assert (
+        count_pending_detail_rows(connection, "geodata_zone", [map_obj.id], z3.id) == 0
+    )
 
 
 def test_count_pending_detail_rows_rejects_unsafe_table():
@@ -320,7 +324,11 @@ def col(name, data_type="integer", is_nullable="NO"):
 
 def test_diff_schemas_identical_returns_none():
     """Two identical schemas are equivalent."""
-    schema = [col("id"), col("name", "character varying"), col("created_at", "timestamp with time zone")]
+    schema = [
+        col("id"),
+        col("name", "character varying"),
+        col("created_at", "timestamp with time zone"),
+    ]
     assert diff_schemas(schema, schema) is None
 
 

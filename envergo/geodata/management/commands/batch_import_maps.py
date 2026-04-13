@@ -155,9 +155,7 @@ class Command(BaseCommand):
             options["default_map_type"],
             options["default_data_type"],
         )
-        self.stdout.write(
-            f"Validated {len(rows)} rows. All referenced files exist."
-        )
+        self.stdout.write(f"Validated {len(rows)} rows. All referenced files exist.")
 
         if options["purge"]:
             purge_type = options["purge_map_type"] or options["default_map_type"]
@@ -265,7 +263,5 @@ sits at), e.g.:
                 data_type=row.data_type,
                 expected_geometries=count_features(map_file),
             )
-            self.stdout.write(
-                f"Importing {row.file} as {row.map_type}/{row.data_type}"
-            )
+            self.stdout.write(f"Importing {row.file} as {row.map_type}/{row.data_type}")
             map_obj.file.save(row.file, map_file)

@@ -53,7 +53,7 @@ Prerequisites
    typically through a Scalingo db-tunnel:
 
        scalingo --app envergo db-tunnel SCALINGO_POSTGRESQL_URL
-       export PROD_DATABASE_URL="postgres://user:pass@127.0.0.1:10000/dbname"
+       export PROD_DATABASE_URL="postgres://user:pass@127.0.0.1:10000/dbname"  # pragma: allowlist secret
 
 Usage
 -----
@@ -173,13 +173,9 @@ def positive_int(value):
     try:
         n = int(value)
     except (TypeError, ValueError):
-        raise argparse.ArgumentTypeError(
-            f"must be a positive integer, got {value!r}"
-        )
+        raise argparse.ArgumentTypeError(f"must be a positive integer, got {value!r}")
     if n < 1:
-        raise argparse.ArgumentTypeError(
-            f"must be a positive integer, got {n}"
-        )
+        raise argparse.ArgumentTypeError(f"must be a positive integer, got {n}")
     return n
 
 
@@ -197,9 +193,7 @@ def non_negative_int(value):
             f"must be a non-negative integer, got {value!r}"
         )
     if n < 0:
-        raise argparse.ArgumentTypeError(
-            f"must be a non-negative integer, got {n}"
-        )
+        raise argparse.ArgumentTypeError(f"must be a non-negative integer, got {n}")
     return n
 
 
@@ -507,8 +501,7 @@ def count_existing_prod_maps(prod, map_ids, map_type):
     """
     with prod.cursor() as cur:
         cur.execute(
-            "SELECT COUNT(*) FROM geodata_map "
-            "WHERE id = ANY(%s) AND map_type = %s",
+            "SELECT COUNT(*) FROM geodata_map " "WHERE id = ANY(%s) AND map_type = %s",
             [map_ids, map_type],
         )
         return cur.fetchone()[0]
@@ -524,8 +517,7 @@ def count_pending_detail_rows(local, table, map_ids, after_id):
     assert_table_safe(table)
     with local.cursor() as cur:
         cur.execute(
-            f"SELECT COUNT(*) FROM {table} "
-            f"WHERE id > %s AND map_id = ANY(%s)",
+            f"SELECT COUNT(*) FROM {table} " f"WHERE id > %s AND map_id = ANY(%s)",
             [after_id, map_ids],
         )
         return cur.fetchone()[0]
@@ -652,9 +644,7 @@ class Command(BaseCommand):
 
             # ── Compute the plan once for the banner and confirmation ──
             nb_existing = count_existing_prod_maps(prod, map_ids, map_type)
-            nb_pending_rows = count_pending_detail_rows(
-                local, table, map_ids, after_id
-            )
+            nb_pending_rows = count_pending_detail_rows(local, table, map_ids, after_id)
             plan = CopyPlan(
                 map_type=map_type,
                 table=table,
@@ -700,17 +690,21 @@ class Command(BaseCommand):
 
             # ── Phase 2: paginated detail copy ────────────────────────
             last_id = self.copy_detail_rows(
-                local, prod, map_ids, table, detail_columns,
-                page_size, after_id, map_type,
+                local,
+                prod,
+                map_ids,
+                table,
+                detail_columns,
+                page_size,
+                after_id,
+                map_type,
             )
 
             # ── Phase 3: reset sequences on production ────────────────
             self.reset_sequences(prod, table)
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Done. {table} rows copied up to id {last_id}."
-            )
+            self.style.SUCCESS(f"Done. {table} rows copied up to id {last_id}.")
         )
 
     def print_warning_banner(self, plan):
@@ -718,7 +712,7 @@ class Command(BaseCommand):
         if plan.is_resume:
             action_lines = [
                 f"  RESUME COPY of {plan.map_type!r} after id {plan.after_id}",
-                f"  (no DELETE — Phase 1 was completed in a previous run)",
+                "  (no DELETE — Phase 1 was completed in a previous run)",
                 f"  - {plan.nb_detail_rows} {plan.table} rows still to transfer",
             ]
         else:
@@ -798,9 +792,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Cancelled (phrase mismatch)."))
             sys.exit(1)
 
-    def cleanup_and_copy_maps(
-        self, local, prod, map_ids, table, map_columns, map_type
-    ):
+    def cleanup_and_copy_maps(self, local, prod, map_ids, table, map_columns, map_type):
         """Delete previous prod rows for these maps, then COPY Maps over.
 
         Atomic: the DELETEs and the COPY share a single transaction.
@@ -821,8 +813,7 @@ class Command(BaseCommand):
         """
         assert_table_safe(table)
         self.stdout.write(
-            ">>> Phase 1: cleaning up previous import and transferring Maps "
-            "(atomic)"
+            ">>> Phase 1: cleaning up previous import and transferring Maps " "(atomic)"
         )
         with prod.cursor() as prod_cur:
             prod_cur.execute(
@@ -833,8 +824,7 @@ class Command(BaseCommand):
                 [map_ids, map_type],
             )
             prod_cur.execute(
-                "DELETE FROM geodata_map "
-                "WHERE id = ANY(%s) AND map_type = %s",
+                "DELETE FROM geodata_map " "WHERE id = ANY(%s) AND map_type = %s",
                 [map_ids, map_type],
             )
         # Intentionally NO commit here — the DELETE and the COPY below
@@ -856,13 +846,18 @@ class Command(BaseCommand):
                         for chunk in copy_out:
                             copy_in.write(chunk)
         prod.commit()
-        self.stdout.write(
-            f"  Phase 1 done: {len(map_ids)} maps replaced atomically."
-        )
+        self.stdout.write(f"  Phase 1 done: {len(map_ids)} maps replaced atomically.")
 
     def copy_detail_rows(
-        self, local, prod, map_ids, table, detail_columns,
-        page_size, after_id, map_type,
+        self,
+        local,
+        prod,
+        map_ids,
+        table,
+        detail_columns,
+        page_size,
+        after_id,
+        map_type,
     ):
         """Stream detail rows local → prod in keyset-paginated chunks.
 
@@ -882,9 +877,7 @@ class Command(BaseCommand):
         in by verify_schemas_match.
         """
         assert_table_safe(table)
-        self.stdout.write(
-            f">>> Phase 2: transferring {table} (page_size={page_size})"
-        )
+        self.stdout.write(f">>> Phase 2: transferring {table} (page_size={page_size})")
         last_id = after_id
         chunks_run = 0
         rows_transferred = 0
@@ -936,16 +929,17 @@ class Command(BaseCommand):
 
         if chunks_run == 0:
             if after_id > 0:
-                self.stdout.write(self.style.WARNING(
-                    f"  No rows found above id {after_id}. Either Phase 2 "
-                    f"is already complete or --after-id is wrong."
-                ))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"  No rows found above id {after_id}. Either Phase 2 "
+                        f"is already complete or --after-id is wrong."
+                    )
+                )
             else:
                 self.stdout.write("  No detail rows found to transfer.")
         else:
             self.stdout.write(
-                f"  Phase 2 done: {rows_transferred} rows in "
-                f"{chunks_run} chunks."
+                f"  Phase 2 done: {rows_transferred} rows in " f"{chunks_run} chunks."
             )
 
         return last_id

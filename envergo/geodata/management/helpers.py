@@ -20,7 +20,6 @@ from django.core.management.base import CommandError
 
 from envergo.geodata.models import DATA_TYPES, MAP_TYPES
 
-
 VALID_MAP_TYPES = {t[0] for t in MAP_TYPES}
 VALID_DATA_TYPES = {t[0] for t in DATA_TYPES}
 
