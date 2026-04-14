@@ -46,6 +46,13 @@ class RegimeUniqueHaieHru(HaieCriterionEvaluator):
 
 
 class RegimeUniqueHaieRu(PlantationConditionMixin, RegimeUniqueHaieHru):
+    """Criterion evaluator for the régime unique haie procedure.
+
+    Determines whether a hedge project falls under the régime unique
+    (single procedure) or droit constant, and whether it is soumis or
+    non concerné based on hedge types.
+    """
+
     plantation_conditions = []
     scope = HaieCriterionScope.ru
 
@@ -80,7 +87,7 @@ class RegimeUniqueHaieL3503(RegimeUniqueHaieHru):
     non concerné based on hedge types.
     """
 
-    scope = HaieCriterionScope.hru
+    scope = HaieCriterionScope.l350_3
 
     def evaluate(self):
         self._result_code, self._result = "non_concerne", "non_concerne"
