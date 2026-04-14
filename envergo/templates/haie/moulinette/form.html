@@ -43,17 +43,36 @@
               {% with hedges_to_remove=hedge_data.hedges_to_remove %}
                 {% if hedges_to_remove|length > 0 %}
                   <div id="statistics-container" class="fr-mb-3w">
-                    <div id="statistics" class="fr-mb-3w">
+                    <div id="statistics" class="fr-ml-0 fr-highlight">
                       <p>
                         {# djlint:off #}{{ hedges_to_remove|length|intcomma }} tracé{% if hedges_to_remove|length > 1 %}s{% endif %}{# djlint:on #}
                       </p>
                       <p>
-                        Linéaire total : <span id="length-to-remove">{{ hedge_data.length_to_remove|floatformat:0 }}</span> m
+                        Linéaire total : <span id="length-to-remove">{{ hedge_data.length_to_remove|floatformat:0|intcomma }}</span> m
                       </p>
+                      {% with hedge_data.hedges.to_remove.l350_3 as l350_3 %}
+                        {% with hedge_data.hedges.to_remove.hru as hru %}
+                          {% if l350_3 or hru and config.single_procedure %}
+                            <ul>
+                              {% if l350_3 %}
+                                <li class="fr-hint-text">
+                                  dont alignements d'arbres en bord de voie ouverte à la
+                                  circulation : {{ l350_3.length|floatformat:0|intcomma }} m
+                                </li>
+                              {% endif %}
+                              {% if hru and config.single_procedure %}
+                                <li class="fr-hint-text">
+                                  dont linéaires hors procédure
+                                  unique : {{ hru.length|floatformat:0|intcomma }} m
+                                </li>
+                              {% endif %}
+                            </ul>
+                          {% endif %}
+                        {% endwith %}
+                      {% endwith %}
                       {% if hedge_data.lineaire_detruit_pac_including_alignement > 0 %}
                         <p>
-                          {{ hedge_data.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m situés sur
-                          parcelles PAC
+                          Linéaires sur parcelles PAC : {{ hedge_data.lineaire_detruit_pac_including_alignement|floatformat:0|intcomma }} m
                         </p>
                       {% else %}
                         <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
@@ -98,11 +117,23 @@
 {% include 'haie/moulinette/_hedge_input_modal.html' %}
 
 <template id="hedge-data-statistics">
-  <div id="statistics" class="fr-mb-3w">
+  <div id="statistics" class="fr-ml-0 fr-highlight">
     <p id="hedges-to-remove-count">Aucun tracé</p>
     <p>
       Linéaire total : <span id="length-to-remove">0</span> m
     </p>
+    <ul id="statistics-details">
+      <li id="l350-3-details"  class="fr-hint-text">
+        dont alignements d'arbres en bord de voie ouverte à la
+        circulation : <span id="l350-3-to-remove">0</span> m
+      </li>
+      {% if config.single_procedure %}
+        <li id="hru-details"  class="fr-hint-text">
+          dont linéaires hors procédure
+          unique :  <span id="hru-to-remove">0</span> m
+        </li>
+      {% endif %}
+    </ul>
     <p id="lineaire-detruit-pac">Aucune haie située sur parcelle PAC</p>
   </div>
 </template>
@@ -139,9 +170,32 @@
         let lengthToRemove = statsContent.getElementById("length-to-remove");
         let lineaireDetruitPac = statsContent.getElementById("lineaire-detruit-pac");
         let hedgesToRemoveCount = statsContent.getElementById("hedges-to-remove-count");
+        let l3503ToRemove = statsContent.getElementById("l350-3-to-remove");
+        let hruToRemove = statsContent.getElementById("hru-to-remove");
+        let statisticsDetails = statsContent.getElementById("statistics-details");
+        let l3503Details = statsContent.getElementById("l350-3-details");
+        let hruDetails = statsContent.getElementById("hru-details");
         lengthToRemove.textContent = Math.round(data.length_to_remove).toLocaleString('fr-FR');
         lineaireDetruitPac.textContent = data.lineaire_detruit_pac === 0 ? "Aucune haie située sur parcelle PAC" : `${Math.round(data.lineaire_detruit_pac).toLocaleString('fr-FR')} m situés sur parcelles PAC`;
         hedgesToRemoveCount.textContent = `${data.hedges_to_remove === 0 ? "Aucun" : data.hedges_to_remove.toLocaleString('fr-FR')} tracé${data.hedges_to_remove > 1 ? "s" : ""}`;
+
+         if(data.l350_3_to_remove === 0 && (!hruToRemove || data.hru_to_remove === 0)) {
+           statisticsDetails.remove();
+         }
+
+        if(data.l350_3_to_remove === 0){
+          l3503Details.remove();
+        }
+        else{
+          l3503ToRemove.textContent = Math.round(data.l350_3_to_remove).toLocaleString('fr-FR');
+        }
+        if(hruToRemove) { // the element does not exist in department not under single procedure
+          if (data.hru_to_remove === 0) {
+            hruDetails.remove();
+          } else {
+            hruToRemove.textContent = Math.round(data.hru_to_remove).toLocaleString('fr-FR');
+          }
+        }
         statisticsContainer.innerHTML = "";
         statisticsContainer.appendChild(statsContent);
 

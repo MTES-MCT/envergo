@@ -253,21 +253,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     def get_log_event_data(self):
         """Get log event data for analytics"""
-        hedge_centroid_coords = self.hedge_data.get_centroid_to_remove()
-        return {
+        data = {
             "reference": self.reference,
             "department": self.get_department_code(),
-            "longueur_detruite": (
-                self.hedge_data.length_to_remove() if self.hedge_data else None
-            ),
-            "longueur_plantee": (
-                self.hedge_data.length_to_plant() if self.hedge_data else None
-            ),
-            "lnglat_centroide_haie_detruite": (
-                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
-            ),
-            "dept_haie_detruite": self.hedge_data.get_department(),
         }
+        if self.hedge_data:
+            data.update(self.hedge_data.get_statistics())
+
+        return data
 
     @property
     def is_dossier_submitted(self):

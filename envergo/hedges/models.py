@@ -298,6 +298,25 @@ class HedgeList(list[Hedge]):
         """
         return HedgeList([h for h in self if h.hedge_type != HedgeTypeBase.ALIGNEMENT])
 
+    def ru(self) -> Self:
+        """Select all hedges that are covered by the single procedure (régime unique, RU)."""
+        return (
+            self.n_alignement()
+            .prop("!bord_batiment")
+            .prop("!parc_jardin")
+            .prop("!place_publique")
+        )
+
+    def l350_3(self) -> Self:
+        """Select all tree alignment that are covered the L350-3 regulation."""
+        return self.alignement().prop("bord_voie")
+
+    def hru(self) -> Self:
+        """Select all hedges are not covered by either the single procedure or L350-3"""
+        ru = self.ru()
+        l350_3 = self.l350_3()
+        return HedgeList([h for h in self if h not in ru and h not in l350_3])
+
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
         return HedgeList([h for h in self if f(h)])
@@ -339,6 +358,12 @@ class HedgeData(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     data = models.JSONField()
     _density = models.JSONField(null=True, default=None)
+    _length_to_remove = models.FloatField(
+        verbose_name="Longueur détruite", null=True, default=None
+    )
+    _length_to_plant = models.FloatField(
+        verbose_name="Longueur plantée", null=True, default=None
+    )
 
     class Meta:
         verbose_name = "Hedge data"
@@ -349,6 +374,21 @@ class HedgeData(models.Model):
 
     def __iter__(self):
         return iter(self.hedges())
+
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        if update_fields is None or "data" in update_fields:
+            # recompute cached value
+            self._length_to_remove = None
+            self._length_to_plant = None
+            self._length_to_remove = self.length_to_remove()
+            self._length_to_plant = self.length_to_plant()
+
+            if update_fields is not None:
+                kwargs["update_fields"] = list(
+                    set(update_fields) | {"_length_to_remove", "_length_to_plant"}
+                )
+        super().save(*args, **kwargs)
 
     def get_bounding_box(self, hedges):
         """Return the bounding box of the given hedge set."""
@@ -370,13 +410,17 @@ class HedgeData(models.Model):
         return self.hedges().to_plant()
 
     def length_to_plant(self):
-        return self.hedges().to_plant().length
+        if self._length_to_plant is None:
+            self._length_to_plant = self.hedges().to_plant().length
+        return self._length_to_plant
 
     def hedges_to_remove(self):
         return self.hedges().to_remove()
 
     def length_to_remove(self):
-        return self.hedges().to_remove().length
+        if self._length_to_remove is None:
+            self._length_to_remove = self.hedges().to_remove().length
+        return self._length_to_remove
 
     def hedges_to_remove_pac(self):
         return self.hedges().to_remove().pac()
@@ -565,6 +609,43 @@ class HedgeData(models.Model):
             if not department_geom.intersects(hedge.geos_geometry):
                 return True
         return False
+
+    def get_statistics(self):
+        hedge_centroid_coords = self.get_centroid_to_remove()
+        ru_to_plant = self.hedges_to_plant().ru()
+        l350_3_to_plant = self.hedges_to_plant().l350_3()
+        hru_to_plant = self.hedges_to_plant().hru()
+        ru_to_remove = self.hedges_to_remove().ru()
+        l350_3_to_remove = self.hedges_to_remove().l350_3()
+        hru_to_remove = self.hedges_to_remove().hru()
+        return {
+            "longueur_detruite": round(self.length_to_remove(), 1),
+            "longueur_plantee": round(self.length_to_plant(), 1),
+            "nb_traces_d_categ": {
+                "ru": len(ru_to_remove),
+                "l350-3": len(l350_3_to_remove),
+                "hru": len(hru_to_remove),
+            },
+            "nb_traces_p_categ": {
+                "ru": len(ru_to_plant),
+                "l350-3": len(l350_3_to_plant),
+                "hru": len(hru_to_plant),
+            },
+            "longueur_d_categ": {
+                "ru": round(ru_to_remove.length, 1),
+                "l350-3": round(l350_3_to_remove.length, 1),
+                "hru": round(hru_to_remove.length, 1),
+            },
+            "longueur_p_categ": {
+                "ru": round(ru_to_plant.length, 1),
+                "l350-3": round(l350_3_to_plant.length, 1),
+                "hru": round(hru_to_plant.length, 1),
+            },
+            "lnglat_centroide_haie_detruite": (
+                f"{hedge_centroid_coords.x}, {hedge_centroid_coords.y}"
+            ),
+            "dept_haie_detruite": self.get_department(),
+        }
 
 
 SPECIES_GROUPS = Choices(

@@ -85,7 +85,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     @admin.display(description="Longueur des haies à détruire")
     def length_to_remove(self, obj):
-        return round(obj.length_to_remove())
+        return round(obj.length_to_plant())
 
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
