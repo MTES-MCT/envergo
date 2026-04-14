@@ -1,5 +1,5 @@
 import pytest
-from django.contrib.gis.geos import MultiPolygon
+from django.contrib.gis.geos import MultiPolygon, Polygon
 
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
@@ -223,10 +223,14 @@ class TestZoneResolution:
             map_type=MAP_TYPES.zonage, departments=["44"], zones=[]
         )
         # Small polygon near Bordeaux (~350 km from Nantes test hedges)
-        from django.contrib.gis.geos import Polygon
-
         small_poly = Polygon(
-            ((-0.58, 44.83), (-0.57, 44.83), (-0.57, 44.84), (-0.58, 44.84), (-0.58, 44.83)),
+            (
+                (-0.58, 44.83),
+                (-0.57, 44.83),
+                (-0.57, 44.84),
+                (-0.58, 44.84),
+                (-0.58, 44.83),
+            ),
             srid=EPSG_WGS84,
         )
         ZoneFactory(
@@ -256,7 +260,7 @@ class TestZoneResolution:
         assert moulinette.catalog["ru_zone_config"] is None
 
     def test_zone_key_not_in_config_returns_none(self):
-        """Zone found but its identifier has no matching config entry → None."""
+        """Zone found but its identifier has no matching config entry → None config."""
         _make_zonage_map("zone_unknown")
         settings = _zone_settings(("zone_X", 50, 2.0, 2.5, 3.0, 3.5))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
@@ -265,7 +269,7 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] is None
+        assert moulinette.catalog["ru_zone_id"] == "zone_unknown"
         assert moulinette.catalog["ru_zone_config"] is None
 
     def test_missing_zone_config_yields_non_disponible(self):
