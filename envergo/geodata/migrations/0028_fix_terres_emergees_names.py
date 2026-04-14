@@ -18,16 +18,14 @@ def fix_terres_emergees_names(apps, schema_editor):
     Map = apps.get_model("geodata", "Map")
     pattern = re.compile(r"delim_terres_france_id_([A-Z]+\d+)_\d+(?:_[a-zA-Z0-9]+)?\.gpkg")
 
-    to_update = []
-    for map_obj in Map.objects.filter(map_type="terres_emergees"):
+    queryset = Map.objects.filter(map_type="terres_emergees").only("id", "name", "file")
+    for map_obj in queryset.iterator():
         filename = os.path.basename(map_obj.file.name)
         match = pattern.match(filename)
         if not match:
             continue
         map_obj.name = f"Délim_terre_France_{match.group(1)}"
-        to_update.append(map_obj)
-
-    Map.objects.bulk_update(to_update, ["name"])
+        map_obj.save(update_fields=["name"])
 
 
 class Migration(migrations.Migration):
