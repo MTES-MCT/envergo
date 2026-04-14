@@ -30,6 +30,7 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
+    get_ru_zone_data,
 )
 from envergo.utils.fields import get_human_readable_value
 
@@ -736,6 +737,7 @@ class EspecesProtegeesRegimeUnique(
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
     RESULT_MATRIX = {
+        "non_disponible": RESULTS.non_disponible,
         "non_concerne": RESULTS.non_concerne,
         "dispense": RESULTS.dispense,
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
@@ -806,6 +808,10 @@ class EspecesProtegeesRegimeUnique(
         catalog["density_400"] = density_data.get("density_400")
         catalog["density_400_length"] = density_data.get("length_400")
         catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+
+        if self.moulinette.config.single_procedure:
+            if "ru_zone_config" not in self.catalog:
+                catalog.update(get_ru_zone_data(self.moulinette))
 
         hedges = haies.hedges_to_remove().n_alignement()
 
@@ -912,9 +918,13 @@ class EspecesProtegeesRegimeUnique(
         guaranteed non-None here because ``evaluate()`` short-circuits to
         ``non_disponible`` whenever the form is invalid.
         """
-        # 0. Department not in régime unique → not concerned
+        # 0. Department not in régime unique -> non concerné
         if not result_data["is_regime_unique"]:
             return "non_concerne"
+
+        # 0 Zone config unavailable -> non disponible
+        if self.catalog.get("ru_zone_config") is None:
+            return "non_disponible"
 
         aa_only = result_data["aa_only"]
         total_length = result_data["total_length"]
@@ -1001,4 +1011,7 @@ class EspecesProtegeesRegimeUnique(
         # exactly which values drove the cascade. None when settings are
         # missing/invalid — the template hides the table in that case.
         context["ep_ru_settings"] = self.params
+        context["ru_zone_id"] = self.catalog.get("ru_zone_id")
+        context["ru_zone_config"] = self.catalog.get("ru_zone_config")
+        context["ru_high_density"] = self.catalog.get("ru_high_density")
         return context
