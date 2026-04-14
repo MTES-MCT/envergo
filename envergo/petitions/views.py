@@ -1136,12 +1136,14 @@ class PetitionProjectInstructorMessagerieView(
         """Avoid errors if forms is invalid"""
 
         if form.errors:
+            error_list = "".join(
+                f"<li>{form.fields[field].label} : {error}</li>"
+                for field, errors in form.errors.items()
+                for error in errors
+            )
             messages.warning(
                 self.request,
-                """Le message n’a pas pu être envoyé.
-Vérifiez que la pièce jointe respecte les conditions suivantes :
-<ul><li>Taille maximale : 20 Mo</li>
-<li>Formats autorisés : PNG, JPG, PDF et ZIP</li>""",
+                f"Le message n’a pas pu être envoyé :<ul>{error_list}</ul>",
             )
 
         self.object = self.get_object()

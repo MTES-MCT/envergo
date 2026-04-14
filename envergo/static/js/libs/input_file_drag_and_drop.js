@@ -20,6 +20,26 @@
   };
   exports.DragNDrop = DragNDrop;
 
+  DragNDrop.prototype.updateFileState = function() {
+    console.log('hello')
+    const successMsg = this.box.querySelector('#success-box-msg');
+    if (this.input.files && this.input.files.length > 0) {
+      this.box.classList.add('has-file');
+      if (successMsg) {
+        const file = this.input.files[0];
+        const size = file.size < 1024 * 1024
+          ? (file.size / 1024).toFixed(0) + ' Ko'
+          : (file.size / (1024 * 1024)).toFixed(1) + ' Mo';
+        successMsg.textContent = file.name + ' (' + size + ')';
+      }
+    } else {
+      this.box.classList.remove('has-file');
+      if (successMsg) {
+        successMsg.textContent = '';
+      }
+    }
+  };
+
   DragNDrop.prototype.registerEvents = function() {
 
     this.box.addEventListener('dragover', function(evt) {
@@ -45,6 +65,11 @@
       evt.preventDefault();
       this.box.classList.remove('draghover');
       this.input.files = evt.dataTransfer.files;
+      this.updateFileState();
+    }.bind(this));
+
+    this.input.addEventListener('change', function() {
+      this.updateFileState();
     }.bind(this));
   };
 

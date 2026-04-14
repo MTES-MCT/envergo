@@ -12,6 +12,7 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import PetitionProject, Simulation, StatusLog
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
+from envergo.utils.validators import validate_mime
 
 
 class PetitionProjectForm(forms.ModelForm):
@@ -90,12 +91,23 @@ validate_extension = FileExtensionValidator(
     allowed_extensions=["png", "jpg", "jpeg", "pdf", "zip"],
 )
 
+ALLOWED_MIME_TYPES = {
+    "image/png",
+    "image/jpeg",
+    "application/pdf",
+    "application/zip",
+}
+
+
+def validate_mime_type(value):
+    validate_mime(value, ALLOWED_MIME_TYPES)
+
 
 class PetitionProjectInstructorMessageForm(forms.Form):
     """Form to send a message through demarches simplifiées API."""
 
     message_body = forms.CharField(
-        label="Votre message",
+        label="Message",
         help_text="",
         widget=forms.Textarea(
             attrs={"rows": 8, "placeholder": "Écrivez votre message ici…"}
@@ -109,7 +121,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_file_size, validate_extension],
+        validators=[validate_file_size, validate_extension, validate_mime_type],
     )
 
     class Meta:
