@@ -70,6 +70,9 @@ class Map(models.Model):
             choices=DEPARTMENT_CHOICES,
         ),
     )
+    # `geography=True`: query with __covers/__coveredby/__intersects, NOT
+    # __contains/__within/__overlaps (silent cast to geometry bypasses the
+    # GIST index → seq scans).
     geometry = gis_models.GeometryField(
         _("Simplified geometry"),
         help_text=_(
@@ -116,6 +119,9 @@ class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="zones")
+    # `geography=True`: query with __covers/__coveredby/__intersects, NOT
+    # __contains/__within/__overlaps (silent cast to geometry bypasses the
+    # GIST index → seq scans).
     geometry = gis_models.MultiPolygonField(
         geography=True,
         help_text=_(
@@ -153,6 +159,9 @@ class Line(gis_models.Model):
     """Stores an annotated geographic Line(s)."""
 
     map = models.ForeignKey(Map, on_delete=models.CASCADE, related_name="lines")
+    # `geography=True`: query with __covers/__coveredby/__intersects, NOT
+    # __contains/__within/__overlaps (silent cast to geometry bypasses the
+    # GIST index → seq scans).
     geometry = gis_models.MultiLineStringField(
         geography=True,
         help_text=_(
