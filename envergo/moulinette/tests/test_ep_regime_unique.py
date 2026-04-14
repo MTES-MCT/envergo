@@ -5,7 +5,7 @@ from django.contrib.gis.geos import MultiPolygon
 
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, france_polygon
-from envergo.moulinette.tests.factories import RUConfigHaieFactory
+from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
 from envergo.moulinette.tests.utils import (
     EP_RU_DEFAULT_SETTINGS,
     make_hedge,
@@ -28,6 +28,22 @@ def regime_unique_haie_criterion(france_map):
     """Create the RU haie regulation needed for replantation coefficient."""
     _regulation, criteria = setup_regime_unique_haie(france_map)
     return criteria
+
+
+# ---------------------------------------------------------------------------
+# Regime unique guard — step 0
+# ---------------------------------------------------------------------------
+
+
+def test_ep_ru_not_regime_unique_yields_non_concerne(ep_ru_criterion):
+    """Department not in régime unique → non_concerne."""
+    DCConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    assert moulinette.ep.ep_regime_unique.result_code == "non_concerne"
 
 
 # ---------------------------------------------------------------------------
