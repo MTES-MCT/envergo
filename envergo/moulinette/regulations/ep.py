@@ -428,7 +428,7 @@ class EspecesProtegeesNormandie(
         # We use the centroid of the hedges to find the zone in which the hedges are located.
         zonage = (
             Zone.objects.filter(
-                geometry__contains=centroid_geos,
+                geometry__covers=centroid_geos,
                 map__map_type=MAP_TYPES.zonage,
             )
             .defer("geometry")
