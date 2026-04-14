@@ -790,13 +790,11 @@ class EspecesProtegeesRegimeUnique(
     def get_catalog_data(self):
         """Populate the catalog with EP régime unique inputs.
 
-        Computes hedge lengths, ripisylve length, zone sensible flags,
-        line-buffer density, and per-hedge procedure-level results.
-
-        When the admin-supplied threshold settings are missing or invalid,
-        per-hedge results are skipped: the criterion is going to be
-        reported as ``non_disponible`` by ``evaluate()`` regardless, so
-        bailing out keeps the catalog free of meaningless values.
+        Computes hedge lengths, ripisylve length, and line-buffer density
+        eagerly. Zone-sensible flags and per-hedge procedure-level results
+        are deferred to ``cached_property`` accessors so the expensive geo
+        queries only run when the cascade actually needs them (step 6) or
+        when the debug / instructor views are rendered.
         """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
@@ -819,9 +817,6 @@ class EspecesProtegeesRegimeUnique(
         catalog["ep_ru_total_length"] = ceil(total_length)
         catalog["ep_ru_ripisylve_length"] = ceil(ripisylve_length)
 
-        hedges_in_zone_sensible = self.get_hedges_in_zone_sensible(hedges)
-        catalog["ep_ru_zone_sensible"] = hedges_in_zone_sensible
-
         # Treat missing density (None) as zero — low density steers the cascade
         # toward more constraining procedure levels when data is unavailable.
         density = catalog.get("density_400")
@@ -829,20 +824,39 @@ class EspecesProtegeesRegimeUnique(
             density = 0
         catalog["ep_ru_density"] = density
 
+        return catalog
+
+    @cached_property
+    def hedges_in_zone_sensible(self):
+        """Lazily compute which hedges intersect a zone sensible EP map."""
+        haies = self.catalog.get("haies")
+        if not haies:
+            return set()
+        hedges = haies.hedges_to_remove().n_alignement()
+        return self.get_hedges_in_zone_sensible(hedges)
+
+    @cached_property
+    def per_hedge_results(self):
+        """Lazily compute per-hedge procedure levels.
+
+        Only meaningful when the cascade falls through to step 6.  Returns
+        an empty dict when admin settings are missing or invalid.
+        """
         params = self.params
         if params is None:
-            return catalog
-
-        catalog["ep_ru_per_hedge_results"] = self.compute_per_hedge_results(
+            return {}
+        haies = self.catalog.get("haies")
+        if not haies:
+            return {}
+        hedges = haies.hedges_to_remove().n_alignement()
+        return self.compute_per_hedge_results(
             hedges,
-            catalog["ep_ru_total_length"],
-            density,
-            hedges_in_zone_sensible,
+            self.catalog.get("ep_ru_total_length", 0),
+            self.catalog.get("ep_ru_density", 0),
+            self.hedges_in_zone_sensible,
             l_haut=params["l_haut"],
             d_haut=params["d_haut"],
         )
-
-        return catalog
 
     def compute_per_hedge_results(
         self, hedges, total_length, density, hedges_in_zone_sensible, l_haut, d_haut
@@ -886,7 +900,6 @@ class EspecesProtegeesRegimeUnique(
             "total_length": self.catalog.get("ep_ru_total_length", 0),
             "ripisylve_length": self.catalog.get("ep_ru_ripisylve_length", 0),
             "density": self.catalog.get("ep_ru_density", 0),
-            "per_hedge_results": self.catalog.get("ep_ru_per_hedge_results", {}),
         }
 
     def get_result_code(self, result_data):
@@ -907,7 +920,6 @@ class EspecesProtegeesRegimeUnique(
         total_length = result_data["total_length"]
         ripisylve_length = result_data["ripisylve_length"]
         density = result_data["density"]
-        per_hedge_results = result_data["per_hedge_results"]
 
         params = self.params
         l_ripisylve = params["l_ripisylve"]
@@ -933,7 +945,10 @@ class EspecesProtegeesRegimeUnique(
             result = "derogation_inventaire"
         # 6. Per-hedge evaluation — pick the most constraining
         else:
-            result = max(per_hedge_results.values(), key=lambda r: EP_RU_RESULT_RANK[r])
+            result = max(
+                self.per_hedge_results.values(),
+                key=lambda r: EP_RU_RESULT_RANK[r],
+            )
 
         return result
 
@@ -953,7 +968,7 @@ class EspecesProtegeesRegimeUnique(
         if not haies:
             return []
 
-        hedges_in_zone_sensible = self.catalog.get("ep_ru_zone_sensible", set())
+        hedges_in_zone_sensible = self.hedges_in_zone_sensible
         hedges = haies.hedges_to_remove().n_alignement()
         HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
 
@@ -974,7 +989,7 @@ class EspecesProtegeesRegimeUnique(
         """Return density + EP-specific debug data."""
         context = super().get_debug_context()
 
-        per_hedge_results = self.catalog.get("ep_ru_per_hedge_results", {})
+        per_hedge_results = self.per_hedge_results
         hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["id"], "-")
