@@ -376,8 +376,18 @@ class HedgeData(models.Model):
         return iter(self.hedges())
 
     def save(self, *args, **kwargs):
-        self._length_to_remove = self.length_to_remove()
-        self._length_to_plant = self.length_to_plant()
+        update_fields = kwargs.get("update_fields")
+        if update_fields is None or "data" in update_fields:
+            # recompute cached value
+            self._length_to_remove = None
+            self._length_to_plant = None
+            self._length_to_remove = self.length_to_remove()
+            self._length_to_plant = self.length_to_plant()
+
+            if update_fields is not None:
+                kwargs["update_fields"] = list(
+                    set(update_fields) | {"_length_to_remove", "_length_to_plant"}
+                )
         super().save(*args, **kwargs)
 
     def get_bounding_box(self, hedges):
@@ -400,13 +410,17 @@ class HedgeData(models.Model):
         return self.hedges().to_plant()
 
     def length_to_plant(self):
-        return self.hedges().to_plant().length
+        if self._length_to_plant is None:
+            self._length_to_plant = self.hedges().to_plant().length
+        return self._length_to_plant
 
     def hedges_to_remove(self):
         return self.hedges().to_remove()
 
     def length_to_remove(self):
-        return self.hedges().to_remove().length
+        if self._length_to_remove is None:
+            self._length_to_remove = self.hedges().to_remove().length
+        return self._length_to_remove
 
     def hedges_to_remove_pac(self):
         return self.hedges().to_remove().pac()
