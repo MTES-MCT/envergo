@@ -5,11 +5,8 @@ from math import ceil
 
 import shapely
 from django import forms
-from django.contrib.gis.db.models import MultiPolygonField
-from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from django.core.validators import RegexValidator
-from django.db.models.functions import Cast
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
@@ -762,8 +759,8 @@ class EspecesProtegeesRegimeUnique(
     def get_hedges_in_zone_sensible(self, hedges):
         """Return the set of hedge IDs that intersect a "Zone sensible EP" map.
 
-        Aggregates all matching zones into a single multipolygon, then tests
-        each hedge for intersection in Python (shapely).
+        Filters matching zones with a DB spatial lookup, then tests each hedge
+        against each zone in Python (shapely) to build the result set.
         """
         if not hedges:
             return set()
@@ -771,21 +768,23 @@ class EspecesProtegeesRegimeUnique(
         hedges_geom = MultiLineString(
             [h.geos_geometry for h in hedges], srid=EPSG_WGS84
         )
-        qs = Zone.objects.filter(
+        zones = Zone.objects.filter(
             map__map_type=MAP_TYPES.zone_sensible_ep,
             geometry__intersects=hedges_geom,
-        ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
-        multipolygon = qs["geom"]
+        )
 
-        if not multipolygon:
-            return set()
-
-        geom = shapely.from_wkt(multipolygon.wkt)
+        # Run a nested loop to check intersection between hedges and zones
+        # We could Union the zones and run a single loop, but it would actually
+        # be MORE expensive
+        hedge_list = list(hedges)
         result = set()
-        for h in hedges:
-            intersection = h.geometry.intersection(geom)
-            if not intersection.is_empty:
-                result.add(h.id)
+        for zone in zones:
+            if len(result) >= len(hedge_list):
+                break
+            zone_geom = shapely.from_wkt(zone.geometry.wkt)
+            for h in hedge_list:
+                if h.id not in result and h.geometry.intersects(zone_geom):
+                    result.add(h.id)
         return result
 
     def get_catalog_data(self):
