@@ -24,16 +24,16 @@ class Natura2000HaieRegulation(HaieRegulationEvaluator):
 
 class Natura2000HaieSettings(forms.Form):
     result = forms.ChoiceField(
-        label="Resultat attendu de l'évaluateur",
+        label="Resultat attendu de l’évaluateur",
         help_text="Indique si l’arrachage de haies est soumis à évaluation des incidences Natura 2000 pour ce critère.",
         required=True,
         choices=RESULTS,
     )
-    concerne_aa = forms.BooleanField(
-        label="Concerne les alignements d'arbres",
-        help_text="Indique si ce critère concerne les alignements d'arbres.",
+    concerne_aa = forms.ChoiceField(
+        label="Concerne les alignements d’arbres",
+        help_text="Indique si ce critère concerne les alignements d’arbres.",
         required=False,
-        initial=False,
+        choices=(("oui", "Oui"), ("non", "Non")),
     )
 
 
@@ -127,5 +127,5 @@ class Natura2000Haie(CriterionEvaluator):
         return (
             self.catalog["l_n2000_hors_aa"] > 0.0,
             self.catalog["l_n2000_aa"] > 0.0,
-            bool(self.settings.get("concerne_aa")),
+            self.settings.get("concerne_aa") == "oui",
         )
