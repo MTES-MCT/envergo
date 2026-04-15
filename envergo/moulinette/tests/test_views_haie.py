@@ -341,6 +341,79 @@ def test_moulinette_post_form_error(client):
     assert error_event.metadata["data"] == data
 
 
+def test_moulinette_post_form_max_hedge_length_exceeded(client):
+    """The form shows an error when hedges to remove exceed MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH."""
+
+    DCConfigHaieFactory()
+    # Create a hedge longer than the default 10 km (10000 m) limit
+    hedge = HedgeFactory(length=11000, additionalData__sur_parcelle_pac=False)
+    hedges = HedgeDataFactory(hedges=[hedge])
+
+    url = reverse("moulinette_form")
+    triage = urlencode(
+        {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+        }
+    )
+    data = {
+        "department": "44",
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "haies": str(hedges.id),
+    }
+    res = client.post(f"{url}?{triage}", data)
+
+    assert res.status_code == 200
+    assert FORM_ERROR in res.content.decode()
+    error_event = Event.objects.get(
+        category="erreur", event="formulaire-simu", metadata__user_type="anonymous"
+    )
+    assert "errors" in error_event.metadata
+    haies_errors = error_event.metadata["errors"]["haies"]
+    error_codes = [e["code"] for e in haies_errors]
+    assert (
+        "max_length_exceeded" in error_codes
+    ), f"Expected 'max_length_exceeded' in {error_codes}"
+
+
+def test_moulinette_post_form_hedge_length_within_limit(client):
+    """No max length error when hedges to remove are within the limit."""
+
+    DCConfigHaieFactory()
+    hedge = HedgeFactory(length=5000, additionalData__sur_parcelle_pac=False)
+    hedges = HedgeDataFactory(hedges=[hedge])
+
+    url = reverse("moulinette_form")
+    triage = urlencode(
+        {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+        }
+    )
+    data = {
+        "department": "44",
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "non",
+        "haies": str(hedges.id),
+    }
+    client.post(f"{url}?{triage}", data)
+
+    assert not Event.objects.filter(category="erreur", event="formulaire-simu").exists()
+
+
 def test_result_p_view_with_hedges_to_remove_outside_department(client):
     """Test if a warning is displayed on result pages when hedges to remove are outside department"""
 
