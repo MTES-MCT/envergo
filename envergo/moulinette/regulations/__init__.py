@@ -443,7 +443,7 @@ class CriterionEvaluator(ABC):
     # The form class to use to ask the admin for necessary settings
     settings_form_class = None
 
-    def __init__(self, moulinette, distance, settings):
+    def __init__(self, criterion, moulinette, distance, settings):
         """Initialize the evaluator.
 
         Args:
@@ -455,6 +455,7 @@ class CriterionEvaluator(ABC):
             raise RuntimeError(
                 f"CriterionEvaluator {type(self).__name__} must have a `slug` attribute."
             )
+        self.criterion = criterion
         self.moulinette = moulinette
         self.distance = distance
         self.moulinette.catalog.update(self.get_catalog_data())

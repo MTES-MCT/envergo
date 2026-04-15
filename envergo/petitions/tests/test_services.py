@@ -356,7 +356,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_aisne_get_instructor_view_context(
-        moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
+        moulinette.ep.ep_aisne__hru._evaluator, petition_project, moulinette
     )
 
     expected_result = {
@@ -487,7 +487,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_normandie_get_instructor_view_context(
-        moulinette.ep.ep_normandie._evaluator, petition_project, moulinette
+        moulinette.ep.ep_normandie__hru._evaluator, petition_project, moulinette
     )
 
     expected_result = {
@@ -655,7 +655,9 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
+        moulinette.conditionnalite_pac.bcae8__hru._evaluator,
+        petition_project,
+        moulinette,
     )
     # noqa: E501
     expected_result = {
@@ -783,7 +785,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Alignements arbres L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -793,7 +795,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     context = alignement_arbres_get_instructor_view_context(
-        moulinette.alignement_arbres.alignement_arbres._evaluator,
+        moulinette.alignement_arbres.alignement_arbres__hru._evaluator,
         petition_project,
         moulinette,
     )

@@ -62,7 +62,7 @@ class Natura2000Haie(HaieCriterionEvaluator):
 
         # Find all the Zones for the current Perimeter and that intersects any of the hedges
         qs = (
-            self.moulinette.natura2000_haie.natura2000_haie.activation_map.zones.all()
+            self.criterion.activation_map.zones.all()
             .filter(geometry__intersects=hedges_geom)
             .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
         )

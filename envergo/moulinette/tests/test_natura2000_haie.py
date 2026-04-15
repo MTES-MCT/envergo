@@ -54,7 +54,7 @@ def test_moulinette_evaluation(coords, expected_result):
     moulinette = MoulinetteHaie(data)
     assert moulinette.natura2000_haie.result == expected_result
     if expected_result != "non_concerne":
-        assert moulinette.natura2000_haie.natura2000_haie.result == expected_result
+        assert moulinette.natura2000_haie.natura2000_haie__hru.result == expected_result
 
 
 @pytest.mark.parametrize(
@@ -71,4 +71,6 @@ def test_moulinette_evaluation_alignement(coords, expected_result):
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.natura2000_haie.natura2000_haie.result_code == expected_result
+    assert (
+        moulinette.natura2000_haie.natura2000_haie__hru.result_code == expected_result
+    )

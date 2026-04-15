@@ -560,20 +560,20 @@ class EspecesProtegeesNormandie(
             self.catalog.get("alignement_bord_voie_every_hedge", False)
             and hasattr(self.moulinette, "alignement_arbres")
             and self.moulinette.alignement_arbres.is_activated
-            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
+            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres__l350_3")
         ):
             if (
-                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                self.moulinette.alignement_arbres.alignement_arbres__l350_3.result_code
                 == "soumis_securite"
             ):
                 result = "dispense_L350"
             elif (
-                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                self.moulinette.alignement_arbres.alignement_arbres__l350_3.result_code
                 == "soumis_esthetique"
             ):
                 result = "a_verifier_L350"
             elif (
-                self.moulinette.alignement_arbres.alignement_arbres.result_code
+                self.moulinette.alignement_arbres.alignement_arbres__l350_3.result_code
                 == "soumis_autorisation"
             ):
                 result = "a_verifier_L350"

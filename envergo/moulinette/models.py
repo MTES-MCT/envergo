@@ -800,7 +800,9 @@ class Criterion(models.Model):
         self._templates = {t.key: t for t in self.templates.all()}
 
         self.moulinette = moulinette
-        self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
+        self._evaluator = self.evaluator(
+            self, moulinette, distance, self.evaluator_settings
+        )
         self._evaluator.evaluate()
 
     def get_evaluator(self):
