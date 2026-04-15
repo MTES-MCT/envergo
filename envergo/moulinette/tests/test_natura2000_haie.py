@@ -2,6 +2,7 @@ import pytest
 
 from envergo.hedges.models import HedgeTypeBase
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.natura2000_haie import Natura2000HaieSettings
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -75,6 +76,27 @@ def test_moulinette_evaluation_alignement(coords, expected_result, n2000_criteri
     assert moulinette.natura2000_haie.natura2000_haie.result_code == expected_result
 
 
+class TestNatura2000HaieSettings:
+    """Test the Natura2000HaieSettings form validation."""
+
+    def test_concerne_aa_accepts_oui(self):
+        form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": "oui"})
+        assert form.is_valid()
+
+    def test_concerne_aa_accepts_non(self):
+        form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": "non"})
+        assert form.is_valid()
+
+    @pytest.mark.parametrize(
+        "value",
+        [True, False, "True", "False", "yes", "no", "1", 1, 0, "anything"],
+    )
+    def test_concerne_aa_rejects_invalid_values(self, value):
+        form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": value})
+        assert not form.is_valid()
+        assert "concerne_aa" in form.errors
+
+
 class TestConcerneAAParam:
     """Test the concerne_aa parameter across all combinations of settings and hedge types."""
 
@@ -82,26 +104,26 @@ class TestConcerneAAParam:
     @pytest.mark.parametrize(
         "concerne_aa, result, hedge_types, expected_result_code",
         [
-            # concerne_aa=True, result=soumis
-            (True, "soumis", [HedgeTypeBase.ALIGNEMENT], "soumis"),
-            (True, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
-            (True, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
-            # concerne_aa=True, result=non_soumis
-            (True, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis"),
-            (True, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
-            (True, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
-            # concerne_aa=False, result=soumis
-            (False, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (False, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
-            (False, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
-            # concerne_aa=False, result=non_soumis
-            (False, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (False, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
-            (False, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
+            # concerne_aa="oui", result=soumis
+            ("oui", "soumis", [HedgeTypeBase.ALIGNEMENT], "soumis"),
+            ("oui", "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
+            ("oui", "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
+            # concerne_aa="oui", result=non_soumis
+            ("oui", "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis"),
+            ("oui", "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
+            ("oui", "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
+            # concerne_aa="non", result=soumis
+            ("non", "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
+            ("non", "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
+            ("non", "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
+            # concerne_aa="non", result=non_soumis
+            ("non", "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
+            ("non", "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
+            ("non", "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
             # result non renseigné, concerne_aa renseigné → settings form invalide → non_disponible
-            (True, None, [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
-            (True, None, [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
-            (True, None, [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
+            ("oui", None, [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
+            ("oui", None, [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
+            ("oui", None, [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
             # concerne_aa non renseigné, result renseigné → concerne_aa=False par défaut
             (None, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
             (None, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
@@ -135,8 +157,8 @@ class TestConcerneAAParam:
         evaluator_settings = {}
         if result is not None:
             evaluator_settings["result"] = result
-        if concerne_aa:
-            evaluator_settings["concerne_aa"] = True
+        if concerne_aa is not None:
+            evaluator_settings["concerne_aa"] = concerne_aa
         CriterionFactory(
             title="Natura 2000 Haie > Test",
             regulation=regulation,
