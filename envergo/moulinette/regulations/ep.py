@@ -790,15 +790,8 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
-        """Populate the catalog with EP régime unique inputs.
+        """Populate the catalog with EP régime unique inputs."""
 
-        Computes hedge lengths, ripisylve length, line-buffer density, and
-        RU zone config (when in régime unique) eagerly. Zone-sensible flags
-        and per-hedge procedure-level results
-        are deferred to ``cached_property`` accessors so the expensive geo
-        queries only run when the cascade actually needs them (step 6) or
-        when the debug / instructor views are rendered.
-        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
@@ -910,13 +903,10 @@ class EspecesProtegeesRegimeUnique(
     def get_result_code(self, result_data):
         """Cascade algorithm for the EP régime unique procedure level.
 
-        Guard clauses (steps 0a-0b) exit early, then project-level rules
-        (steps 1-5) are tried. If none match, the most constraining per-hedge
-        result wins (step 6). All thresholds
-        come from the admin-configurable settings (validated by
-        ``EspecesProtegeesRegimeUniqueSettings``); ``self.params`` is
-        guaranteed non-None here because ``evaluate()`` short-circuits to
-        ``non_disponible`` whenever the form is invalid.
+        The result depends on several steps, in that order:
+         - guard clauses
+         - project level data
+         - per hedge result
         """
         # 0a. Department not in régime unique -> non concerné
         if not result_data["is_regime_unique"]:

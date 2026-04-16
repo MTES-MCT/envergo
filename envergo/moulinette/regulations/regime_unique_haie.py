@@ -66,8 +66,7 @@ def resolve_zone_config(moulinette):
         .first()
     )
 
-    zone_id = None
-    zone_config = None
+    zone_id, zone_config = None, None
     if zonage is not None:
         zone_id = zonage.attributes.get("identifiant_zone")
         if zone_id and zone_id in coeff_compensation:
