@@ -21,6 +21,7 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_point,
     get_department_from_coords,
 )
+from envergo.moulinette.regulations import HaieCriterionScope
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -646,6 +647,30 @@ class HedgeData(models.Model):
             ),
             "dept_haie_detruite": self.get_department(),
         }
+
+    def get_by_scope(self, single_procedure, scope):
+        if single_procedure:
+            if scope == HaieCriterionScope.hru:
+                return self.hedges().hru()
+            elif scope == HaieCriterionScope.ru:
+                return self.hedges().ru()
+            elif scope == HaieCriterionScope.l350_3:
+                return self.hedges().l350_3()
+            else:
+                raise NotImplementedError()
+        else:
+            if scope == HaieCriterionScope.hru:
+                return self.hedges()
+            else:
+                return []
+
+    def get_hedges_by_scope(self, single_procedure):
+        hedges_by_scope = {
+            scope: self.get_by_scope(single_procedure, scope)
+            for scope in HaieCriterionScope
+        }
+
+        return hedges_by_scope
 
 
 SPECIES_GROUPS = Choices(

@@ -638,6 +638,17 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
         ):
             cls.slug = f"{cls._base_slug}__{cls.scope.name}"
 
+    def __init__(self, criterion, moulinette, distance, settings):
+        super().__init__(criterion, moulinette, distance, settings)
+        if "haies" in self.moulinette.catalog:
+            self.hedges = self.moulinette.catalog["haies"].get_by_scope(
+                self.moulinette.config.single_procedure, self.scope
+            )
+        else:
+            from envergo.hedges.models import HedgeList
+
+            self.hedges = HedgeList()
+
 
 SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.soumis: True,

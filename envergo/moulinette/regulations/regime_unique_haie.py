@@ -66,7 +66,7 @@ class RegimeUniqueHaieRu(PlantationConditionMixin, RegimeUniqueHaieHru):
         haies = self.catalog["haies"]
         minimum_length_to_plant = 0.0
         lengths_by_type = defaultdict(int)
-        for to_remove in haies.hedges_to_remove().ru():
+        for to_remove in self.hedges.to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
 
         for hedge_type, length in lengths_by_type.items():

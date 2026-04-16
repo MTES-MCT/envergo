@@ -2754,20 +2754,12 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         EXISTS subqueries.
         """
         dept_centroid = self.department.centroid
-        hedges_by_scope = {scope: [] for scope in HaieCriterionScope}
         if "haies" in self.catalog:
-            if self.config.single_procedure:
-                hedges_by_scope[HaieCriterionScope.ru] = (
-                    self.catalog["haies"].hedges().ru()
-                )
-                hedges_by_scope[HaieCriterionScope.hru] = (
-                    self.catalog["haies"].hedges().hru()
-                )
-                hedges_by_scope[HaieCriterionScope.l350_3] = (
-                    self.catalog["haies"].hedges().l350_3()
-                )
-            else:
-                hedges_by_scope[HaieCriterionScope.hru] = self.catalog["haies"].hedges()
+            hedges_by_scope = self.catalog["haies"].get_hedges_by_scope(
+                self.config.single_procedure
+            )
+        else:
+            hedges_by_scope = {scope: [] for scope in HaieCriterionScope}
 
         # Build scope → evaluator classpaths mapping
         evaluators_by_scope = {scope: [] for scope in HaieCriterionScope}
