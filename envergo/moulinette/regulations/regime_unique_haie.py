@@ -121,8 +121,8 @@ def compute_ru_compensation_ratio(moulinette):
     if not total_length:
         return 0.0
 
-    # The method could be called by several evaluators so the zonage config
-    # might already be in the catalog
+    # Zone data (including per-hedge coefficients) may already be in the
+    # catalog if another evaluator populated it.
     if "ru_zone_config" not in moulinette.catalog:
         moulinette.catalog.update(get_ru_zone_data(moulinette))
     coefficients = moulinette.catalog["ru_per_hedge_coefficients"]

@@ -200,7 +200,7 @@ class TestNoZonage:
 
 
 class TestZoneResolution:
-    """Tests for has_ru_zonage=True — zone lookup with nearest-zone fallback."""
+    """Tests for has_ru_zonage=True — zone lookup with distance-capped fallback."""
 
     def test_centroid_in_zone_uses_zone_config(self):
         """When the centroid falls inside a zonage polygon, use that zone's config."""
@@ -216,12 +216,37 @@ class TestZoneResolution:
 
     def test_centroid_not_in_zone_uses_nearest(self):
         """When no zone covers the centroid, fall back to the nearest zone."""
-        # Zone in dept 44 covers France → centroid is inside, so this would
-        # match via covers. To test nearest-zone fallback, create a zone that
-        # does NOT cover the centroid. Use a small polygon far from Nantes.
         zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
-        # Small polygon near Bordeaux (~350 km from Nantes test hedges)
-        small_poly = Polygon(
+        # Small polygon ~20 km from the HedgeFactory default centroid (~43.687, 3.585)
+        nearby_poly = Polygon(
+            (
+                (3.58, 43.50),
+                (3.59, 43.50),
+                (3.59, 43.51),
+                (3.58, 43.51),
+                (3.58, 43.50),
+            ),
+            srid=EPSG_WGS84,
+        )
+        ZoneFactory(
+            map=zonage_map,
+            geometry=MultiPolygon([nearby_poly]),
+            attributes={"identifiant_zone": "zone_nearest"},
+        )
+        settings = zone_settings(("zone_nearest", 50, 1.2, 1.4, 1.6, 1.8))
+        RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+        moulinette = make_moulinette_haie_with_density(
+            density=80,
+            hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
+            reimplantation="replantation",
+        )
+        assert moulinette.catalog["ru_zone_id"] == "zone_nearest"
+
+    def test_distant_zone_ignored(self):
+        """A zone beyond the 50 km cap is ignored even if it's the nearest."""
+        zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
+        # Small polygon near Bordeaux (~350 km from HedgeFactory default centroid)
+        distant_poly = Polygon(
             (
                 (-0.58, 44.83),
                 (-0.57, 44.83),
@@ -233,17 +258,18 @@ class TestZoneResolution:
         )
         ZoneFactory(
             map=zonage_map,
-            geometry=MultiPolygon([small_poly]),
-            attributes={"identifiant_zone": "zone_nearest"},
+            geometry=MultiPolygon([distant_poly]),
+            attributes={"identifiant_zone": "zone_far"},
         )
-        settings = zone_settings(("zone_nearest", 50, 1.2, 1.4, 1.6, 1.8))
+        settings = zone_settings(("zone_far", 50, 1.2, 1.4, 1.6, 1.8))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] == "zone_nearest"
+        assert moulinette.catalog["ru_zone_id"] is None
+        assert moulinette.catalog["ru_zone_config"] is None
 
     def test_no_zones_returns_none(self):
         """When no zonage zones exist, zone config is None."""
