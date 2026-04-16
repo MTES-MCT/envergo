@@ -124,7 +124,7 @@ def test_moulinette_evaluation_non_disponible(type_haie, expected_result):
 # ---------------------------------------------------------------------------
 
 
-def _make_zonage_map(zone_id, departments=None):
+def make_zonage_map(zone_id, departments=None):
     """Create a zonage Map with a single Zone covering France."""
     if departments is None:
         departments = ["44"]
@@ -141,7 +141,7 @@ def _make_zonage_map(zone_id, departments=None):
     return zonage_map
 
 
-def _zone_settings(*zones, default=None):
+def zone_settings(*zones, default=None):
     """Build a ``single_procedure_settings`` dict from zone configs.
 
     Each zone is a ``(key, X_densite, R1_non_arboree_HD, R2_non_arboree_LD,
@@ -174,7 +174,7 @@ class TestNoZonage:
 
     def test_uses_default_config(self):
         """Without zonage, always return the default config."""
-        settings = _zone_settings(default=(50, 1.0, 1.1, 1.2, 1.3))
+        settings = zone_settings(default=(50, 1.0, 1.1, 1.2, 1.3))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=False)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -185,8 +185,8 @@ class TestNoZonage:
 
     def test_ignores_existing_zonage_maps(self):
         """Zone maps exist but has_ru_zonage=False — they are not queried."""
-        _make_zonage_map("zone_A")
-        settings = _zone_settings(
+        make_zonage_map("zone_A")
+        settings = zone_settings(
             ("zone_A", 50, 3.0, 3.5, 4.0, 4.5),
             default=(50, 1.0, 1.0, 1.0, 1.0),
         )
@@ -204,8 +204,8 @@ class TestZoneResolution:
 
     def test_centroid_in_zone_uses_zone_config(self):
         """When the centroid falls inside a zonage polygon, use that zone's config."""
-        _make_zonage_map("zone_A")
-        settings = _zone_settings(("zone_A", 50, 1.2, 1.4, 1.6, 1.8))
+        make_zonage_map("zone_A")
+        settings = zone_settings(("zone_A", 50, 1.2, 1.4, 1.6, 1.8))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -219,9 +219,7 @@ class TestZoneResolution:
         # Zone in dept 44 covers France → centroid is inside, so this would
         # match via covers. To test nearest-zone fallback, create a zone that
         # does NOT cover the centroid. Use a small polygon far from Nantes.
-        zonage_map = MapFactory(
-            map_type=MAP_TYPES.zonage, departments=["44"], zones=[]
-        )
+        zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
         # Small polygon near Bordeaux (~350 km from Nantes test hedges)
         small_poly = Polygon(
             (
@@ -238,7 +236,7 @@ class TestZoneResolution:
             geometry=MultiPolygon([small_poly]),
             attributes={"identifiant_zone": "zone_nearest"},
         )
-        settings = _zone_settings(("zone_nearest", 50, 1.2, 1.4, 1.6, 1.8))
+        settings = zone_settings(("zone_nearest", 50, 1.2, 1.4, 1.6, 1.8))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -249,7 +247,7 @@ class TestZoneResolution:
 
     def test_no_zones_returns_none(self):
         """When no zonage zones exist, zone config is None."""
-        settings = _zone_settings(("zone_A", 50, 1.0, 1.0, 1.0, 1.0))
+        settings = zone_settings(("zone_A", 50, 1.0, 1.0, 1.0, 1.0))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -261,8 +259,8 @@ class TestZoneResolution:
 
     def test_zone_key_not_in_config_returns_none(self):
         """Zone found but its identifier has no matching config entry → None config."""
-        _make_zonage_map("zone_unknown")
-        settings = _zone_settings(("zone_X", 50, 2.0, 2.5, 3.0, 3.5))
+        make_zonage_map("zone_unknown")
+        settings = zone_settings(("zone_X", 50, 2.0, 2.5, 3.0, 3.5))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -274,7 +272,7 @@ class TestZoneResolution:
 
     def test_missing_zone_config_yields_non_disponible(self):
         """When zone config is None, the evaluator returns non_disponible."""
-        settings = _zone_settings(("zone_A", 50, 1.0, 1.0, 1.0, 1.0))
+        settings = zone_settings(("zone_A", 50, 1.0, 1.0, 1.0, 1.0))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -290,7 +288,7 @@ class TestPerHedgeCoefficients:
 
     def test_arboree_high_density(self):
         """Mixte hedge + density above threshold → R3_arboree_HD."""
-        settings = _zone_settings(default=(60, 1.0, 1.1, 1.8, 2.0))
+        settings = zone_settings(default=(60, 1.0, 1.1, 1.8, 2.0))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -303,7 +301,7 @@ class TestPerHedgeCoefficients:
 
     def test_arboree_low_density(self):
         """Mixte hedge + density below threshold → R4_arboree_LD."""
-        settings = _zone_settings(default=(60, 1.0, 1.1, 1.8, 2.0))
+        settings = zone_settings(default=(60, 1.0, 1.1, 1.8, 2.0))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=40,
@@ -316,7 +314,7 @@ class TestPerHedgeCoefficients:
 
     def test_non_arboree_high_density(self):
         """Non-mixte hedge + density above threshold → R1_non_arboree_HD."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -328,7 +326,7 @@ class TestPerHedgeCoefficients:
 
     def test_non_arboree_low_density(self):
         """Non-mixte hedge + density below threshold → R2_non_arboree_LD."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=40,
@@ -340,7 +338,7 @@ class TestPerHedgeCoefficients:
 
     def test_density_at_threshold_is_high(self):
         """Density exactly equal to X_densite counts as high density."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=60,
@@ -354,7 +352,7 @@ class TestPerHedgeCoefficients:
     @pytest.mark.parametrize("type_haie", ["buissonnante", "arbustive"])
     def test_all_non_mixte_types_are_non_arboree(self, type_haie):
         """buissonnante, arbustive map to non_arboree (degradee is not valid in RU)."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -362,13 +360,13 @@ class TestPerHedgeCoefficients:
             reimplantation="replantation",
         )
         coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
-        assert list(coefficients.values()) == [1.5], (
-            f"{type_haie} should use R1_non_arboree_HD"
-        )
+        assert list(coefficients.values()) == [
+            1.5
+        ], f"{type_haie} should use R1_non_arboree_HD"
 
     def test_alignements_excluded_from_coefficients(self):
         """Alignement hedges should not appear in per-hedge coefficients."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -384,7 +382,7 @@ class TestCompensationRatio:
 
     def test_single_hedge_returns_its_coefficient(self):
         """A single non-alignement hedge → ratio equals its coefficient."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -397,7 +395,7 @@ class TestCompensationRatio:
     def test_weighted_average_mixed_types(self):
         """Multiple hedges of different types → weighted average by length."""
         # arboree_HD=2.0, non_arboree_HD=1.0
-        settings = _zone_settings(default=(60, 1.0, 1.5, 2.0, 2.5))
+        settings = zone_settings(default=(60, 1.0, 1.5, 2.0, 2.5))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -413,7 +411,7 @@ class TestCompensationRatio:
 
     def test_only_alignements_returns_zero(self):
         """When all hedges are alignements, ratio is 0.0."""
-        settings = _zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
+        settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
             density=80,
@@ -436,8 +434,8 @@ class TestCompensationRatio:
 
     def test_zone_specific_config_used_for_ratio(self):
         """When a zonage matches, its coefficients drive the ratio, not the default."""
-        _make_zonage_map("zone_A")
-        settings = _zone_settings(("zone_A", 50, 3.0, 3.5, 4.0, 4.5))
+        make_zonage_map("zone_A")
+        settings = zone_settings(("zone_A", 50, 3.0, 3.5, 4.0, 4.5))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
             density=80,

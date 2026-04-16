@@ -1,3 +1,11 @@
+"""Régime unique haie — zone-based compensation coefficients.
+
+Provides zone resolution (mapping a project's location to a coefficient
+matrix), per-hedge coefficient assignment based on density and hedge type,
+and a weighted-average compensation ratio used by both the régime unique
+haie evaluator and the EP régime unique evaluator.
+"""
+
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import GEOSGeometry
 
@@ -24,8 +32,11 @@ _COEFF_KEY = {
 def resolve_zone_config(moulinette):
     """Return the ``(zone_id, zone_config)`` pair for the project's location.
 
-    Returns ``(None, None)`` when zonage is enabled but no matching zone
-    or config entry is found.
+    Three possible outcomes:
+    - ``("default", {...})``: zonage disabled — uses the default matrix.
+    - ``(zone_id, {...})``: zonage enabled, matching zone found.
+    - ``(zone_id_or_none, None)``: zonage enabled but no matching zone
+      or no config entry for the found zone.
     """
     config = moulinette.config
     settings = config.single_procedure_settings
@@ -109,7 +120,7 @@ def compute_ru_compensation_ratio(moulinette):
         return 0.0
 
     # The method could be called by several evaluators so the zonage config
-    # might already still be in the catalog
+    # might already be in the catalog
     if "ru_zone_config" not in moulinette.catalog:
         moulinette.catalog.update(get_ru_zone_data(moulinette))
     coefficients = moulinette.catalog["ru_per_hedge_coefficients"]

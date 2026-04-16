@@ -792,8 +792,9 @@ class EspecesProtegeesRegimeUnique(
     def get_catalog_data(self):
         """Populate the catalog with EP régime unique inputs.
 
-        Computes hedge lengths, ripisylve length, and line-buffer density
-        eagerly. Zone-sensible flags and per-hedge procedure-level results
+        Computes hedge lengths, ripisylve length, line-buffer density, and
+        RU zone config (when in régime unique) eagerly. Zone-sensible flags
+        and per-hedge procedure-level results
         are deferred to ``cached_property`` accessors so the expensive geo
         queries only run when the cascade actually needs them (step 6) or
         when the debug / instructor views are rendered.
@@ -909,18 +910,19 @@ class EspecesProtegeesRegimeUnique(
     def get_result_code(self, result_data):
         """Cascade algorithm for the EP régime unique procedure level.
 
-        Project-level rules (steps 0-5) are tried first. If none match, the
-        most constraining per-hedge result wins (step 6). All thresholds
+        Guard clauses (steps 0a-0b) exit early, then project-level rules
+        (steps 1-5) are tried. If none match, the most constraining per-hedge
+        result wins (step 6). All thresholds
         come from the admin-configurable settings (validated by
         ``EspecesProtegeesRegimeUniqueSettings``); ``self.params`` is
         guaranteed non-None here because ``evaluate()`` short-circuits to
         ``non_disponible`` whenever the form is invalid.
         """
-        # 0. Department not in régime unique -> non concerné
+        # 0a. Department not in régime unique -> non concerné
         if not result_data["is_regime_unique"]:
             return "non_concerne"
 
-        # 0 Zone config unavailable -> non disponible
+        # 0b. Zone config unavailable -> non disponible
         if self.catalog.get("ru_zone_config") is None:
             return "non_disponible"
 
