@@ -28,6 +28,10 @@ _COEFF_KEY = {
     ("non_arboree", "LD"): "R2_non_arboree_LD",
 }
 
+# Maximum distance (metres) for nearest-zone fallback.
+# This is not a business rule but a technical safeguard
+MAX_ZONE_DISTANCE_M = 50_000  # 50 km
+
 
 def resolve_zone_config(moulinette):
     """Return the ``(zone_id, zone_config)`` pair for the project's location.
@@ -51,24 +55,23 @@ def resolve_zone_config(moulinette):
 
     dept_code = moulinette.department.department
 
-    # Single distance query: containing zones have distance=0.
-    # This bypasses the GiST index (no geometry__covers filter), but the number of
-    # zonage rows per department is small enough that a sequential distance scan
-    # is negligible.
-    zonage = (
+    # Single distance query: containing zones have distance=0, so the nearest
+    # zone is the best match. Zones beyond _MAX_ZONE_DISTANCE_M are discarded.
+    zone = (
         Zone.objects.filter(
             map__map_type=MAP_TYPES.zonage,
             map__departments__contains=[dept_code],
         )
         .annotate(distance=Distance("geometry", centroid_geos))
+        .filter(distance__lte=MAX_ZONE_DISTANCE_M)
         .order_by("distance")
         .defer("geometry")
         .first()
     )
 
     zone_id, zone_config = None, None
-    if zonage is not None:
-        zone_id = zonage.attributes.get("identifiant_zone")
+    if zone is not None:
+        zone_id = zone.attributes.get("identifiant_zone")
         if zone_id and zone_id in coeff_compensation:
             zone_config = coeff_compensation[zone_id]
 
