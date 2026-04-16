@@ -65,10 +65,10 @@ class DepartmentSearchMixin:
                 Subquery(valid_config_qs.values("contacts_info")[:1]),
                 Subquery(other_config_qs.values("contacts_info")[:1]),
                 Value(
-                    '<p class="fr-text--sm fr-my-2w fr-error-text">'
+                    "<p><i>"
                     "Les coordonnées du guichet unique dans ce département"
                     " ne sont pas encore disponibles."
-                    "</p>"
+                    "</i></p>"
                 ),
                 output_field=TextField(),
             ),
