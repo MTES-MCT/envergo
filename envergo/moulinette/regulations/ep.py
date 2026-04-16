@@ -30,6 +30,7 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
+    get_ru_zone_data,
 )
 from envergo.utils.fields import get_human_readable_value
 
@@ -736,6 +737,7 @@ class EspecesProtegeesRegimeUnique(
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
     RESULT_MATRIX = {
+        "non_disponible": RESULTS.non_disponible,
         "non_concerne": RESULTS.non_concerne,
         "dispense": RESULTS.dispense,
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
@@ -788,24 +790,20 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
-        """Populate the catalog with EP régime unique inputs.
+        """Populate the catalog with EP régime unique inputs."""
 
-        Computes hedge lengths, ripisylve length, and line-buffer density
-        eagerly. Zone-sensible flags and per-hedge procedure-level results
-        are deferred to ``cached_property`` accessors so the expensive geo
-        queries only run when the cascade actually needs them (step 6) or
-        when the debug / instructor views are rendered.
-        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
             return catalog
 
-        # Line-buffer density (400 m)
-        density_data = haies.density_around_lines
-        catalog["density_400"] = density_data.get("density_400")
-        catalog["density_400_length"] = density_data.get("length_400")
-        catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        catalog.update(self.get_density_catalog_data())
+
+        if (
+            self.moulinette.config.single_procedure
+            and "ru_zone_config" not in self.catalog
+        ):
+            catalog.update(get_ru_zone_data(self.moulinette))
 
         hedges = haies.hedges_to_remove().n_alignement()
 
@@ -905,16 +903,18 @@ class EspecesProtegeesRegimeUnique(
     def get_result_code(self, result_data):
         """Cascade algorithm for the EP régime unique procedure level.
 
-        Project-level rules (steps 0-5) are tried first. If none match, the
-        most constraining per-hedge result wins (step 6). All thresholds
-        come from the admin-configurable settings (validated by
-        ``EspecesProtegeesRegimeUniqueSettings``); ``self.params`` is
-        guaranteed non-None here because ``evaluate()`` short-circuits to
-        ``non_disponible`` whenever the form is invalid.
+        The result depends on several steps, in that order:
+         - guard clauses
+         - project level data
+         - per hedge result
         """
-        # 0. Department not in régime unique → not concerned
+        # 0a. Department not in régime unique -> non concerné
         if not result_data["is_regime_unique"]:
             return "non_concerne"
+
+        # 0b. Zone config unavailable -> non disponible
+        if self.catalog.get("ru_zone_config") is None:
+            return "non_disponible"
 
         aa_only = result_data["aa_only"]
         total_length = result_data["total_length"]
@@ -1001,4 +1001,7 @@ class EspecesProtegeesRegimeUnique(
         # exactly which values drove the cascade. None when settings are
         # missing/invalid — the template hides the table in that case.
         context["ep_ru_settings"] = self.params
+        context["ru_zone_id"] = self.catalog.get("ru_zone_id")
+        context["ru_zone_config"] = self.catalog.get("ru_zone_config")
+        context["ru_high_density"] = self.catalog.get("ru_high_density")
         return context

@@ -1,4 +1,17 @@
+"""Régime unique haie — zone-based compensation coefficients.
+
+Provides zone resolution (mapping a project's location to a coefficient
+matrix), per-hedge coefficient assignment based on density and hedge type,
+and a weighted-average compensation ratio used by both the régime unique
+haie evaluator and the EP régime unique evaluator.
+"""
+
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import GEOSGeometry
+
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.models import MAP_TYPES, Zone
+from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
     CriterionEvaluator,
@@ -6,27 +19,117 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
 )
 
+# Maps (hedge_category, density_level) to the official coefficient key name.
+# Numbering follows the instruction technique sent to prefects.
+_COEFF_KEY = {
+    ("arboree", "HD"): "R3_arboree_HD",
+    ("arboree", "LD"): "R4_arboree_LD",
+    ("non_arboree", "HD"): "R1_non_arboree_HD",
+    ("non_arboree", "LD"): "R2_non_arboree_LD",
+}
+
+# Maximum distance (metres) for nearest-zone fallback.
+# This is not a business rule but a technical safeguard
+MAX_ZONE_DISTANCE_M = 50_000  # 50 km
+
+
+def resolve_zone_config(moulinette):
+    """Return the ``(zone_id, zone_config)`` pair for the project's location.
+
+    Three possible outcomes:
+    - ``("default", {...})``: zonage disabled — uses the default matrix.
+    - ``(zone_id, {...})``: zonage enabled, matching zone found.
+    - ``(zone_id_or_none, None)``: zonage enabled but no matching zone
+      or no config entry for the found zone.
+    """
+    config = moulinette.config
+    settings = config.single_procedure_settings
+    coeff_compensation = settings.get("coeff_compensation", {})
+
+    if not config.has_ru_zonage:
+        return "default", coeff_compensation.get("default")
+
+    haies = moulinette.catalog["haies"]
+    centroid_shapely = haies.get_centroid_to_remove()
+    centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
+
+    dept_code = moulinette.department.department
+
+    # Single distance query: containing zones have distance=0, so the nearest
+    # zone is the best match. Zones beyond _MAX_ZONE_DISTANCE_M are discarded.
+    zone = (
+        Zone.objects.filter(
+            map__map_type=MAP_TYPES.zonage,
+            map__departments__contains=[dept_code],
+        )
+        .annotate(distance=Distance("geometry", centroid_geos))
+        .filter(distance__lte=MAX_ZONE_DISTANCE_M)
+        .order_by("distance")
+        .defer("geometry")
+        .first()
+    )
+
+    zone_id, zone_config = None, None
+    if zone is not None:
+        zone_id = zone.attributes.get("identifiant_zone")
+        if zone_id and zone_id in coeff_compensation:
+            zone_config = coeff_compensation[zone_id]
+
+    return zone_id, zone_config
+
+
+def get_ru_zone_data(moulinette):
+    """Return catalog entries for the RU zone config and per-hedge coefficients."""
+    zone_id, zone_config = resolve_zone_config(moulinette)
+
+    high_density = None
+    coefficients = {}
+    if zone_config is not None:
+        haies = moulinette.catalog["haies"]
+        density_400 = haies.density_around_lines.get("density_400") or 0.0
+        x_densite = zone_config.get("X_densite", 0.0)
+        high_density = density_400 >= x_densite
+
+        density_key = "HD" if high_density else "LD"
+        for hedge in haies.hedges_to_remove().n_alignement():
+            # "mixte" is the only RU hedge type that counts as tree-bearing ("arborée")
+            type_key = "arboree" if hedge.hedge_type == "mixte" else "non_arboree"
+            config_key = _COEFF_KEY[(type_key, density_key)]
+            coefficients[hedge.id] = zone_config.get(config_key, 0.0)
+
+    return {
+        "ru_zone_id": zone_id,
+        "ru_zone_config": zone_config,
+        "ru_high_density": high_density,
+        "ru_per_hedge_coefficients": coefficients,
+    }
+
 
 def compute_ru_compensation_ratio(moulinette):
     """Compute the régime unique compensation ratio.
 
-    Returns the weighted average of per-hedge-type compensation coefficients
-    (from the department config), weighted by hedge length. Alignements are
-    excluded. Returns 0.0 when the department is not in régime unique.
+    Returns the weighted average of per-hedge compensation coefficients
+    (zone-aware, density-sensitive), weighted by hedge length. Alignements
+    are excluded. Returns 0.0 when the department is not in régime unique.
     """
     if not moulinette.config.single_procedure:
         return 0.0
 
     haies = moulinette.catalog["haies"]
-    total_length = haies.length_to_remove()
-    if total_length == 0:
+    hedges = haies.hedges_to_remove().n_alignement()
+    total_length = hedges.length
+    if not total_length:
         return 0.0
 
-    coeff_by_type = moulinette.config.single_procedure_settings["coeff_compensation"]
+    # Zone data (including per-hedge coefficients) may already be in the
+    # catalog if another evaluator populated it.
+    if "ru_zone_config" not in moulinette.catalog:
+        moulinette.catalog.update(get_ru_zone_data(moulinette))
+    coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
 
     compensated_length = 0.0
-    for hedge in haies.hedges_to_remove().n_alignement():
-        compensated_length += hedge.length * coeff_by_type[hedge.hedge_type]
+    for hedge in hedges:
+        compensated_length += hedge.length * coefficients.get(hedge.id, 0.0)
 
     return round(compensated_length / total_length, 2)
 
@@ -55,6 +158,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
     plantation_conditions = []
 
     RESULT_MATRIX = {
+        "non_disponible": RESULTS.non_disponible,
         "non_concerne": RESULTS.non_concerne,
         "non_concerne_aa": RESULTS.non_concerne,
         "soumis": RESULTS.soumis,
@@ -67,15 +171,22 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         ("droit_constant", "has_hedges"): "non_concerne",
     }
 
+    def get_result_code(self, result_data):
+        """Override to detect missing zone config before the CODE_MATRIX lookup."""
+        if (
+            self.moulinette.config.single_procedure
+            and self.catalog.get("ru_zone_config") is None
+        ):
+            return "non_disponible"
+        return super().get_result_code(result_data)
+
     def get_catalog_data(self):
-        """Inject 400m line-buffer density into the catalog when in régime unique."""
+        """Inject density and zone-based coefficient data when in régime unique."""
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies and self.moulinette.config.single_procedure:
-            density_data = haies.density_around_lines
-            catalog["density_400"] = density_data.get("density_400")
-            catalog["density_400_length"] = density_data.get("length_400")
-            catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        if self.moulinette.config.single_procedure:
+            catalog.update(self.get_density_catalog_data())
+            if "ru_zone_config" not in self.catalog:
+                catalog.update(get_ru_zone_data(self.moulinette))
         return catalog
 
     def get_result_data(self):
@@ -84,9 +195,20 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
         regime_unique = self.moulinette.config.single_procedure
 
-        return "regime_unique" if regime_unique else "droit_constant", (
-            "aa_only" if not has_hedges else "has_hedges"
+        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
+        hedge_presence = "has_hedges" if has_hedges else "aa_only"
+        return procedure_mode, hedge_presence
+
+    def get_debug_context(self):
+        """Return density and RU zone data for the debug template."""
+        context = super().get_debug_context()
+        context["ru_zone_id"] = self.catalog.get("ru_zone_id")
+        context["ru_zone_config"] = self.catalog.get("ru_zone_config")
+        context["ru_high_density"] = self.catalog.get("ru_high_density")
+        context["ru_per_hedge_coefficients"] = self.catalog.get(
+            "ru_per_hedge_coefficients"
         )
+        return context
 
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""

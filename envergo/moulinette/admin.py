@@ -502,6 +502,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             {
                 "fields": [
                     "single_procedure",
+                    "has_ru_zonage",
                     "single_procedure_settings",
                 ],
             },
