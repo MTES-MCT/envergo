@@ -1,4 +1,4 @@
-{% load utils %}
+{% load static utils %}
 
 <div id="form-group-{{ field.html_name }}"
      class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
@@ -14,7 +14,7 @@
       <label id="default-box-msg" for="{{ field.id_for_label }}" class="box-msg">
         Cliquez ici ou glissez / déposez directement votre fichier dans cette zone.
       </label>
-      <label id="success-box-msg" for="{{ field.id_for_label }}" class="box-msg">Votre fichier a bien été déposé.</label>
+      <label id="success-box-msg" for="{{ field.id_for_label }}" class="box-msg"></label>
 
     </div>
   </div>
@@ -27,3 +27,5 @@
     </p>
   {% endif %}
 </div>
+
+<script defer src="{% static 'js/libs/input_file_drag_and_drop.js' %}"></script>

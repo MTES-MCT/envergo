@@ -675,8 +675,8 @@ form {
       outline-offset: 2px;
     }
 
-    // When a file has been selected
-    input[type="file"]:valid + div.input-file-widget {
+    // When a file has been selected (class added via JS)
+    &.has-file div.input-file-widget {
       #default-box-msg {
         display: none;
       }
