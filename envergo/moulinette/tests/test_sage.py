@@ -16,7 +16,12 @@ from envergo.moulinette.tests.utils import make_amenagement_data
 
 @pytest.fixture(autouse=True)
 def sage_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="sage", has_perimeters=True)
+    regulation = RegulationFactory(
+        regulation="sage",
+        has_perimeters=True,
+        show_map=True,
+        map_factory_name="envergo.moulinette.regulations.PerimetersBoundedWithCenterMapMarkerMapFactory",
+    )
     perimeter = PerimeterFactory(
         name="Sage Vie Jaunay", activation_map=france_map, regulations=[regulation]
     )
