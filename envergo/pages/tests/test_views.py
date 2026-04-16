@@ -351,6 +351,12 @@ class TestContactHaie:
                 False,
                 id="no_config_default_message",
             ),
+            pytest.param(
+                [("", True, "current")],
+                None,
+                True,
+                id="empty_contacts_info_falls_to_default",
+            ),
         ],
     )
     def test_contacts_info_resolution(

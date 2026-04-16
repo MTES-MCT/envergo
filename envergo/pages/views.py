@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
 from django.db.models import Exists, OuterRef, Subquery, TextField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, NullIf
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
@@ -62,8 +62,12 @@ class DepartmentSearchMixin:
             is_config_valid=Exists(valid_config_qs),
             # Default value is inline HTML so the fallback is testable server-side
             contacts_info=Coalesce(
-                Subquery(valid_config_qs.values("contacts_info")[:1]),
-                Subquery(other_config_qs.values("contacts_info")[:1]),
+                NullIf(
+                    Subquery(valid_config_qs.values("contacts_info")[:1]), Value("")
+                ),
+                NullIf(
+                    Subquery(other_config_qs.values("contacts_info")[:1]), Value("")
+                ),
                 Value(
                     "<p><i>"
                     "Les coordonnées du guichet unique dans ce département"
