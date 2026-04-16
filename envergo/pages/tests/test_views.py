@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 
 import pytest
@@ -292,3 +293,88 @@ class TestContactHaie:
         """POST is no longer supported; contact info is handled client-side."""
         response = client.post(reverse("contact_us"), {})
         assert response.status_code == 405
+
+    def _get_department_data(self, response, dept):
+        departments = json.loads(response.context["departments_json"])
+        return next(d for d in departments if d["id"] == dept.id)
+
+    @pytest.mark.parametrize(
+        "config_entries, expected_contacts, expected_valid",
+        [
+            # config_entries: list of (contacts_info, is_activated, validity)
+            pytest.param(
+                [("C1", True, "current")],
+                "C1",
+                True,
+                id="active_valid",
+            ),
+            pytest.param(
+                [("C1", True, "current"), ("C2", True, "future")],
+                "C1",
+                True,
+                id="active_valid_plus_future",
+            ),
+            pytest.param(
+                [("C1", True, "expired")],
+                "C1",
+                False,
+                id="active_expired_fallback",
+            ),
+            pytest.param(
+                [("C1", True, "expired"), ("C2", False, "current")],
+                "C1",
+                False,
+                id="expired_active_over_inactive_recent",
+            ),
+            pytest.param(
+                [("C1", True, "future")],
+                "C1",
+                False,
+                id="only_future_active",
+            ),
+            pytest.param(
+                [("C1", True, "expired"), ("C2", True, "future")],
+                "C2",
+                False,
+                id="expired_and_future",
+            ),
+            pytest.param(
+                [("C1", False, "current")],
+                "",
+                False,
+                id="only_inactive",
+            ),
+            pytest.param(
+                [],
+                "",
+                False,
+                id="no_config",
+            ),
+        ],
+    )
+    def test_contacts_info_resolution(
+        self, client, config_entries, expected_contacts, expected_valid
+    ):
+        today = date.today()
+        validity_ranges = {
+            "expired": DateRange(
+                today - timedelta(days=365), today - timedelta(days=1)
+            ),
+            "current": DateRange(today, today + timedelta(days=365)),
+            "future": DateRange(
+                today + timedelta(days=365), today + timedelta(days=730)
+            ),
+        }
+        dept = DepartmentFactory()
+        for contacts_info, is_activated, validity in config_entries:
+            DCConfigHaieFactory(
+                department=dept,
+                contacts_info=contacts_info,
+                is_activated=is_activated,
+                validity_range=validity_ranges[validity],
+            )
+
+        response = client.get(reverse("contact_us"))
+        data = self._get_department_data(response, dept)
+        assert data["contacts_info"] == expected_contacts
+        assert data["is_config_valid"] is expected_valid

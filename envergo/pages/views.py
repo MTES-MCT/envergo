@@ -7,7 +7,8 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.db.models import OuterRef, Subquery
+from django.db.models import BooleanField, OuterRef, Subquery, TextField, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
@@ -40,15 +41,28 @@ class DepartmentSearchMixin:
     queryset = Department.objects.defer("geometry").all()
 
     def get_queryset_with_contacts(self):
-        """List all departments for the select input with contact info"""
+        """List all departments with contact info.
+
+        Uses the valid active config if available, otherwise the most recent config.
+        """
         valid_config_qs = ConfigHaie.objects.valid_at(timezone.now().date()).filter(
             is_activated=True, department=OuterRef("pk")
         )
+        latest_config_qs = ConfigHaie.objects.filter(
+            is_activated=True, department=OuterRef("pk")
+        ).order_by("-validity_range")
 
-        departments_qs = self.queryset.annotate(
-            contacts_info=Subquery(valid_config_qs.values("contacts_info"))
+        return self.queryset.annotate(
+            is_config_valid=Subquery(
+                valid_config_qs.values("pk")[:1], output_field=BooleanField()
+            ),
+            contacts_info=Coalesce(
+                Subquery(valid_config_qs.values("contacts_info")[:1]),
+                Subquery(latest_config_qs.values("contacts_info")[:1]),
+                Value(""),
+                output_field=TextField(),
+            ),
         )
-        return departments_qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,7 +71,8 @@ class DepartmentSearchMixin:
                 "id": d.id,
                 "code": d.department,
                 "label": str(d),
-                "contacts_info": d.contacts_info or "",
+                "contacts_info": d.contacts_info,
+                "is_config_valid": bool(d.is_config_valid),
             }
             for d in self.get_queryset_with_contacts()
         ]
