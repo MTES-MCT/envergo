@@ -170,12 +170,8 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
     def get_catalog_data(self):
         """Inject density and zone-based coefficient data when in régime unique."""
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies and self.moulinette.config.single_procedure:
-            density_data = haies.density_around_lines
-            catalog["density_400"] = density_data.get("density_400")
-            catalog["density_400_length"] = density_data.get("length_400")
-            catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        if self.moulinette.config.single_procedure:
+            catalog.update(self.get_density_catalog_data())
             if "ru_zone_config" not in self.catalog:
                 catalog.update(get_ru_zone_data(self.moulinette))
         return catalog

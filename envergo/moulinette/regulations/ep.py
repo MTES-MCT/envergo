@@ -803,11 +803,7 @@ class EspecesProtegeesRegimeUnique(
         if not haies:
             return catalog
 
-        # Line-buffer density (400 m)
-        density_data = haies.density_around_lines
-        catalog["density_400"] = density_data.get("density_400")
-        catalog["density_400_length"] = density_data.get("length_400")
-        catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        catalog.update(self.get_density_catalog_data())
 
         if self.moulinette.config.single_procedure:
             if "ru_zone_config" not in self.catalog:

@@ -655,12 +655,25 @@ class SelfDeclarationMixin:
 class HedgeDensityMixin:
     """Mixin for criterion evaluators that need "hedge density" to be evaluated.
 
-    Provides a default get_debug_context() for line-buffer (400 m) density.
-    Evaluators that use centroid-based density (e.g. EspecesProtegeesNormandie)
-    override this method.
+    Provides shared density catalog injection and a default
+    get_debug_context() for line-buffer (400 m) density. Evaluators that use
+    centroid-based density (e.g. EspecesProtegeesNormandie) override the
+    debug method.
     """
 
     debug_template = "haie/moulinette/debug/density_around_lines.html"
+
+    def get_density_catalog_data(self):
+        """Return line-buffer density entries for the catalog."""
+        haies = self.catalog.get("haies")
+        if not haies:
+            return {}
+        density_data = haies.density_around_lines
+        return {
+            "density_400": density_data.get("density_400"),
+            "density_400_length": density_data.get("length_400"),
+            "density_400_area_ha": density_data.get("area_400_ha"),
+        }
 
     def get_debug_context(self):
         """Return line-buffer density data for the debug template.
