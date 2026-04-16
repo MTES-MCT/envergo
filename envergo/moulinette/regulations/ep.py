@@ -805,9 +805,11 @@ class EspecesProtegeesRegimeUnique(
 
         catalog.update(self.get_density_catalog_data())
 
-        if self.moulinette.config.single_procedure:
-            if "ru_zone_config" not in self.catalog:
-                catalog.update(get_ru_zone_data(self.moulinette))
+        if (
+            self.moulinette.config.single_procedure
+            and "ru_zone_config" not in self.catalog
+        ):
+            catalog.update(get_ru_zone_data(self.moulinette))
 
         hedges = haies.hedges_to_remove().n_alignement()
 
