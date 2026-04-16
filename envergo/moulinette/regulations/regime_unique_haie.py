@@ -47,7 +47,7 @@ def resolve_zone_config(moulinette):
     coeff_compensation = settings.get("coeff_compensation", {})
 
     if not config.has_ru_zonage:
-        return "default", coeff_compensation.get("default", {})
+        return "default", coeff_compensation.get("default")
 
     haies = moulinette.catalog["haies"]
     centroid_shapely = haies.get_centroid_to_remove()
