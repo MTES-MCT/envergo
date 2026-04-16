@@ -299,13 +299,14 @@ class TestContactHaie:
         return next(d for d in departments if d["id"] == dept.id)
 
     @pytest.mark.parametrize(
-        "config_entries, expected_contacts, expected_valid",
+        "config_entries, expected_contacts_info, expected_valid",
         [
-            # config_entries: list of (contacts_info, is_activated, validity)
             pytest.param(
-                [("C1", True, "current")],
-                "C1",
-                True,
+                [
+                    ("C1", True, "current")
+                ],  # config_entries (contacts_info, is_activated, validity)
+                "C1",  # expected_contacts_info
+                True,  # expected_valid
                 id="active_valid",
             ),
             pytest.param(
@@ -315,45 +316,45 @@ class TestContactHaie:
                 id="active_valid_plus_future",
             ),
             pytest.param(
-                [("C1", True, "expired")],
+                [("C1", False, "current")],
                 "C1",
                 False,
-                id="active_expired_fallback",
+                id="current_inactive",
             ),
             pytest.param(
                 [("C1", True, "expired"), ("C2", False, "current")],
-                "C1",
+                "C2",
                 False,
-                id="expired_active_over_inactive_recent",
+                id="latest_end_date_wins",
             ),
             pytest.param(
                 [("C1", True, "future")],
                 "C1",
                 False,
-                id="only_future_active",
+                id="only_future",
             ),
             pytest.param(
                 [("C1", True, "expired"), ("C2", True, "future")],
                 "C2",
                 False,
-                id="expired_and_future",
+                id="future_over_expired",
             ),
             pytest.param(
-                [("C1", False, "current")],
-                "",
+                [("C1", True, "expired")],
+                "C1",
                 False,
-                id="only_inactive",
+                id="only_expired",
             ),
             pytest.param(
                 [],
-                "",
+                None,
                 False,
-                id="no_config",
+                id="no_config_default_message",
             ),
         ],
     )
     def test_contacts_info_resolution(
-        self, client, config_entries, expected_contacts, expected_valid
+        self, client, config_entries, expected_contacts_info, expected_valid
     ):
         today = date.today()
         validity_ranges = {
@@ -376,5 +377,11 @@ class TestContactHaie:
 
         response = client.get(reverse("contact_us"))
         data = self._get_department_data(response, dept)
-        assert data["contacts_info"] == expected_contacts
+        if expected_contacts_info is None:
+            assert (
+                "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
+                in data["contacts_info"]
+            )
+        else:
+            assert data["contacts_info"] == expected_contacts_info
         assert data["is_config_valid"] is expected_valid

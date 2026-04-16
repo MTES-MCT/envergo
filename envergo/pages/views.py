@@ -7,7 +7,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.db.models import BooleanField, OuterRef, Subquery, TextField, Value
+from django.db.models import Exists, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
@@ -41,25 +41,35 @@ class DepartmentSearchMixin:
     queryset = Department.objects.defer("geometry").all()
 
     def get_queryset_with_contacts(self):
-        """List all departments with contact info.
+        """Return all departments annotated with contacts_info and is_config_valid.
 
-        Uses the valid active config if available, otherwise the most recent config.
+        contacts_info resolution: active config valid today > config with the
+        latest validity end date > default message.
+
+        is_config_valid: True if an active config valid today exists.
         """
-        valid_config_qs = ConfigHaie.objects.valid_at(timezone.now().date()).filter(
+        today = timezone.now().date()
+
+        valid_config_qs = ConfigHaie.objects.valid_at(today).filter(
             is_activated=True, department=OuterRef("pk")
         )
-        latest_config_qs = ConfigHaie.objects.filter(
-            is_activated=True, department=OuterRef("pk")
+        # Order matters: the config with the latest end date is preferred
+        other_config_qs = ConfigHaie.objects.filter(
+            department=OuterRef("pk"),
         ).order_by("-validity_range")
 
         return self.queryset.annotate(
-            is_config_valid=Subquery(
-                valid_config_qs.values("pk")[:1], output_field=BooleanField()
-            ),
+            is_config_valid=Exists(valid_config_qs),
+            # Default value is inline HTML so the fallback is testable server-side
             contacts_info=Coalesce(
                 Subquery(valid_config_qs.values("contacts_info")[:1]),
-                Subquery(latest_config_qs.values("contacts_info")[:1]),
-                Value(""),
+                Subquery(other_config_qs.values("contacts_info")[:1]),
+                Value(
+                    '<p class="fr-text--sm fr-my-2w fr-error-text">'
+                    "Les coordonnées du guichet unique dans ce département"
+                    " ne sont pas encore disponibles."
+                    "</p>"
+                ),
                 output_field=TextField(),
             ),
         )

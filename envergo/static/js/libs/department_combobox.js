@@ -18,15 +18,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const clearBtn = document.createElement("button");
   function showContactInfo(dept) {
-    if (dept.contacts_info) {
-      let html = `<div class="fr-highlight fr-mt-4w">${dept.contacts_info}</div>`;
-      if (!dept.is_config_valid) {
-        html += `<p class="fr-mt-2w">À noter&nbsp;: le portail du guichet unique de la haie n'est pas encore activé dans le département ${dept.label}.</p>`;
-      }
-      infoContainer.innerHTML = html;
-    } else {
-      infoContainer.innerHTML = `<p class="fr-text--sm fr-my-2w fr-error-text">Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles.</p>`;
+    let html = `<div class="fr-highlight fr-mt-4w">${dept.contacts_info}</div>`;
+    if (!dept.is_config_valid) {
+      html += `<p class="fr-mt-2w">À noter&nbsp;: le portail du guichet unique de la haie n'est pas encore activé dans le département ${dept.label}.</p>`;
     }
+    infoContainer.innerHTML = html;
   }
 
   accessibleAutocomplete({
