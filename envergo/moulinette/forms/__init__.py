@@ -1,3 +1,5 @@
+from textwrap import dedent
+
 from django import forms
 from django.conf import settings
 from django.contrib.gis.db.models.functions import Centroid
@@ -458,17 +460,23 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                 haies.length_to_remove()
                 > settings.MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH
             ):
+                max_length_km = int(
+                    settings.MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH / 1000
+                )
                 contact_url = f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
                 self.add_error(
                     "haies",
                     ValidationError(
                         mark_safe(
-                            # Le <span> évite que le <a> soit traité comme un
-                            # flex item séparé par le DSFR (.fr-error-text)
-                            f"""<span>La somme des longueurs des haies à détruire est limitée à 10&nbsp;km,
+                            dedent(
+                                # Le <span> évite que le <a> soit traité comme un
+                                # flex item séparé par le DSFR (.fr-error-text)
+                                f"""<span>La somme des longueurs des haies à détruire est limitée à
+                                {max_length_km}&nbsp;km,
                             pour des raisons de performance du simulateur.<br>
                             Si cette condition est bloquante pour votre simulation,
                             <a href="{contact_url}" target="_blank">contactez-nous</a>.</span>"""
+                            )
                         ),
                         code="max_length_exceeded",
                     ),
