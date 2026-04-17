@@ -32,7 +32,7 @@ class Natura2000HaieSettings(forms.Form):
     concerne_aa = forms.ChoiceField(
         label="Concerne les alignements d’arbres",
         help_text="Indique si ce critère concerne les alignements d’arbres.",
-        required=False,
+        required=True,
         choices=(("oui", "Oui"), ("non", "Non")),
     )
 
