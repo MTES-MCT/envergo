@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.admin import DepartmentsListFilter
 from envergo.moulinette.models import (
     REGULATIONS,
+    AaL3503Handling,
     ActionToTake,
     ConfigAmenagement,
     ConfigHaie,
@@ -468,6 +469,37 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
                 "department"
             ].queryset.defer("geometry")
 
+    def clean(self):
+        """Validate AA L350-3 fields when single procedure is active.
+
+        When the department uses the single procedure (régime unique), the
+        chosen AA L350-3 handling mode determines which companion field is
+        required: an external form URL or contact information.
+        """
+        cleaned_data = super().clean()
+
+        if not cleaned_data.get("single_procedure"):
+            return cleaned_data
+
+        handling = cleaned_data.get("aa_l3503_handling")
+        is_third_party = handling == AaL3503Handling.THIRD_PARTY_FORM
+        is_not_handled = handling == AaL3503Handling.NOT_HANDLED
+
+        if is_third_party and not cleaned_data.get("aa_l3503_form_url"):
+            self.add_error(
+                "aa_l3503_form_url",
+                "L'URL du formulaire est obligatoire lorsque le régime unique "
+                "est activé et que le mode de dépôt est « formulaire tiers ».",
+            )
+        elif is_not_handled and not cleaned_data.get("aa_l3503_contact_info"):
+            self.add_error(
+                "aa_l3503_contact_info",
+                "Les informations de contact sont obligatoires lorsque le régime "
+                "unique est activé et que le mode est « pas de prise en compte ».",
+            )
+
+        return cleaned_data
+
     def get_demarche_simplifiee_pre_fill_config_help_text(self):
         context = {
             "sources": ConfigHaie.get_demarche_simplifiee_value_sources(),
@@ -503,6 +535,16 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                 "fields": [
                     "single_procedure",
                     "single_procedure_settings",
+                ],
+            },
+        ),
+        (
+            "Alignements d'arbres L350-3",
+            {
+                "fields": [
+                    "aa_l3503_handling",
+                    "aa_l3503_form_url",
+                    "aa_l3503_contact_info",
                 ],
             },
         ),
