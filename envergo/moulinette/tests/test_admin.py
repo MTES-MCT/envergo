@@ -248,8 +248,8 @@ class TestConfigHaieAaL3503FormValidation:
         form = ConfigHaieTestForm(data=data, instance=instance)
         assert form.is_valid(), form.errors
 
-    def test_not_handled_without_contact_is_invalid(self):
-        """Form rejects not-handled mode with empty contact when single_procedure is on."""
+    def test_not_handled_without_contact_is_valid(self):
+        """Form accepts not-handled mode with empty contact (contact info is optional)."""
         instance = RUConfigHaieFactory()
         data = self.build_form_data(
             instance,
@@ -257,8 +257,7 @@ class TestConfigHaieAaL3503FormValidation:
             aa_l3503_contact_info="",
         )
         form = ConfigHaieTestForm(data=data, instance=instance)
-        assert not form.is_valid()
-        assert "aa_l3503_contact_info" in form.errors
+        assert form.is_valid(), form.errors
 
     def test_not_handled_with_contact_is_valid(self):
         """Form accepts not-handled mode with contact info when single_procedure is on."""

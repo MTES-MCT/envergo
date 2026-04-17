@@ -2,6 +2,8 @@
 
 {% load moulinette utils %}
 
+{% block body-classes %}parametrage{% endblock %}
+
 {% block title %}
   Paramétrage {{ department }}
 {% endblock title %}
@@ -29,7 +31,7 @@
         <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
       </p>
 
-      <h2 id="title-contact" class="fr-mb-4v">Informations de contact</h2>
+      <h2 id="title-contact">Informations de contact</h2>
       <div class="fr-callout">
         <p class="fr-text--sm">
           Les informations de contact ci-dessous sont affichées aux usagers pour les guider sur le portail.
@@ -42,9 +44,9 @@
         </p>
       </div>
 
-      <div class="fr-mt-4w fr-mb-4w fr-highlight fr-highlight--beige-gris-galet">{{ object.contacts_info|safe }}</div>
+      <div class="fr-highlight fr-highlight--beige-gris-galet">{{ object.contacts_info|safe }}</div>
 
-      <h2 id="title-cartes" class="fr-mb-4v">Cartes</h2>
+      <h2 id="title-cartes">Cartes</h2>
 
       <div class="fr-callout">
         <p class="fr-text--sm">
@@ -105,10 +107,18 @@
     rel="noopener">Cart'eaux</a>.
       </p>
 
-      <h2 id="title-aa-l3503" class="fr-mb-4v">Alignements d'arbres L350-3</h2>
+      <h2 id="title-aa-l3503">Alignements d'arbres L350-3</h2>
 
       <p class="fr-mb-1w">
-        <strong>Dépôt des dossiers L350-3 :</strong> {{ object.get_aa_l3503_handling_display }}
+        <strong>Dépôt des dossiers L350-3 :</strong>
+
+        {% if object.aa_l3503_handling == "portal" %}
+          sur le portail du GUH.
+        {% elif object.aa_l3503_handling == "third_party_form" %}
+          sur un formulaire dématérialisé hors GUH – le portail du GUH indique le lien de dépôt.
+        {% else %}
+          le portail du GUH invite l’usager à contacter le service instructeur.
+        {% endif %}
       </p>
 
       {% if object.aa_l3503_handling == "third_party_form" and object.aa_l3503_form_url %}
@@ -118,62 +128,75 @@
         </p>
       {% endif %}
 
-      {% if object.aa_l3503_handling == "not_handled" and object.aa_l3503_contact_info %}
-        <p class="fr-mb-1w">
-          <strong>Informations de contact L350-3 :</strong>
+      {% if object.aa_l3503_handling == "not_handled" %}
+        {% if object.aa_l3503_contact_info %}
+          <p class="fr-mb-1w">
+            <strong>Contacts et indications fournies à l’usager sur la procédure à suivre pour les travaux sur alignements d’arbres L350-3 :</strong>
+          </p>
+          <div class="fr-highlight">{{ object.aa_l3503_contact_info|safe }}</div>
+        {% else %}
+          <p>
+            ⚠️ <i>Aucune information n'a été saisie.
+          Le simulateur ne pourra pas indiquer la marche à suivre à l'usager.</i>
         </p>
-        <div class="fr-highlight fr-mb-3w">{{ object.aa_l3503_contact_info|safe }}</div>
+        <p>
+          <a class="fr-btn fr-btn--secondary"
+             href="{{ department_settings_form }}"
+             target="_blank"
+             rel="noopener">Paramétrer la prise en compte des AA L350-3</a>
+        </p>
       {% endif %}
+    {% endif %}
 
-      <h2 id="title-comptes" class="fr-mb-4v">Comptes</h2>
+    <h2 id="title-comptes">Comptes</h2>
 
-      <p>
-        <a class="fr-btn fr-btn--secondary"
-           href="{{ department_settings_form }}"
-           target="_blank"
-           rel="noopener">Ajouter / modifier les droits d'accès</a>
+    <p>
+      <a class="fr-btn fr-btn--secondary"
+         href="{{ department_settings_form }}"
+         target="_blank"
+         rel="noopener">Ajouter / modifier les droits d'accès</a>
+    </p>
+
+    <div class="fr-mb-2w">
+      <p class="fr-mb-1w">
+        <strong>Liste des comptes ayant les droits de modification (services coordonnateurs) sur tous les dossiers du
+        département :</strong>
       </p>
 
-      <div class="fr-mb-2w">
-        <p class="fr-mb-1w">
-          <strong>Liste des comptes ayant les droits de modification (services coordonnateurs) sur tous les dossiers du
-          département :</strong>
+      {% if department_members.instructors_emails %}
+        <ul>
+          {% for member_email in department_members.instructors_emails %}<li>{{ member_email }}</li>{% endfor %}
+        </ul>
+      {% else %}
+        <p>
+          <em>Aucun compte</em>
         </p>
+      {% endif %}
+    </div>
 
-        {% if department_members.instructors_emails %}
-          <ul>
-            {% for member_email in department_members.instructors_emails %}<li>{{ member_email }}</li>{% endfor %}
-          </ul>
-        {% else %}
-          <p>
-            <em>Aucun compte</em>
-          </p>
-        {% endif %}
-      </div>
-
-      <div class="fr-mb-2w">
-        <p class="fr-mb-1w">
-          <strong>Liste des comptes ayant les droits de lecture sur tous les dossiers du département :</strong>
+    <div class="fr-mb-2w">
+      <p class="fr-mb-1w">
+        <strong>Liste des comptes ayant les droits de lecture sur tous les dossiers du département :</strong>
+      </p>
+      {% if department_members.invited_emails %}
+        <ul>
+          {% for member_email in department_members.invited_emails %}<li>{{ member_email }}</li>{% endfor %}
+        </ul>
+      {% else %}
+        <p>
+          <em>Aucun compte</em>
         </p>
-        {% if department_members.invited_emails %}
-          <ul>
-            {% for member_email in department_members.invited_emails %}<li>{{ member_email }}</li>{% endfor %}
-          </ul>
-        {% else %}
-          <p>
-            <em>Aucun compte</em>
-          </p>
-        {% endif %}
-      </div>
-      <div class="fr-mb-2w">
-        <p class="fr-mb-1w">
-          <strong>Outre ceux listés ci-dessus, certains comptes peuvent avoir été invités en lecture sur des dossiers
-            individuels. Ces accès sont gérés et consultables directement dans la vue « Services consultés » de
-          chaque dossier.</strong>
-        </p>
-      </div>
+      {% endif %}
+    </div>
+    <div class="fr-mb-2w">
+      <p class="fr-mb-1w">
+        <strong>Outre ceux listés ci-dessus, certains comptes peuvent avoir été invités en lecture sur des dossiers
+          individuels. Ces accès sont gérés et consultables directement dans la vue « Services consultés » de
+        chaque dossier.</strong>
+      </p>
     </div>
   </div>
+</div>
 {% endblock %}
 
 {% block after-content %}{% endblock %}
