@@ -62,7 +62,10 @@ class Natura2000Haie(CriterionEvaluator):
             (True, False, True): result,
             (True, False, False): result,
             (False, True, True): result,
-            (False, True, False): "non_soumis_aa",
+            # non_soumis_aa only makes sense when the criterion would otherwise be
+            # "soumis", otherwise we'd tell the user "not subject because it's AA"
+            # when it's actually not subject for both hedges AND AA.
+            (False, True, False): "non_soumis_aa" if result == "soumis" else result,
             (False, False, True): "non_soumis",
             (False, False, False): "non_soumis",
         }

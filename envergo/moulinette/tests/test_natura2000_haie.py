@@ -34,7 +34,7 @@ def n2000_criteria(bizous_town_center):
             evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
-            evaluator_settings={"result": "soumis"},
+            evaluator_settings={"result": "soumis", "concerne_aa": "non"},
         ),
     ]
     return criteria
@@ -117,20 +117,20 @@ class TestConcerneAAParam:
             ("non", "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
             ("non", "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
             # concerne_aa="non", result=non_soumis
-            ("non", "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
+            ("non", "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             ("non", "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             ("non", "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
             # result non renseigné, concerne_aa renseigné → settings form invalide → non_disponible
             ("oui", None, [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
             ("oui", None, [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
             ("oui", None, [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
-            # concerne_aa non renseigné, result renseigné → concerne_aa=False par défaut
-            (None, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
-            (None, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
-            (None, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
-            (None, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis"),
-            (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
-            (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
+            # concerne_aa non renseigné, result renseigné → settings form invalide → non_disponible
+            (None, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
+            (None, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
+            (None, "soumis", [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
+            (None, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
+            (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
+            (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_disponible"),
             # ni concerne_aa ni result renseignés → settings form invalide → non_disponible
             (None, None, [HedgeTypeBase.ALIGNEMENT], "non_disponible"),
             (None, None, [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_disponible"),
