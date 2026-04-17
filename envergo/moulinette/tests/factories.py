@@ -110,6 +110,8 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "sites_inscrits_haie",
         "protection_captages",
     ]
+    aa_l3503_handling = "not_handled"
+    aa_l3503_contact_info = "<p>À compléter</p>"
     demarche_simplifiee_number = 123456
     demarche_simplifiee_pre_fill_config = [
         {

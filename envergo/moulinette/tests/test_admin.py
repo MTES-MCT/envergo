@@ -13,11 +13,17 @@ from envergo.moulinette.admin import (
     ConfigHaieAdminForm,
     CriterionAdminForm,
 )
-from envergo.moulinette.models import ConfigAmenagement, ConfigHaie, Criterion
+from envergo.moulinette.models import (
+    AaL3503Handling,
+    ConfigAmenagement,
+    ConfigHaie,
+    Criterion,
+)
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     DCConfigHaieFactory,
+    RUConfigHaieFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -197,3 +203,94 @@ class TestConfigHaieOverlapValidation:
         error_html = str(form.errors)
         assert "<a href=" in error_html
         assert str(existing.pk) in error_html
+
+
+class TestConfigHaieAaL3503FormValidation:
+    """Tests for the admin form validation of AA L350-3 fields.
+
+    When single_procedure is active, the chosen handling mode determines which
+    companion field is required. These tests verify that clean() surfaces the
+    right errors on the right fields.
+    """
+
+    def build_form_data(self, instance, **overrides):
+        """Build valid form data from a factory instance, then apply overrides.
+
+        Clears demarche_simplifiee_pre_fill_config to avoid unrelated validation
+        failures (the factory's pre-fill references form fields that require
+        regulation fixtures).
+        """
+        data = instance_to_form_data(instance)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data.update(overrides)
+        return data
+
+    def test_third_party_form_without_url_is_invalid(self):
+        """Form rejects third-party mode with empty URL when single_procedure is on."""
+        instance = RUConfigHaieFactory()
+        data = self.build_form_data(
+            instance,
+            aa_l3503_handling=AaL3503Handling.THIRD_PARTY_FORM,
+            aa_l3503_form_url="",
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert not form.is_valid()
+        assert "aa_l3503_form_url" in form.errors
+
+    def test_third_party_form_with_url_is_valid(self):
+        """Form accepts third-party mode with a URL when single_procedure is on."""
+        instance = RUConfigHaieFactory()
+        data = self.build_form_data(
+            instance,
+            aa_l3503_handling=AaL3503Handling.THIRD_PARTY_FORM,
+            aa_l3503_form_url="https://example.com/form",
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
+
+    def test_not_handled_without_contact_is_invalid(self):
+        """Form rejects not-handled mode with empty contact when single_procedure is on."""
+        instance = RUConfigHaieFactory()
+        data = self.build_form_data(
+            instance,
+            aa_l3503_handling=AaL3503Handling.NOT_HANDLED,
+            aa_l3503_contact_info="",
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert not form.is_valid()
+        assert "aa_l3503_contact_info" in form.errors
+
+    def test_not_handled_with_contact_is_valid(self):
+        """Form accepts not-handled mode with contact info when single_procedure is on."""
+        instance = RUConfigHaieFactory()
+        data = self.build_form_data(
+            instance,
+            aa_l3503_handling=AaL3503Handling.NOT_HANDLED,
+            aa_l3503_contact_info="<p>Contactez le service</p>",
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
+
+    def test_portal_valid_without_url_or_contact(self):
+        """Form accepts portal mode without URL or contact info."""
+        instance = RUConfigHaieFactory()
+        data = self.build_form_data(
+            instance,
+            aa_l3503_handling=AaL3503Handling.PORTAL,
+            aa_l3503_form_url="",
+            aa_l3503_contact_info="",
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
+
+    def test_no_validation_when_single_procedure_off(self):
+        """Form skips AA L350-3 validation when single_procedure is False."""
+        instance = DCConfigHaieFactory()
+        data = self.build_form_data(
+            instance,
+            single_procedure=False,
+            aa_l3503_handling=AaL3503Handling.NOT_HANDLED,
+            aa_l3503_contact_info="",
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
