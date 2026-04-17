@@ -406,7 +406,8 @@
       "weight": 3,
       "activation_mode": "hedges_intersection",
       "evaluator_settings": {
-        "result": "non_soumis"
+        "result": "non_soumis",
+        "concerne_aa": "non"
       }
     }
   },
