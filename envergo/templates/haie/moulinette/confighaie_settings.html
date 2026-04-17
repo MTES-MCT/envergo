@@ -108,7 +108,15 @@
       <h2 id="title-aa-l3503" class="fr-mb-4v">Alignements d'arbres L350-3</h2>
 
       <p class="fr-mb-1w">
-        <strong>Dépôt des dossiers L350-3 :</strong> {{ object.get_aa_l3503_handling_display }}
+        <strong>Dépôt des dossiers L350-3 :</strong>
+
+        {% if object.aa_l3503_handling == "portal" %}
+          sur le portail du GUH.
+        {% elif object.aa_l3503_handling == "third_party_form" %}
+          sur un formulaire dématérialisé hors GUH – le portail du GUH indique le lien de dépôt.
+        {% else %}
+          le portail du GUH invite l’usager à contacter le service instructeur.
+        {% endif %}
       </p>
 
       {% if object.aa_l3503_handling == "third_party_form" and object.aa_l3503_form_url %}
@@ -120,7 +128,7 @@
 
       {% if object.aa_l3503_handling == "not_handled" and object.aa_l3503_contact_info %}
         <p class="fr-mb-1w">
-          <strong>Informations de contact L350-3 :</strong>
+          <strong>Contacts et indications fournies à l’usager sur la procédure à suivre pour les travaux sur alignements d’arbres L350-3 :</strong>
         </p>
         <div class="fr-highlight fr-mb-3w">{{ object.aa_l3503_contact_info|safe }}</div>
       {% endif %}
