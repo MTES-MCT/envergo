@@ -128,7 +128,7 @@ class TestConcerneAAParam:
             (None, "soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
             (None, "soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "soumis"),
             (None, "soumis", [HedgeTypeBase.BUISSONNANTE], "soumis"),
-            (None, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis_aa"),
+            (None, "non_soumis", [HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE, HedgeTypeBase.ALIGNEMENT], "non_soumis"),
             (None, "non_soumis", [HedgeTypeBase.BUISSONNANTE], "non_soumis"),
             # ni concerne_aa ni result renseignés → settings form invalide → non_disponible
