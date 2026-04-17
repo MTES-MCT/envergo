@@ -24,7 +24,7 @@ class Natura2000HaieRegulation(HaieRegulationEvaluator):
 
 class Natura2000HaieSettings(forms.Form):
     result = forms.ChoiceField(
-        label="Resultat attendu de l’évaluateur",
+        label="Resultat attendu de l'évaluateur",
         help_text="Indique si l’arrachage de haies est soumis à évaluation des incidences Natura 2000 pour ce critère.",
         required=True,
         choices=RESULTS,
