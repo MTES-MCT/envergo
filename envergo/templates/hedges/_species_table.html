@@ -20,6 +20,10 @@
                   <i>{{ s.scientific_name }}</i>
                 </td>
               </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3">Aucune espèce spécifique disponible pour l'affichage</td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>

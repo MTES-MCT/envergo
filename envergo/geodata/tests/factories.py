@@ -184,6 +184,43 @@ class ZoneFactory(DjangoModelFactory):
     species_taxrefs = []
 
 
+class TerresEmergeesMapFactory(MapFactory):
+    """A `terres_emergees` Map with no auto-generated zones.
+
+    The default `MapFactory` auto-creates one `ZoneFactory` zone via
+    `RelatedFactoryList`, with the default `france_multipolygon` geometry.
+    For tests of the off-land branch we need full control over which
+    geometries cover the test point, so this variant overrides the
+    related-factory list to size 0.
+    """
+
+    map_type = MAP_TYPES.terres_emergees
+    zones = factory.RelatedFactoryList(
+        "envergo.geodata.tests.factories.ZoneFactory",
+        factory_related_name="map",
+        size=0,
+    )
+
+
+class TerresEmergeesZoneFactory(DjangoModelFactory):
+    """A `terres_emergees` zone covering France's mainland.
+
+    Tests that exercise the on-land branch of the hedge density computation
+    need at least one `terres_emergees` zone in the DB — without one, the
+    on-land check returns False and the code silently falls through to the
+    off-land sentinel (`density=1.0`). The default `MapFactory` /
+    `ZoneFactory` pair does not create such a zone, so use this factory
+    instead when on-land behavior matters to the test.
+    """
+
+    class Meta:
+        model = Zone
+
+    map = factory.SubFactory(TerresEmergeesMapFactory)
+    geometry = france_multipolygon
+    species_taxrefs = []
+
+
 class DepartmentFactory(DjangoModelFactory):
     class Meta:
         model = Department

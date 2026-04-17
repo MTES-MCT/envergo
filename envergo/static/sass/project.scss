@@ -588,10 +588,16 @@ section.regulation {
 }
 
 section.debug {
+  --title-spacing: 1.5rem 0 0.5rem 0;
+
   h3 small {
     font-size: 1rem;
     font-weight: normal;
     color: var(--text-mention-grey);
+  }
+
+  div.criterion-debug {
+    margin-top: 1.5rem;
   }
 }
 
