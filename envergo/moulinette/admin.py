@@ -473,8 +473,7 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         """Validate AA L350-3 fields when single procedure is active.
 
         When the department uses the single procedure (régime unique), the
-        chosen AA L350-3 handling mode determines which companion field is
-        required: an external form URL or contact information.
+        third-party form handling, the external form URL is required.
         """
         cleaned_data = super().clean()
 
@@ -482,22 +481,15 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             return cleaned_data
 
         handling = cleaned_data.get("aa_l3503_handling")
-        is_third_party = handling == AaL3503Handling.THIRD_PARTY_FORM
-        is_not_handled = handling == AaL3503Handling.NOT_HANDLED
 
-        if is_third_party and not cleaned_data.get("aa_l3503_form_url"):
+        if handling == AaL3503Handling.THIRD_PARTY_FORM and not cleaned_data.get(
+            "aa_l3503_form_url"
+        ):
             self.add_error(
                 "aa_l3503_form_url",
                 "L'URL du formulaire est obligatoire lorsque le régime unique "
                 "est activé et que le mode de dépôt est « formulaire tiers ».",
             )
-        elif is_not_handled and not cleaned_data.get("aa_l3503_contact_info"):
-            self.add_error(
-                "aa_l3503_contact_info",
-                "Les informations de contact sont obligatoires lorsque le régime "
-                "unique est activé et que le mode est « pas de prise en compte ».",
-            )
-
         return cleaned_data
 
     def get_demarche_simplifiee_pre_fill_config_help_text(self):
