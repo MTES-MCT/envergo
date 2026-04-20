@@ -18,7 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const clearBtn = document.createElement("button");
   function showContactInfo(dept) {
-    let html = `<div class="fr-highlight fr-mt-4w">${dept.contacts_info}</div>`;
+    let html = dept.contacts_info
+      ? `<div class="fr-highlight fr-mt-4w">${dept.contacts_info}</div>`
+      : `<p class="fr-mt-4w"><i>Les coordonnées du guichet unique dans ce département ne sont pas disponibles.</i></p>`;
     if (!dept.is_config_valid) {
       html += `<p class="fr-mt-2w">À noter&nbsp;: le portail du guichet unique de la haie n'est pas encore activé dans le département ${dept.label}.</p>`;
     }

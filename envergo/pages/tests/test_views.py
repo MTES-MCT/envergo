@@ -383,11 +383,5 @@ class TestContactHaie:
 
         response = client.get(reverse("contact_us"))
         data = self._get_department_data(response, dept)
-        if expected_contacts_info is None:
-            assert (
-                "Les coordonnées du guichet unique dans ce département ne sont pas encore disponibles."
-                in data["contacts_info"]
-            )
-        else:
-            assert data["contacts_info"] == expected_contacts_info
+        assert data["contacts_info"] == expected_contacts_info
         assert data["is_config_valid"] is expected_valid
