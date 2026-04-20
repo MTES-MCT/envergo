@@ -33,6 +33,7 @@ from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html, format_html_join
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -1136,14 +1137,21 @@ class PetitionProjectInstructorMessagerieView(
         """Avoid errors if forms is invalid"""
 
         if form.errors:
-            error_list = "".join(
-                f"<li>{form.fields[field].label} : {error}</li>"
-                for field, errors in form.errors.items()
-                for error in errors
+            error_list = format_html_join(
+                "",
+                "<li>{} : {}</li>",
+                (
+                    (form.fields[field].label, error)
+                    for field, errors in form.errors.items()
+                    for error in errors
+                ),
             )
             messages.warning(
                 self.request,
-                f"Le message n’a pas pu être envoyé :<ul>{error_list}</ul>",
+                format_html(
+                    "Le message n’a pas pu être envoyé :<ul>{}</ul>",
+                    error_list,
+                ),
             )
 
         self.object = self.get_object()

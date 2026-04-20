@@ -836,6 +836,24 @@ def test_messagerie_invalid_extension_error(
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
+def test_messagerie_html_in_filename_is_escaped(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Un nom de fichier contenant du HTML ne doit pas être interprété."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    attachment = SimpleUploadedFile("test.csv.<h1>", b"data")
+    response = client.post(url, {"message_body": "test", "additional_file": attachment})
+    content = response.content.decode()
+    assert "<h1>" not in content
+    assert "&lt;h1&gt;" in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_messagerie_file_too_large_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):

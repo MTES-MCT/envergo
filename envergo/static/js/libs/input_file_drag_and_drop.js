@@ -21,8 +21,7 @@
   exports.DragNDrop = DragNDrop;
 
   DragNDrop.prototype.updateFileState = function() {
-    console.log('hello')
-    const successMsg = this.box.querySelector('#success-box-msg');
+    const successMsg = this.box.querySelector('.success-box-msg');
     if (this.input.files && this.input.files.length > 0) {
       this.box.classList.add('has-file');
       if (successMsg) {
@@ -71,6 +70,12 @@
     this.input.addEventListener('change', function() {
       this.updateFileState();
     }.bind(this));
+
+    const removeBtn = this.box.querySelector('.remove-file-btn');
+    removeBtn.addEventListener('click', function() {
+      this.input.value = '';
+      this.updateFileState();
+    }.bind(this));
   };
 
 })(this);
@@ -81,6 +86,9 @@ window.addEventListener('load', function() {
   // This selector class is set in the `_input_file_snippet.html` template
   const boxes = document.querySelectorAll(".input-file-box");
   boxes.forEach(function(box) {
-    new DragNDrop(box);
+    if (!box.dataset.dragInit) {
+      new DragNDrop(box);
+      box.dataset.dragInit = "true";
+    }
   });
 });
