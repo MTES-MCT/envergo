@@ -4,8 +4,8 @@ from abc import ABC
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
 from envergo.moulinette.regulations import (
+    HaieCriterionCategory,
     HaieCriterionEvaluator,
-    HaieCriterionScope,
     HaieRegulationEvaluator,
 )
 
@@ -62,21 +62,21 @@ class AlignementsArbresBase(PlantationConditionMixin, HaieCriterionEvaluator, AB
 
 
 class AlignementsArbresRu(AlignementsArbresBase):
-    scope = HaieCriterionScope.ru
+    category = HaieCriterionCategory.ru
 
     def evaluate(self):
         self._result_code, self._result = "non_concerne", "non_concerne"
 
 
 class AlignementsArbresHru(AlignementsArbresBase):
-    scope = HaieCriterionScope.hru
+    category = HaieCriterionCategory.hru
 
     def evaluate(self):
         self._result_code, self._result = "non_concerne", "non_concerne"
 
 
 class AlignementsArbresL3503(AlignementsArbresBase):
-    scope = HaieCriterionScope.l350_3
+    category = HaieCriterionCategory.l350_3
 
     RESULT_MATRIX = {
         "soumis_securite": RESULTS.soumis_declaration,
@@ -99,7 +99,7 @@ class AlignementsArbresL3503(AlignementsArbresBase):
 
 
 class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
-    scope = HaieCriterionScope.hru
+    category = HaieCriterionCategory.hru
     slug = "alignement_arbres_calvados_before_ru"
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,

@@ -1,7 +1,7 @@
 from envergo.evaluations.models import RESULTS
 from envergo.moulinette.regulations import (
+    HaieCriterionCategory,
     HaieCriterionEvaluator,
-    HaieCriterionScope,
     HaieRegulationEvaluator,
 )
 
@@ -27,7 +27,7 @@ class ProtectionCaptagesHaieHru(HaieCriterionEvaluator):
     choice_label = "Protection de captages > Protection de captages"
     slug = "protection_captages"
     plantation_conditions = []
-    scope = HaieCriterionScope.hru
+    category = HaieCriterionCategory.hru
 
     RESULT_MATRIX = {
         "a_verifier": RESULTS.a_verifier,
@@ -49,8 +49,8 @@ class ProtectionCaptagesHaieHru(HaieCriterionEvaluator):
 
 
 class ProtectionCaptagesHaieRu(ProtectionCaptagesHaieHru):
-    scope = HaieCriterionScope.ru
+    category = HaieCriterionCategory.ru
 
 
 class ProtectionCaptagesHaieL3503(ProtectionCaptagesHaieHru):
-    scope = HaieCriterionScope.l350_3
+    category = HaieCriterionCategory.l350_3

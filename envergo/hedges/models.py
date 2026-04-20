@@ -21,7 +21,7 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_lines,
     get_department_from_coords,
 )
-from envergo.moulinette.regulations import HaieCriterionScope
+from envergo.moulinette.regulations import HaieCriterionCategory
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -645,29 +645,29 @@ class HedgeData(models.Model):
             "dept_haie_detruite": self.get_department(),
         }
 
-    def get_by_scope(self, single_procedure, scope):
+    def get_by_category(self, single_procedure, category):
         if single_procedure:
-            if scope == HaieCriterionScope.hru:
+            if category == HaieCriterionCategory.hru:
                 return self.hedges().hru()
-            elif scope == HaieCriterionScope.ru:
+            elif category == HaieCriterionCategory.ru:
                 return self.hedges().ru()
-            elif scope == HaieCriterionScope.l350_3:
+            elif category == HaieCriterionCategory.l350_3:
                 return self.hedges().l350_3()
             else:
                 raise NotImplementedError()
         else:
-            if scope == HaieCriterionScope.hru:
+            if category == HaieCriterionCategory.hru:
                 return self.hedges()
             else:
                 return []
 
-    def get_hedges_by_scope(self, single_procedure):
-        hedges_by_scope = {
-            scope: self.get_by_scope(single_procedure, scope)
-            for scope in HaieCriterionScope
+    def get_hedges_by_category(self, single_procedure):
+        hedges_by_category = {
+            category: self.get_by_category(single_procedure, category)
+            for category in HaieCriterionCategory
         }
 
-        return hedges_by_scope
+        return hedges_by_category
 
 
 SPECIES_GROUPS = Choices(

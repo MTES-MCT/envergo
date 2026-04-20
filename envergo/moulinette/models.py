@@ -70,8 +70,8 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import (
     TO_ADD,
     TO_SUBTRACT,
+    HaieCriterionCategory,
     HaieCriterionEvaluator,
-    HaieCriterionScope,
     HaieRegulationEvaluator,
     MapFactory,
 )
@@ -2746,32 +2746,32 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         There is two kind of activation mode for a criterion:
          * department_centroid: activated if the department centroid is in the activation map,
-           and there is at least one hedge in the criterion's scope
+           and there is at least one hedge in the criterion's category
          * hedges_intersection: activated if the activation map intersects with hedges
-           belonging to the same scope as the criterion
+           belonging to the same category as the criterion
 
         Both modes are combined into a single query to avoid multiple expensive spatial
         EXISTS subqueries.
         """
         dept_centroid = self.department.centroid
         if "haies" in self.catalog:
-            hedges_by_scope = self.catalog["haies"].get_hedges_by_scope(
+            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
                 self.config.single_procedure
             )
         else:
-            hedges_by_scope = {scope: [] for scope in HaieCriterionScope}
+            hedges_by_category = {category: [] for category in HaieCriterionCategory}
 
-        # Build scope → evaluator classpaths mapping
-        evaluators_by_scope = {scope: [] for scope in HaieCriterionScope}
+        # Build category → evaluator classpaths mapping
+        evaluators_by_category = {category: [] for category in HaieCriterionCategory}
         for cls in get_subclasses(HaieCriterionEvaluator):
-            evaluators_by_scope[cls.scope].append(classpath(cls))
+            evaluators_by_category[cls.category].append(classpath(cls))
 
-        # department_centroid: geography filter + exclude evaluators whose scope has no hedges
-        empty_scope_evaluators = [
+        # department_centroid: geography filter + exclude evaluators whose category has no hedges
+        empty_category_evaluators = [
             evaluator_classpath
-            for scope, hedges in hedges_by_scope.items()
+            for category, hedges in hedges_by_category.items()
             if not hedges
-            for evaluator_classpath in evaluators_by_scope[scope]
+            for evaluator_classpath in evaluators_by_category[category]
         ]
         centroid_subquery = Zone.objects.filter(
             map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
@@ -2779,22 +2779,23 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         centroid_q = (
             Q(activation_mode="department_centroid")
             & Exists(centroid_subquery)
-            & ~Q(evaluator__in=empty_scope_evaluators)
+            & ~Q(evaluator__in=empty_category_evaluators)
         )
 
-        # hedges_intersection: one EXISTS per scope, OR-combined into a single query
-        scope_qs = []
-        for scope, hedges in hedges_by_scope.items():
-            if hedges and evaluators_by_scope[scope]:
+        # hedges_intersection: one EXISTS per category, OR-combined into a single query
+        category_qs = []
+        for category, hedges in hedges_by_category.items():
+            if hedges and evaluators_by_category[category]:
                 zone_subquery = self.get_zone_subquery(hedges)
-                scope_qs.append(
-                    Q(evaluator__in=evaluators_by_scope[scope]) & Exists(zone_subquery)
+                category_qs.append(
+                    Q(evaluator__in=evaluators_by_category[category])
+                    & Exists(zone_subquery)
                 )
 
         final_q = centroid_q
-        if scope_qs:
+        if category_qs:
             intersection_q = Q(activation_mode="hedges_intersection") & reduce(
-                operator.or_, scope_qs
+                operator.or_, category_qs
             )
             final_q |= intersection_q
 

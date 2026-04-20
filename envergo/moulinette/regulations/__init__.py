@@ -610,42 +610,42 @@ class CriterionEvaluator(ABC):
         return {}
 
 
-class HaieCriterionScope(Enum):
+class HaieCriterionCategory(Enum):
     ru = "Régime unique"
     l350_3 = "L350-3"
     hru = "Hors régime unique"
 
 
 class HaieCriterionEvaluator(CriterionEvaluator, ABC):
-    """Add a scope for criterion evaluator on GUH to filter the hedges to evaluate."""
+    """Add a category for criterion evaluator on GUH to filter the hedges to evaluate."""
 
-    scope: HaieCriterionScope = HaieCriterionScope.hru
+    category: HaieCriterionCategory = HaieCriterionCategory.hru
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        # Automatically append the scope to choice_label and slug.
-        # _base_choice_label holds the label without the scope suffix, so that
-        # subclasses overriding only `scope` can recompute the full label correctly.
+        # Automatically append the category to choice_label and slug.
+        # _base_choice_label holds the label without the category suffix, so that
+        # subclasses overriding only `category` can recompute the full label correctly.
         if "choice_label" in cls.__dict__:
             cls._base_choice_label = cls.__dict__["choice_label"]
-        if ("scope" in cls.__dict__ or "choice_label" in cls.__dict__) and hasattr(
+        if ("category" in cls.__dict__ or "choice_label" in cls.__dict__) and hasattr(
             cls, "_base_choice_label"
         ):
-            cls.choice_label = f"{cls._base_choice_label} - {cls.scope.value}"
+            cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
 
         if "slug" in cls.__dict__:
             cls._base_slug = cls.__dict__["slug"]
-        if ("scope" in cls.__dict__ or "slug" in cls.__dict__) and hasattr(
+        if ("category" in cls.__dict__ or "slug" in cls.__dict__) and hasattr(
             cls, "_base_slug"
         ):
-            cls.slug = f"{cls._base_slug}__{cls.scope.name}"
+            cls.slug = f"{cls._base_slug}__{cls.category.name}"
 
     def __init__(self, criterion, moulinette, distance, settings):
         super().__init__(criterion, moulinette, distance, settings)
         if "haies" in self.moulinette.catalog:
-            self.hedges = self.moulinette.catalog["haies"].get_by_scope(
-                self.moulinette.config.single_procedure, self.scope
+            self.hedges = self.moulinette.catalog["haies"].get_by_category(
+                self.moulinette.config.single_procedure, self.category
             )
         else:
             from envergo.hedges.models import HedgeList

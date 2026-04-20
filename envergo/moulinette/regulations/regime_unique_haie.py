@@ -1,8 +1,8 @@
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
+    HaieCriterionCategory,
     HaieCriterionEvaluator,
-    HaieCriterionScope,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -53,7 +53,7 @@ class RegimeUniqueHaieHru(HaieCriterionEvaluator):
 
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
-    scope = HaieCriterionScope.hru
+    category = HaieCriterionCategory.hru
 
     RESULT_MATRIX = {
         "non_concerne": RESULTS.non_concerne,
@@ -81,7 +81,7 @@ class RegimeUniqueHaieRu(
     """
 
     plantation_conditions = []
-    scope = HaieCriterionScope.ru
+    category = HaieCriterionCategory.ru
 
     def evaluate(self):
         self._result_code, self._result = "soumis", "soumis"
@@ -110,7 +110,7 @@ class RegimeUniqueHaieL3503(RegimeUniqueHaieHru):
     non concerné based on hedge types.
     """
 
-    scope = HaieCriterionScope.l350_3
+    category = HaieCriterionCategory.l350_3
 
     def evaluate(self):
         self._result_code, self._result = "non_concerne", "non_concerne"

@@ -24,8 +24,8 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import (
+    HaieCriterionCategory,
     HaieCriterionEvaluator,
-    HaieCriterionScope,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -729,7 +729,7 @@ class EspecesProtegeesRegimeUnique(
     plantation_conditions = []
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
-    scope = HaieCriterionScope.ru
+    category = HaieCriterionCategory.ru
 
     RESULT_MATRIX = {
         "non_concerne": RESULTS.non_concerne,

@@ -1,7 +1,7 @@
 from envergo.geodata.utils import get_geoportail_urbanisme_centered_url
 from envergo.moulinette.regulations import (
+    HaieCriterionCategory,
     HaieCriterionEvaluator,
-    HaieCriterionScope,
     HaieRegulationEvaluator,
 )
 
@@ -17,7 +17,7 @@ class UrbanismeHaieRegulation(HaieRegulationEvaluator):
 class UrbanismeHaieHru(HaieCriterionEvaluator):
     choice_label = "Urbanisme Haie > Urbanisme Haie"
     slug = "urbanisme_haie"
-    scope = HaieCriterionScope.hru
+    category = HaieCriterionCategory.hru
 
     def evaluate(self):
         self._result_code, self._result = "a_verifier", "a_verifier"
@@ -31,8 +31,8 @@ class UrbanismeHaieHru(HaieCriterionEvaluator):
 
 
 class UrbanismeHaieRu(UrbanismeHaieHru):
-    scope = HaieCriterionScope.ru
+    category = HaieCriterionCategory.ru
 
 
 class UrbanismeHaieL3503(UrbanismeHaieHru):
-    scope = HaieCriterionScope.l350_3
+    category = HaieCriterionCategory.l350_3
