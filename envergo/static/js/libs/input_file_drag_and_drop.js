@@ -21,7 +21,6 @@
   exports.DragNDrop = DragNDrop;
 
   DragNDrop.prototype.updateFileState = function() {
-    console.log('hello')
     const successMsg = this.box.querySelector('.success-box-msg');
     if (this.input.files && this.input.files.length > 0) {
       this.box.classList.add('has-file');
