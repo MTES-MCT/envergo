@@ -13,45 +13,81 @@
 <a class="fr-btn fr-btn--secondary fr-mb-1w"
    href="{% url 'demo_density_project' %}?haies={{ haies_id }}">Voir le calcul de densité</a>
 
-{% if ru_zone_config %}
+{% if ru_hedge_rows %}
   <h6>Coefficients de compensation (régime unique)</h6>
-  <p>
-    <strong>Zonage :</strong> {{ ru_zone_id }}
-    <br />
-    <strong>Seuil X_densite :</strong> {{ ru_zone_config.X_densite }} ml/ha
-    <br />
-    <strong>Densité haute :</strong> {{ ru_high_density|yesno:"Oui,Non" }}
-  </p>
+
   <div class="fr-table fr-table--sm">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">
         <div class="fr-table__content">
           <table>
-            <caption>Matrice de coefficients (zone {{ ru_zone_id }})</caption>
+            <caption>Zone et coefficient par haie</caption>
             <thead>
               <tr>
-                <th scope="col">
-                  <span class="fr-sr-only">Type de haie</span>
-                </th>
-                <th scope="col">Haute densité</th>
-                <th scope="col">Basse densité</th>
+                <th scope="col">Haie</th>
+                <th scope="col">Longueur</th>
+                <th scope="col">Zone</th>
+                <th scope="col">X_densite</th>
+                <th scope="col">Densité</th>
+                <th scope="col">Coefficient</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row">Non arborée</th>
-                <td>{{ ru_zone_config.R1_non_arboree_HD }}</td>
-                <td>{{ ru_zone_config.R2_non_arboree_LD }}</td>
-              </tr>
-              <tr>
-                <th scope="row">Arborée</th>
-                <td>{{ ru_zone_config.R3_arboree_HD }}</td>
-                <td>{{ ru_zone_config.R4_arboree_LD }}</td>
-              </tr>
+              {% for row in ru_hedge_rows %}
+                <tr>
+                  <td>{{ row.hedge_id }}</td>
+                  <td>{{ row.length }} m</td>
+                  <td>{{ row.zone_id|default:"-" }}</td>
+                  <td>
+                    {% if row.x_densite != None %}
+                      {{ row.x_densite }} ml/ha
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                  <td>{{ row.high_density|yesno:"HD,LD,-" }}</td>
+                  <td>{{ row.coefficient }}</td>
+                </tr>
+              {% endfor %}
             </tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
+
+  {% for zone_id, config in ru_zone_configs.items %}
+    <div class="fr-table fr-table--sm">
+      <div class="fr-table__wrapper">
+        <div class="fr-table__container">
+          <div class="fr-table__content">
+            <table>
+              <caption>Matrice de coefficients (zone {{ zone_id }}) — X_densite : {{ config.X_densite }} ml/ha</caption>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span class="fr-sr-only">Type de haie</span>
+                  </th>
+                  <th scope="col">Haute densité</th>
+                  <th scope="col">Basse densité</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Non arborée</th>
+                  <td>{{ config.R1_non_arboree_HD }}</td>
+                  <td>{{ config.R2_non_arboree_LD }}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Arborée</th>
+                  <td>{{ config.R3_arboree_HD }}</td>
+                  <td>{{ config.R4_arboree_LD }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 {% endif %}

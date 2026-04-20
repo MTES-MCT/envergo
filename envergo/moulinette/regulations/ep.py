@@ -30,6 +30,7 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
+    get_ru_debug_context,
     get_ru_zone_data,
 )
 from envergo.utils.fields import get_human_readable_value
@@ -801,7 +802,7 @@ class EspecesProtegeesRegimeUnique(
 
         if (
             self.moulinette.config.single_procedure
-            and "ru_zone_config" not in self.catalog
+            and "ru_per_hedge_coefficients" not in self.catalog
         ):
             catalog.update(get_ru_zone_data(self.moulinette))
 
@@ -912,8 +913,8 @@ class EspecesProtegeesRegimeUnique(
         if not result_data["is_regime_unique"]:
             return "non_concerne"
 
-        # 0b. Zone config unavailable -> non disponible
-        if self.catalog.get("ru_zone_config") is None:
+        # 0b. Zone config unavailable for at least one hedge -> non disponible
+        if not self.catalog.get("ru_all_zones_resolved", False):
             return "non_disponible"
 
         aa_only = result_data["aa_only"]
@@ -986,7 +987,7 @@ class EspecesProtegeesRegimeUnique(
         return rows
 
     def get_debug_context(self):
-        """Return density + EP-specific debug data."""
+        """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
 
         per_hedge_results = self.per_hedge_results
@@ -1001,7 +1002,5 @@ class EspecesProtegeesRegimeUnique(
         # exactly which values drove the cascade. None when settings are
         # missing/invalid — the template hides the table in that case.
         context["ep_ru_settings"] = self.params
-        context["ru_zone_id"] = self.catalog.get("ru_zone_id")
-        context["ru_zone_config"] = self.catalog.get("ru_zone_config")
-        context["ru_high_density"] = self.catalog.get("ru_high_density")
+        context.update(get_ru_debug_context(self.catalog))
         return context

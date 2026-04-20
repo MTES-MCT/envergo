@@ -4,6 +4,7 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -173,7 +174,7 @@ class TestNoZonage:
     """Tests for has_ru_zonage=False — always uses default, no zone lookup."""
 
     def test_uses_default_config(self):
-        """Without zonage, always return the default config."""
+        """Without zonage, always return the default config for every hedge."""
         settings = zone_settings(default=(50, 1.0, 1.1, 1.2, 1.3))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=False)
         moulinette = make_moulinette_haie_with_density(
@@ -181,7 +182,8 @@ class TestNoZonage:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] == "default"
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["zone_id"] == "default" for info in zone_info.values())
 
     def test_ignores_existing_zonage_maps(self):
         """Zone maps exist but has_ru_zonage=False — they are not queried."""
@@ -196,14 +198,15 @@ class TestNoZonage:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] == "default"
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["zone_id"] == "default" for info in zone_info.values())
 
 
 class TestZoneResolution:
-    """Tests for has_ru_zonage=True — zone lookup with distance-capped fallback."""
+    """Tests for has_ru_zonage=True — per-hedge zone lookup with distance fallback."""
 
     def test_centroid_in_zone_uses_zone_config(self):
-        """When the centroid falls inside a zonage polygon, use that zone's config."""
+        """When the hedge centroid falls inside a zonage polygon, use that zone."""
         make_zonage_map("zone_A")
         settings = zone_settings(("zone_A", 50, 1.2, 1.4, 1.6, 1.8))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
@@ -212,10 +215,11 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] == "zone_A"
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["zone_id"] == "zone_A" for info in zone_info.values())
 
     def test_centroid_not_in_zone_uses_nearest(self):
-        """When no zone covers the centroid, fall back to the nearest zone."""
+        """When no zone covers the hedge centroid, fall back to the nearest."""
         zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
         # Small polygon ~20 km from the HedgeFactory default centroid (~43.687, 3.585)
         nearby_poly = Polygon(
@@ -240,7 +244,8 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] == "zone_nearest"
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["zone_id"] == "zone_nearest" for info in zone_info.values())
 
     def test_distant_zone_ignored(self):
         """A zone beyond the 50 km cap is ignored even if it's the nearest."""
@@ -268,11 +273,11 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] is None
-        assert moulinette.catalog["ru_zone_config"] is None
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["zone_config"] is None for info in zone_info.values())
 
     def test_no_zones_returns_none(self):
-        """When no zonage zones exist, zone config is None."""
+        """When no zonage zones exist, zone config is None for every hedge."""
         settings = zone_settings(("zone_A", 50, 1.0, 1.0, 1.0, 1.0))
         RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
         moulinette = make_moulinette_haie_with_density(
@@ -280,8 +285,8 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] is None
-        assert moulinette.catalog["ru_zone_config"] is None
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["zone_config"] is None for info in zone_info.values())
 
     def test_zone_key_not_in_config_returns_none(self):
         """Zone found but its identifier has no matching config entry → None config."""
@@ -293,8 +298,10 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_zone_id"] == "zone_unknown"
-        assert moulinette.catalog["ru_zone_config"] is None
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        info = list(zone_info.values())[0]
+        assert info["zone_id"] == "zone_unknown"
+        assert info["zone_config"] is None
 
     def test_missing_zone_config_yields_non_disponible(self):
         """When zone config is None, the evaluator returns non_disponible."""
@@ -323,7 +330,8 @@ class TestPerHedgeCoefficients:
         )
         coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.8]
-        assert moulinette.catalog["ru_high_density"] is True
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["high_density"] is True for info in zone_info.values())
 
     def test_arboree_low_density(self):
         """Mixte hedge + density below threshold → R4_arboree_LD."""
@@ -336,7 +344,8 @@ class TestPerHedgeCoefficients:
         )
         coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
         assert list(coefficients.values()) == [2.0]
-        assert moulinette.catalog["ru_high_density"] is False
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["high_density"] is False for info in zone_info.values())
 
     def test_non_arboree_high_density(self):
         """Non-mixte hedge + density above threshold → R1_non_arboree_HD."""
@@ -371,7 +380,8 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        assert moulinette.catalog["ru_high_density"] is True
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        assert all(info["high_density"] is True for info in zone_info.values())
         coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.8]
 
@@ -471,3 +481,146 @@ class TestCompensationRatio:
         evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
         # zone_A, R3_arboree_HD = 4.0
         assert evaluator.get_replantation_coefficient() == 4.0
+
+
+# ---------------------------------------------------------------------------
+# Multi-zone tests — hedges in different zones get different coefficients
+# ---------------------------------------------------------------------------
+
+# Two non-overlapping zone polygons covering different areas of France.
+# Zone A covers a southern area (lat ~43), zone B covers a northern area (lat ~44).
+ZONE_A_POLY = Polygon(
+    ((2.9, 42.9), (4.1, 42.9), (4.1, 43.8), (2.9, 43.8), (2.9, 42.9)),
+    srid=EPSG_WGS84,
+)
+ZONE_B_POLY = Polygon(
+    ((2.9, 43.9), (4.1, 43.9), (4.1, 44.8), (2.9, 44.8), (2.9, 43.9)),
+    srid=EPSG_WGS84,
+)
+
+
+def make_two_zone_map(zone_a_id="zone_A", zone_b_id="zone_B"):
+    """Create a zonage map with two non-overlapping zones."""
+    zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
+    ZoneFactory(
+        map=zonage_map,
+        geometry=MultiPolygon([ZONE_A_POLY]),
+        attributes={"identifiant_zone": zone_a_id},
+    )
+    ZoneFactory(
+        map=zonage_map,
+        geometry=MultiPolygon([ZONE_B_POLY]),
+        attributes={"identifiant_zone": zone_b_id},
+    )
+    return zonage_map
+
+
+def make_hedge_at(lat, lng, length=100, type_haie="buissonnante"):
+    """Create a HedgeFactory whose centroid is at the given coordinates.
+
+    Both latLngs start identical; the ``length`` post-generation hook adjusts
+    the endpoint so the hedge has the requested length while staying near the
+    target point.
+    """
+    return HedgeFactory(
+        latLngs=[{"lat": lat, "lng": lng}, {"lat": lat, "lng": lng}],
+        length=length,
+        additionalData__type_haie=type_haie,
+        additionalData__sur_parcelle_pac=False,
+    )
+
+
+class TestMultiZoneHedges:
+    """Tests for hedges located in different zones getting different coefficients."""
+
+    def test_hedges_in_different_zones_get_different_coefficients(self):
+        """Two hedges in two different zones get coefficients from their own zone."""
+        make_two_zone_map()
+        settings = zone_settings(
+            ("zone_A", 60, 1.0, 1.1, 1.2, 1.3),
+            ("zone_B", 60, 2.0, 2.1, 2.2, 2.3),
+        )
+        RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+        hedge_south = make_hedge_at(lat=43.3, lng=3.5, type_haie="mixte")
+        hedge_north = make_hedge_at(lat=44.3, lng=3.5, type_haie="mixte")
+        moulinette = make_moulinette_haie_with_density(
+            density=80,
+            hedges=[hedge_south, hedge_north],
+            reimplantation="replantation",
+        )
+        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        # Each hedge should be in its own zone
+        assert zone_info[hedge_south.id]["zone_id"] == "zone_A"
+        assert zone_info[hedge_north.id]["zone_id"] == "zone_B"
+        # R3_arboree_HD from respective zones
+        assert coefficients[hedge_south.id] == 1.2
+        assert coefficients[hedge_north.id] == 2.2
+
+    def test_same_density_different_threshold_different_hd_ld(self):
+        """Same project density can be HD in one zone but LD in another."""
+        make_two_zone_map()
+        # Zone A: X_densite=50 (density 60 → HD), Zone B: X_densite=80 (density 60 → LD)
+        settings = zone_settings(
+            ("zone_A", 50, 1.0, 1.1, 1.2, 1.3),
+            ("zone_B", 80, 2.0, 2.1, 2.2, 2.3),
+        )
+        RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+        hedge_south = make_hedge_at(lat=43.3, lng=3.5, type_haie="arbustive")
+        hedge_north = make_hedge_at(lat=44.3, lng=3.5, type_haie="arbustive")
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[hedge_south, hedge_north],
+            reimplantation="replantation",
+        )
+        zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
+        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        # Zone A: density 60 >= X_densite 50 → HD → R1_non_arboree_HD=1.0
+        assert zone_info[hedge_south.id]["high_density"] is True
+        assert coefficients[hedge_south.id] == 1.0
+        # Zone B: density 60 < X_densite 80 → LD → R2_non_arboree_LD=2.1
+        assert zone_info[hedge_north.id]["high_density"] is False
+        assert coefficients[hedge_north.id] == 2.1
+
+    def test_one_hedge_without_zone_triggers_non_disponible(self):
+        """When one hedge has no zone config, the evaluator returns non_disponible."""
+        # Only create zone A (southern), no zone covering northern area
+        zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
+        ZoneFactory(
+            map=zonage_map,
+            geometry=MultiPolygon([ZONE_A_POLY]),
+            attributes={"identifiant_zone": "zone_A"},
+        )
+        settings = zone_settings(("zone_A", 50, 1.0, 1.1, 1.2, 1.3))
+        RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+        hedge_south = make_hedge_at(lat=43.3, lng=3.5)
+        # Hedge far from any zone (> 50 km away)
+        hedge_far = make_hedge_at(lat=48.0, lng=3.5)
+        moulinette = make_moulinette_haie_with_density(
+            density=80,
+            hedges=[hedge_south, hedge_far],
+            reimplantation="replantation",
+        )
+        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        assert evaluator.result_code == "non_disponible"
+
+    def test_weighted_average_with_multi_zone_coefficients(self):
+        """Weighted average correctly combines coefficients from different zones."""
+        make_two_zone_map()
+        settings = zone_settings(
+            ("zone_A", 60, 1.0, 1.5, 2.0, 2.5),
+            ("zone_B", 60, 3.0, 3.5, 4.0, 4.5),
+        )
+        RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+        # 100m hedge in zone A (mixte, HD → R3=2.0)
+        hedge_south = make_hedge_at(lat=43.3, lng=3.5, length=100, type_haie="mixte")
+        # 100m hedge in zone B (mixte, HD → R3=4.0)
+        hedge_north = make_hedge_at(lat=44.3, lng=3.5, length=100, type_haie="mixte")
+        moulinette = make_moulinette_haie_with_density(
+            density=80,
+            hedges=[hedge_south, hedge_north],
+            reimplantation="replantation",
+        )
+        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        # (100 * 2.0 + 100 * 4.0) / 200 = 3.0
+        assert evaluator.get_replantation_coefficient() == 3.0
