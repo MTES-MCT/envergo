@@ -40,6 +40,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("hedges", "0028_hedgedata_length_fields"),
+        ("moulinette", "0111_confighaie_contacts_info"),
     ]
 
     operations = [
