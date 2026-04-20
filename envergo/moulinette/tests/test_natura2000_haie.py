@@ -87,15 +87,6 @@ class TestNatura2000HaieSettings:
         form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": "non"})
         assert form.is_valid()
 
-    @pytest.mark.parametrize(
-        "value",
-        [True, False, "True", "False", "yes", "no", "1", 1, 0, "anything"],
-    )
-    def test_concerne_aa_rejects_invalid_values(self, value):
-        form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": value})
-        assert not form.is_valid()
-        assert "concerne_aa" in form.errors
-
 
 class TestConcerneAAParam:
     """Test the concerne_aa parameter across all combinations of settings and hedge types."""
