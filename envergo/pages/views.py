@@ -60,19 +60,12 @@ class DepartmentSearchMixin:
 
         return self.queryset.annotate(
             is_config_valid=Exists(valid_config_qs),
-            # Default value is inline HTML so the fallback is testable server-side
             contacts_info=Coalesce(
                 NullIf(
                     Subquery(valid_config_qs.values("contacts_info")[:1]), Value("")
                 ),
                 NullIf(
                     Subquery(other_config_qs.values("contacts_info")[:1]), Value("")
-                ),
-                Value(
-                    "<p><i>"
-                    "Les coordonnées du guichet unique dans ce département"
-                    " ne sont pas encore disponibles."
-                    "</i></p>"
                 ),
                 output_field=TextField(),
             ),
