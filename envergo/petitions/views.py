@@ -961,6 +961,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
         context["plantation_evaluation"] = PlantationEvaluator(
             context["moulinette"], context["moulinette"].catalog["haies"]
         )
+        context["config"] = context["moulinette"].config
         return context
 
     def get_success_url(self):
