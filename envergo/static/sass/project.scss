@@ -659,7 +659,7 @@ form {
         display: block;
       }
 
-      #success-box-msg {
+      .success-file-row {
         display: none;
       }
     }
@@ -671,12 +671,14 @@ form {
 
     // When a file has been selected (class added via JS)
     &.has-file div.input-file-widget {
-      #default-box-msg {
+      .default-box-msg {
         display: none;
       }
 
-      #success-box-msg {
-        display: block;
+      .success-file-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
     }
   }
