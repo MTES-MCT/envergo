@@ -16,26 +16,43 @@ from envergo.hedges.regulations import (
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
-from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    DCConfigHaieFactory,
+    RegulationFactory,
+    RUConfigHaieFactory,
+)
 from envergo.moulinette.tests.utils import make_moulinette_haie_data
 
 pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def ep_criterion_evaluator():
-    DCConfigHaieFactory()
-    data = make_moulinette_haie_data()
-    moulinette = MoulinetteHaie(data)
-    return EspecesProtegeesAisne(moulinette, 0, {})
+def ep_criterion(france_map):  # noqa
+    regulation = RegulationFactory(regulation="ep")
+    return CriterionFactory(
+        title="Espèces protégées",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesSimple",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
 
 
 @pytest.fixture
-def ep_criterion_evaluator_ru():
+def ep_criterion_evaluator(ep_criterion):
+    DCConfigHaieFactory()
+    data = make_moulinette_haie_data()
+    moulinette = MoulinetteHaie(data)
+    return EspecesProtegeesAisne(ep_criterion, moulinette, 0, {})
+
+
+@pytest.fixture
+def ep_criterion_evaluator_ru(ep_criterion):
     RUConfigHaieFactory()
     data = make_moulinette_haie_data()
     moulinette = MoulinetteHaie(data)
-    return EspecesProtegeesAisne(moulinette, 0, {})
+    return EspecesProtegeesAisne(ep_criterion, moulinette, 0, {})
 
 
 @pytest.fixture

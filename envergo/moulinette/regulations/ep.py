@@ -25,6 +25,7 @@ from envergo.hedges.regulations import (
 )
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
+    HaieCriterionScope,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -563,26 +564,20 @@ class EspecesProtegeesNormandie(
         # this evaluator needs the result of the alignement_arbres criterion to get its own result
         # the regulation weight should be configurated to fetch the alignement_arbres before this one
         # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
+        reg = getattr(self.moulinette, "alignement_arbres", None)
+        criterion = getattr(reg, "alignement_arbres__l350_3", None) or getattr(
+            reg, "alignement_arbres_calvados_before_ru__hru", None
+        )  # Calvados was supporting L350-3 before RU, so we need to check the hru criterion.
+
         if (
             self.catalog.get("alignement_bord_voie_every_hedge", False)
-            and hasattr(self.moulinette, "alignement_arbres")
-            and self.moulinette.alignement_arbres.is_activated
-            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres__l350_3")
+            and reg is not None
+            and reg.is_activated
+            and criterion is not None
         ):
-            if (
-                self.moulinette.alignement_arbres.alignement_arbres__l350_3.result_code
-                == "soumis_securite"
-            ):
+            if criterion.result_code == "soumis_securite":
                 result = "dispense_L350"
-            elif (
-                self.moulinette.alignement_arbres.alignement_arbres__l350_3.result_code
-                == "soumis_esthetique"
-            ):
-                result = "a_verifier_L350"
-            elif (
-                self.moulinette.alignement_arbres.alignement_arbres__l350_3.result_code
-                == "soumis_autorisation"
-            ):
+            elif criterion.result_code in ("soumis_esthetique", "soumis_autorisation"):
                 result = "a_verifier_L350"
             else:  # non soumis
                 result = super().get_result_code(result_data)
@@ -734,6 +729,7 @@ class EspecesProtegeesRegimeUnique(
     plantation_conditions = []
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
+    scope = HaieCriterionScope.ru
 
     RESULT_MATRIX = {
         "non_concerne": RESULTS.non_concerne,

@@ -382,7 +382,7 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
     CriterionFactory(
         title="Alignement arbres > L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     ),
@@ -418,7 +418,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
     CriterionFactory(
         title="Alignement arbres > L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     ),

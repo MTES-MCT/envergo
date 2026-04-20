@@ -382,7 +382,21 @@ def setup_regime_unique_haie(activation_map):
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaie",
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),

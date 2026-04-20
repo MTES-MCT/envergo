@@ -21,7 +21,7 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -240,8 +240,9 @@ def test_moulinette_result_autorisation(ep_criteria):
                     "type_haie": "mixte",
                     "sur_parcelle_pac": False,
                     "mode_destruction": "coupe_a_blanc",
+                    "place_publique": True,
                 },
-            )
+            ),
         ]
     )
     data = {
