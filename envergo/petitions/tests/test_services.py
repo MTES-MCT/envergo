@@ -63,9 +63,11 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_organization_id="Q2hhbXAtNDcyOTE3MQ==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+            "organization": "Q2hhbXAtNDcyOTE3MQ==",
+        }
     )
 
     petition_project = PetitionProjectFactory()

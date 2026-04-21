@@ -151,9 +151,9 @@ def get_context_from_ds(petition_project) -> dict:
     config = petition_project.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
 
-    city = ""
-    pacage = ""
-    organization = ""
+    city_item = ""
+    pacage_item = ""
+    organization_item = ""
     usager = ""
     applicant = ""
     applicant_email = ""
@@ -186,7 +186,11 @@ def get_context_from_ds(petition_project) -> dict:
         notify(dedent(message), "haie")
 
     if dossier:
-        city, organization, pacage = extract_data_from_fields(config, dossier)
+        city_item = get_field_data_from_dn_dossier("city", config, dossier)
+        organization_item = get_field_data_from_dn_dossier(
+            "organization", config, dossier
+        )
+        pacage_item = get_field_data_from_dn_dossier("pacage", config, dossier)
         usager = dossier.usager.email or ""
         applicant = dossier.applicant_name or ""
         if dossier.demandeur:
@@ -198,9 +202,9 @@ def get_context_from_ds(petition_project) -> dict:
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
         "ds_info": {
             "usager": usager,
-            "city": city,
-            "pacage": pacage,
-            "organization": organization,
+            "city": city_item.value,
+            "pacage": pacage_item.value,
+            "organization": organization_item.value,
             "applicant": applicant,
             "applicant_email": applicant_email,
             "representative": representative,
@@ -226,6 +230,14 @@ def get_field_data_from_ds_dossier(field_id, dossier):
         None,
     )
     return item
+
+
+def get_field_data_from_dn_dossier(field_name, config, dossier):
+    """Get field value from dossier DN using demarches_simplifiees_display_fields"""
+    ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
+    if not ds_field_id:
+        return None
+    return get_field_data_from_ds_dossier(ds_field_id, dossier)
 
 
 def extract_data_from_fields(config, dossier):
