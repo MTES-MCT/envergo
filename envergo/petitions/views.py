@@ -1435,10 +1435,18 @@ class PetitionProjectInstructorProcedureView(
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
+        ds_status_mapping = {
+            f"{stage},{decision}": ds_status
+            for (
+                stage,
+                decision,
+            ), ds_status in DEMARCHES_SIMPLIFIEES_STATUS_MAPPING.items()
+        }
         context.update(
             {
                 "STAGES": STAGES,
                 "DECISIONS": DECISIONS,
+                "ds_status_mapping": ds_status_mapping,
             }
         )
 
