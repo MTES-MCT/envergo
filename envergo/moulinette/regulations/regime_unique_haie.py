@@ -169,9 +169,14 @@ def get_ru_zone_data(moulinette):
 
         coefficients[hedge.id] = coefficient
         per_hedge_zone_info[hedge.id] = {
+            "hedge_id": hedge.id,
             "zone_id": zone_id,
             "zone_config": zone_config,
             "high_density": high_density,
+            "x_densite": zone_config.get("X_densite") if zone_config else None,
+            "type": "Arborée" if hedge.hedge_type == "mixte" else "Non arborée",
+            "length": round(hedge.length),
+            "coefficient": coefficient,
         }
 
     return {
@@ -179,26 +184,6 @@ def get_ru_zone_data(moulinette):
         "ru_per_hedge_zone_info": per_hedge_zone_info,
         "ru_all_zones_resolved": all_resolved,
     }
-
-
-def build_ru_debug_rows(per_hedge_zone_info, coefficients, hedges):
-    """Build a list of dicts for the debug template's per-hedge zone table."""
-    hedge_lengths = {h.id: h.length for h in hedges}
-    rows = []
-    for hedge_id, info in per_hedge_zone_info.items():
-        zone_config = info["zone_config"]
-        x_densite = zone_config.get("X_densite") if zone_config else None
-        rows.append(
-            {
-                "hedge_id": hedge_id,
-                "zone_id": info["zone_id"],
-                "high_density": info["high_density"],
-                "x_densite": x_densite,
-                "length": round(hedge_lengths.get(hedge_id, 0)),
-                "coefficient": coefficients.get(hedge_id, 0.0),
-            }
-        )
-    return rows
 
 
 def collect_zone_configs(per_hedge_zone_info):
@@ -217,11 +202,8 @@ def get_ru_debug_context(catalog):
     Shared by both RegimeUniqueHaie and EspecesProtegeesRegimeUnique.
     """
     per_hedge_info = catalog.get("ru_per_hedge_zone_info", {})
-    coefficients = catalog.get("ru_per_hedge_coefficients", {})
-    haies = catalog.get("haies")
-    hedges = haies.hedges_to_remove().n_alignement() if haies else []
     return {
-        "ru_hedge_rows": build_ru_debug_rows(per_hedge_info, coefficients, hedges),
+        "ru_hedge_rows": list(per_hedge_info.values()),
         "ru_zone_configs": collect_zone_configs(per_hedge_info),
     }
 
