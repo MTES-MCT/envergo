@@ -278,12 +278,26 @@
         }
       };
 
-      document.getElementById("id_stage").addEventListener("change", function (event) {
+      const procedureForm = document.querySelector('#procedure-modal form');
+      const currentDsStatus = procedureForm.dataset.currentDsStatus;
+      const dsStatusMapping = JSON.parse(document.getElementById('ds-status-mapping').textContent);
+      const stateChangeMessage = document.getElementById('procedure-state-change-message');
+      const stageInput = document.getElementById("id_stage");
+      const decisionInput = document.getElementById("id_decision");
+
+      const checkStateChange = () => {
+        const newDsStatus = dsStatusMapping[`${stageInput.value},${decisionInput.value}`];
+        stateChangeMessage.style.display = (newDsStatus && newDsStatus !== currentDsStatus) ? "block" : "none";
+      };
+
+      stageInput.addEventListener("change", (event) => {
         displayStageObjective(event.target.value);
         toggleDueDate(event.target.value);
+        checkStateChange();
       });
-      displayStageObjective(document.getElementById("id_stage").value);
-      toggleDueDate(document.getElementById("id_stage").value);
+      decisionInput.addEventListener("change", checkStateChange);
+      displayStageObjective(stageInput.value);
+      toggleDueDate(stageInput.value);
 
     });
   </script>
