@@ -240,43 +240,6 @@ def get_field_data_from_dn_dossier(field_name, config, dossier):
     return get_field_data_from_ds_dossier(ds_field_id, dossier)
 
 
-def extract_data_from_fields(config, dossier):
-    """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
-    city = ""
-    pacage = ""
-    organization = ""
-
-    champs = dossier.champs
-    city_field = next(
-        (champ for champ in champs if champ.id == config.demarches_simplifiees_city_id),
-        None,
-    )
-    if city_field:
-        city = city_field.stringValue
-    pacage_field = next(
-        (
-            champ
-            for champ in champs
-            if champ.id == config.demarches_simplifiees_pacage_id
-        ),
-        None,
-    )
-    if pacage_field:
-        pacage = pacage_field.stringValue
-    organization_field = next(
-        (
-            champ
-            for champ in champs
-            if champ.id == config.demarches_simplifiees_organization_id
-        ),
-        None,
-    )
-    if organization_field:
-        organization = organization_field.stringValue
-
-    return city, organization, pacage
-
-
 def compute_instructor_informations_ds(
     petition_project,
 ) -> DemarchesSimplifieesDetails | None:
