@@ -736,23 +736,175 @@ def test_petition_project_instructor_messagerie_ds(
     envoi_event = Event.objects.filter(category="message", event="envoi").get()
     assert envoi_event.metadata["piece_jointe"] == 1
 
-    # GIVEN a message and doc attachment unauthorized extension
+
+def _setup_messagerie(haie_instructor_44, client):
+    """Helper to setup messagerie test context."""
+    DCConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+    )
+    project = PetitionProjectFactory(
+        demarches_simplifiees_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
+    )
+    url = reverse(
+        "petition_project_instructor_messagerie_view",
+        kwargs={"reference": project.reference},
+    )
+    client.force_login(haie_instructor_44)
+    return url
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_valid_message_without_file(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Soumettre un message valide sans pièce jointe → succès."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    response = client.post(url, {"message_body": "Bonjour"}, follow=True)
+    content = response.content.decode()
+    assert "Le message a bien été envoyé au demandeur." in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_valid_message_with_file(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Soumettre un message valide avec pièce jointe valide → succès."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    response = client.post(
+        url, {"message_body": "Voir PJ", "additional_file": attachment}, follow=True
+    )
+    content = response.content.decode()
+    assert "Le message a bien été envoyé au demandeur." in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_empty_message_error(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Soumettre un formulaire avec message vide → erreur"""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    response = client.post(url, {"message_body": ""})
+    content = response.content.decode()
+    assert "Message : Ce champ est obligatoire." in content
+    # Le champ fichier (optionnel) ne doit pas apparaître dans le message d'erreur
+    assert "Pièce jointe :" not in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_invalid_extension_error(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Soumettre avec une pièce jointe d'extension invalide → erreur incluant le message complet."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
     attachment = SimpleUploadedFile(
         FILE_TEST_NOK_PATH.name, FILE_TEST_NOK_PATH.read_bytes()
     )
-    message_data = {
-        "message_body": "test",
-        "additional_file": attachment,
-    }
-    # WHEN I post message
-    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
-    response = client.post(instructor_messagerie_url, message_data, follow=True)
-    # THEN I receive nok response
+    response = client.post(url, {"message_body": "test", "additional_file": attachment})
+    content = response.content.decode()
+    normalized = (
+        content.replace("\xa0", " ").replace("&#x27;", "'").replace("\u2019", "'")
+    )
+    assert (
+        "Pièce jointe : L'extension de fichier « odt » n'est pas autorisée. "
+        "Les extensions autorisées sont :  png, jpg, jpeg, pdf, zip."
+    ) in normalized
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_html_in_filename_is_escaped(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Un nom de fichier contenant du HTML ne doit pas être interprété."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    attachment = SimpleUploadedFile("test.csv.<h1>", b"data")
+    response = client.post(url, {"message_body": "test", "additional_file": attachment})
+    content = response.content.decode()
+    assert "<h1>" not in content
+    assert "&lt;h1&gt;" in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_file_too_large_error(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Soumettre avec une pièce jointe trop volumineuse → erreur incluant le message complet."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    big_file = SimpleUploadedFile(
+        "doc.pdf", b"x" * (21 * 1024 * 1024), content_type="application/pdf"
+    )
+    response = client.post(url, {"message_body": "test", "additional_file": big_file})
+    content = response.content.decode()
+    assert "Pièce jointe :" in content
+    assert "20 Mo" in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_modal_opens_on_error(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Après soumission invalide, la modale s'ouvre au chargement."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    response = client.post(url, {"message_body": ""})
     content = response.content.decode()
     assert (
-        "Le message n’a pas pu être envoyé.\nVérifiez que la pièce jointe respecte les conditions suivantes"
-        in content
-    )  # noqa
+        "dsfr(document.getElementById('modal-new-message')).modal.disclose()" in content
+    )
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_messagerie_modal_not_opened_on_success(
+    mock_ds_query_execute, haie_instructor_44, client, site
+):
+    """Après soumission valide, le script d'ouverture de modale n'est pas présent."""
+    url = _setup_messagerie(haie_instructor_44, client)
+    mock_ds_query_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    response = client.post(url, {"message_body": "Bonjour"}, follow=True)
+    content = response.content.decode()
+    assert (
+        "dsfr(document.getElementById('modal-new-message')).modal.disclose()"
+        not in content
+    )
 
 
 def test_petition_project_list(
