@@ -202,9 +202,9 @@ def get_context_from_ds(petition_project) -> dict:
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
         "ds_info": {
             "usager": usager,
-            "city": city_item.value,
-            "pacage": pacage_item.value,
-            "organization": organization_item.value,
+            "city": city_item.value if city_item else "",
+            "pacage": pacage_item.value if pacage_item else "",
+            "organization": organization_item.value if organization_item else "",
             "applicant": applicant,
             "applicant_email": applicant_email,
             "representative": representative,

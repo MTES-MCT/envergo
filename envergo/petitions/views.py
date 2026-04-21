@@ -212,8 +212,8 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                 organization_item = get_field_data_from_dn_dossier(
                     "organization", config, dossier
                 )
-                obj.city = city_item.value
-                obj.organization = organization_item.value
+                obj.city = city_item.value if city_item else ""
+                obj.organization = organization_item.value if organization_item else ""
 
         return context
 
