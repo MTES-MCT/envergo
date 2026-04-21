@@ -262,8 +262,10 @@ def test_petition_project_detail(mock_post, client, site):
     mock_post.return_value = mock_response
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     project = PetitionProjectFactory()
 
@@ -438,8 +440,10 @@ def test_petition_project_instructor_notes_view(
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     project = PetitionProjectFactory()
     instructor_notes_url = reverse(
@@ -495,8 +499,10 @@ def test_petition_project_instructor_view_reglementation_pages(
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     project = PetitionProjectFactory()
 
@@ -618,8 +624,10 @@ def test_petition_project_instructor_display_dossier_ds_info(
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     project = PetitionProjectFactory()
 
@@ -650,8 +658,10 @@ def test_petition_project_instructor_messagerie_ds(
     """Test messagerie view"""
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     project = PetitionProjectFactory()
 

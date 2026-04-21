@@ -60,9 +60,11 @@ def test_display_ds_field(mock_post):
 
     # Given a config haie with a DS display field
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_display_fields={"motivation": "Q2hhbXAtNDUzNDE0Ng=="},
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+            "motivation": "Q2hhbXAtNDUzNDE0Ng==",
+        }
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
@@ -102,9 +104,10 @@ def test_display_empty_ds_fields(mock_post):
 
     # Given a config haie with empty DS display fields
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_display_fields={},
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
@@ -133,9 +136,11 @@ def test_display_empty_ds_fields(mock_post):
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_display_fields={"motivation": "id_imaginaire"},
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+            "motivation": "id_imaginaire",
+        }
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
@@ -164,9 +169,11 @@ def test_display_ds_field_invalid_field_id(mock_post):
 def test_display_ds_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_display_fields={"motivation": "Q2hhbXAtNDUzNDE0Ng=="},
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+            "motivation": "Q2hhbXAtNDUzNDE0Ng==",
+        }
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
