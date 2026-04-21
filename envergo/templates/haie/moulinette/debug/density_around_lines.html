@@ -25,6 +25,7 @@
             <thead>
               <tr>
                 <th scope="col">Haie</th>
+                <th scope="col">Type</th>
                 <th scope="col">Longueur</th>
                 <th scope="col">Zone</th>
                 <th scope="col">X_densite</th>
@@ -36,6 +37,7 @@
               {% for row in ru_hedge_rows %}
                 <tr>
                   <td>{{ row.hedge_id }}</td>
+                  <td>{{ row.type }}</td>
                   <td>{{ row.length }} m</td>
                   <td>{{ row.zone_id|default:"-" }}</td>
                   <td>
