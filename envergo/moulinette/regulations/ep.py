@@ -1,8 +1,11 @@
 from collections import defaultdict
 from decimal import Decimal as D
+from functools import cached_property
+from math import ceil
 
+import shapely
 from django import forms
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from django.core.validators import RegexValidator
 
 from envergo.evaluations.models import RESULTS
@@ -25,6 +28,9 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
+from envergo.moulinette.regulations.regime_unique_haie import (
+    compute_ru_compensation_ratio,
+)
 from envergo.utils.fields import get_human_readable_value
 
 
@@ -33,11 +39,12 @@ class EPRegulation(HaieRegulationEvaluator):
 
     PROCEDURE_TYPE_MATRIX = {
         "interdit": "interdit",
-        "derogation": "autorisation",
+        "derogation_inventaire": "autorisation",
         "derogation_simplifiee": "autorisation",
         "dispense_sous_condition": "declaration",
         "a_verifier": "declaration",
         "dispense": "declaration",
+        "non_concerne": "declaration",
     }
 
 
@@ -635,40 +642,363 @@ class EspecesProtegeesNormandie(
         return context
 
 
+class EspecesProtegeesRegimeUniqueSettings(forms.Form):
+    """Configurable thresholds for the EP régime unique cascade algorithm.
+
+    All thresholds are required: missing or invalid values cause the
+    criterion to evaluate to ``non_disponible`` (the admin must populate
+    them per criterion).
+    """
+
+    l_ripisylve = forms.IntegerField(
+        label="L_ripisylve (m)",
+        help_text=(
+            "Seuil de longueur de ripisylve détruite au-delà duquel "
+            "le projet bascule en dérogation standard."
+        ),
+        required=True,
+        min_value=0,
+    )
+    l_bas = forms.IntegerField(
+        label="L_bas (m)",
+        help_text=(
+            "Seuil bas de longueur totale détruite : en deçà, le projet "
+            "obtient une dispense."
+        ),
+        required=True,
+        min_value=0,
+    )
+    l_haut = forms.IntegerField(
+        label="L_haut (m)",
+        help_text=(
+            "Seuil haut de longueur totale détruite : au-delà, le projet "
+            "est considéré comme à fort impact."
+        ),
+        required=True,
+        min_value=0,
+    )
+    d_bas = forms.IntegerField(
+        label="D_bas (ml/ha)",
+        help_text="Seuil bas de densité bocagère (mètres linéaires par hectare).",
+        required=True,
+        min_value=0,
+    )
+    d_haut = forms.IntegerField(
+        label="D_haut (ml/ha)",
+        help_text="Seuil haut de densité bocagère (mètres linéaires par hectare).",
+        required=True,
+        min_value=0,
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        l_bas = cleaned.get("l_bas")
+        l_haut = cleaned.get("l_haut")
+        d_bas = cleaned.get("d_bas")
+        d_haut = cleaned.get("d_haut")
+        if l_bas is not None and l_haut is not None and l_bas > l_haut:
+            raise forms.ValidationError("L_bas doit être inférieur ou égal à L_haut.")
+        if d_bas is not None and d_haut is not None and d_bas > d_haut:
+            raise forms.ValidationError("D_bas doit être inférieur ou égal à D_haut.")
+        return cleaned
+
+
+# Severity ranking used to pick the most constraining per-hedge result.
+EP_RU_RESULT_RANK = {
+    "dispense": 1,
+    "derogation_simplifiee": 2,
+    "derogation_inventaire": 3,
+}
+
+# Replantation coefficient bonus per result level (added to R_ru).
+EP_RU_REPLANTATION_BONUS = {
+    "derogation_inventaire": 0.5,
+    "derogation_simplifiee": 0.25,
+    "dispense": 0.0,
+}
+
+
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
 ):
     """EP criterion for the "régime unique" procedure.
 
-    This evaluator is attached only to departments in régime unique.
-    It inherits line-buffer density debug rendering from HedgeDensityMixin.
+    Determines the required procedure level (dispense / dérogation simplifiée /
+    dérogation with field inventory) based on hedge lengths, riparian status,
+    bocage density and sensitive-zone intersection.
     """
 
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
+    debug_template = "haie/moulinette/debug/ep_regime_unique.html"
     plantation_conditions = []
     form_class = None
-
-    CODE_MATRIX = {
-        "derogation_simplifiee": "derogation_simplifiee",
-    }
+    settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
     RESULT_MATRIX = {
+        "non_concerne": RESULTS.non_concerne,
+        "dispense": RESULTS.dispense,
         "derogation_simplifiee": RESULTS.derogation_simplifiee,
+        "derogation_inventaire": RESULTS.derogation_inventaire,
     }
 
+    @cached_property
+    def params(self):
+        """Validated, typed threshold settings.
+
+        Returns ``None`` when the admin-supplied settings are missing or
+        invalid; in that case the criterion is reported as ``non_disponible``
+        by ``CriterionEvaluator.evaluate`` (which re-validates the form),
+        and methods that need the thresholds simply bail out.
+        """
+        form = self.get_settings_form()
+        if form is None or not form.is_valid():
+            return None
+        return form.cleaned_data
+
+    def get_hedges_in_zone_sensible(self, hedges):
+        """Return the set of hedge IDs that intersect a "Zone sensible EP" map.
+
+        Filters matching zones with a DB spatial lookup, then tests each hedge
+        against each zone in Python (shapely) to build the result set.
+        """
+        if not hedges:
+            return set()
+
+        hedges_geom = MultiLineString(
+            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
+        )
+        zones = Zone.objects.filter(
+            map__map_type=MAP_TYPES.zone_sensible_ep,
+            geometry__intersects=hedges_geom,
+        )
+
+        # Run a nested loop to check intersection between hedges and zones
+        # We could Union the zones and run a single loop, but it would actually
+        # be MORE expensive
+        hedge_list = list(hedges)
+        result = set()
+        for zone in zones:
+            if len(result) >= len(hedge_list):
+                break
+            zone_geom = shapely.from_wkt(zone.geometry.wkt)
+            for h in hedge_list:
+                if h.id not in result and h.geometry.intersects(zone_geom):
+                    result.add(h.id)
+        return result
+
     def get_catalog_data(self):
+        """Populate the catalog with EP régime unique inputs.
+
+        Computes hedge lengths, ripisylve length, and line-buffer density
+        eagerly. Zone-sensible flags and per-hedge procedure-level results
+        are deferred to ``cached_property`` accessors so the expensive geo
+        queries only run when the cascade actually needs them (step 6) or
+        when the debug / instructor views are rendered.
+        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
-        if haies:
-            density_data = haies.density_around_lines
-            catalog["density_400"] = density_data.get("density_400")
-            catalog["density_400_length"] = density_data.get("length_400")
-            catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+        if not haies:
+            return catalog
+
+        # Line-buffer density (400 m)
+        density_data = haies.density_around_lines
+        catalog["density_400"] = density_data.get("density_400")
+        catalog["density_400_length"] = density_data.get("length_400")
+        catalog["density_400_area_ha"] = density_data.get("area_400_ha")
+
+        hedges = haies.hedges_to_remove().n_alignement()
+
+        catalog["ep_ru_aa_only"] = not hedges
+
+        # Total length and ripisylve length (excluding alignements)
+        total_length = hedges.length
+        ripisylve_length = hedges.filter(lambda h: h.prop("ripisylve")).length
+        catalog["ep_ru_total_length"] = ceil(total_length)
+        catalog["ep_ru_ripisylve_length"] = ceil(ripisylve_length)
+
+        # Treat missing density (None) as zero — low density steers the cascade
+        # toward more constraining procedure levels when data is unavailable.
+        density = catalog.get("density_400")
+        if density is None:
+            density = 0
+        catalog["ep_ru_density"] = density
+
         return catalog
 
+    @cached_property
+    def hedges_in_zone_sensible(self):
+        """Lazily compute which hedges intersect a zone sensible EP map."""
+        haies = self.catalog.get("haies")
+        if not haies:
+            return set()
+        hedges = haies.hedges_to_remove().n_alignement()
+        return self.get_hedges_in_zone_sensible(hedges)
+
+    @cached_property
+    def per_hedge_results(self):
+        """Lazily compute per-hedge procedure levels.
+
+        Only meaningful when the cascade falls through to step 6.  Returns
+        an empty dict when admin settings are missing or invalid.
+        """
+        params = self.params
+        if params is None:
+            return {}
+        haies = self.catalog.get("haies")
+        if not haies:
+            return {}
+        hedges = haies.hedges_to_remove().n_alignement()
+        return self.compute_per_hedge_results(
+            hedges,
+            self.catalog.get("ep_ru_total_length", 0),
+            self.catalog.get("ep_ru_density", 0),
+            self.hedges_in_zone_sensible,
+            l_haut=params["l_haut"],
+            d_haut=params["d_haut"],
+        )
+
+    def compute_per_hedge_results(
+        self, hedges, total_length, density, hedges_in_zone_sensible, l_haut, d_haut
+    ):
+        """Assign a procedure level to each hedge based on length, density, type and zone.
+
+        Only meaningful when the project-level cascade falls through to
+        step 6 (per-hedge evaluation). Called unconditionally so the debug
+        view always has data to display.
+
+        Args:
+            hedges: iterable of non-alignement hedges to classify.
+            total_length: total length of the destruction project (m).
+            density: project-wide bocage density (ml/ha).
+            hedges_in_zone_sensible: set of hedge ids intersecting a zone sensible.
+            l_haut: high length threshold (m), from settings.
+            d_haut: high density threshold (ml/ha), from settings.
+        """
+        per_hedge_results = {}
+        for h in hedges:
+            in_zone = h.id in hedges_in_zone_sensible
+            is_mixte = h.hedge_type == "mixte"
+            long_total = total_length > l_haut
+            high_density = density > d_haut
+
+            if long_total and in_zone:
+                result = "derogation_inventaire"
+            elif high_density and not long_total and not is_mixte and not in_zone:
+                result = "dispense"
+            else:
+                result = "derogation_simplifiee"
+
+            per_hedge_results[h.id] = result
+        return per_hedge_results
+
     def get_result_data(self):
-        return "derogation_simplifiee"
+        """Return project-level EP parameters for the cascade algorithm."""
+        return {
+            "is_regime_unique": self.moulinette.config.single_procedure,
+            "aa_only": self.catalog.get("ep_ru_aa_only", False),
+            "total_length": self.catalog.get("ep_ru_total_length", 0),
+            "ripisylve_length": self.catalog.get("ep_ru_ripisylve_length", 0),
+            "density": self.catalog.get("ep_ru_density", 0),
+        }
+
+    def get_result_code(self, result_data):
+        """Cascade algorithm for the EP régime unique procedure level.
+
+        Project-level rules (steps 0-5) are tried first. If none match, the
+        most constraining per-hedge result wins (step 6). All thresholds
+        come from the admin-configurable settings (validated by
+        ``EspecesProtegeesRegimeUniqueSettings``); ``self.params`` is
+        guaranteed non-None here because ``evaluate()`` short-circuits to
+        ``non_disponible`` whenever the form is invalid.
+        """
+        # 0. Department not in régime unique → not concerned
+        if not result_data["is_regime_unique"]:
+            return "non_concerne"
+
+        aa_only = result_data["aa_only"]
+        total_length = result_data["total_length"]
+        ripisylve_length = result_data["ripisylve_length"]
+        density = result_data["density"]
+
+        params = self.params
+        l_ripisylve = params["l_ripisylve"]
+        l_bas = params["l_bas"]
+        l_haut = params["l_haut"]
+        d_bas = params["d_bas"]
+        d_haut = params["d_haut"]
+
+        # 1. Only tree-row hedges
+        if aa_only:
+            result = "derogation_inventaire"
+        # 2. Ripisylve threshold exceeded
+        elif ripisylve_length > l_ripisylve:
+            result = "derogation_inventaire"
+        # 3. Very short total
+        elif total_length <= l_bas:
+            result = "dispense"
+        # 4. Medium total with moderate density
+        elif total_length <= l_haut and density < d_haut:
+            result = "derogation_simplifiee"
+        # 5. Long total with low density
+        elif total_length > l_haut and density < d_bas:
+            result = "derogation_inventaire"
+        # 6. Per-hedge evaluation — pick the most constraining
+        else:
+            result = max(
+                self.per_hedge_results.values(),
+                key=lambda r: EP_RU_RESULT_RANK[r],
+            )
+
+        return result
 
     def get_replantation_coefficient(self):
-        return 0.0
+        """Base RU coefficient plus a bonus depending on the EP result level."""
+        r_ru = compute_ru_compensation_ratio(self.moulinette)
+        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
+        return round(r_ru + bonus, 2)
+
+    def build_hedge_rows(self):
+        """Build per-hedge display rows for non-alignement hedges.
+
+        Returns a list of dicts with id, hedge_type (human-readable), and
+        in_zone_sensible — used by both the debug page and the instructor view.
+        """
+        haies = self.catalog.get("haies")
+        if not haies:
+            return []
+
+        hedges_in_zone_sensible = self.hedges_in_zone_sensible
+        hedges = haies.hedges_to_remove().n_alignement()
+        HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
+
+        rows = []
+        for h in hedges:
+            rows.append(
+                {
+                    "id": h.id,
+                    "hedge_type": get_human_readable_value(
+                        HedgeType.choices, h.hedge_type
+                    ),
+                    "in_zone_sensible": h.id in hedges_in_zone_sensible,
+                }
+            )
+        return rows
+
+    def get_debug_context(self):
+        """Return density + EP-specific debug data."""
+        context = super().get_debug_context()
+
+        per_hedge_results = self.per_hedge_results
+        hedge_rows = self.build_hedge_rows()
+        for row in hedge_rows:
+            row["partial_result"] = per_hedge_results.get(row["id"], "-")
+
+        context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
+        context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
+        context["hedge_debug_rows"] = hedge_rows
+        # Surface the admin-configured thresholds so the debug page shows
+        # exactly which values drove the cascade. None when settings are
+        # missing/invalid — the template hides the table in that case.
+        context["ep_ru_settings"] = self.params
+        return context

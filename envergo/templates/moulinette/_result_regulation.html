@@ -5,11 +5,10 @@
     <h2>{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h2>
   {% endblock %}
 
-  {% if regulation.display_perimeter %}
-    {% perimeter_detail regulation %}
-  {% endif %}
-
   {% if regulation.display_map %}
+    {% if regulation.display_perimeter %}
+      {% perimeter_detail regulation %}
+    {% endif %}
     {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
   {% endif %}
 

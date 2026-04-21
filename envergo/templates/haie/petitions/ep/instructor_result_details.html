@@ -2,11 +2,58 @@
 
 {% if density_400 is not None %}
   <h5 class="fr-mt-3w">Densité bocagère</h5>
-  <p>
-    <strong>Densité du bocage — rayon 400m :</strong> {{ density_400|floatformat:"1" }} ml/ha
-  </p>
-  <a class="fr-btn fr-btn--secondary"
+
+  <ul class="instructor-view-list">
+    {% include 'haie/petitions/_item.html' with label="Densité bocagère autour des haies à détruire (rayon 400 m) :" value=density_400|floatformat:"1g" unit="ml/ha" %}
+  </ul>
+
+  <a class="fr-btn fr-btn--secondary fr-btn--sm"
      href="{% url 'demo_density_project' %}?haies={{ hedge_data_id }}">Voir le calcul de densité</a>
+
+{% endif %}
+
+{% if show_ep_ru_params %}
+  <h5 class="fr-mt-3w">Niveau de procédure</h5>
+  <p>
+    <i>Le niveau de procédure espèces protégées (dispense de dérogation / dérogation « allégée » / dérogation « standard ») est déterminé
+    par les caractéristiques du projet dans son ensemble (linéaires, densité) et le type et la localisation de chacune des haies à détruire.</i>
+  </p>
+
+  <ul class="instructor-view-list">
+    {% include 'haie/petitions/_item.html' with label="Longueur totale à détruire" value=ep_ru_total_length|floatformat:"0g" unit="m" %}
+    {% include 'haie/petitions/_item.html' with label="Longueur totale de ripisylves" value=ep_ru_ripisylve_length|floatformat:"0g" unit="m" %}
+    {% include 'haie/petitions/_item.html' with label="Densité bocagère" value=density_400|floatformat:"1g" unit="ml/ha" %}
+  </ul>
+
+  {% if ep_ru_hedge_rows %}
+    <div class="fr-table fr-table--no-caption">
+      <div class="fr-table__wrapper">
+        <div class="fr-table__container">
+          <div class="fr-table__content">
+            <table>
+              <caption>Caractéristiques des haies à détruire</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Haie</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">En zone sensible</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in ep_ru_hedge_rows %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.hedge_type }}</td>
+                    <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 {% endif %}
 
 <h5 class="fr-mt-3w">Liste des espèces</h5>

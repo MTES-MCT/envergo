@@ -68,7 +68,7 @@ class Command(BaseCommand):
 
         self.anonymize_model(
             User.objects.filter(is_staff=False),
-            [("email", lambda x: fake.email()), ("name", lambda x: fake.name())],
+            [("email", lambda x: fake.unique.email()), ("name", lambda x: fake.name())],
         )
         self.anonymize_model(
             Evaluation.objects.all(),

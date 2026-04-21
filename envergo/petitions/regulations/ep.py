@@ -81,8 +81,21 @@ def ep_base_get_instructor_view_context(
 def ep_regime_unique_get_instructor_view_context(
     evaluator, petition_project, moulinette
 ) -> dict:
-    """Build density context for the EP régime unique instructor view."""
-    return get_line_buffer_density_context(petition_project, moulinette)
+    """Build density + EP régime unique parameters for the instructor view."""
+    context = ep_base_get_instructor_view_context(
+        evaluator, petition_project, moulinette
+    )
+    context.update(get_line_buffer_density_context(petition_project, moulinette))
+
+    is_regime_unique = moulinette.config.single_procedure
+    ep_ru_aa_only = moulinette.catalog.get("ep_ru_aa_only", True)
+    context["show_ep_ru_params"] = is_regime_unique and not ep_ru_aa_only
+    context["ep_ru_total_length"] = moulinette.catalog.get("ep_ru_total_length")
+    context["ep_ru_ripisylve_length"] = moulinette.catalog.get("ep_ru_ripisylve_length")
+    context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
+    context["ep_ru_hedge_rows"] = evaluator.build_hedge_rows()
+
+    return context
 
 
 def reduce_hedges_properties_to_displayable_items(moulinette, petition_project):

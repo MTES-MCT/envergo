@@ -1,0 +1,93 @@
+{% include 'haie/moulinette/debug/density_around_lines.html' %}
+
+{% if ep_ru_settings %}
+  <div class="fr-table fr-table--sm">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <caption>Seuils de configuration</caption>
+            <tbody>
+              <tr>
+                <th scope="row">L_ripisylve</th>
+                <td>{{ ep_ru_settings.l_ripisylve }} m</td>
+              </tr>
+              <tr>
+                <th scope="row">L_bas</th>
+                <td>{{ ep_ru_settings.l_bas }} m</td>
+              </tr>
+              <tr>
+                <th scope="row">L_haut</th>
+                <td>{{ ep_ru_settings.l_haut }} m</td>
+              </tr>
+              <tr>
+                <th scope="row">D_bas</th>
+                <td>{{ ep_ru_settings.d_bas }} ml/ha</td>
+              </tr>
+              <tr>
+                <th scope="row">D_haut</th>
+                <td>{{ ep_ru_settings.d_haut }} ml/ha</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% if ep_ru_total_length is not None %}
+  <div class="fr-table fr-table--sm">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <caption>Paramètres EP régime unique</caption>
+            <tbody>
+              <tr>
+                <th scope="row">Longueur totale détruite (hors alignements)</th>
+                <td>{{ ep_ru_total_length }} m</td>
+              </tr>
+              <tr>
+                <th scope="row">Longueur totale ripisylve</th>
+                <td>{{ ep_ru_ripisylve_length }} m</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if hedge_debug_rows %}
+    <div class="fr-table fr-table--sm">
+      <div class="fr-table__wrapper">
+        <div class="fr-table__container">
+          <div class="fr-table__content">
+            <table>
+              <caption>Détail par haie</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Haie</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Zone sensible</th>
+                  <th scope="col">Résultat partiel</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in hedge_debug_rows %}
+                  <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.hedge_type }}</td>
+                    <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
+                    <td>{{ row.partial_result }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}

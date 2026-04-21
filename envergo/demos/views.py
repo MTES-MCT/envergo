@@ -2,16 +2,15 @@ import json
 from math import sqrt
 
 import numpy as np
-from django.contrib.gis.geos import MultiLineString, Point
+from django.contrib.gis.geos import Point
 from django.db import connection
 from django.views.generic import FormView
 from scipy.interpolate import griddata
 
 from envergo.geodata.forms import LatLngForm
-from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import (
+    compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
-    compute_hedge_density_around_point,
     get_catchment_area_pixel_values,
     to_geojson,
 )
@@ -89,37 +88,25 @@ class HedgeDensity(LatLngDemoMixin, FormView):
     def get_result_data(self, lng, lat):
         """Return context with data to display map"""
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
-        density_400 = compute_hedge_density_around_point(lng_lat, 400)
-        density_5000 = compute_hedge_density_around_point(lng_lat, 5000)
-
-        circle = (
-            density_5000["artifacts"]["truncated_circle"]
-            or density_5000["artifacts"]["circle"]
+        # Get the density data for different circles around the point.
+        # For display purpose, we fetch hedges with a simplified geometry.
+        # Tolerance ~5 m at French latitudes is well below pixel resolution
+        # at the demo's 5 km zoom.
+        bundle = compute_hedge_densities_around_point(
+            lng_lat,
+            radii=[400, 5000],
+            display_simplify_tolerance=0.00005,
         )
+        density_400 = bundle[400]
+        density_5000 = bundle[5000]
 
-        hedges_5000 = Line.objects.filter(
-            map__map_type=MAP_TYPES.haies,
-            geometry__intersects=circle,
-        )
-
-        hedges_5000_mls = []
-        for hedge in hedges_5000:
-            geom = hedge.geometry
-            if geom:
-                hedges_5000_mls.extend(geom)
-
-        polygons = []
-        polygons.append(
+        polygons = [
             {
-                "polygon": to_geojson(
-                    MultiLineString(hedges_5000_mls, srid=EPSG_WGS84)
-                ),
+                "polygon": bundle["display_geojson"],
                 "color": "#f0f921",
                 "legend": "Haies",
                 "opacity": 1.0,
-            }
-        )
-        polygons.append(
+            },
             {
                 "polygon": to_geojson(
                     density_400["artifacts"]["truncated_circle"]
@@ -128,9 +115,7 @@ class HedgeDensity(LatLngDemoMixin, FormView):
                 "color": "#cc4778",
                 "legend": "400m",
                 "opacity": 1.0,
-            }
-        )
-        polygons.append(
+            },
             {
                 "polygon": to_geojson(
                     density_5000["artifacts"]["truncated_circle"]
@@ -139,8 +124,8 @@ class HedgeDensity(LatLngDemoMixin, FormView):
                 "color": "#7e03a8",
                 "legend": "5km",
                 "opacity": 1.0,
-            }
-        )
+            },
+        ]
         context = {
             "result_available": True,
             "length_400": density_400["artifacts"]["length"],
@@ -197,12 +182,10 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
     def get_result_data(self, hedges):
         """Return context with data to display map"""
 
-        # Create multilinestring from hedges to remove
         hedges_to_remove_mls_merged = hedges.get_multilinestring_to_remove()
 
-        # Generate buffer 400m around hedges and get data
         density_400 = compute_hedge_density_around_lines(
-            hedges_to_remove_mls_merged, 400
+            hedges_to_remove_mls_merged, 400, display_simplify_tolerance=0.00005
         )
 
         buffered_400_polygon = (
@@ -210,44 +193,27 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
             or density_400["artifacts"]["buffer_zone"]
         )
 
-        # Get hedges intersects buffer and hedges map
-        hedges_400 = Line.objects.filter(
-            map__map_type=MAP_TYPES.haies,
-            geometry__intersects=buffered_400_polygon,
-        )
-
-        hedges_400_mls = []
-        for hedge in hedges_400:
-            geom = hedge.geometry
-            if geom:
-                hedges_400_mls.extend(geom)
-
-        polygons = []
-        polygons.append(
+        polygons = [
             {
-                "polygon": to_geojson(MultiLineString(hedges_400_mls, srid=EPSG_WGS84)),
+                "polygon": density_400["artifacts"]["display_geojson"],
                 "color": "#f0f921",
                 "legend": "Haies existantes",
                 "opacity": 1.0,
-            }
-        )
-        polygons.append(
+            },
             {
                 "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
                 "className": "hedge to-remove",
                 "legend": "Haies à détruire",
                 "opacity": 1.0,
-            }
-        )
-        polygons.append(
+            },
             {
                 "polygon": to_geojson(buffered_400_polygon),
                 "color": "#457EAC",
                 "legend": "Zone tampon de 400m",
                 "opacity": 1.0,
-            }
-        )
+            },
+        ]
         context = {
             "result_available": True,
             "hedges_to_remove_mls": hedges_to_remove_mls_merged,

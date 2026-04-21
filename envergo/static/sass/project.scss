@@ -588,10 +588,16 @@ section.regulation {
 }
 
 section.debug {
+  --title-spacing: 1.5rem 0 0.5rem 0;
+
   h3 small {
     font-size: 1rem;
     font-weight: normal;
     color: var(--text-mention-grey);
+  }
+
+  div.criterion-debug {
+    margin-top: 1.5rem;
   }
 }
 
@@ -659,7 +665,7 @@ form {
         display: block;
       }
 
-      #success-box-msg {
+      .success-file-row {
         display: none;
       }
     }
@@ -669,14 +675,16 @@ form {
       outline-offset: 2px;
     }
 
-    // When a file has been selected
-    input[type="file"]:valid + div.input-file-widget {
-      #default-box-msg {
+    // When a file has been selected (class added via JS)
+    &.has-file div.input-file-widget {
+      .default-box-msg {
         display: none;
       }
 
-      #success-box-msg {
-        display: block;
+      .success-file-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
     }
   }
