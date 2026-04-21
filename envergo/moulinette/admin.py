@@ -453,6 +453,7 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             "demarches_simplifiees_display_fields": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
+            "single_procedure_settings": JSONWidget(attrs={"rows": 20, "cols": 80}),
         }
 
     def __init__(self, *args, **kwargs):
