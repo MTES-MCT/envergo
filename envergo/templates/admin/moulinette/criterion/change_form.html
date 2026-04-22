@@ -17,6 +17,14 @@
                 <li>
                   <strong>{{ field.name }}</strong> : {{ field.label }}
                   -> {{ field.errors.0 }}
+                  {% if field.field.choices %}
+                    (choix :
+                    {% for value, label in field.field.choices %}
+                      {{ value }}
+                      {% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                    )
+                  {% endif %}
                 </li>
               {% endfor %}
             </ul>

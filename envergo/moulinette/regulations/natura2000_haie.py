@@ -32,6 +32,12 @@ class Natura2000HaieSettings(forms.Form):
         required=True,
         choices=RESULTS,
     )
+    concerne_aa = forms.ChoiceField(
+        label="Concerne les alignements d’arbres",
+        help_text="Indique si ce critère concerne les alignements d’arbres.",
+        required=True,
+        choices=(("oui", "Oui"), ("non", "Non")),
+    )
 
 
 EPSG_WGS84 = 4326
@@ -48,6 +54,24 @@ class Natura2000Haie(HaieCriterionEvaluator):
         "non_soumis": RESULTS.non_soumis,
         "soumis": RESULTS.soumis,
     }
+
+    @property
+    def CODE_MATRIX(self):
+        result = self.settings.get("result", "non_soumis")
+        return {
+            # (has_non_aa_hedges, has_aa_hedges, concerne_aa): result_code
+            (True, True, True): result,
+            (True, True, False): result,
+            (True, False, True): result,
+            (True, False, False): result,
+            (False, True, True): result,
+            # non_soumis_aa only makes sense when the criterion would otherwise be
+            # "soumis", otherwise we'd tell the user "not subject because it's AA"
+            # when it's actually not subject for both hedges AND AA.
+            (False, True, False): "non_soumis_aa" if result == "soumis" else result,
+            (False, False, True): "non_soumis",
+            (False, False, False): "non_soumis",
+        }
 
     def get_catalog_data(self):
         """Let's compute the length of hedges crossing the N2000 perimeter."""
@@ -106,19 +130,8 @@ class Natura2000Haie(HaieCriterionEvaluator):
         return data
 
     def get_result_data(self):
-        """Returns if a non-alignement hedge intersects the n2000 zone.
-
-        If we are evaluating this criterion, it means that *some* hedges have intersected
-        a n2000 zone. But since some hedge types are excluded, we have to run a more
-        specific check again.
-        """
-
-        return self.catalog["l_n2000_hors_aa"] > 0.0
-
-    def get_result_code(self, intersects_n2000):
-        if intersects_n2000:
-            code = self.settings.get("result", "non_soumis")
-        else:
-            code = "non_soumis_aa"
-
-        return code
+        return (
+            self.catalog["l_n2000_hors_aa"] > 0.0,
+            self.catalog["l_n2000_aa"] > 0.0,
+            self.settings.get("concerne_aa") == "oui",
+        )

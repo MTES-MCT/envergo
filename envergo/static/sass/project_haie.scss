@@ -1170,3 +1170,18 @@ button.hide-expanded[aria-expanded="true"] {
     right: 0.2rem;
   }
 }
+
+/* Parametrage page: consistent section spacing */
+.parametrage {
+  h2 {
+    margin-top: 2rem;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h3 {
+    margin-top: 1.5rem;
+  }
+}
