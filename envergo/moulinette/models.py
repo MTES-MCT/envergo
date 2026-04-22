@@ -1488,7 +1488,7 @@ class ConfigHaie(ConfigBase):
             ),
             CheckConstraint(
                 check=Q(demarche_simplifiee_number__isnull=True)
-                | Q(demarches_simplifiees_project_url_id__isnull=False),
+                | Q(demarches_simplifiees_display_fields__project_url__isnull=False),
                 name="project_url_id_required_if_demarche_number",
             ),
             CheckConstraint(
