@@ -88,6 +88,6 @@ def test_moulinette_evaluation(
         criterion = moulinette.alignement_arbres.alignement_arbres__hru
     else:
         criterion = moulinette.alignement_arbres.alignement_arbres__l350_3
+        assert criterion.get_evaluator().get_replantation_coefficient() == expected_r
 
     assert criterion.result_code == expected_result_code
-    assert criterion.get_evaluator().get_replantation_coefficient() == expected_r
