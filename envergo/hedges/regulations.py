@@ -627,10 +627,10 @@ class TreeAlignmentsCondition(PlantationCondition):
         )
 
         from envergo.moulinette.regulations.alignementarbres import (
-            AlignementsArbresBase,
+            AlignementsArbresL3503,
         )
 
-        r_aa = AlignementsArbresBase.get_result_based_replantation_coefficient(
+        r_aa = AlignementsArbresL3503.get_result_based_replantation_coefficient(
             self.criterion_evaluator.result_code
         )
 

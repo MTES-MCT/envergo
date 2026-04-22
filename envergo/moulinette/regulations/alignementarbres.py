@@ -22,10 +22,59 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
     }
 
 
-class AlignementsArbresBase(PlantationConditionMixin, HaieCriterionEvaluator, ABC):
+class AlignementsArbresBase(HaieCriterionEvaluator, ABC):
     choice_label = "Alignements d'arbres > L350-3"
     slug = "alignement_arbres"
+
+
+class AlignementsArbresRu(AlignementsArbresBase):
+    category = HaieCriterionCategory.ru
+
+    def evaluate(self):
+        self._result_code, self._result = "non_concerne", "non_concerne"
+
+
+class AlignementsArbresHru(AlignementsArbresBase):
+    category = HaieCriterionCategory.hru
+
+    def evaluate(self):
+        self._result_code, self._result = "non_concerne", "non_concerne"
+
+
+class AlignementsArbresL3503(PlantationConditionMixin, AlignementsArbresBase):
+    category = HaieCriterionCategory.l350_3
     plantation_conditions = [TreeAlignmentsCondition]
+
+    RESULT_MATRIX = {
+        "soumis_securite": RESULTS.soumis_declaration,
+        "soumis_esthetique": RESULTS.soumis_declaration,
+        "soumis_autorisation": RESULTS.soumis_autorisation,
+    }
+
+    CODE_MATRIX = {
+        "amelioration_culture": "soumis_autorisation",
+        "chemin_acces": "soumis_autorisation",
+        "securite": "soumis_securite",
+        "amenagement": "soumis_autorisation",
+        "amelioration_ecologique": "soumis_autorisation",
+        "embellissement": "soumis_esthetique",
+        "autre": "soumis_autorisation",
+    }
+
+    def get_result_data(self):
+        return self.catalog.get("motif")
+
+    @classmethod
+    def get_result_based_replantation_coefficient(cls, result_code):
+        if result_code == "soumis_autorisation":
+            r_aa = 2.0
+        elif result_code == "soumis_esthetique":
+            r_aa = 1.0
+        elif result_code == "soumis_securite":
+            r_aa = 1.0
+        else:  # non_soumis
+            r_aa = 0.0
+        return r_aa
 
     def get_replantation_coefficient(self):
         haies = self.catalog.get("haies")
@@ -48,59 +97,13 @@ class AlignementsArbresBase(PlantationConditionMixin, HaieCriterionEvaluator, AB
 
         return aggregated_r
 
-    @classmethod
-    def get_result_based_replantation_coefficient(cls, result_code):
-        if result_code == "soumis_autorisation":
-            r_aa = 2.0
-        elif result_code == "soumis_esthetique":
-            r_aa = 1.0
-        elif result_code == "soumis_securite":
-            r_aa = 1.0
-        else:  # non_soumis
-            r_aa = 0.0
-        return r_aa
-
-
-class AlignementsArbresRu(AlignementsArbresBase):
-    category = HaieCriterionCategory.ru
-
-    def evaluate(self):
-        self._result_code, self._result = "non_concerne", "non_concerne"
-
-
-class AlignementsArbresHru(AlignementsArbresBase):
-    category = HaieCriterionCategory.hru
-
-    def evaluate(self):
-        self._result_code, self._result = "non_concerne", "non_concerne"
-
-
-class AlignementsArbresL3503(AlignementsArbresBase):
-    category = HaieCriterionCategory.l350_3
-
-    RESULT_MATRIX = {
-        "soumis_securite": RESULTS.soumis_declaration,
-        "soumis_esthetique": RESULTS.soumis_declaration,
-        "soumis_autorisation": RESULTS.soumis_autorisation,
-    }
-
-    CODE_MATRIX = {
-        "amelioration_culture": "soumis_autorisation",
-        "chemin_acces": "soumis_autorisation",
-        "securite": "soumis_securite",
-        "amenagement": "soumis_autorisation",
-        "amelioration_ecologique": "soumis_autorisation",
-        "embellissement": "soumis_esthetique",
-        "autre": "soumis_autorisation",
-    }
-
-    def get_result_data(self):
-        return self.catalog.get("motif")
-
 
 class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
     category = HaieCriterionCategory.hru
     slug = "alignement_arbres_calvados_before_ru"
+    choice_label = "Alignements d'arbres > L350-3 (Calvados avant régime unique)"
+    plantation_conditions = [TreeAlignmentsCondition]
+
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
         "soumis_securite": RESULTS.soumis_declaration,
