@@ -159,10 +159,11 @@ def get_context_from_ds(petition_project) -> dict:
     applicant_email = ""
     representative = ""
 
+    display_dn_fields = config.demarches_simplifiees_display_fields
     if (
-        not config.demarches_simplifiees_pacage_id
-        or not config.demarches_simplifiees_city_id
-        or not config.demarches_simplifiees_organization_id
+        not display_dn_fields.get("city", None)
+        or not display_dn_fields.get("organization", None)
+        or not display_dn_fields.get("pacage", None)
     ):
         logger.error(
             "Missing Demarches Simplifiees ids in Haie Config",

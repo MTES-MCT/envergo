@@ -750,8 +750,10 @@ def test_petition_project_instructor_messagerie_ds(
 def _setup_messagerie(haie_instructor_44, client):
     """Helper to setup messagerie test context."""
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
+        demarches_simplifiees_display_fields={
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
     project = PetitionProjectFactory(
         demarches_simplifiees_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
