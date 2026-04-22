@@ -215,7 +215,11 @@ def get_context_from_ds(petition_project) -> dict:
 
 
 def get_field_data_from_dn_dossier(field_name, config, dossier):
-    """Get field value from dossier DN using demarches_simplifiees_display_fields"""
+    """Get field value from dossier DN related to a given config and a DN dossier
+    from a petition project.
+
+    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    """
     dn_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
     if not dn_field_id:
         return None
