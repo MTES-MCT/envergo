@@ -474,8 +474,23 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
 
         When the department uses the single procedure (régime unique), the
         third-party form handling, the external form URL is required.
+
+        Validate demarches_simplifiees_display_fields should have required keys
+        "organization", "city", "pacage" when demarche number is filled.
+        Only project_url is checked by a model constraint because others
+        are not filled by default.
         """
         cleaned_data = super().clean()
+
+        display_dn_fields = cleaned_data.get("demarches_simplifiees_display_fields")
+        dn_number = cleaned_data.get("demarche_simplifiee_number")
+        if dn_number and (
+            not display_dn_fields
+            or not display_dn_fields.get("city", None)
+            or not display_dn_fields.get("organization", None)
+            or not display_dn_fields.get("pacage", None)
+        ):
+            self.add_error("demarches_simplifiees_display_fields", "")
 
         if not cleaned_data.get("single_procedure"):
             return cleaned_data
