@@ -214,11 +214,14 @@ def get_context_from_ds(petition_project) -> dict:
     return context
 
 
-def get_field_data_from_ds_dossier(field_id, dossier):
-    """Get field value from dossier DS with id"""
+def get_field_data_from_dn_dossier(field_name, config, dossier):
+    """Get field value from dossier DN using demarches_simplifiees_display_fields"""
+    dn_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
+    if not dn_field_id:
+        return None
     champs = dossier.champs
     field = next(
-        (champ for champ in champs if champ.id == field_id),
+        (champ for champ in champs if champ.id == dn_field_id),
         None,
     )
     if not field:
@@ -230,14 +233,6 @@ def get_field_data_from_ds_dossier(field_id, dossier):
         None,
     )
     return item
-
-
-def get_field_data_from_dn_dossier(field_name, config, dossier):
-    """Get field value from dossier DN using demarches_simplifiees_display_fields"""
-    ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
-    if not ds_field_id:
-        return None
-    return get_field_data_from_ds_dossier(ds_field_id, dossier)
 
 
 def compute_instructor_informations_ds(
