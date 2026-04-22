@@ -427,16 +427,20 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             regulation.has_perimeters
             and regulation in self.moulinette.hedges_intersecting_regulations_perimeter
         ):
-            all_perimeters = self.moulinette.hedges_intersecting_regulations_perimeter[
-                regulation
-            ]
-            hedges_by_category = self.moulinette["haies"].get_hedges_by_category(
-                self.moulinette.config.single_procedure
-            )
+            all_perimeters = {
+                perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
+                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter[
+                    regulation
+                ].items()
+            }
+            hedges_by_category = self.moulinette.catalog[
+                "haies"
+            ].get_hedges_by_category(self.moulinette.config.single_procedure)
             for category, hedges in hedges_by_category.items():
                 category_perimeter = []
                 for perimeter, perimeter_hedges in all_perimeters.items():
-                    if hedges in perimeter_hedges:
+                    perimeter_hedge_ids = {h.id for h in perimeter_hedges}
+                    if any(h.id in perimeter_hedge_ids for h in hedges):
                         category_perimeter.append(perimeter)
 
                 activated_perimeters = [p for p in category_perimeter if p.is_activated]
