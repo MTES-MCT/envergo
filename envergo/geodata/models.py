@@ -1,8 +1,10 @@
 import logging
 
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES_PER_REGION
@@ -115,6 +117,81 @@ class Map(models.Model):
         return self.name
 
 
+class ZoneManager(models.Manager):
+    """Custom manager for Zone with spatial query helpers."""
+
+    def find_covering(self, centroids, map_type, dept_code):
+        """Find the zone covering each centroid via a single DB roundtrip.
+
+        Uses a LATERAL JOIN so each centroid gets its own GiST index scan
+        on ``ST_Covers``. Returns ``{key: Zone}`` — only matched centroids
+        appear in the result.
+        """
+        values_parts = []
+        params = []
+        for key, centroid in centroids.items():
+            values_parts.append(
+                "(%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)"
+            )
+            params.extend([str(key), centroid.x, centroid.y])
+
+        values_sql = ", ".join(values_parts)
+        params.extend([str(map_type), dept_code])
+
+        sql = f"""
+            WITH centroids(point_id, geom) AS (VALUES {values_sql})
+            SELECT c.point_id, z.id
+            FROM centroids c
+            LEFT JOIN LATERAL (
+                SELECT zz.id
+                FROM geodata_zone zz
+                JOIN geodata_map m ON zz.map_id = m.id
+                WHERE m.map_type = %s
+                AND m.departments @> ARRAY[%s]::varchar[]
+                AND ST_Covers(zz.geometry, c.geom)
+                LIMIT 1
+            ) z ON TRUE
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+
+        # Collect matched zone IDs and map them back to Zone objects.
+        point_to_zone_id = {}
+        zone_ids = set()
+        for point_id, zone_id in rows:
+            if zone_id is not None:
+                point_to_zone_id[point_id] = zone_id
+                zone_ids.add(zone_id)
+
+        if not zone_ids:
+            return {}
+
+        zones_by_id = self.in_bulk(zone_ids)
+        return {
+            point_id: zones_by_id[zone_id]
+            for point_id, zone_id in point_to_zone_id.items()
+        }
+
+    def find_nearest(self, centroid, map_type, dept_code, max_distance_m):
+        """Find the nearest zone of the given type within a distance cap.
+
+        Uses ``ST_DWithin`` for spatial index filtering, then
+        ``ST_Distance`` on the geography column for exact metre ordering.
+        """
+        return (
+            self.filter(
+                map__map_type=map_type,
+                map__departments__contains=[dept_code],
+            )
+            .filter(geometry__dwithin=(centroid, D(m=max_distance_m)))
+            .annotate(dist=Distance("geometry", centroid))
+            .order_by("dist")
+            .first()
+        )
+
+
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
@@ -145,6 +222,8 @@ class Zone(gis_models.Model):
         blank=True,
         base_field=models.IntegerField(),
     )
+
+    objects = ZoneManager()
 
     class Meta:
         verbose_name = _("Zone")

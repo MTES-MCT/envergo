@@ -6,11 +6,8 @@ and a weighted-average compensation ratio used by both the régime unique
 haie evaluator and the EP régime unique evaluator.
 """
 
-from django.contrib.gis.geos import GEOSGeometry
-
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
-from envergo.geodata.utils import EPSG_LAMB93, EPSG_WGS84
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
     CriterionEvaluator,
@@ -32,83 +29,55 @@ COEFF_KEY = {
 MAX_ZONE_DISTANCE_M = 50_000  # 50 km
 
 
-def match_point_to_zone(point, zones, zones_lamb93):
-    """Return the Zone that best matches a point, or None.
-
-    Tries containment first (GEOS ``.covers()`` on WGS84 — accurate for
-    metropolitan France), then falls back to the nearest zone within 50 km
-    using Lambert 93 projected distances.
-    """
-    for zone in zones:
-        if zone.geometry.covers(point):
-            return zone
-
-    # Distance fallback — nearest zone within 50 km (Lambert 93).
-    point_lamb93 = point.transform(EPSG_LAMB93, clone=True)
-    best_zone = None
-    min_dist = MAX_ZONE_DISTANCE_M
-    for zone, zone_geom in zip(zones, zones_lamb93):
-        dist = point_lamb93.distance(zone_geom)
-        if dist < min_dist:
-            min_dist = dist
-            best_zone = zone
-
-    return best_zone
-
-
 def resolve_hedge_zones(hedges, dept_code):
-    """Match each hedge to its nearest zonage Zone based on its centroid.
+    """Match each hedge to its zonage zone based on centroid containment.
 
-    Fetches all zonage zones for the department in a single DB query, then
-    matches each hedge centroid in Python.
-
-    We iterate sequentially because the number of zones per department is
-    very low (a handful at best), so any clever optimization would simply
-    increase complexity with few benefits.
-
-    Returns a dict of ``hedge_id → Zone | None``.
+    Returns ``{hedge_id: zone_attributes_dict | None}``.
     """
-    zones = list(
-        Zone.objects.filter(
-            map__map_type=MAP_TYPES.zonage,
-            map__departments__contains=[dept_code],
-        )
-    )
+    if not hedges:
+        return {}
 
-    if not zones:
-        return {h.id: None for h in hedges}
+    centroids = {h.id: h.geos_centroid for h in hedges}
+    zones = Zone.objects.find_covering(centroids, MAP_TYPES.zonage, dept_code)
 
-    # Pre-compute Lambert 93 projections for the distance fallback.
-    # Zone count is small, so the cost is negligible.
-    zones_lamb93 = [zone.geometry.transform(EPSG_LAMB93, clone=True) for zone in zones]
+    # When a hedge doesn't fall into a zonage, we have to find the nearest zone instead.
+    # Functionnaly, that is questionnable. Zonages are administrative perimeters
+    # define by prefects, so you are either in a zonage or not.
+    # But the only ways an hedge centroid might not fall into any zonage is either
+    # there is a flaw in the data (e.g missing map) or the hedge topoly makes
+    # the centroid falls outside the department.
+    # In any case we have to have a fallback.
+    for hedge_id in centroids:
+        if hedge_id not in zones:
+            # That SHOULD be an exceptional case, so I stayed as simple as possible
+            zones[hedge_id] = Zone.objects.find_nearest(
+                centroids[hedge_id], MAP_TYPES.zonage, dept_code, MAX_ZONE_DISTANCE_M
+            )
 
-    result = {}
-    for hedge in hedges:
-        centroid_geos = GEOSGeometry(hedge.geometry.centroid.wkt, srid=EPSG_WGS84)
-        result[hedge.id] = match_point_to_zone(centroid_geos, zones, zones_lamb93)
-
-    return result
+    return {
+        hedge_id: zone.attributes if zone else None for hedge_id, zone in zones.items()
+    }
 
 
-def zone_config_for_hedge(zone, coeff_compensation):
-    """Extract (zone_id, zone_config) from a matched Zone and the config dict.
+def zone_config_for_hedge(zone_attrs, coeff_compensation):
+    """Extract (zone_id, zone_config) from zone attributes and the config dict.
 
     Three outcomes:
 
-    - ``("default", config_or_none)`` when zonage is disabled (zone is the
-      ``"default"`` sentinel).
-    - ``(None, None)`` when no Zone was matched (zone is ``None``).
-    - ``(zone_id, config_or_none)`` when a Zone was matched — config is
-      ``None`` if the zone's ``identifiant_zone`` attribute is missing or
-      has no entry in coeff_compensation.
+    - ``("default", config_or_none)`` when zonage is disabled (zone_attrs is
+      the ``"default"`` sentinel).
+    - ``(None, None)`` when no zone was matched (zone_attrs is ``None``).
+    - ``(zone_id, config_or_none)`` when a zone was matched — config is
+      ``None`` if ``identifiant_zone`` is missing or has no entry in
+      coeff_compensation.
     """
-    if zone == "default":
+    if zone_attrs == "default":
         return "default", coeff_compensation.get("default")
 
-    if zone is None:
+    if zone_attrs is None:
         return None, None
 
-    zone_id = zone.attributes.get("identifiant_zone")
+    zone_id = zone_attrs.get("identifiant_zone")
     zone_config = coeff_compensation.get(zone_id) if zone_id else None
     return zone_id, zone_config
 
@@ -135,8 +104,8 @@ def get_ru_zone_data(moulinette):
     haies = moulinette.catalog["haies"]
     hedges = haies.hedges_to_remove().n_alignement()
 
-    # Resolve per-hedge zones: Zone objects when zonage is enabled,
-    # the literal "default" sentinel otherwise.
+    # Resolve per-hedge zones: zone attributes dicts when zonage is
+    # enabled, the literal "default" sentinel otherwise.
     if not config.has_ru_zonage:
         matched_zones = {h.id: "default" for h in hedges}
     else:
