@@ -358,6 +358,16 @@ class Regulation(models.Model):
         return self._evaluator.result
 
     @property
+    def results_by_category(self):
+        """Return a regulation result for each category of at least one criterion."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing the results."
+            )
+
+        return self._evaluator.results_by_category
+
+    @property
     def procedure_type(self):
         """Return the regulation procedure type (autorisation / déclaration / hors r.u)."""
         if not hasattr(self, "_evaluator"):
@@ -2581,6 +2591,32 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             result = "declaration"
 
         return result or RESULTS.non_soumis
+
+    @property
+    def results_by_category(self):
+        """Compute global result from individual regulation results depending on the criteria category."""
+        if hasattr(self, "_result"):
+            return self._result
+
+        if not self.is_evaluated():
+            self._result = RESULTS.non_disponible
+            return self._result
+
+        all_results_by_category = defaultdict(list)
+        for regulation in self.regulations:
+            for category, result in regulation.results_by_category.items():
+                all_results_by_category[category].append(result)
+
+        results_by_category = {}
+        for category, results in all_results_by_category.items():
+            for cascading_result in RESULT_CASCADE:
+                if cascading_result in results:
+                    results_by_category[category] = GLOBAL_RESULT_MATRIX[
+                        cascading_result
+                    ]
+                    break
+
+        return results_by_category
 
     def summary(self):
         """Build a data summary, for analytics purpose."""

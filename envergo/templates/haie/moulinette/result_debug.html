@@ -7,10 +7,15 @@
   <section class="debug">
 
     <h1>Paramètres de la moulinette</h1>
-    <p>
-      Résultat global : {% result_tag moulinette.result moulinette.result_tag_style %}
-      <small>({{ moulinette.result }})</small>
-    </p>
+    <p>Résultat global :</p>
+    <ul>
+      {% for category, result in moulinette.results_by_category.items %}
+        <li>
+          {{ category.value }} : {% result_tag result %}
+          <small>({{ result }})</small>
+        </li>
+      {% endfor %}
+    </ul>
 
     <h2>Données initiales</h2>
 
