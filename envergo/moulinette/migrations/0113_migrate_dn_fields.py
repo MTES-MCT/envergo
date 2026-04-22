@@ -40,7 +40,7 @@ def move_dn_display_fields_to_id_fields(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0111_confighaie_contacts_info"),
+        ("moulinette", "0112_confighaie_aa_l3503_fields"),
     ]
 
     operations = [
