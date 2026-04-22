@@ -45,6 +45,12 @@ class Command(BaseCommand):
         ).valid_at(timezone.now().date())
         for config in configs_with_ds:
             demarche_number = config.demarche_simplifiee_number
+            project_url_id = config.demarches_simplifiees_display_fields.get(
+                "project_url", None
+            )
+            if not project_url_id:
+                # A config should always have "project_url" in demarches_simplifiees_display_fields
+                continue
 
             logging.info(f"Handling demarche {demarche_number} ({config})")
 
@@ -70,7 +76,7 @@ class Command(BaseCommand):
                     self.handle_unlinked_dossier(
                         dossier,
                         demarche,
-                        config,
+                        project_url_id,
                     )
                     continue
 
@@ -80,7 +86,7 @@ class Command(BaseCommand):
 
         set_urlconf(None)
 
-    def handle_unlinked_dossier(self, dossier, demarche, config):
+    def handle_unlinked_dossier(self, dossier, demarche, project_url_id):
         """Handle a dossier that is not linked to any project in the database
 
         This dossier is not linked to any project on this environment
@@ -93,7 +99,7 @@ class Command(BaseCommand):
             (
                 champ.stringValue
                 for champ in dossier.champs
-                if champ.id == config.demarches_simplifiees_project_url_id
+                if champ.id == project_url_id
             ),
             "",
         )
