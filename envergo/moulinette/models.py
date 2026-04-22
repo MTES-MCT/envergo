@@ -1229,6 +1229,14 @@ def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
     ]
 
 
+class AaL3503Handling(models.TextChoices):
+    """How tree alignment projects (article L350-3) are handled by a department."""
+
+    PORTAL = "portal", "Dépôt sur le portail"
+    THIRD_PARTY_FORM = "third_party_form", "Dépôt sur un formulaire tiers"
+    NOT_HANDLED = "not_handled", "Pas de prise en compte (contacter le service)"
+
+
 class ConfigHaie(ConfigBase):
     """Some moulinette content depends on the department.
 
@@ -1250,6 +1258,21 @@ class ConfigHaie(ConfigBase):
         blank=True,
         null=False,
         default=dict,
+    )
+
+    aa_l3503_handling = models.CharField(
+        "Prise en compte des AA L350-3",
+        max_length=32,
+        choices=AaL3503Handling.choices,
+        default=AaL3503Handling.NOT_HANDLED,
+    )
+    aa_l3503_form_url = models.URLField(
+        "URL formulaire AA L350-3",
+        blank=True,
+    )
+    aa_l3503_contact_info = models.TextField(
+        "Informations de contact AA L350-3",
+        blank=True,
     )
 
     department_doctrine_html = models.TextField(
@@ -2767,8 +2790,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 )
                 .annotate(geometry=F("activation_map__geometry"))
                 .filter(Exists(zone_subquery))
-                .order_by("id")
-                .distinct("id")
             )
         else:
             # if there is no hedge in the project

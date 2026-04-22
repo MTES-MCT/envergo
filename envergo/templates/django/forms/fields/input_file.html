@@ -1,4 +1,4 @@
-{% load utils %}
+{% load static utils %}
 
 <div id="form-group-{{ field.html_name }}"
      class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
@@ -11,11 +11,15 @@
 
     <div class="input-file-widget fr-input">
       <span class="icon fr-fi--lg fr-fi-file-download-line" aria-hidden="true"></span>
-      <label id="default-box-msg" for="{{ field.id_for_label }}" class="box-msg">
+      <label class="box-msg default-box-msg" for="{{ field.id_for_label }}">
         Cliquez ici ou glissez / déposez directement votre fichier dans cette zone.
       </label>
-      <label id="success-box-msg" for="{{ field.id_for_label }}" class="box-msg">Votre fichier a bien été déposé.</label>
-
+      <span class="success-file-row">
+        <label class="box-msg success-box-msg" for="{{ field.id_for_label }}"></label>
+        <button type="button"
+                class="remove-file-btn fr-btn fr-btn--tertiary-no-outline fr-btn--sm fr-icon-close-line"
+                aria-label="Retirer le fichier"></button>
+      </span>
     </div>
   </div>
 
@@ -27,3 +31,5 @@
     </p>
   {% endif %}
 </div>
+
+<script defer src="{% static 'js/libs/input_file_drag_and_drop.js' %}"></script>

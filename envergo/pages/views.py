@@ -7,7 +7,8 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
-from django.db.models import OuterRef, Subquery
+from django.db.models import Exists, OuterRef, Subquery, TextField, Value
+from django.db.models.functions import Coalesce, NullIf
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
@@ -40,15 +41,35 @@ class DepartmentSearchMixin:
     queryset = Department.objects.defer("geometry").all()
 
     def get_queryset_with_contacts(self):
-        """List all departments for the select input with contact info"""
-        valid_config_qs = ConfigHaie.objects.valid_at(timezone.now().date()).filter(
+        """Return all departments annotated with contacts_info and is_config_valid.
+
+        contacts_info resolution: active config valid today > config with the
+        latest validity end date > default message.
+
+        is_config_valid: True if an active config valid today exists.
+        """
+        today = timezone.now().date()
+
+        valid_config_qs = ConfigHaie.objects.valid_at(today).filter(
             is_activated=True, department=OuterRef("pk")
         )
+        # Order matters: the config with the latest end date is preferred
+        other_config_qs = ConfigHaie.objects.filter(
+            department=OuterRef("pk"),
+        ).order_by("-validity_range")
 
-        departments_qs = self.queryset.annotate(
-            contacts_info=Subquery(valid_config_qs.values("contacts_info"))
+        return self.queryset.annotate(
+            is_config_valid=Exists(valid_config_qs),
+            contacts_info=Coalesce(
+                NullIf(
+                    Subquery(valid_config_qs.values("contacts_info")[:1]), Value("")
+                ),
+                NullIf(
+                    Subquery(other_config_qs.values("contacts_info")[:1]), Value("")
+                ),
+                output_field=TextField(),
+            ),
         )
-        return departments_qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -57,7 +78,8 @@ class DepartmentSearchMixin:
                 "id": d.id,
                 "code": d.department,
                 "label": str(d),
-                "contacts_info": d.contacts_info or "",
+                "contacts_info": d.contacts_info,
+                "is_config_valid": bool(d.is_config_valid),
             }
             for d in self.get_queryset_with_contacts()
         ]

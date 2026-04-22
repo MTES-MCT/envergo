@@ -41,3 +41,11 @@
     </div>
   </div>
 </dialog>
+
+{% if form.errors %}
+  <script>
+  window.addEventListener('DOMContentLoaded', function() {
+    dsfr(document.getElementById('modal-new-message')).modal.disclose();
+  });
+  </script>
+{% endif %}
