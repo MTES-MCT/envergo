@@ -261,12 +261,7 @@ def test_petition_project_detail(mock_post, client, site):
 
     mock_post.return_value = mock_response
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     petition_project_url = reverse(
@@ -439,12 +434,7 @@ def test_petition_project_instructor_notes_view(
     """
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
     instructor_notes_url = reverse(
         "petition_project_instructor_notes_view",
@@ -498,12 +488,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     # Test regulation imaginaire url
@@ -623,12 +608,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     """Test if dossier data is in template"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     instructor_ds_url = reverse(
@@ -656,14 +636,7 @@ def test_petition_project_instructor_messagerie_ds(
     mock_ds_query_execute, haie_user_44, haie_instructor_44, client, site
 ):
     """Test messagerie view"""
-    config = DCConfigHaieFactory()
-    config.demarches_simplifiees_display_fields.update(
-        {
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
-    config.save()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     instructor_messagerie_url = reverse(
@@ -750,14 +723,7 @@ def test_petition_project_instructor_messagerie_ds(
 
 def _setup_messagerie(haie_instructor_44, client):
     """Helper to setup messagerie test context."""
-    config = DCConfigHaieFactory()
-    config.demarches_simplifiees_display_fields.update(
-        {
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
-    config.save()
+    DCConfigHaieFactory()
     project = PetitionProjectFactory(
         demarches_simplifiees_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
     )

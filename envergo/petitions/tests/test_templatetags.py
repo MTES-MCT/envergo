@@ -59,13 +59,13 @@ def test_display_ds_field(mock_post):
     """Test display DS field template tag"""
 
     # Given a config haie with a DS display field
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+    config = DCConfigHaieFactory()
+    config.demarches_simplifiees_display_fields.update(
+        {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
+    config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given DS dossier is available
@@ -103,12 +103,7 @@ def test_display_empty_ds_fields(mock_post):
     """Test display DS field template tag"""
 
     # Given a config haie with empty DS display fields
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    DCConfigHaieFactory()
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given DS dossier is available
@@ -135,13 +130,13 @@ def test_display_empty_ds_fields(mock_post):
 )
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-            "motivation": "id_imaginaire",
+    config = DCConfigHaieFactory()
+    config.demarches_simplifiees_display_fields.update(
+        {
+            "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
+    config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given DS dossier is available
@@ -168,13 +163,13 @@ def test_display_ds_field_invalid_field_id(mock_post):
 )
 def test_display_ds_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+    config = DCConfigHaieFactory()
+    config.demarches_simplifiees_display_fields.update(
+        {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
+    config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given DS dossier is not available
