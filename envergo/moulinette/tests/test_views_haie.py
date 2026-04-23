@@ -10,11 +10,10 @@ from envergo.analytics.models import Event
 from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
     CriterionFactory,
-    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
-    RUConfigHaieFactory,
 )
 
 pytestmark = pytest.mark.haie
@@ -45,7 +44,10 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 
 
 def test_triage(client):
-    DCConfigHaieFactory(department_doctrine_html="<h2>Doctrine du département</h2>")
+    ConfigHaieFactory(
+        is_dc_activated=True,
+        department_doctrine_html="<h2>Doctrine du département</h2>",
+    )
 
     url = reverse("triage")
     params = "department=44"
@@ -71,7 +73,8 @@ def test_triage(client):
 
 def test_triage_result(client):
 
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         department_doctrine_html="<h2>Doctrine du département</h2>",
         hedge_maintenance_html="<h2>kikoo</h2>",
     )
@@ -117,7 +120,8 @@ def test_triage_result(client):
 
 def test_moulinette_form_with_invalid_triage(client):
 
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         department_doctrine_html="<h2>Doctrine du département</h2>",
         hedge_maintenance_html="<h2>kikoo</h2>",
     )
@@ -135,7 +139,7 @@ def test_invalid_department_result(client):
     """Test simulation with querystring not valid department"""
 
     # GIVEN config haie and haies
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     haies = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData={"sur_parcelle_pac": False})]
     )
@@ -165,7 +169,7 @@ def test_debug_result(client):
     """WIP: Test for debug page.
     Missing fixtures criteria ep and pac for MoulinetteHaie"""
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     haies = HedgeDataFactory(
         hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)]
     )
@@ -193,7 +197,7 @@ def test_debug_result(client):
 
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_d_view_with_R_gt_0(mock_R, client):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedges = HedgeDataFactory()
     data = {
         "element": "haie",
@@ -221,7 +225,7 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
 
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_d_view_with_R_eq_0(mock_R, client):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedges = HedgeDataFactory()
     data = {
         "element": "haie",
@@ -246,7 +250,7 @@ def test_result_d_view_with_R_eq_0(mock_R, client):
 
 
 def test_result_d_view_non_soumis_with_r_gt_0(client):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedge_lt5m = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -276,7 +280,7 @@ def test_result_d_view_non_soumis_with_r_gt_0(client):
 
 @patch("envergo.hedges.services.get_replantation_coefficient")
 def test_result_p_view(mock_R, client):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedges = HedgeDataFactory()
     data = {
         "element": "haie",
@@ -302,7 +306,7 @@ def test_result_p_view(mock_R, client):
 
 
 def test_moulinette_post_form_error(client):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     url = reverse("moulinette_form")
     data = {
         "foo": "bar",
@@ -344,7 +348,7 @@ def test_moulinette_post_form_error(client):
 def test_moulinette_post_form_max_hedge_length_exceeded(client):
     """The form shows an error when hedges to remove exceed MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH."""
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     # Create a hedge longer than the default 10 km (10000 m) limit
     hedge = HedgeFactory(length=11000, additionalData__sur_parcelle_pac=False)
     hedges = HedgeDataFactory(hedges=[hedge])
@@ -386,7 +390,7 @@ def test_moulinette_post_form_max_hedge_length_exceeded(client):
 def test_moulinette_post_form_hedge_length_within_limit(client):
     """No max length error when hedges to remove are within the limit."""
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedge = HedgeFactory(length=5000, additionalData__sur_parcelle_pac=False)
     hedges = HedgeDataFactory(hedges=[hedge])
 
@@ -418,7 +422,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     """Test if a warning is displayed on result pages when hedges to remove are outside department"""
 
     # GIVEN a moulinette with at least an hedge to remove outside the department
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -484,8 +488,8 @@ def test_confighaie_home_view(
     admin_user,
 ):
     """Test config haie settings homepage view"""
-    DCConfigHaieFactory(department=herault_department)
-    DCConfigHaieFactory(department=loire_atlantique_department)
+    ConfigHaieFactory(is_dc_activated=True, department=herault_department)
+    ConfigHaieFactory(is_dc_activated=True, department=loire_atlantique_department)
     url = reverse("confighaie_list")
 
     # GIVEN an anonymous visitor
@@ -562,8 +566,8 @@ def test_confighaie_settings_view(
 
     # Create two config haie and a department without config haie associated
     DepartmentFactory(department="24")
-    DCConfigHaieFactory(department=herault_department)
-    DCConfigHaieFactory(department=loire_atlantique_department)
+    ConfigHaieFactory(is_dc_activated=True, department=herault_department)
+    ConfigHaieFactory(is_dc_activated=True, department=loire_atlantique_department)
     admin_user.departments.add(loire_atlantique_department)
     url = reverse("confighaie_settings", kwargs={"department": "44"})
 
@@ -627,7 +631,7 @@ def test_confighaie_settings_view_map_display(
     """Test maps display in department setting view"""
 
     # GIVEN a config haie
-    DCConfigHaieFactory(department=loire_atlantique_department)
+    ConfigHaieFactory(is_dc_activated=True, department=loire_atlantique_department)
     # GIVEN a map in department
     bizous_town_center.departments = [loire_atlantique_department.department]
     bizous_town_center.save()
@@ -788,7 +792,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
     query = urlencode(data)
 
     # WHEN requesting the result plantation page with droit constant
-    config_44 = DCConfigHaieFactory()
+    config_44 = ConfigHaieFactory(is_dc_activated=True)
     res = client.get(f"{url}?{query}")
 
     # THEN the result page is displayed with a warning listing all regulations
@@ -807,7 +811,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
 
     # # Given a department configured as régime unique
     config_44.delete()
-    RUConfigHaieFactory()
+    ConfigHaieFactory(is_ru_activated=True)
     # WHEN requesting the result plantation page with droit constant
     res = client.get(f"{url}?{query}")
 
@@ -839,11 +843,13 @@ def test_confighaie_settings_view_with_multiple_configs(
     tomorrow = today + timedelta(days=1)
     one_year_ago = today - timedelta(days=365)
 
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         department=loire_atlantique_department,
         validity_range=DateRange(one_year_ago, today, "[)"),
     )
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         department=loire_atlantique_department,
         validity_range=DateRange(today, tomorrow, "[)"),
     )
@@ -869,11 +875,13 @@ def test_confighaie_detail_by_date_slug(
     tomorrow = today + timedelta(days=1)
     one_year_ago = today - timedelta(days=365)
 
-    old_config = DCConfigHaieFactory(
+    old_config = ConfigHaieFactory(
+        is_dc_activated=True,
         department=loire_atlantique_department,
         validity_range=DateRange(one_year_ago, today, "[)"),
     )
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         department=loire_atlantique_department,
         validity_range=DateRange(today, tomorrow, "[)"),
     )
@@ -898,7 +906,8 @@ def test_confighaie_detail_permanent_slug(
     haie_instructor_44,
 ):
     """The 'permanent' slug matches a config with no validity_range."""
-    permanent_config = DCConfigHaieFactory(
+    permanent_config = ConfigHaieFactory(
+        is_dc_activated=True,
         department=loire_atlantique_department,
         validity_range=None,
     )
@@ -920,7 +929,7 @@ def test_confighaie_detail_invalid_slug_returns_404_with_link_to_config_list_vie
     haie_instructor_44,
 ):
     """An unknown date slug returns 404."""
-    DCConfigHaieFactory(department=loire_atlantique_department)
+    ConfigHaieFactory(is_dc_activated=True, department=loire_atlantique_department)
 
     client.force_login(haie_instructor_44)
 
@@ -949,7 +958,7 @@ def test_old_parametrage_url_redirects(
     haie_instructor_44,
 ):
     """The old /moulinette/parametrage/{dep}/ URL permanently redirects."""
-    DCConfigHaieFactory(department=loire_atlantique_department)
+    ConfigHaieFactory(is_dc_activated=True, department=loire_atlantique_department)
 
     client.force_login(haie_instructor_44)
     response = client.get("/simulateur/parametrage/44/")
@@ -960,7 +969,7 @@ def test_old_parametrage_url_redirects(
 
 def test_triage_result_destruction_contexte_non(client):
     """destruction + contexte=non → redirige vers le formulaire principal."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     url = reverse("moulinette_result")
     params = "department=44&element=haie&travaux=destruction&contexte=non"
     res = client.get(f"{url}?{params}")
@@ -970,7 +979,7 @@ def test_triage_result_destruction_contexte_non(client):
 
 def test_triage_result_destruction_contexte_projet_no_autorisation(client):
     """destruction + contexte=projet sans autorisation → triage_projet_result.html."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     url = reverse("moulinette_result")
     params = "department=44&element=haie&travaux=destruction&contexte=projet"
     res = client.get(f"{url}?{params}")
@@ -982,7 +991,7 @@ def test_triage_result_destruction_contexte_projet_no_autorisation(client):
 
 def test_triage_result_destruction_contexte_projet_urba(client):
     """destruction + contexte=projet-urba → redirige vers le formulaire principal."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     url = reverse("moulinette_result")
     params = "department=44&element=haie&travaux=destruction&contexte=projet-urba"
     res = client.get(f"{url}?{params}")
@@ -992,7 +1001,7 @@ def test_triage_result_destruction_contexte_projet_urba(client):
 
 def test_triage_result_destruction_contexte_projet_autre(client):
     """destruction + contexte=projet-autre → redirige vers le formulaire principal."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     url = reverse("moulinette_result")
     params = "department=44&element=haie&travaux=destruction&contexte=projet-autre"
     res = client.get(f"{url}?{params}")
@@ -1002,7 +1011,7 @@ def test_triage_result_destruction_contexte_projet_autre(client):
 
 def test_triage_get_initial_normalizes_projet_specifique_to_projet(client):
     """Visiter le triage avec contexte=projet-urba ou projet-autre préremplit contexte=projet."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     triage_url = reverse("triage")
 
     for contexte in ("projet-urba", "projet-autre"):

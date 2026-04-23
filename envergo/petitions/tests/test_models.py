@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES, ResultSnapshot
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
@@ -16,14 +16,14 @@ pytestmark = pytest.mark.django_db
 
 
 def test_set_department_on_save():
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     petition_project = PetitionProjectFactory()
     assert petition_project.department.department == "44"
 
 
 def test_form_url_adds_alternative_param():
     """form_url appends alternative=true to the query string."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     simulation = SimulationFactory(project=project)
 
@@ -41,7 +41,7 @@ def test_form_url_adds_alternative_param():
 
 def test_form_url_does_not_duplicate_alternative_param():
     """form_url replaces an existing alternative param instead of appending a second one."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     # Create a simulation whose moulinette_url already contains alternative=true
     moulinette_url = project.moulinette_url + "&alternative=true"
@@ -56,7 +56,7 @@ def test_form_url_does_not_duplicate_alternative_param():
 @pytest.mark.haie
 def test_result_url_adds_alternative_param():
     """result_url appends alternative=true for new simulations."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     simulation = SimulationFactory(project=project, is_active=False)
     url = simulation.result_url
@@ -68,7 +68,7 @@ def test_result_url_adds_alternative_param():
 @pytest.mark.haie
 def test_result_url_active_returns_project_url():
     """result_url points to the project page (without alternative param) for active simulations."""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     # Deactivate the initial simulation created by the factory
     project.simulations.update(is_active=False)
@@ -86,7 +86,7 @@ class TestResultSnapshot:
 
     def test_create_for_project(self):
         """ResultSnapshot.create_for_project creates a snapshot with correct data."""
-        DCConfigHaieFactory()
+        ConfigHaieFactory(is_dc_activated=True)
         project = PetitionProjectFactory()
 
         # Clear any snapshots created during project creation
@@ -102,7 +102,7 @@ class TestResultSnapshot:
 
     def test_snapshot_created_on_new_project(self):
         """A ResultSnapshot is created when a new PetitionProject is saved."""
-        DCConfigHaieFactory()
+        ConfigHaieFactory(is_dc_activated=True)
 
         # Count existing snapshots
         initial_count = ResultSnapshot.objects.count()
@@ -117,7 +117,7 @@ class TestResultSnapshot:
 
     def test_snapshot_created_on_moulinette_url_change(self):
         """A ResultSnapshot is created when moulinette_url changes."""
-        DCConfigHaieFactory()
+        ConfigHaieFactory(is_dc_activated=True)
         project = PetitionProjectFactory()
 
         # Count snapshots after project creation
@@ -141,7 +141,7 @@ class TestResultSnapshot:
 
     def test_no_snapshot_on_unrelated_field_change(self):
         """No ResultSnapshot is created when unrelated fields change."""
-        DCConfigHaieFactory()
+        ConfigHaieFactory(is_dc_activated=True)
         project = PetitionProjectFactory()
 
         # Count snapshots after project creation
@@ -156,7 +156,7 @@ class TestResultSnapshot:
 
     def test_snapshot_payload_contains_moulinette_summary(self):
         """The snapshot payload contains data from moulinette.summary()."""
-        DCConfigHaieFactory()
+        ConfigHaieFactory(is_dc_activated=True)
         project = PetitionProjectFactory()
 
         snapshot = ResultSnapshot.objects.filter(project=project).first()
@@ -178,7 +178,7 @@ class TestResultSnapshot:
 
         Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
 
-        DCConfigHaieFactory()
+        ConfigHaieFactory(is_dc_activated=True)
         # Create project in draft state (not yet submitted)
         project = PetitionProjectFactory(
             demarches_simplifiees_state=DOSSIER_STATES.draft

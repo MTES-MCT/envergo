@@ -1,7 +1,6 @@
 from datetime import date, datetime, time, timedelta
 from unittest.mock import ANY, Mock, patch
 
-import factory
 import pytest
 from django.conf import settings
 from django.contrib import messages
@@ -15,12 +14,11 @@ from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
-from envergo.geodata.tests.factories import Department34Factory
 from envergo.hedges.models import TO_PLANT, HedgeTypeBase
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
+    ConfigHaieFactory,
     CriterionFactory,
-    DCConfigHaieFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
@@ -127,7 +125,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    config = DCConfigHaieFactory()
+    config = ConfigHaieFactory(is_dc_activated=True)
     config.demarche_simplifiee_pre_fill_config.append(
         {"id": "abc", "value": "plantation_adequate"}
     )
@@ -190,12 +188,14 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
 
     today = date.today()
     # Expired config
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         demarche_simplifiee_number=111111,
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
-    DCConfigHaieFactory(
+    ConfigHaieFactory(
+        is_dc_activated=True,
         demarche_simplifiee_number=222222,
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
@@ -226,7 +226,9 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
-    DCConfigHaieFactory()
+    ConfigHaieFactory(
+        is_dc_activated=True,
+    )
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -261,12 +263,7 @@ def test_petition_project_detail(mock_post, client, site):
 
     mock_post.return_value = mock_response
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     petition_project_url = reverse(
@@ -337,7 +334,7 @@ def test_petition_project_instructor_view_requires_authentication(
     User must be authenticated, haie user, and project department must be in user departments permissions
     """
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
@@ -439,12 +436,7 @@ def test_petition_project_instructor_notes_view(
     """
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     instructor_notes_url = reverse(
         "petition_project_instructor_notes_view",
@@ -498,12 +490,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Test regulation imaginaire url
@@ -623,12 +610,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
     """Test if dossier data is in template"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "pacage": "Q2hhbXAtNDU0MzkzOA==",
-        }
-    )
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     instructor_ds_url = reverse(
@@ -656,7 +638,7 @@ def test_petition_project_instructor_messagerie_ds(
     mock_ds_query_execute, haie_user_44, haie_instructor_44, client, site
 ):
     """Test messagerie view"""
-    config = DCConfigHaieFactory()
+    config = ConfigHaieFactory(is_dc_activated=True)
     config.demarches_simplifiees_display_fields.update(
         {
             "city": "Q2hhbXAtNDcyOTE4Nw==",
@@ -750,7 +732,7 @@ def test_petition_project_instructor_messagerie_ds(
 
 def _setup_messagerie(haie_instructor_44, client):
     """Helper to setup messagerie test context."""
-    config = DCConfigHaieFactory()
+    config = ConfigHaieFactory(is_dc_activated=True)
     config.demarches_simplifiees_display_fields.update(
         {
             "city": "Q2hhbXAtNDcyOTE4Nw==",
@@ -926,8 +908,8 @@ def test_petition_project_list(
     inactive_haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
 ):
 
-    DCConfigHaieFactory()
-    DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
+    ConfigHaieFactory(is_dc_activated=True)
+    ConfigHaieFactory(is_dc_activated_department34=True)
     # GIVEN two projects non draft, one in 34 and one in 44
     now = timezone.now()
     last_month = now - timedelta(days=30)
@@ -996,7 +978,7 @@ def test_petition_project_list_filters(
 
     project_list_url = reverse("petition_project_list")
     # Given config haie on 44
-    config_haie_44 = DCConfigHaieFactory()
+    config_haie_44 = ConfigHaieFactory(is_dc_activated=True)
     department_44 = config_haie_44.department
 
     # Given two haie instructors, haie user, `haie_user_44` and admin user instructor
@@ -1128,7 +1110,7 @@ def test_petition_project_list_filters(
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     geopkg_url = reverse(
         "petition_project_hedge_data_export",
@@ -1150,7 +1132,7 @@ def test_petition_project_instructor_notes_form(
     """Post instruction note as different users"""
 
     # GIVEN a petition project
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     instructor_notes_form_url = reverse(
         "petition_project_instructor_notes_view",
@@ -1218,7 +1200,7 @@ def test_instructor_view_with_hedges_outside_department(client, haie_instructor_
     # GIVEN a moulinette with at least an hedge to remove outside the department
 
     client.force_login(haie_instructor_44)
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -1271,7 +1253,7 @@ def test_petition_project_procedure(
 ):
     """Test procedure flow for petition project"""
     # GIVEN a petition project
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1365,7 +1347,7 @@ def test_petition_project_procedure(
 def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site):
     """Test follow up flow for petition project"""
     # GIVEN a petition project
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     toggle_follow_url = reverse(
         "petition_project_toggle_follow",
@@ -1441,7 +1423,7 @@ def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site)
 def test_petition_project_follow_buttons(client, haie_instructor_44, site):
     """Test the buttons to toggle follow up are on the pages"""
     # GIVEN a petition project
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1469,7 +1451,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client, haie_instructor_44, haie_user
 ):
     client.force_login(haie_instructor_44)
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1496,7 +1478,7 @@ def test_petition_invited_instructor_cannot_send_message(
     mock_ds_query_execute, client, haie_instructor_44, haie_user
 ):
     client.force_login(haie_instructor_44)
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1526,7 +1508,7 @@ def test_petition_invited_instructor_cannot_send_message(
 def test_petition_project_rai_button(client, haie_user, haie_instructor_44, site):
     """Only department admin can see the "request additional info" button"""
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     status_url = reverse(
         "petition_project_instructor_procedure_view",
@@ -1568,7 +1550,7 @@ def test_petition_project_request_for_info(
     today = date.today()
     next_month = today + timedelta(days=30)
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory(status__due_date=today)
     assert project.due_date == today
     assert project.is_additional_information_requested is False
@@ -1607,7 +1589,7 @@ def test_petition_project_resume_instruction(
     last_month = today - timedelta(days=30)
     next_month = today + timedelta(days=30)
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory(status__due_date=today)
     # Create a suspension log separately
     StatusLogFactory(
@@ -1667,7 +1649,7 @@ def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_u
     qs = LatestMessagerieAccess.objects.all()
     assert qs.count() == 0
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     messagerie_url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1701,7 +1683,7 @@ def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_u
 
 
 def test_project_list_unread_pill(client, haie_instructor_44):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
 
     read_msg = '<td class="messagerie-col read">'
     unread_msg = '<td class="messagerie-col unread">'
@@ -1770,7 +1752,7 @@ def test_alternatives_list_permission(client, haie_user, haie_instructor_44, sit
     """Test alternative flow for petition project"""
 
     # GIVEN a petition project
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     alternative_url = reverse(
         "petition_project_instructor_alternative_view",
@@ -1804,7 +1786,7 @@ def test_alternatives_list_permission(client, haie_user, haie_instructor_44, sit
 def test_alternatives_list_shows_data(client, haie_instructor_44):
 
     # GIVEN a petition project
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     alternative_url = reverse(
         "petition_project_instructor_alternative_view",
@@ -1840,7 +1822,7 @@ def test_alternatives_list_shows_data(client, haie_instructor_44):
 
 
 def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory(reference="ABC123")
     s2 = SimulationFactory(project=project, comment="Simulation 2")
 
@@ -1872,7 +1854,7 @@ def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
 
 def test_alternative_activate(client, haie_instructor_44):
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     SimulationFactory(project=project, comment="Simulation 2")
 
@@ -1908,7 +1890,7 @@ def test_alternative_activate(client, haie_instructor_44):
 
 def test_alternative_delete(client, haie_instructor_44):
 
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     s2 = SimulationFactory(project=project, comment="Simulation 2")
     s3 = SimulationFactory(project=project, comment="Simulation 3")
@@ -2067,7 +2049,7 @@ def test_real_token_format_accepted(client):
 
 def test_consultations_view_requires_authentication(client):
     """Test that consultations view requires authentication"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     consultations_url = reverse(
         "petition_project_instructor_consultations_view",
@@ -2081,7 +2063,7 @@ def test_consultations_view_requires_authentication(client):
 
 def test_consultations_view_requires_haie_access(client, haie_user):
     """Test that consultations view requires haie access"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     consultations_url = reverse(
         "petition_project_instructor_consultations_view",
@@ -2101,7 +2083,7 @@ def test_consultations_view_accessible_to_department_instructor(
     client, haie_instructor_44
 ):
     """Test that consultations view is accessible to department instructor"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     consultations_url = reverse(
         "petition_project_instructor_consultations_view",
@@ -2116,7 +2098,7 @@ def test_consultations_view_accessible_to_department_instructor(
 
 def test_consultations_view_inaccessible_to_invited_instructor(client, haie_user):
     """Test that consultations view is accessible to invited instructor"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     # Create an accepted invitation token for haie_user
     InvitationTokenFactory(user=haie_user, petition_project=project)
@@ -2135,7 +2117,7 @@ def test_consultations_view_displays_accepted_tokens(
     client, haie_instructor_44, haie_user
 ):
     """Test that consultations view displays only accepted tokens"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Create tokens with different states
@@ -2186,7 +2168,7 @@ def test_consultations_view_displays_accepted_tokens(
 
 def test_invitation_token_create_requires_authentication(client):
     """Test that token creation requires authentication"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     create_url = reverse(
         "petition_project_invitation_token_create",
@@ -2200,7 +2182,7 @@ def test_invitation_token_create_requires_authentication(client):
 
 def test_invitation_token_create_requires_change_permission(client, haie_user):
     """Test that token creation requires change permission - standard user"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     create_url = reverse(
         "petition_project_invitation_token_create",
@@ -2217,7 +2199,7 @@ def test_invitation_token_create_authorized_for_department_instructor(
     client, haie_instructor_44, site
 ):
     """Test that department instructor can create tokens"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     create_url = reverse(
         "petition_project_invitation_token_create",
@@ -2235,7 +2217,7 @@ def test_invitation_token_create_authorized_for_department_instructor(
 
 def test_invitation_token_create_returns_html(client, haie_instructor_44, site):
     """Test that token creation returns HTML template instead of JSON"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     create_url = reverse(
         "petition_project_invitation_token_create",
@@ -2258,7 +2240,7 @@ def test_invitation_token_create_generates_unique_token(
     client, haie_instructor_44, site
 ):
     """Test that each creation generates a unique token"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     create_url = reverse(
         "petition_project_invitation_token_create",
@@ -2289,7 +2271,7 @@ def test_invitation_token_create_generates_unique_token(
 
 def test_invitation_token_delete_requires_authentication(client):
     """Test that token deletion requires authentication"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     delete_url = reverse(
         "petition_project_invitation_token_delete",
@@ -2303,7 +2285,7 @@ def test_invitation_token_delete_requires_authentication(client):
 
 def test_invitation_token_delete_requires_change_permission(client, haie_user):
     """Test that token deletion requires change permission"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(petition_project=project)
 
@@ -2320,7 +2302,7 @@ def test_invitation_token_delete_requires_change_permission(client, haie_user):
 
 def test_invitation_token_delete_success(client, haie_instructor_44):
     """Test successful token deletion"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(
         petition_project=project, created_by=haie_instructor_44
@@ -2342,7 +2324,7 @@ def test_invitation_token_delete_success(client, haie_instructor_44):
 
 def test_invitation_token_delete_requires_token_id(client, haie_instructor_44):
     """Test that token deletion requires token_id parameter"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     delete_url = reverse(
@@ -2359,7 +2341,7 @@ def test_invitation_token_delete_requires_token_id(client, haie_instructor_44):
 
 def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
     """Test deletion of non-existent token"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     delete_url = reverse(
@@ -2375,7 +2357,7 @@ def test_invitation_token_delete_token_not_found(client, haie_instructor_44):
 
 def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44):
     """Test deletion of token from different project"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project_a = PetitionProjectFactory()
     project_b = PetitionProjectFactory()
 
@@ -2402,7 +2384,7 @@ def test_invitation_token_delete_token_wrong_project(client, haie_instructor_44)
 
 def test_invitation_token_delete_logs_analytics_event(client, haie_instructor_44):
     """Test that token deletion logs analytics event"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(
         petition_project=project, created_by=haie_instructor_44
@@ -2421,7 +2403,7 @@ def test_invitation_token_delete_logs_analytics_event(client, haie_instructor_44
 
 def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
     """Test that deletion only accepts POST method"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
     token = InvitationTokenFactory(
         petition_project=project, created_by=haie_instructor_44
@@ -2449,7 +2431,7 @@ def test_invitation_token_delete_only_accepts_post(client, haie_instructor_44):
 
 def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, site):
     """Test complete invitation workflow from creation to acceptance"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Step 1: Department instructor creates token via consultations page
@@ -2495,7 +2477,7 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
 
 def test_invitation_token_expiration_display(client, haie_instructor_44, haie_user):
     """Test that only accepted tokens are displayed, regardless of expiration"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Create pending token (not accepted - should NOT be displayed)
@@ -2546,7 +2528,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
     client, haie_instructor_44, haie_user
 ):
     """Test that consultations link in menu is visible only for department instructors"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Department instructor should see the link
@@ -2587,7 +2569,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
 
 def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_user):
     """Test that revoke button is shown for all accepted tokens"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Create a second user for variety
@@ -2639,7 +2621,7 @@ def test_revoke_button_shown_for_all_tokens(client, haie_instructor_44, haie_use
 
 def test_tokens_ordered_by_creation_date_desc(client, haie_instructor_44, haie_user):
     """Test that accepted tokens are ordered by creation date (newest first)"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Create a second user for variety
@@ -2687,7 +2669,7 @@ def test_consultations_page_shows_creator_and_accepted_user_info(
     client, haie_instructor_44, haie_user
 ):
     """Test that consultations page shows accepted user email"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Set user names
@@ -2726,7 +2708,7 @@ def test_consultations_page_shows_creator_and_accepted_user_info(
 
 def test_old_invitation_url_updated(client, haie_instructor_44, site):
     """Test that the URL pattern has been updated from /invitations/ to /invitations/create/"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # New URL should work
@@ -2743,7 +2725,7 @@ def test_old_invitation_url_updated(client, haie_instructor_44, site):
 
 def test_analytics_events_have_correct_names(client, haie_instructor_44, site):
     """Test that analytics events use the new event names"""
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     project = PetitionProjectFactory()
 
     # Test creation event
@@ -2787,7 +2769,7 @@ class TestGetProjectConfig:
 
     @pytest.mark.django_db
     def test_returns_config_without_validity_range(self):
-        config = DCConfigHaieFactory(validity_range=None)
+        config = ConfigHaieFactory(is_dc_activated=True, validity_range=None)
         project = PetitionProjectFactory(
             demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         )
@@ -2799,10 +2781,12 @@ class TestGetProjectConfig:
     def test_returns_config_matching_date(self):
         from django.db.backends.postgresql.psycopg_any import DateRange
 
-        config_old = DCConfigHaieFactory(
+        config_old = ConfigHaieFactory(
+            is_dc_activated=True,
             validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
         )
-        config_new = DCConfigHaieFactory(
+        config_new = ConfigHaieFactory(
+            is_dc_activated=True,
             department=config_old.department,
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
@@ -2818,10 +2802,12 @@ class TestGetProjectConfig:
     def test_returns_old_config_for_old_project(self):
         from django.db.backends.postgresql.psycopg_any import DateRange
 
-        config_old = DCConfigHaieFactory(
+        config_old = ConfigHaieFactory(
+            is_dc_activated=True,
             validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
         )
-        config_new = DCConfigHaieFactory(  # noqa
+        ConfigHaieFactory(
+            is_dc_activated=True,  # noqa
             department=config_old.department,
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
@@ -2837,7 +2823,8 @@ class TestGetProjectConfig:
     def test_returns_none_when_no_config_matches(self):
         from django.db.backends.postgresql.psycopg_any import DateRange
 
-        DCConfigHaieFactory(
+        ConfigHaieFactory(
+            is_dc_activated=True,
             validity_range=DateRange(date(2026, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
@@ -2852,7 +2839,7 @@ class TestGetProjectConfig:
     def test_cache_is_built_once(self):
         from envergo.moulinette.models import ConfigHaie
 
-        DCConfigHaieFactory(validity_range=None)
+        ConfigHaieFactory(is_dc_activated=True, validity_range=None)
         project1 = PetitionProjectFactory(
             demarches_simplifiees_state=DOSSIER_STATES.prefilled,
         )

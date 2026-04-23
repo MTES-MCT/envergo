@@ -1,7 +1,12 @@
 import factory
+from factory import Trait
 from factory.django import DjangoModelFactory
 
-from envergo.geodata.tests.factories import DepartmentFactory, MapFactory
+from envergo.geodata.tests.factories import (
+    Department34Factory,
+    DepartmentFactory,
+    MapFactory,
+)
 from envergo.moulinette.models import (
     ActionToTake,
     ConfigAmenagement,
@@ -88,6 +93,81 @@ class PerimeterFactory(DjangoModelFactory):
 
         # Add the iterable of groups using bulk addition
         self.regulations.add(*extracted)
+
+
+class ConfigHaieFactory(DjangoModelFactory):
+    class Meta:
+        model = ConfigHaie
+
+    department = factory.SubFactory(DepartmentFactory)
+    is_activated = False
+    single_procedure = False
+    validity_range = None
+    regulations_available = [
+        "conditionnalite_pac",
+        "ep",
+        "natura2000_haie",
+        "alignement_arbres",
+        "reserves_naturelles",
+        "code_rural_haie",
+        "regime_unique_haie",
+        "sites_proteges_haie",
+        "sites_inscrits_haie",
+        "protection_captages",
+    ]
+
+    class Params:
+        """Set params to create an activated config haie in Droit constant (DC) or Régime unique (RU)
+        and others variations."""
+
+        is_dc_activated = Trait(
+            is_activated=True,
+            single_procedure=False,
+            demarche_simplifiee_number=123456,
+            demarche_simplifiee_pre_fill_config=[
+                {
+                    "id": "123",
+                    "value": "profil",
+                    "mapping": {
+                        "autre": "Autre (collectivit\u00e9, am\u00e9nageur, gestionnaire de r\u00e9seau, particulier, etc.)",  # noqa E501
+                        "agri_pac": "Exploitant-e agricole b\u00e9n\u00e9ficiaire de la PAC",
+                    },
+                },
+                {
+                    "id": "456",
+                    "value": "conditionnalite_pac.result",
+                    "mapping": {"soumis": True, "non_soumis": False},
+                },
+                {"id": "789", "value": "url_projet"},
+                {"id": "321", "value": "ref_projet"},
+                {"id": "654", "value": "url_moulinette"},
+            ],
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "city": "Q2hhbXAtNDcyOTE4Nw==",
+                "pacage": "Q2hhbXAtNDU0MzkzOA==",
+                "organization": "Q2hhbXAtNDcyOTE3MQ==",
+            },
+        )
+        is_dc_activated_missing_display_fields = Trait(
+            is_dc_activated=True,
+            demarches_simplifiees_display_fields={"project_url": "ABC123"},
+        )
+        is_dc_activated_department34 = Trait(
+            is_dc_activated=True, department=factory.SubFactory(Department34Factory)
+        )
+        is_ru_activated = Trait(
+            is_activated_confighaie=True,
+            single_procedure=True,
+            single_procedure_settings={
+                "coeff_compensation": {
+                    "mixte": 1.5,
+                    "degradee": 1.5,
+                    "arbustive": 1.5,
+                    "buissonnante": 1.5,
+                }
+            },
+        )
 
 
 class DCConfigHaieFactory(DjangoModelFactory):

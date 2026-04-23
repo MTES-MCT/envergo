@@ -16,7 +16,7 @@ from envergo.hedges.regulations import (
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
-from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
+from envergo.moulinette.tests.factories import ConfigHaieFactory
 from envergo.moulinette.tests.utils import make_moulinette_haie_data
 
 pytestmark = pytest.mark.django_db
@@ -24,7 +24,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def ep_criterion_evaluator():
-    DCConfigHaieFactory()
+    ConfigHaieFactory(is_dc_activated=True)
     data = make_moulinette_haie_data()
     moulinette = MoulinetteHaie(data)
     return EspecesProtegeesAisne(moulinette, 0, {})
@@ -32,7 +32,7 @@ def ep_criterion_evaluator():
 
 @pytest.fixture
 def ep_criterion_evaluator_ru():
-    RUConfigHaieFactory()
+    ConfigHaieFactory(is_ru_activated=True)
     data = make_moulinette_haie_data()
     moulinette = MoulinetteHaie(data)
     return EspecesProtegeesAisne(moulinette, 0, {})
