@@ -1,12 +1,13 @@
-<section class="fr-accordion">
-  <h3 class="fr-accordion__title">
+<section class="admin-accordion">
+  <h3 class="admin-accordion__title">
+
     <button type="button"
-            class="fr-accordion__btn"
+            class="admin-accordion__btn"
             aria-expanded="false"
             aria-controls="fill-in-help">Aide pour la configuration du pré-remplissage DN</button>
   </h3>
 
-  <div class="hidden" id="fill-in-help">
+  <div class="collapse" id="fill-in-help">
     <p>
       Ce champ doit comporter un tableau au format json comportant une entrée pour chaque champ ou annotation privée à
       pré-remplir dans Démarches Simplifiées avec des données provenant du guichet unique de la haie.
@@ -21,7 +22,7 @@
       </li>
     </ul>
 
-    <h3>Exemple</h3>
+    <h4>Exemple</h4>
     <pre>
         [
           {
@@ -48,7 +49,7 @@
         ]
         </pre>
 
-    <h3>Comment trouver les ids des champs ou des annotations privées ?</h3>
+    <h4>Comment trouver les ids des champs ou des annotations privées ?</h4>
     <p>
       Pour trouver les ids des champs ou des annotations privées, vous pouvez consulter le schéma json de votre démarche :
     </p>
@@ -68,7 +69,7 @@
       <li>Les ids des annotations sont indiqués ici : revision > annotationDescriptors > index [0...n] > id</li>
     </ul>
 
-    <h3>Quelles sont les sources de valeurs autorisées ?</h3>
+    <h4>Quelles sont les sources de valeurs autorisées ?</h4>
     {% for title, set in sources.items %}
       <h5>{{ title }} :</h5>
       <ul>
@@ -76,7 +77,7 @@
       </ul>
     {% endfor %}
 
-    <h3>Comment fonctionne le mapping ?</h3>
+    <h4>Comment fonctionne le mapping ?</h4>
 
     <p>
       Ce mapping est nécessaire dans le cas des questions de type choix (simple ou multiple) ou les questions de type
@@ -86,18 +87,3 @@
     </p>
   </div>
 </section>
-
-<script>
-
-window.addEventListener('load', function () {
-    const accordionBtns = document.querySelectorAll(".fr-accordion__btn");
-    const collapse_class = "hidden";
-    accordionBtns.forEach(btn => btn.addEventListener('click', function (evt) {
-      const btn = evt.currentTarget;
-      const target = btn.getAttribute('aria-controls');
-      const target_elt = document.getElementById(target);
-      const expanded = btn.getAttribute('aria-expanded');
-      target_elt.classList.toggle(collapse_class);
-    }))
-});
-</script>

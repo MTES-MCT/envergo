@@ -5,3 +5,27 @@
 {% block submit_buttons_bottom %}
   {% envergo_submit_row %}
 {% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+
+  <script>
+
+window.addEventListener('load', function () {
+    const accordionBtns = document.querySelectorAll(".admin-accordion__btn");
+    accordionBtns.forEach(btn => btn.addEventListener('click', function (evt) {
+      const btn = evt.currentTarget;
+      const target = btn.getAttribute('aria-controls');
+      const target_elt = document.getElementById(target);
+      const expanded = btn.getAttribute('aria-expanded');
+      target_elt.classList.toggle("collapse--expanded");
+      if (expanded === "true") {
+        btn.setAttribute("aria-expanded", "false");
+      } else {
+        btn.setAttribute("aria-expanded", "true");
+      }
+    }))
+});
+  </script>
+
+{% endblock %}

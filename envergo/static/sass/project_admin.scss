@@ -65,8 +65,72 @@ fieldset.module.recipients:has(input[type="checkbox"]:checked)
   display: none;
 }
 
-/* Users *
+/* Accordion in help text *
  * */
+
+.admin-accordion {
+  margin-top: 0.25rem;
+
+  .admin-accordion__title {
+    display: block;
+    font-size: unset;
+    line-height: unset;
+    margin: 0;
+    padding: 0;
+  }
+
+  .admin-accordion__btn {
+    border: none;
+    display: inline-flex;
+    flex-direction: row;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    line-height: 1.5rem;
+
+    &::after {
+      --icon-size: 1rem;
+
+      background-color: currentcolor;
+      content: "";
+      display: inline-block;
+      flex: 0 0 auto;
+      height: var(--icon-size);
+      width: var(--icon-size);
+      mask-image: url("/static/icons/arrow-down-s-line.svg");
+      mask-size: 100% 100%;
+      transition: transform 0.3s;
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    &[aria-expanded="true"]::after {
+      transform: rotate(-180deg);
+    }
+  }
+
+  .collapse {
+    --collapse-max-height: none;
+
+    transition:
+      visibility 0.3s,
+      padding 0.3s;
+    overflow: hidden;
+    max-height: var(--collapse-max-height);
+
+    &:not(.collapse--expanded) {
+      --collapse-max-height: 0;
+
+      visibility: hidden;
+    }
+  }
+
+  .collapse--expanded {
+    overflow: hidden auto;
+  }
+}
+
+/* Users *
+     * */
 
 a#add_id_departments {
   display: none;
@@ -76,8 +140,8 @@ a#add_id_departments {
 
 /* Disable delete button
 
-  to avoid unwanted project suppression when they only want to delete invited accounts
-  */
+      to avoid unwanted project suppression when they only want to delete invited accounts
+      */
 
 .model-petitionproject.change-form .submit-row {
   &::after {
