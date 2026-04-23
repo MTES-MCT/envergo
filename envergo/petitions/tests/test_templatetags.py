@@ -103,7 +103,11 @@ def test_display_empty_ds_fields(mock_post):
     """Test display DS field template tag"""
 
     # Given a config haie with empty DS display fields
-    DCConfigHaieFactory()
+    DCConfigHaieFactory(
+        demarches_simplifiees_display_fields={
+            "project_url": "ABC123",
+        }
+    )
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given DS dossier is available
@@ -130,10 +134,12 @@ def test_display_empty_ds_fields(mock_post):
 )
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
-    config = DCConfigHaieFactory()
+    config = DCConfigHaieFactory(
+        demarches_simplifiees_display_fields={"project_url": "ABC123"}
+    )
     config.demarches_simplifiees_display_fields.update(
         {
-            "motivation": "Q2hhbXAtNDUzNDE0Ng==",
+            "motivation": "Q3IMAGINARYBOYS",
         }
     )
     config.save()

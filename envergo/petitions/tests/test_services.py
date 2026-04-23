@@ -62,8 +62,14 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory()
-
+    DCConfigHaieFactory(
+        demarches_simplifiees_display_fields={
+            "project_url": "ABC123",
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "organization": "Q2hhbXAtNDcyOTE3MQ==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
+    )
     petition_project = PetitionProjectFactory()
 
     # WHEN I fetch it from DS for the first time
@@ -156,7 +162,13 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 ):
     petition_project = PetitionProjectFactory()
 
-    DCConfigHaieFactory()
+    DCConfigHaieFactory(
+        demarches_simplifiees_display_fields={
+            "project_url": "ABC123",
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "organization": "Q2hhbXAtNDcyOTE3MQ==",
+        }
+    )
     get_context_from_ds(petition_project)
 
     args, kwargs = mock_notify.call_args
