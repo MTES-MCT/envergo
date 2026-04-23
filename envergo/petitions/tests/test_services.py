@@ -162,13 +162,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 ):
     petition_project = PetitionProjectFactory()
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
-            "project_url": "ABC123",
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-            "organization": "Q2hhbXAtNDcyOTE3MQ==",
-        }
-    )
+    DCConfigHaieFactory()
     get_context_from_ds(petition_project)
 
     args, kwargs = mock_notify.call_args
