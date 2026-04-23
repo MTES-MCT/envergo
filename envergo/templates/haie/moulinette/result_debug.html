@@ -17,9 +17,23 @@
       {% endfor %}
     </ul>
 
-    <h2>Données initiales</h2>
+    <h2>Données d’entrée</h2>
 
     <ul class="fr-mb-2w">
+      <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
+      {% if moulinette.config %}
+        <li>
+          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+        </li>
+        <li>Régime unique : {{ moulinette.config.single_procedure|yesno }}</li>
+      {% else %}
+        <li>Département : {{ moulinette.department }}</li>
+      {% endif %}
+
+      <li>
+        Lien admin vers l'objet haies :
+        <a href="{% url 'admin:hedges_hedgedata_change' haies.id %}">{{ haies.id }}</a>
+      </li>
       <li>
         Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
         <ul>
@@ -36,46 +50,46 @@
           {% endfor %}
         </ul>
       </li>
-
-      {% if moulinette.config %}
-        <li>
-          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
-        </li>
-      {% else %}
-        <li>Département : {{ moulinette.department }}</li>
-      {% endif %}
-      <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
     </ul>
 
-    <h2>Conditions d'acceptabilité</h2>
+    <h2>Résultat de la simulation</h2>
+    <fieldset class="fr-segmented">
+      <div class="fr-segmented__elements">
+        {% for category in moulinette.results_by_category %}
+          <div class="fr-segmented__element">
+            <input value="{{ category.name }}"
+                   {% if forloop.counter0 == 0 %}checked{% endif %}
+                   type="radio"
+                   id="segmented-{{ category.name }}"
+                   name="segmented-category">
+            <label class="fr-label" for="segmented-{{ category.name }}">{{ category.value }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% for category, result in moulinette.results_by_category.items %}
+      <p class="category-{{ category.name }} fr-mt-2w">
+        {% result_tag result %}
+        <small>({{ result }})</small>
+      </p>
+    {% endfor %}
 
-    <ul class="fr-mb-2w">
-      {% for condition in plantation_evaluation.conditions %}
-        <li>
-          {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
-          {% if condition.context %}
-            <ul>
-              {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
-            </ul>
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-
-    <h2>Réglementations</h2>
+    <h3>Réglementations</h3>
 
     {% for regulation in moulinette.regulations %}
-      <h3>{{ regulation.title }}</h3>
-      <p>
-        {% result_tag regulation.result regulation.result_tag_style %}
-        <small>({{ regulation.result }})</small>
-      </p>
+      <h4>{{ regulation.title }}</h4>
+      {% for category, result in regulation.results_by_category.items %}
+        <p class="category-{{ category.name }}">
+          {% result_tag result %}
+          <small>({{ result }})</small>
+        </p>
+      {% endfor %}
 
       {% with criteria=regulation.criteria.all %}
         {% if criteria %}
           <ul>
             {% for criterion in criteria %}
-              <li class="fr-mb-2w">
+              <li class="fr-mb-2w category-{{ criterion.evaluator.category.name }}">
                 {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
                 {% if criterion.get_evaluator.get_replantation_coefficient %}
@@ -106,15 +120,49 @@
       {% endwith %}
     {% endfor %}
 
+    <h3>Conditions d'acceptabilité</h3>
+    <ul class="fr-mb-2w">
+      {% for condition in plantation_evaluation.conditions %}
+        <li class="category-{{ condition.criterion_evaluator.category.name }}">
+          {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
+          {% if condition.context %}
+            <ul>
+              {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
     <h2>Catalogue de données</h2>
 
-    <dd>
+    <dl>
       {% for key, value in moulinette.catalog.items %}
         <dt>{{ key }}</dt>
         <dd>
           {{ value|truncatechars:150 }}
         </dd>
       {% endfor %}
-    </dd>
+    </dl>
   </section>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+      // Hide/diplay content based on segmented control selection
+      function displayCategoryContent() {
+        current = document.querySelector("input[name=\"segmented-category\"]:checked")
+        document.querySelectorAll("[class*='category-']").forEach(el => el.hidden = true);
+        document.querySelectorAll(`.category-${current.value}`).forEach(el => el.hidden = false);
+
+        document.querySelectorAll("input[name=\"segmented-category\"]").forEach(input => {
+          input.addEventListener("change", () => {
+            document.querySelectorAll("[class*='category-']").forEach(el => el.hidden = true);
+            document.querySelectorAll(`.category-${input.value}`).forEach(el => el.hidden = false);
+          });
+        });
+      }
+      window.addEventListener('load', displayCategoryContent);
+  </script>
 {% endblock %}
