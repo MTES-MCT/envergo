@@ -319,7 +319,9 @@ class TestConfigHaieDNDisplayFieldValidation:
 
     def test_validation_when_demarche_simplifiee_number_is_set(self):
         """Form skips AA L350-3 validation when single_procedure is False."""
-        instance = DCConfigHaieFactory()
+        instance = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={"project_url": "ABC123"}
+        )
         data = instance_to_form_data(instance)
         data["demarche_simplifiee_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=instance)
