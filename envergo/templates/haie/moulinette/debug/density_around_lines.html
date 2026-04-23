@@ -47,7 +47,7 @@
                       -
                     {% endif %}
                   </td>
-                  <td>{{ row.high_density|yesno:"HD,LD,-" }}</td>
+                  <td>{{ row.high_density|yesno:"haute,basse,-" }}</td>
                   <td>{{ row.coefficient }}</td>
                 </tr>
               {% endfor %}
