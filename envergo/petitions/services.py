@@ -151,18 +151,19 @@ def get_context_from_ds(petition_project) -> dict:
     config = petition_project.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
 
-    city = ""
-    pacage = ""
-    organization = ""
+    city_item = ""
+    pacage_item = ""
+    organization_item = ""
     usager = ""
     applicant = ""
     applicant_email = ""
     representative = ""
 
+    display_dn_fields = config.demarches_simplifiees_display_fields
     if (
-        not config.demarches_simplifiees_pacage_id
-        or not config.demarches_simplifiees_city_id
-        or not config.demarches_simplifiees_organization_id
+        not display_dn_fields.get("city", None)
+        or not display_dn_fields.get("organization", None)
+        or not display_dn_fields.get("pacage", None)
     ):
         logger.error(
             "Missing Demarches Simplifiees ids in Haie Config",
@@ -186,7 +187,11 @@ def get_context_from_ds(petition_project) -> dict:
         notify(dedent(message), "haie")
 
     if dossier:
-        city, organization, pacage = extract_data_from_fields(config, dossier)
+        city_item = get_field_data_from_dn_dossier("city", config, dossier)
+        organization_item = get_field_data_from_dn_dossier(
+            "organization", config, dossier
+        )
+        pacage_item = get_field_data_from_dn_dossier("pacage", config, dossier)
         usager = dossier.usager.email or ""
         applicant = dossier.applicant_name or ""
         if dossier.demandeur:
@@ -198,9 +203,9 @@ def get_context_from_ds(petition_project) -> dict:
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
         "ds_info": {
             "usager": usager,
-            "city": city,
-            "pacage": pacage,
-            "organization": organization,
+            "city": city_item.value if city_item else "",
+            "pacage": pacage_item.value if pacage_item else "",
+            "organization": organization_item.value if organization_item else "",
             "applicant": applicant,
             "applicant_email": applicant_email,
             "representative": representative,
@@ -210,11 +215,18 @@ def get_context_from_ds(petition_project) -> dict:
     return context
 
 
-def get_field_data_from_ds_dossier(field_id, dossier):
-    """Get field value from dossier DS with id"""
+def get_field_data_from_dn_dossier(field_name, config, dossier):
+    """Get field value from dossier DN related to a given config and a DN dossier
+    from a petition project.
+
+    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    """
+    dn_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
+    if not dn_field_id:
+        return None
     champs = dossier.champs
     field = next(
-        (champ for champ in champs if champ.id == field_id),
+        (champ for champ in champs if champ.id == dn_field_id),
         None,
     )
     if not field:
@@ -226,43 +238,6 @@ def get_field_data_from_ds_dossier(field_id, dossier):
         None,
     )
     return item
-
-
-def extract_data_from_fields(config, dossier):
-    """Extract the data of the known fields in config from the Demarches Simplifiees dossier."""
-    city = ""
-    pacage = ""
-    organization = ""
-
-    champs = dossier.champs
-    city_field = next(
-        (champ for champ in champs if champ.id == config.demarches_simplifiees_city_id),
-        None,
-    )
-    if city_field:
-        city = city_field.stringValue
-    pacage_field = next(
-        (
-            champ
-            for champ in champs
-            if champ.id == config.demarches_simplifiees_pacage_id
-        ),
-        None,
-    )
-    if pacage_field:
-        pacage = pacage_field.stringValue
-    organization_field = next(
-        (
-            champ
-            for champ in champs
-            if champ.id == config.demarches_simplifiees_organization_id
-        ),
-        None,
-    )
-    if organization_field:
-        organization = organization_field.stringValue
-
-    return city, organization, pacage
 
 
 def compute_instructor_informations_ds(

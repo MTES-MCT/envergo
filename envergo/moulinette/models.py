@@ -1321,30 +1321,6 @@ class ConfigHaie(ConfigBase):
         default=dict,
     )
 
-    demarches_simplifiees_city_id = models.CharField(
-        'Identifiant DS "Commune principale"',
-        blank=True,
-        max_length=64,
-    )
-
-    demarches_simplifiees_organization_id = models.CharField(
-        'Identifiant DS "Nom de votre structure"',
-        blank=True,
-        max_length=64,
-    )
-
-    demarches_simplifiees_pacage_id = models.CharField(
-        'Identifiant DS "numéro de PACAGE"',
-        blank=True,
-        max_length=64,
-    )
-
-    demarches_simplifiees_project_url_id = models.CharField(
-        'Identifiant DS "Lien internet de la simulation réglementaire de votre projet"',
-        blank=True,
-        max_length=64,
-    )
-
     def __str__(self):
         return self.department.get_department_display()
 
@@ -1493,7 +1469,7 @@ class ConfigHaie(ConfigBase):
             ),
             CheckConstraint(
                 check=Q(demarche_simplifiee_number__isnull=True)
-                | Q(demarches_simplifiees_project_url_id__isnull=False),
+                | Q(demarches_simplifiees_display_fields__project_url__isnull=False),
                 name="project_url_id_required_if_demarche_number",
             ),
             CheckConstraint(

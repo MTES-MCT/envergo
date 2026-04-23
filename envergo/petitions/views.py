@@ -89,8 +89,8 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
-    extract_data_from_fields,
     get_context_from_ds,
+    get_field_data_from_dn_dossier,
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
@@ -208,9 +208,12 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             dossier = obj.prefetched_dossier
             if dossier:
                 config = self.get_project_config(obj)
-                city, organization, _ = extract_data_from_fields(config, dossier)
-                obj.city = city
-                obj.organization = organization
+                city_item = get_field_data_from_dn_dossier("city", config, dossier)
+                organization_item = get_field_data_from_dn_dossier(
+                    "organization", config, dossier
+                )
+                obj.city = city_item.value if city_item else ""
+                obj.organization = organization_item.value if organization_item else ""
 
         return context
 

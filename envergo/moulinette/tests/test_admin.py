@@ -67,6 +67,14 @@ def instance_to_form_data(instance):
     return {k: v if v is not None else "" for k, v in data.items()}
 
 
+def update_data_jsonfield_with_new_entry(data, field_name, dict_update):
+    """Updates data json field "field_name" with new entry"""
+    json_field = json.loads(data[field_name])
+    json_field.update(dict_update)
+    data[field_name] = json.dumps(json_field)
+    return data
+
+
 class TestCriterionOverlapValidation:
     def test_overlap_shows_admin_link(self):
         """When a new criterion overlaps an existing one, the error contains an admin link."""
@@ -216,12 +224,19 @@ class TestConfigHaieAaL3503FormValidation:
     def build_form_data(self, instance, **overrides):
         """Build valid form data from a factory instance, then apply overrides.
 
-        Clears demarche_simplifiee_pre_fill_config to avoid unrelated validation
+        Clears `demarche_simplifiee_pre_fill_config` to avoid unrelated validation
         failures (the factory's pre-fill references form fields that require
         regulation fixtures).
+        Add mandatories keys in `demarches_simplifiees_display_fields` to avoid
+        unrelated validation failures.
         """
         data = instance_to_form_data(instance)
         data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data = update_data_jsonfield_with_new_entry(
+            data,
+            "demarches_simplifiees_display_fields",
+            {"city": "XYZ123", "organization": "XYZ456", "pacage": "XYZ789"},
+        )
         data.update(overrides)
         return data
 
@@ -292,4 +307,49 @@ class TestConfigHaieAaL3503FormValidation:
             aa_l3503_contact_info="",
         )
         form = ConfigHaieTestForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
+
+
+class TestConfigHaieDNDisplayFieldValidation:
+    """Tests for the admin form validation on `demarches_simplifiees_display_fields`.
+
+    When `demarche_simplifiee_number` is set, `demarches_simplifiees_display_fields` should have
+    keys "organization", "city", "pacage" set with value.
+    """
+
+    def test_validation_when_demarche_simplifiee_number_is_set(self):
+        """Form skips AA L350-3 validation when single_procedure is False."""
+        instance = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={"project_url": "ABC123"}
+        )
+        data = instance_to_form_data(instance)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        assert not form.is_valid()
+        assert "demarches_simplifiees_display_fields" in form.errors
+
+        # WHEN only city is set in `demarches_simplifiees_display_fields`
+        data = update_data_jsonfield_with_new_entry(
+            data, "demarches_simplifiees_display_fields", {"city": "XYZ123"}
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        # THEN form is not valid
+        assert not form.is_valid()
+        assert "demarches_simplifiees_display_fields" in form.errors
+
+        # WHEN only city and organization are set in `demarches_simplifiees_display_fields`
+        data = update_data_jsonfield_with_new_entry(
+            data, "demarches_simplifiees_display_fields", {"organization": "XYZ456"}
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        # THEN form is not valid
+        assert not form.is_valid()
+        assert "demarches_simplifiees_display_fields" in form.errors
+
+        # WHEN city, organization and pacate are set in `demarches_simplifiees_display_fields`
+        data = update_data_jsonfield_with_new_entry(
+            data, "demarches_simplifiees_display_fields", {"pacage": "XYZ789"}
+        )
+        form = ConfigHaieTestForm(data=data, instance=instance)
+        # THEN form is valid
         assert form.is_valid(), form.errors
