@@ -317,68 +317,68 @@ class TestConfigHaieDNDisplayFieldValidation:
     keys "organization", "city", "pacage" set with value.
     """
 
-    def build_form_data(self, instance, dn_display_fields_updates=None):
-        """Build valid form data from a factory instance, then update
-        `demarches_simplifiees_display_fields` with updates.
-
-        Clears `demarche_simplifiee_pre_fill_config` to avoid unrelated validation
-        failures (the factory's pre-fill references form fields that require
-        regulation fixtures).
-        """
-        data = instance_to_form_data(instance)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
-        if dn_display_fields_updates:
-            data = update_data_jsonfield_with_new_entry(
-                data,
-                "demarches_simplifiees_display_fields",
-                dn_display_fields_updates,
-            )
-        return data
-
     def test_validation_when_demarche_simplifiee_number_is_set(self):
         """Form is not valid when city or organization or pacage are not set."""
         config = DCConfigHaieFactory()
-        data = self.build_form_data(config)
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         assert not form.is_valid()
         assert "demarches_simplifiees_display_fields" in form.errors
 
-        # WHEN pacage is missing in `demarches_simplifiees_display_fields`
-        data = self.build_form_data(
-            config, {"city": "XYZ123", "organization": "XYZ456"}
+    def test_admin_form_invalid_when_pacage_missing(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "city": "XYZ123",
+                "organization": "XYZ456",
+            }
         )
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        form = ConfigHaieTestForm(data=data, instance=config)
+        assert not form.is_valid()
+        assert "demarches_simplifiees_display_fields" in form.errors
+
+    def test_admin_form_invalid_when_city_missing(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "pacage": "XYZ789",
+                "organization": "XYZ456",
+            }
+        )
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         # THEN form is not valid
         assert not form.is_valid()
         assert "demarches_simplifiees_display_fields" in form.errors
 
-        # WHEN city is missing in `demarches_simplifiees_display_fields`
-        data = self.build_form_data(
-            config, {"pacage": "XYZ789", "organization": "XYZ456"}
-        )
-        form = ConfigHaieTestForm(data=data, instance=config)
-        # THEN form is not valid
-        assert not form.is_valid()
-        assert "demarches_simplifiees_display_fields" in form.errors
-
-        # WHEN organization is missing in `demarches_simplifiees_display_fields`
-        data = update_data_jsonfield_with_new_entry(
-            data,
-            "demarches_simplifiees_display_fields",
-            {
+    def test_admin_form_invalid_when_organization_missing(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
                 "pacage": "XYZ789",
                 "city": "XYZ123",
-            },
+            }
         )
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
-        # THEN form is not valid
         assert not form.is_valid()
         assert "demarches_simplifiees_display_fields" in form.errors
 
-        # WHEN `demarches_simplifiees_display_fields` has all required values
-        data = self.build_form_data(
-            config, {"pacage": "XYZ789", "organization": "XYZ456"}
+    def test_admin_form_valid_when_all_are_filled(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "pacage": "XYZ789",
+                "city": "XYZ123",
+                "organization": "XYZ456",
+            }
         )
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
-        # THEN form is valid
         assert form.is_valid(), form.errors
