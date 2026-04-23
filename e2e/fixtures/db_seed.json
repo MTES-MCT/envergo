@@ -440,7 +440,8 @@
       ],
       "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
       "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
-      "demarche_simplifiee_number": "123456"
+      "demarche_simplifiee_number": "123456",
+      "demarches_simplifiees_display_fields": {"project_url": "ABC123"}
     }
   },
   {
