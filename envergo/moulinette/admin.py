@@ -481,7 +481,6 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         are not filled by default.
         """
         cleaned_data = super().clean()
-
         display_dn_fields = cleaned_data.get("demarches_simplifiees_display_fields")
         dn_number = cleaned_data.get("demarche_simplifiee_number")
         if dn_number and (
@@ -490,7 +489,11 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             or not display_dn_fields.get("organization", None)
             or not display_dn_fields.get("pacage", None)
         ):
-            self.add_error("demarches_simplifiees_display_fields", "")
+            self.add_error(
+                "demarches_simplifiees_display_fields",
+                "Les champs city, organization et pacage sont obligatoires "
+                "lorsque le numéro de la démarche est rempli.",
+            )
 
         if not cleaned_data.get("single_procedure"):
             return cleaned_data

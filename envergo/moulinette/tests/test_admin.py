@@ -224,12 +224,19 @@ class TestConfigHaieAaL3503FormValidation:
     def build_form_data(self, instance, **overrides):
         """Build valid form data from a factory instance, then apply overrides.
 
-        Clears demarche_simplifiee_pre_fill_config to avoid unrelated validation
+        Clears `demarche_simplifiee_pre_fill_config` to avoid unrelated validation
         failures (the factory's pre-fill references form fields that require
         regulation fixtures).
+        Add mandatories keys in `demarches_simplifiees_display_fields` to avoid
+        unrelated validation failures.
         """
         data = instance_to_form_data(instance)
         data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data = update_data_jsonfield_with_new_entry(
+            data,
+            "demarches_simplifiees_display_fields",
+            {"city": "XYZ123", "organization": "XYZ456", "pacage": "XYZ789"},
+        )
         data.update(overrides)
         return data
 
