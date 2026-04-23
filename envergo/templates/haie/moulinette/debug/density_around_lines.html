@@ -30,7 +30,6 @@
                 <th scope="col">Zone</th>
                 <th scope="col">X_densite</th>
                 <th scope="col">Densité</th>
-                <th scope="col">Coefficient</th>
               </tr>
             </thead>
             <tbody>
@@ -48,7 +47,6 @@
                     {% endif %}
                   </td>
                   <td>{{ row.high_density|yesno:"haute,basse,-" }}</td>
-                  <td>{{ row.coefficient }}</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -58,23 +56,21 @@
     </div>
   </div>
 
-  {% for zone_id, config in ru_zone_configs.items %}
-    <div class="fr-table fr-table--sm">
-      <div class="fr-table__wrapper">
-        <div class="fr-table__container">
-          <div class="fr-table__content">
-            <table>
-              <caption>Matrice de coefficients (zone {{ zone_id }}) — X_densite : {{ config.X_densite }} ml/ha</caption>
-              <thead>
+  <div class="fr-table fr-table--sm">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <caption>Matrice de coefficients</caption>
+            <tbody>
+              {% for zone_id, config in ru_zone_configs.items %}
                 <tr>
                   <th scope="col">
-                    <span class="fr-sr-only">Type de haie</span>
+                    Zone {{ zone_id }} <span class="fr-text--light">(X_densité : {{ config.X_densite }} ml/ha)</span>
                   </th>
                   <th scope="col">Haute densité</th>
                   <th scope="col">Basse densité</th>
                 </tr>
-              </thead>
-              <tbody>
                 <tr>
                   <th scope="row">Non arborée</th>
                   <td>{{ config.R1_non_arboree_HD }}</td>
@@ -85,11 +81,11 @@
                   <td>{{ config.R3_arboree_HD }}</td>
                   <td>{{ config.R4_arboree_LD }}</td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  {% endfor %}
+  </div>
 {% endif %}
