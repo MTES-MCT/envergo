@@ -80,9 +80,9 @@ fieldset.module.recipients:has(input[type="checkbox"]:checked)
   }
 
   .admin-accordion__btn {
-    border: none;
     display: inline-flex;
     flex-direction: row;
+    align-items: center;
     width: 100%;
     padding: 0.5rem 0.75rem;
     line-height: 1.5rem;
