@@ -133,9 +133,6 @@ class DCConfigHaieFactory(DjangoModelFactory):
     ]
     demarches_simplifiees_display_fields = {
         "project_url": "ABC123",
-        "city": "XYZ123",
-        "organization": "XYZ456",
-        "pacage": "XYZ789",
     }
 
 
