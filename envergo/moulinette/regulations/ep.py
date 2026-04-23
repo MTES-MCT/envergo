@@ -991,9 +991,14 @@ class EspecesProtegeesRegimeUnique(
         context = super().get_debug_context()
 
         per_hedge_results = self.per_hedge_results
+        per_hedge_coefficients = self.catalog.get("ru_per_hedge_coefficients", {})
+        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
         hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["id"], "-")
+            coeff_brut = per_hedge_coefficients.get(row["id"], 0.0)
+            row["coeff_ru_brut"] = coeff_brut
+            row["coeff_ru_majore"] = round(coeff_brut + bonus, 2)
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
