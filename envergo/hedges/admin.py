@@ -92,7 +92,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
         content = render_to_string(
             "hedges/admin/_hedges_species.html",
-            context={"species": obj.get_all_species()},
+            context={"species": obj.get_all_species_hru()},
         )
         return mark_safe(content)
 
@@ -103,21 +103,23 @@ class SpeciesAdmin(admin.ModelAdmin):
         "common_name",
         "scientific_name",
         "group",
+        "taxref_group",
         "level_of_concern",
         "highly_sensitive",
+        "cd_ref",
         "taxref_ids",
     ]
     search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
-    readonly_fields = ["kingdom", "taxref_ids"]
+    readonly_fields = ["kingdom", "taxref_ids", "cd_ref", "taxref_group"]
 
 
 class SpeciesMapAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
         choices=HedgeTypeFactory.build_from_context(
             single_procedure=False
-        ).choices,  # EP s'applique uniquement à "droit constant" pour le moment
+        ).choices,
         widget=forms.CheckboxSelectMultiple,
         label="Types de haies considérés",
         required=False,
@@ -138,6 +140,7 @@ class SpeciesMapAdmin(admin.ModelAdmin):
         "map",
         "hedge_types",
         "hedge_properties",
+        "level_of_concern",
     ]
     search_fields = [
         "species__common_name",
