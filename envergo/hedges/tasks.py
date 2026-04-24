@@ -10,6 +10,7 @@ from config.celery_app import app
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     IMPORT_STATUSES,
+    LEVELS_OF_CONCERN,
     HedgeTypeFactory,
     Species,
     SpeciesMap,
@@ -92,30 +93,32 @@ def extract_file(field_file):
 
     if field_file.url.startswith("http"):
         r = requests.get(field_file.url, stream=True)
-        content = io.StringIO(r.content.decode())
+        # utf-8-sig to remove the eventual bom
+        content = io.StringIO(r.content.decode("utf-8-sig"))
         return content
 
     elif os.path.exists(field_file.path):
         content = open(field_file.path, "rb").read()
-        return io.StringIO(content.decode())
+        return io.StringIO(content.decode("utf-8-sig"))
 
     else:
         raise RuntimeError("File not found")
 
 
 def process_species_file_map_row(row, smf):
-    """Process a single file row."""
-    if "CD_NOM" in row:
-        species_taxref_id = row["CD_NOM"]
-        species = Species.objects.get(taxref_ids__contains=[species_taxref_id])
-    else:
-        species = Species.objects.get(common_name=row["common_name"])
+    """Process a single CSV row, creating a SpeciesMap.
+
+    Supports three species identification methods (tried in order):
+    CD_REF (RU format), CD_NOM (legacy), common_name (legacy).
+    When CD_REF is used and the species doesn't exist, a stub is created.
+    """
+    species = find_or_create_species(row)
 
     hedge_types = []
     for hedge_type in HedgeTypeFactory.build_from_context(
         single_procedure=False
-    ).names:  # EP s'applique uniquement à "droit constant" pour le moment
-        if bool(row[hedge_type]):
+    ).values:
+        if row.get(hedge_type) and bool(row[hedge_type]):
             hedge_types.append(hedge_type)
 
     hedge_properties = []
@@ -123,10 +126,59 @@ def process_species_file_map_row(row, smf):
         if row.get(hedge_property, False):
             hedge_properties.append(hedge_property)
 
+    local_level = parse_level_of_concern(row.get("level_of_concern", ""))
+
     return SpeciesMap(
         species=species,
         map=smf.map,
         species_map_file=smf,
         hedge_types=hedge_types,
         hedge_properties=hedge_properties,
+        level_of_concern=local_level,
     )
+
+
+def find_or_create_species(row):
+    """Look up a Species from a CSV row, creating a stub if needed.
+
+    Supports CD_REF (RU), CD_NOM (legacy), and common_name (legacy).
+    For CD_REF, missing species are auto-created with placeholder names
+    that import_taxref will later enrich.
+    """
+    if "CD_REF" in row and row["CD_REF"]:
+        cd_ref = int(row["CD_REF"])
+        species, _ = Species.objects.get_or_create(
+            cd_ref=cd_ref,
+            defaults={
+                "scientific_name": f"CD_REF_{cd_ref}",
+                "common_name": f"Espèce {cd_ref}",
+            },
+        )
+    elif "CD_NOM" in row:
+        species = Species.objects.get(taxref_ids__contains=[row["CD_NOM"]])
+
+    else:
+        species = Species.objects.get(common_name=row["common_name"])
+
+    # If none of the identification fields exist, the method will just fail
+    # with an exception. Let it, that will abort the entire process which is the
+    # expected behavior.
+    return species
+
+
+# Reverse mapping from display labels ("Majeur", "Très fort"…) to database
+# values ("majeur", "tres_fort"…), used to normalize CSV import data.
+LEVEL_OF_CONCERN_DISPLAY_TO_DB = {label: value for value, label in LEVELS_OF_CONCERN}
+
+
+def parse_level_of_concern(raw_value):
+    """Convert a display-format level_of_concern to its database value."""
+
+    stripped = raw_value.strip()
+    if not stripped:
+        return None
+    db_value = LEVEL_OF_CONCERN_DISPLAY_TO_DB.get(stripped)
+    if db_value is None:
+        logger.warning("Unknown level_of_concern value: %s", stripped)
+        db_value = stripped.lower()
+    return db_value
