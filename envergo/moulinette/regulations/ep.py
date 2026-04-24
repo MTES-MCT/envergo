@@ -57,7 +57,7 @@ class EPMixin:
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies:
-            catalog["protected_species"] = haies.get_all_species()
+            catalog["protected_species"] = haies.get_all_species_hru()
         return catalog
 
 
@@ -100,7 +100,7 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies:
-            species = haies.get_all_species()
+            species = haies.get_all_species_hru()
             catalog["protected_species"] = species
             catalog["fauna_sensitive_species"] = [
                 s for s in species if s.highly_sensitive and s.kingdom == "animalia"
@@ -793,10 +793,16 @@ class EspecesProtegeesRegimeUnique(
     def get_catalog_data(self):
         """Populate the catalog with EP régime unique inputs."""
 
+        Overrides the HRU species list from EPMixin with the RU species list,
+        which uses a 400m buffer and excludes majeur species not observed locally.
+        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
             return catalog
+
+        # Override HRU species with RU species
+        catalog["protected_species"] = haies.get_all_species()
 
         catalog.update(self.get_density_catalog_data())
 

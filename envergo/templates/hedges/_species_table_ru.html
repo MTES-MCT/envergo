@@ -1,0 +1,37 @@
+{% load hedges %}
+
+<div class="fr-table fr-table--no-caption">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <caption>Liste des espèces protégées potentiellement présentes</caption>
+          <thead>
+            <tr>
+              <th>Groupe</th>
+              <th>Nom commun</th>
+              <th>Nom scientifique</th>
+              <th>Niveau d'enjeu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in species %}
+              <tr>
+                <td>{{ s.taxref_group }}</td>
+                <td>{{ s.common_name }}</td>
+                <td>
+                  <i>{{ s.scientific_name }}</i>
+                </td>
+                <td>{{ s.local_level_of_concern|level_of_concern_display }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4">Aucune espèce spécifique disponible pour l'affichage</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
