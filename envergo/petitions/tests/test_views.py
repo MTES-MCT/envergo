@@ -2504,6 +2504,7 @@ def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user
     # THEN response is 403 and specific template is used
     assert response.status_code == 403
     assert response.template_name == "haie/petitions/403_token_expired.html"
+    assert "https://tally.so/r/Gxol8e" in response.context["ask_new_link_url"]
 
     # GIVEN a token already accepted by another user (is not valid)
     other_haie_user = UserFactory(is_haie_user=True)
