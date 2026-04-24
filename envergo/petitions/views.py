@@ -5,7 +5,7 @@ import re
 import shutil
 import tempfile
 from collections import defaultdict
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import fiona
 import requests
@@ -906,22 +906,42 @@ class BasePetitionProjectInstructorView(
                 invitation_token_qs = InvitationToken.objects.filter(
                     token=invitation_token
                 )
-                if (
-                    invitation_token_qs.exists()
-                    and not invitation_token_qs.get().is_valid(self.request.user)
-                ):
-                    # Add button url in context
-                    ask_new_link_url = "https://tally.so/r/Gxol8e"
-                    context = {"ask_new_link_url": ask_new_link_url}
-                    # Log event
-                    self.event_action = "acces_interdit"
-                    self.log_event_action(request)
-                    return TemplateResponse(
-                        request=request,
-                        context=context,
-                        template="haie/petitions/403_token_expired.html",
-                        status=403,
-                    )
+                if invitation_token_qs.exists():
+                    invitation_token_object = invitation_token_qs.get()
+                    if not invitation_token_object.is_valid(self.request.user):
+                        # Add button url in context
+                        ask_new_link_url_base = "https://tally.so/r/Gxol8e"
+                        user = self.request.user
+                        city = get_context_from_ds(self.object)["ds_info"]["city"]
+                        petition_project_consultation_url = (
+                            self.request.build_absolute_uri(
+                                reverse(
+                                    "petition_project_instructor_consultations_view",
+                                    kwargs={"reference": self.object.reference},
+                                )
+                            )
+                        )
+                        ask_new_link_params = {
+                            "user_name": user.name,
+                            "user_email": user.email,
+                            "reference": kwargs.get("reference"),
+                            "city": city,
+                            "token": invitation_token,
+                            "instructor_email": invitation_token_object.created_by.email,
+                            "callback_url": petition_project_consultation_url,
+                        }
+                        context = {
+                            "ask_new_link_url": f"{ask_new_link_url_base}?{urlencode(ask_new_link_params)}"
+                        }
+                        # Log event
+                        self.event_action = "acces_interdit"
+                        self.log_event_action(request)
+                        return TemplateResponse(
+                            request=request,
+                            context=context,
+                            template="haie/petitions/403_token_expired.html",
+                            status=403,
+                        )
 
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
