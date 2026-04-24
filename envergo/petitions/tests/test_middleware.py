@@ -248,10 +248,10 @@ def test_used_token_shows_warning(
     assert "n'est plus valide" in str(message_list[0])
 
 
-def test_authenticated_user_with_permission_on_project_with_token_in_url_dont_use_token(
+def test_authenticated_user_with_permission_on_project_with_token_in_url_cannot_process_token(
     rf, middleware, valid_invitation_token, haie_user_44
 ):
-    """Test that valid token is processed for authenticated user from URL."""
+    """Test that valid token from URL is not processed for authenticated user with view permissions on project."""
     url = f"/?{settings.INVITATION_TOKEN_COOKIE_NAME}={valid_invitation_token.token}"
     request = rf.get(url)
     request.user = haie_user_44
@@ -259,7 +259,29 @@ def test_authenticated_user_with_permission_on_project_with_token_in_url_dont_us
 
     middleware(request)
 
-    # Token should not be accepted
+    # Token should not be assigned
+    valid_invitation_token.refresh_from_db()
+    assert valid_invitation_token.user is None
+
+    # User should not see success message
+    message_list = list(messages.get_messages(request))
+    assert len(message_list) == 0
+
+
+def test_authenticated_user_with_permission_on_project_with_token_in_cookie_cannot_process_token(
+    rf, middleware, valid_invitation_token, haie_user_44
+):
+    """Test that valid token from cookie is not processed for authenticated user with view permissions on project."""
+    request = rf.get("/")
+    request.user = haie_user_44
+    request.COOKIES = {
+        settings.INVITATION_TOKEN_COOKIE_NAME: valid_invitation_token.token
+    }
+    add_messages_middleware(request)
+
+    middleware(request)
+
+    # Token should not be assigned
     valid_invitation_token.refresh_from_db()
     assert valid_invitation_token.user is None
 
