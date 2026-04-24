@@ -145,7 +145,7 @@ def test_moulinette_haie_has_specific_behavior():
 def test_config_haie_activated_has_missing_demarche_simplifiee_number(
     loire_atlantique_department,  # noqa
 ):
-    """Check demarche_simplifiee_number_required_if_activated constraint"""
+    """Check `demarche_simplifiee_number_required_if_activated` constraint"""
     config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
@@ -154,7 +154,7 @@ def test_config_haie_activated_has_missing_demarche_simplifiee_number(
 def test_config_haie_with_demarche_simplifiee_number_has_missing_project_url_id(
     loire_atlantique_department,  # noqa
 ):
-    """Check project_url_id_required_if_demarche_number constraint"""
+    """Check `project_url_id_required_if_demarche_number` constraint"""
     config_haie = ConfigHaie(
         department=loire_atlantique_department, demarche_simplifiee_number="123456789"
     )

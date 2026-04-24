@@ -318,38 +318,67 @@ class TestConfigHaieDNDisplayFieldValidation:
     """
 
     def test_validation_when_demarche_simplifiee_number_is_set(self):
-        """Form skips AA L350-3 validation when single_procedure is False."""
-        instance = DCConfigHaieFactory(
-            demarches_simplifiees_display_fields={"project_url": "ABC123"}
-        )
-        data = instance_to_form_data(instance)
+        """Form is not valid when city or organization or pacage are not set."""
+        config = DCConfigHaieFactory()
+        data = instance_to_form_data(config)
         data["demarche_simplifiee_pre_fill_config"] = "[]"
-        form = ConfigHaieTestForm(data=data, instance=instance)
+        form = ConfigHaieTestForm(data=data, instance=config)
         assert not form.is_valid()
         assert "demarches_simplifiees_display_fields" in form.errors
 
-        # WHEN only city is set in `demarches_simplifiees_display_fields`
-        data = update_data_jsonfield_with_new_entry(
-            data, "demarches_simplifiees_display_fields", {"city": "XYZ123"}
+    def test_admin_form_invalid_when_pacage_missing(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "city": "XYZ123",
+                "organization": "XYZ456",
+            }
         )
-        form = ConfigHaieTestForm(data=data, instance=instance)
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        form = ConfigHaieTestForm(data=data, instance=config)
+        assert not form.is_valid()
+        assert "demarches_simplifiees_display_fields" in form.errors
+
+    def test_admin_form_invalid_when_city_missing(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "pacage": "XYZ789",
+                "organization": "XYZ456",
+            }
+        )
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        form = ConfigHaieTestForm(data=data, instance=config)
         # THEN form is not valid
         assert not form.is_valid()
         assert "demarches_simplifiees_display_fields" in form.errors
 
-        # WHEN only city and organization are set in `demarches_simplifiees_display_fields`
-        data = update_data_jsonfield_with_new_entry(
-            data, "demarches_simplifiees_display_fields", {"organization": "XYZ456"}
+    def test_admin_form_invalid_when_organization_missing(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "pacage": "XYZ789",
+                "city": "XYZ123",
+            }
         )
-        form = ConfigHaieTestForm(data=data, instance=instance)
-        # THEN form is not valid
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        form = ConfigHaieTestForm(data=data, instance=config)
         assert not form.is_valid()
         assert "demarches_simplifiees_display_fields" in form.errors
 
-        # WHEN city, organization and pacate are set in `demarches_simplifiees_display_fields`
-        data = update_data_jsonfield_with_new_entry(
-            data, "demarches_simplifiees_display_fields", {"pacage": "XYZ789"}
+    def test_admin_form_valid_when_all_are_filled(self):
+        config = DCConfigHaieFactory(
+            demarches_simplifiees_display_fields={
+                "project_url": "ABC123",
+                "pacage": "XYZ789",
+                "city": "XYZ123",
+                "organization": "XYZ456",
+            }
         )
-        form = ConfigHaieTestForm(data=data, instance=instance)
-        # THEN form is valid
+        data = instance_to_form_data(config)
+        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        form = ConfigHaieTestForm(data=data, instance=config)
         assert form.is_valid(), form.errors
