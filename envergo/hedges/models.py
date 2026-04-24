@@ -671,6 +671,7 @@ KINGDOMS = Choices(
 )
 
 LEVELS_OF_CONCERN = Choices(
+    ("non_documente", "Non documenté"),
     ("faible", "Faible"),
     ("moyen", "Moyen"),
     ("fort", "Fort"),
@@ -692,14 +693,28 @@ class Species(models.Model):
         null=True, verbose_name="Ids TaxRef (cd_nom)", base_field=models.IntegerField()
     )
 
-    # This "group" is an ad-hoc category, not related to the official biology taxonomy
-    group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
+    # Canonical TaxRef identifier — unique per species reference taxon.
+    cd_ref = models.IntegerField(
+        "CD_REF TaxRef", unique=True, null=True, blank=True
+    )
+
+    # Deprecated ad-hoc classification, kept for legacy data. Prefer taxref_group.
+    group = models.CharField(
+        "Groupe (obsolète)",
+        choices=SPECIES_GROUPS,
+        max_length=64,
+        blank=True,
+        help_text="Classification ad-hoc obsolète. Utiliser le groupe TaxRef.",
+    )
+
+    # Official group from TaxRef GROUP2_INPN field.
+    taxref_group = models.CharField("Groupe TaxRef", max_length=128, blank=True)
 
     kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
     common_name = models.CharField("Nom commun", max_length=255)
     scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(
-        "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN
+        "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN, blank=True
     )
     highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
 
@@ -739,12 +754,20 @@ class SpeciesMap(models.Model):
         base_field=models.CharField(
             max_length=32,
             choices=HedgeTypeFactory.build_from_context(single_procedure=False).choices,
-        ),  # EP s'applique uniquement à "droit constant" pour le moment
+        ),
     )
     hedge_properties = ArrayField(
         verbose_name="Propriétés de la haie",
         help_text="Propriétés requises par l'espèce",
         base_field=models.CharField(max_length=32, choices=HEDGE_PROPERTIES),
+    )
+    level_of_concern = models.CharField(
+        "Niveau d'enjeu local",
+        max_length=16,
+        choices=LEVELS_OF_CONCERN,
+        null=True,
+        blank=True,
+        help_text="Niveau d'enjeu spécifique à cette carte/département.",
     )
 
     class Meta:
