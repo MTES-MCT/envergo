@@ -4,6 +4,12 @@
 
 {% block title %}Questions fréquentes{% endblock %}
 
+{% block messages %}
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-12 fr-col-md-8 fr-col-lg-7 fr-col-xl-6">{% include '_messages.html' %}</div>
+  </div>
+{% endblock %}
+
 {% block content %}
   <article>
     <div class="fr-grid-row fr-grid-row--gutters">

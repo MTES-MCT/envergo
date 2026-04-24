@@ -215,7 +215,9 @@
         {% block before-content %}
           <div id="before-content" class="fr-container">
             {% block messages %}
-              {% include '_messages.html' %}
+              <div class="fr-grid-row fr-grid-row--center">
+                <div class="fr-col fr-col-md-8 fr-col-lg-7 fr-col-xl-6">{% include '_messages.html' %}</div>
+              </div>
             {% endblock %}
           </div>
         {% endblock %}
