@@ -910,10 +910,15 @@ class BasePetitionProjectInstructorView(
                     invitation_token_qs.exists()
                     and not invitation_token_qs.get().is_valid(self.request.user)
                 ):
+                    # Add button url in context
+                    ask_new_link_url = "https://tally.so/r/Gxol8e"
+                    context = {"ask_new_link_url": ask_new_link_url}
+                    # Log event
                     self.event_action = "acces_interdit"
                     self.log_event_action(request)
                     return TemplateResponse(
                         request=request,
+                        context=context,
                         template="haie/petitions/403_token_expired.html",
                         status=403,
                     )
