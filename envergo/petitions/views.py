@@ -899,19 +899,27 @@ class BasePetitionProjectInstructorView(
         self.object = self.get_object()
         if not self.has_view_permission(request, self.object):
             # If token used is expired returns specific 403
-            invitation_token = request.GET[settings.INVITATION_TOKEN_COOKIE_NAME]
-            invitation_token_qs = InvitationToken.objects.filter(token=invitation_token)
-            if invitation_token_qs.exists() and not invitation_token_qs.get().is_valid(
-                self.request.user
-            ):
-                return TemplateResponse(
-                    request=request,
-                    template="haie/petitions/403_token_expired.html",
-                    status=403,
+            invitation_token = request.GET.get(
+                settings.INVITATION_TOKEN_COOKIE_NAME, ""
+            )
+            if invitation_token:
+                invitation_token_qs = InvitationToken.objects.filter(
+                    token=invitation_token
                 )
+                if (
+                    invitation_token_qs.exists()
+                    and not invitation_token_qs.get().is_valid(self.request.user)
+                ):
+                    return TemplateResponse(
+                        request=request,
+                        template="haie/petitions/403_token_expired.html",
+                        status=403,
+                    )
+
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
+
         res = super().get(request, *args, **kwargs)
         self.log_event_action(self.request)
         return res
