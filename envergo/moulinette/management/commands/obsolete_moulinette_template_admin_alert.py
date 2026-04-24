@@ -13,6 +13,9 @@ class Command(BaseCommand):
     help = "Post a message when a moulinette template has an obsolete key."
 
     def handle(self, *args, **options):
+        if not settings.ENVERGO_AMENAGEMENT_DOMAIN:
+            return None
+
         obsolete_templates = MoulinetteTemplate.objects.exclude(
             key__in=[tuple[0] for tuple in get_all_template_keys()]
         ).select_related("config__department", "criterion")
