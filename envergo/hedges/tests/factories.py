@@ -62,6 +62,7 @@ class SpeciesFactory(DjangoModelFactory):
 
     common_name = factory.Sequence(lambda n: f"Trucmuche {n}")
     scientific_name = factory.Sequence(lambda n: f"Machinchose {n}")
+    cd_ref = factory.Sequence(lambda n: 1000 + n)
 
     @factory.sequence
     def taxref_ids(n):
@@ -79,3 +80,4 @@ class SpeciesMapFactory(DjangoModelFactory):
     )
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
     hedge_properties = []
+    level_of_concern = None

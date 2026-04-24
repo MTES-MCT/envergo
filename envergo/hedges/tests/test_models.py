@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 import pytest
-from django.contrib.gis.geos import MultiPolygon
+from django.contrib.gis.geos import MultiPolygon, Polygon
 from shapely import centroid
 
 from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
@@ -144,10 +144,10 @@ def test_hedge_species_are_filtered_by_geography(
     calvados_map.zones.update(species_taxrefs=calvados_species.taxref_ids)
 
     hedge = aisne_hedge_data.hedges()[0]
-    assert set(hedge.get_species()) == set([aisne_species])
+    assert set(hedge.get_species_hru()) == set([aisne_species])
 
     hedge = calvados_hedge_data.hedges()[0]
-    assert set(hedge.get_species()) == set([calvados_species])
+    assert set(hedge.get_species_hru()) == set([calvados_species])
 
 
 def test_zone_filters_are_not_mixed():  # noqa
@@ -212,19 +212,19 @@ def test_zone_filters_are_not_mixed():  # noqa
             },
         ]
     )
-    species = acy_limé_hedges.get_all_species()
+    species = acy_limé_hedges.get_all_species_hru()
     assert set(species) == set([huppe, hypolais])
 
     # The second hedge in Acy should not return the Hypolaïs Ictérine anymore
     acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "degradee"
     acy_limé_hedges.save()
-    species = acy_limé_hedges.get_all_species()
+    species = acy_limé_hedges.get_all_species_hru()
     assert set(species) == set([huppe])
 
     acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "mixte"
     acy_limé_hedges.data[0]["additionalData"]["type_haie"] = "degradee"
     acy_limé_hedges.save()
-    species = acy_limé_hedges.get_all_species()
+    species = acy_limé_hedges.get_all_species_hru()
     assert set(species) == set([hypolais])
 
 
@@ -237,14 +237,14 @@ def test_hedge_data_species_are_filtered_by_geography(
     calvados_species = SpeciesMapFactory(map=calvados_map).species
     calvados_map.zones.update(species_taxrefs=calvados_species.taxref_ids)
 
-    assert set(aisne_hedge_data.get_all_species()) == set([aisne_species])
-    assert set(calvados_hedge_data.get_all_species()) == set([calvados_species])
+    assert set(aisne_hedge_data.get_all_species_hru()) == set([aisne_species])
+    assert set(calvados_hedge_data.get_all_species_hru()) == set([calvados_species])
 
     aisne_map.zones.all().update(species_taxrefs=[])
     calvados_map.zones.all().update(species_taxrefs=[])
 
-    assert set(aisne_hedge_data.get_all_species()) == set()
-    assert set(calvados_hedge_data.get_all_species()) == set()
+    assert set(aisne_hedge_data.get_all_species_hru()) == set()
+    assert set(calvados_hedge_data.get_all_species_hru()) == set()
 
 
 def test_species_are_filtered_by_hedge_type():
@@ -254,7 +254,7 @@ def test_species_are_filtered_by_hedge_type():
     hedge = HedgeFactory(additionalData__type_haie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species()
+    hedges_species = hedges.get_all_species_hru()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
@@ -263,7 +263,7 @@ def test_species_are_filtered_by_hedge_type():
         additionalData__type_haie="arbustive", additionalData__recemment_plantee=False
     )
     hedges = HedgeDataFactory(hedges=[hedge])
-    hedges_species = hedges.get_all_species()
+    hedges_species = hedges.get_all_species_hru()
     assert s1 not in hedges_species
     assert s2 not in hedges_species
     assert s3 in hedges_species
@@ -274,7 +274,7 @@ def test_species_are_filtered_by_hedge_type():
     )
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species()
+    hedges_species = hedges.get_all_species_hru()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
@@ -305,25 +305,25 @@ def test_species_are_filtered_by_hedge_features():
     hedge = HedgeFactory(
         additionalData__proximite_mare=False, additionalData__vieil_arbre=False
     )
-    hedge_species = hedge.get_species()
+    hedge_species = hedge.get_species_hru()
     assert set(hedge_species) == set([s4])
 
     hedge = HedgeFactory(
         additionalData__proximite_mare=True, additionalData__vieil_arbre=False
     )
-    hedge_species = hedge.get_species()
+    hedge_species = hedge.get_species_hru()
     assert set(hedge_species) == set([s2, s4])
 
     hedge = HedgeFactory(
         additionalData__proximite_mare=False, additionalData__vieil_arbre=True
     )
-    hedge_species = hedge.get_species()
+    hedge_species = hedge.get_species_hru()
     assert set(hedge_species) == set([s3, s4])
 
     hedge = HedgeFactory(
         additionalData__proximite_mare=True, additionalData__vieil_arbre=True
     )
-    hedge_species = hedge.get_species()
+    hedge_species = hedge.get_species_hru()
     assert set(hedge_species) == set([s1, s2, s3, s4])
 
 
@@ -336,17 +336,17 @@ def test_multiple_hedges_combine_their_species():
     hedge1 = HedgeFactory(
         additionalData__proximite_mare=True, additionalData__vieil_arbre=False
     )
-    hedge_species = hedge1.get_species()
+    hedge_species = hedge1.get_species_hru()
     assert set(hedge_species) == set([s2, s4])
 
     hedge2 = HedgeFactory(
         additionalData__proximite_mare=False, additionalData__vieil_arbre=True
     )
-    hedge_species = hedge2.get_species()
+    hedge_species = hedge2.get_species_hru()
     assert set(hedge_species) == set([s3, s4])
 
     hedges = HedgeDataFactory(hedges=[hedge1, hedge2])
-    all_species = hedges.get_all_species()
+    all_species = hedges.get_all_species_hru()
     assert set(all_species) == set([s2, s3, s4])
 
 
@@ -913,3 +913,238 @@ class TestDensityLazyComputation:
 
         with pytest.raises(AttributeError, match="density_around_centroid"):
             hedge_data.density
+
+
+class TestSpeciesModelFields:
+    """Phase 1: verify new fields on Species and SpeciesMap."""
+
+    def test_species_has_cd_ref_field(self):
+        species = SpeciesFactory(cd_ref=42)
+        species.refresh_from_db()
+        assert species.cd_ref == 42
+
+    def test_species_cd_ref_is_unique(self):
+        SpeciesFactory(cd_ref=99)
+        with pytest.raises(Exception):
+            SpeciesFactory(cd_ref=99)
+
+    def test_species_cd_ref_is_nullable(self):
+        species = SpeciesFactory(cd_ref=None)
+        species.refresh_from_db()
+        assert species.cd_ref is None
+
+    def test_species_has_taxref_group_field(self):
+        species = SpeciesFactory(taxref_group="Mammifères")
+        species.refresh_from_db()
+        assert species.taxref_group == "Mammifères"
+
+    def test_species_group_is_optional(self):
+        """The ad-hoc group field should accept blank values for new species."""
+        species = SpeciesFactory(group="")
+        species.refresh_from_db()
+        assert species.group == ""
+
+    def test_species_level_of_concern_is_optional(self):
+        """Global level_of_concern can be blank for species created from CD_REF only."""
+        species = SpeciesFactory(level_of_concern="")
+        species.refresh_from_db()
+        assert species.level_of_concern == ""
+
+    def test_species_map_has_level_of_concern(self):
+        sm = SpeciesMapFactory(level_of_concern="fort")
+        sm.refresh_from_db()
+        assert sm.level_of_concern == "fort"
+
+    def test_species_map_level_of_concern_is_nullable(self):
+        """Legacy SpeciesMaps can have null level_of_concern."""
+        sm = SpeciesMapFactory(level_of_concern=None)
+        sm.refresh_from_db()
+        assert sm.level_of_concern is None
+
+    def test_levels_of_concern_includes_non_documente(self):
+        from envergo.hedges.models import LEVELS_OF_CONCERN
+
+        values = [v for v, _ in LEVELS_OF_CONCERN]
+        assert "non_documente" in values
+
+
+class TestRuSpeciesQuerying:
+    """Phase 5: RU species querying with 400m buffer and observed/majeur filtering."""
+
+    # The test hedge runs roughly from lat 49.3508 to 49.3502 at lng 3.411
+    HEDGE_LAT = 49.3505
+
+    def _make_zone_near_hedge(self, map_obj, distance_m, species_taxrefs=None):
+        """Create a small zone at approximately `distance_m` north of the test hedge.
+
+        One degree of latitude is ~111 km at this latitude.
+        """
+        offset_deg = distance_m / 111_000.0
+        base_lat = self.HEDGE_LAT + offset_deg
+        size = 0.001
+        poly = Polygon([
+            (3.410, base_lat),
+            (3.420, base_lat),
+            (3.420, base_lat + size),
+            (3.410, base_lat + size),
+            (3.410, base_lat),
+        ])
+        return ZoneFactory(
+            map=map_obj,
+            geometry=MultiPolygon([poly]),
+            species_taxrefs=species_taxrefs or [],
+        )
+
+    def _make_hedge_in_aisne(self, hedge_type="mixte"):
+        """Create a hedge in the Aisne, near the test zone origin."""
+        return HedgeFactory(
+            latLngs=[
+                {"lat": 49.35080401731072, "lng": 3.410785365407426},
+                {"lat": 49.35021667499731, "lng": 3.4120515874961255},
+            ],
+            additionalData={
+                "type_haie": hedge_type,
+                "vieil_arbre": True,
+                "proximite_mare": True,
+                "mode_destruction": "arrachage",
+                "sur_parcelle_pac": True,
+                "ripisylve": False,
+                "connexion_boisement": False,
+            },
+        )
+
+    def test_ru_species_within_400m_buffer(self):
+        """Species in a zone within 400m of the hedge are returned."""
+        species = SpeciesFactory(cd_ref=5001)
+        map_obj = MapFactory(map_type="species", zones=None)
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[5001])
+        SpeciesMapFactory(
+            species=species,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="fort",
+        )
+
+        hedge = self._make_hedge_in_aisne()
+        result = hedge.get_species()
+        assert species in set(result)
+
+    def test_ru_species_outside_400m_excluded(self):
+        """Species in a zone beyond 400m of the hedge are not returned."""
+        species = SpeciesFactory(cd_ref=5002)
+        map_obj = MapFactory(map_type="species", zones=None)
+        self._make_zone_near_hedge(map_obj, 600, species_taxrefs=[5002])
+        SpeciesMapFactory(
+            species=species,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="fort",
+        )
+
+        hedge = self._make_hedge_in_aisne()
+        result = hedge.get_species()
+        assert species not in set(result)
+
+    def test_ru_majeur_observed_included(self):
+        """Majeur species observed locally (cd_ref in zone) are included."""
+        species = SpeciesFactory(cd_ref=5003)
+        map_obj = MapFactory(map_type="species", zones=None)
+        # Zone within 400m, species IS in species_taxrefs (observed locally)
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[5003])
+        SpeciesMapFactory(
+            species=species,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="majeur",
+        )
+
+        hedge = self._make_hedge_in_aisne()
+        result = hedge.get_species()
+        assert species in set(result)
+
+    def test_ru_majeur_not_observed_excluded(self):
+        """Majeur species NOT observed locally are excluded from the cortège."""
+        species = SpeciesFactory(cd_ref=5004)
+        map_obj = MapFactory(map_type="species", zones=None)
+        # Zone within 400m, but species NOT in species_taxrefs (not observed)
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[9999])
+        SpeciesMapFactory(
+            species=species,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="majeur",
+        )
+
+        hedge = self._make_hedge_in_aisne()
+        result = hedge.get_species()
+        assert species not in set(result)
+
+    def test_ru_non_majeur_included_even_without_observation(self):
+        """Non-majeur species are included regardless of observation status."""
+        species = SpeciesFactory(cd_ref=5005)
+        map_obj = MapFactory(map_type="species", zones=None)
+        # Zone within 400m, species NOT in species_taxrefs
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
+        SpeciesMapFactory(
+            species=species,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="fort",
+        )
+
+        hedge = self._make_hedge_in_aisne()
+        result = hedge.get_species()
+        assert species in set(result)
+
+    def test_ru_species_annotated_observed_locally(self):
+        """Species should be annotated with observed_locally boolean."""
+        observed = SpeciesFactory(cd_ref=5006)
+        not_observed = SpeciesFactory(cd_ref=5007)
+        map_obj = MapFactory(map_type="species", zones=None)
+        # Zone lists only cd_ref=5006
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[5006])
+        SpeciesMapFactory(
+            species=observed,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="fort",
+        )
+        SpeciesMapFactory(
+            species=not_observed,
+            map=map_obj,
+            hedge_types=["mixte"],
+            level_of_concern="moyen",
+        )
+
+        hedge = self._make_hedge_in_aisne()
+        result = list(hedge.get_species())
+
+        observed_result = next(s for s in result if s.cd_ref == 5006)
+        not_observed_result = next(s for s in result if s.cd_ref == 5007)
+        assert observed_result.observed_locally is True
+        assert not_observed_result.observed_locally is False
+
+    def test_ru_species_sorted_by_level_descending(self):
+        """Species should be sorted by level_of_concern descending."""
+        map_obj = MapFactory(map_type="species", zones=None)
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
+
+        faible = SpeciesFactory(cd_ref=6001, common_name="AA Faible")
+        fort = SpeciesFactory(cd_ref=6002, common_name="AA Fort")
+        majeur_observed = SpeciesFactory(cd_ref=6003, common_name="AA Majeur")
+        # Majeur is observed so it's included
+        self._make_zone_near_hedge(map_obj, 100, species_taxrefs=[6003])
+        for sp, level in [(faible, "faible"), (fort, "fort"), (majeur_observed, "majeur")]:
+            SpeciesMapFactory(
+                species=sp,
+                map=map_obj,
+                hedge_types=["mixte"],
+                level_of_concern=level,
+            )
+
+        hedge = self._make_hedge_in_aisne()
+        hedges = HedgeDataFactory(hedges=[hedge])
+        result = list(hedges.get_all_species())
+
+        levels = [s.local_level_of_concern for s in result]
+        assert levels == ["majeur", "fort", "faible"]
