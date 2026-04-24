@@ -16,6 +16,7 @@ from envergo.hedges.models import (
     SpeciesMap,
     SpeciesMapFile,
 )
+from envergo.hedges.species_stubs import make_stub_common_name, make_stub_scientific_name
 
 logger = logging.getLogger(__name__)
 
@@ -150,8 +151,8 @@ def find_or_create_species(row):
         species, _ = Species.objects.get_or_create(
             cd_ref=cd_ref,
             defaults={
-                "scientific_name": f"CD_REF_{cd_ref}",
-                "common_name": f"Espèce {cd_ref}",
+                "scientific_name": make_stub_scientific_name(cd_ref),
+                "common_name": make_stub_common_name(cd_ref),
             },
         )
     elif "CD_NOM" in row:
