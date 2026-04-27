@@ -7,9 +7,13 @@ from tempfile import TemporaryDirectory
 
 import requests
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from envergo.hedges.models import Species
-from envergo.hedges.species_stubs import has_placeholder_common_name, has_placeholder_scientific_name
+from envergo.hedges.species_stubs import (
+    has_placeholder_common_name,
+    has_placeholder_scientific_name,
+)
 
 # Download link can be found here
 # https://inpn.mnhn.fr/telechargement/referentielEspece/referentielTaxo
@@ -18,7 +22,7 @@ TAXREF_URL = "https://assets.patrinat.fr/files/referentiel/TAXREF_v18_2025.zip"
 
 
 class Command(BaseCommand):
-    help = "Update species data with official data from the TaxRef document."
+    help = "Update species records with official data from the TaxRef document."
 
     def add_arguments(self, parser):
         parser.add_argument("taxref_url", type=str, nargs="?", default=TAXREF_URL)
@@ -54,9 +58,7 @@ class Command(BaseCommand):
 
         The TaxRef file contains ~1.5M rows (one per cd_nom across all French
         taxa). Most rows don't match any Species in our database. For those
-        that do match, we update: taxref_ids (cd_nom array), kingdom,
-        taxref_group, cd_ref, and — for stub species — common and scientific
-        names.
+        that do match, we update the record from the taxonomy.
 
         Matching is done in-memory via two lookup dicts (by cd_ref and by
         scientific_name) to avoid per-row database queries.
@@ -66,18 +68,19 @@ class Command(BaseCommand):
 
         species_index = SpeciesIndex(Species.objects.all())
 
-        # Reset cd_nom arrays — they will be rebuilt from the TaxRef file
-        Species.objects.update(taxref_ids=[])
-        for s in species_index.all():
-            s.taxref_ids = []
+        with transaction.atomic():
+            # Reset cd_nom arrays — they will be rebuilt from the TaxRef file.
+            Species.objects.update(taxref_ids=[])
+            for s in species_index.all():
+                s.taxref_ids = []
 
-        with open(path) as csvfile:
-            reader = csv.DictReader(csvfile, delimiter="\t")
-            for row in reader:
-                self.process_row(row, species_index)
+            with open(path) as csvfile:
+                reader = csv.DictReader(csvfile, delimiter="\t")
+                for row in reader:
+                    self.process_row(row, species_index)
 
-        for s in species_index.all():
-            s.save()
+            for s in species_index.all():
+                s.save()
 
     def process_row(self, row, species_index):
         """Enrich a single Species from a TaxRef row, if it matches."""
@@ -92,7 +95,7 @@ class Command(BaseCommand):
         # Every TaxRef row carries one cd_nom. A single species (cd_ref) can
         # appear in many rows because historical synonyms each have their own
         # cd_nom. We accumulate all of them.
-        species.taxref_ids.append(row["CD_NOM"])
+        species.taxref_ids.append(int(row["CD_NOM"]))
         species.kingdom = row["REGNE"].lower()
 
         # Backfill cd_ref on legacy species that were matched by name only
@@ -128,7 +131,13 @@ class Command(BaseCommand):
 class SpeciesIndex:
     """In-memory index for fast Species lookup by cd_ref or scientific_name.
 
-    Avoids per-row database queries when processing the ~1.5M-row TaxRef file.
+    The TaxRef file has ~1.5M rows but we only care about the few hundred
+    Species already in our database. Loading them all into two dicts up front
+    turns each row's lookup into an O(1) hash probe instead of a DB query.
+
+    The index is mutable: when a TaxRef row enriches a stub Species (created
+    earlier by the CSV import with only a cd_ref), we register its real
+    scientific_name so later rows referencing the same name also match.
     """
 
     def __init__(self, queryset):
@@ -142,7 +151,9 @@ class SpeciesIndex:
 
     def find(self, cd_ref, scientific_name):
         """Find a Species by cd_ref first, then by scientific_name."""
-        return self.by_cd_ref.get(cd_ref) or self.by_scientific_name.get(scientific_name)
+        return self.by_cd_ref.get(cd_ref) or self.by_scientific_name.get(
+            scientific_name
+        )
 
     def register_cd_ref(self, cd_ref, species):
         """Add a cd_ref entry so subsequent rows with the same cd_ref match."""
