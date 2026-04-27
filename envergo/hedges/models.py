@@ -10,7 +10,16 @@ from django.contrib.gis.measure import D
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Case, Exists, F, IntegerField, OuterRef, Q, Value, When
+from django.db.models import (
+    Case,
+    Exists,
+    IntegerField,
+    OuterRef,
+    Q,
+    Subquery,
+    Value,
+    When,
+)
 from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod, Transformer
@@ -184,129 +193,29 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sous_ligne_electrique", None)
 
-    def get_species_filter_hru(self):
-        """Build the filter to get species possibly living in a single hedge.
+    @property
+    def effective_hedge_type(self):
+        """Return the hedge type to use for species filtering.
 
-        Species have requirements. For example, a "Pipistrelle commune" bat
-        MAY live in an "alignement arboré" or "haie multistrate" and
-        requires old trees (vieil_arbre is checked).
-
-        Also, there is a two way mechanism to filter species geographically.
-
-        Species are linked to a map through a "SpeciesMap" object. But each Zone
-        linked to the map has an additional field that links the species living in the
-        specific zone
+        Recently planted hedges are treated as degraded from a biodiversity
+        standpoint, regardless of their declared type.
         """
-        # if the hedge is recently planted, we consider it as a degradee hedge in a biodiversity point of view
-        hedge_type = (
-            HedgeTypeBase.DEGRADEE
-            if self.prop("recemment_plantee")
-            else self.hedge_type
-        )
+        if self.prop("recemment_plantee"):
+            return HedgeTypeBase.DEGRADEE
+        return self.hedge_type
 
-        q_hedge_type = Q(species_maps__hedge_types__contains=[hedge_type])
+    @property
+    def missing_ecological_properties(self):
+        """Return hedge properties that are explicitly absent.
 
-        properties_to_exclude = []
-        for p, _ in HEDGE_PROPERTIES:
-            if p in self.additionalData and not self.additionalData[p]:
-                properties_to_exclude.append(p)
-
-        filter = q_hedge_type
-        if properties_to_exclude:
-            q_exclude = Q(species_maps__hedge_properties__overlap=properties_to_exclude)
-            filter &= ~q_exclude
-
-        zone_subquery = (
-            Zone.objects.filter(geometry__intersects=self.geos_geometry)
-            .filter(map_id=OuterRef("species_maps__map_id"))
-            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
-        )
-        filter = filter & Q(Exists(zone_subquery))
-        return filter
-
-    def get_species_hru(self):
-        """Return known species that may be related to this hedge (HRU logic)."""
-
-        qs = (
-            Species.objects.filter(self.get_species_filter_hru())
-            .annotate(map_id=F("species_maps__map_id"))
-            .order_by("group", "common_name")
-            .distinct("group", "common_name")
-        )
-        return qs
-
-    def get_zones_hru(self):
-        """Return species zones intersecting this hedge (HRU logic)."""
-        zones = Zone.objects.filter(geometry__intersects=self.geos_geometry).filter(
-            map__map_type="species"
-        )
-        return zones
-
-    def get_species_filter(self):
-        """Build the RU filter for species potentially near this hedge.
-
-        Uses a 400m buffer for geographic coverage. All species linked to
-        intersecting maps via SpeciesMap are considered potentially present,
-        except "majeur" species that have not been observed locally (cd_ref
-        absent from zone.species_taxrefs).
+        Species requiring any of these properties will be excluded from the
+        cortège, since the hedge does not satisfy the ecological condition.
         """
-        hedge_type = (
-            HedgeTypeBase.DEGRADEE
-            if self.prop("recemment_plantee")
-            else self.hedge_type
-        )
-
-        nearby_zones = Zone.objects.filter(
-            geometry__dwithin=(self.geos_geometry, D(m=400)),
-            map__map_type="species",
-        )
-        map_ids_subquery = nearby_zones.values("map_id")
-
-        q_filter = Q(species_maps__map_id__in=map_ids_subquery)
-        q_filter &= Q(species_maps__hedge_types__contains=[hedge_type])
-
-        properties_to_exclude = [
+        return [
             p
             for p, _ in HEDGE_PROPERTIES
             if p in self.additionalData and not self.additionalData[p]
         ]
-        if properties_to_exclude:
-            q_filter &= ~Q(
-                species_maps__hedge_properties__overlap=properties_to_exclude
-            )
-
-        observed_subquery = Zone.objects.filter(
-            geometry__dwithin=(self.geos_geometry, D(m=400)),
-            map__map_type="species",
-            species_taxrefs__contains=[OuterRef("cd_ref")],
-        )
-        q_majeur_not_observed = Q(species_maps__level_of_concern="majeur") & ~Q(
-            Exists(observed_subquery)
-        )
-        q_filter &= ~q_majeur_not_observed
-
-        return q_filter
-
-    def get_species(self):
-        """Return species potentially near this hedge (RU logic).
-
-        Species are annotated with local_level_of_concern and observed_locally.
-        """
-        observed_subquery = Zone.objects.filter(
-            geometry__dwithin=(self.geos_geometry, D(m=400)),
-            map__map_type="species",
-            species_taxrefs__contains=[OuterRef("cd_ref")],
-        )
-        qs = (
-            Species.objects.filter(self.get_species_filter())
-            .annotate(
-                local_level_of_concern=F("species_maps__level_of_concern"),
-                observed_locally=Exists(observed_subquery),
-            )
-            .order_by("common_name")
-            .distinct("common_name")
-        )
-        return qs
 
 
 class HedgeList(list[Hedge]):
@@ -587,74 +496,12 @@ class HedgeData(models.Model):
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
     def get_all_species_hru(self):
-        """Return the local list of protected species (HRU logic)."""
-
-        filters = [h.get_species_filter_hru() for h in self.hedges_to_remove()]
-        if not filters:
-            return Species.objects.none()
-
-        union = reduce(operator.or_, filters)
-        species = (
-            Species.objects.filter(union)
-            .annotate(map_id=F("species_maps__map_id"))
-            .order_by("group", "common_name")
-            .distinct("group", "common_name")
-        )
-        return species
-
-    # Level-of-concern ordering for RU species queries (highest = most important)
-    LEVEL_ORDER = {
-        "majeur": 6,
-        "tres_fort": 5,
-        "fort": 4,
-        "moyen": 3,
-        "faible": 2,
-        "non_documente": 1,
-    }
+        """Return the local list of protected species (legacy HRU logic)."""
+        return Species.hru.for_hedges(self.hedges_to_remove())
 
     def get_all_species(self):
-        """Return the RU list of protected species.
-
-        Annotated with local_level_of_concern, observed_locally, and sorted
-        by level_of_concern descending. Majeur species not observed locally
-        are excluded by the per-hedge filter.
-        """
-        hedges = self.hedges_to_remove()
-        filters = [h.get_species_filter() for h in hedges]
-        if not filters:
-            return Species.objects.none()
-
-        union = reduce(operator.or_, filters)
-
-        all_hedges_geom = MultiLineString(
-            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
-        )
-        observed_subquery = Zone.objects.filter(
-            geometry__dwithin=(all_hedges_geom, D(m=400)),
-            map__map_type="species",
-            species_taxrefs__contains=[OuterRef("cd_ref")],
-        )
-
-        level_whens = [
-            When(species_maps__level_of_concern=k, then=Value(v))
-            for k, v in self.LEVEL_ORDER.items()
-        ]
-
-        species = (
-            Species.objects.filter(union)
-            .annotate(
-                local_level_of_concern=F("species_maps__level_of_concern"),
-                observed_locally=Exists(observed_subquery),
-                level_order=Case(
-                    *level_whens,
-                    default=Value(0),
-                    output_field=IntegerField(),
-                ),
-            )
-            .order_by("-level_order", "common_name")
-            .distinct()
-        )
-        return species
+        """Return the RU list of protected species."""
+        return Species.ru.for_hedges(self.hedges_to_remove())
 
     def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
@@ -801,6 +648,183 @@ LEVELS_OF_CONCERN = Choices(
     ("majeur", "Majeur"),
 )
 
+# --- Species query infrastructure ----------------------------------------
+#
+# Two query pipelines exist for finding protected species near hedges:
+#
+# HRU (droit constant): species must be confirmed in zones that directly
+# intersect the hedge, AND their taxref_ids must overlap the zone's
+# species_taxrefs array. Strict, observation-based.
+#
+# RU (régime unique): all species from SpeciesMaps within 400m are
+# considered potentially present. "Majeur" species not observed locally
+# (cd_ref absent from nearby zone.species_taxrefs) are excluded entirely.
+#
+# Each pipeline is exposed as a custom manager on the Species model:
+#   Species.hru.for_hedges(hedges)
+#   Species.ru.for_hedges(hedges)
+
+# In RU, we check species within a 400m buffer around each hedges
+SPECIES_BUFFER_DISTANCE = D(m=400)
+
+LEVEL_OF_CONCERN_ORDER = {
+    value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1)
+}
+
+LEVEL_OF_CONCERN_WHENS = [
+    When(level_of_concern=value, then=Value(rank))
+    for value, rank in LEVEL_OF_CONCERN_ORDER.items()
+]
+
+
+def build_observed_species_subquery(geometry):
+    """Build a subquery matching zones where a species was observed locally.
+
+    A species is considered observed when its cd_ref appears in the
+    species_taxrefs array of a species-map zone within the buffer distance
+    of the given geometry.
+    """
+    return Zone.objects.filter(
+        geometry__dwithin=(geometry, SPECIES_BUFFER_DISTANCE),
+        map__map_type="species",
+        species_taxrefs__contains=[OuterRef("cd_ref")],
+    )
+
+
+def build_hru_filter(hedge):
+    """Build a Q filter for species confirmed in zones intersecting this hedge.
+
+    Requires both geographic overlap (zone intersects hedge) and taxonomic
+    overlap (species' taxref_ids appear in the zone's species_taxrefs).
+    """
+    q_filter = Q(species_maps__hedge_types__contains=[hedge.effective_hedge_type])
+
+    if hedge.missing_ecological_properties:
+        q_filter &= ~Q(
+            species_maps__hedge_properties__overlap=hedge.missing_ecological_properties
+        )
+
+    zone_subquery = (
+        Zone.objects.filter(geometry__intersects=hedge.geos_geometry)
+        .filter(map_id=OuterRef("species_maps__map_id"))
+        .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
+    )
+    q_filter &= Q(Exists(zone_subquery))
+    return q_filter
+
+
+def build_ru_filter(hedge):
+    """Build a Q filter for species potentially near this hedge (400m buffer).
+
+    All species linked to nearby maps via SpeciesMap are included, except
+    "majeur" species not observed locally.
+    """
+    nearby_zones = Zone.objects.filter(
+        geometry__dwithin=(hedge.geos_geometry, SPECIES_BUFFER_DISTANCE),
+        map__map_type="species",
+    )
+
+    q_filter = Q(species_maps__map_id__in=nearby_zones.values("map_id"))
+    q_filter &= Q(species_maps__hedge_types__contains=[hedge.effective_hedge_type])
+
+    if hedge.missing_ecological_properties:
+        q_filter &= ~Q(
+            species_maps__hedge_properties__overlap=hedge.missing_ecological_properties
+        )
+
+    observed_subquery = build_observed_species_subquery(hedge.geos_geometry)
+    q_majeur_not_observed = Q(species_maps__level_of_concern="majeur") & ~Q(
+        Exists(observed_subquery)
+    )
+    q_filter &= ~q_majeur_not_observed
+
+    return q_filter
+
+
+class HruSpeciesQuerySet(models.QuerySet):
+    """Species queryset for the HRU (droit constant) pipeline."""
+
+    def for_hedges(self, hedges):
+        """Return species confirmed in zones intersecting the given hedges."""
+
+        filters = [build_hru_filter(h) for h in hedges]
+        if not filters:
+            return self.none()
+
+        union = reduce(operator.or_, filters)
+        return self.filter(union).distinct().order_by("group", "common_name")
+
+
+class RuSpeciesQuerySet(models.QuerySet):
+    """Species queryset for the RU (régime unique) pipeline."""
+
+    def for_hedges(self, hedges):
+        """Return species potentially near the given hedges.
+
+        Annotated with local_level_of_concern (from the highest-ranked
+        matching SpeciesMap) and observed_locally. Sorted by level of
+        concern descending, then by common name.
+        """
+        hedges = list(hedges)
+        filters = [build_ru_filter(h) for h in hedges]
+        if not filters:
+            return self.none()
+
+        union = reduce(operator.or_, filters)
+
+        all_hedges_geom = MultiLineString(
+            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
+        )
+
+        nearby_map_ids = Zone.objects.filter(
+            geometry__dwithin=(all_hedges_geom, SPECIES_BUFFER_DISTANCE),
+            map__map_type="species",
+        ).values("map_id")
+
+        # Subquery: pick the highest level_of_concern across matching
+        # SpeciesMaps. Uses a rank annotation to ORDER BY, then LIMIT 1.
+        level_subquery = (
+            SpeciesMap.objects.filter(
+                species_id=OuterRef("pk"),
+                map_id__in=nearby_map_ids,
+            )
+            .annotate(
+                level_rank=Case(
+                    *LEVEL_OF_CONCERN_WHENS,
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("-level_rank")
+            .values("level_of_concern")[:1]
+        )
+
+        observed_subquery = build_observed_species_subquery(all_hedges_geom)
+
+        # level_order for sorting — derived from the annotated
+        # local_level_of_concern, not from a JOIN.
+        outer_level_whens = [
+            When(local_level_of_concern=k, then=Value(v))
+            for k, v in LEVEL_OF_CONCERN_ORDER.items()
+        ]
+
+        return (
+            self.filter(union)
+            .annotate(
+                local_level_of_concern=Subquery(level_subquery),
+                observed_locally=Exists(observed_subquery),
+            )
+            .annotate(
+                level_order=Case(
+                    *outer_level_whens,
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            )
+            .distinct()
+            .order_by("-level_order", "common_name")
+        )
+
 
 class Species(models.Model):
     """Represent a single species."""
@@ -837,6 +861,13 @@ class Species(models.Model):
         "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN, blank=True
     )
     highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
+
+    objects = models.Manager()
+
+    # Regime unique and Droit constant use different rules to build a species list
+    # We build custom manager to provide a clear api
+    hru = HruSpeciesQuerySet.as_manager()
+    ru = RuSpeciesQuerySet.as_manager()
 
     class Meta:
         verbose_name = "Espèce"
