@@ -49,13 +49,21 @@ class EPRegulation(HaieRegulationEvaluator):
 
 
 class EPMixin:
-    """Legacy criterion for protected species."""
+    """Mixin that populates the catalog with the protected species list.
+
+    Subclasses override get_protected_species() to select the pipeline
+    (HRU vs RU). Defaults to RU.
+    """
+
+    def get_protected_species(self, haies):
+        """Return the species list for the catalog. Override for HRU."""
+        return haies.get_all_species()
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies:
-            catalog["protected_species"] = haies.get_all_species_hru()
+            catalog["protected_species"] = self.get_protected_species(haies)
         return catalog
 
 
@@ -70,12 +78,20 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluat
         "soumis": "soumis",
     }
 
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
+
     def get_result_data(self):
         return "soumis"
 
 
 class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluator):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
 
     choice_label = "EP > EP Aisne"
     slug = "ep_aisne"
@@ -96,16 +112,13 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies:
-            species = haies.get_all_species_hru()
-            catalog["protected_species"] = species
-            catalog["fauna_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "animalia"
-            ]
-            catalog["flora_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "plantae"
-            ]
+        species = catalog.get("protected_species", [])
+        catalog["fauna_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "animalia"
+        ]
+        catalog["flora_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "plantae"
+        ]
         return catalog
 
     def get_result_data(self):
@@ -171,7 +184,11 @@ class EPNormandieForm(forms.Form):
 class EspecesProtegeesNormandie(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
 ):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
@@ -796,16 +813,12 @@ class EspecesProtegeesRegimeUnique(
         queries only run when the cascade actually needs them (step 6) or
         when the debug / instructor views are rendered.
 
-        Overrides the HRU species list from EPMixin with the RU species list,
-        which uses a 400m buffer and excludes majeur species not observed locally.
+        Species are populated by EPMixin using the default RU pipeline.
         """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
             return catalog
-
-        # Override HRU species with RU species
-        catalog["protected_species"] = haies.get_all_species()
 
         # Line-buffer density (400 m)
         density_data = haies.density_around_lines
