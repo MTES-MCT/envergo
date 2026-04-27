@@ -9,8 +9,7 @@
           <thead>
             <tr>
               <th scope="col">Groupe</th>
-              <th scope="col">Nom commun</th>
-              <th scope="col">Nom scientifique</th>
+              <th scope="col">Nom</th>
               <th scope="col">Niveau d'enjeu</th>
             </tr>
           </thead>
@@ -18,8 +17,9 @@
             {% for s in species %}
               <tr>
                 <td>{{ s.taxref_group }}</td>
-                <td>{{ s.common_name }}</td>
                 <td>
+                  {{ s.common_name }}
+                  <br />
                   <i>{{ s.scientific_name }}</i>
                 </td>
                 <td>{{ s.local_level_of_concern|level_of_concern_display }}</td>
