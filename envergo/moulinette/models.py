@@ -689,6 +689,11 @@ class Criterion(models.Model):
         default=False,
         help_text="Ne s'applique que sur activation expresse de l'utilisateur (questions « optionnelles »)",
     )
+    is_staff_only = models.BooleanField(
+        _("Is staff only"),
+        default=False,
+        help_text="Ne s'affiche et ne s'applique que pour les utilisateurs staff",
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -773,6 +778,10 @@ class Criterion(models.Model):
                 {
                     "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
                 }
+            )
+        if self.is_staff_only and not self.is_optional:
+            raise ValidationError(
+                {"is_optional": "Un critère staff-only doit être optionnel."}
             )
 
     @property
@@ -1755,7 +1764,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
             bound_form = self.get_triage_form_class()(**form_kwargs)
             return bound_form
 
-    def get_additional_forms(self):
+    def get_additional_forms(self, exclude_staff_only=False):
         """Get a list of instanciated additional questions forms.
 
         Additional forms are questions that conditionaly arrise depending on the data
@@ -1768,7 +1777,9 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         if not self.is_evaluated():
             return forms
 
-        form_classes = self.additional_form_classes()
+        form_classes = self.additional_form_classes(
+            exclude_staff_only=exclude_staff_only
+        )
         for form_class in form_classes:
             form = form_class(**self.form_kwargs)
 
@@ -1778,7 +1789,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
-    def additional_form_classes(self):
+    def additional_form_classes(self, exclude_staff_only=False):
         """Return the list of forms for additional questions.
 
         Some criteria need more data to return an answer. Here, we gather all
@@ -1790,6 +1801,8 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 if not criterion.is_optional:
+                    if exclude_staff_only and criterion.is_staff_only:
+                        continue
                     form_class = criterion.get_form_class()
                     if form_class and form_class not in form_classes:
                         form_classes.append(form_class)
@@ -1800,7 +1813,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def additional_forms(self):
         return self.get_additional_forms()
 
-    def get_optional_forms(self):
+    def get_optional_forms(self, exclude_staff_only=False):
         """Get a list of instanciated optional forms.
 
         Optional forms can be selectively activated during a simulation.
@@ -1812,7 +1825,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
            the moulinette regulations.
         """
         forms = []
-        form_classes = self.optional_form_classes()
+        form_classes = self.optional_form_classes(exclude_staff_only=exclude_staff_only)
 
         for form_class in form_classes:
             # Every optional form has a "activate" field
@@ -1834,28 +1847,33 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
-    def optional_form_classes(self):
-        """Return the list of forms for optional questions.
+    def _get_optional_criteria_list(self, exclude_staff_only=False):
+        if self.is_evaluated():
+            criteria = [
+                c
+                for regulation in self.regulations
+                for c in regulation.criteria.all()
+                if c.is_optional
+            ]
+        else:
+            criteria = list(self.get_optional_criteria())
 
-        If the moulinette is bound, we can fetch the precise optional criterion list and
-        get their forms.
+        if exclude_staff_only:
+            criteria = [c for c in criteria if not c.is_staff_only]
 
-        Otherwise, we have to fetch every single existing optional criterion.
-        """
+        return criteria
+
+    def optional_form_classes(self, exclude_staff_only=False):
+        """Return the list of forms for optional questions."""
         form_classes = []
 
-        if self.is_evaluated():
-            for regulation in self.regulations:
-                for criterion in regulation.criteria.all():
-                    if criterion.is_optional:
-                        form_class = criterion.get_form_class()
-                        if form_class and form_class not in form_classes:
-                            form_classes.append(form_class)
-        else:
-            for criterion in self.get_optional_criteria():
+        for criterion in self._get_optional_criteria_list(exclude_staff_only):
+            if self.is_evaluated():
+                form_class = criterion.get_form_class()
+            else:
                 form_class = criterion.evaluator.form_class
-                if form_class and form_class not in form_classes:
-                    form_classes.append(form_class)
+            if form_class and form_class not in form_classes:
+                form_classes.append(form_class)
 
         return form_classes
 
@@ -2077,7 +2095,6 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         criteria = Criterion.objects.filter(
             is_optional=True, regulation__regulation__in=self.REGULATIONS
         ).order_by("weight")
-
         return criteria
 
     def get_regulations(self):
