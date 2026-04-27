@@ -99,8 +99,9 @@ def extract_file(field_file):
         return content
 
     elif os.path.exists(field_file.path):
-        content = open(field_file.path, "rb").read()
-        return io.StringIO(content.decode("utf-8-sig"))
+        with open(field_file.path, "rb") as f:
+            raw = f.read()
+        return io.StringIO(raw.decode("utf-8-sig"))
 
     else:
         raise RuntimeError("File not found")
