@@ -85,11 +85,12 @@ class HandleInvitationTokenMiddleware:
         )
 
     def process_token(self, request, token):
-        """Accepts the invitation."""
+        """Accepts the invitation if the user has not yet view permission."""
 
         invitation = InvitationToken.objects.filter(token=token).first()
-
-        if invitation:
+        if invitation and not invitation.petition_project.has_view_permission(
+            request.user
+        ):
             if invitation.is_valid(request.user):
                 invitation.user = request.user
                 invitation.save()

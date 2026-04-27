@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Lien d'accès invalide (code 403){% endblock %}
+
+{% block article %}
+  <h1>Votre lien d'accès n'est plus valide</h1>
+  <p>Erreur 403</p>
+
+  <p class="fr-text--lead">
+    Ce lien d'accès n'est plus valide. Il a déjà été utilisé par un autre utilisateur
+    ou bien il est expiré.
+    Pour consulter ce dossier, demandez un nouveau lien au service coordonateur.
+  </p>
+  <p>
+    <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+       href="{{ ask_new_link_url }}">Demander un nouveau lien</a>
+  </p>
+  <p class="fr-text--light">
+    Vous serez redirigé vers un formulaire. Un e-mail sera ensuite
+    envoyé à l'instructeur pour qu'il vous transmette un nouveau lien.
+  </p>
+{% endblock %}
