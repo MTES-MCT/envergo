@@ -16,7 +16,10 @@ from envergo.hedges.models import (
     SpeciesMap,
     SpeciesMapFile,
 )
-from envergo.hedges.species_stubs import make_stub_common_name, make_stub_scientific_name
+from envergo.hedges.species_stubs import (
+    make_stub_common_name,
+    make_stub_scientific_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,12 +123,12 @@ def process_species_file_map_row(row, smf):
     for hedge_type in HedgeTypeFactory.build_from_context(
         single_procedure=False
     ).values:
-        if row.get(hedge_type) and bool(row[hedge_type]):
+        if row.get(hedge_type, "").strip().upper() in ("TRUE", "1"):
             hedge_types.append(hedge_type)
 
     hedge_properties = []
     for hedge_property in ALL_HEDGE_PROPERTIES:
-        if row.get(hedge_property, False):
+        if row.get(hedge_property, "").strip().upper() in ("TRUE", "1"):
             hedge_properties.append(hedge_property)
 
     local_level = parse_level_of_concern(row.get("level_of_concern", ""))
