@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0113_merge_20260427_1100"),
+        ("moulinette", "0113_merge_20260427_1504"),
     ]
 
     operations = [
