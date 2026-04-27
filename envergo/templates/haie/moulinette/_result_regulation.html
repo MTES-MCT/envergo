@@ -12,7 +12,9 @@
 
   {% if regulation.show_criteria and regulation.criteria.all %}
     {% for criterion in regulation.criteria.all %}
-      {% if criterion.should_be_displayed %}
+      {% if criterion.is_staff_only and not is_staff %}
+        {# Critère masqué pour les non-staff #}
+      {% elif criterion.should_be_displayed %}
         {% show_criterion_body regulation criterion %}
       {% endif %}
     {% endfor %}
