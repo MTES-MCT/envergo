@@ -733,6 +733,132 @@ class PremierBoisement(SelfDeclarationMixin, CriterionEvaluator):
         return premier_boisement
 
 
+ICPE_PROJET_CREATION = "creation"
+ICPE_PROJET_MODIF_AVEC_PAC = "modif_avec_pac"
+ICPE_PROJET_MODIF_SANS_PAC = "modif_sans_pac"
+ICPE_PROJET_AUCUN = "aucun"
+
+ICPE_PROJET_CHOICES = (
+    (ICPE_PROJET_CREATION, "Oui, il crée une nouvelle ICPE"),
+    (
+        ICPE_PROJET_MODIF_AVEC_PAC,
+        "Oui, il modifie une ICPE existante, avec dépôt d'un dossier de porter à connaissance",
+    ),
+    (
+        ICPE_PROJET_MODIF_SANS_PAC,
+        "Oui, il modifie une ICPE existante, sans nécessité d'un dossier",
+    ),
+    (ICPE_PROJET_AUCUN, "Non, aucune ICPE"),
+)
+
+ICPE_REGIME_ENREGISTREMENT = "enregistrement"
+ICPE_REGIME_DECLARATION = "declaration"
+ICPE_REGIME_INCONNU = "inconnu"
+ICPE_REGIME_AUCUN = "aucun"
+
+ICPE_REGIME_CHOICES = (
+    (ICPE_REGIME_ENREGISTREMENT, "ICPE-E : soumise à enregistrement"),
+    (ICPE_REGIME_DECLARATION, "ICPE-D : soumise à déclaration"),
+    (
+        ICPE_REGIME_INCONNU,
+        "Il s'agit d'une ICPE mais je ne connais pas son régime de classement",
+    ),
+    (ICPE_REGIME_AUCUN, "Aucune ICPE"),
+)
+
+
+class ICPEForm(OptionalFormMixin, forms.Form):
+    prefix = "evalenv_icpe"
+
+    activate = forms.BooleanField(
+        label="Installation classée (ICPE)",
+        help_text="À noter : ce simulateur détermine les procédures à suivre en fonction "
+        "du statut ICPE du projet. Il ne permet pas encore de déterminer si le projet "
+        "est soumis à ICPE.",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    icpe_projet = DisplayChoiceField(
+        label="Le projet porte-t-il sur une installation classée pour la protection "
+        "de l'environnement (ICPE) ?",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=ICPE_PROJET_CHOICES,
+    )
+    icpe_regime = DisplayChoiceField(
+        label="Quel est le régime de classement de l'ICPE ?",
+        help_text="Les ICPE soumises à autorisation (A) ne sont pas traités par le simulateur, "
+        "car ils correspondent à des projets complexes et de grande envergure, au traitement "
+        "administratif souvent spécifique.\n"
+        "Si le projet modifie le régime de classement ICPE de l'installation, "
+        "choisir celui qu'aurait l'installation une fois le projet réalisé",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=ICPE_REGIME_CHOICES,
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        icpe_projet = cleaned_data.get("icpe_projet")
+        icpe_regime = cleaned_data.get("icpe_regime")
+
+        if (
+            icpe_projet == ICPE_PROJET_AUCUN
+            and icpe_regime
+            and icpe_regime != ICPE_REGIME_AUCUN
+        ):
+            self.add_error(
+                "icpe_projet",
+                "Le choix « Non, aucune ICPE » est incompatible avec la réponse "
+                "ci-dessous qui indique qu'il s'agit d'une ICPE. "
+                "Modifier l'une ou l'autre des réponses.",
+            )
+
+        if (
+            icpe_projet
+            and icpe_projet != ICPE_PROJET_AUCUN
+            and icpe_regime == ICPE_REGIME_AUCUN
+        ):
+            self.add_error(
+                "icpe_regime",
+                "Le choix « Aucune ICPE » est incompatible avec la réponse "
+                "ci-dessus qui indique qu'il s'agit d'une ICPE. "
+                "Modifier l'une ou l'autre des réponses.",
+            )
+
+        return cleaned_data
+
+
+class ICPE(SelfDeclarationMixin, CriterionEvaluator):
+    choice_label = "Éval Env > ICPE"
+    slug = "icpe"
+    form_class = ICPEForm
+    CODE_MATRIX = {
+        (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_ENREGISTREMENT): "non_soumis_sans_pac",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis_pas_icpe",
+    }
+    RESULT_MATRIX = {
+        "non_soumis_declaration": "non_soumis",
+        "non_soumis_sans_pac": "non_soumis",
+        "non_soumis_pas_icpe": "non_soumis",
+    }
+
+    def get_result_data(self):
+        form = self.get_form()
+        form.is_valid()
+        icpe_projet = form.cleaned_data.get("icpe_projet")
+        icpe_regime = form.cleaned_data.get("icpe_regime")
+        return icpe_projet, icpe_regime
+
+
 class OtherCriteria(SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Éval Env > Autres rubriques"
     slug = "autres_rubriques"
