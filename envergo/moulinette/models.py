@@ -779,6 +779,10 @@ class Criterion(models.Model):
                     "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
                 }
             )
+        if self.is_staff_only and not self.is_optional:
+            raise ValidationError(
+                {"is_optional": "Un critère staff-only doit être optionnel."}
+            )
 
     @property
     def slug(self):
