@@ -1768,7 +1768,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
             bound_form = self.get_triage_form_class()(**form_kwargs)
             return bound_form
 
-    def get_additional_forms(self, exclude_staff_only=False):
+    def get_additional_forms(self):
         """Get a list of instanciated additional questions forms.
 
         Additional forms are questions that conditionaly arrise depending on the data
@@ -1781,9 +1781,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         if not self.is_evaluated():
             return forms
 
-        form_classes = self.additional_form_classes(
-            exclude_staff_only=exclude_staff_only
-        )
+        form_classes = self.additional_form_classes()
         for form_class in form_classes:
             form = form_class(**self.form_kwargs)
 
@@ -1793,7 +1791,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
-    def additional_form_classes(self, exclude_staff_only=False):
+    def additional_form_classes(self):
         """Return the list of forms for additional questions.
 
         Some criteria need more data to return an answer. Here, we gather all
@@ -1805,8 +1803,6 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         for regulation in self.regulations:
             for criterion in regulation.criteria.all():
                 if not criterion.is_optional:
-                    if exclude_staff_only and criterion.is_staff_only:
-                        continue
                     form_class = criterion.get_form_class()
                     if form_class and form_class not in form_classes:
                         form_classes.append(form_class)
@@ -1817,7 +1813,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def additional_forms(self):
         return self.get_additional_forms()
 
-    def get_optional_forms(self, exclude_staff_only=False):
+    def get_optional_forms(self, exclude_staff_only=True):
         """Get a list of instanciated optional forms.
 
         Optional forms can be selectively activated during a simulation.
@@ -1851,7 +1847,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
-    def _get_optional_criteria_list(self, exclude_staff_only=False):
+    def _get_optional_criteria_list(self, exclude_staff_only=True):
         if self.is_evaluated():
             criteria = [
                 c
@@ -1867,7 +1863,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
         return criteria
 
-    def optional_form_classes(self, exclude_staff_only=False):
+    def optional_form_classes(self, exclude_staff_only=True):
         """Return the list of forms for optional questions."""
         form_classes = []
 
@@ -1883,7 +1879,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
     @cached_property
     def optional_forms(self):
-        return self.get_optional_forms()
+        return self.get_optional_forms(exclude_staff_only=False)
 
     def get_all_forms(self):
         """Return all forms associated with the Moulinette."""
