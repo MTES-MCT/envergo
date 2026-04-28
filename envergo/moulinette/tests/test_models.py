@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
-from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
+from envergo.geodata.tests.factories import DepartmentFactory, MapFactory, ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigAmenagement,
@@ -225,6 +225,61 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         ],
     )
     config_haie.clean()
+
+
+def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
+    """Test get_demarche_simplifiee_value_sources method"""
+    config_haie = DCConfigHaieFactory()
+    other_map = MapFactory()
+    sites_proteges_regulation = RegulationFactory(
+        regulation="sites_proteges_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesProtegesRegulation",
+    )
+    spr_perimeter_bizou = PerimeterFactory(
+        name="Bizous",
+        activation_map=bizous_town_center,
+        regulations=[sites_proteges_regulation],
+    )
+    spr_perimeter_bizou_MH = PerimeterFactory(
+        name="MH",
+        activation_map=bizous_town_center,
+        regulations=[sites_proteges_regulation],
+    )
+    spr_perimeter_other = PerimeterFactory(
+        name="Other",
+        activation_map=other_map,
+        regulations=[sites_proteges_regulation],
+    )
+    CriterionFactory(
+        title="Sites Patrimoniaux Remarquables",
+        backend_title="SPR Haies > bizou",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter_bizou,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    ),
+    CriterionFactory(
+        title="Monuments historiques",
+        backend_title="MH Haies > bizou2",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter_bizou_MH,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.MonumentsHistoriquesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    ),
+    CriterionFactory(
+        title="Monuments historiques",
+        backend_title="SPR Haies > bizou",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter_other,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.MonumentsHistoriquesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    )
+    results = config_haie.get_demarche_simplifiee_value_sources()
+    assert results == {}
 
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(
