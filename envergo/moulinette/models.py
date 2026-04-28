@@ -2615,15 +2615,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         return result or RESULTS.non_soumis
 
-    @property
+    @cached_property
     def results_by_category(self):
         """Compute global result from individual regulation results depending on the criteria category."""
-        if hasattr(self, "_result"):
-            return self._result
-
         if not self.is_evaluated():
-            self._result = RESULTS.non_disponible
-            return self._result
+            raise RuntimeError(
+                "Moulinette must be evaluated before accessing the results."
+            )
 
         all_results_by_category = defaultdict(list)
         for regulation in self.regulations:
@@ -2638,6 +2636,26 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                         cascading_result
                     ]
                     break
+
+        # use the procedure result for régime unique category
+        procedures = [regulation.procedure_type for regulation in self.regulations]
+        is_interdit = "interdit" in procedures
+        is_autorisation = "autorisation" in procedures
+
+        if is_interdit:
+            results_by_category[HaieCriterionCategory.ru] = RESULTS.interdit
+        elif is_autorisation:
+            results_by_category[HaieCriterionCategory.ru] = "autorisation"
+        elif results_by_category[HaieCriterionCategory.ru] not in [
+            RESULTS.non_soumis,
+            RESULTS.non_disponible,
+        ]:
+            results_by_category[HaieCriterionCategory.ru] = "declaration"
+
+        # remove the category if there is no hedge concerned
+        for category, hedges in self.catalog["hedges_by_category"].items():
+            if not hedges:
+                results_by_category.pop(category)
 
         return results_by_category
 
@@ -2736,6 +2754,35 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
         }
 
+        # get the most relevant main category to display. RU if it is applicable, or depending on the cascade elsewhere.
+        if HaieCriterionCategory.ru in self.results_by_category:
+            category = HaieCriterionCategory.ru
+        else:
+            category = None
+            hru_result = self.results_by_category.get(HaieCriterionCategory.hru)
+            l350_3_result = self.results_by_category.get(HaieCriterionCategory.l350_3)
+            for result in RESULT_CASCADE:
+                if result == l350_3_result:
+                    category = HaieCriterionCategory.l350_3
+                    break
+                elif result == hru_result:
+                    category = HaieCriterionCategory.hru
+                    break
+            if not category:
+                # There is no result from the Cascade for any category.
+                # e.g. if there is no regulation
+                raise NotImplementedError(
+                    "This simulation has no results in any category."
+                )
+
+        other_categories = [
+            other_category.name
+            for other_category in self.results_by_category
+            if other_category != category
+        ]
+        context["HaieCriterionCategory"] = HaieCriterionCategory
+        context["main_category"] = category
+        context["other_categories"] = other_categories
         return context
 
     def get_catalog_data(self):
@@ -2748,6 +2795,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["has_hedges_outside_department"] = (
                 hedges.has_hedges_outside_department(self.department)
             )
+            data["hedges_by_category"] = hedges.get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            data["hedges_by_category"] = {
+                category: [] for category in HaieCriterionCategory
+            }
 
         return data
 
@@ -2811,12 +2865,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         EXISTS subqueries.
         """
         dept_centroid = self.department.centroid
-        if "haies" in self.catalog:
-            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
-                self.config.single_procedure
-            )
-        else:
-            hedges_by_category = {category: [] for category in HaieCriterionCategory}
+        hedges_by_category = self.catalog["hedges_by_category"]
 
         # Build category → evaluator classpaths mapping
         evaluators_by_category = {category: [] for category in HaieCriterionCategory}
@@ -2968,6 +3017,22 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
+
+    @property
+    def is_multi_category(self):
+        """Do the hedges in this simulation fall under different categories of regulations
+        (e.g. régime Unique, L350-3, Hors régime unique )?"""
+        return len(self.results_by_category.keys()) > 1
+
+    @property
+    def is_submittable_to_pguh(self):
+        """Can this simulation be submitted to the PGUH?"""
+        return (
+            HaieCriterionCategory.ru in self.results_by_category.keys()
+            or HaieCriterionCategory.hru in self.results_by_category.keys()
+            or HaieCriterionCategory.l350_3 in self.results_by_category.keys()
+            and self.config.aa_l3503_handling == AaL3503Handling.PORTAL
+        )
 
 
 class ActionToTake(models.Model):

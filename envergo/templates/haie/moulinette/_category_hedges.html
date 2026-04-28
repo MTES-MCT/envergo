@@ -1,0 +1,10 @@
+<p>
+  <strong>{{ category.label }}</strong> •
+  {% if category.name == "ru" %}
+    {{ hedge_data.hedges.ru.names }}
+  {% elif category.name == "l350_3" %}
+    {{ hedge_data.hedges.l350_3.names }}
+  {% elif category.name == "hru" %}
+    {{ hedge_data.hedges.hru.names }}
+  {% endif %}
+</p>

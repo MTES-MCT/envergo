@@ -220,8 +220,8 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     """Render the global moulinette result content."""
     context_data = context.flatten()
     context_data.update(plantation_evaluation.get_context())
-    regime = "regime_unique" if moulinette.config.single_procedure else "droit_constant"
-    template_name = f"haie/moulinette/result/{regime}/{moulinette.result}.html"
+    category = context_data["main_category"]
+    template_name = f"haie/moulinette/result/{category.name}/{moulinette.result}.html"
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
@@ -230,6 +230,13 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
             extra={"result": moulinette.result, "template_name": template_name},
         )
         content = ""
+
+    if moulinette.is_multi_category:
+        header = render_to_string(
+            "haie/moulinette/_category_hedges.html",
+            {"category": category, "hedge_data": context["hedge_data"]},
+        )
+        content = header + content
 
     return content
 

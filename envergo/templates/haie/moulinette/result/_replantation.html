@@ -1,4 +1,5 @@
 {% if reduced_minimum_length_to_plant %}
+  {#  Uniquement pour le Calvados avant l'entrée en vigueur du régime unique#}
   <h6>
     🌳 <strong>Plantation minimale attendue : {{ minimum_length_to_plant }} m</strong>
   </h6>
@@ -10,7 +11,8 @@
   <ul>
     <li>{{ minimum_length_to_plant }} m pour une plantation de haies de type identique à celles détruites ;</li>
     <li>
-      {{ reduced_minimum_length_to_plant }} m pour une plantation de haies d'un type supérieur, plus favorable à l'accueil de la biodiversité
+      {{ reduced_minimum_length_to_plant }} m pour une plantation de haies d'un type supérieur, plus favorable à
+      l'accueil de la biodiversité
       (<a href="{{ HAIE_FAQ_URLS.NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION }}"
    target="_blank"
    rel="noopener">voir le guide</a>).
@@ -20,7 +22,8 @@
   <p>D’autres conditions sont également à remplir : type de haie, maintien de certaines caractéristiques…</p>
 
   <p>
-    Ce simulateur accompagne la saisie des linéaires à planter et indique si la plantation respecte les critères attendus.
+    Ce simulateur accompagne la saisie des linéaires à planter et indique si la plantation respecte les critères
+    attendus.
   </p>
 
   <p>
@@ -36,12 +39,12 @@
   </h6>
 
   <p>
-    Au vu des caractéristiques des haies détruites, la plantation d’une longueur minimale de
+    Au vu des caractéristiques des linéaires détruits, la plantation d’une longueur minimale de
     {{ minimum_length_to_plant }} m sera exigée pour que le projet puisse être autorisé.
     D’autres conditions sont également à remplir : type de haie, maintien de certaines caractéristiques…
   </p>
   <p>
-    Ce simulateur accompagne la saisie des haies à planter et indique si la plantation respecte
+    Ce simulateur accompagne la saisie des linéaires à planter et indique si la plantation respecte
     les conditions attendues.
   </p>
   <p>
@@ -49,14 +52,17 @@
     <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line"
             type="button"
             data-fr-opened="false"
-            aria-controls="hedge-input-modal">Localiser les haies à planter</button>
+            aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
   </p>
 
-{% else %}
+{% elif moulinette.is_submittable_on_pguh %}
   <h6>
     🌳 <strong>Projet de plantation</strong>
   </h6>
-  <p>Au vu des caractéristiques du projet, la plantation d’une haie n'est pas requise. Vous pouvez :</p>
+  <p>
+    Pour que le dossier soit accepté, il est fortement recommandé de proposer la plantation de linéaires en
+    compensation de la destruction. Vous pouvez :
+  </p>
   <p>
     <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mb-3w"
             type="button"
@@ -67,5 +73,34 @@
        class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line">
     Déposer une demande sans plantation</a>
   </p>
+{% else %}
+  <p>Vous devez :</p>
+  <ul>
+    {% if moulinette.config.aa_l3503_handling == AaL3503Handling.THIRD_PARTY_FORM %}
+      <li>
+        <strong>déposer un dossier</strong> aux services de l’État en charge de la réglementation sur les alignements
+        d’arbres.
+        <br />
+        Le dépôt de ce dossier se fait sur un autre portail. Pour démarrer la procédure, dans une nouvelle fenêtre :
+        <a href="{{ moulinette.config.aa_l3503_form_url }}"
+           target="_blank"
+           rel="noopener external"
+           class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line">
+        Aller au formulaire spécifique alignements d’arbres</a>
+      </li>
+    {% else %}
+      <li>
+        <strong>contacter les services de l’État</strong> en charge de la réglementation sur les alignements d’arbres.
+        La marche à suivre pour obtenir l’autorisation d’effectuer les travaux vous sera indiquée :
+        <div class="fr-highlight">{{ object.aa_l3503_contact_info|safe }}</div>
+      </li>
+    {% endif %}
+    <li>
+      <strong>contacter la mairie</strong> de la commune où se situe le projet, car les linéaires ne bénéficient pas
+      d’une procédure de demande unique. S’ils sont protégés par des dispositions intercommunales ou municipales (voir
+      réglementation <a href="#regulation_urbanisme_haie"
+    title="Voir le détail de la réglementation « Haies classées – Urbanisme »">« Haies classées – Urbanisme »</a>), une déclaration préalable en mairie serait alors nécessaire.
+    </li>
+  </ul>
 
 {% endif %}
