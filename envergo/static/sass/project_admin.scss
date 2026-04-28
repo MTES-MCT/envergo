@@ -65,8 +65,17 @@ fieldset.module.recipients:has(input[type="checkbox"]:checked)
   display: none;
 }
 
-/* Users *
+/* Accordion in help text *
+ * using detail disclosure element
  * */
+
+.help details summary {
+  padding: 0.5rem 0;
+  font-size: 0.8125rem;
+}
+
+/* Users *
+     * */
 
 a#add_id_departments {
   display: none;
@@ -76,8 +85,8 @@ a#add_id_departments {
 
 /* Disable delete button
 
-  to avoid unwanted project suppression when they only want to delete invited accounts
-  */
+      to avoid unwanted project suppression when they only want to delete invited accounts
+      */
 
 .model-petitionproject.change-form .submit-row {
   &::after {
