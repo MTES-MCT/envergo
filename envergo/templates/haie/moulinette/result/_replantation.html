@@ -55,14 +55,19 @@
             aria-controls="hedge-input-modal">Décrire le projet de plantation</button>
   </p>
 
-{% elif moulinette.is_submittable_on_pguh %}
+{% elif moulinette.is_submittable_to_pguh %}
   <h6>
     🌳 <strong>Projet de plantation</strong>
   </h6>
-  <p>
-    Pour que le dossier soit accepté, il est fortement recommandé de proposer la plantation de linéaires en
-    compensation de la destruction. Vous pouvez :
-  </p>
+
+  {% if moulinette.config.is_single_procedure %}
+    <p>
+      Pour que le dossier soit accepté, il est fortement recommandé de proposer la plantation de linéaires en
+      compensation de la destruction. Vous pouvez :
+    </p>
+  {% else %}
+    <p>Au vu des caractéristiques du projet, la plantation d’une haie n'est pas requise. Vous pouvez :</p>
+  {% endif %}
   <p>
     <button class="hedge-input-open-btn fr-btn fr-btn--secondary fr-btn--icon-right fr-icon-arrow-right-line fr-mb-3w"
             type="button"
