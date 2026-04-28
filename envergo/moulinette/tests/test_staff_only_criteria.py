@@ -4,11 +4,13 @@ from django.test import Client
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
+from envergo.moulinette.models import MoulinetteAmenagement
 from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     RegulationFactory,
 )
+from envergo.moulinette.tests.utils import COORDS_BIZOU, make_amenagement_data
 from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -64,7 +66,7 @@ class TestICPEStaffOnlyVisibility:
         res = client.get(url)
 
         assert res.status_code == 200
-        assert "installation classée (ICPE)" not in res.content.decode()
+        assert "installation classée (icpe)" not in res.content.decode().lower()
 
     def test_staff_can_see_icpe_result(self, staff_client):
         params = (
@@ -78,7 +80,16 @@ class TestICPEStaffOnlyVisibility:
 
         assert res.status_code == 200
         assertTemplateUsed(res, "moulinette/result.html")
-        assert "installation classée (ICPE)" in res.content.decode()
+        assert "installation classée (icpe)" in res.content.decode().lower()
+
+    def test_superuser_non_staff_cannot_see_icpe_form(self, client):
+        user = UserFactory(is_superuser=True, is_staff=False)
+        client.force_login(user)
+        url = reverse("moulinette_form")
+        res = client.get(url)
+
+        assert res.status_code == 200
+        assert "Installation classée (ICPE)" not in res.content.decode()
 
 
 class TestICPEResults:
@@ -172,6 +183,29 @@ class TestICPEFormValidation:
         )
         url = f"{reverse('moulinette_result')}?{params}"
         return staff_client.get(url)
+
+
+class TestStaffOnlyFiltering:
+    def _make_moulinette(self):
+        data = make_amenagement_data(
+            lat=COORDS_BIZOU[0],
+            lng=COORDS_BIZOU[1],
+            created_surface=500,
+            final_surface=500,
+        )
+        return MoulinetteAmenagement(data)
+
+    def test_optional_form_classes_excludes_staff_only_by_default(self):
+        moulinette = self._make_moulinette()
+        form_classes = moulinette.optional_form_classes()
+        class_names = [fc.__name__ for fc in form_classes]
+        assert "ICPEForm" not in class_names
+
+    def test_optional_form_classes_includes_staff_only_when_requested(self):
+        moulinette = self._make_moulinette()
+        form_classes = moulinette.optional_form_classes(exclude_staff_only=False)
+        class_names = [fc.__name__ for fc in form_classes]
+        assert "ICPEForm" in class_names
 
 
 class TestCriterionStaffOnlyValidation:

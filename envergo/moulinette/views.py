@@ -105,9 +105,7 @@ class MoulinetteMixin:
             context["has_errors"] = (
                 self.request.method == "POST" and not self.moulinette.is_valid()
             )
-            context["additional_forms"] = self.moulinette.get_additional_forms(
-                exclude_staff_only=exclude_staff_only
-            )
+            context["additional_forms"] = self.moulinette.get_additional_forms()
             context["additional_fields"] = self.moulinette.additional_fields
 
             # We need to display a different form style when the "additional forms"
