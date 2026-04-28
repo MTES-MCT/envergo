@@ -56,7 +56,12 @@ class EPMixin:
     """
 
     def get_protected_species(self, haies):
-        """Return the species list for the catalog. Override for HRU."""
+        """Return the protected species queryset for the catalog.
+
+        Input is a HedgeData instance; output is an annotated Species
+        queryset. Defaults to the RU pipeline. HRU evaluators override
+        this to call haies.get_all_species_hru().
+        """
         return haies.get_all_species()
 
     def get_catalog_data(self):
