@@ -20,13 +20,13 @@
                 <td>
                   {{ s.common_name }}
                   <br />
-                  <i>{{ s.scientific_name }}</i>
+                  <i lang="la">{{ s.scientific_name }}</i>
                 </td>
                 <td>{{ s.local_level_of_concern|level_of_concern_display }}</td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="4">Aucune espèce spécifique disponible pour l'affichage</td>
+                <td colspan="3">Aucune espèce spécifique disponible pour l'affichage</td>
               </tr>
             {% endfor %}
           </tbody>
