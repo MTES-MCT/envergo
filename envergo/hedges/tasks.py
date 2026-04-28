@@ -4,6 +4,7 @@ import logging
 import os
 
 import requests
+from django.db import IntegrityError
 from django.utils import timezone
 
 from config.celery_app import app
@@ -63,12 +64,12 @@ def process_species_map_file(task, object_id):
                 species_maps.append(species_map)
             except Species.DoesNotExist:
                 if "common_name" in row:
-                    msg = f"Espèce inconnue {row["common_name"]}"
+                    msg = f"Espèce inconnue {row['common_name']}"
                 else:
                     msg = f"Espèce inconnue à la ligne {nb_lines + 1}"
                 import_log.append(msg)
                 logger.warning(msg)
-            except Exception as e:
+            except (ValueError, TypeError, KeyError, IntegrityError) as e:
                 msg = f"Erreur d'import sur la ligne {nb_lines + 1}: {e}"
                 import_log.append(msg)
                 logger.error(msg)
@@ -146,28 +147,32 @@ def process_species_file_map_row(row, smf):
 def find_or_create_species(row):
     """Look up a Species from a CSV row, creating a stub if needed.
 
-    Supports CD_REF (RU), CD_NOM (legacy), and common_name (legacy).
-    For CD_REF, missing species are auto-created with placeholder names
-    that import_taxref will later enrich.
+    Identification precedence: CD_REF (RU format) → CD_NOM (legacy) →
+    common_name (legacy). For CD_REF, missing species are auto-created
+    with placeholder names that import_taxref will later enrich.
     """
     if "CD_REF" in row and row["CD_REF"]:
         cd_ref = int(row["CD_REF"])
-        species, _ = Species.objects.get_or_create(
-            cd_ref=cd_ref,
-            defaults={
-                "scientific_name": make_stub_scientific_name(cd_ref),
-                "common_name": make_stub_common_name(cd_ref),
-            },
-        )
+        try:
+            species, _ = Species.objects.get_or_create(
+                cd_ref=cd_ref,
+                defaults={
+                    "scientific_name": make_stub_scientific_name(cd_ref),
+                    "common_name": make_stub_common_name(cd_ref),
+                },
+            )
+        except IntegrityError:
+            species = Species.objects.get(cd_ref=cd_ref)
     elif "CD_NOM" in row:
-        species = Species.objects.get(taxref_ids__contains=[row["CD_NOM"]])
-
-    else:
+        cd_nom = int(row["CD_NOM"])
+        species = Species.objects.get(taxref_ids__contains=[cd_nom])
+    elif "common_name" in row:
         species = Species.objects.get(common_name=row["common_name"])
+    else:
+        raise ValueError(
+            "CSV row has no species identifier (CD_REF, CD_NOM, or common_name)"
+        )
 
-    # If none of the identification fields exist, the method will just fail
-    # with an exception. Let it, that will abort the entire process which is the
-    # expected behavior.
     return species
 
 
@@ -185,5 +190,4 @@ def parse_level_of_concern(raw_value):
     db_value = LEVEL_OF_CONCERN_DISPLAY_TO_DB.get(stripped)
     if db_value is None:
         logger.warning("Unknown level_of_concern value: %s", stripped)
-        db_value = stripped.lower()
     return db_value
