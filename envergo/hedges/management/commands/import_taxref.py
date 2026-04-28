@@ -113,7 +113,7 @@ class Command(BaseCommand):
         """Replace placeholder names on stub species with real TaxRef data.
 
         When the RU CSV import creates a Species from a CD_REF alone, it sets
-        placeholder names (e.g. "Espèce 12345", "CD_REF_12345") because the
+        placeholder names (e.g. "CD_REF_12345") because the
         CSV doesn't carry names. This method fills them in from TaxRef.
         """
         nom_vern = row.get("NOM_VERN", "")

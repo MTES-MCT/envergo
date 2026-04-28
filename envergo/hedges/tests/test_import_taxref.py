@@ -118,7 +118,7 @@ def test_import_taxref_matches_by_cd_ref():
     SpeciesFactory(
         cd_ref=110920,
         scientific_name="CD_REF_110920",
-        common_name="Espèce 110920",
+        common_name="CD_REF_110920",
     )
 
     with TemporaryDirectory() as tmpdir:
