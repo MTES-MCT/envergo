@@ -161,14 +161,4 @@
   <script defer src="{% static 'js/libs/moulinette_result_project_map.js' %}"></script>
   <script defer
           src="{% static 'js/libs/amenagement_result_actions_banner.js' %}"></script>
-  <script>
-    window.addEventListener('load', () => {
-      const liabilityLink = document.getElementById('liability-link');
-      if (liabilityLink) {
-        liabilityLink.addEventListener('click', () => {
-          _paq.push(['trackEvent', 'Content', 'JumpToAnchor', 'LiabilityInfo']);
-        });
-      }
-    });
-  </script>
 {% endblock %}
