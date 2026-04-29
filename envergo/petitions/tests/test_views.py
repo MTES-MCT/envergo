@@ -2491,7 +2491,10 @@ def test_instructor_view_token_matomo_invitation(
 def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):
     """Test that instructor view returns 403 when user use an invalid token"""
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+        demarches_simplifiees_display_fields={
+            "project_url": "ABC123",
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+        }
     )
     project = PetitionProjectFactory()
 
