@@ -24,6 +24,7 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
 from envergo.petitions.models import (
     DOSSIER_STATES,
     LOG_TYPES,
@@ -395,6 +396,8 @@ def test_petition_project_instructor_view_requires_authentication(
     )
     # THEN the response status code is 200 (OK)
     assert response.status_code == 200
+    # AND matomo url is set
+    assert_matomo_url(response, "/projet/+ref_projet+/instruction/")
 
     # GIVEN an admin user, should be authorized
     request.user = admin_user
@@ -2460,9 +2463,36 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
     assert "Révoquer" in content
 
 
-def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):
+def test_instructor_view_token_matomo_invitation(
+    client, haie_instructor_44, haie_user, site
+):
     """Test that instructor view returns 403 when user use an invalid token"""
     DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    # GIVEN a token
+    invitation_token = InvitationTokenFactory(
+        petition_project=project,
+        created_by=haie_instructor_44,
+    )
+    instructor_page_url = reverse(
+        "petition_project_instructor_view",
+        kwargs={"reference": project.reference},
+    )
+    # WHEN haie_user tries to get page using this token
+    client.force_login(haie_user)
+    response = client.get(
+        f"{instructor_page_url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={invitation_token.token}",
+        follow=True,
+    )
+    assert_matomo_url(response, "/projet/+ref_projet+/instruction/invitation/")
+
+
+def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):
+    """Test that instructor view returns 403 when user use an invalid token"""
+    DCConfigHaieFactory(
+        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
+    )
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(
@@ -2486,6 +2516,7 @@ def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user
     assert response.status_code == 403
     assert response.template_name == "haie/petitions/403_token_expired.html"
     assert "https://tally.so/r/Gxol8e" in response.context["ask_new_link_url"]
+    assert_matomo_url(response, "/projet/+ref_projet+/instruction/invitation/expired/")
 
     # GIVEN a token already accepted by another user (is not valid)
     other_haie_user = UserFactory(is_haie_user=True)

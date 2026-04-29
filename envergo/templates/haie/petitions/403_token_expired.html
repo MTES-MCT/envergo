@@ -13,10 +13,16 @@
   </p>
   <p>
     <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
+       data-event-category="Invitation"
+       data-event-action="RequestAccess"
        href="{{ ask_new_link_url }}">Demander un nouveau lien</a>
   </p>
   <p class="fr-text--light">
     Vous serez redirigé vers un formulaire. Un e-mail sera ensuite
     envoyé à l'instructeur pour qu'il vous transmette un nouveau lien.
   </p>
+{% endblock %}
+
+{% block extra_js %}
+  <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
 {% endblock %}
