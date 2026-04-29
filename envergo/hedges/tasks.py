@@ -36,31 +36,31 @@ def process_species_habitat_file(task, object_id):
     """
     logger.info(f"Starting import on species habitat file {object_id}")
 
-    smf = SpeciesHabitatFile.objects.get(pk=object_id)
+    habitat_file = SpeciesHabitatFile.objects.get(pk=object_id)
     import_log = []
 
     # Store the task data in the model, so we can display progression
     # in the admin page.
-    smf.task_id = task.request.id
-    smf.import_log = ""
-    smf.import_status = None
-    smf.save()
+    habitat_file.task_id = task.request.id
+    habitat_file.import_log = ""
+    habitat_file.import_status = None
+    habitat_file.save()
 
     # Clear existing data
     logger.info("Clearing existing data")
-    SpeciesHabitat.objects.filter(species_habitat_file=smf).delete()
+    SpeciesHabitat.objects.filter(species_habitat_file=habitat_file).delete()
 
     # Process csv file
     logger.info("Processing csv file")
     habitats = []
-    with extract_file(smf.file) as csvfile:
+    with extract_file(habitat_file.file) as csvfile:
         nb_lines = 0
         reader = csv.DictReader(csvfile)
         for row in reader:
             nb_lines += 1
 
             try:
-                habitat = process_species_habitat_row(row, smf)
+                habitat = process_species_habitat_row(row, habitat_file)
                 habitats.append(habitat)
             except Species.DoesNotExist:
                 if "common_name" in row:
@@ -80,16 +80,16 @@ def process_species_habitat_file(task, object_id):
 
     # Update the import status and metadata
     if len(objects) == nb_lines:
-        smf.import_status = IMPORT_STATUSES.success
+        habitat_file.import_status = IMPORT_STATUSES.success
     elif len(objects) > 0:
-        smf.import_status = IMPORT_STATUSES.partial_success
+        habitat_file.import_status = IMPORT_STATUSES.partial_success
     else:
-        smf.import_status = IMPORT_STATUSES.failure
+        habitat_file.import_status = IMPORT_STATUSES.failure
 
-    smf.task_id = None
-    smf.import_date = timezone.now()
-    smf.import_log = "\n".join(import_log)
-    smf.save()
+    habitat_file.task_id = None
+    habitat_file.import_date = timezone.now()
+    habitat_file.import_log = "\n".join(import_log)
+    habitat_file.save()
     logger.info("Import finished")
 
 
