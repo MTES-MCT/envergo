@@ -281,13 +281,22 @@
       const procedureForm = document.querySelector('#procedure-modal form');
       const currentDsStatus = procedureForm.dataset.currentDsStatus;
       const dsStatusMapping = JSON.parse(document.getElementById('ds-status-mapping').textContent);
+      const dsStatusLabels = JSON.parse(document.getElementById('ds-status-labels').textContent);
       const stateChangeMessage = document.getElementById('procedure-state-change-message');
+      const stateTransitionText = document.getElementById('procedure-state-transition-text');
       const stageInput = document.getElementById("id_stage");
       const decisionInput = document.getElementById("id_decision");
 
       const checkStateChange = () => {
         const newDsStatus = dsStatusMapping[`${stageInput.value},${decisionInput.value}`];
-        stateChangeMessage.style.display = (newDsStatus && newDsStatus !== currentDsStatus) ? "block" : "none";
+        if (newDsStatus && newDsStatus !== currentDsStatus) {
+          const currentLabel = dsStatusLabels[currentDsStatus] || currentDsStatus;
+          const newLabel = dsStatusLabels[newDsStatus] || newDsStatus;
+          stateTransitionText.textContent = `Le dossier passe de l'état « ${currentLabel} » à « ${newLabel} » sur Démarches Numériques.`;
+          stateChangeMessage.style.display = "block";
+        } else {
+          stateChangeMessage.style.display = "none";
+        }
       };
 
       stageInput.addEventListener("change", (event) => {

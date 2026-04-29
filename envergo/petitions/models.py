@@ -725,7 +725,7 @@ class StatusLog(models.Model):
         default=DECISIONS.unset,
     )
     update_comment = models.TextField(
-        "Commentaire",
+        "Commentaire interne",
         help_text="Ajouter un commentaire expliquant le contexte du changement.",
         blank=True,
     )
