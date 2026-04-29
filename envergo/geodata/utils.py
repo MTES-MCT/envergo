@@ -134,7 +134,7 @@ class CustomMapping(LayerMapping):
             # We had problems with incorrect values because of missing commas
             # creating integer overflow errors. We have to defend against that
             parsed = int(val)
-            if parsed > 2_147_483_647:
+            if parsed > 2**31 - 1:
                 logger.warning(
                     "Skipping species taxref value %s (exceeds integer range)", val
                 )
