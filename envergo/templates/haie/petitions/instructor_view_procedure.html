@@ -242,6 +242,8 @@
 {% block extra_body %}
   {{ block.super }}
   {% include 'haie/petitions/_procedure_modal.html' %}
+  {{ forbidden_transitions|json_script:"forbidden-transitions" }}
+  {{ petition_project.stage|json_script:"current-stage" }}
 {% endblock %}
 
 {% block extra_js %}
@@ -286,6 +288,30 @@
       const stateTransitionText = document.getElementById('procedure-state-transition-text');
       const stageInput = document.getElementById("id_stage");
       const decisionInput = document.getElementById("id_decision");
+      const submitBtn = document.querySelector('#procedure-modal button[type="submit"]');
+
+      const forbiddenTransitions = JSON.parse(document.getElementById('forbidden-transitions').textContent);
+      const currentStage = JSON.parse(document.getElementById('current-stage').textContent);
+
+      const isForbidden = (from, to) =>
+        forbiddenTransitions.some(([f, t]) => f === from && t === to);
+
+      let warningEl = document.createElement("p");
+      warningEl.className = "fr-error-text";
+      warningEl.id = "stage-transition-warning";
+      warningEl.style.display = "none";
+      stageInput.closest(".fr-select-group, .fr-input-group, div").appendChild(warningEl);
+
+      const validateTransition = (stage) => {
+        if (isForbidden(currentStage, stage)) {
+          warningEl.textContent = "Cette transition n'est pas autorisée.";
+          warningEl.style.display = "block";
+          submitBtn.disabled = true;
+        } else {
+          warningEl.style.display = "none";
+          submitBtn.disabled = false;
+        }
+      };
 
       const checkStateChange = () => {
         const newDsStatus = dsStatusMapping[`${stageInput.value},${decisionInput.value}`];
@@ -302,6 +328,7 @@
       stageInput.addEventListener("change", (event) => {
         displayStageObjective(event.target.value);
         toggleDueDate(event.target.value);
+        validateTransition(event.target.value);
         checkStateChange();
       });
       decisionInput.addEventListener("change", checkStateChange);
