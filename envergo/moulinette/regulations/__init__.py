@@ -398,8 +398,8 @@ class HaieRegulationEvaluator(RegulationEvaluator):
 
     def evaluate(self, regulation):
         super().evaluate(regulation)
-        self._procedure_type = self.get_procedure_type(regulation)
         self._results_by_category = self.get_results_by_category(regulation)
+        self._procedure_type = self.get_procedure_type(regulation)
 
     def get_procedure_type(self, regulation):
         procedure_type = self.PROCEDURE_TYPE_MATRIX.get(
@@ -425,15 +425,12 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             return {category: RESULTS.non_active for category in HaieCriterionCategory}
 
         results_by_category = {}
-        if (
-            regulation.has_perimeters
-            and regulation in self.moulinette.hedges_intersecting_regulations_perimeter
-        ):
+        if regulation.has_perimeters:
             all_perimeters = {
                 perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
-                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter[
-                    regulation
-                ].items()
+                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter.get(
+                    regulation, {}
+                ).items()
             }
             hedges_by_category = self.moulinette.catalog[
                 "haies"

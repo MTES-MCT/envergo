@@ -67,10 +67,12 @@ def render_from_moulinette_templates(context, template_name):
 
 
 @register.simple_tag(takes_context=True)
-def show_regulation_body(context, regulation):
+def show_regulation_body(context, regulation, category):
     """Render the main regulation content block."""
 
-    template_name = f"{regulation.slug}/result_{regulation.result}.html"
+    template_name = (
+        f"{regulation.slug}/result_{regulation.results_by_category[category]}.html"
+    )
     content = render_from_moulinette_templates(context, template_name)
 
     return content

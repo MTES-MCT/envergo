@@ -2948,17 +2948,24 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return fields
 
     def get_regulations_by_group(self):
-        """Group regulations by their result_group"""
+        """Group regulations by their result_group for each category."""
         regulations_list = sorted(
             self.regulations, key=lambda regulation: regulation.display_order
         )
 
-        regulations_list.sort(key=attrgetter("result_group"))
-        grouped = {
-            key: list(group)
-            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
-        }
-        return grouped
+        grouped_by_category = {}
+        for category in self.results_by_category:
+
+            def result_group_for(reg, cat=category):
+                return RESULTS_GROUP_MAPPING[reg.results_by_category[cat]]
+
+            sorted_regs = sorted(regulations_list, key=result_group_for)
+            grouped_by_category[category] = {
+                key: list(group)
+                for key, group in groupby(sorted_regs, key=result_group_for)
+            }
+
+        return grouped_by_category
 
     def get_map_center(self):
         """Returns at what coordinates is the perimeter."""

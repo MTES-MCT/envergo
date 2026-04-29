@@ -3,17 +3,19 @@
 {% load moulinette %}
 
 {% block regulation_title %}
-  <h4>{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h4>
+  <h4>{% include 'moulinette/_result_regulation_title.html' with regulation=regulation category=category %}</h4>
 {% endblock %}
 
 {% block regulation_body %}
-  {% show_regulation_body regulation as body_content %}
+  {% show_regulation_body regulation category as body_content %}
   {% if body_content %}<div class="fr-mb-3w">{{ body_content }}</div>{% endif %}
 
   {% if regulation.show_criteria and regulation.criteria.all %}
     {% for criterion in regulation.criteria.all %}
       {% if criterion.should_be_displayed %}
-        {% show_criterion_body regulation criterion %}
+        {% if criterion.evaluator.category == category %}
+          {% show_criterion_body regulation criterion %}
+        {% endif %}
       {% endif %}
     {% endfor %}
   {% endif %}
