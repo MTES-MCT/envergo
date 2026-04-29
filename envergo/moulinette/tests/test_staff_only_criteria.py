@@ -82,6 +82,15 @@ class TestICPEStaffOnlyVisibility:
         assertTemplateUsed(res, "moulinette/result.html")
         assert "installation classée (icpe)" in res.content.decode().lower()
 
+    def test_staff_haie_only_cannot_see_icpe_form(self, client):
+        user = UserFactory(is_staff=True, access_amenagement=False, access_haie=True)
+        client.force_login(user)
+        url = reverse("moulinette_form")
+        res = client.get(url)
+
+        assert res.status_code == 200
+        assert "Installation classée (ICPE)" not in res.content.decode()
+
     def test_superuser_non_staff_cannot_see_icpe_form(self, client):
         user = UserFactory(is_superuser=True, is_staff=False)
         client.force_login(user)
@@ -203,7 +212,9 @@ class TestStaffOnlyFiltering:
 
     def test_optional_form_classes_includes_staff_only_when_requested(self):
         moulinette = self._make_moulinette()
-        form_classes = moulinette.optional_form_classes(exclude_staff_only=False)
+        form_classes = moulinette.optional_form_classes(
+            exclude_staff_only_criterion=False
+        )
         class_names = [fc.__name__ for fc in form_classes]
         assert "ICPEForm" in class_names
 
