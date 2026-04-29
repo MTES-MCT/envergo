@@ -864,12 +864,20 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request, self.object
         )
 
-        matomo_custom_path = self.request.path.replace(
-            self.object.reference, "+ref_projet+"
+        invitation_token = self.request.GET.get(
+            settings.INVITATION_TOKEN_COOKIE_NAME, ""
         )
-        context["matomo_custom_url"] = update_url_with_matomo_params(
-            self.request.build_absolute_uri(matomo_custom_path), self.request
-        )
+        if invitation_token:
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("petition_project_invitation_token_in_query")
+            )
+        else:
+            matomo_custom_path = self.request.path.replace(
+                self.object.reference, "+ref_projet+"
+            )
+            context["matomo_custom_url"] = update_url_with_matomo_params(
+                self.request.build_absolute_uri(matomo_custom_path), self.request
+            )
         context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
             self.object.config.demarche_simplifiee_number
         )
@@ -909,10 +917,12 @@ class BasePetitionProjectInstructorView(
                 if invitation_token_qs.exists():
                     invitation_token_object = invitation_token_qs.get()
                     if not invitation_token_object.is_valid(self.request.user):
-                        # Add button url in context
+                        # Add button url in context and return specific 403 template
                         ask_new_link_url_base = "https://tally.so/r/Gxol8e"
                         user = self.request.user
-                        city = get_context_from_ds(self.object)["ds_info"]["city"]
+                        city = get_context_from_ds(self.object)["ds_info"][
+                            "city"
+                        ]  # TODO: avoid getting info from DS
                         petition_project_consultation_url = (
                             self.request.build_absolute_uri(
                                 reverse(
@@ -933,9 +943,11 @@ class BasePetitionProjectInstructorView(
                         context = {
                             "ask_new_link_url": f"{ask_new_link_url_base}?{urlencode(ask_new_link_params)}"
                         }
-                        # Log event
-                        self.event_action = "acces_interdit"
-                        self.log_event_action(request)
+                        # Add matomo url to context
+                        context["matomo_custom_url"] = self.request.build_absolute_uri(
+                            reverse("petition_project_invitation_token_expired")
+                        )
+
                         return TemplateResponse(
                             request=request,
                             context=context,
