@@ -55,8 +55,8 @@ const trackSelfDeclarationDismiss = () => {
     });
 };
 
-const trackLiabilityLink = () => {
-  const liabilityLink = document.getElementById('liability-link');
+const trackEvaluationLiabilityLink = () => {
+  const liabilityLink = document.getElementById('evaluation-liability-link');
   if (liabilityLink) {
     liabilityLink.addEventListener('click', function () {
       _paq.push(['trackEvent', 'EvaluationContent', 'JumpToAnchor', 'LiabilityInfo']);
@@ -69,5 +69,5 @@ window.addEventListener('load', () => {
   trackAppointmentButton();
   trackSelfDeclarationButtons();
   trackSelfDeclarationDismiss();
-  trackLiabilityLink();
+  trackEvaluationLiabilityLink();
 });
