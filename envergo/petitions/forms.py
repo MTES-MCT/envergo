@@ -141,7 +141,7 @@ class ProcedureForm(forms.ModelForm):
             "update_comment",
         ]
         help_texts = {
-            "update_comment": "Commentaire interne. Aucun message ne sera envoyé au demandeur.",
+            "update_comment": "Ce commentaire ne sera visible que par les services instructeurs dans l'historique du dossier.",  # noqa: E501
         }
         labels = {
             "due_date": "Échéance de l'étape",
