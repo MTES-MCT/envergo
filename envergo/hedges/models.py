@@ -649,10 +649,10 @@ LEVELS_OF_CONCERN = Choices(
 # Two query pipelines exist for finding protected species near hedges:
 #
 # HRU (droit constant): species must be confirmed in zones that directly
-# intersect the hedge, AND their taxref_ids must overlap the zone's
+# intersect the hedge, AND their cd_noms must overlap the zone's
 # species_taxrefs array. Strict, observation-based.
 #
-# RU (régime unique): all species from SpeciesMaps within 400m are
+# RU (régime unique): all species from SpeciesHabitats within 400m are
 # considered potentially present. "Majeur" species not observed locally
 # (cd_ref absent from nearby zone.species_taxrefs) are excluded entirely.
 #
@@ -691,20 +691,20 @@ class HruSpeciesQuerySet(models.QuerySet):
         """Build a Q filter for species confirmed in zones intersecting a hedge.
 
         HRU is observation-based: species are only included when both their
-        geographic zone intersects the hedge AND their taxref_ids appear in
+        geographic zone intersects the hedge AND their cd_noms appear in
         the zone's species_taxrefs array (confirming local observation).
         """
-        q_filter = Q(species_maps__hedge_types__contains=[hedge.effective_hedge_type])
+        q_filter = Q(habitats__hedge_types__contains=[hedge.effective_hedge_type])
 
         if hedge.missing_ecological_properties:
             q_filter &= ~Q(
-                species_maps__hedge_properties__overlap=hedge.missing_ecological_properties
+                habitats__hedge_properties__overlap=hedge.missing_ecological_properties
             )
 
         zone_subquery = (
             Zone.objects.filter(geometry__intersects=hedge.geos_geometry)
-            .filter(map_id=OuterRef("species_maps__map_id"))
-            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
+            .filter(map_id=OuterRef("habitats__map_id"))
+            .filter(species_taxrefs__overlap=OuterRef("cd_noms"))
         )
         q_filter &= Q(Exists(zone_subquery))
         return q_filter
@@ -798,17 +798,17 @@ class RuSpeciesQuerySet(models.QuerySet):
         every "majeur" species is excluded.
         """
         if observed_cdrefs:
-            is_majeur = Q(species_maps__level_of_concern="majeur")
+            is_majeur = Q(habitats__level_of_concern="majeur")
             not_observed = ~Q(cd_ref__in=observed_cdrefs)
             return ~(is_majeur & not_observed)
 
-        return ~Q(species_maps__level_of_concern="majeur")
+        return ~Q(habitats__level_of_concern="majeur")
 
     def build_grouped_filter(self, hedges, nearby_map_ids, observed_cdrefs):
         """Build a single Q filter from all hedges, grouped by filter signature.
 
         Hedges that share the same (hedge_type, missing_properties) produce
-        identical SpeciesMap filters, so we deduplicate them into one Q per
+        identical SpeciesHabitat filters, so we deduplicate them into one Q per
         unique signature and OR the groups together.
         """
         signatures = {
@@ -829,13 +829,13 @@ class RuSpeciesQuerySet(models.QuerySet):
         self, hedge_type, missing_props, nearby_map_ids, majeur_exclusion
     ):
         """Build the Q filter for one (hedge_type, missing_props) signature."""
-        on_nearby_map = Q(species_maps__map_id__in=nearby_map_ids)
-        matches_hedge_type = Q(species_maps__hedge_types__contains=[hedge_type])
+        on_nearby_map = Q(habitats__map_id__in=nearby_map_ids)
+        matches_hedge_type = Q(habitats__hedge_types__contains=[hedge_type])
         signature_filter = on_nearby_map & matches_hedge_type
 
         if missing_props:
             requires_absent_property = Q(
-                species_maps__hedge_properties__overlap=list(missing_props)
+                habitats__hedge_properties__overlap=list(missing_props)
             )
             signature_filter &= ~requires_absent_property
 
@@ -845,13 +845,13 @@ class RuSpeciesQuerySet(models.QuerySet):
     def build_level_subquery(self, nearby_map_ids):
         """Build a subquery to pick the highest level_of_concern per species.
 
-        A species can appear in multiple SpeciesMaps with different levels.
+        A species can appear in multiple SpeciesHabitats with different levels.
         This subquery finds the highest-ranked match and returns the label
         for display. Sorting rank is derived from the label in the outer
         query via Case/When on LEVEL_OF_CONCERN_ORDER.
         """
         best_match = (
-            SpeciesMap.objects.filter(
+            SpeciesHabitat.objects.filter(
                 species_id=OuterRef("pk"),
                 map_id__in=nearby_map_ids,
             )
@@ -870,21 +870,18 @@ class RuSpeciesQuerySet(models.QuerySet):
 class Species(models.Model):
     """Represent a single species."""
 
-    # This is the unique species identifier (cd_nom) in the INPN TaxRef database
-    # https://inpn.mnhn.fr/telechargement/referentielEspece/referentielTaxo
-    # The reason why this is an array is because sometimes, there are duplicates
-    # (e.g) a species has been describe by several naturalists over the years before
-    # they realized it was a duplicate.
-    # Hence, for a given scientific name, there can be several TaxRef ids.
-    taxref_ids = ArrayField(
-        null=True, verbose_name="Ids TaxRef (cd_nom)", base_field=models.IntegerField()
+    # Multiple cd_nom values (unique species identifiers in the INPN TaxRef database)
+    # because a single species can have been described independently by several
+    # naturalists before the duplicates were recognized and merged under one cd_ref.
+    cd_noms = ArrayField(
+        null=True, verbose_name="CD_NOM (TaxRef)", base_field=models.IntegerField()
     )
 
     # Canonical TaxRef identifier — unique per species reference taxon.
     cd_ref = models.IntegerField("CD_REF TaxRef", unique=True, null=True, blank=True)
 
-    # Deprecated ad-hoc classification, kept for legacy data. Prefer taxref_group.
-    group = models.CharField(
+    # Deprecated ad-hoc classification, kept for legacy data. Prefer group.
+    adhoc_group = models.CharField(
         "Groupe (obsolète)",
         choices=SPECIES_GROUPS,
         max_length=64,
@@ -893,7 +890,7 @@ class Species(models.Model):
     )
 
     # Official group from TaxRef GROUP2_INPN field.
-    taxref_group = models.CharField("Groupe TaxRef", max_length=128, blank=True)
+    group = models.CharField("Groupe", max_length=128, blank=True)
 
     kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
     common_name = models.CharField("Nom commun", max_length=255)
@@ -918,28 +915,25 @@ class Species(models.Model):
         return f"{self.common_name} ({self.scientific_name})"
 
 
-# TODO
-# That name is terrible, and does not represent what the class does at all
-# Refactor into something better
-class SpeciesMap(models.Model):
-    """Represent a single species map."""
+class SpeciesHabitat(models.Model):
+    """Habitat requirements and conservation status of a species in a geographic area."""
 
     species = models.ForeignKey(
         Species,
-        related_name="species_maps",
+        related_name="habitats",
         on_delete=models.CASCADE,
         verbose_name="Espèce",
     )
     map = models.ForeignKey(
         "geodata.Map",
-        related_name="species_maps",
+        related_name="habitats",
         on_delete=models.CASCADE,
         verbose_name="Carte",
     )
-    species_map_file = models.ForeignKey(
-        "SpeciesMapFile",
+    species_habitat_file = models.ForeignKey(
+        "SpeciesHabitatFile",
         verbose_name="Importé par",
-        related_name="species_maps",
+        related_name="habitats",
         null=True,
         on_delete=models.CASCADE,
     )
@@ -966,8 +960,8 @@ class SpeciesMap(models.Model):
     )
 
     class Meta:
-        verbose_name = "Carte d'espèce"
-        verbose_name_plural = "Cartes d'espèces"
+        verbose_name = "Habitat d'espèce"
+        verbose_name_plural = "Habitats d'espèces"
         unique_together = ("species", "map")
 
 
@@ -978,8 +972,8 @@ IMPORT_STATUSES = Choices(
 )
 
 
-class SpeciesMapFile(models.Model):
-    """Holds a csv file that links species and their caracteristics to a map."""
+class SpeciesHabitatFile(models.Model):
+    """Holds a CSV file that links species and their habitat characteristics to a map."""
 
     name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
     file = models.FileField("Fichier", upload_to="species_maps/")
@@ -996,8 +990,8 @@ class SpeciesMapFile(models.Model):
     import_log = models.TextField("Log d'import", blank=True)
 
     class Meta:
-        verbose_name = "Fichier de carte d'espèces"
-        verbose_name_plural = "Fichiers de carte d'espèces"
+        verbose_name = "Fichier d'habitat d'espèce"
+        verbose_name_plural = "Fichiers d'habitat d'espèces"
 
     def __str__(self):
         return self.file.name

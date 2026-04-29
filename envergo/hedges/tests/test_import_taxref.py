@@ -65,8 +65,8 @@ def test_import_taxref_populates_cd_ref():
     assert species.cd_ref == 110920
 
 
-def test_import_taxref_populates_taxref_group():
-    """Species should get taxref_group from GROUP2_INPN."""
+def test_import_taxref_populates_group():
+    """Species should get group from GROUP2_INPN."""
     SpeciesFactory(scientific_name="Orchis militaris", cd_ref=None)
 
     with TemporaryDirectory() as tmpdir:
@@ -84,7 +84,7 @@ def test_import_taxref_populates_taxref_group():
         call_command("import_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
-    assert species.taxref_group == "Angiospermes"
+    assert species.group == "Angiospermes"
 
 
 def test_import_taxref_populates_common_name_from_nom_vern():
@@ -139,4 +139,4 @@ def test_import_taxref_matches_by_cd_ref():
     assert species.scientific_name == "Orchis militaris"
     assert species.common_name == "Orchis militaire"
     assert species.kingdom == "plantae"
-    assert species.taxref_group == "Angiospermes"
+    assert species.group == "Angiospermes"

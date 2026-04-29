@@ -18,7 +18,7 @@ from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
     SpeciesFactory,
-    SpeciesMapFactory,
+    SpeciesHabitatFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -137,11 +137,11 @@ def calvados_hedge_data():
 def test_hedge_species_are_filtered_by_geography(
     aisne_map, calvados_map, aisne_hedge_data, calvados_hedge_data  # noqa
 ):
-    aisne_species = SpeciesMapFactory(map=aisne_map).species
-    aisne_map.zones.update(species_taxrefs=aisne_species.taxref_ids)
+    aisne_species = SpeciesHabitatFactory(map=aisne_map).species
+    aisne_map.zones.update(species_taxrefs=aisne_species.cd_noms)
 
-    calvados_species = SpeciesMapFactory(map=calvados_map).species
-    calvados_map.zones.update(species_taxrefs=calvados_species.taxref_ids)
+    calvados_species = SpeciesHabitatFactory(map=calvados_map).species
+    calvados_map.zones.update(species_taxrefs=calvados_species.cd_noms)
 
     hedge = aisne_hedge_data.hedges()[0]
     assert set(Species.hru.for_hedges([hedge])) == set([aisne_species])
@@ -158,14 +158,14 @@ def test_zone_filters_are_not_mixed():  # noqa
     ZoneFactory(
         map=acy_limé_map, geometry=MultiPolygon([limé_polygon]), species_taxrefs=[2]
     )
-    hypolais = SpeciesFactory(common_name="Hypolaïs ictérine", taxref_ids=[1])
-    SpeciesMapFactory(
+    hypolais = SpeciesFactory(common_name="Hypolaïs ictérine", cd_noms=[1])
+    SpeciesHabitatFactory(
         map=acy_limé_map,
         species=hypolais,
         hedge_types=["mixte"],
     )
-    huppe = SpeciesFactory(common_name="Huppe fasciée", taxref_ids=[2])
-    SpeciesMapFactory(
+    huppe = SpeciesFactory(common_name="Huppe fasciée", cd_noms=[2])
+    SpeciesHabitatFactory(
         map=acy_limé_map,
         species=huppe,
         hedge_types=["mixte"],
@@ -231,11 +231,11 @@ def test_zone_filters_are_not_mixed():  # noqa
 def test_hedge_data_species_are_filtered_by_geography(
     aisne_map, calvados_map, aisne_hedge_data, calvados_hedge_data  # noqa
 ):
-    aisne_species = SpeciesMapFactory(map=aisne_map).species
-    aisne_map.zones.update(species_taxrefs=aisne_species.taxref_ids)
+    aisne_species = SpeciesHabitatFactory(map=aisne_map).species
+    aisne_map.zones.update(species_taxrefs=aisne_species.cd_noms)
 
-    calvados_species = SpeciesMapFactory(map=calvados_map).species
-    calvados_map.zones.update(species_taxrefs=calvados_species.taxref_ids)
+    calvados_species = SpeciesHabitatFactory(map=calvados_map).species
+    calvados_map.zones.update(species_taxrefs=calvados_species.cd_noms)
 
     assert set(aisne_hedge_data.get_all_species_hru()) == set([aisne_species])
     assert set(calvados_hedge_data.get_all_species_hru()) == set([calvados_species])
@@ -248,9 +248,9 @@ def test_hedge_data_species_are_filtered_by_geography(
 
 
 def test_species_are_filtered_by_hedge_type():
-    s1 = SpeciesMapFactory(hedge_types=["degradee"]).species
-    s2 = SpeciesMapFactory(hedge_types=["degradee"]).species
-    s3 = SpeciesMapFactory(hedge_types=["arbustive"]).species
+    s1 = SpeciesHabitatFactory(hedge_types=["degradee"]).species
+    s2 = SpeciesHabitatFactory(hedge_types=["degradee"]).species
+    s3 = SpeciesHabitatFactory(hedge_types=["arbustive"]).species
     hedge = HedgeFactory(additionalData__type_haie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
@@ -297,10 +297,10 @@ def test_hedges_has_centroid_and_department():
 
 
 def test_species_are_filtered_by_hedge_features():
-    s1 = SpeciesMapFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
-    s2 = SpeciesMapFactory(hedge_properties=["proximite_mare"]).species
-    s3 = SpeciesMapFactory(hedge_properties=["vieil_arbre"]).species
-    s4 = SpeciesMapFactory(hedge_properties=[]).species
+    s1 = SpeciesHabitatFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
+    s2 = SpeciesHabitatFactory(hedge_properties=["proximite_mare"]).species
+    s3 = SpeciesHabitatFactory(hedge_properties=["vieil_arbre"]).species
+    s4 = SpeciesHabitatFactory(hedge_properties=[]).species
 
     hedge = HedgeFactory(
         additionalData__proximite_mare=False, additionalData__vieil_arbre=False
@@ -328,10 +328,10 @@ def test_species_are_filtered_by_hedge_features():
 
 
 def test_multiple_hedges_combine_their_species():
-    _ = SpeciesMapFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
-    s2 = SpeciesMapFactory(hedge_properties=["proximite_mare"]).species
-    s3 = SpeciesMapFactory(hedge_properties=["vieil_arbre"]).species
-    s4 = SpeciesMapFactory(hedge_properties=[]).species
+    _ = SpeciesHabitatFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
+    s2 = SpeciesHabitatFactory(hedge_properties=["proximite_mare"]).species
+    s3 = SpeciesHabitatFactory(hedge_properties=["vieil_arbre"]).species
+    s4 = SpeciesHabitatFactory(hedge_properties=[]).species
 
     hedge1 = HedgeFactory(
         additionalData__proximite_mare=True, additionalData__vieil_arbre=False
@@ -350,13 +350,13 @@ def test_multiple_hedges_combine_their_species():
     assert set(all_species) == set([s2, s3, s4])
 
 
-def test_hru_no_duplicates_from_multiple_species_maps():
-    """A species linked to two matching SpeciesMaps should appear only once."""
+def test_hru_no_duplicates_from_multiple_habitats():
+    """A species linked to two matching SpeciesHabitats should appear only once."""
     species = SpeciesFactory()
-    map1 = MapFactory(map_type="species", zones__species_taxrefs=species.taxref_ids)
-    map2 = MapFactory(map_type="species", zones__species_taxrefs=species.taxref_ids)
-    SpeciesMapFactory(species=species, map=map1)
-    SpeciesMapFactory(species=species, map=map2)
+    map1 = MapFactory(map_type="species", zones__species_taxrefs=species.cd_noms)
+    map2 = MapFactory(map_type="species", zones__species_taxrefs=species.cd_noms)
+    SpeciesHabitatFactory(species=species, map=map1)
+    SpeciesHabitatFactory(species=species, map=map2)
 
     hedge = HedgeFactory()
     result = list(Species.hru.for_hedges([hedge]))
@@ -929,7 +929,7 @@ class TestDensityLazyComputation:
 
 
 class TestSpeciesModelFields:
-    """Phase 1: verify new fields on Species and SpeciesMap."""
+    """Phase 1: verify new fields on Species and SpeciesHabitat."""
 
     def test_species_has_cd_ref_field(self):
         species = SpeciesFactory(cd_ref=42)
@@ -946,16 +946,16 @@ class TestSpeciesModelFields:
         species.refresh_from_db()
         assert species.cd_ref is None
 
-    def test_species_has_taxref_group_field(self):
-        species = SpeciesFactory(taxref_group="Mammifères")
+    def test_species_has_group_field(self):
+        species = SpeciesFactory(group="Mammifères")
         species.refresh_from_db()
-        assert species.taxref_group == "Mammifères"
+        assert species.group == "Mammifères"
 
-    def test_species_group_is_optional(self):
+    def test_species_adhoc_group_is_optional(self):
         """The ad-hoc group field should accept blank values for new species."""
-        species = SpeciesFactory(group="")
+        species = SpeciesFactory(adhoc_group="")
         species.refresh_from_db()
-        assert species.group == ""
+        assert species.adhoc_group == ""
 
     def test_species_level_of_concern_is_optional(self):
         """Global level_of_concern can be blank for species created from CD_REF only."""
@@ -963,14 +963,14 @@ class TestSpeciesModelFields:
         species.refresh_from_db()
         assert species.level_of_concern == ""
 
-    def test_species_map_has_level_of_concern(self):
-        sm = SpeciesMapFactory(level_of_concern="fort")
+    def test_species_habitat_has_level_of_concern(self):
+        sm = SpeciesHabitatFactory(level_of_concern="fort")
         sm.refresh_from_db()
         assert sm.level_of_concern == "fort"
 
-    def test_species_map_level_of_concern_is_nullable(self):
-        """Legacy SpeciesMaps can have null level_of_concern."""
-        sm = SpeciesMapFactory(level_of_concern=None)
+    def test_species_habitat_level_of_concern_is_nullable(self):
+        """Legacy SpeciesHabitats can have null level_of_concern."""
+        sm = SpeciesHabitatFactory(level_of_concern=None)
         sm.refresh_from_db()
         assert sm.level_of_concern is None
 
@@ -1031,7 +1031,7 @@ class TestRuSpeciesQuerying:
         species = SpeciesFactory(cd_ref=5001)
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[5001])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1047,7 +1047,7 @@ class TestRuSpeciesQuerying:
         species = SpeciesFactory(cd_ref=5002)
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 600, species_taxrefs=[5002])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1064,7 +1064,7 @@ class TestRuSpeciesQuerying:
         map_obj = MapFactory(map_type="species", zones=None)
         # Zone within 400m, species IS in species_taxrefs (observed locally)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[5003])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1081,7 +1081,7 @@ class TestRuSpeciesQuerying:
         map_obj = MapFactory(map_type="species", zones=None)
         # Zone within 400m, but species NOT in species_taxrefs (not observed)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[9999])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1098,7 +1098,7 @@ class TestRuSpeciesQuerying:
         map_obj = MapFactory(map_type="species", zones=None)
         # Zone within 400m, species NOT in species_taxrefs
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1116,13 +1116,13 @@ class TestRuSpeciesQuerying:
         map_obj = MapFactory(map_type="species", zones=None)
         # Zone lists only cd_ref=5006
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[5006])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=observed,
             map=map_obj,
             hedge_types=["mixte"],
             level_of_concern="fort",
         )
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=not_observed,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1148,7 +1148,7 @@ class TestRuSpeciesQuerying:
         # Majeur is observed so it's included
         self._make_zone_near_hedge(map_obj, 100, species_taxrefs=[6003])
         for sp, level in [(faible, "faible"), (fort, "fort"), (majeur_observed, "majeur")]:
-            SpeciesMapFactory(
+            SpeciesHabitatFactory(
                 species=sp,
                 map=map_obj,
                 hedge_types=["mixte"],
@@ -1163,11 +1163,11 @@ class TestRuSpeciesQuerying:
         assert levels == ["majeur", "fort", "faible"]
 
     def test_ru_null_level_of_concern_treated_as_non_majeur(self):
-        """Species with NULL level_of_concern on SpeciesMap are included."""
+        """Species with NULL level_of_concern on SpeciesHabitat are included."""
         species = SpeciesFactory(cd_ref=7001)
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1183,7 +1183,7 @@ class TestRuSpeciesQuerying:
         species = SpeciesFactory(cd_ref=None)
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species,
             map=map_obj,
             hedge_types=["mixte"],
@@ -1202,11 +1202,11 @@ class TestRuSpeciesQuerying:
         map2 = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map1, 200, species_taxrefs=[7003])
         self._make_zone_near_hedge(map2, 300, species_taxrefs=[7003])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species, map=map1,
             hedge_types=["mixte"], level_of_concern="fort",
         )
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species, map=map2,
             hedge_types=["mixte"], level_of_concern="moyen",
         )
@@ -1221,12 +1221,12 @@ class TestRuSpeciesQuerying:
         no_requirements = SpeciesFactory(cd_ref=7005)
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=needs_ripisylve, map=map_obj,
             hedge_types=["mixte"], hedge_properties=["ripisylve"],
             level_of_concern="fort",
         )
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=no_requirements, map=map_obj,
             hedge_types=["mixte"], hedge_properties=[],
             level_of_concern="fort",
@@ -1245,11 +1245,11 @@ class TestRuSpeciesQuerying:
         map_high = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_low, 200, species_taxrefs=[])
         self._make_zone_near_hedge(map_high, 300, species_taxrefs=[])
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species, map=map_low,
             hedge_types=["mixte"], level_of_concern="faible",
         )
-        SpeciesMapFactory(
+        SpeciesHabitatFactory(
             species=species, map=map_high,
             hedge_types=["mixte"], level_of_concern="tres_fort",
         )
