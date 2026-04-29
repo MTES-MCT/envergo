@@ -278,8 +278,19 @@ def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
     )
+    expected_results_criteria = {
+        (
+            "sites_proteges_haie.mh_haie.result_code",
+            "Code de résultat du critère MH Haies > bizou2 de la réglementation sites_proteges_haie",
+        ),
+        (
+            "sites_proteges_haie.spr_haie.result_code",
+            "Code de résultat du critère SPR Haies > bizou de la réglementation sites_proteges_haie",
+        ),
+    }
+
     results = config_haie.get_demarche_simplifiee_value_sources()
-    assert results == {}
+    assert results["Résultats des critères"] == expected_results_criteria
 
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(
