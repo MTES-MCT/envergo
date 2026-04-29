@@ -639,38 +639,14 @@ LEVELS_OF_CONCERN = Choices(
     ("majeur", "Majeur"),
 )
 
-# --- Species query infrastructure ----------------------------------------
-#
-# Two query pipelines exist for finding protected species near hedges:
-#
-# HRU (droit constant): species must be confirmed in zones that directly
-# intersect the hedge, AND their cd_noms must overlap the zone's
-# species_taxrefs array. Strict, observation-based.
-#
-# RU (régime unique): all species from SpeciesHabitats within 400m are
-# considered potentially present. "Majeur" species not observed locally
-# (cd_ref absent from nearby zone.species_taxrefs) are excluded entirely.
-#
-# Each pipeline is exposed as a custom manager on the Species model:
-#   Species.hru.for_hedges(hedges)
-#   Species.ru.for_hedges(hedges)
 
-SPECIES_BUFFER_DISTANCE = D(m=400)
-
-# Numeric ranks for sorting species by level_of_concern in the RU pipeline.
-# Derived from LEVELS_OF_CONCERN ordering (1 = lowest, 6 = highest).
-LEVEL_OF_CONCERN_ORDER = {
-    value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1)
-}
-
-LEVEL_OF_CONCERN_WHENS = [
-    When(level_of_concern=value, then=Value(rank))
-    for value, rank in LEVEL_OF_CONCERN_ORDER.items()
-]
-
-
+# HRU (droit constant):
 class HruSpeciesQuerySet(models.QuerySet):
-    """Species queryset for the HRU (droit constant) pipeline."""
+    """Species queryset for the HRU (droit constant) pipeline.
+
+    species must be confirmed in zones that directly intersect the hedge,
+    AND their cd_noms must overlap the zone's species_taxrefs array.
+    """
 
     def for_hedges(self, hedges):
         """Return species confirmed in zones intersecting the given hedges."""
@@ -705,8 +681,29 @@ class HruSpeciesQuerySet(models.QuerySet):
         return q_filter
 
 
+# RU (régime unique):
+#
+
+SPECIES_BUFFER_DISTANCE = D(m=400)
+
+# Numeric ranks for sorting species by level_of_concern in the RU pipeline.
+# Derived from LEVELS_OF_CONCERN ordering (1 = lowest, 6 = highest).
+LEVEL_OF_CONCERN_ORDER = {
+    value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1)
+}
+
+LEVEL_OF_CONCERN_WHENS = [
+    When(level_of_concern=value, then=Value(rank))
+    for value, rank in LEVEL_OF_CONCERN_ORDER.items()
+]
+
+
 class RuSpeciesQuerySet(models.QuerySet):
     """Species queryset for the RU (régime unique) pipeline.
+
+    All species from SpeciesHabitats within 400m are considered potentially present.
+    Highly sensitive species not observed locally (cd_ref absent from nearby
+    zone.species_taxrefs) are excluded entirely.
 
     The zone data (nearby map ids and observed cd_refs) is prefetched in
     a single query, then injected as plain Python values into the species
@@ -875,7 +872,8 @@ class Species(models.Model):
     # Canonical TaxRef identifier — unique per species reference taxon.
     cd_ref = models.IntegerField("CD_REF TaxRef", unique=True, null=True, blank=True)
 
-    # Deprecated ad-hoc classification, kept for legacy data. Prefer group.
+    # Some data provider (e.g Aisne) use a "group" classification that is manually
+    # curated and does not match any "official" taxonomy value.
     adhoc_group = models.CharField(
         "Groupe (obsolète)",
         choices=SPECIES_GROUPS,
