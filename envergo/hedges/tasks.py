@@ -12,6 +12,7 @@ from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     IMPORT_STATUSES,
     LEVELS_OF_CONCERN,
+
     HedgeTypeFactory,
     Species,
     SpeciesHabitat,
@@ -111,7 +112,7 @@ def extract_file(field_file):
         raise RuntimeError("File not found")
 
 
-def process_species_habitat_row(row, smf):
+def process_species_habitat_row(row, habitat_file):
     """Process a single CSV row, creating a SpeciesHabitat.
 
     Supports three species identification methods (tried in order):
@@ -119,6 +120,7 @@ def process_species_habitat_row(row, smf):
     When CD_REF is used and the species doesn't exist, a stub is created.
     """
     species = find_or_create_species(row)
+    update_species_adhoc_group(species, row)
 
     hedge_types = []
     for hedge_type in HedgeTypeFactory.build_from_context(
@@ -136,8 +138,8 @@ def process_species_habitat_row(row, smf):
 
     return SpeciesHabitat(
         species=species,
-        map=smf.map,
-        species_habitat_file=smf,
+        map=habitat_file.map,
+        species_habitat_file=habitat_file,
         hedge_types=hedge_types,
         hedge_properties=hedge_properties,
         level_of_concern=local_level,
@@ -176,10 +178,22 @@ def find_or_create_species(row):
     return species
 
 
+def update_species_adhoc_group(species, row):
+    """Set species.adhoc_group from the CSV 'groupe' column if present."""
+    raw_group = row.get("groupe", "").strip()
+    if not raw_group:
+        return
+
+    if species.adhoc_group == raw_group:
+        return
+
+    species.adhoc_group = raw_group
+    species.save(update_fields=["adhoc_group"])
+
+
 # Reverse mapping from display labels ("Majeur", "Très fort"…) to database
 # values ("majeur", "tres_fort"…), used to normalize CSV import data.
 LEVEL_OF_CONCERN_DISPLAY_TO_DB = {label: value for value, label in LEVELS_OF_CONCERN}
-
 
 def parse_level_of_concern(raw_value):
     """Convert a display-format level_of_concern to its database value."""

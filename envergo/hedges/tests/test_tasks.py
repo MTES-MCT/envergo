@@ -93,3 +93,27 @@ def test_import_csv_maps_display_values(display_value, db_value):
     sm = process_species_habitat_row(row, smf)
 
     assert sm.level_of_concern == db_value
+
+
+def test_import_csv_saves_groupe_to_adhoc_group():
+    """The 'groupe' CSV column should be stored verbatim in species.adhoc_group."""
+    species = SpeciesFactory(cd_ref=110920, adhoc_group="")
+    smf = make_smf()
+    row = make_row(110920, hedge_types=["mixte"], groupe="Oiseaux")
+
+    process_species_habitat_row(row, smf)
+
+    species.refresh_from_db()
+    assert species.adhoc_group == "Oiseaux"
+
+
+def test_import_csv_skips_adhoc_group_when_groupe_absent():
+    """Species.adhoc_group should not be touched when the CSV has no 'groupe' column."""
+    species = SpeciesFactory(cd_ref=110920, adhoc_group="Reptiles")
+    smf = make_smf()
+    row = make_row(110920, hedge_types=["mixte"])
+
+    process_species_habitat_row(row, smf)
+
+    species.refresh_from_db()
+    assert species.adhoc_group == "Reptiles"
