@@ -56,8 +56,8 @@ const trackActionTabs = () => {
   }
 };
 
-const trackLiabilityLink = () => {
-  const liabilityLink = document.getElementById('liability-link');
+const trackSimulationLiabilityLink = () => {
+  const liabilityLink = document.getElementById('simulation-liability-link');
   if (liabilityLink) {
     liabilityLink.addEventListener('click', function () {
       _paq.push(['trackEvent', 'SimulationContent', 'JumpToAnchor', 'LiabilityInfo']);
@@ -71,5 +71,5 @@ window.addEventListener('load', () => {
   trackActionButtons();
   trackActionLearnMoreLinks();
   trackActionTabs();
-  trackLiabilityLink();
+  trackSimulationLiabilityLink();
 });
