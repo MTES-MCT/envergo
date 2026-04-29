@@ -6,6 +6,7 @@ from django.contrib import admin, messages
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.html import mark_safe
 
 from envergo.hedges.models import (
@@ -18,6 +19,7 @@ from envergo.hedges.models import (
     SpeciesHabitatFile,
 )
 from envergo.hedges.tasks import process_species_habitat_file
+from envergo.moulinette.models import ConfigHaie
 
 
 @admin.register(HedgeData)
@@ -87,12 +89,28 @@ class HedgeDataAdmin(admin.ModelAdmin):
     def length_to_remove(self, obj):
         return round(obj.length_to_plant())
 
+    def is_single_procedure(self, obj):
+        """Check whether the department uses the single-procedure (RU) regime."""
+        department_code = obj.get_department()
+        if not department_code:
+            return False
+        config = (
+            ConfigHaie.objects.filter(department__department=department_code)
+            .valid_at(timezone.now().date())
+            .first()
+        )
+        return config.single_procedure if config else False
+
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
 
+        if self.is_single_procedure(obj):
+            species = obj.get_all_species()
+        else:
+            species = obj.get_all_species_hru()
         content = render_to_string(
             "hedges/admin/_hedges_species.html",
-            context={"species": obj.get_all_species_hru()},
+            context={"species": species},
         )
         return mark_safe(content)
 
@@ -117,9 +135,7 @@ class SpeciesAdmin(admin.ModelAdmin):
 
 class SpeciesHabitatAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
-        choices=HedgeTypeFactory.build_from_context(
-            single_procedure=False
-        ).choices,
+        choices=HedgeTypeFactory.build_from_context(single_procedure=False).choices,
         widget=forms.CheckboxSelectMultiple,
         label="Types de haies considérés",
         required=False,
