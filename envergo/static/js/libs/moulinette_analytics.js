@@ -60,7 +60,7 @@ const trackLiabilityLink = () => {
   const liabilityLink = document.getElementById('liability-link');
   if (liabilityLink) {
     liabilityLink.addEventListener('click', function () {
-      _paq.push(['trackEvent', 'Content', 'JumpToAnchor', 'LiabilityInfo']);
+      _paq.push(['trackEvent', 'SimulationContent', 'JumpToAnchor', 'LiabilityInfo']);
     });
   }
 };
