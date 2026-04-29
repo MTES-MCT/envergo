@@ -16,7 +16,7 @@
       </li>
     </ul>
 
-    <h4>Exemple</h4>
+    <h3>Exemple</h3>
     <pre>
         [
           {
@@ -43,7 +43,7 @@
         ]
         </pre>
 
-    <h4>Comment trouver les ids des champs ou des annotations privées ?</h4>
+    <h3>Comment trouver les ids des champs ou des annotations privées ?</h3>
     <p>
       Pour trouver les ids des champs ou des annotations privées, vous pouvez consulter le schéma json de votre démarche :
     </p>
@@ -63,15 +63,15 @@
       <li>Les ids des annotations sont indiqués ici : revision > annotationDescriptors > index [0...n] > id</li>
     </ul>
 
-    <h4>Quelles sont les sources de valeurs autorisées ?</h4>
+    <h3>Quelles sont les sources de valeurs autorisées ?</h3>
     {% for title, set in sources.items %}
-      <h5>{{ title }} :</h5>
+      <h4>{{ title }} :</h4>
       <ul>
         {% for key, label in set %}<li>{{ key }} ({{ label }})</li>{% endfor %}
       </ul>
     {% endfor %}
 
-    <h4>Comment fonctionne le mapping ?</h4>
+    <h3>Comment fonctionne le mapping ?</h3>
 
     <p>
       Ce mapping est nécessaire dans le cas des questions de type choix (simple ou multiple) ou les questions de type

@@ -76,6 +76,7 @@ from envergo.petitions.forms import (
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
+    FORBIDDEN_STAGE_TRANSITIONS,
     LOG_TYPES,
     STAGES,
     InvitationToken,
@@ -1502,11 +1503,15 @@ class PetitionProjectInstructorProcedureView(
                 decision,
             ), ds_status in DEMARCHES_SIMPLIFIEES_STATUS_MAPPING.items()
         }
+        ds_status_labels = {key: str(label) for key, label in DOSSIER_STATES}
+        forbidden_transitions = [list(k) for k in FORBIDDEN_STAGE_TRANSITIONS.keys()]
         context.update(
             {
                 "STAGES": STAGES,
                 "DECISIONS": DECISIONS,
                 "ds_status_mapping": ds_status_mapping,
+                "ds_status_labels": ds_status_labels,
+                "forbidden_transitions": forbidden_transitions,
             }
         )
 
