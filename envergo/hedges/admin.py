@@ -159,6 +159,8 @@ class SpeciesHabitatAdmin(admin.ModelAdmin):
         "level_of_concern",
     ]
     search_fields = [
+        "species__cd_ref",
+        "species__adhoc_group",
         "species__common_name",
         "species__scientific_name",
         "species__cd_noms",

@@ -14,7 +14,7 @@
           <tbody>
             {% for s in species %}
               <tr>
-                <td>{{ s.get_group_display }}</td>
+                <td>{{ s.adhoc_group|title }}</td>
                 <td>{{ s.common_name }}</td>
                 <td>
                   <i>{{ s.scientific_name }}</i>

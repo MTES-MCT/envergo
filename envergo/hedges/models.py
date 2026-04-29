@@ -610,16 +610,6 @@ class HedgeData(models.Model):
         }
 
 
-SPECIES_GROUPS = Choices(
-    ("amphibiens", "Amphibiens"),
-    ("chauves-souris", "Chauves-souris"),
-    ("flore", "Flore"),
-    ("insectes", "Insectes"),
-    ("mammiferes-terrestres", "Mammifères terrestres"),
-    ("oiseaux", "Oiseaux"),
-    ("reptiles", "Reptiles"),
-)
-
 KINGDOMS = Choices(
     ("animalia", "Animalia"),
     ("archaea", "Archaea"),
@@ -876,7 +866,6 @@ class Species(models.Model):
     # curated and does not match any "official" taxonomy value.
     adhoc_group = models.CharField(
         "Groupe (obsolète)",
-        choices=SPECIES_GROUPS,
         max_length=64,
         blank=True,
         help_text="Classification ad-hoc obsolète. Utiliser le groupe TaxRef.",
