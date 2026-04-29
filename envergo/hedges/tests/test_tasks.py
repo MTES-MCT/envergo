@@ -1,19 +1,19 @@
-"""Tests for species map CSV import task."""
+"""Tests for species habitat CSV import task."""
 
 import pytest
 
 from envergo.geodata.tests.factories import MapFactory
-from envergo.hedges.models import Species, SpeciesMap, SpeciesMapFile
-from envergo.hedges.tasks import LEVEL_OF_CONCERN_DISPLAY_TO_DB, process_species_file_map_row
+from envergo.hedges.models import Species, SpeciesHabitat, SpeciesHabitatFile
+from envergo.hedges.tasks import LEVEL_OF_CONCERN_DISPLAY_TO_DB, process_species_habitat_row
 from envergo.hedges.tests.factories import SpeciesFactory
 
 pytestmark = pytest.mark.django_db
 
 
 def make_smf():
-    """Create a minimal SpeciesMapFile-like object for testing."""
+    """Create a minimal SpeciesHabitatFile-like object for testing."""
     map_obj = MapFactory(map_type="species")
-    smf = SpeciesMapFile.objects.create(
+    smf = SpeciesHabitatFile.objects.create(
         name="test",
         map=map_obj,
         file="test.csv",
@@ -49,7 +49,7 @@ def test_import_csv_with_cd_ref():
     smf = make_smf()
     row = make_row(110920, hedge_types=["mixte", "arbustive"])
 
-    sm = process_species_file_map_row(row, smf)
+    sm = process_species_habitat_row(row, smf)
 
     assert sm.species == species
     assert "mixte" in sm.hedge_types
@@ -61,7 +61,7 @@ def test_import_csv_creates_missing_species():
     smf = make_smf()
     row = make_row(99999, hedge_types=["mixte"])
 
-    sm = process_species_file_map_row(row, smf)
+    sm = process_species_habitat_row(row, smf)
 
     assert sm.species.cd_ref == 99999
     # Stub has placeholder names
@@ -70,12 +70,12 @@ def test_import_csv_creates_missing_species():
 
 
 def test_import_csv_reads_level_of_concern():
-    """level_of_concern from CSV should be stored on SpeciesMap."""
+    """level_of_concern from CSV should be stored on SpeciesHabitat."""
     SpeciesFactory(cd_ref=110920)
     smf = make_smf()
     row = make_row(110920, hedge_types=["mixte"], level_of_concern="Fort")
 
-    sm = process_species_file_map_row(row, smf)
+    sm = process_species_habitat_row(row, smf)
 
     assert sm.level_of_concern == "fort"
 
@@ -90,6 +90,6 @@ def test_import_csv_maps_display_values(display_value, db_value):
     smf = make_smf()
     row = make_row(42, hedge_types=["mixte"], level_of_concern=display_value)
 
-    sm = process_species_file_map_row(row, smf)
+    sm = process_species_habitat_row(row, smf)
 
     assert sm.level_of_concern == db_value

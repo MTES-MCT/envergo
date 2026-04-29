@@ -14,8 +14,8 @@ from envergo.hedges.models import (
     LEVELS_OF_CONCERN,
     HedgeTypeFactory,
     Species,
-    SpeciesMap,
-    SpeciesMapFile,
+    SpeciesHabitat,
+    SpeciesHabitatFile,
 )
 from envergo.hedges.species_stubs import (
     make_stub_common_name,
@@ -29,14 +29,14 @@ ALL_HEDGE_PROPERTIES = dict(HEDGE_PROPERTIES).keys()
 
 
 @app.task(bind=True)
-def process_species_map_file(task, object_id):
-    """Process a single SpeciesMapFile objects.
+def process_species_habitat_file(task, object_id):
+    """Process a single SpeciesHabitatFile.
 
-    This scripts import the file data and associates Species with Maps.
+    Imports the file data and associates Species with Maps via SpeciesHabitat.
     """
-    logger.info(f"Starting import on species map file {object_id}")
+    logger.info(f"Starting import on species habitat file {object_id}")
 
-    smf = SpeciesMapFile.objects.get(pk=object_id)
+    smf = SpeciesHabitatFile.objects.get(pk=object_id)
     import_log = []
 
     # Store the task data in the model, so we can display progression
@@ -48,11 +48,11 @@ def process_species_map_file(task, object_id):
 
     # Clear existing data
     logger.info("Clearing existing data")
-    SpeciesMap.objects.filter(species_map_file=smf).delete()
+    SpeciesHabitat.objects.filter(species_habitat_file=smf).delete()
 
     # Process csv file
     logger.info("Processing csv file")
-    species_maps = []
+    habitats = []
     with extract_file(smf.file) as csvfile:
         nb_lines = 0
         reader = csv.DictReader(csvfile)
@@ -60,8 +60,8 @@ def process_species_map_file(task, object_id):
             nb_lines += 1
 
             try:
-                species_map = process_species_file_map_row(row, smf)
-                species_maps.append(species_map)
+                habitat = process_species_habitat_row(row, smf)
+                habitats.append(habitat)
             except Species.DoesNotExist:
                 if "common_name" in row:
                     msg = f"Espèce inconnue {row['common_name']}"
@@ -76,7 +76,7 @@ def process_species_map_file(task, object_id):
 
     # Create objects with a single query
     logger.info("Saving data objects")
-    objects = SpeciesMap.objects.bulk_create(species_maps)
+    objects = SpeciesHabitat.objects.bulk_create(habitats)
 
     # Update the import status and metadata
     if len(objects) == nb_lines:
@@ -111,8 +111,8 @@ def extract_file(field_file):
         raise RuntimeError("File not found")
 
 
-def process_species_file_map_row(row, smf):
-    """Process a single CSV row, creating a SpeciesMap.
+def process_species_habitat_row(row, smf):
+    """Process a single CSV row, creating a SpeciesHabitat.
 
     Supports three species identification methods (tried in order):
     CD_REF (RU format), CD_NOM (legacy), common_name (legacy).
@@ -134,10 +134,10 @@ def process_species_file_map_row(row, smf):
 
     local_level = parse_level_of_concern(row.get("level_of_concern", ""))
 
-    return SpeciesMap(
+    return SpeciesHabitat(
         species=species,
         map=smf.map,
-        species_map_file=smf,
+        species_habitat_file=smf,
         hedge_types=hedge_types,
         hedge_properties=hedge_properties,
         level_of_concern=local_level,
@@ -165,7 +165,7 @@ def find_or_create_species(row):
             species = Species.objects.get(cd_ref=cd_ref)
     elif "CD_NOM" in row:
         cd_nom = int(row["CD_NOM"])
-        species = Species.objects.get(taxref_ids__contains=[cd_nom])
+        species = Species.objects.get(cd_noms__contains=[cd_nom])
     elif "common_name" in row:
         species = Species.objects.get(common_name=row["common_name"])
     else:

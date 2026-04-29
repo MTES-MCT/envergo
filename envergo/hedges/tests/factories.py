@@ -3,7 +3,7 @@ from factory.django import DjangoModelFactory
 from shapely import LineString
 
 from envergo.geodata.tests.factories import MapFactory
-from envergo.hedges.models import Hedge, HedgeData, Species, SpeciesMap
+from envergo.hedges.models import Hedge, HedgeData, Species, SpeciesHabitat
 
 
 class HedgeFactory(factory.Factory):
@@ -65,18 +65,18 @@ class SpeciesFactory(DjangoModelFactory):
     cd_ref = factory.Sequence(lambda n: 1000 + n)
 
     @factory.sequence
-    def taxref_ids(n):
+    def cd_noms(n):
         return [n]
 
 
-class SpeciesMapFactory(DjangoModelFactory):
+class SpeciesHabitatFactory(DjangoModelFactory):
     class Meta:
-        model = SpeciesMap
+        model = SpeciesHabitat
 
     species = factory.SubFactory(SpeciesFactory)
     map = factory.SubFactory(
         MapFactory,
-        zones__species_taxrefs=factory.SelfAttribute("...species.taxref_ids"),
+        zones__species_taxrefs=factory.SelfAttribute("...species.cd_noms"),
     )
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]
     hedge_properties = []

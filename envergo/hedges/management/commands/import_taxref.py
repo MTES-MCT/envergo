@@ -70,9 +70,9 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             # Reset cd_nom arrays — they will be rebuilt from the TaxRef file.
-            Species.objects.update(taxref_ids=[])
+            Species.objects.update(cd_noms=[])
             for s in species_index.all():
-                s.taxref_ids = []
+                s.cd_noms = []
 
             with open(path) as csvfile:
                 reader = csv.DictReader(csvfile, delimiter="\t")
@@ -95,7 +95,7 @@ class Command(BaseCommand):
         # Every TaxRef row carries one cd_nom. A single species (cd_ref) can
         # appear in many rows because historical synonyms each have their own
         # cd_nom. We accumulate all of them.
-        species.taxref_ids.append(int(row["CD_NOM"]))
+        species.cd_noms.append(int(row["CD_NOM"]))
         species.kingdom = row["REGNE"].lower()
 
         # Backfill cd_ref on legacy species that were matched by name only
@@ -105,7 +105,7 @@ class Command(BaseCommand):
 
         taxref_group = row.get("GROUP2_INPN", "")
         if taxref_group:
-            species.taxref_group = taxref_group
+            species.group = taxref_group
 
         self.enrich_stub_names(species, row, species_index)
 

@@ -14,10 +14,10 @@ from envergo.hedges.models import (
     HedgeTypeFactory,
     Pacage,
     Species,
-    SpeciesMap,
-    SpeciesMapFile,
+    SpeciesHabitat,
+    SpeciesHabitatFile,
 )
-from envergo.hedges.tasks import process_species_map_file
+from envergo.hedges.tasks import process_species_habitat_file
 
 
 @admin.register(HedgeData)
@@ -103,19 +103,19 @@ class SpeciesAdmin(admin.ModelAdmin):
         "common_name",
         "scientific_name",
         "group",
-        "taxref_group",
+        "adhoc_group",
         "level_of_concern",
         "highly_sensitive",
         "cd_ref",
-        "taxref_ids",
+        "cd_noms",
     ]
     search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
-    readonly_fields = ["kingdom", "taxref_ids", "cd_ref", "taxref_group"]
+    readonly_fields = ["kingdom", "cd_noms", "cd_ref", "group", "adhoc_group"]
 
 
-class SpeciesMapAdminForm(forms.ModelForm):
+class SpeciesHabitatAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
         choices=HedgeTypeFactory.build_from_context(
             single_procedure=False
@@ -132,9 +132,9 @@ class SpeciesMapAdminForm(forms.ModelForm):
     )
 
 
-@admin.register(SpeciesMap)
-class SpeciesMapAdmin(admin.ModelAdmin):
-    form = SpeciesMapAdminForm
+@admin.register(SpeciesHabitat)
+class SpeciesHabitatAdmin(admin.ModelAdmin):
+    form = SpeciesHabitatAdminForm
     list_display = [
         "species",
         "map",
@@ -145,14 +145,14 @@ class SpeciesMapAdmin(admin.ModelAdmin):
     search_fields = [
         "species__common_name",
         "species__scientific_name",
-        "species__taxref_ids",
+        "species__cd_noms",
         "map__name",
     ]
     autocomplete_fields = ["species", "map"]
 
 
-@admin.register(SpeciesMapFile)
-class SpeciesMapFileAdmin(admin.ModelAdmin):
+@admin.register(SpeciesHabitatFile)
+class SpeciesHabitatFileAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "file",
@@ -204,7 +204,7 @@ class SpeciesMapFileAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         return qs.select_related("map").defer("map__geometry")
 
-    @admin.action(description="Importer la carte d'espèces")
+    @admin.action(description="Importer le fichier d'habitat")
     def process(self, request, queryset):
         if queryset.count() > 1:
             error = "Merci de ne sélectionner qu'une seule carte"
@@ -212,7 +212,7 @@ class SpeciesMapFileAdmin(admin.ModelAdmin):
             return
 
         map = queryset[0]
-        process_species_map_file.delay(map.id)
+        process_species_habitat_file.delay(map.id)
         msg = "Votre fichier est en cours de traitement."
         self.message_user(request, msg, level=messages.INFO)
 
