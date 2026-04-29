@@ -61,6 +61,21 @@ DECISIONS = Choices(
     ("dropped", "Classé sans suite"),
 )
 
+FORBIDDEN_STAGE_TRANSITIONS = {
+    (
+        "to_be_processed",
+        "closed",
+    ): "Pour clore le dossier, il faut passer par une étape intermédiaire (autre que « À instruire »).",
+    (
+        "closed",
+        "to_be_processed",
+    ): "Pour repasser le dossier à l'étape « À instruire », il faut passer par une étape intermédiaire (autre que « Dossier clos »).",  # noqa: E501
+    (
+        "closed",
+        "closed",
+    ): "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le repasser à une étape d'instruction.",
+}
+
 LOG_TYPES = Choices(
     ("status_change", "Changement d'état"),
     ("suspension", "Demande de compléments"),
