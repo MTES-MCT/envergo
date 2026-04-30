@@ -2549,6 +2549,26 @@ section#actions-to-take {
       font-size: 0.875rem;
       line-height: 1.5rem;
       margin: var(--text-spacing);
+
+      &--collapsible::after {
+        --icon-size: 1rem;
+
+        display: inline-block;
+        vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
+        background-color: currentcolor;
+        width: var(--icon-size);
+        height: var(--icon-size);
+        mask-size: 100% 100%;
+        mask-image: url("/static/icons/arrow-down-s-line.svg");
+        content: "";
+        transition: transform 0.3s;
+        margin-right: 0;
+        margin-left: auto;
+      }
+
+      &[aria-expanded="true"]::after {
+        transform: rotate(-180deg);
+      }
     }
   }
 
