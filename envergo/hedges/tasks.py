@@ -59,7 +59,7 @@ def process_species_habitat_file(task, object_id):
 
             try:
                 habitat, modified_species = process_species_habitat_row(
-                    row, habitat_file
+                    row, habitat_file, import_log
                 )
                 habitats.append(habitat)
                 if modified_species is not None:
@@ -115,7 +115,7 @@ def extract_file(field_file):
         raise RuntimeError("File not found")
 
 
-def process_species_habitat_row(row, habitat_file):
+def process_species_habitat_row(row, habitat_file, import_log=None):
     """Process a single CSV row, creating a SpeciesHabitat.
 
     Supports three species identification methods (tried in order):
@@ -141,7 +141,9 @@ def process_species_habitat_row(row, habitat_file):
         if row.get(hedge_property, "").strip().upper() in ("TRUE", "1"):
             hedge_properties.append(hedge_property)
 
-    local_level = parse_level_of_concern(row.get("level_of_concern", ""))
+    local_level = parse_level_of_concern(
+        row.get("level_of_concern", ""), import_log
+    )
 
     habitat = SpeciesHabitat(
         species=species,
@@ -203,7 +205,7 @@ def update_species_adhoc_group(species, row):
 LEVEL_OF_CONCERN_DISPLAY_TO_DB = {label: value for value, label in LEVELS_OF_CONCERN}
 
 
-def parse_level_of_concern(raw_value):
+def parse_level_of_concern(raw_value, import_log=None):
     """Convert a display-format level_of_concern to its database value."""
 
     stripped = raw_value.strip()
@@ -211,5 +213,8 @@ def parse_level_of_concern(raw_value):
         return None
     db_value = LEVEL_OF_CONCERN_DISPLAY_TO_DB.get(stripped)
     if db_value is None:
-        logger.warning("Unknown level_of_concern value: %s", stripped)
+        msg = f"Niveau d'enjeu inconnu : « {stripped} »"
+        logger.warning(msg)
+        if import_log is not None:
+            import_log.append(msg)
     return db_value
