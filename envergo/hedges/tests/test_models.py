@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.db import IntegrityError, transaction
 from shapely import centroid
 
 from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
@@ -942,8 +943,9 @@ class TestSpeciesModelFields:
 
     def test_species_cd_ref_is_unique(self):
         SpeciesFactory(cd_ref=99)
-        with pytest.raises(Exception):
-            SpeciesFactory(cd_ref=99)
+        with pytest.raises(IntegrityError):
+            with transaction.atomic():
+                SpeciesFactory(cd_ref=99)
 
     def test_species_cd_ref_is_nullable(self):
         species = SpeciesFactory(cd_ref=None)

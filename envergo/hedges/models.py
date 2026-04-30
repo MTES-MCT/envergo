@@ -635,7 +635,6 @@ LEVELS_OF_CONCERN = Choices(
 )
 
 
-# HRU (droit constant):
 class HruSpeciesQuerySet(models.QuerySet):
     """Species queryset for the HRU (droit constant) pipeline.
 
@@ -646,6 +645,7 @@ class HruSpeciesQuerySet(models.QuerySet):
     def for_hedges(self, hedges):
         """Return species confirmed in zones intersecting the given hedges."""
 
+        hedges = HedgeList(hedges)
         filters = [self.build_filter(h) for h in hedges]
         if not filters:
             return self.none()
@@ -675,9 +675,6 @@ class HruSpeciesQuerySet(models.QuerySet):
         q_filter &= Q(Exists(zone_subquery))
         return q_filter
 
-
-# RU (régime unique):
-#
 
 SPECIES_BUFFER_DISTANCE = D(m=400)
 
