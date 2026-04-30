@@ -18,10 +18,7 @@ from envergo.hedges.models import (
     SpeciesHabitat,
     SpeciesHabitatFile,
 )
-from envergo.hedges.species_stubs import (
-    make_stub_common_name,
-    make_stub_scientific_name,
-)
+from envergo.hedges.species_stubs import make_stub_scientific_name
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +157,6 @@ def find_or_create_species(row):
                 cd_ref=cd_ref,
                 defaults={
                     "scientific_name": make_stub_scientific_name(cd_ref),
-                    "common_name": make_stub_common_name(cd_ref),
                 },
             )
         except IntegrityError:

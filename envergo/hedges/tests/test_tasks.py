@@ -64,8 +64,8 @@ def test_import_csv_creates_missing_species():
     sm = process_species_habitat_row(row, smf)
 
     assert sm.species.cd_ref == 99999
-    # Stub has placeholder names
     assert "99999" in sm.species.scientific_name
+    assert sm.species.common_name == ""
     assert Species.objects.filter(cd_ref=99999).exists()
 
 

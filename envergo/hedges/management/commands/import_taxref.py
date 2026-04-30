@@ -10,10 +10,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from envergo.hedges.models import Species
-from envergo.hedges.species_stubs import (
-    has_placeholder_common_name,
-    has_placeholder_scientific_name,
-)
+from envergo.hedges.species_stubs import has_placeholder_scientific_name
 
 # Download link can be found here
 # https://inpn.mnhn.fr/telechargement/referentielEspece/referentielTaxo
@@ -117,7 +114,7 @@ class Command(BaseCommand):
         CSV doesn't carry names. This method fills them in from TaxRef.
         """
         nom_vern = row.get("NOM_VERN", "")
-        if nom_vern and has_placeholder_common_name(species):
+        if nom_vern and not species.common_name:
             # NOM_VERN can contain several names separated by commas;
             # we take the first one.
             species.common_name = nom_vern.split(",")[0].strip()

@@ -118,7 +118,7 @@ def test_import_taxref_matches_by_cd_ref():
     SpeciesFactory(
         cd_ref=110920,
         scientific_name="CD_REF_110920",
-        common_name="CD_REF_110920",
+        common_name="",
     )
 
     with TemporaryDirectory() as tmpdir:
@@ -140,3 +140,30 @@ def test_import_taxref_matches_by_cd_ref():
     assert species.common_name == "Orchis militaire"
     assert species.kingdom == "plantae"
     assert species.group == "Angiospermes"
+
+
+def test_import_taxref_leaves_common_name_blank_when_no_nom_vern():
+    """Species with empty NOM_VERN in TaxRef should keep a blank common_name."""
+    SpeciesFactory(
+        cd_ref=6124,
+        scientific_name="CD_REF_6124",
+        common_name="",
+    )
+
+    with TemporaryDirectory() as tmpdir:
+        zip_path = create_taxref_zip(tmpdir, [
+            {
+                "REGNE": "Plantae",
+                "GROUP2_INPN": "Mousses",
+                "CD_NOM": "6124",
+                "CD_REF": "6124",
+                "LB_NOM": "Rhytidium rugosum",
+                "NOM_VERN": "",
+                "GROUP1_INPN": "",
+            },
+        ])
+        call_command("import_taxref", zip_path)
+
+    species = Species.objects.get(cd_ref=6124)
+    assert species.scientific_name == "Rhytidium rugosum"
+    assert species.common_name == ""
