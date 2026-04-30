@@ -122,8 +122,35 @@ class CustomMapping(LayerMapping):
         return attr
 
     def get_attribute_especes(self, feat):
+        """Parse the 'especes' field from a GeoPackage feature.
+
+        For legacy (HRU) maps, values are cd_nom (TaxRef CD_NOM).
+        For RU maps, values are cd_ref (TaxRef CD_REF).
+        Both are integers stored in Zone.species_taxrefs; the querying
+        pipeline determines which identifier type is used for matching.
+        """
+
+        # Value is comma separated integers, None when empty
         raw_especes = feat.get("especes")
-        especes = list(map(int, filter(None, raw_especes.split(","))))
+        if not raw_especes:
+            return []
+
+        especes = []
+        for val in raw_especes.split(","):
+            val = val.strip()
+            if not val:
+                continue
+
+            # We had problems with incorrect values because of missing commas
+            # creating integer overflow errors. We have to defend against that
+            parsed = int(val)
+            if parsed > 2**31 - 1:
+                logger.warning(
+                    "Skipping species taxref value %s (exceeds integer range)", val
+                )
+                continue
+
+            especes.append(parsed)
         return especes
 
 

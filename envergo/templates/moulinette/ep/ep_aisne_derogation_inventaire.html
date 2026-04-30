@@ -14,7 +14,9 @@
   <p>Concernant les espèces animales suivantes :</p>
 
   <ul>
-    {% for species in fauna_sensitive_species %}<li>{{ species.common_name }}</li>{% endfor %}
+    {% for species in fauna_sensitive_species %}
+      <li>{{ species.common_name|default:species.scientific_name }}</li>
+    {% endfor %}
   </ul>
 
   <div class="fr-highlight fr-mb-3w">
@@ -32,7 +34,9 @@
   <p>Concernant les espèces florales suivantes :</p>
 
   <ul>
-    {% for species in flora_sensitive_species %}<li>{{ species.common_name }}</li>{% endfor %}
+    {% for species in flora_sensitive_species %}
+      <li>{{ species.common_name|default:species.scientific_name }}</li>
+    {% endfor %}
   </ul>
 
   <div class="fr-highlight fr-mb-3w">

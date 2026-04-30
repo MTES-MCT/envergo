@@ -51,13 +51,26 @@ class EPRegulation(HaieRegulationEvaluator):
 
 
 class EPMixin:
-    """Legacy criterion for protected species."""
+    """Mixin that populates the catalog with the protected species list.
+
+    Subclasses override get_protected_species() to select the pipeline
+    (HRU vs RU). Defaults to RU.
+    """
+
+    def get_protected_species(self, haies):
+        """Return the protected species queryset for the catalog.
+
+        Input is a HedgeData instance; output is an annotated Species
+        queryset. Defaults to the RU pipeline. HRU evaluators override
+        this to call haies.get_all_species_hru().
+        """
+        return haies.get_all_species()
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies:
-            catalog["protected_species"] = haies.get_all_species()
+            catalog["protected_species"] = self.get_protected_species(haies)
         return catalog
 
 
@@ -72,12 +85,20 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluat
         "soumis": "soumis",
     }
 
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
+
     def get_result_data(self):
         return "soumis"
 
 
 class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluator):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
 
     choice_label = "EP > EP Aisne"
     slug = "ep_aisne"
@@ -98,16 +119,13 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies:
-            species = haies.get_all_species()
-            catalog["protected_species"] = species
-            catalog["fauna_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "animalia"
-            ]
-            catalog["flora_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "plantae"
-            ]
+        species = catalog.get("protected_species", [])
+        catalog["fauna_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "animalia"
+        ]
+        catalog["flora_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "plantae"
+        ]
         return catalog
 
     def get_result_data(self):
@@ -173,7 +191,11 @@ class EPNormandieForm(forms.Form):
 class EspecesProtegeesNormandie(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
 ):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
@@ -791,8 +813,16 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
-        """Populate the catalog with EP régime unique inputs."""
+        """Populate the catalog with EP régime unique inputs.
 
+        Computes hedge lengths, ripisylve length, and line-buffer density
+        eagerly. Zone-sensible flags and per-hedge procedure-level results
+        are deferred to ``cached_property`` accessors so the expensive geo
+        queries only run when the cascade actually needs them (step 6) or
+        when the debug / instructor views are rendered.
+
+        Species are populated by EPMixin using the default RU pipeline.
+        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
