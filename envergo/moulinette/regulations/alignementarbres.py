@@ -61,6 +61,12 @@ class AlignementsArbresL3503(PlantationConditionMixin, AlignementsArbresBase):
         "autre": "soumis_autorisation",
     }
 
+    def evaluate(self):
+        if self.hedges.to_remove():
+            super().evaluate()
+        else:
+            self._result_code, self._result = "non_concerne", "non_concerne"
+
     def get_result_data(self):
         return self.catalog.get("motif")
 

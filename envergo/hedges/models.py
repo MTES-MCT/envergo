@@ -350,6 +350,23 @@ class HedgeList(list[Hedge]):
             hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
         return hedges
 
+    def category(self, single_procedure, category) -> Self:
+        """List the hedges depending on the given category."""
+        if single_procedure:
+            if category == HaieCriterionCategory.hru:
+                return self.hru()
+            elif category == HaieCriterionCategory.ru:
+                return self.ru()
+            elif category == HaieCriterionCategory.l350_3:
+                return self.l350_3()
+            else:
+                raise ValueError(f"Category not recognized : {category}")
+        else:
+            if category == HaieCriterionCategory.hru:
+                return self
+            else:
+                return HedgeList([])
+
 
 class HedgeData(models.Model):
     """Hedge data model.
@@ -645,25 +662,12 @@ class HedgeData(models.Model):
             "dept_haie_detruite": self.get_department(),
         }
 
-    def get_by_category(self, single_procedure, category):
-        if single_procedure:
-            if category == HaieCriterionCategory.hru:
-                return self.hedges().hru()
-            elif category == HaieCriterionCategory.ru:
-                return self.hedges().ru()
-            elif category == HaieCriterionCategory.l350_3:
-                return self.hedges().l350_3()
-            else:
-                raise NotImplementedError()
-        else:
-            if category == HaieCriterionCategory.hru:
-                return self.hedges()
-            else:
-                return []
-
-    def get_hedges_by_category(self, single_procedure):
+    def get_hedges_by_category(
+        self, single_procedure
+    ) -> dict[HaieCriterionCategory, HedgeList]:
+        """Get the hedges list for each category."""
         hedges_by_category = {
-            category: self.get_by_category(single_procedure, category)
+            category: self.hedges().category(single_procedure, category)
             for category in HaieCriterionCategory
         }
 

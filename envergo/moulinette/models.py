@@ -2815,6 +2815,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 )
                 .annotate(geometry=F("activation_map__geometry"))
                 .filter(Exists(zone_subquery))
+                .order_by("id")
+                .distinct("id")
             )
         else:
             # if there is no hedge in the project
