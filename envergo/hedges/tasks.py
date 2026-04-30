@@ -50,6 +50,7 @@ def process_species_habitat_file(task, object_id):
     # Process csv file
     logger.info("Processing csv file")
     habitats = []
+    species_to_update = {}
     with extract_file(habitat_file.file) as csvfile:
         nb_lines = 0
         reader = csv.DictReader(csvfile)
@@ -57,8 +58,12 @@ def process_species_habitat_file(task, object_id):
             nb_lines += 1
 
             try:
-                habitat = process_species_habitat_row(row, habitat_file)
+                habitat, modified_species = process_species_habitat_row(
+                    row, habitat_file
+                )
                 habitats.append(habitat)
+                if modified_species is not None:
+                    species_to_update[modified_species.pk] = modified_species
             except Species.DoesNotExist:
                 if "common_name" in row:
                     msg = f"Espèce inconnue {row['common_name']}"
@@ -71,8 +76,10 @@ def process_species_habitat_file(task, object_id):
                 import_log.append(msg)
                 logger.error(msg)
 
-    # Create objects with a single query
+    # Batch-save species and habitat changes
     logger.info("Saving data objects")
+    if species_to_update:
+        Species.objects.bulk_update(species_to_update.values(), ["adhoc_group"])
     objects = SpeciesHabitat.objects.bulk_create(habitats)
 
     # Update the import status and metadata
@@ -114,9 +121,13 @@ def process_species_habitat_row(row, habitat_file):
     Supports three species identification methods (tried in order):
     CD_REF (RU format), CD_NOM (legacy), common_name (legacy).
     When CD_REF is used and the species doesn't exist, a stub is created.
+
+    Returns (habitat, modified_species) where modified_species is the Species
+    instance if its adhoc_group was updated in-memory, or None otherwise.
+    The caller is responsible for persisting the change via bulk_update.
     """
     species = find_or_create_species(row)
-    update_species_adhoc_group(species, row)
+    modified_species = update_species_adhoc_group(species, row)
 
     hedge_types = []
     for hedge_type in HedgeTypeFactory.build_from_context(
@@ -132,7 +143,7 @@ def process_species_habitat_row(row, habitat_file):
 
     local_level = parse_level_of_concern(row.get("level_of_concern", ""))
 
-    return SpeciesHabitat(
+    habitat = SpeciesHabitat(
         species=species,
         map=habitat_file.map,
         species_habitat_file=habitat_file,
@@ -140,6 +151,7 @@ def process_species_habitat_row(row, habitat_file):
         hedge_properties=hedge_properties,
         level_of_concern=local_level,
     )
+    return habitat, modified_species
 
 
 def find_or_create_species(row):
@@ -170,16 +182,20 @@ def find_or_create_species(row):
 
 
 def update_species_adhoc_group(species, row):
-    """Set species.adhoc_group from the CSV 'groupe' column if present."""
+    """Set species.adhoc_group from the CSV 'groupe' column if present.
+
+    Mutates the species in-memory but does not save. Returns the species
+    if modified, None otherwise. The caller batches saves via bulk_update.
+    """
     raw_group = row.get("groupe", "").strip()
     if not raw_group:
-        return
+        return None
 
     if species.adhoc_group == raw_group:
-        return
+        return None
 
     species.adhoc_group = raw_group
-    species.save(update_fields=["adhoc_group"])
+    return species
 
 
 # Reverse mapping from display labels ("Majeur", "Très fort"…) to database
