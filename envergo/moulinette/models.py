@@ -2638,23 +2638,24 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                     break
 
         # use the procedure result for régime unique category
-        procedures = [regulation.procedure_type for regulation in self.regulations]
-        is_interdit = "interdit" in procedures
-        is_autorisation = "autorisation" in procedures
+        if HaieCriterionCategory.ru in results_by_category:
+            procedures = [regulation.procedure_type for regulation in self.regulations]
+            is_interdit = "interdit" in procedures
+            is_autorisation = "autorisation" in procedures
 
-        if is_interdit:
-            results_by_category[HaieCriterionCategory.ru] = RESULTS.interdit
-        elif is_autorisation:
-            results_by_category[HaieCriterionCategory.ru] = "autorisation"
-        elif results_by_category[HaieCriterionCategory.ru] not in [
-            RESULTS.non_soumis,
-            RESULTS.non_disponible,
-        ]:
-            results_by_category[HaieCriterionCategory.ru] = "declaration"
+            if is_interdit:
+                results_by_category[HaieCriterionCategory.ru] = RESULTS.interdit
+            elif is_autorisation:
+                results_by_category[HaieCriterionCategory.ru] = "autorisation"
+            elif results_by_category[HaieCriterionCategory.ru] not in [
+                RESULTS.non_soumis,
+                RESULTS.non_disponible,
+            ]:
+                results_by_category[HaieCriterionCategory.ru] = "declaration"
 
         # remove the category if there is no hedge concerned
         for category, hedges in self.catalog["hedges_by_category"].items():
-            if not hedges:
+            if not hedges and category in results_by_category:
                 results_by_category.pop(category)
 
         return results_by_category
@@ -2753,36 +2754,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 )
             )
         }
-
-        # get the most relevant main category to display. RU if it is applicable, or depending on the cascade elsewhere.
-        if HaieCriterionCategory.ru in self.results_by_category:
-            category = HaieCriterionCategory.ru
-        else:
-            category = None
-            hru_result = self.results_by_category.get(HaieCriterionCategory.hru)
-            l350_3_result = self.results_by_category.get(HaieCriterionCategory.l350_3)
-            for result in RESULT_CASCADE:
-                if result == l350_3_result:
-                    category = HaieCriterionCategory.l350_3
-                    break
-                elif result == hru_result:
-                    category = HaieCriterionCategory.hru
-                    break
-            if not category:
-                # There is no result from the Cascade for any category.
-                # e.g. if there is no regulation
-                raise NotImplementedError(
-                    "This simulation has no results in any category."
-                )
-
-        other_categories = [
-            other_category.name
-            for other_category in self.results_by_category
-            if other_category != category
-        ]
-        context["HaieCriterionCategory"] = HaieCriterionCategory
-        context["main_category"] = category
-        context["other_categories"] = other_categories
         return context
 
     def get_catalog_data(self):

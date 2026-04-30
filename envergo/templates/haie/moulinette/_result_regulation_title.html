@@ -8,4 +8,7 @@
     <span class="undertitle">{{ regulation.subtitle }}</span>
   {% endif %}
 </span>
-{% result_tag regulation.result regulation.result_tag_style %}
+
+{% with result=regulation.results_by_category|get_item:category %}
+  {% result_tag result %}
+{% endwith %}

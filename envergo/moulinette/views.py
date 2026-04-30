@@ -22,11 +22,12 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
-from envergo.evaluations.models import TagStyleEnum
+from envergo.evaluations.models import RESULT_CASCADE, TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
+from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
@@ -598,6 +599,42 @@ class MoulinetteHaieResult(
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
+
+            # get the most relevant main category to display.
+            # RU if it is applicable, or depending on the cascade elsewhere.
+            if HaieCriterionCategory.ru in moulinette.results_by_category:
+                category = HaieCriterionCategory.ru
+            else:
+                category = None
+                hru_result = moulinette.results_by_category.get(
+                    HaieCriterionCategory.hru
+                )
+                l350_3_result = moulinette.results_by_category.get(
+                    HaieCriterionCategory.l350_3
+                )
+                for result in RESULT_CASCADE:
+                    if result == l350_3_result:
+                        category = HaieCriterionCategory.l350_3
+                        break
+                    elif result == hru_result:
+                        category = HaieCriterionCategory.hru
+                        break
+                if not category:
+                    # There is no result from the Cascade for any category.
+                    # e.g. if there is no regulation
+                    raise NotImplementedError(
+                        "This simulation has no results in any category."
+                    )
+
+            other_categories = [
+                other_category.name
+                for other_category in moulinette.results_by_category
+                if other_category != category
+            ]
+            context["HaieCriterionCategory"] = HaieCriterionCategory
+            context["main_category"] = category
+            context["other_categories"] = other_categories
+
         return context
 
 
