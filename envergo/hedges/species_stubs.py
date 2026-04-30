@@ -1,8 +1,8 @@
 """Shared conventions for Species stub objects.
 
 When the RU CSV import creates a Species from a CD_REF alone, it uses
-placeholder names because the CSV doesn't carry name data. These placeholders
-are later replaced by import_taxref with real TaxRef data.
+a placeholder scientific_name because the CSV doesn't carry name data.
+The placeholder is later replaced by import_taxref with real TaxRef data.
 
 Both the creation side (tasks.py) and the enrichment side (import_taxref.py)
 must agree on the placeholder format. This module is the single source of
@@ -17,16 +17,6 @@ def make_stub_scientific_name(cd_ref):
     return f"{STUB_PREFIX}{cd_ref}"
 
 
-def make_stub_common_name(cd_ref):
-    """Build the placeholder common_name for a stub species."""
-    return f"{STUB_PREFIX}{cd_ref}"
-
-
 def has_placeholder_scientific_name(species):
     """Return True if the species has a placeholder scientific_name."""
     return species.scientific_name.startswith(STUB_PREFIX)
-
-
-def has_placeholder_common_name(species):
-    """Return True if the species has a placeholder or empty common_name."""
-    return not species.common_name or species.common_name.startswith(STUB_PREFIX)

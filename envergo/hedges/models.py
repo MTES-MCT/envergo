@@ -875,7 +875,7 @@ class Species(models.Model):
     group = models.CharField("Groupe", max_length=128, blank=True)
 
     kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
-    common_name = models.CharField("Nom commun", max_length=255)
+    common_name = models.CharField("Nom commun", max_length=255, blank=True)
     scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(
         "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN, blank=True
@@ -894,7 +894,9 @@ class Species(models.Model):
         verbose_name_plural = "Espèces"
 
     def __str__(self):
-        return f"{self.common_name} ({self.scientific_name})"
+        if self.common_name:
+            return f"{self.common_name} ({self.scientific_name})"
+        return self.scientific_name
 
 
 class SpeciesHabitat(models.Model):
