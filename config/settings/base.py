@@ -479,7 +479,7 @@ FROM_EMAIL = {
 
 HAIE_FAQ_URLS = {
     "SERVICE_USERS": "https://aide.haie.beta.gouv.fr",  # noqa: E501
-    "INSTRUCTORS": "https://equatorial-red-4c6.notion.site/Guichet-unique-de-la-haie-Ressources-pour-les-services-instructeurs-17afe5fe476680aebd08f47929bb0718",  # noqa: E501
+    "INSTRUCTORS": "https://instruction.haie.beta.gouv.fr",  # noqa: E501
     "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/organismes-agrees-pour-delivrer-une-attestation-de-meilleur-emplacement-environnemental",  # noqa: E501
     "TREE_SPECIES_COPPICING_CAPACITY": "https://aide.haie.beta.gouv.fr/haies-types-et-bonnes-pratiques/liste-des-essences-et-leur-capacite-a-receper",  # noqa: E501
     "DC_HEDGES_TYPES": "https://aide.haie.beta.gouv.fr/haies-types-et-bonnes-pratiques/les-cinq-types-de-haies",  # noqa: E501
