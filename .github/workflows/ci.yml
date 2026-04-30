@@ -1,6 +1,7 @@
 name: CI
 permissions:
   actions: read
+  contents: write
 
 # Enable Buildkit and let compose use it to speed up image building
 env:
@@ -29,9 +30,19 @@ jobs:
         with:
           python-version: 3.12.8
 
-      # Run all pre-commit hooks on all the files.
-      # Getting only staged files can be tricky in case a new PR is opened
-      # since the action is run on a branch in detached head state
+      # Run pre-commit a first time with continue-on-error to let it auto-fix
+      # files without failing the job. If it fails, push the fixes and re-run
+      # pre-commit for real to validate the result.
+      - name: Install and Run Pre-commit (auto-fix)
+        id: pre-commit
+        uses: pre-commit/action@v3.0.1
+        continue-on-error: true
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        if: steps.pre-commit.outcome == 'failure' && github.event_name == 'pull_request'
+        with:
+          commit_message: "style: apply pre-commit fixes"
+
       - name: Install and Run Pre-commit
         uses: pre-commit/action@v3.0.1
 
