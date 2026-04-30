@@ -1,26 +1,22 @@
 {% load moulinette %}
 
 <section class="action-to-take">
-  <button class="action-btn fr-btn fr-btn--tertiary-no-outline"
-          {% if action.details %}aria-expanded="false" aria-controls="action-{{ action.slug }}"{% endif %}>
-    <span class="{% if action.details %}fr-sr-only{% endif %}">
-      <span class="fr-icon-arrow-right-line fr-icon--sm"></span>{{ action.label }}
+  {% if action.details %}
+    <button class="action-title action-btn fr-btn fr-btn--tertiary-no-outline"
+            aria-expanded="false"
+            aria-controls="action-{{ action.slug }}">
+      <span class="fr-icon-arrow-right-line fr-icon--sm">{{ action.label }}</span>
+    </button>
+  {% else %}
+    <span class="action-title">
+      <span class="fr-icon-arrow-right-line fr-icon--sm">{{ action.label }}</span>
     </span>
+  {% endif %}
+
+  <div class="fr-collapse action-details-container"
+       id="action-{{ action.slug }}">
     {% if action.details %}
-      <span aria-hidden="true" class="concealed-label">
-        <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
-        {{ action.label }}
-        <span class="fr-icon-arrow-down-s-line fr-icon--sm"></span></span>
-        <span aria-hidden="true" class="expanded-label">
-          <span class="fr-icon-arrow-right-line fr-icon--sm"></span>
-          {{ action.label }}
-          <span class="fr-icon-arrow-up-s-line fr-icon--sm"></span></span>
-        {% endif %}
-      </button>
-      <div class="fr-collapse action-details-container"
-           id="action-{{ action.slug }}">
-        {% if action.details %}
-          <p class="fr-ml-5w fr-my-1w">{% include action.details %}</p>
-        {% endif %}
-      </div>
-    </section>
+      <p class="fr-ml-5w fr-my-1w">{% include action.details %}</p>
+    {% endif %}
+  </div>
+</section>
