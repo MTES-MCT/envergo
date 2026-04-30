@@ -150,15 +150,12 @@ def find_or_create_species(row):
     """
     if "CD_REF" in row and row["CD_REF"]:
         cd_ref = int(row["CD_REF"])
-        try:
-            species, _ = Species.objects.get_or_create(
-                cd_ref=cd_ref,
-                defaults={
-                    "scientific_name": make_stub_scientific_name(cd_ref),
-                },
-            )
-        except IntegrityError:
-            species = Species.objects.get(cd_ref=cd_ref)
+        species, _ = Species.objects.get_or_create(
+            cd_ref=cd_ref,
+            defaults={
+                "scientific_name": make_stub_scientific_name(cd_ref),
+            },
+        )
     elif "CD_NOM" in row:
         cd_nom = int(row["CD_NOM"])
         species = Species.objects.get(cd_noms__contains=[cd_nom])
