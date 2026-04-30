@@ -12,7 +12,6 @@ from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     IMPORT_STATUSES,
     LEVELS_OF_CONCERN,
-
     HedgeTypeFactory,
     Species,
     SpeciesHabitat,
@@ -146,9 +145,8 @@ def process_species_habitat_row(row, habitat_file):
 def find_or_create_species(row):
     """Look up a Species from a CSV row, creating a stub if needed.
 
-    Identification precedence: CD_REF (RU format) → CD_NOM (legacy) →
-    common_name (legacy). For CD_REF, missing species are auto-created
-    with a placeholder scientific_name that import_taxref will later enrich.
+    Missing species are auto-created with a placeholder scientific_name that
+    import_taxref will later enrich.
     """
     if "CD_REF" in row and row["CD_REF"]:
         cd_ref = int(row["CD_REF"])
@@ -190,6 +188,7 @@ def update_species_adhoc_group(species, row):
 # Reverse mapping from display labels ("Majeur", "Très fort"…) to database
 # values ("majeur", "tres_fort"…), used to normalize CSV import data.
 LEVEL_OF_CONCERN_DISPLAY_TO_DB = {label: value for value, label in LEVELS_OF_CONCERN}
+
 
 def parse_level_of_concern(raw_value):
     """Convert a display-format level_of_concern to its database value."""
