@@ -681,6 +681,19 @@ class HruSpeciesQuerySet(models.QuerySet):
 
 SPECIES_BUFFER_DISTANCE = D(m=400)
 
+
+def group_hedges_by_signature(hedges):
+    """Group hedges by their (hedge_type, missing_properties) filter signature.
+
+    Hedges sharing the same signature produce identical SpeciesHabitat filters,
+    so they can be treated as a single geographic group for zone proximity.
+    """
+    groups = {}
+    for h in hedges:
+        sig = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
+        groups.setdefault(sig, []).append(h)
+    return groups
+
 # Numeric ranks for sorting species by level_of_concern in the RU pipeline.
 # Derived from LEVELS_OF_CONCERN ordering (1 = lowest, 6 = highest).
 LEVEL_OF_CONCERN_ORDER = {
@@ -716,23 +729,21 @@ class RuSpeciesQuerySet(models.QuerySet):
         if not hedges:
             return self.none()
 
-        # Fetch map and species in the 400m buffer around hedges
-        nearby_map_ids, observed_cdrefs = self.prefetch_zone_data(
-            hedges.to_multilinestring()
+        signature_map_ids, observed_cdrefs = (
+            self.prefetch_zone_data_by_signature(hedges)
         )
-        if not nearby_map_ids:
+        if not signature_map_ids:
             return self.none()
 
-        # Build the filter to fetch the actual species
         species_filter = self.build_grouped_filter(
-            hedges, nearby_map_ids, observed_cdrefs
+            signature_map_ids, observed_cdrefs
         )
 
-        # Build subquery to annotate with the level of concern
-        level_label = self.build_level_subquery(nearby_map_ids)
+        all_nearby_map_ids = set()
+        for ids in signature_map_ids.values():
+            all_nearby_map_ids.update(ids)
+        level_label = self.build_level_subquery(list(all_nearby_map_ids))
 
-        # We also need to annotate the query with an integer rank
-        # so we can order directly in the query
         level_order_whens = [
             When(local_level_of_concern=value, then=Value(rank))
             for value, rank in LEVEL_OF_CONCERN_ORDER.items()
@@ -757,25 +768,60 @@ class RuSpeciesQuerySet(models.QuerySet):
             .order_by("-level_order", "common_name")
         )
 
-    def prefetch_zone_data(self, hedges_geom):
-        """Fetch species-map zone data near the given geometry in one query.
+    def prefetch_zone_data_by_signature(self, hedges):
+        """Fetch per-signature zone data in a single DB query.
 
-        Returns the set of nearby map ids and the set of cd_refs that have
-        been observed locally (present in at least one zone's species_taxrefs).
+        Each zone within 400m of the hedge set is annotated with a boolean
+        per signature group, indicating whether the zone is also within 400m
+        of that specific group's hedges. This scopes nearby_map_ids per
+        signature without adding extra DB round trips.
         """
-        nearby_data = Zone.objects.filter(
-            geometry__dwithin=(hedges_geom, SPECIES_BUFFER_DISTANCE),
+        signature_groups = group_hedges_by_signature(hedges)
+        all_hedges_geom = hedges.to_multilinestring()
+
+        zones = Zone.objects.filter(
+            geometry__dwithin=(all_hedges_geom, SPECIES_BUFFER_DISTANCE),
             map__map_type="species",
-        ).values_list("map_id", "species_taxrefs")
+        )
 
-        nearby_map_ids = set()
-        observed_cdrefs = set()
-        for map_id, taxrefs in nearby_data:
-            nearby_map_ids.add(map_id)
+        sig_annotations = {}
+        sig_order = []
+        for i, (sig, sig_hedges) in enumerate(signature_groups.items()):
+            sig_geom = HedgeList(sig_hedges).to_multilinestring()
+            annotation_name = f"near_sig_{i}"
+            sig_annotations[annotation_name] = Case(
+                When(
+                    geometry__dwithin=(sig_geom, SPECIES_BUFFER_DISTANCE),
+                    then=Value(True),
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+            sig_order.append((annotation_name, sig))
+
+        zones = zones.annotate(**sig_annotations)
+        value_fields = ["map_id", "species_taxrefs"] + [
+            name for name, _ in sig_order
+        ]
+
+        all_observed_cdrefs = set()
+        signature_map_ids = {sig: set() for sig in signature_groups}
+
+        for row in zones.values_list(*value_fields):
+            map_id = row[0]
+            taxrefs = row[1]
             if taxrefs:
-                observed_cdrefs.update(taxrefs)
+                all_observed_cdrefs.update(taxrefs)
+            for j, (_, sig) in enumerate(sig_order):
+                if row[2 + j]:
+                    signature_map_ids[sig].add(map_id)
 
-        return list(nearby_map_ids), observed_cdrefs
+        result = {
+            sig: list(ids)
+            for sig, ids in signature_map_ids.items()
+            if ids
+        }
+        return result, all_observed_cdrefs
 
     def build_majeur_exclusion(self, observed_cdrefs):
         """Build a Q clause excluding "majeur" species not observed locally.
@@ -791,24 +837,21 @@ class RuSpeciesQuerySet(models.QuerySet):
 
         return ~Q(habitats__level_of_concern="majeur")
 
-    def build_grouped_filter(self, hedges, nearby_map_ids, observed_cdrefs):
-        """Build a single Q filter from all hedges, grouped by filter signature.
+    def build_grouped_filter(self, signature_map_ids, observed_cdrefs):
+        """Build a single Q filter from per-signature nearby map IDs.
 
-        Hedges that share the same (hedge_type, missing_properties) produce
-        identical SpeciesHabitat filters, so we deduplicate them into one Q per
-        unique signature and OR the groups together.
+        Each signature (hedge_type, missing_properties) has its own set of
+        nearby map IDs, ensuring that a species whose habitat is only near
+        hedges of type A cannot match type B's filter.
         """
-        signatures = {
-            (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
-            for h in hedges
-        }
         majeur_exclusion = self.build_majeur_exclusion(observed_cdrefs)
 
         signature_filters = [
             self.build_signature_filter(
                 hedge_type, missing_props, nearby_map_ids, majeur_exclusion
             )
-            for hedge_type, missing_props in signatures
+            for (hedge_type, missing_props), nearby_map_ids
+            in signature_map_ids.items()
         ]
         return reduce(operator.or_, signature_filters)
 

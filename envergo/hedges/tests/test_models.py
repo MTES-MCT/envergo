@@ -1280,3 +1280,51 @@ class TestRuSpeciesQuerying:
         result = list(Species.ru.for_hedges([hedge]))
         match = next(s for s in result if s.pk == species.pk)
         assert match.local_level_of_concern == "tres_fort"
+
+    def test_ru_species_not_leaked_across_signatures(self):
+        """A species near hedge A must not match hedge B's signature filter.
+
+        Regression test: the RU filter used to compute nearby_map_ids as a
+        union across all hedges, so a species whose habitat map was only
+        near hedge A could match hedge B's (hedge_type, missing_props)
+        filter. With per-signature zone scoping, the species should only
+        appear if a hedge of the matching type is within 400m.
+        """
+        map_obj = MapFactory(map_type="species", zones=None)
+        self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
+
+        species = SpeciesFactory(cd_ref=8001)
+        SpeciesHabitatFactory(
+            species=species,
+            map=map_obj,
+            hedge_types=["degradee"],
+            level_of_concern="fort",
+        )
+
+        # Hedge A is near the zone but has type "mixte" — wrong signature
+        hedge_a = self._make_hedge_in_aisne(hedge_type="mixte")
+
+        # Hedge B is far away but has type "degradee" — right signature
+        hedge_b = HedgeFactory(
+            latLngs=[
+                {"lat": 43.687177, "lng": 3.584794},
+                {"lat": 43.687301, "lng": 3.585910},
+            ],
+            additionalData={
+                "type_haie": "degradee",
+                "vieil_arbre": False,
+                "proximite_mare": False,
+                "mode_destruction": "arrachage",
+                "sur_parcelle_pac": True,
+                "ripisylve": False,
+                "connexion_boisement": False,
+            },
+        )
+
+        result = set(Species.ru.for_hedges([hedge_a, hedge_b]))
+        assert species not in result
+
+        # Sanity: a degradee hedge near the zone DOES return the species
+        hedge_c = self._make_hedge_in_aisne(hedge_type="degradee")
+        result = set(Species.ru.for_hedges([hedge_c]))
+        assert species in result
