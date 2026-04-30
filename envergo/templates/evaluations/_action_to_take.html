@@ -1,12 +1,18 @@
 {% load moulinette %}
 
 <section class="action-to-take">
-  <button class="action-btn {% if action.details %}action-btn--collapsible{% endif %} fr-btn fr-btn--tertiary-no-outline"
-          {% if action.details %}aria-expanded="false" aria-controls="action-{{ action.slug }}"{% endif %}>
-    <span class="action-label">
+  {% if action.details %}
+    <button class="action-title action-btn fr-btn fr-btn--tertiary-no-outline"
+            aria-expanded="false"
+            aria-controls="action-{{ action.slug }}">
+      <span class="fr-icon-arrow-right-line fr-icon--sm">{{ action.label }}</span>
+    </button>
+  {% else %}
+    <span class="action-title">
       <span class="fr-icon-arrow-right-line fr-icon--sm">{{ action.label }}</span>
     </span>
-  </button>
+  {% endif %}
+
   <div class="fr-collapse action-details-container"
        id="action-{{ action.slug }}">
     {% if action.details %}

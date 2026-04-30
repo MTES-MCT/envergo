@@ -2540,7 +2540,7 @@ section#actions-to-take {
       font-size: 12px;
     }
 
-    .action-btn {
+    .action-title {
       font-weight: normal;
       background-color: var(--background-action-low-blue-france);
       min-height: unset;
@@ -2549,8 +2549,10 @@ section#actions-to-take {
       font-size: 0.875rem;
       line-height: 1.5rem;
       margin: var(--text-spacing);
+    }
 
-      &--collapsible::after {
+    .action-btn {
+      &::after {
         --icon-size: 1rem;
 
         display: inline-block;
@@ -2566,7 +2568,7 @@ section#actions-to-take {
         margin-left: auto;
       }
 
-      &[aria-expanded="true"]::after {
+      ::after {
         transform: rotate(-180deg);
       }
     }
