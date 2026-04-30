@@ -172,7 +172,9 @@ class InvitationTokenAdmin(admin.ModelAdmin):
         "id",
         "created_at",
         "created_by_list",
+        "token",
     )
+    search_fields = ["token"]
     ordering = ("-created_at",)
     readonly_fields = ("token",)
     form = InvitationTokenAdminForm
