@@ -122,8 +122,17 @@ class Command(BaseCommand):
 
         scientific_name = row["LB_NOM"]
         if scientific_name and has_placeholder_scientific_name(species):
-            species.scientific_name = scientific_name
-            species_index.register_scientific_name(scientific_name, species)
+            existing = species_index.by_scientific_name.get(scientific_name)
+            if existing is not None and existing is not species:
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"Skipping scientific_name '{scientific_name}': "
+                        f"already used by species cd_ref={existing.cd_ref}"
+                    )
+                )
+            else:
+                species.scientific_name = scientific_name
+                species_index.register_scientific_name(scientific_name, species)
 
 
 class SpeciesIndex:
