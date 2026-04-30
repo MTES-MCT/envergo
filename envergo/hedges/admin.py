@@ -130,7 +130,14 @@ class SpeciesAdmin(admin.ModelAdmin):
     search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
-    readonly_fields = ["kingdom", "cd_noms", "cd_ref", "group", "adhoc_group"]
+    readonly_fields = [
+        "common_name",
+        "kingdom",
+        "cd_noms",
+        "cd_ref",
+        "group",
+        "adhoc_group",
+    ]
 
 
 class SpeciesHabitatAdminForm(forms.ModelForm):
