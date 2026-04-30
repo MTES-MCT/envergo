@@ -2568,7 +2568,7 @@ section#actions-to-take {
         margin-left: auto;
       }
 
-      ::after {
+      &[aria-expanded="true"]::after {
         transform: rotate(-180deg);
       }
     }
