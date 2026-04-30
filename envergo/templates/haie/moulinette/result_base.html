@@ -172,7 +172,9 @@
         {% endif %}
 
         {% for regulation in regulations %}
-          {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation category=category %}
+          {% if category in regulation.results_by_category %}
+            {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation category=category %}
+          {% endif %}
         {% endfor %}
 
         {% if forloop.counter0 == 0 and forloop.parentloop.counter0 == 0 %}

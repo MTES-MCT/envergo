@@ -53,9 +53,13 @@ class Command(BaseCommand):
             )
 
         for old, hru, ru, l350_3 in SWITCHES:
-            backend_title = Criterion.objects.filter(evaluator=old).values_list(
-                "backend_title", flat=True
-            )[0]
+            backend_title = (
+                Criterion.objects.filter(evaluator=old)
+                .values_list("backend_title", flat=True)
+                .first()
+            )
+            if not backend_title:
+                continue
             Criterion.objects.filter(evaluator=old).update(
                 evaluator=hru, backend_title=f"{backend_title} - Hors régime unique"
             )

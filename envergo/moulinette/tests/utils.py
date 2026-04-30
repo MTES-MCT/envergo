@@ -6,7 +6,11 @@ creating regulation/criterion combos, and building hedge scenarios.
 
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    HaieRegulationFactory,
+    RegulationFactory,
+)
 
 # ---------------------------------------------------------------------------
 # Coordinate presets
@@ -361,7 +365,9 @@ def setup_ep_regime_unique(activation_map, evaluator_settings=None):
     """
     if evaluator_settings is None:
         evaluator_settings = EP_RU_DEFAULT_SETTINGS
-    regulation = RegulationFactory(regulation="ep")
+    regulation = HaieRegulationFactory(
+        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
+    )
     criteria = [
         CriterionFactory(
             title="EP Régime Unique",

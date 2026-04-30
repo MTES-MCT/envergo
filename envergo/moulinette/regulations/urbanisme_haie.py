@@ -20,7 +20,10 @@ class UrbanismeHaieHru(HaieCriterionEvaluator):
     category = HaieCriterionCategory.hru
 
     def evaluate(self):
-        self._result_code, self._result = "a_verifier", "a_verifier"
+        if self.hedges.to_remove():
+            self._result_code, self._result = "a_verifier", "a_verifier"
+        else:
+            self._result_code, self._result = "non_concerne", "non_concerne"
 
     def get_catalog_data(self):
         data = super().get_catalog_data()

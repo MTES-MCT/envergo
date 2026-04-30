@@ -725,8 +725,10 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
     def __init__(self, criterion, moulinette, distance, settings):
         super().__init__(criterion, moulinette, distance, settings)
         if "haies" in self.moulinette.catalog:
-            self.hedges = self.moulinette.catalog["haies"].get_by_category(
-                self.moulinette.config.single_procedure, self.category
+            self.hedges = (
+                self.moulinette.catalog["haies"]
+                .hedges()
+                .category(self.moulinette.config.single_procedure, self.category)
             )
         else:
             from envergo.hedges.models import HedgeList
