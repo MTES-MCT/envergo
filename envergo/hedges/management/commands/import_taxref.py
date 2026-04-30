@@ -107,11 +107,12 @@ class Command(BaseCommand):
         self.enrich_stub_names(species, row, species_index)
 
     def enrich_stub_names(self, species, row, species_index):
-        """Replace placeholder names on stub species with real TaxRef data.
+        """Fill in missing names on stub species from TaxRef data.
 
-        When the RU CSV import creates a Species from a CD_REF alone, it sets
-        placeholder names (e.g. "CD_REF_12345") because the
-        CSV doesn't carry names. This method fills them in from TaxRef.
+        When the RU CSV import creates a Species from a CD_REF alone, only a
+        placeholder scientific_name is set (e.g. "CD_REF_12345") and
+        common_name is left blank. This method fills them in from TaxRef
+        when available.
         """
         nom_vern = row.get("NOM_VERN", "")
         if nom_vern and not species.common_name:

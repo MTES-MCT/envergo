@@ -148,7 +148,7 @@ def find_or_create_species(row):
 
     Identification precedence: CD_REF (RU format) → CD_NOM (legacy) →
     common_name (legacy). For CD_REF, missing species are auto-created
-    with placeholder names that import_taxref will later enrich.
+    with a placeholder scientific_name that import_taxref will later enrich.
     """
     if "CD_REF" in row and row["CD_REF"]:
         cd_ref = int(row["CD_REF"])
