@@ -875,12 +875,23 @@ class Species(models.Model):
     group = models.CharField("Groupe", max_length=128, blank=True)
 
     kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
-    common_name = models.CharField("Nom commun", max_length=255, blank=True)
+    common_name = models.CharField(
+        "Nom commun",
+        max_length=255,
+        blank=True,
+        help_text="Importé depuis le référentiel TaxRef",
+    )
     scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(
-        "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN, blank=True
+        "Niveau d'enjeu",
+        max_length=16,
+        choices=LEVELS_OF_CONCERN,
+        blank=True,
+        help_text="Seulement pour l'Aisne. Cette valeur est désormais spécifiée dans le modèle Habitat d'espèce.",
     )
-    highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
+    highly_sensitive = models.BooleanField(
+        "Particulièrement sensible", default=False, help_text="Seulement pour l'Aisne."
+    )
 
     objects = models.Manager()
 
