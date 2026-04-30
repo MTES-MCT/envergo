@@ -1,7 +1,6 @@
 """Tests for the import_taxref management command."""
 
 import csv
-import io
 import os
 import zipfile
 from tempfile import TemporaryDirectory
@@ -48,17 +47,20 @@ def test_import_taxref_populates_cd_ref():
     SpeciesFactory(scientific_name="Orchis militaris", cd_ref=None)
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [
-            {
-                "REGNE": "Plantae",
-                "GROUP2_INPN": "Angiospermes",
-                "CD_NOM": "110920",
-                "CD_REF": "110920",
-                "LB_NOM": "Orchis militaris",
-                "NOM_VERN": "Orchis militaire, Casque militaire",
-                "GROUP1_INPN": "",
-            },
-        ])
+        zip_path = create_taxref_zip(
+            tmpdir,
+            [
+                {
+                    "REGNE": "Plantae",
+                    "GROUP2_INPN": "Angiospermes",
+                    "CD_NOM": "110920",
+                    "CD_REF": "110920",
+                    "LB_NOM": "Orchis militaris",
+                    "NOM_VERN": "Orchis militaire, Casque militaire",
+                    "GROUP1_INPN": "",
+                },
+            ],
+        )
         call_command("import_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
@@ -70,17 +72,20 @@ def test_import_taxref_populates_group():
     SpeciesFactory(scientific_name="Orchis militaris", cd_ref=None)
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [
-            {
-                "REGNE": "Plantae",
-                "GROUP2_INPN": "Angiospermes",
-                "CD_NOM": "110920",
-                "CD_REF": "110920",
-                "LB_NOM": "Orchis militaris",
-                "NOM_VERN": "Orchis militaire",
-                "GROUP1_INPN": "",
-            },
-        ])
+        zip_path = create_taxref_zip(
+            tmpdir,
+            [
+                {
+                    "REGNE": "Plantae",
+                    "GROUP2_INPN": "Angiospermes",
+                    "CD_NOM": "110920",
+                    "CD_REF": "110920",
+                    "LB_NOM": "Orchis militaris",
+                    "NOM_VERN": "Orchis militaire",
+                    "GROUP1_INPN": "",
+                },
+            ],
+        )
         call_command("import_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
@@ -96,17 +101,20 @@ def test_import_taxref_populates_common_name_from_nom_vern():
     )
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [
-            {
-                "REGNE": "Plantae",
-                "GROUP2_INPN": "Angiospermes",
-                "CD_NOM": "110920",
-                "CD_REF": "110920",
-                "LB_NOM": "Orchis militaris",
-                "NOM_VERN": "Orchis militaire, Casque militaire, Orchis casqué",
-                "GROUP1_INPN": "",
-            },
-        ])
+        zip_path = create_taxref_zip(
+            tmpdir,
+            [
+                {
+                    "REGNE": "Plantae",
+                    "GROUP2_INPN": "Angiospermes",
+                    "CD_NOM": "110920",
+                    "CD_REF": "110920",
+                    "LB_NOM": "Orchis militaris",
+                    "NOM_VERN": "Orchis militaire, Casque militaire, Orchis casqué",
+                    "GROUP1_INPN": "",
+                },
+            ],
+        )
         call_command("import_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
@@ -122,17 +130,20 @@ def test_import_taxref_matches_by_cd_ref():
     )
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [
-            {
-                "REGNE": "Plantae",
-                "GROUP2_INPN": "Angiospermes",
-                "CD_NOM": "110920",
-                "CD_REF": "110920",
-                "LB_NOM": "Orchis militaris",
-                "NOM_VERN": "Orchis militaire",
-                "GROUP1_INPN": "",
-            },
-        ])
+        zip_path = create_taxref_zip(
+            tmpdir,
+            [
+                {
+                    "REGNE": "Plantae",
+                    "GROUP2_INPN": "Angiospermes",
+                    "CD_NOM": "110920",
+                    "CD_REF": "110920",
+                    "LB_NOM": "Orchis militaris",
+                    "NOM_VERN": "Orchis militaire",
+                    "GROUP1_INPN": "",
+                },
+            ],
+        )
         call_command("import_taxref", zip_path)
 
     species = Species.objects.get(cd_ref=110920)
@@ -151,17 +162,20 @@ def test_import_taxref_leaves_common_name_blank_when_no_nom_vern():
     )
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [
-            {
-                "REGNE": "Plantae",
-                "GROUP2_INPN": "Mousses",
-                "CD_NOM": "6124",
-                "CD_REF": "6124",
-                "LB_NOM": "Rhytidium rugosum",
-                "NOM_VERN": "",
-                "GROUP1_INPN": "",
-            },
-        ])
+        zip_path = create_taxref_zip(
+            tmpdir,
+            [
+                {
+                    "REGNE": "Plantae",
+                    "GROUP2_INPN": "Mousses",
+                    "CD_NOM": "6124",
+                    "CD_REF": "6124",
+                    "LB_NOM": "Rhytidium rugosum",
+                    "NOM_VERN": "",
+                    "GROUP1_INPN": "",
+                },
+            ],
+        )
         call_command("import_taxref", zip_path)
 
     species = Species.objects.get(cd_ref=6124)

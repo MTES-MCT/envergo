@@ -18,7 +18,10 @@
               <tr>
                 <td>{{ s.group }}</td>
                 <td>
-                  {% if s.common_name %}{{ s.common_name }}<br />{% endif %}
+                  {% if s.common_name %}
+                    {{ s.common_name }}
+                    <br />
+                  {% endif %}
                   <i lang="la">{{ s.scientific_name }}</i>
                 </td>
                 <td>{{ s.local_level_of_concern|level_of_concern_display }}</td>

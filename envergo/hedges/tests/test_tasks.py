@@ -3,8 +3,11 @@
 import pytest
 
 from envergo.geodata.tests.factories import MapFactory
-from envergo.hedges.models import Species, SpeciesHabitat, SpeciesHabitatFile
-from envergo.hedges.tasks import LEVEL_OF_CONCERN_DISPLAY_TO_DB, process_species_habitat_row
+from envergo.hedges.models import Species, SpeciesHabitatFile
+from envergo.hedges.tasks import (
+    LEVEL_OF_CONCERN_DISPLAY_TO_DB,
+    process_species_habitat_row,
+)
 from envergo.hedges.tests.factories import SpeciesFactory
 
 pytestmark = pytest.mark.django_db

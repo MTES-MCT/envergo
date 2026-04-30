@@ -297,7 +297,9 @@ def test_hedges_has_centroid_and_department():
 
 
 def test_species_are_filtered_by_hedge_features():
-    s1 = SpeciesHabitatFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
+    s1 = SpeciesHabitatFactory(
+        hedge_properties=["proximite_mare", "vieil_arbre"]
+    ).species
     s2 = SpeciesHabitatFactory(hedge_properties=["proximite_mare"]).species
     s3 = SpeciesHabitatFactory(hedge_properties=["vieil_arbre"]).species
     s4 = SpeciesHabitatFactory(hedge_properties=[]).species
@@ -328,7 +330,9 @@ def test_species_are_filtered_by_hedge_features():
 
 
 def test_multiple_hedges_combine_their_species():
-    _ = SpeciesHabitatFactory(hedge_properties=["proximite_mare", "vieil_arbre"]).species
+    _ = SpeciesHabitatFactory(
+        hedge_properties=["proximite_mare", "vieil_arbre"]
+    ).species
     s2 = SpeciesHabitatFactory(hedge_properties=["proximite_mare"]).species
     s3 = SpeciesHabitatFactory(hedge_properties=["vieil_arbre"]).species
     s4 = SpeciesHabitatFactory(hedge_properties=[]).species
@@ -995,13 +999,15 @@ class TestRuSpeciesQuerying:
         offset_deg = distance_m / 111_000.0
         base_lat = self.HEDGE_LAT + offset_deg
         size = 0.001
-        poly = Polygon([
-            (3.410, base_lat),
-            (3.420, base_lat),
-            (3.420, base_lat + size),
-            (3.410, base_lat + size),
-            (3.410, base_lat),
-        ])
+        poly = Polygon(
+            [
+                (3.410, base_lat),
+                (3.420, base_lat),
+                (3.420, base_lat + size),
+                (3.410, base_lat + size),
+                (3.410, base_lat),
+            ]
+        )
         return ZoneFactory(
             map=map_obj,
             geometry=MultiPolygon([poly]),
@@ -1147,7 +1153,11 @@ class TestRuSpeciesQuerying:
         majeur_observed = SpeciesFactory(cd_ref=6003, common_name="AA Majeur")
         # Majeur is observed so it's included
         self._make_zone_near_hedge(map_obj, 100, species_taxrefs=[6003])
-        for sp, level in [(faible, "faible"), (fort, "fort"), (majeur_observed, "majeur")]:
+        for sp, level in [
+            (faible, "faible"),
+            (fort, "fort"),
+            (majeur_observed, "majeur"),
+        ]:
             SpeciesHabitatFactory(
                 species=sp,
                 map=map_obj,
@@ -1203,12 +1213,16 @@ class TestRuSpeciesQuerying:
         self._make_zone_near_hedge(map1, 200, species_taxrefs=[7003])
         self._make_zone_near_hedge(map2, 300, species_taxrefs=[7003])
         SpeciesHabitatFactory(
-            species=species, map=map1,
-            hedge_types=["mixte"], level_of_concern="fort",
+            species=species,
+            map=map1,
+            hedge_types=["mixte"],
+            level_of_concern="fort",
         )
         SpeciesHabitatFactory(
-            species=species, map=map2,
-            hedge_types=["mixte"], level_of_concern="moyen",
+            species=species,
+            map=map2,
+            hedge_types=["mixte"],
+            level_of_concern="moyen",
         )
 
         hedge = self._make_hedge_in_aisne()
@@ -1222,13 +1236,17 @@ class TestRuSpeciesQuerying:
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
         SpeciesHabitatFactory(
-            species=needs_ripisylve, map=map_obj,
-            hedge_types=["mixte"], hedge_properties=["ripisylve"],
+            species=needs_ripisylve,
+            map=map_obj,
+            hedge_types=["mixte"],
+            hedge_properties=["ripisylve"],
             level_of_concern="fort",
         )
         SpeciesHabitatFactory(
-            species=no_requirements, map=map_obj,
-            hedge_types=["mixte"], hedge_properties=[],
+            species=no_requirements,
+            map=map_obj,
+            hedge_types=["mixte"],
+            hedge_properties=[],
             level_of_concern="fort",
         )
 
@@ -1246,12 +1264,16 @@ class TestRuSpeciesQuerying:
         self._make_zone_near_hedge(map_low, 200, species_taxrefs=[])
         self._make_zone_near_hedge(map_high, 300, species_taxrefs=[])
         SpeciesHabitatFactory(
-            species=species, map=map_low,
-            hedge_types=["mixte"], level_of_concern="faible",
+            species=species,
+            map=map_low,
+            hedge_types=["mixte"],
+            level_of_concern="faible",
         )
         SpeciesHabitatFactory(
-            species=species, map=map_high,
-            hedge_types=["mixte"], level_of_concern="tres_fort",
+            species=species,
+            map=map_high,
+            hedge_types=["mixte"],
+            level_of_concern="tres_fort",
         )
 
         hedge = self._make_hedge_in_aisne()
