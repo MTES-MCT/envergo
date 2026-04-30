@@ -52,7 +52,7 @@ def test_import_csv_with_cd_ref():
     habitat_file = make_habitat_file()
     row = make_row(110920, hedge_types=["mixte", "arbustive"])
 
-    habitat = process_species_habitat_row(row, habitat_file)
+    habitat, _ = process_species_habitat_row(row, habitat_file)
 
     assert habitat.species == species
     assert "mixte" in habitat.hedge_types
@@ -64,7 +64,7 @@ def test_import_csv_creates_missing_species():
     habitat_file = make_habitat_file()
     row = make_row(99999, hedge_types=["mixte"])
 
-    habitat = process_species_habitat_row(row, habitat_file)
+    habitat, _ = process_species_habitat_row(row, habitat_file)
 
     assert habitat.species.cd_ref == 99999
     assert "99999" in habitat.species.scientific_name
@@ -78,7 +78,7 @@ def test_import_csv_reads_level_of_concern():
     habitat_file = make_habitat_file()
     row = make_row(110920, hedge_types=["mixte"], level_of_concern="Fort")
 
-    habitat = process_species_habitat_row(row, habitat_file)
+    habitat, _ = process_species_habitat_row(row, habitat_file)
 
     assert habitat.level_of_concern == "fort"
 
@@ -93,21 +93,26 @@ def test_import_csv_maps_display_values(display_value, db_value):
     habitat_file = make_habitat_file()
     row = make_row(42, hedge_types=["mixte"], level_of_concern=display_value)
 
-    habitat = process_species_habitat_row(row, habitat_file)
+    habitat, _ = process_species_habitat_row(row, habitat_file)
 
     assert habitat.level_of_concern == db_value
 
 
 def test_import_csv_saves_groupe_to_adhoc_group():
-    """The 'groupe' CSV column should be stored verbatim in species.adhoc_group."""
+    """The 'groupe' CSV column should be stored in species.adhoc_group.
+
+    The update is in-memory only — the caller is responsible for persisting
+    via bulk_update. This test verifies the in-memory mutation.
+    """
     species = SpeciesFactory(cd_ref=110920, adhoc_group="")
     habitat_file = make_habitat_file()
     row = make_row(110920, hedge_types=["mixte"], groupe="Oiseaux")
 
-    process_species_habitat_row(row, habitat_file)
+    _, modified_species = process_species_habitat_row(row, habitat_file)
 
-    species.refresh_from_db()
-    assert species.adhoc_group == "Oiseaux"
+    assert modified_species is not None
+    assert modified_species.pk == species.pk
+    assert modified_species.adhoc_group == "Oiseaux"
 
 
 def test_import_csv_skips_adhoc_group_when_groupe_absent():
@@ -116,7 +121,7 @@ def test_import_csv_skips_adhoc_group_when_groupe_absent():
     habitat_file = make_habitat_file()
     row = make_row(110920, hedge_types=["mixte"])
 
-    process_species_habitat_row(row, habitat_file)
+    _, modified_species = process_species_habitat_row(row, habitat_file)
 
-    species.refresh_from_db()
+    assert modified_species is None
     assert species.adhoc_group == "Reptiles"
