@@ -598,6 +598,12 @@ section.debug {
 
   div.criterion-debug {
     margin-top: 1.5rem;
+
+    table caption {
+      font-size: 1rem;
+      line-height: 1.5rem;
+      margin: var(--text-spacing);
+    }
   }
 }
 

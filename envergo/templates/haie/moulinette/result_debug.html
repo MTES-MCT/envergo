@@ -68,35 +68,34 @@
 
       {% with criteria=regulation.criteria.all %}
         {% if criteria %}
-          <ul>
-            {% for criterion in criteria %}
-              <li class="fr-mb-2w">
+          {% for criterion in criteria %}
+            <section class="fr-mb-2w">
+              <h4>
                 {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
+              </h4>
+              <p>
                 {% if criterion.get_evaluator.get_replantation_coefficient %}
-                  <br />
                   R = {{ criterion.get_evaluator.get_replantation_coefficient|floatformat:"2g" }}
                 {% else %}
-                  <br />
                   R = ND
                 {% endif %}
+                <br />
                 {% if criterion.get_evaluator.plantation_conditions %}
-                  <br />
                   Conditions d'acceptabilité =
                   {% for condition in criterion.get_evaluator.plantation_conditions %}
                     {{ condition.label }}
                     {% if not forloop.last %},&nbsp;{% endif %}
                   {% endfor %}
                 {% else %}
-                  <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
+              </p>
 
-                {% criterion_debug_snippet criterion as debug_content %}
-                {% if debug_content %}<div class="criterion-debug">{{ debug_content }}</div>{% endif %}
-              </li>
-            {% endfor %}
-          </ul>
+              {% criterion_debug_snippet criterion as debug_content %}
+              {% if debug_content %}<div class="criterion-debug">{{ debug_content }}</div>{% endif %}
+            </section>
+          {% endfor %}
         {% endif %}
       {% endwith %}
     {% endfor %}

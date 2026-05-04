@@ -1,8 +1,10 @@
 import logging
 
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.measure import D
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from localflavor.fr.fr_department import DEPARTMENT_CHOICES_PER_REGION
@@ -115,6 +117,116 @@ class Map(models.Model):
         return self.name
 
 
+class ZoneManager(models.Manager):
+    """Custom manager with helpers for optimizing Zone querying."""
+
+    POINT_VALUE_TEMPLATE = "(%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)"
+
+    def lateral_zone_join(
+        self, centroids, map_type, dept_code, lateral_filter, extra_params=()
+    ):
+        """Match each centroid to a zone in a single query, regardless of centroid count.
+
+        This allows joining centroids (e.g from hedges) each with a zone, running
+        a parameterized subquery for each centroid.
+
+        For example, it builds the query that says:
+        "Join each of those centroids with the zone that is the closest to it."
+
+        ``lateral_filter`` is the spatial predicate injected into the LATERAL
+        subquery (e.g. ST_Covers for containment, ST_DWithin + ORDER BY for
+        proximity). Unmatched centroids are absent from the returned dict.
+        """
+        if not centroids:
+            return {}
+
+        values_sql, params = self._build_centroid_values(centroids)
+        params.extend([str(map_type), dept_code, *extra_params])
+
+        sql = f"""
+            WITH centroids(point_id, geom) AS (VALUES {values_sql})
+            SELECT c.point_id, z.id
+            FROM centroids c
+            LEFT JOIN LATERAL (
+                SELECT zz.id
+                FROM geodata_zone zz
+                JOIN geodata_map m ON zz.map_id = m.id
+                WHERE m.map_type = %s
+                AND m.departments @> ARRAY[%s]::varchar[]
+                {lateral_filter}
+            ) z ON TRUE
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+
+        return self._hydrate_zones(rows)
+
+    def _build_centroid_values(self, centroids):
+        """Return a (values_sql, params) tuple for use in the CTE's VALUES clause."""
+
+        clauses = []
+        params = []
+        for key, centroid in centroids.items():
+            clauses.append(self.POINT_VALUE_TEMPLATE)
+            params.extend([str(key), centroid.x, centroid.y])
+        values_sql = ", ".join(clauses)
+        return values_sql, params
+
+    def _hydrate_zones(self, rows):
+        """Fetch Zone objects for the matched IDs returned by the raw query."""
+
+        matched = {
+            point_id: zone_id for point_id, zone_id in rows if zone_id is not None
+        }
+        if not matched:
+            return {}
+        zones_by_id = self.in_bulk(set(matched.values()))
+        return {point_id: zones_by_id[zone_id] for point_id, zone_id in matched.items()}
+
+    def find_covering(self, centroids, map_type, dept_code):
+        """Return {key: Zone} for centroids that fall inside a zone polygon."""
+
+        return self.lateral_zone_join(
+            centroids,
+            map_type,
+            dept_code,
+            lateral_filter="AND ST_Covers(zz.geometry, c.geom) LIMIT 1",
+        )
+
+    def find_nearest(self, centroid, map_type, dept_code, max_distance_m):
+        """Return the closest zone within ``max_distance_m``, or None.
+
+        ST_DWithin gates index access (cheap bounding-box filter), then
+        ST_Distance on the geography column gives exact metre ordering.
+        """
+        return (
+            self.filter(
+                map__map_type=map_type,
+                map__departments__contains=[dept_code],
+            )
+            .filter(geometry__dwithin=(centroid, D(m=max_distance_m)))
+            .annotate(dist=Distance("geometry", centroid))
+            .order_by("dist")
+            .first()
+        )
+
+    def find_nearest_batch(self, centroids, map_type, dept_code, max_distance_m):
+        """Like find_nearest, but batched: one query for all centroids."""
+
+        return self.lateral_zone_join(
+            centroids,
+            map_type,
+            dept_code,
+            lateral_filter=(
+                "AND ST_DWithin(zz.geometry, c.geom, %s) "
+                "ORDER BY ST_Distance(zz.geometry, c.geom) LIMIT 1"
+            ),
+            extra_params=(max_distance_m,),
+        )
+
+
 class Zone(gis_models.Model):
     """Stores an annotated geographic polygon(s)."""
 
@@ -145,6 +257,8 @@ class Zone(gis_models.Model):
         blank=True,
         base_field=models.IntegerField(),
     )
+
+    objects = ZoneManager()
 
     class Meta:
         verbose_name = _("Zone")
