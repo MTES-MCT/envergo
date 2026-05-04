@@ -63,11 +63,13 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-        demarches_simplifiees_organization_id="Q2hhbXAtNDcyOTE3MQ==",
+        demarches_simplifiees_display_fields={
+            "project_url": "ABC123",
+            "city": "Q2hhbXAtNDcyOTE4Nw==",
+            "organization": "Q2hhbXAtNDcyOTE3MQ==",
+            "pacage": "Q2hhbXAtNDU0MzkzOA==",
+        }
     )
-
     petition_project = PetitionProjectFactory()
 
     # WHEN I fetch it from DS for the first time
@@ -135,9 +137,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
 ):
     petition_project = PetitionProjectFactory()
-    config = DCConfigHaieFactory()
-    config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
-    config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
+    DCConfigHaieFactory()
 
     details = get_demarches_simplifiees_dossier(petition_project)
 
@@ -186,9 +186,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     )
 
     petition_project = PetitionProjectFactory()
-    config = DCConfigHaieFactory()
-    config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
-    config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
+    DCConfigHaieFactory()
 
     details = get_demarches_simplifiees_dossier(petition_project)
 
@@ -214,9 +212,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 ):
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
     petition_project = PetitionProjectFactory()
-    config = DCConfigHaieFactory()
-    config.demarches_simplifiees_city_id = "Q2hhbXAtNDcyOTE4Nw=="
-    config.demarches_simplifiees_pacage_id = "Q2hhbXAtNDU0MzkzOA=="
+    DCConfigHaieFactory()
 
     details = get_demarches_simplifiees_dossier(petition_project)
 
@@ -239,10 +235,7 @@ def test_compute_instructor_information(mock_get_dossier):
         GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
     )
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-    )
+    DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
@@ -849,10 +842,7 @@ def test_get_message_project_via_demarches_simplifiees(
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-    )
+    DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
@@ -879,10 +869,7 @@ def test_send_message_project_via_demarches_simplifiees(
 ):
     """Test send message for project via demarches simplifiées"""
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-    )
+    DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
@@ -922,10 +909,7 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
 ):
     """Test send message for project via demarches simplifiées"""
 
-    DCConfigHaieFactory(
-        demarches_simplifiees_city_id="Q2hhbXAtNDcyOTE4Nw==",
-        demarches_simplifiees_pacage_id="Q2hhbXAtNDU0MzkzOA==",
-    )
+    DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
