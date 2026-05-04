@@ -41,21 +41,22 @@ def resolve_hedge_zones(hedges, dept_code):
     zones = Zone.objects.find_covering(centroids, MAP_TYPES.zonage, dept_code)
 
     # When a hedge doesn't fall into a zonage, we have to find the nearest zone instead.
-    # Functionnaly, that is questionnable. Zonages are administrative perimeters
-    # define by prefects, so you are either in a zonage or not.
-    # But the only ways an hedge centroid might not fall into any zonage is either
-    # there is a flaw in the data (e.g missing map) or the hedge topoly makes
-    # the centroid falls outside the department.
+    # Functionally, that is questionable. Zonages are administrative perimeters
+    # defined by prefects, so you are either in a zonage or not.
+    # But the only ways a hedge centroid might not fall into any zonage is either
+    # there is a flaw in the data (e.g missing map) or the hedge topology makes
+    # the centroid fall outside the department.
     # In any case we have to have a fallback.
-    for hedge_id in centroids:
-        if hedge_id not in zones:
-            # That SHOULD be an exceptional case, so I stayed as simple as possible
-            zones[hedge_id] = Zone.objects.find_nearest(
-                centroids[hedge_id], MAP_TYPES.zonage, dept_code, MAX_ZONE_DISTANCE_M
-            )
+    unmatched = {hid: centroids[hid] for hid in centroids if hid not in zones}
+    if unmatched:
+        nearest = Zone.objects.find_nearest_batch(
+            unmatched, MAP_TYPES.zonage, dept_code, MAX_ZONE_DISTANCE_M
+        )
+        zones.update(nearest)
 
     return {
-        hedge_id: zone.attributes if zone else None for hedge_id, zone in zones.items()
+        hedge_id: zones[hedge_id].attributes if hedge_id in zones else None
+        for hedge_id in centroids
     }
 
 
