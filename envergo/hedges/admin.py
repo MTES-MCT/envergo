@@ -41,6 +41,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
         "all_species",
         "_density",
     ]
+    exclude = ["_length_to_plant", "_length_to_remove"]
 
     def get_urls(self):
         urls = super().get_urls()
@@ -77,7 +78,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     @admin.display(description="Longueur des haies à planter")
     def length_to_plant(self, obj):
-        return round(obj.length_to_plant())
+        return round(obj.length_to_plant(), 2)
 
     @admin.display(description="Nombre de haies à détruire")
     def hedges_to_remove(self, obj):
@@ -85,7 +86,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     @admin.display(description="Longueur des haies à détruire")
     def length_to_remove(self, obj):
-        return round(obj.length_to_plant())
+        return round(obj.length_to_remove(), 2)
 
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
