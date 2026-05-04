@@ -864,20 +864,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request, self.object
         )
 
-        invitation_token = self.request.GET.get(
-            settings.INVITATION_TOKEN_COOKIE_NAME, ""
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
         )
-        if invitation_token:
-            context["matomo_custom_url"] = self.request.build_absolute_uri(
-                reverse("petition_project_invitation_token_in_query")
-            )
-        else:
-            matomo_custom_path = self.request.path.replace(
-                self.object.reference, "+ref_projet+"
-            )
-            context["matomo_custom_url"] = update_url_with_matomo_params(
-                self.request.build_absolute_uri(matomo_custom_path), self.request
-            )
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
+        )
         context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
             self.object.config.demarche_simplifiee_number
         )
@@ -978,6 +970,14 @@ class BasePetitionProjectInstructorView(
         context["has_change_permission"] = self.has_change_permission(
             self.request, self.object
         )
+
+        invitation_token = self.request.GET.get(
+            settings.INVITATION_TOKEN_COOKIE_NAME, ""
+        )
+        if invitation_token:
+            context["matomo_custom_url"] = self.request.build_absolute_uri(
+                reverse("petition_project_invitation_token_in_query")
+            )
         return context
 
     def log_event_action(self, request):
