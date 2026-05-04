@@ -31,10 +31,10 @@ class HandleInvitationTokenMiddleware:
         if request.user.is_authenticated:
             if url_token:
                 self.process_token(request, url_token)
-                if cookie_token == url_token:
+                if url_token == cookie_token:
                     delete_cookie_token = True
 
-            elif cookie_token:
+            if cookie_token and url_token != cookie_token:
                 self.process_token(request, cookie_token)
                 delete_cookie_token = True
 
