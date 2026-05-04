@@ -25,11 +25,16 @@ class HandleInvitationTokenMiddleware:
 
         # User is authenticated. We look for invitation tokens in url
         # or in session data.
+        # When user was not logged before a cookie has been stored.
+        # but token is in url too, so delete cookie if they are equals.
+        # This avoids to process_token twice and have two messages.
         if request.user.is_authenticated:
             if url_token:
                 self.process_token(request, url_token)
+                if url_token == cookie_token:
+                    delete_cookie_token = True
 
-            if cookie_token:
+            if cookie_token and url_token != cookie_token:
                 self.process_token(request, cookie_token)
                 delete_cookie_token = True
 

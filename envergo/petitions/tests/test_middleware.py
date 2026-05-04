@@ -248,6 +248,32 @@ def test_used_token_shows_warning(
     assert "n'est plus valide" in str(message_list[0])
 
 
+def test_unauthenticated_user_with_used_token_in_url_has_one_message_after_login(
+    rf, middleware, used_invitation_token, invitation_creator, authenticated_user
+):
+    """Test that when invalid token is stored in cookie before login,
+    then deleted after login when token is in url and process only one time"""
+    url = f"/?{settings.INVITATION_TOKEN_COOKIE_NAME}={used_invitation_token.token}"
+    # Request to log in
+    request = rf.get(url)
+    add_messages_middleware(request)
+    another_user = UserFactory()
+    request.user = another_user
+    # Token cookie has been set before when user was not logged in
+    request.COOKIES = {
+        settings.INVITATION_TOKEN_COOKIE_NAME: used_invitation_token.token
+    }
+    response = middleware(request)
+
+    # Cookie should be deleted
+    assert settings.INVITATION_TOKEN_COOKIE_NAME in response.cookies
+    cookie = response.cookies[settings.INVITATION_TOKEN_COOKIE_NAME]
+    assert cookie.value == ""
+    # Only one message is displayed
+    message_list = list(messages.get_messages(request))
+    assert len(message_list) == 1
+
+
 def test_authenticated_user_with_permission_on_project_with_token_in_url_cannot_process_token(
     rf, middleware, valid_invitation_token, haie_user_44
 ):
