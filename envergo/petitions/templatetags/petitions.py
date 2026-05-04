@@ -13,7 +13,7 @@ from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
 from envergo.petitions.services import (
     get_demarches_simplifiees_dossier,
-    get_field_data_from_ds_dossier,
+    get_field_data_from_dn_dossier,
 )
 
 register = template.Library()
@@ -270,19 +270,15 @@ def get_ds_field(context, field_name):
 
     `field_name` must be set in config.demarches_simplifiees_display_fields.
     """
-
-    config = context.get("moulinette").config
-    ds_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
-    if ds_field_id is None:
-        return None
     petition_project = context.get("petition_project", None)
     if petition_project is None:
         return None
     ds_dossier = get_demarches_simplifiees_dossier(petition_project)
     if ds_dossier is None:
         return None
+    config = context.get("moulinette").config
 
-    return get_field_data_from_ds_dossier(ds_field_id, ds_dossier)
+    return get_field_data_from_dn_dossier(field_name, config, ds_dossier)
 
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)

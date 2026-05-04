@@ -140,7 +140,9 @@ class DCConfigHaieFactory(DjangoModelFactory):
         {"id": "321", "value": "ref_projet"},
         {"id": "654", "value": "url_moulinette"},
     ]
-    demarches_simplifiees_project_url_id = "ABC123"
+    demarches_simplifiees_display_fields = {
+        "project_url": "ABC123",
+    }
 
 
 class RUConfigHaieFactory(DCConfigHaieFactory):

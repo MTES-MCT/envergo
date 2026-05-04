@@ -371,9 +371,7 @@
       "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8",
       "weight": 1,
       "activation_mode": "department_centroid",
-      "evaluator_settings": {
-        "replantation_coefficient": 2
-      }
+      "evaluator_settings": {}
     }
   },
   {
@@ -388,9 +386,7 @@
       "evaluator": "envergo.moulinette.regulations.ep.EspecesProtegeesAisne",
       "weight": 2,
       "activation_mode": "department_centroid",
-      "evaluator_settings": {
-        "replantation_coefficient": 1.5
-      }
+      "evaluator_settings": {}
     }
   },
   {
@@ -485,7 +481,8 @@
       ],
       "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
       "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
-      "demarche_simplifiee_number": "123456"
+      "demarche_simplifiee_number": "123456",
+      "demarches_simplifiees_display_fields": {"project_url": "ABC123"}
     }
   },
   {

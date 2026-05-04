@@ -1333,30 +1333,6 @@ class ConfigHaie(ConfigBase):
         default=dict,
     )
 
-    demarches_simplifiees_city_id = models.CharField(
-        'Identifiant DS "Commune principale"',
-        blank=True,
-        max_length=64,
-    )
-
-    demarches_simplifiees_organization_id = models.CharField(
-        'Identifiant DS "Nom de votre structure"',
-        blank=True,
-        max_length=64,
-    )
-
-    demarches_simplifiees_pacage_id = models.CharField(
-        'Identifiant DS "numéro de PACAGE"',
-        blank=True,
-        max_length=64,
-    )
-
-    demarches_simplifiees_project_url_id = models.CharField(
-        'Identifiant DS "Lien internet de la simulation réglementaire de votre projet"',
-        blank=True,
-        max_length=64,
-    )
-
     def __str__(self):
         return self.department.get_department_display()
 
@@ -1467,13 +1443,17 @@ class ConfigHaie(ConfigBase):
                 )
             )
             for criterion in regulation.criteria.all():
-                criteria_results.add(
-                    (
-                        f"{regulation.slug}.{criterion.slug}.result_code",
-                        f"Code de résultat du critère {criterion.backend_title} de la "
-                        f"réglementation {regulation.regulation}",
-                    )
+                criterion_result_slug_code = (
+                    f"{regulation.slug}.{criterion.slug}.result_code"
                 )
+                if criterion_result_slug_code not in dict(criteria_results):
+                    criteria_results.add(
+                        (
+                            criterion_result_slug_code,
+                            f"Code de résultat du critère {criterion.backend_title} "
+                            f"de la réglementation {regulation.regulation}",
+                        )
+                    )
                 form_class = criterion.evaluator.form_class
                 if form_class:
                     regulation_sources.update(
@@ -1505,7 +1485,7 @@ class ConfigHaie(ConfigBase):
             ),
             CheckConstraint(
                 check=Q(demarche_simplifiee_number__isnull=True)
-                | Q(demarches_simplifiees_project_url_id__isnull=False),
+                | Q(demarches_simplifiees_display_fields__project_url__isnull=False),
                 name="project_url_id_required_if_demarche_number",
             ),
             CheckConstraint(

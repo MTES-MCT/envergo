@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
 from envergo.contrib.sites.tests.factories import SiteFactory
-from envergo.geodata.tests.factories import DepartmentFactory, ZoneFactory
+from envergo.geodata.tests.factories import DepartmentFactory, MapFactory, ZoneFactory
 from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigAmenagement,
@@ -142,10 +142,22 @@ def test_moulinette_haie_has_specific_behavior():
     assert MoulinetteClass is MoulinetteHaie
 
 
-def test_config_haie_has_missing_demarche_simplifiee_number(
+def test_config_haie_activated_has_missing_demarche_simplifiee_number(
     loire_atlantique_department,  # noqa
 ):
+    """Check `demarche_simplifiee_number_required_if_activated` constraint"""
     config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
+    with pytest.raises(ValidationError):
+        config_haie.validate_constraints()
+
+
+def test_config_haie_with_demarche_simplifiee_number_has_missing_project_url_id(
+    loire_atlantique_department,  # noqa
+):
+    """Check `project_url_id_required_if_demarche_number` constraint"""
+    config_haie = ConfigHaie(
+        department=loire_atlantique_department, demarche_simplifiee_number="123456789"
+    )
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
 
@@ -213,6 +225,72 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         ],
     )
     config_haie.clean()
+
+
+def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
+    """Test get_demarche_simplifiee_value_sources method"""
+    config_haie = DCConfigHaieFactory()
+    other_map = MapFactory()
+    sites_proteges_regulation = RegulationFactory(
+        regulation="sites_proteges_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesProtegesRegulation",
+    )
+    spr_perimeter_bizou = PerimeterFactory(
+        name="Bizous",
+        activation_map=bizous_town_center,
+        regulations=[sites_proteges_regulation],
+    )
+    spr_perimeter_bizou_MH = PerimeterFactory(
+        name="MH",
+        activation_map=bizous_town_center,
+        regulations=[sites_proteges_regulation],
+    )
+    spr_perimeter_other = PerimeterFactory(
+        name="Other",
+        activation_map=other_map,
+        regulations=[sites_proteges_regulation],
+    )
+    CriterionFactory(
+        title="Sites Patrimoniaux Remarquables",
+        backend_title="SPR Haies > bizou",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter_bizou,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    ),
+    CriterionFactory(
+        title="Monuments historiques",
+        backend_title="MH Haies > bizou2",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter_bizou_MH,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.MonumentsHistoriquesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    ),
+    CriterionFactory(
+        title="Monuments historiques",
+        backend_title="SPR Haies > bizou",
+        regulation=sites_proteges_regulation,
+        perimeter=spr_perimeter_other,
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.MonumentsHistoriquesHaie",
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    )
+    expected_results_criteria = {
+        (
+            "sites_proteges_haie.mh_haie.result_code",
+            "Code de résultat du critère MH Haies > bizou2 de la réglementation sites_proteges_haie",
+        ),
+        (
+            "sites_proteges_haie.spr_haie.result_code",
+            "Code de résultat du critère SPR Haies > bizou de la réglementation sites_proteges_haie",
+        ),
+    }
+
+    results = config_haie.get_demarche_simplifiee_value_sources()
+    assert results["Résultats des critères"] == expected_results_criteria
 
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(
