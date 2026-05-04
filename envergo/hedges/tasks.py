@@ -141,9 +141,7 @@ def process_species_habitat_row(row, habitat_file, import_log=None):
         if row.get(hedge_property, "").strip().upper() in ("TRUE", "1"):
             hedge_properties.append(hedge_property)
 
-    local_level = parse_level_of_concern(
-        row.get("level_of_concern", ""), import_log
-    )
+    local_level = parse_level_of_concern(row.get("level_of_concern", ""), import_log)
 
     habitat = SpeciesHabitat(
         species=species,
