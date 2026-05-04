@@ -41,7 +41,7 @@ test('A petitioner can submit a project', async ({ page }) => {
     await expect(await page.getByRole('heading', { name: 'Conditionnalité PAC' })).toContainText('Dispense');
     await expect(await page.getByRole('heading', { name: 'Natura 2000 Haie' })).toContainText('Non soumis');
 
-    await page.locator('#project-result').getByRole('button', { name: 'Localiser les haies à planter' }).click();
+    await page.locator('#project-result').getByRole('button', { name: 'Décrire le projet de plantation' }).click();
     await page.locator('#hedge-input-iframe').contentFrame().getByRole('button', { name: 'Tracer une haie à planter' }).click();
     await page.frameLocator('#hedge-input-iframe')
         .locator('#tooltip')

@@ -5,8 +5,11 @@ from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    HaieRegulationFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import setup_ep_regime_unique
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +23,21 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -48,7 +65,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
+    regulation = HaieRegulationFactory(
         regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
     )
     criteria = [
@@ -140,17 +157,7 @@ def test_moulinette_result_alignement():
 
 
 def test_moulinette_result_non_alignement():
-    DCConfigHaieFactory(
-        single_procedure=True,
-        single_procedure_settings={
-            "coeff_compensation": {
-                "mixte": 1.5,
-                "degradee": 1.5,
-                "arbustive": 1.5,
-                "buissonnante": 1.5,
-            }
-        },
-    )
+    RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -177,8 +184,7 @@ def test_moulinette_result_non_alignement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.conditionnalite_pac.result == "non_soumis"
-    assert moulinette.alignement_arbres.result == "non_soumis"
+    assert moulinette.alignement_arbres.result == "non_concerne"
     assert moulinette.result == "declaration"
 
 
@@ -227,18 +233,9 @@ def test_moulinette_result_interdit():
     assert moulinette.result == "interdit"
 
 
-def test_moulinette_result_autorisation(ep_criteria):
-    DCConfigHaieFactory(
-        single_procedure=True,
-        single_procedure_settings={
-            "coeff_compensation": {
-                "mixte": 1.5,
-                "degradee": 1.5,
-                "arbustive": 1.5,
-                "buissonnante": 1.5,
-            }
-        },
-    )
+def test_moulinette_result_autorisation(france_map):
+    setup_ep_regime_unique(france_map)
+    RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -246,8 +243,9 @@ def test_moulinette_result_autorisation(ep_criteria):
                     "type_haie": "mixte",
                     "sur_parcelle_pac": False,
                     "mode_destruction": "coupe_a_blanc",
+                    "place_publique": False,
                 },
-            )
+            ),
         ]
     )
     data = {
@@ -268,5 +266,5 @@ def test_moulinette_result_autorisation(ep_criteria):
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.ep.ep_aisne.result == "derogation_simplifiee"
+    assert moulinette.ep.ep_regime_unique__ru.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

@@ -1,4 +1,7 @@
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class CodeRuralHaieRegulation(HaieRegulationEvaluator):
@@ -9,7 +12,7 @@ class CodeRuralHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class CodeRural(CriterionEvaluator):
+class CodeRural(HaieCriterionEvaluator):
     choice_label = "Code rural > Code Rural L126-3"
     slug = "code_rural"
 

@@ -23,7 +23,21 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaie",
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -42,7 +56,7 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         (
             "alignement",
             "non_concerne",
-            "non_concerne_aa",
+            "non_concerne",
         ),
     ],
 )
@@ -55,17 +69,19 @@ def test_moulinette_evaluation_single_procedure(
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
-    assert (
-        moulinette.regime_unique_haie.regime_unique_haie.result_code
-        == expected_result_code
-    )
+    if type_haie == "mixte":
+        criterion = moulinette.regime_unique_haie.regime_unique_haie__ru
+    else:
+        criterion = moulinette.regime_unique_haie.regime_unique_haie__l350_3
+
+    assert criterion.result_code == expected_result_code
 
 
 @pytest.mark.parametrize(
     "type_haie, expected_result, expected_result_code",
     [
-        ("mixte", "non_concerne", "non_concerne"),
-        ("alignement", "non_concerne", "non_concerne"),
+        ("mixte", "non_active", "non_active"),
+        ("alignement", "non_active", "non_active"),
     ],
 )
 def test_moulinette_evaluation_droit_constant(
@@ -78,7 +94,7 @@ def test_moulinette_evaluation_droit_constant(
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
-        moulinette.regime_unique_haie.regime_unique_haie.result_code
+        moulinette.regime_unique_haie.regime_unique_haie__hru.result_code
         == expected_result_code
     )
 

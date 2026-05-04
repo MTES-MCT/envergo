@@ -6,7 +6,11 @@ creating regulation/criterion combos, and building hedge scenarios.
 
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    HaieRegulationFactory,
+    RegulationFactory,
+)
 
 # ---------------------------------------------------------------------------
 # Coordinate presets
@@ -124,7 +128,7 @@ def make_moulinette_haie_data(
     hedges=None,
     hedge_data=None,
     motif="chemin_acces",
-    reimplantation="remplacement",
+    reimplantation="replantation",
     localisation_pac="non",
     travaux="destruction",
     element="haie",
@@ -361,7 +365,9 @@ def setup_ep_regime_unique(activation_map, evaluator_settings=None):
     """
     if evaluator_settings is None:
         evaluator_settings = EP_RU_DEFAULT_SETTINGS
-    regulation = RegulationFactory(regulation="ep")
+    regulation = HaieRegulationFactory(
+        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
+    )
     criteria = [
         CriterionFactory(
             title="EP Régime Unique",
@@ -382,7 +388,21 @@ def setup_regime_unique_haie(activation_map):
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaie",
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),

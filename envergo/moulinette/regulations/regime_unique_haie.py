@@ -1,7 +1,8 @@
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
-    CriterionEvaluator,
+    HaieCriterionCategory,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -42,7 +43,7 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEvaluator):
+class RegimeUniqueHaieHru(HaieCriterionEvaluator):
     """Criterion evaluator for the régime unique haie procedure.
 
     Determines whether a hedge project falls under the régime unique
@@ -52,20 +53,41 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
 
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
-    plantation_conditions = []
+    category = HaieCriterionCategory.hru
 
     RESULT_MATRIX = {
         "non_concerne": RESULTS.non_concerne,
-        "non_concerne_aa": RESULTS.non_concerne,
-        "soumis": RESULTS.soumis,
+        "non_active": RESULTS.non_active,
     }
 
     CODE_MATRIX = {
-        ("regime_unique", "aa_only"): "non_concerne_aa",
-        ("regime_unique", "has_hedges"): "soumis",
-        ("droit_constant", "aa_only"): "non_concerne",
-        ("droit_constant", "has_hedges"): "non_concerne",
+        "regime_unique": "non_concerne",
+        "droit_constant": "non_active",
     }
+
+    def get_result_data(self):
+        regime_unique = self.moulinette.config.single_procedure
+        return "regime_unique" if regime_unique else "droit_constant"
+
+
+class RegimeUniqueHaieRu(
+    PlantationConditionMixin, HedgeDensityMixin, RegimeUniqueHaieHru
+):
+    """Criterion evaluator for the régime unique haie procedure.
+
+    Determines whether a hedge project falls under the régime unique
+    (single procedure) or droit constant, and whether it is soumis or
+    non concerné based on hedge types.
+    """
+
+    plantation_conditions = []
+    category = HaieCriterionCategory.ru
+
+    def evaluate(self):
+        if self.hedges.to_remove():
+            self._result_code, self._result = "soumis", "soumis"
+        else:
+            self._result_code, self._result = "non_concerne", "non_concerne"
 
     def get_catalog_data(self):
         """Inject 400m line-buffer density into the catalog when in régime unique."""
@@ -78,16 +100,20 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
             catalog["density_400_area_ha"] = density_data.get("area_400_ha")
         return catalog
 
-    def get_result_data(self):
-        """Return a (procedure_mode, hedge_presence) tuple for CODE_MATRIX lookup."""
-        hedges = self.catalog["haies"].hedges_to_remove()
-        has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
-        regime_unique = self.moulinette.config.single_procedure
-
-        return "regime_unique" if regime_unique else "droit_constant", (
-            "aa_only" if not has_hedges else "has_hedges"
-        )
-
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
         return compute_ru_compensation_ratio(self.moulinette)
+
+
+class RegimeUniqueHaieL3503(RegimeUniqueHaieHru):
+    """Criterion evaluator for the régime unique haie procedure.
+
+    Determines whether a hedge project falls under the régime unique
+    (single procedure) or droit constant, and whether it is soumis or
+    non concerné based on hedge types.
+    """
+
+    category = HaieCriterionCategory.l350_3
+
+    def evaluate(self):
+        self._result_code, self._result = "non_concerne", "non_concerne"

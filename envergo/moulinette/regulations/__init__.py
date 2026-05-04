@@ -1,7 +1,8 @@
 import json
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, EnumType, StrEnum
 from types import SimpleNamespace
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -397,10 +398,13 @@ class HaieRegulationEvaluator(RegulationEvaluator):
 
     def evaluate(self, regulation):
         super().evaluate(regulation)
+        self._results_by_category = self.get_results_by_category(regulation)
         self._procedure_type = self.get_procedure_type(regulation)
 
     def get_procedure_type(self, regulation):
-        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(self.result)
+        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(
+            self.results_by_category[HaieCriterionCategory.ru]
+        )
         return procedure_type
 
     @property
@@ -410,6 +414,70 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._procedure_type
+
+    def get_results_by_category(self, regulation):
+
+        # We start by handling edge cases:
+        # - when the regulation is not activated for the department
+        # - when the perimeter is not activated
+        # - when no perimeter is found
+        if not regulation.is_activated():
+            return {category: RESULTS.non_active for category in HaieCriterionCategory}
+
+        results_by_category = {}
+        if regulation.has_perimeters:
+            all_perimeters = {
+                perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
+                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter.get(
+                    regulation, {}
+                ).items()
+            }
+            hedges_by_category = self.moulinette.catalog[
+                "haies"
+            ].get_hedges_by_category(self.moulinette.config.single_procedure)
+            for category, hedges in hedges_by_category.items():
+                category_perimeter = []
+                for perimeter, perimeter_hedges in all_perimeters.items():
+                    perimeter_hedge_ids = {h.id for h in perimeter_hedges}
+                    if any(h.id in perimeter_hedge_ids for h in hedges):
+                        category_perimeter.append(perimeter)
+
+                activated_perimeters = [p for p in category_perimeter if p.is_activated]
+                if category_perimeter and not any(activated_perimeters):
+                    results_by_category[category] = RESULTS.non_disponible
+                if not category_perimeter:
+                    results_by_category[category] = RESULTS.non_concerne
+
+        all_results_by_category = defaultdict(list)
+        for criterion in regulation.criteria.all():
+            all_results_by_category[criterion.evaluator.category].append(
+                criterion.result
+            )
+
+        for category, results in all_results_by_category.items():
+            for status in RESULT_CASCADE:
+                if status in results:
+                    results_by_category[category] = status
+                    break
+
+        # If there is no criterion at all, we have to set a default value
+        for category in HaieCriterionCategory:
+            if category not in results_by_category:
+                if regulation.has_perimeters:
+                    results_by_category[category] = RESULTS.non_soumis
+                else:
+                    results_by_category[category] = RESULTS.non_disponible
+
+        return results_by_category
+
+    @property
+    def results_by_category(self):
+        """Return a regulation macro result for each category of at least one criterion."""
+
+        if not hasattr(self, "_result"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return self._results_by_category
 
 
 class CriterionEvaluator(ABC):
@@ -443,7 +511,7 @@ class CriterionEvaluator(ABC):
     # The form class to use to ask the admin for necessary settings
     settings_form_class = None
 
-    def __init__(self, moulinette, distance, settings):
+    def __init__(self, criterion, moulinette, distance, settings):
         """Initialize the evaluator.
 
         Args:
@@ -455,6 +523,7 @@ class CriterionEvaluator(ABC):
             raise RuntimeError(
                 f"CriterionEvaluator {type(self).__name__} must have a `slug` attribute."
             )
+        self.criterion = criterion
         self.moulinette = moulinette
         self.distance = distance
         # Settings must be assigned before `get_catalog_data` because some
@@ -607,6 +676,64 @@ class CriterionEvaluator(ABC):
         rendering debug_template.
         """
         return {}
+
+
+class _DjangoSafeEnumMeta(EnumType):
+    do_not_call_in_templates = True
+
+
+class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
+
+    def __new__(cls, value, label=""):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.label = label
+        return member
+
+
+class HaieCriterionCategory(LabelEnum):
+    ru = ("Régime unique", "Haies bénéficiant d'une procédure unique")
+    l350_3 = ("L350-3", "Alignements d'arbres en bord de voie")
+    hru = ("Hors régime unique", "Autres haies et alignements, hors procédure unique")
+
+
+class HaieCriterionEvaluator(CriterionEvaluator, ABC):
+    """Add a category for criterion evaluator on GUH to filter the hedges to evaluate."""
+
+    category: HaieCriterionCategory = HaieCriterionCategory.hru
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        # Automatically append the category to choice_label and slug.
+        # _base_choice_label holds the label without the category suffix, so that
+        # subclasses overriding only `category` can recompute the full label correctly.
+        if "choice_label" in cls.__dict__:
+            cls._base_choice_label = cls.__dict__["choice_label"]
+        if ("category" in cls.__dict__ or "choice_label" in cls.__dict__) and hasattr(
+            cls, "_base_choice_label"
+        ):
+            cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
+
+        if "slug" in cls.__dict__:
+            cls._base_slug = cls.__dict__["slug"]
+        if ("category" in cls.__dict__ or "slug" in cls.__dict__) and hasattr(
+            cls, "_base_slug"
+        ):
+            cls.slug = f"{cls._base_slug}__{cls.category.name}"
+
+    def __init__(self, criterion, moulinette, distance, settings):
+        super().__init__(criterion, moulinette, distance, settings)
+        if "haies" in self.moulinette.catalog:
+            self.hedges = (
+                self.moulinette.catalog["haies"]
+                .hedges()
+                .category(self.moulinette.config.single_procedure, self.category)
+            )
+        else:
+            from envergo.hedges.models import HedgeList
+
+            self.hedges = HedgeList()
 
 
 SELF_DECLARATION_ELIGIBILITY_MATRIX = {

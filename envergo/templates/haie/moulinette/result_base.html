@@ -61,31 +61,127 @@
   {% block sensitive_areas %}
     {% include 'haie/moulinette/_sensitive_areas.html' %}
   {% endblock %}
+
+  {% if moulinette.is_multi_category %}
+    <section>
+      <div class="fr-callout fr-icon-information-line fr-mb-4w">
+        <p class="fr-mb-1w">
+          Le projet concerne des haies et/ou
+          alignements d'arbres de plusieurs catégories
+          juridiques :
+        </p>
+        <ul class="fr-mb-1w">
+          {% for category in moulinette.results_by_category %}
+            <li>
+              {{ category.label }}
+              <a href="#result-{{ category }}">
+                <span class="fr-link">
+                  <span class="fr-hidden-xl">Détail</span>
+                  <span class="fr-hidden fr-unhidden-xl">Aller au détail</span>
+                </span>
+                <span class="fr-link"><span class="fr-icon--sm fr-icon-arrow-down-line" aria-hidden="true"></span></span>
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+        <p>
+          Plusieurs dossiers devront être déposés. Les
+          procédures sont détaillées ci-dessous.
+        </p>
+      </div>
+    </section>
+  {% endif %}
+
   {% block result_header %}{% endblock %}
-
-  {% for result, regulations in moulinette.get_regulations_by_group.items %}
-    {% if result.name == "BlockingRegulations" %}
-      <h3>Réglementations interdisant le projet</h3>
-    {% elif result.name == "RestrictiveRegulations" and moulinette.result == "interdit" %}
-      <h3>Autres réglementations concernant le projet</h3>
-    {% elif result.name == "RestrictiveRegulations" %}
-      <h3>Réglementations concernant le projet</h3>
-    {% elif result.name == "UnsimulatedRegulations" %}
-      <h3>Réglementations non simulées</h3>
+  {% if "l350_3" in other_categories %}
+    <div class="fr-mb-3w">
+      {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.l350_3 %}
       <p>
-        ⚠️ <em>Ces réglementations peuvent concerner le projet mais le simulateur n’est pas encore en mesure de se prononcer.</em>
+        Le projet de destruction inclut des alignements d'arbres en bord de voie ouverte à la circulation du public. Ces linéaires sont protégés (art.
+        <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045213878"
+           target="_blank"
+           rel="noopener">L350-3 du code de l'environnement</a>) et relèvent d'une procédure spécifique, hors de la déclaration unique concernant les haies.
       </p>
-    {% else %}
-      <h3>Autres réglementations</h3>
-    {% endif %}
+      {% if moulinette.config.aa_l3503_handling == AaL3503Handling.PORTAL %}
+        <p>
+          Un dossier distinct doit être déposé, sur ce même portail. La marche à suivre sera indiquée à la prochaine étape.
+        </p>
+      {% elif moulinette.config.aa_l3503_handling == AaL3503Handling.THIRD_PARTY_FORM %}
+        <p>
+          Un dossier distinct doit être déposé, sur un autre portail. La marche à suivre sera indiquée à la prochaine étape.
+        </p>
+      {% else %}
+        <p>Un dossier distinct doit être déposé. La marche à suivre sera indiquée à la prochaine étape.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if "hru" in other_categories %}
+    <div class="fr-mb-3w fr-callout other-category-header">
+      {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.hru %}
+      <p>Le projet de destruction inclut des linéaires non soumis à la procédure unique de déclaration, c'est-à-dire :</p>
+      <ul>
+        <li>des haies en bordure de bâtiment, de place publique, ou dans des parcs ou jardins attenants à une habitation</li>
+        <li>des alignements d'arbres, qui n'entrent pas dans la définition d'une haie.</li>
+      </ul>
+      <p>Ces linéaires sont néanmoins protégés par plusieurs réglementations.</p>
+      <p>
+        Un dossier distinct doit être déposé, sur ce même portail. La marche à suivre sera indiquée à la prochaine
+        étape.
+      </p>
+    </div>
+  {% endif %}
 
-    {% for regulation in regulations %}
-      {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}
-    {% endfor %}
+  <h2 id="regulations-title">Détail des réglementations applicables</h2>
+  <div id="regulation-segmented-container" style="">
+    <p id="regulation-segmented-container__label" class="fr-text--xs">
+      <strong>Réglementations applicables
+      aux :</strong>
+    </p>
+    <fieldset class="fr-segmented">
+      <div class="fr-segmented__elements">
+        {% for category in moulinette.results_by_category %}
+          <div class="fr-segmented__element">
+            <input value="{{ category.name }}"
+                   {% if forloop.counter0 == 0 %}checked{% endif %}
+                   type="radio"
+                   id="segmented-{{ category.name }}"
+                   name="segmented-category">
+            <label class="fr-label" for="segmented-{{ category.name }}">{{ category.label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+  </div>
 
-    {% if forloop.counter0 == 0 %}
-      {% block liability_info %}{% endblock %}
-    {% endif %}
+  {% for category, groups in moulinette.get_regulations_by_group.items %}
+    <div class="category-{{ category.name }}">
+      {% for result, regulations in groups.items %}
+        {% if result.name == "BlockingRegulations" %}
+          <h3>Réglementations interdisant le projet</h3>
+        {% elif result.name == "RestrictiveRegulations" and moulinette.result == "interdit" %}
+          <h3>Autres réglementations concernant le projet</h3>
+        {% elif result.name == "RestrictiveRegulations" %}
+          <h3>Réglementations concernant le projet</h3>
+        {% elif result.name == "UnsimulatedRegulations" %}
+          <h3>Réglementations non simulées</h3>
+          <p>
+            ⚠️ <em>Ces réglementations peuvent concerner le projet mais le simulateur n’est pas encore en mesure de se prononcer.</em>
+          </p>
+        {% else %}
+          <h3>Autres réglementations</h3>
+        {% endif %}
+
+        {% for regulation in regulations %}
+          {% if category in regulation.results_by_category %}
+            {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation category=category %}
+          {% endif %}
+        {% endfor %}
+
+        {% if forloop.counter0 == 0 and forloop.parentloop.counter0 == 0 %}
+          {% block liability_info %}{% endblock %}
+        {% endif %}
+      {% endfor %}
+    </div>
   {% endfor %}
 
   {% include 'haie/moulinette/_hedge_input_modal.html' %}
@@ -117,11 +213,25 @@
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
+    function displayCategoryContent() {
+      // Hide/display content based on segmented control selection
+      current = document.querySelector("input[name=\"segmented-category\"]:checked")
+      document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
+      document.querySelectorAll(`.category-${current.value}`).forEach(el => el.hidden = false);
 
+      document.querySelectorAll("input[name=\"segmented-category\"]").forEach(input => {
+        input.addEventListener("change", () => {
+          document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
+          document.querySelectorAll(`.category-${input.value}`).forEach(el => el.hidden = false);
+        });
+      });
+    }
+      window.addEventListener('load', displayCategoryContent);
     window.addEventListener("load", function() {
       let iframeUrl = HEDGES_PLANTATION_URL;
       let redirectUrl = RESULT_P_URL;
       var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+      displayCategoryContent();
     });
   </script>
 {% endblock %}

@@ -137,7 +137,7 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "dispense_10m"
+    assert moulinette.ep.ep_normandie__hru.result_code == "dispense_10m"
 
 
 def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  # noqa
@@ -180,7 +180,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "dispense_20m"
+    assert moulinette.ep.ep_normandie__hru.result_code == "dispense_20m"
 
 
 def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  # noqa
@@ -223,7 +223,7 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "interdit"
+    assert moulinette.ep.ep_normandie__hru.result_code == "interdit"
 
 
 def test_ep_normandie_dispense_coupe_a_blanc(
@@ -257,7 +257,7 @@ def test_ep_normandie_dispense_coupe_a_blanc(
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "dispense_coupe_a_blanc"
+    assert moulinette.ep.ep_normandie__hru.result_code == "dispense_coupe_a_blanc"
 
 
 def test_ep_normandie_interdit_remplacement(
@@ -291,7 +291,7 @@ def test_ep_normandie_interdit_remplacement(
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
     # Replacing hedges is no longer forbidden in Normandie
-    assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
+    assert moulinette.ep.ep_normandie__hru.result_code == "derogation_simplifiee"
 
 
 def test_ep_normandie_derogation_simplifiee(
@@ -323,7 +323,7 @@ def test_ep_normandie_derogation_simplifiee(
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
+    assert moulinette.ep.ep_normandie__hru.result_code == "derogation_simplifiee"
 
 
 def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
@@ -356,7 +356,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == "dispense"
+    assert moulinette.ep.ep_normandie__hru.result_code == "dispense"
 
 
 # ---------------------------------------------------------------------------
@@ -382,7 +382,7 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
     CriterionFactory(
         title="Alignement arbres > L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     ),
@@ -408,7 +408,7 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors()
-    assert moulinette.ep.ep_normandie.result_code == result_code
+    assert moulinette.ep.ep_normandie__hru.result_code == result_code
 
 
 def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
@@ -418,7 +418,7 @@ def test_ep_normandie_without_alignement_arbre_evaluation_should_raise(
     CriterionFactory(
         title="Alignement arbres > L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     ),

@@ -56,6 +56,7 @@ def test_bcae8_impossible_case():
         hedges=hedges,
         localisation_pac="oui",
         lineaire_total=100,
+        reimplantation="remplacement",
     )
     moulinette = MoulinetteHaie(moulinette_data)
     assert not moulinette.is_valid()
@@ -78,7 +79,7 @@ def test_bcae8_not_activated(herault_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "non_soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "dispense_petit"
 
     criterion = Criterion.objects.all()[0]
     criterion.activation_map = herault_map
@@ -110,10 +111,9 @@ def test_bcae8_small_dispense_petit():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "non_soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit"
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("1")
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "dispense_petit"
+    assert moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient() == D(
+        "1"
     )
 
 
@@ -136,11 +136,10 @@ def test_bcae8_small_dispense_petit_2():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "non_soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "dispense_petit"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "dispense_petit"
     # With hedges to remove other than PAC, the R is computed only on PAC ones
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("0.5")
+    assert moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient() == D(
+        "0.5"
     )
 
 
@@ -162,7 +161,7 @@ def test_bcae8_small_interdit_transfert_parcelles():
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
         == "interdit_transfert_parcelles"
     )
 
@@ -185,7 +184,7 @@ def test_bcae8_small_interdit_amelioration_culture():
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
         == "interdit_transfert_parcelles"
     )
 
@@ -206,7 +205,9 @@ def test_bcae8_small_soumis_chemin_acces():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_chemin_acces"
+    )
 
 
 def test_bcae8_small_interdit_chemin_acces():
@@ -225,7 +226,9 @@ def test_bcae8_small_interdit_chemin_acces():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_chemin_acces"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code == "interdit_chemin_acces"
+    )
 
 
 def test_bcae8_multi_chemin_acces():
@@ -247,7 +250,9 @@ def test_bcae8_multi_chemin_acces():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_chemin_acces"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_chemin_acces"
+    )
 
 
 def test_bcae8_small_interdit_securite():
@@ -267,7 +272,7 @@ def test_bcae8_small_interdit_securite():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_securite"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "interdit_securite"
 
 
 def test_bcae8_small_soumis_amenagement():
@@ -287,7 +292,7 @@ def test_bcae8_small_soumis_amenagement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_amenagement"
 
 
 def test_bcae8_small_interdit_amenagement():
@@ -307,7 +312,9 @@ def test_bcae8_small_interdit_amenagement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code == "interdit_amenagement"
+    )
 
 
 def test_bcae8_small_interdit_embellissement():
@@ -325,7 +332,10 @@ def test_bcae8_small_interdit_embellissement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_embellissement"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
+        == "interdit_embellissement"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -341,6 +351,7 @@ def test_bcae8_big_soumis_remplacement():
     moulinette_data = make_moulinette_haie_data(
         hedges=hedges,
         motif="amelioration_culture",
+        reimplantation="remplacement",
         localisation_pac="oui",
         lineaire_total=5000,
         transfert_parcelles="non",
@@ -349,9 +360,11 @@ def test_bcae8_big_soumis_remplacement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_remplacement"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_remplacement"
+    )
     assert round(
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
+        moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient(),
         1,
     ) == D("1")
 
@@ -374,10 +387,11 @@ def test_bcae8_big_soumis_transfer_parcelles():
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code == "soumis_transfert_parcelles"
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
+        == "soumis_transfert_parcelles"
     )
     assert round(
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
+        moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient(),
         1,
     ) == D("1")
 
@@ -400,11 +414,11 @@ def test_bcae8_big_soumis_meilleur_emplacement_amelioration_culture():
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
         == "soumis_meilleur_emplacement"
     )
     assert round(
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient(),
+        moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient(),
         1,
     ) == D("1")
 
@@ -427,7 +441,7 @@ def test_bcae8_big_interdit_amelioration_culture():
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
     assert (
-        moulinette.conditionnalite_pac.bcae8.result_code
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
         == "interdit_amelioration_culture"
     )
 
@@ -447,7 +461,10 @@ def test_bcae8_big_interdit_embellissement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_embellissement"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code
+        == "interdit_embellissement"
+    )
 
 
 def test_bcae8_big_soumis_fosse():
@@ -466,10 +483,9 @@ def test_bcae8_big_soumis_fosse():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_fosse"
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("0")
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_fosse"
+    assert moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient() == D(
+        "0"
     )
 
 
@@ -489,10 +505,9 @@ def test_bcae8_big_soumis_incendie():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_incendie"
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("0")
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_incendie"
+    assert moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient() == D(
+        "0"
     )
 
 
@@ -512,10 +527,9 @@ def test_bcae8_big_soumis_maladie():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_maladie"
-    assert (
-        moulinette.conditionnalite_pac.bcae8._evaluator.get_replantation_coefficient()
-        == D("0")
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_maladie"
+    assert moulinette.conditionnalite_pac.bcae8__hru._evaluator.get_replantation_coefficient() == D(
+        "0"
     )
 
 
@@ -535,7 +549,7 @@ def test_bcae8_big_interdit_autre():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_autre"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "interdit_autre"
 
 
 # ---------------------------------------------------------------------------
@@ -574,7 +588,9 @@ def test_bcae8_batiment_exploitation():
     assert moulinette.is_valid()
     assert not moulinette.has_missing_data()
     assert moulinette.result == "interdit"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "interdit_amenagement"
+    assert (
+        moulinette.conditionnalite_pac.bcae8__hru.result_code == "interdit_amenagement"
+    )
 
     # WHEN the batiment exploitation param is oui
     moulinette_data["data"]["batiment_exploitation"] = "oui"
@@ -584,10 +600,10 @@ def test_bcae8_batiment_exploitation():
     assert moulinette.is_valid()
     assert not moulinette.has_missing_data()
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_amenagement"
 
     # EVEN on small project or without replantation
     moulinette_data["data"]["reimplantation"] = "non"
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.result == "soumis"
-    assert moulinette.conditionnalite_pac.bcae8.result_code == "soumis_amenagement"
+    assert moulinette.conditionnalite_pac.bcae8__hru.result_code == "soumis_amenagement"

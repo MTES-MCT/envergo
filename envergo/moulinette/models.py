@@ -1,8 +1,10 @@
 import logging
+import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from datetime import date
 from enum import IntEnum
+from functools import reduce
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
@@ -56,6 +58,7 @@ from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFacto
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
+    classpath,
     get_subclasses,
 )
 from envergo.moulinette.forms import (
@@ -67,6 +70,8 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import (
     TO_ADD,
     TO_SUBTRACT,
+    HaieCriterionCategory,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     MapFactory,
 )
@@ -351,6 +356,16 @@ class Regulation(models.Model):
             )
 
         return self._evaluator.result
+
+    @property
+    def results_by_category(self):
+        """Return a regulation result for each category of at least one criterion."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing the results."
+            )
+
+        return self._evaluator.results_by_category
 
     @property
     def procedure_type(self):
@@ -795,7 +810,9 @@ class Criterion(models.Model):
         self._templates = {t.key: t for t in self.templates.all()}
 
         self.moulinette = moulinette
-        self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
+        self._evaluator = self.evaluator(
+            self, moulinette, distance, self.evaluator_settings
+        )
         self._evaluator.evaluate()
 
     def get_evaluator(self):
@@ -2578,6 +2595,51 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         return result or RESULTS.non_soumis
 
+    @cached_property
+    def results_by_category(self):
+        """Compute global result from individual regulation results depending on the criteria category."""
+        if not self.is_evaluated():
+            raise RuntimeError(
+                "Moulinette must be evaluated before accessing the results."
+            )
+
+        all_results_by_category = defaultdict(list)
+        for regulation in self.regulations:
+            for category, result in regulation.results_by_category.items():
+                all_results_by_category[category].append(result)
+
+        results_by_category = {}
+        for category, results in all_results_by_category.items():
+            for cascading_result in RESULT_CASCADE:
+                if cascading_result in results:
+                    results_by_category[category] = GLOBAL_RESULT_MATRIX[
+                        cascading_result
+                    ]
+                    break
+
+        # use the procedure result for régime unique category
+        if HaieCriterionCategory.ru in results_by_category:
+            procedures = [regulation.procedure_type for regulation in self.regulations]
+            is_interdit = "interdit" in procedures
+            is_autorisation = "autorisation" in procedures
+
+            if is_interdit:
+                results_by_category[HaieCriterionCategory.ru] = RESULTS.interdit
+            elif is_autorisation:
+                results_by_category[HaieCriterionCategory.ru] = "autorisation"
+            elif results_by_category[HaieCriterionCategory.ru] not in [
+                RESULTS.non_soumis,
+                RESULTS.non_disponible,
+            ]:
+                results_by_category[HaieCriterionCategory.ru] = "declaration"
+
+        # remove the category if there is no hedge concerned
+        for category, hedges in self.catalog["hedges_by_category"].items():
+            if not hedges and category in results_by_category:
+                results_by_category.pop(category)
+
+        return results_by_category
+
     def summary(self):
         """Build a data summary, for analytics purpose."""
         summary = self.data.copy()
@@ -2672,7 +2734,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 )
             )
         }
-
         return context
 
     def get_catalog_data(self):
@@ -2685,6 +2746,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["has_hedges_outside_department"] = (
                 hedges.has_hedges_outside_department(self.department)
             )
+            data["hedges_by_category"] = hedges.get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            data["hedges_by_category"] = {
+                category: [] for category in HaieCriterionCategory
+            }
 
         return data
 
@@ -2741,36 +2809,56 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch the criteria that can be activated for this project
 
         There is two kind of activation mode for a criterion:
-         * department_centroid : the criteria is activated if the department centroid is in the activation map
-         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
+         * department_centroid: activated if the department centroid is in the activation map,
+           and there is at least one hedge in the criterion's category
+         * hedges_intersection: activated if the activation map intersects with hedges
+           belonging to the same category as the criterion
+
+        Both modes are combined into a single query to avoid multiple expensive spatial
+        EXISTS subqueries.
         """
         dept_centroid = self.department.centroid
-        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
+        hedges_by_category = self.catalog["hedges_by_category"]
 
-        # Filter for department_centroid activation mode
-        subquery = Zone.objects.filter(
+        # Build category → evaluator classpaths mapping
+        evaluators_by_category = {category: [] for category in HaieCriterionCategory}
+        for cls in get_subclasses(HaieCriterionEvaluator):
+            evaluators_by_category[cls.category].append(classpath(cls))
+
+        # department_centroid: geography filter + exclude evaluators whose category has no hedges
+        empty_category_evaluators = [
+            evaluator_classpath
+            for category, hedges in hedges_by_category.items()
+            if not hedges
+            for evaluator_classpath in evaluators_by_category[category]
+        ]
+        centroid_subquery = Zone.objects.filter(
             map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
         ).values("id")
-        department_centroid_criteria = (
-            super()
-            .get_criteria()
-            .filter(
-                Exists(subquery),
-                activation_mode="department_centroid",
-            )
+        centroid_q = (
+            Q(activation_mode="department_centroid")
+            & Exists(centroid_subquery)
+            & ~Q(evaluator__in=empty_category_evaluators)
         )
 
-        # Filter for hedges_intersection activation mode
-        hedges_intersection_criteria = super().get_criteria().none()
-        if hedges:
-            zone_subquery = self.get_zone_subquery(hedges)
-            hedges_intersection_criteria = (
-                super()
-                .get_criteria()
-                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
-            )
+        # hedges_intersection: one EXISTS per category, OR-combined into a single query
+        category_qs = []
+        for category, hedges in hedges_by_category.items():
+            if hedges and evaluators_by_category[category]:
+                zone_subquery = self.get_zone_subquery(hedges)
+                category_qs.append(
+                    Q(evaluator__in=evaluators_by_category[category])
+                    & Exists(zone_subquery)
+                )
 
-        return department_centroid_criteria | hedges_intersection_criteria
+        final_q = centroid_q
+        if category_qs:
+            intersection_q = Q(activation_mode="hedges_intersection") & reduce(
+                operator.or_, category_qs
+            )
+            final_q |= intersection_q
+
+        return super().get_criteria().filter(final_q)
 
     def get_zone_subquery(self, hedges):
         query = Q()
@@ -2813,17 +2901,24 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return fields
 
     def get_regulations_by_group(self):
-        """Group regulations by their result_group"""
+        """Group regulations by their result_group for each category."""
         regulations_list = sorted(
             self.regulations, key=lambda regulation: regulation.display_order
         )
 
-        regulations_list.sort(key=attrgetter("result_group"))
-        grouped = {
-            key: list(group)
-            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
-        }
-        return grouped
+        grouped_by_category = {}
+        for category in self.results_by_category:
+
+            def result_group_for(reg, cat=category):
+                return RESULTS_GROUP_MAPPING[reg.results_by_category[cat]]
+
+            sorted_regs = sorted(regulations_list, key=result_group_for)
+            grouped_by_category[category] = {
+                key: list(group)
+                for key, group in groupby(sorted_regs, key=result_group_for)
+            }
+
+        return grouped_by_category
 
     def get_map_center(self):
         """Returns at what coordinates is the perimeter."""
@@ -2882,6 +2977,22 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
+
+    @property
+    def is_multi_category(self):
+        """Do the hedges in this simulation fall under different categories of regulations
+        (e.g. régime Unique, L350-3, Hors régime unique )?"""
+        return len(self.results_by_category.keys()) > 1
+
+    @property
+    def is_submittable_to_pguh(self):
+        """Can this simulation be submitted to the PGUH?"""
+        return (
+            HaieCriterionCategory.ru in self.results_by_category.keys()
+            or HaieCriterionCategory.hru in self.results_by_category.keys()
+            or HaieCriterionCategory.l350_3 in self.results_by_category.keys()
+            and self.config.aa_l3503_handling == AaL3503Handling.PORTAL
+        )
 
 
 class ActionToTake(models.Model):

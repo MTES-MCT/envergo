@@ -5,13 +5,13 @@
     <h3 class="fr-alert__title">La plantation se situe en zone sensible ou en site protégé</h3>
     {% if moulinette.config.single_procedure %}
       <p>
-        La localisation des linéaires à planter dans des zones sensibles ou réglementées fait basculer le projet en
+        Certains linéaires <strong>à planter</strong> se situent dans des zones sensibles ou réglementées, et font basculer le projet en
         régime d'autorisation, ce qui entraîne une procédure plus approfondie et plus longue.
       </p>
     {% else %}
       <p>
-        La localisation des linéaires à planter dans des zones sensibles ou réglementées soumet le projet à une ou
-        plusieurs réglementations.
+        Certains linéaires <strong>à planter</strong> se situent dans des zones sensibles ou réglementées, et déclenchent
+        l'application de certaines réglementations.
       </p>
 
     {% endif %}
@@ -19,8 +19,14 @@
     <ul>
       {% for regulation, hedges in hedges_to_plant_intersecting_regulations_perimeter.items %}
         <li>
-          {{ regulation.title }} (<a href="#regulation_{{ regulation.slug }}"
-   title="Voir le détail de la réglementation « {{ regulation }} »">voir détail</a>) :
+          {{ regulation.title }}
+          {% if moulinette.is_multi_category %}
+            (<a href="#regulations-title"
+   title="Voir le détail de la réglementation « {{ regulation }} »">voir détail</a>) :
+          {% else %}
+            (<a href="#regulation_{{ regulation.slug }}"
+   title="Voir le détail de la réglementation « {{ regulation }} »">voir détail</a>) :
+          {% endif %}
           {{ hedges|join_ids }}
         </li>
       {% endfor %}

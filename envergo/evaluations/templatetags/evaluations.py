@@ -1,13 +1,16 @@
 from django import template
 from django.utils.safestring import mark_safe
 
-from envergo.evaluations.models import RESULTS, TagStyleEnum
+from envergo.evaluations.models import RESULTS, TAG_STYLES_BY_RESULT, TagStyleEnum
 
 register = template.Library()
 
 
 @register.simple_tag
-def result_tag(result, result_tag_style: TagStyleEnum):
+def result_tag(result, result_tag_style: TagStyleEnum = None):
+    if result_tag_style is None:
+        result_tag_style = TAG_STYLES_BY_RESULT[result]
+
     try:
         result_label = RESULTS[result]
         display = (
