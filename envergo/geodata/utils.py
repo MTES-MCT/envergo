@@ -30,16 +30,6 @@ EPSG_WGS84 = 4326
 EPSG_LAMB93 = 2154
 
 
-def parse_jsonb(value):
-    """Normalize a jsonb value from a raw DB cursor to a Python dict.
-
-    Django's raw cursor may return jsonb columns as strings rather than
-    dicts, depending on the psycopg adapter configuration.
-    """
-    if isinstance(value, str):
-        return json.loads(value)
-    return value
-
 FRANCE_LAT = 46.76305599999998
 FRANCE_LNG = 2.424722
 FRANCE_ZOOM = 6
