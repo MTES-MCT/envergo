@@ -1,10 +1,10 @@
 # Services externes
 
-## Démarches numériques
+## Démarche numérique (ex Démarches simplifiées)
 
-Un module démarches numériques est disponible dans le module petitions.
+Un module démarches simplifiées est disponible dans le module petitions.
 
-Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans Démarches Numériques.
+Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans Démarche Numérique.
 
 Celui-ci permet d'envoyer des requêtes GraphQL pour :
 
@@ -13,7 +13,7 @@ Celui-ci permet d'envoyer des requêtes GraphQL pour :
 - récupérer un dossier
 - lire et envoyer des messages
 
-Pour fonctionner, un compte dédié doit être créé au niveau de Démarches Numériques.
+Pour fonctionner, un compte dédié doit être créé au niveau de Démarche Numérique.
 
 ### Dans le code
 
@@ -29,16 +29,16 @@ Une requête vers DN peut être aussi exécutées hors du client :
 
 ### Configuration
 
-Dans le compte créé dans Démarches Numériques,
+Dans le compte créé dans Démarche Numérique,
 
-1. Créer un token en lecture / écriture pour permettre au client d'accéder à Démarches Numériques
+1. Créer un token en lecture / écriture pour permettre au client d'accéder à Démarche Numérique
 
     Pour des raisons de sécurité, il est préférable de restreindre les réseaux ayant accès à ce token à l'IP
     du serveur qui héberge votre application.
 
 2. Récupérer l'id instructeur du compte (via la première démarche créée)
 
-3. Dans les variables d'environnement, activer Démarches Numériques
+3. Dans les variables d'environnement, activer Démarche Numérique
 
     ```dotenv
     DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED=True
@@ -50,6 +50,6 @@ Dans le compte créé dans Démarches Numériques,
 
 Pour ajouter une nouvelle démarche,
 
-- donner les droits d'administration et d'instruction de cette démarche au compte Démarches Numériques sur lequel
+- donner les droits d'administration et d'instruction de cette démarche au compte Démarche Numérique sur lequel
   est configuré le token.
 - depuis ce compte, modifier le token et ajouter la démarche.
