@@ -488,6 +488,7 @@ createApp({
     };
 
     const stopDrawing = () => {
+      map.editTools.stopDrawing();
       removeTooltip();
       window.removeEventListener('keyup', cancelDrawingFromEscape);
       hedgeBeingDrawn.value = null;
