@@ -416,7 +416,52 @@
       "regulation": 14,
       "activation_map": 36,
       "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings": {}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 104,
+    "fields": {
+      "backend_title": "Alignements d'arbres (L350-3)",
+      "title": "Alignements d'arbres (L350-3)",
+      "regulation": 14,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings": {}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 105,
+    "fields": {
+      "backend_title": "Alignements d'arbres (L350-3)",
+      "title": "Alignements d'arbres (L350-3)",
+      "regulation": 14,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings": {}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 106,
+    "fields": {
+      "backend_title": "Alignements d'arbres (L350-3)",
+      "title": "Alignements d'arbres (L350-3)",
+      "regulation": 14,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
       "weight": 1,
       "activation_mode": "department_centroid",
       "evaluator_settings": {}

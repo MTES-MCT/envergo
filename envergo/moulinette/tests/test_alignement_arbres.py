@@ -3,8 +3,8 @@ import pytest
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
-    DCConfigHaieFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 
@@ -17,7 +17,21 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -45,14 +59,21 @@ def alignementarbres_criteria(france_map):  # noqa
             "soumis_autorisation",
             2.0,
         ),
-        ("mixte", True, "amelioration_culture", "non_soumis", "non_soumis", 0.0),
-        ("alignement", False, "amelioration_culture", "non_soumis", "non_soumis", 0.0),
+        ("mixte", True, "amelioration_culture", "non_concerne", "non_concerne", 0.0),
+        (
+            "alignement",
+            False,
+            "amelioration_culture",
+            "non_concerne",
+            "non_concerne",
+            0.0,
+        ),
     ],
 )
 def test_moulinette_evaluation(
     type_haie, bord_voie, motif, expected_result_code, expected_result, expected_r
 ):
-    DCConfigHaieFactory()
+    RUConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie, bord_voie=bord_voie)],
         motif=motif,
@@ -60,11 +81,13 @@ def test_moulinette_evaluation(
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.alignement_arbres.result == expected_result
-    assert (
-        moulinette.alignement_arbres.alignement_arbres.result_code
-        == expected_result_code
-    )
-    assert (
-        moulinette.alignement_arbres.alignement_arbres.get_evaluator().get_replantation_coefficient()
-        == expected_r
-    )
+
+    if type_haie == "mixte":
+        criterion = moulinette.alignement_arbres.alignement_arbres__ru
+    elif not bord_voie:
+        criterion = moulinette.alignement_arbres.alignement_arbres__hru
+    else:
+        criterion = moulinette.alignement_arbres.alignement_arbres__l350_3
+        assert criterion.get_evaluator().get_replantation_coefficient() == expected_r
+
+    assert criterion.result_code == expected_result_code

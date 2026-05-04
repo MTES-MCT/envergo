@@ -1,8 +1,10 @@
 import logging
+import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from datetime import date
 from enum import IntEnum
+from functools import reduce
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
@@ -56,6 +58,7 @@ from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFacto
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
+    classpath,
     get_subclasses,
 )
 from envergo.moulinette.forms import (
@@ -67,6 +70,8 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import (
     TO_ADD,
     TO_SUBTRACT,
+    HaieCriterionCategory,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     MapFactory,
 )
@@ -795,7 +800,9 @@ class Criterion(models.Model):
         self._templates = {t.key: t for t in self.templates.all()}
 
         self.moulinette = moulinette
-        self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
+        self._evaluator = self.evaluator(
+            self, moulinette, distance, self.evaluator_settings
+        )
         self._evaluator.evaluate()
 
     def get_evaluator(self):
@@ -2741,36 +2748,61 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch the criteria that can be activated for this project
 
         There is two kind of activation mode for a criterion:
-         * department_centroid : the criteria is activated if the department centroid is in the activation map
-         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
+         * department_centroid: activated if the department centroid is in the activation map,
+           and there is at least one hedge in the criterion's category
+         * hedges_intersection: activated if the activation map intersects with hedges
+           belonging to the same category as the criterion
+
+        Both modes are combined into a single query to avoid multiple expensive spatial
+        EXISTS subqueries.
         """
         dept_centroid = self.department.centroid
-        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
+        if "haies" in self.catalog:
+            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            hedges_by_category = {category: [] for category in HaieCriterionCategory}
 
-        # Filter for department_centroid activation mode
-        subquery = Zone.objects.filter(
+        # Build category → evaluator classpaths mapping
+        evaluators_by_category = {category: [] for category in HaieCriterionCategory}
+        for cls in get_subclasses(HaieCriterionEvaluator):
+            evaluators_by_category[cls.category].append(classpath(cls))
+
+        # department_centroid: geography filter + exclude evaluators whose category has no hedges
+        empty_category_evaluators = [
+            evaluator_classpath
+            for category, hedges in hedges_by_category.items()
+            if not hedges
+            for evaluator_classpath in evaluators_by_category[category]
+        ]
+        centroid_subquery = Zone.objects.filter(
             map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
         ).values("id")
-        department_centroid_criteria = (
-            super()
-            .get_criteria()
-            .filter(
-                Exists(subquery),
-                activation_mode="department_centroid",
-            )
+        centroid_q = (
+            Q(activation_mode="department_centroid")
+            & Exists(centroid_subquery)
+            & ~Q(evaluator__in=empty_category_evaluators)
         )
 
-        # Filter for hedges_intersection activation mode
-        hedges_intersection_criteria = super().get_criteria().none()
-        if hedges:
-            zone_subquery = self.get_zone_subquery(hedges)
-            hedges_intersection_criteria = (
-                super()
-                .get_criteria()
-                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
-            )
+        # hedges_intersection: one EXISTS per category, OR-combined into a single query
+        category_qs = []
+        for category, hedges in hedges_by_category.items():
+            if hedges and evaluators_by_category[category]:
+                zone_subquery = self.get_zone_subquery(hedges)
+                category_qs.append(
+                    Q(evaluator__in=evaluators_by_category[category])
+                    & Exists(zone_subquery)
+                )
 
-        return department_centroid_criteria | hedges_intersection_criteria
+        final_q = centroid_q
+        if category_qs:
+            intersection_q = Q(activation_mode="hedges_intersection") & reduce(
+                operator.or_, category_qs
+            )
+            final_q |= intersection_q
+
+        return super().get_criteria().filter(final_q)
 
     def get_zone_subquery(self, hedges):
         query = Q()

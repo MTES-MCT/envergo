@@ -1,3 +1,5 @@
+from abc import ABC
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.module_loading import import_string
@@ -44,10 +46,11 @@ def get_all_evaluators():
 # Shamelessly stolen from StackOverflow
 # https://stackoverflow.com/a/3862310/1062495
 def get_subclasses(cls):
-    """Recursively get all subclasses and sub-subclasses of a class."""
+    """Recursively get all non-abstract subclasses and sub-subclasses of a class."""
     for subclass in cls.__subclasses__():
         yield from get_subclasses(subclass)
-        yield subclass
+        if ABC not in subclass.__bases__:
+            yield subclass
 
 
 class CriterionChoiceField(models.Field):

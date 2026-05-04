@@ -81,5 +81,5 @@ def test_moulinette_evaluation(coords, expected_result, sites_proteges_criteria)
     moulinette = MoulinetteHaie(data)
     assert moulinette.sites_proteges_haie.result == expected_result
     if expected_result != "non_concerne":
-        assert moulinette.sites_proteges_haie.mh_haie.result == expected_result
-        assert moulinette.sites_proteges_haie.spr_haie.result == expected_result
+        assert moulinette.sites_proteges_haie.mh_haie__hru.result == expected_result
+        assert moulinette.sites_proteges_haie.spr_haie__hru.result == expected_result
