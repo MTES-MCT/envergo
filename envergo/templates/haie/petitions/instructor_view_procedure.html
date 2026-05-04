@@ -295,7 +295,8 @@
         forbiddenTransitions.some(([f, t]) => f === from && t === to);
 
       const checkStateChange = () => {
-        const newDsStatus = dsStatusMapping[`${stageInput.value},${decisionInput.value}`];
+        const stageMapping = dsStatusMapping[stageInput.value];
+        const newDsStatus = stageMapping && stageMapping[decisionInput.value];
         if (!newDsStatus || newDsStatus === currentDsStatus || isForbidden(currentStage, stageInput.value)) {
           stateChangeMessage.style.display = "none";
           return;

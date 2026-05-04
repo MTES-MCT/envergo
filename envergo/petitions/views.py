@@ -1450,13 +1450,12 @@ class PetitionProjectInstructorProcedureView(
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
-        ds_status_mapping = {
-            f"{stage},{decision}": ds_status
-            for (
-                stage,
-                decision,
-            ), ds_status in DEMARCHES_SIMPLIFIEES_STATUS_MAPPING.items()
-        }
+        ds_status_mapping = {}
+        for (
+            stage,
+            decision,
+        ), ds_status in DEMARCHES_SIMPLIFIEES_STATUS_MAPPING.items():
+            ds_status_mapping.setdefault(stage, {})[decision] = ds_status
         ds_status_labels = {key: str(label) for key, label in DOSSIER_STATES}
         forbidden_transitions = [list(k) for k in FORBIDDEN_STAGE_TRANSITIONS.keys()]
         context.update(
