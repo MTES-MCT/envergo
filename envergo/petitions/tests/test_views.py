@@ -2485,7 +2485,7 @@ def test_instructor_view_token_matomo_invitation(
         f"{instructor_page_url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={invitation_token.token}",
         follow=True,
     )
-    assert_matomo_url(response, "/projet/+ref_projet+/instruction/invitation/")
+    assert_matomo_url(response, "/projet/+ref_projet+/instruction/invitation/accepted")
 
 
 def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):

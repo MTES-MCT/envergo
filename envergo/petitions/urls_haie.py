@@ -112,7 +112,7 @@ urlpatterns = [
     ),
     # This is another "fake" url, only for matomo tracking
     path(
-        "+ref_projet+/instruction/invitation/",
+        "+ref_projet+/instruction/invitation/accepted",
         RedirectView.as_view(pattern_name="home"),
         name="petition_project_invitation_token_in_query",
     ),
