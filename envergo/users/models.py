@@ -55,6 +55,17 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
+    def has_access_to_staff_only_criterion(self, site):
+        if not self.is_staff:
+            return False
+        is_amenagement_site = site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN
+        is_haie_site = site.domain == settings.ENVERGO_HAIE_DOMAIN
+        if is_amenagement_site:
+            return self.access_amenagement
+        if is_haie_site:
+            return self.access_haie
+        return False
+
     is_instructor = models.BooleanField(
         "En charge de l'instruction sur les départements",
         default=False,
