@@ -118,25 +118,30 @@ class Map(models.Model):
 
 
 class ZoneManager(models.Manager):
-    """Custom manager for Zone with spatial query helpers."""
+    """Custom manager with helpers for optimizing Zone querying."""
 
-    def find_covering(self, centroids, map_type, dept_code):
-        """Find the zone covering each centroid via a single DB roundtrip.
+    POINT_VALUE_TEMPLATE = "(%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)"
 
-        Uses a LATERAL JOIN so each centroid gets its own GiST index scan
-        on ``ST_Covers``. Returns ``{key: Zone}`` — only matched centroids
-        appear in the result.
+    def lateral_zone_join(
+        self, centroids, map_type, dept_code, lateral_filter, extra_params=()
+    ):
+        """Match each centroid to a zone in a single query, regardless of centroid count.
+
+        This allows joining centroids (e.g from hedges) each with a zone, running
+        a parameterized subquery for each centroid.
+
+        For example, it builds the query that says:
+        "Join each of those centroids with the zone that is the closest to it."
+
+        ``lateral_filter`` is the spatial predicate injected into the LATERAL
+        subquery (e.g. ST_Covers for containment, ST_DWithin + ORDER BY for
+        proximity). Unmatched centroids are absent from the returned dict.
         """
-        values_parts = []
-        params = []
-        for key, centroid in centroids.items():
-            values_parts.append(
-                "(%s, ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography)"
-            )
-            params.extend([str(key), centroid.x, centroid.y])
+        if not centroids:
+            return {}
 
-        values_sql = ", ".join(values_parts)
-        params.extend([str(map_type), dept_code])
+        values_sql, params = self._build_centroid_values(centroids)
+        params.extend([str(map_type), dept_code, *extra_params])
 
         sql = f"""
             WITH centroids(point_id, geom) AS (VALUES {values_sql})
@@ -148,8 +153,7 @@ class ZoneManager(models.Manager):
                 JOIN geodata_map m ON zz.map_id = m.id
                 WHERE m.map_type = %s
                 AND m.departments @> ARRAY[%s]::varchar[]
-                AND ST_Covers(zz.geometry, c.geom)
-                LIMIT 1
+                {lateral_filter}
             ) z ON TRUE
         """
 
@@ -157,28 +161,45 @@ class ZoneManager(models.Manager):
             cursor.execute(sql, params)
             rows = cursor.fetchall()
 
-        # Collect matched zone IDs and map them back to Zone objects.
-        point_to_zone_id = {}
-        zone_ids = set()
-        for point_id, zone_id in rows:
-            if zone_id is not None:
-                point_to_zone_id[point_id] = zone_id
-                zone_ids.add(zone_id)
+        return self._hydrate_zones(rows)
 
-        if not zone_ids:
-            return {}
+    def _build_centroid_values(self, centroids):
+        """Return a (values_sql, params) tuple for use in the CTE's VALUES clause."""
 
-        zones_by_id = self.in_bulk(zone_ids)
-        return {
-            point_id: zones_by_id[zone_id]
-            for point_id, zone_id in point_to_zone_id.items()
+        clauses = []
+        params = []
+        for key, centroid in centroids.items():
+            clauses.append(self.POINT_VALUE_TEMPLATE)
+            params.extend([str(key), centroid.x, centroid.y])
+        values_sql = ", ".join(clauses)
+        return values_sql, params
+
+    def _hydrate_zones(self, rows):
+        """Fetch Zone objects for the matched IDs returned by the raw query."""
+
+        matched = {
+            point_id: zone_id for point_id, zone_id in rows if zone_id is not None
         }
+        if not matched:
+            return {}
+        zones_by_id = self.in_bulk(set(matched.values()))
+        return {point_id: zones_by_id[zone_id] for point_id, zone_id in matched.items()}
+
+    def find_covering(self, centroids, map_type, dept_code):
+        """Return {key: Zone} for centroids that fall inside a zone polygon."""
+
+        return self.lateral_zone_join(
+            centroids,
+            map_type,
+            dept_code,
+            lateral_filter="AND ST_Covers(zz.geometry, c.geom) LIMIT 1",
+        )
 
     def find_nearest(self, centroid, map_type, dept_code, max_distance_m):
-        """Find the nearest zone of the given type within a distance cap.
+        """Return the closest zone within ``max_distance_m``, or None.
 
-        Uses ``ST_DWithin`` for spatial index filtering, then
-        ``ST_Distance`` on the geography column for exact metre ordering.
+        ST_DWithin gates index access (cheap bounding-box filter), then
+        ST_Distance on the geography column gives exact metre ordering.
         """
         return (
             self.filter(
@@ -189,6 +210,20 @@ class ZoneManager(models.Manager):
             .annotate(dist=Distance("geometry", centroid))
             .order_by("dist")
             .first()
+        )
+
+    def find_nearest_batch(self, centroids, map_type, dept_code, max_distance_m):
+        """Like find_nearest, but batched: one query for all centroids."""
+
+        return self.lateral_zone_join(
+            centroids,
+            map_type,
+            dept_code,
+            lateral_filter=(
+                "AND ST_DWithin(zz.geometry, c.geom, %s) "
+                "ORDER BY ST_Distance(zz.geometry, c.geom) LIMIT 1"
+            ),
+            extra_params=(max_distance_m,),
         )
 
 
