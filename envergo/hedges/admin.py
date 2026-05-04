@@ -43,6 +43,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
         "all_species",
         "_density",
     ]
+    exclude = ["_length_to_plant", "_length_to_remove"]
 
     def get_urls(self):
         urls = super().get_urls()
@@ -79,7 +80,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     @admin.display(description="Longueur des haies à planter")
     def length_to_plant(self, obj):
-        return round(obj.length_to_plant())
+        return round(obj.length_to_plant(), 2)
 
     @admin.display(description="Nombre de haies à détruire")
     def hedges_to_remove(self, obj):
@@ -87,7 +88,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     @admin.display(description="Longueur des haies à détruire")
     def length_to_remove(self, obj):
-        return round(obj.length_to_plant())
+        return round(obj.length_to_remove(), 2)
 
     def is_single_procedure(self, obj):
         """Check whether the department uses the single-procedure (RU) regime."""
