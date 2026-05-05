@@ -1,0 +1,49 @@
+name: Autofix lint
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  autofix:
+    if: >
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, 'autofix lint') &&
+      contains(fromJSON('["MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PR branch
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('ref', pr.data.head.ref);
+            core.setOutput('sha', pr.data.head.sha);
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.sha }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6.0.0
+        with:
+          python-version: 3.12.8
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+        continue-on-error: true
+
+      - name: Commit and push fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: apply pre-commit fixes"
