@@ -263,5 +263,5 @@ def test_moulinette_result_autorisation(ep_criteria):
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.ep.ep_aisne__hru.result == "derogation_simplifiee"
+    assert moulinette.ep.hru__ep_aisne.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

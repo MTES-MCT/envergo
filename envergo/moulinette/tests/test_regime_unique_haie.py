@@ -70,9 +70,9 @@ def test_moulinette_evaluation_single_procedure(
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
     if type_haie == "mixte":
-        criterion = moulinette.regime_unique_haie.regime_unique_haie__ru
+        criterion = moulinette.regime_unique_haie.ru__regime_unique_haie
     else:
-        criterion = moulinette.regime_unique_haie.regime_unique_haie__l350_3
+        criterion = moulinette.regime_unique_haie.l350_3__regime_unique_haie
 
     assert criterion.result_code == expected_result_code
 
@@ -94,7 +94,7 @@ def test_moulinette_evaluation_droit_constant(
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
     assert (
-        moulinette.regime_unique_haie.regime_unique_haie__hru.result_code
+        moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
         == expected_result_code
     )
 

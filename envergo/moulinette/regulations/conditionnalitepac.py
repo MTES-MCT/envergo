@@ -183,7 +183,7 @@ class Bcae8Form(forms.Form):
 
 class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
-    slug = "bcae8"
+    base_slug = "bcae8"
     form_class = Bcae8Form
     plantation_conditions = [MinLengthPacCondition]
 

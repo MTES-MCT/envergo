@@ -15,7 +15,7 @@ class SitesProtegesRegulation(HaieRegulationEvaluator):
 
 class SitesPatrimoniauxRemarquablesHaie(HaieCriterionEvaluator):
     choice_label = "Sites protégés > SPR Haie"
-    slug = "spr_haie"
+    base_slug = "spr_haie"
     plantation_conditions = []
 
     def get_catalog_data(self):
@@ -31,7 +31,7 @@ class SitesPatrimoniauxRemarquablesHaie(HaieCriterionEvaluator):
 
 class MonumentsHistoriquesHaie(HaieCriterionEvaluator):
     choice_label = "Sites protégés > MH Haie"
-    slug = "mh_haie"
+    base_slug = "mh_haie"
     plantation_conditions = []
 
     def get_catalog_data(self):

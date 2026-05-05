@@ -64,7 +64,7 @@ def test_moulinette_evaluation(coords, expected_result, sites_inscrits_criteria)
     moulinette = MoulinetteHaie(data)
     assert moulinette.sites_inscrits_haie.result == expected_result
     if expected_result != "non_concerne":
-        assert moulinette.sites_inscrits_haie.si_haie__hru.result == expected_result
+        assert moulinette.sites_inscrits_haie.hru__si_haie.result == expected_result
 
 
 def test_aa_only_flag(sites_inscrits_criteria):
