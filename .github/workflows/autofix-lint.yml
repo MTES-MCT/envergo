@@ -27,11 +27,12 @@ jobs:
               pull_number: context.issue.number,
             });
             core.setOutput('ref', pr.data.head.ref);
+            core.setOutput('sha', pr.data.head.sha);
 
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.pr.outputs.ref }}
+          ref: ${{ steps.pr.outputs.sha }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v6.0.0
