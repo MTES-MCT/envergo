@@ -1,7 +1,6 @@
 name: CI
 permissions:
   actions: read
-  contents: write
 
 # Enable Buildkit and let compose use it to speed up image building
 env:
@@ -30,17 +29,8 @@ jobs:
         with:
           python-version: 3.12.8
 
-      # Run pre-commit hooks on all files. If it fails on a PR, auto-commit
-      # the fixes — the push will trigger a new CI run to validate.
       - name: Install and Run Pre-commit
-        id: pre-commit
         uses: pre-commit/action@v3.0.1
-        continue-on-error: true
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        if: steps.pre-commit.outcome == 'failure' && github.event_name == 'pull_request'
-        with:
-          commit_message: "style: apply pre-commit fixes"
 
   # With no caching at all the entire ci process takes 4m 30s to complete!
   pytest:
