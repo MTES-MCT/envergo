@@ -913,3 +913,268 @@ class TestDensityLazyComputation:
 
         with pytest.raises(AttributeError, match="density_around_centroid"):
             hedge_data.density
+
+
+class TestHedgeListCategory:
+    """Tests for HedgeList.category() method.
+
+    Category classification:
+    - RU: non-alignement hedges without bord_batiment/parc_jardin/place_publique
+    - L350-3: alignement hedges with bord_voie
+    - HRU: everything else (not RU and not L350-3)
+    """
+
+    def _make_hedge(self, id, type="TO_REMOVE", hedge_type="mixte", **props):
+        return HedgeFactory(
+            id=id,
+            type=type,
+            additionalData={
+                "type_haie": hedge_type,
+                "mode_destruction": "autre",
+                "sur_parcelle_pac": False,
+                "proximite_mare": False,
+                "vieil_arbre": False,
+                "ripisylve": False,
+                "connexion_boisement": False,
+                **props,
+            },
+        )
+
+    def _ru_hedge(self, id, type="TO_REMOVE"):
+        """A hedge that qualifies as RU (non-alignement, no exclusion props)."""
+        return self._make_hedge(id, type=type, hedge_type="mixte")
+
+    def _l350_3_hedge(self, id, type="TO_REMOVE"):
+        """A hedge that qualifies as L350-3 (alignement + bord_voie)."""
+        return self._make_hedge(id, type=type, hedge_type="alignement", bord_voie=True)
+
+    def _hru_hedge(self, id, type="TO_REMOVE"):
+        """A hedge that qualifies as HRU (alignement without bord_voie)."""
+        return self._make_hedge(id, type=type, hedge_type="alignement", bord_voie=False)
+
+    # --- single_procedure=False ---
+
+    def test_not_single_procedure_hru_returns_self(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges = HedgeList([self._ru_hedge("R1"), self._hru_hedge("H1")])
+        result = hedges.category(False, HaieCriterionCategory.hru)
+        assert result is hedges
+
+    def test_not_single_procedure_ru_returns_empty(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges = HedgeList([self._ru_hedge("R1"), self._hru_hedge("H1")])
+        result = hedges.category(False, HaieCriterionCategory.ru)
+        assert len(result) == 0
+
+    def test_not_single_procedure_l350_3_returns_empty(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges = HedgeList([self._ru_hedge("R1"), self._hru_hedge("H1")])
+        result = hedges.category(False, HaieCriterionCategory.l350_3)
+        assert len(result) == 0
+
+    # --- HRU category ---
+
+    def test_hru_no_hru_to_remove_returns_empty(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges = HedgeList(
+            [
+                self._ru_hedge("R1"),
+                self._hru_hedge("H1", type="TO_PLANT"),
+            ]
+        )
+        result = hedges.category(True, HaieCriterionCategory.hru)
+        assert len(result) == 0
+
+    def test_hru_all_categories_present_returns_only_hru(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        ru = self._ru_hedge("R1")
+        l350_3 = self._l350_3_hedge("L1")
+        plant = self._ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3, plant])
+
+        result = hedges.category(True, HaieCriterionCategory.hru)
+        assert hru in result
+        assert ru not in result
+        assert l350_3 not in result
+        assert plant not in result
+
+    def test_hru_only_category_returns_self(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        plant = self._ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, plant])
+
+        result = hedges.category(True, HaieCriterionCategory.hru)
+        assert result is hedges
+
+    def test_hru_with_l350_3_absorbs_ru_plantings(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        l350_3 = self._l350_3_hedge("L1")
+        ru_plant = self._ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, l350_3, ru_plant])
+
+        result = hedges.category(True, HaieCriterionCategory.hru)
+        assert hru in result
+        assert ru_plant in result
+        assert l350_3 not in result
+
+    def test_hru_with_ru_absorbs_l350_3_plantings(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        ru = self._ru_hedge("R1")
+        l350_3_plant = self._l350_3_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3_plant])
+
+        result = hedges.category(True, HaieCriterionCategory.hru)
+        assert hru in result
+        assert l350_3_plant in result
+        assert ru not in result
+
+    # --- RU category ---
+
+    def test_ru_no_ru_to_remove_returns_empty(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges = HedgeList(
+            [
+                self._hru_hedge("H1"),
+                self._ru_hedge("R1", type="TO_PLANT"),
+            ]
+        )
+        result = hedges.category(True, HaieCriterionCategory.ru)
+        assert len(result) == 0
+
+    def test_ru_with_hru_present_returns_only_ru(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        ru = self._ru_hedge("R1")
+        ru_plant = self._ru_hedge("P1", type="TO_PLANT")
+        plant = self._hru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, plant, ru_plant])
+
+        result = hedges.category(True, HaieCriterionCategory.ru)
+        assert ru in result
+        assert hru not in result
+        assert plant not in result
+        assert ru_plant in result
+
+    def test_ru_all_categories_returns_only_ru(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        ru = self._ru_hedge("R1")
+        l350_3 = self._l350_3_hedge("L1")
+        ru_plant = self._ru_hedge("P1", type="TO_PLANT")
+        hru_plant = self._hru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3, ru_plant, hru_plant])
+
+        result = hedges.category(True, HaieCriterionCategory.ru)
+        assert ru in result
+        assert hru not in result
+        assert l350_3 not in result
+        assert ru_plant in result
+        assert hru_plant not in result
+
+    def test_ru_with_l350_3_no_hru_absorbs_hru_plantings(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        ru = self._ru_hedge("R1")
+        l350_3 = self._l350_3_hedge("L1")
+        hru_plant = self._hru_hedge("P1", type="TO_PLANT")
+        l350_3_plant = self._l350_3_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([ru, l350_3, hru_plant, l350_3_plant])
+
+        result = hedges.category(True, HaieCriterionCategory.ru)
+        assert ru in result
+        assert hru_plant in result
+        assert l350_3 not in result
+        assert l350_3_plant not in result
+
+    def test_ru_only_category_returns_self(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        ru = self._ru_hedge("R1")
+        plant = self._hru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([ru, plant])
+
+        result = hedges.category(True, HaieCriterionCategory.ru)
+        assert result is hedges
+
+    # --- L350-3 category ---
+
+    def test_l350_3_no_l350_3_to_remove_returns_empty(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges = HedgeList(
+            [
+                self._hru_hedge("H1"),
+                self._l350_3_hedge("L1", type="TO_PLANT"),
+            ]
+        )
+        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        assert len(result) == 0
+
+    def test_l350_3_only_category_returns_self(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        l350_3 = self._l350_3_hedge("L1")
+        plant = self._ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([l350_3, plant])
+
+        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        assert result is hedges
+
+    def test_l350_3_with_hru_returns_only_l350_3(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        l350_3 = self._l350_3_hedge("L1")
+        plant = self._ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, l350_3, plant])
+
+        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        assert l350_3 in result
+        assert hru not in result
+        assert plant not in result
+
+    def test_l350_3_with_ru_returns_only_l350_3(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        ru = self._ru_hedge("R1")
+        l350_3 = self._l350_3_hedge("L1")
+        hedges = HedgeList([ru, l350_3])
+
+        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        assert l350_3 in result
+        assert ru not in result
+
+    def test_l350_3_all_categories_returns_only_l350_3(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hru = self._hru_hedge("H1")
+        ru = self._ru_hedge("R1")
+        l350_3 = self._l350_3_hedge("L1")
+        hedges = HedgeList([hru, ru, l350_3])
+
+        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        assert l350_3 in result
+        assert hru not in result
+        assert ru not in result
+
+    # --- Invalid category ---
+
+    def test_invalid_category_raises(self):
+        hedges = HedgeList([self._ru_hedge("R1")])
+        with pytest.raises(ValueError, match="Category not recognized"):
+            hedges.category(True, "invalid")
