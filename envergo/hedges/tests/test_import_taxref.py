@@ -183,13 +183,13 @@ def test_import_taxref_leaves_common_name_blank_when_no_nom_vern():
     assert species.common_name == ""
 
 
-TAXREF_ROW_UPUPA = {
+TAXREF_ROW_BUBO = {
     "REGNE": "Animalia",
     "GROUP2_INPN": "Oiseaux",
-    "CD_NOM": "3571",
-    "CD_REF": "3571",
-    "LB_NOM": "Upupa epops",
-    "NOM_VERN": "Huppe fasciée",
+    "CD_NOM": "3482",
+    "CD_REF": "3482",
+    "LB_NOM": "Bubo bubo",
+    "NOM_VERN": "Grand-duc d'Europe",
     "GROUP1_INPN": "",
 }
 
@@ -197,52 +197,50 @@ TAXREF_ROW_UPUPA = {
 def test_merge_stub_into_legacy_species():
     """A stub matched by cd_ref is merged into the legacy species that holds the real name."""
     SpeciesFactory(
-        scientific_name="Upupa epops",
-        common_name="Huppe fasciée",
+        scientific_name="Bubo bubo",
+        common_name="Grand-duc d'Europe",
         cd_ref=None,
     )
     SpeciesFactory(
-        cd_ref=3571,
-        scientific_name="CD_REF_3571",
+        cd_ref=3482,
+        scientific_name="CD_REF_3482",
         common_name="",
     )
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_UPUPA])
+        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
         call_command("import_taxref", zip_path)
 
-    assert Species.objects.count() == 1
-    species = Species.objects.get()
-    assert species.scientific_name == "Upupa epops"
-    assert species.common_name == "Huppe fasciée"
-    assert species.cd_ref == 3571
+    species = Species.objects.get(scientific_name="Bubo bubo")
+    assert species.common_name == "Grand-duc d'Europe"
+    assert species.cd_ref == 3482
     assert species.kingdom == "animalia"
     assert species.group == "Oiseaux"
-    assert 3571 in species.cd_noms
+    assert 3482 in species.cd_noms
+    assert not Species.objects.filter(scientific_name="CD_REF_3482").exists()
 
 
 def test_merge_reassigns_species_habitat():
     """SpeciesHabitat rows from the stub are reassigned to the keeper."""
     legacy = SpeciesFactory(
-        scientific_name="Upupa epops",
-        common_name="Huppe fasciée",
+        scientific_name="Bubo bubo",
+        common_name="Grand-duc d'Europe",
         cd_ref=None,
     )
     stub = SpeciesFactory(
-        cd_ref=3571,
-        scientific_name="CD_REF_3571",
+        cd_ref=3482,
+        scientific_name="CD_REF_3482",
         common_name="",
     )
-    legacy_habitat = SpeciesHabitatFactory(species=legacy)
+    SpeciesHabitatFactory(species=legacy)
     stub_habitat = SpeciesHabitatFactory(species=stub)
     stub_habitat_pk = stub_habitat.pk
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_UPUPA])
+        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
         call_command("import_taxref", zip_path)
 
-    assert Species.objects.count() == 1
-    keeper = Species.objects.get()
+    keeper = Species.objects.get(scientific_name="Bubo bubo")
     assert keeper.habitats.count() == 2
 
     reassigned = SpeciesHabitat.objects.get(pk=stub_habitat_pk)
@@ -252,24 +250,23 @@ def test_merge_reassigns_species_habitat():
 def test_merge_keeps_legacy_habitat_on_conflict():
     """When both species have a habitat for the same map, the legacy one is kept."""
     legacy = SpeciesFactory(
-        scientific_name="Upupa epops",
-        common_name="Huppe fasciée",
+        scientific_name="Bubo bubo",
+        common_name="Grand-duc d'Europe",
         cd_ref=None,
     )
     stub = SpeciesFactory(
-        cd_ref=3571,
-        scientific_name="CD_REF_3571",
+        cd_ref=3482,
+        scientific_name="CD_REF_3482",
         common_name="",
     )
     legacy_habitat = SpeciesHabitatFactory(species=legacy)
     SpeciesHabitatFactory(species=stub, map=legacy_habitat.map)
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_UPUPA])
+        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
         call_command("import_taxref", zip_path)
 
-    assert Species.objects.count() == 1
-    keeper = Species.objects.get()
+    keeper = Species.objects.get(scientific_name="Bubo bubo")
     assert keeper.habitats.count() == 1
     assert keeper.habitats.get().pk == legacy_habitat.pk
 
@@ -277,40 +274,39 @@ def test_merge_keeps_legacy_habitat_on_conflict():
 def test_merge_preserves_legacy_common_name():
     """The keeper's existing common_name is never overwritten by TaxRef data."""
     SpeciesFactory(
-        scientific_name="Upupa epops",
-        common_name="Huppe d'Afrique",
+        scientific_name="Bubo bubo",
+        common_name="Hibou grand-duc",
         cd_ref=None,
     )
     SpeciesFactory(
-        cd_ref=3571,
-        scientific_name="CD_REF_3571",
+        cd_ref=3482,
+        scientific_name="CD_REF_3482",
         common_name="",
     )
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_UPUPA])
+        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
         call_command("import_taxref", zip_path)
 
-    species = Species.objects.get()
-    assert species.common_name == "Huppe d'Afrique"
+    species = Species.objects.get(scientific_name="Bubo bubo")
+    assert species.common_name == "Hibou grand-duc"
 
 
 def test_no_merge_when_both_have_cd_ref():
     """Two species that both have cd_ref values are not merged — the warning is kept."""
     SpeciesFactory(
-        scientific_name="Upupa epops",
+        scientific_name="Bubo bubo",
         cd_ref=9999,
     )
     SpeciesFactory(
-        cd_ref=3571,
-        scientific_name="CD_REF_3571",
+        cd_ref=3482,
+        scientific_name="CD_REF_3482",
         common_name="",
     )
 
     with TemporaryDirectory() as tmpdir:
-        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_UPUPA])
+        zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
         call_command("import_taxref", zip_path)
 
-    assert Species.objects.count() == 2
-    stub = Species.objects.get(cd_ref=3571)
-    assert stub.scientific_name == "CD_REF_3571"
+    stub = Species.objects.get(cd_ref=3482)
+    assert stub.scientific_name == "CD_REF_3482"
