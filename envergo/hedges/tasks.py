@@ -200,7 +200,10 @@ def update_species_adhoc_group(species, row):
 
 # Reverse mapping from display labels ("Majeur", "Très fort"…) to database
 # values ("majeur", "tres_fort"…), used to normalize CSV import data.
-LEVEL_OF_CONCERN_DISPLAY_TO_DB = {label: value for value, label in LEVELS_OF_CONCERN}
+# Keys are lowercased so the lookup is case-insensitive.
+LEVEL_OF_CONCERN_DISPLAY_TO_DB = {
+    label.lower(): value for value, label in LEVELS_OF_CONCERN
+}
 
 
 def parse_level_of_concern(raw_value, import_log=None):
@@ -209,7 +212,7 @@ def parse_level_of_concern(raw_value, import_log=None):
     stripped = raw_value.strip()
     if not stripped:
         return None
-    db_value = LEVEL_OF_CONCERN_DISPLAY_TO_DB.get(stripped)
+    db_value = LEVEL_OF_CONCERN_DISPLAY_TO_DB.get(stripped.lower())
     if db_value is None:
         msg = f"Niveau d'enjeu inconnu : « {stripped} »"
         logger.warning(msg)
