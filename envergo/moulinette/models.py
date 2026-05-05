@@ -587,9 +587,32 @@ class Regulation(models.Model):
 
     def has_plantation_condition_details_template(self) -> bool:
         """Check if the regulation has a template for plantation condition details for at least one criterion."""
-        return self.has_criterion_template(
-            "haie/petitions/{}/{}_plantation_condition_details.html"
-        )
+        for criterion in self.criteria.all():
+            if issubclass(criterion.evaluator, HaieCriterionEvaluator):
+                try:
+                    template_path = (
+                        "haie/petitions/{}/{}/{}_plantation_condition_details.html"
+                    )
+                    get_template(
+                        template_path.format(
+                            self.slug,
+                            criterion.evaluator.category,
+                            criterion.evaluator.base_slug,
+                        )
+                    )
+                    return True
+                except TemplateDoesNotExist:
+                    pass
+            else:
+                try:
+                    template_path = (
+                        "haie/petitions/{}/{}_plantation_condition_details.html"
+                    )
+                    get_template(template_path.format(self.slug, criterion.slug))
+                    return True
+                except TemplateDoesNotExist:
+                    pass
+        return False
 
     def has_key_elements_template(self) -> bool:
         """Check if the regulation has a template for key elements."""
@@ -598,16 +621,6 @@ class Regulation(models.Model):
     def has_instruction_guidelines_template(self) -> bool:
         """Check if the regulation has a template for guidelines for instruction."""
         return self.has_template("haie/petitions/{}/instruction_guidelines.html")
-
-    def has_criterion_template(self, template_path) -> bool:
-        """Check if the regulation has a template of the given path for at least one criterion."""
-        for criterion in self.criteria.all():
-            try:
-                get_template(template_path.format(self.slug, criterion.slug))
-                return True
-            except TemplateDoesNotExist:
-                pass
-        return False
 
     def has_template(self, template_path) -> bool:
         """Check if the regulation has a template of the given path."""

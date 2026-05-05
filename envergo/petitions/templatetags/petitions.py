@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
 from envergo.petitions.services import (
@@ -51,9 +52,8 @@ def instructor_view_part(
     """Render a specific part of the instructor view for a criterion."""
 
     context_dict = context.flatten()
-
     if criterion is None:
-        template = f"haie/petitions/{regulation.slug}/{part_name}.html"
+        template_path = f"haie/petitions/{regulation.slug}/{part_name}.html"
         for regulation_criterion in regulation.criteria.all():
             context_dict.update(
                 get_instructor_view_context(
@@ -66,14 +66,22 @@ def instructor_view_part(
                 get_instructor_view_context(regulation_evaluator, project, moulinette)
             )
     else:
-        template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
+        if issubclass(criterion.evaluator, HaieCriterionEvaluator):
+            template_path = (
+                f"haie/petitions/{regulation.slug}/{criterion.evaluator.category}/"
+                f"{criterion.evaluator.base_slug}_{part_name}.html"
+            )
+        else:
+            template_path = (
+                f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
+            )
         context_dict.update(
             get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
         )
 
     try:
         return render_to_string(
-            template,
+            template_path,
             context=context_dict,
         )
     except TemplateDoesNotExist:

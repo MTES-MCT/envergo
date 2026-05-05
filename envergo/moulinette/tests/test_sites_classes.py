@@ -61,7 +61,7 @@ def test_moulinette_evaluation(coords, expected_result, sites_classes_criterion)
     assert moulinette.sites_classes_haie.result == expected_result
     if expected_result != "non_concerne":
         assert (
-            moulinette.sites_classes_haie.sites_classes_haie__hru.result
+            moulinette.sites_classes_haie.hru__sites_classes_haie.result
             == expected_result
         )
 
