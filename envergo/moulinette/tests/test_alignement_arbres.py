@@ -83,11 +83,11 @@ def test_moulinette_evaluation(
     assert moulinette.alignement_arbres.result == expected_result
 
     if type_haie == "mixte":
-        criterion = moulinette.alignement_arbres.alignement_arbres__ru
+        criterion = moulinette.alignement_arbres.ru__alignement_arbres
     elif not bord_voie:
-        criterion = moulinette.alignement_arbres.alignement_arbres__hru
+        criterion = moulinette.alignement_arbres.hru__alignement_arbres
     else:
-        criterion = moulinette.alignement_arbres.alignement_arbres__l350_3
+        criterion = moulinette.alignement_arbres.l350_3__alignement_arbres
         assert criterion.get_evaluator().get_replantation_coefficient() == expected_r
 
     assert criterion.result_code == expected_result_code

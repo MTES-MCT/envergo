@@ -110,7 +110,7 @@ def test_moulinette_evaluation(
 
     if expected_result != "non_concerne":
         assert (
-            moulinette.reserves_naturelles.reserves_naturelles__hru.result
+            moulinette.reserves_naturelles.hru__reserves_naturelles.result
             == expected_result
         )
         assert moulinette.catalog["l_resnat"] == expected_lenght_resnat

@@ -52,7 +52,7 @@ class RegimeUniqueHaieHru(HaieCriterionEvaluator):
     """
 
     choice_label = "Régime unique haie > Régime unique haie"
-    slug = "regime_unique_haie"
+    base_slug = "regime_unique_haie"
     category = HaieCriterionCategory.hru
 
     RESULT_MATRIX = {

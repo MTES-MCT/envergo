@@ -36,4 +36,4 @@ def test_moulinette_evaluation():
     moulinette = MoulinetteHaie(data)
     assert moulinette.code_rural_haie.result == "a_verifier"
 
-    assert moulinette.code_rural_haie.code_rural__hru.result == "a_verifier"
+    assert moulinette.code_rural_haie.hru__code_rural.result == "a_verifier"

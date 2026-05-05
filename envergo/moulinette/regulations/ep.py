@@ -64,7 +64,7 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, HaieCriterionEva
     """Basic criterion: always returns "soumis."""
 
     choice_label = "EP > EP simple"
-    slug = "ep_simple"
+    base_slug = "ep_simple"
     plantation_conditions = [SafetyCondition]
 
     CODE_MATRIX = {
@@ -79,7 +79,7 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEval
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Aisne"
-    slug = "ep_aisne"
+    base_slug = "ep_aisne"
     plantation_conditions = [SafetyCondition, QualityCondition]
 
     CODE_MATRIX = {
@@ -175,7 +175,7 @@ class EspecesProtegeesNormandie(
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Normandie"
-    slug = "ep_normandie"
+    base_slug = "ep_normandie"
     debug_template = "haie/moulinette/debug/ep_normandie.html"
     plantation_conditions = [
         MinLengthCondition,
@@ -565,9 +565,9 @@ class EspecesProtegeesNormandie(
         # the regulation weight should be configurated to fetch the alignement_arbres before this one
         # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
         reg = getattr(self.moulinette, "alignement_arbres", None)
-        criterion = getattr(reg, "alignement_arbres__l350_3", None) or getattr(
-            reg, "alignement_arbres_calvados_before_ru__hru", None
-        )  # Calvados was supporting L350-3 before RU, so we need to check the hru criterion.
+        criterion = getattr(reg, "l350_3__alignement_arbres", None) or getattr(
+            reg, "alignement_arbres_calvados_before_ru", None
+        )  # Calvados was supporting L350-3 before RU, so we need to check its specific criterion.
 
         if (
             self.catalog.get("alignement_bord_voie_every_hedge", False)
@@ -724,7 +724,7 @@ class EspecesProtegeesRegimeUnique(
     """
 
     choice_label = "EP > EP Régime unique"
-    slug = "ep_regime_unique"
+    base_slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
     plantation_conditions = []
     form_class = None

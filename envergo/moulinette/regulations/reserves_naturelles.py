@@ -40,7 +40,7 @@ EPSG_LAMB93 = 2154
 
 class ReservesNaturelles(HaieCriterionEvaluator):
     choice_label = "Réserves naturelles > Réserves naturelles"
-    slug = "reserves_naturelles"
+    base_slug = "reserves_naturelles"
     form_class = ReservesNaturellesForm
 
     CODE_MATRIX = {

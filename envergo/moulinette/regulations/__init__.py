@@ -620,9 +620,25 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
     """Add a category for criterion evaluator on GUH to filter the hedges to evaluate."""
 
     category: HaieCriterionCategory = HaieCriterionCategory.hru
+    base_slug: str | None = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+
+        if "base_slug" not in cls.__dict__ and not hasattr(cls, "_base_slug"):
+            # base_slug is required.
+            # The base slug isn't necessarily unique. It's typically shared by evaluators computing the same criteria
+            # across different category hedges.
+            # It's used, among others, to retrieve the criteria templates in combination with the category.
+            raise RuntimeError(
+                f"HaieCriterionEvaluator {type(cls).__name__} must have a `base_slug` attribute."
+            )
+        if "base_slug" in cls.__dict__:
+            cls._base_slug = cls.__dict__["base_slug"]
+        if ("category" in cls.__dict__ or "base_slug" in cls.__dict__) and hasattr(
+            cls, "_base_slug"
+        ):
+            cls.slug = f"{cls.category.name}__{cls._base_slug}"
 
         # Automatically append the category to choice_label and slug.
         # _base_choice_label holds the label without the category suffix, so that
@@ -633,13 +649,6 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
             cls, "_base_choice_label"
         ):
             cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
-
-        if "slug" in cls.__dict__:
-            cls._base_slug = cls.__dict__["slug"]
-        if ("category" in cls.__dict__ or "slug" in cls.__dict__) and hasattr(
-            cls, "_base_slug"
-        ):
-            cls.slug = f"{cls._base_slug}__{cls.category.name}"
 
     def __init__(self, criterion, moulinette, distance, settings):
         super().__init__(criterion, moulinette, distance, settings)

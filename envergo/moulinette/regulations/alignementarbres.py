@@ -24,7 +24,7 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
 
 class AlignementsArbresBase(HaieCriterionEvaluator, ABC):
     choice_label = "Alignements d'arbres > L350-3"
-    slug = "alignement_arbres"
+    base_slug = "alignement_arbres"
 
 
 class AlignementsArbresRu(AlignementsArbresBase):

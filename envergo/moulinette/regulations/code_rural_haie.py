@@ -14,7 +14,7 @@ class CodeRuralHaieRegulation(HaieRegulationEvaluator):
 
 class CodeRural(HaieCriterionEvaluator):
     choice_label = "Code rural > Code Rural L126-3"
-    slug = "code_rural"
+    base_slug = "code_rural"
 
     def evaluate(self):
         self._result_code, self._result = "a_verifier", "a_verifier"

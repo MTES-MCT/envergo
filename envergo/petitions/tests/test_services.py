@@ -349,7 +349,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_aisne_get_instructor_view_context(
-        moulinette.ep.ep_aisne__hru._evaluator, petition_project, moulinette
+        moulinette.ep.hru__ep_aisne._evaluator, petition_project, moulinette
     )
 
     expected_result = {
@@ -480,7 +480,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     info = ep_normandie_get_instructor_view_context(
-        moulinette.ep.ep_normandie__hru._evaluator, petition_project, moulinette
+        moulinette.ep.hru__ep_normandie._evaluator, petition_project, moulinette
     )
 
     expected_result = {
@@ -648,7 +648,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.bcae8__hru._evaluator,
+        moulinette.conditionnalite_pac.hru__bcae8._evaluator,
         petition_project,
         moulinette,
     )
@@ -788,7 +788,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
     context = alignement_arbres_get_instructor_view_context(
-        moulinette.alignement_arbres.alignement_arbres_calvados_before_ru__hru._evaluator,
+        moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
         petition_project,
         moulinette,
     )

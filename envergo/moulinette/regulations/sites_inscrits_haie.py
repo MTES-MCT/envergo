@@ -16,7 +16,7 @@ class SitesInscritsRegulation(HaieRegulationEvaluator):
 
 class SitesInscritsHaie(HaieCriterionEvaluator):
     choice_label = "Sites inscrits > Sites inscrits Haie"
-    slug = "si_haie"
+    base_slug = "si_haie"
     plantation_conditions = []
 
     RESULT_MATRIX = {

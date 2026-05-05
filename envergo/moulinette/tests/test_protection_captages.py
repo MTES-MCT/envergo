@@ -76,7 +76,7 @@ def test_moulinette_evaluation_without_single_procedure(
     moulinette = MoulinetteHaie(data)
     assert moulinette.protection_captages.result == expected_result
     if expected_result != "non_concerne":
-        criterion = moulinette.protection_captages.protection_captages__hru
+        criterion = moulinette.protection_captages.hru__protection_captages
         assert criterion.result == expected_result
 
 
@@ -99,7 +99,7 @@ def test_moulinette_evaluation(captage_criteria, coords, expected_result):
     moulinette = MoulinetteHaie(data)
     assert moulinette.protection_captages.result == expected_result
     if expected_result != "non_concerne":
-        criterion = moulinette.protection_captages.protection_captages__ru
+        criterion = moulinette.protection_captages.ru__protection_captages
         assert criterion.result == expected_result
 
 
