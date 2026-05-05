@@ -9,7 +9,7 @@ import requests
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from envergo.hedges.models import Species
+from envergo.hedges.models import Species, SpeciesHabitat
 from envergo.hedges.species_stubs import has_placeholder_scientific_name
 
 # Download link can be found here
@@ -124,15 +124,76 @@ class Command(BaseCommand):
         if scientific_name and has_placeholder_scientific_name(species):
             existing = species_index.by_scientific_name.get(scientific_name)
             if existing is not None and existing is not species:
-                self.stderr.write(
-                    self.style.WARNING(
-                        f"Skipping scientific_name '{scientific_name}': "
-                        f"already used by species cd_ref={existing.cd_ref}"
+                if existing.cd_ref is None:
+                    self.merge_species(
+                        keeper=existing, stub=species, species_index=species_index
                     )
-                )
+                else:
+                    self.stderr.write(
+                        self.style.WARNING(
+                            f"Skipping scientific_name '{scientific_name}': "
+                            f"already used by species cd_ref={existing.cd_ref}"
+                        )
+                    )
             else:
                 species.scientific_name = scientific_name
                 species_index.register_scientific_name(scientific_name, species)
+
+    def merge_species(self, keeper, stub, species_index):
+        """Absorb a stub species into a legacy species that holds the real name.
+
+        The legacy species (keeper) already has the correct scientific_name and
+        may have SpeciesHabitat rows used in production. The stub species was
+        created from a CD_REF during a CSV import and carries TaxRef enrichment
+        data (cd_ref, cd_noms, kingdom, group) accumulated during this import
+        run. After the merge the stub is deleted and the keeper inherits the
+        TaxRef data.
+        """
+
+        cd_ref = stub.cd_ref
+
+        # Transfer TaxRef enrichment data (only fill blanks on the keeper)
+        keeper.cd_ref = cd_ref
+        keeper.cd_noms = list(set(keeper.cd_noms or []) | set(stub.cd_noms or []))
+        if stub.kingdom and not keeper.kingdom:
+            keeper.kingdom = stub.kingdom
+        if stub.group and not keeper.group:
+            keeper.group = stub.group
+        if stub.common_name and not keeper.common_name:
+            keeper.common_name = stub.common_name
+
+        # Reassign non-conflicting SpeciesHabitat rows from stub to keeper
+        keeper_map_ids = set(
+            SpeciesHabitat.objects.filter(species=keeper).values_list(
+                "map_id", flat=True
+            )
+        )
+        stub_habitats = SpeciesHabitat.objects.filter(species=stub)
+        conflicting = stub_habitats.filter(map_id__in=keeper_map_ids)
+        if conflicting.exists():
+            for map_id in conflicting.values_list("map_id", flat=True):
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"Dropping stub SpeciesHabitat for map_id={map_id} "
+                        f"(keeper already has one)"
+                    )
+                )
+        stub_habitats.exclude(map_id__in=keeper_map_ids).update(species=keeper)
+
+        # Delete the stub from the DB now — the keeper will be saved later with
+        # the same cd_ref, and the unique constraint would fail otherwise.
+        stub.delete()
+
+        # Update the index so subsequent TaxRef rows find the keeper
+        species_index.unregister(stub)
+        species_index.register_cd_ref(cd_ref, keeper)
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Merged stub '{stub.scientific_name}' into "
+                f"'{keeper.scientific_name}' (cd_ref={cd_ref})"
+            )
+        )
 
 
 class SpeciesIndex:
@@ -169,6 +230,13 @@ class SpeciesIndex:
     def register_scientific_name(self, scientific_name, species):
         """Add a scientific_name entry after a stub's name is replaced."""
         self.by_scientific_name[scientific_name] = species
+
+    def unregister(self, species):
+        """Remove a species from all index lookups after a merge."""
+        for key in [k for k, v in self.by_cd_ref.items() if v is species]:
+            del self.by_cd_ref[key]
+        for key in [k for k, v in self.by_scientific_name.items() if v is species]:
+            del self.by_scientific_name[key]
 
     def all(self):
         """Return all indexed species (deduplicated)."""

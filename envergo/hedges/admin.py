@@ -102,6 +102,18 @@ class HedgeDataAdmin(admin.ModelAdmin):
         )
         return config.single_procedure if config else False
 
+    def is_single_procedure(self, obj):
+        """Check whether the department uses the single-procedure (RU) regime."""
+        department_code = obj.get_department()
+        if not department_code:
+            return False
+        config = (
+            ConfigHaie.objects.filter(department__department=department_code)
+            .valid_at(timezone.now().date())
+            .first()
+        )
+        return config.single_procedure if config else False
+
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
 

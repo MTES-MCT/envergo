@@ -691,6 +691,7 @@ def group_hedges_by_signature(hedges):
         groups.setdefault(sig, []).append(h)
     return groups
 
+
 # Numeric ranks for sorting species by level_of_concern in the RU pipeline.
 # Derived from LEVELS_OF_CONCERN ordering (1 = lowest, 6 = highest).
 LEVEL_OF_CONCERN_ORDER = {
@@ -726,15 +727,13 @@ class RuSpeciesQuerySet(models.QuerySet):
         if not hedges:
             return self.none()
 
-        signature_map_ids, observed_cdrefs = (
-            self.prefetch_zone_data_by_signature(hedges)
+        signature_map_ids, observed_cdrefs = self.prefetch_zone_data_by_signature(
+            hedges
         )
         if not signature_map_ids:
             return self.none()
 
-        species_filter = self.build_grouped_filter(
-            signature_map_ids, observed_cdrefs
-        )
+        species_filter = self.build_grouped_filter(signature_map_ids, observed_cdrefs)
 
         all_nearby_map_ids = set()
         for ids in signature_map_ids.values():
@@ -797,9 +796,7 @@ class RuSpeciesQuerySet(models.QuerySet):
             sig_order.append((annotation_name, sig))
 
         zones = zones.annotate(**sig_annotations)
-        value_fields = ["map_id", "species_taxrefs"] + [
-            name for name, _ in sig_order
-        ]
+        value_fields = ["map_id", "species_taxrefs"] + [name for name, _ in sig_order]
 
         all_observed_cdrefs = set()
         signature_map_ids = {sig: set() for sig in signature_groups}
@@ -813,11 +810,7 @@ class RuSpeciesQuerySet(models.QuerySet):
                 if row[2 + j]:
                     signature_map_ids[sig].add(map_id)
 
-        result = {
-            sig: list(ids)
-            for sig, ids in signature_map_ids.items()
-            if ids
-        }
+        result = {sig: list(ids) for sig, ids in signature_map_ids.items() if ids}
         return result, all_observed_cdrefs
 
     def build_majeur_exclusion(self, observed_cdrefs):
@@ -847,8 +840,7 @@ class RuSpeciesQuerySet(models.QuerySet):
             self.build_signature_filter(
                 hedge_type, missing_props, nearby_map_ids, majeur_exclusion
             )
-            for (hedge_type, missing_props), nearby_map_ids
-            in signature_map_ids.items()
+            for (hedge_type, missing_props), nearby_map_ids in signature_map_ids.items()
         ]
         return reduce(operator.or_, signature_filters)
 

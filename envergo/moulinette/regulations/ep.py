@@ -815,12 +815,6 @@ class EspecesProtegeesRegimeUnique(
     def get_catalog_data(self):
         """Populate the catalog with EP régime unique inputs.
 
-        Computes hedge lengths, ripisylve length, and line-buffer density
-        eagerly. Zone-sensible flags and per-hedge procedure-level results
-        are deferred to ``cached_property`` accessors so the expensive geo
-        queries only run when the cascade actually needs them (step 6) or
-        when the debug / instructor views are rendered.
-
         Species are populated by EPMixin using the default RU pipeline.
         """
         catalog = super().get_catalog_data()
