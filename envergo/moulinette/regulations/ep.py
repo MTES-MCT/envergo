@@ -816,11 +816,19 @@ class EspecesProtegeesRegimeUnique(
         """Populate the catalog with EP régime unique inputs.
 
         Species are populated by EPMixin using the default RU pipeline.
+        The public list excludes "majeur" species (sensitive data only
+        shown on the instruction page, not the public result page).
         """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
             return catalog
+
+        species = catalog.get("protected_species")
+        if species is not None:
+            catalog["protected_species_public"] = species.exclude(
+                local_level_of_concern="majeur"
+            )
 
         catalog.update(self.get_density_catalog_data())
 
