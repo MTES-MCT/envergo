@@ -9,7 +9,12 @@ from django.utils import timezone
 from django.utils.formats import date_format
 
 from envergo.moulinette.utils import MoulinetteUrl
-from envergo.petitions.models import PetitionProject, Simulation, StatusLog
+from envergo.petitions.models import (
+    FORBIDDEN_STAGE_TRANSITIONS,
+    PetitionProject,
+    Simulation,
+    StatusLog,
+)
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
 from envergo.utils.validators import validate_mime
@@ -141,7 +146,7 @@ class ProcedureForm(forms.ModelForm):
             "update_comment",
         ]
         help_texts = {
-            "update_comment": "Commentaire interne. Aucun message ne sera envoyé au demandeur.",
+            "update_comment": "Ce commentaire ne sera visible que par les services instructeurs dans l'historique du dossier.",  # noqa: E501
         }
         labels = {
             "due_date": "Échéance de l'étape",
@@ -177,31 +182,13 @@ class ProcedureForm(forms.ModelForm):
             )
 
         previous_stage = self.initial["stage"]
-
-        if stage == "closed" and previous_stage == "to_be_processed":
+        transition = (previous_stage, stage)
+        if transition in FORBIDDEN_STAGE_TRANSITIONS:
             self.add_error(
                 "stage",
                 ValidationError(
-                    "Pour clore le dossier, il faut passer par une étape intermédiaire (autre que « À instruire »).",
-                    code="to_be_processed_to_closed",
-                ),
-            )
-        elif stage == "to_be_processed" and previous_stage == "closed":
-            self.add_error(
-                "stage",
-                ValidationError(
-                    "Pour repasser le dossier à l'étape « À instruire », il faut passer par une étape "
-                    "intermédiaire (autre que « Dossier clos »).",
-                    code="closed_to_to_be_processed",
-                ),
-            )
-        elif stage == "closed" and previous_stage == "closed":
-            self.add_error(
-                "stage",
-                ValidationError(
-                    "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le repasser à une "
-                    "étape d'instruction.",
-                    code="closed_to_closed",
+                    FORBIDDEN_STAGE_TRANSITIONS[transition],
+                    code="forbidden_transition",
                 ),
             )
 

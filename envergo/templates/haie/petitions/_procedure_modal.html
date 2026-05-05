@@ -13,9 +13,23 @@
           </div>
           <div class="fr-modal__content">
             <h2 id="procedure-modal-title" class="fr-modal__title">Modification de l'état du dossier</h2>
-            <form method="post" action="" novalidate class="fr-mb-3w">
+            {{ ds_status_mapping|json_script:"ds-status-mapping" }}
+            {{ ds_status_labels|json_script:"ds-status-labels" }}
+            <form method="post"
+                  action=""
+                  novalidate
+                  class="fr-mb-3w"
+                  data-current-ds-status="{{ petition_project.demarches_simplifiees_state }}">
               {% csrf_token %}
               {% include '_form_snippet.html' with form=form %}
+              <div id="procedure-state-change-message"
+                   class="fr-alert fr-alert--info fr-mb-2w"
+                   style="display: none">
+                <p id="procedure-state-transition-text"></p>
+                <p>
+                  <strong>Le demandeur sera notifié de la mise à jour du statut de son dossier.</strong>
+                </p>
+              </div>
               <button type="submit" class="fr-btn">Enregistrer</button>
             </form>
           </div>

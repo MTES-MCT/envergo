@@ -1242,6 +1242,11 @@ class ConfigHaie(ConfigBase):
         null=False,
         default=dict,
     )
+    has_ru_zonage = models.BooleanField(
+        "Zonage RU",
+        default=False,
+        help_text="Activer si un zonage spécifique au régime unique est défini pour ce département.",
+    )
 
     aa_l3503_handling = models.CharField(
         "Prise en compte des AA L350-3",
@@ -1426,13 +1431,17 @@ class ConfigHaie(ConfigBase):
                 )
             )
             for criterion in regulation.criteria.all():
-                criteria_results.add(
-                    (
-                        f"{regulation.slug}.{criterion.slug}.result_code",
-                        f"Code de résultat du critère {criterion.backend_title} de la "
-                        f"réglementation {regulation.regulation}",
-                    )
+                criterion_result_slug_code = (
+                    f"{regulation.slug}.{criterion.slug}.result_code"
                 )
+                if criterion_result_slug_code not in dict(criteria_results):
+                    criteria_results.add(
+                        (
+                            criterion_result_slug_code,
+                            f"Code de résultat du critère {criterion.backend_title} "
+                            f"de la réglementation {regulation.regulation}",
+                        )
+                    )
                 form_class = criterion.evaluator.form_class
                 if form_class:
                     regulation_sources.update(
@@ -1469,32 +1478,42 @@ class ConfigHaie(ConfigBase):
             ),
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",
-                violation_error_message="Les paramètres de régime unique doivent comporter des coefficients de "
-                "compensation numérique pour chaque type de haies (buissonnante, "
-                "arbustive et mixte).",
+                violation_error_message="Les paramètres de régime unique doivent comporter une clé "
+                "'coeff_compensation'. Sans zonage, une entrée 'default' avec "
+                "X_densite, R1_non_arboree_HD, R2_non_arboree_LD, R3_arboree_HD, "
+                "R4_arboree_LD est requise.",
                 check=Q(single_procedure=False)
                 | (
-                    Q(single_procedure_settings__has_key="coeff_compensation")
+                    Q(has_ru_zonage=True)
+                    & Q(single_procedure_settings__has_key="coeff_compensation")
+                )
+                | (
+                    Q(has_ru_zonage=False)
+                    & Q(single_procedure_settings__has_key="coeff_compensation")
                     & Q(
-                        single_procedure_settings__coeff_compensation__degradee__regex=r"^\d+(\.\d+)?$"
+                        single_procedure_settings__coeff_compensation__has_key="default"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__has_key="buissonnante"
+                        single_procedure_settings__coeff_compensation__default__has_key="X_densite"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__buissonnante__regex=r"^\d+(\.\d+)?$"
+                        single_procedure_settings__coeff_compensation__default__has_key="R1_non_arboree_HD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__has_key="arbustive"
+                        single_procedure_settings__coeff_compensation__default__has_key="R2_non_arboree_LD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__arbustive__regex=r"^\d+(\.\d+)?$"
+                        single_procedure_settings__coeff_compensation__default__has_key="R3_arboree_HD"
                     )
-                    & Q(single_procedure_settings__coeff_compensation__has_key="mixte")
                     & Q(
-                        single_procedure_settings__coeff_compensation__mixte__regex=r"^\d+(\.\d+)?$"
+                        single_procedure_settings__coeff_compensation__default__has_key="R4_arboree_LD"
                     )
                 ),
+            ),
+            CheckConstraint(
+                name="ru_zonage_requires_single_procedure",
+                violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
+                check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
         ]
 

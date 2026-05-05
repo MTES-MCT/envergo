@@ -117,6 +117,11 @@ class Hedge:
         return geom
 
     @property
+    def geos_centroid(self):
+        """Centroid of the hedge line as a GEOSGeometry point (WGS84)."""
+        return self.geos_geometry.centroid
+
+    @property
     def geometry_lamb93(self):
         """Return a shapely geometry with a Lambert 93 projection."""
 
