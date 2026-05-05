@@ -96,12 +96,20 @@ class MoulinetteMixin:
         context["moulinette"] = self.moulinette
         context.update(self.moulinette.catalog)
 
+        user = self.request.user
+        if user.is_authenticated:
+            is_staff = user.has_access_to_staff_only_criterion(self.request.site)
+        else:
+            is_staff = False
+        exclude_staff_only_criterion = not is_staff
+        context["is_staff"] = is_staff
+
         if self.moulinette.is_evaluated():
 
             context["has_errors"] = (
                 self.request.method == "POST" and not self.moulinette.is_valid()
             )
-            context["additional_forms"] = self.moulinette.additional_forms
+            context["additional_forms"] = self.moulinette.get_additional_forms()
             context["additional_fields"] = self.moulinette.additional_fields
 
             # We need to display a different form style when the "additional forms"
@@ -155,7 +163,9 @@ class MoulinetteMixin:
             self.request.user.is_staff
             and self.request.user.groups.filter(name="Staff ops").exists()
         )
-        context["optional_forms"] = self.moulinette.optional_forms
+        context["optional_forms"] = self.moulinette.get_optional_forms(
+            exclude_staff_only_criterion=exclude_staff_only_criterion
+        )
         context["triage_form"] = self.moulinette.triage_form
 
         context = {**context, **self.moulinette.get_extra_context(self.request)}
