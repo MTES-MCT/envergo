@@ -16,6 +16,7 @@ from django.utils.safestring import mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.moulinette.utils import get_moulinette_class_from_site
 
 register = template.Library()
@@ -83,9 +84,16 @@ def show_regulation_body(context, regulation, category=None):
 @register.simple_tag(takes_context=True)
 def show_criterion_body(context, regulation, criterion):
     """Render a single criterion content."""
-
-    template_name = f"{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
-    content = render_from_moulinette_templates(context, template_name)
+    if issubclass(criterion.evaluator, HaieCriterionEvaluator):
+        template_path = (
+            f"{regulation.slug}/{criterion.evaluator.category.name}/{criterion.evaluator.base_slug}_"
+            f"{criterion.result_code}.html"
+        )
+    else:
+        template_path = (
+            f"{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
+        )
+    content = render_from_moulinette_templates(context, template_path)
 
     return content
 

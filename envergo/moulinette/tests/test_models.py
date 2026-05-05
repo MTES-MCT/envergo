@@ -280,11 +280,11 @@ def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
     )
     expected_results_criteria = {
         (
-            "sites_proteges_haie.mh_haie__hru.result_code",
+            "sites_proteges_haie.hru__mh_haie.result_code",
             "Code de résultat du critère MH Haies > bizou2 de la réglementation sites_proteges_haie",
         ),
         (
-            "sites_proteges_haie.spr_haie__hru.result_code",
+            "sites_proteges_haie.hru__spr_haie.result_code",
             "Code de résultat du critère SPR Haies > bizou de la réglementation sites_proteges_haie",
         ),
     }

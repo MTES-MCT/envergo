@@ -25,7 +25,7 @@ class ProtectionCaptagesHaieHru(HaieCriterionEvaluator):
     """
 
     choice_label = "Protection de captages > Protection de captages"
-    slug = "protection_captages"
+    base_slug = "protection_captages"
     plantation_conditions = []
     category = HaieCriterionCategory.hru
 

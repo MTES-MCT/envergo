@@ -46,7 +46,7 @@ EPSG_LAMB93 = 2154
 
 class Natura2000Haie(HaieCriterionEvaluator):
     choice_label = "Natura 2000 > Haie"
-    slug = "natura2000_haie"
+    base_slug = "natura2000_haie"
     settings_form_class = Natura2000HaieSettings
 
     RESULT_MATRIX = {
