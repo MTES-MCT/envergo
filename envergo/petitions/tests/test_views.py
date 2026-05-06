@@ -474,6 +474,197 @@ def test_petition_project_instructor_notes_view(
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
+def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
+    mock_post, haie_instructor_44, client, site
+):
+    """Coordinator (has_change_permission) sees both note fields and can edit them."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "instructor_free_mention" in content
+    assert "instructor_private_mention" in content
+    assert "Notes pour tous les services consultés" in content
+    assert "Notes internes au service coordonnateur" in content
+
+    # Coordinator can update both fields at once
+    response = client.post(
+        url,
+        {
+            "instructor_free_mention": "Note publique",
+            "instructor_private_mention": "Note privée",
+        },
+    )
+    assert response.status_code == 302
+    project.refresh_from_db()
+    assert project.instructor_free_mention == "Note publique"
+    assert project.instructor_private_mention == "Note privée"
+
+    # Success message is displayed after redirect
+    response = client.get(response.url)
+    assert "Les notes ont été enregistrées." in response.content.decode()
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_invited_sees_only_public_and_cannot_edit(
+    mock_post, haie_user_44, client, site
+):
+    """Invited instructor (has_view_permission only) sees public notes read-only."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="Contenu public",
+        instructor_private_mention="Contenu privé",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    # Public notes are visible as plain text
+    assert "Contenu public" in content
+    # Private notes are not visible at all
+    assert "Contenu privé" not in content
+    assert "Notes internes au service coordonnateur" not in content
+    # No edit form fields
+    assert 'name="instructor_free_mention"' not in content
+    assert 'name="instructor_private_mention"' not in content
+    # Hint text for read-only users
+    assert "Vous ne pouvez pas modifier ces notes" in content
+
+    # Invited user cannot POST
+    response = client.post(
+        url,
+        {
+            "instructor_free_mention": "Tentative",
+            "instructor_private_mention": "Hack",
+        },
+    )
+    assert response.status_code == 403
+    project.refresh_from_db()
+    assert project.instructor_free_mention == "Contenu public"
+    assert project.instructor_private_mention == "Contenu privé"
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_invited_empty_notes(mock_post, haie_user_44, client, site):
+    """When public notes are empty, invited instructor sees 'Aucune note.'"""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="",
+        instructor_private_mention="Secret",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Aucune note." in content
+    assert "Secret" not in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_invited_links_are_clickable(
+    mock_post, haie_user_44, client, site
+):
+    """URLs in public notes are rendered as clickable links for invited instructors."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="Voir https://example.com/doc pour les détails",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.get(url)
+    content = response.content.decode()
+    assert '<a href="https://example.com/doc"' in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_coordinator_links_are_clickable(
+    mock_post, haie_instructor_44, client, site
+):
+    """URLs in notes are rendered as clickable links in read mode for coordinators."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="Lien public https://example.com/pub",
+        instructor_private_mention="Lien privé https://example.com/priv",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(url)
+    content = response.content.decode()
+    assert '<a href="https://example.com/pub"' in content
+    assert '<a href="https://example.com/priv"' in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_coordinator_empty_notes(
+    mock_post, haie_instructor_44, client, site
+):
+    """Coordinator sees 'Aucune note.' for each empty field."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="",
+        instructor_private_mention="",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(url)
+    content = response.content.decode()
+    assert content.count("Aucune note.") == 2
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
 def test_petition_project_instructor_view_reglementation_pages(
     mock_post,
     haie_instructor_44,

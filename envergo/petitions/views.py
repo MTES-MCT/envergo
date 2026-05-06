@@ -1135,6 +1135,7 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
             reference=self.object.reference,
             **get_matomo_tags(self.request),
         )
+        messages.success(self.request, "Les notes ont été enregistrées.")
         return res
 
     def get_success_url(self):

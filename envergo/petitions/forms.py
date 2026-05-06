@@ -67,20 +67,35 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         model = PetitionProject
         fields = [
             "instructor_free_mention",
+            "instructor_private_mention",
         ]
         widgets = {
             "instructor_free_mention": forms.Textarea(
                 attrs={
-                    "rows": 10,
+                    "rows": 15,
                     "placeholder": "Ajoutez vos notes ici…",
                 },
             ),
+            "instructor_private_mention": forms.Textarea(
+                attrs={
+                    "rows": 15,
+                    "placeholder": "Ajoutez vos notes privées ici…",
+                },
+            ),
         }
-        labels = {"instructor_free_mention": ""}
+        labels = {
+            "instructor_free_mention": "Notes pour tous les services consultés",
+            "instructor_private_mention": "Notes internes au service coordonnateur",
+        }
         help_texts = {
-            "instructor_free_mention": "Partagez ici tout ce qui est utile à votre suivi de la demande, "
-            "ou à la collaboration entre services instructeurs. "
-            "Cliquer sur « Enregistrer » pour sauvegarder."
+            "instructor_free_mention": (
+                "Partagez ici tout ce qui est utile à la collaboration"
+                " entre services instructeurs."
+            ),
+            "instructor_private_mention": (
+                "Partagez ici tout ce qui est utile à votre suivi de la demande."
+                " Les services consultés n'ont pas accès à ces notes."
+            ),
         }
 
 

@@ -6,31 +6,94 @@
 
 {% load static %}
 
-{% block title %}Instruction du dossier – Notes pour l'instructeur{% endblock %}
+{% block title %}Instruction du dossier – Notes d'instruction{% endblock %}
 
-{% block project_view_title %}<h2>Notes libres pour l'instruction</h2>{% endblock %}
+{% block project_view_title %}<h2>Notes d'instruction</h2>{% endblock %}
 
 {% block project_content %}
 
   <div class="project-inner-content">
 
-    <form method="post"
-          action="{% url 'petition_project_instructor_notes_view' petition_project.reference %}">
-      {% csrf_token %}
-
-      <section class="fr-my-3w" id="instructor_free_mention">
-        <div id="field-instructor_free_mention" class="fr-my-2w">
-          {% render_field form.instructor_free_mention %}
-          {% if is_department_instructor %}
-            <button type="submit"
-                    class="fr-btn fr-btn--secondary"
-                    formaction="{% url 'petition_project_instructor_notes_view' petition_project.reference %}#field-instructor_free_mention">
-              Enregistrer
-            </button>
-          {% endif %}
+    {% if has_change_permission %}
+      {# ── Mode lecture (coordonnateur) ── #}
+      <div id="notes-read-mode">
+        <div class="notes-btn-row">
+          <button type="button" class="fr-btn" id="notes-edit-btn-top">Compléter les notes</button>
         </div>
-      </section>
-    </form>
+
+        <hr class="fr-mt-2w fr-mb-4w">
+
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12 fr-col-md-6">
+            <h3 class="fr-h6 fr-mb-1w">Notes internes au service coordonnateur</h3>
+            <p class="fr-text--sm fr-hint-text fr-mb-2w">
+              Partagez ici tout ce qui est utile à votre suivi de la demande. Les services consultés n'ont pas accès à ces notes.
+            </p>
+            <div class="fr-text--md" id="private-notes-display">
+              {% if petition_project.instructor_private_mention %}
+                {{ petition_project.instructor_private_mention|urlize|linebreaksbr }}
+              {% else %}
+                <em>Aucune note.</em>
+              {% endif %}
+            </div>
+          </div>
+          <div class="fr-col-12 fr-col-md-6">
+            <h3 class="fr-h6 fr-mb-1w">Notes pour tous les services consultés</h3>
+            <p class="fr-text--sm fr-hint-text fr-mb-2w">
+              Partagez ici tout ce qui est utile à la collaboration entre services instructeurs.
+            </p>
+            <div class="fr-text--md" id="public-notes-display">
+              {% if petition_project.instructor_free_mention %}
+                {{ petition_project.instructor_free_mention|urlize|linebreaksbr }}
+              {% else %}
+                <em>Aucune note.</em>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div id="notes-edit-btn-bottom-container" style="display: none;">
+          <hr class="fr-mt-4w fr-mb-2w">
+          <div class="notes-btn-row">
+            <button type="button" class="fr-btn" id="notes-edit-btn-bottom">Compléter les notes</button>
+          </div>
+        </div>
+      </div>
+
+      {# ── Mode écriture (coordonnateur) ── #}
+      <div id="notes-edit-mode" style="display: none;">
+        <form method="post"
+              id="notes-form"
+              action="{% url 'petition_project_instructor_notes_view' petition_project.reference %}">
+          {% csrf_token %}
+
+          <hr class="fr-mt-2w fr-mb-4w">
+
+          <div class="notes-edit-grid">
+            <div>{% render_field form.instructor_private_mention %}</div>
+            <div>{% render_field form.instructor_free_mention %}</div>
+          </div>
+
+          <div class="fr-mt-3w fr-btns-group fr-btns-group--inline">
+            <button type="button" class="fr-btn fr-btn--secondary" id="notes-cancel-btn">Annuler</button>
+            <button type="submit" class="fr-btn">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+
+    {% else %}
+      {# ── Vue invité (lecture seule, notes publiques uniquement) ── #}
+      <p class="fr-text--sm fr-hint-text fr-mb-2w">
+        Les instructeurs du guichet unique rassemblent ici les notes utiles au suivi du dossier et à la collaboration entre services instructeurs. Vous ne pouvez pas modifier ces notes.
+      </p>
+      <div class="fr-text--md">
+        {% if petition_project.instructor_free_mention %}
+          {{ petition_project.instructor_free_mention|urlize|linebreaksbr }}
+        {% else %}
+          <em>Aucune note.</em>
+        {% endif %}
+      </div>
+    {% endif %}
 
   </div>
 {% endblock %}
@@ -40,4 +103,7 @@
   <script>var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";</script>
   <script>var SOURCE_PAGE = "instruction";</script>
   <script defer src="{% static 'js/libs/form_project_instruction.js' %}"></script>
+  {% if has_change_permission %}
+    <script defer src="{% static 'js/libs/notes_toggle.js' %}"></script>
+  {% endif %}
 {% endblock %}
