@@ -84,7 +84,10 @@ class RegimeUniqueHaieRu(
     category = HaieCriterionCategory.ru
 
     def evaluate(self):
-        self._result_code, self._result = "soumis", "soumis"
+        if self.hedges.to_remove():
+            self._result_code, self._result = "soumis", "soumis"
+        else:
+            self._result_code, self._result = "non_concerne", "non_concerne"
 
     def get_catalog_data(self):
         """Inject 400m line-buffer density into the catalog when in régime unique."""

@@ -1,5 +1,6 @@
 import json
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from types import SimpleNamespace
@@ -398,6 +399,7 @@ class HaieRegulationEvaluator(RegulationEvaluator):
     def evaluate(self, regulation):
         super().evaluate(regulation)
         self._procedure_type = self.get_procedure_type(regulation)
+        self._results_by_category = self.get_results_by_category(regulation)
 
     def get_procedure_type(self, regulation):
         procedure_type = self.PROCEDURE_TYPE_MATRIX.get(self.result)
@@ -410,6 +412,73 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._procedure_type
+
+    def get_results_by_category(self, regulation):
+
+        # We start by handling edge cases:
+        # - when the regulation is not activated for the department
+        # - when the perimeter is not activated
+        # - when no perimeter is found
+        if not regulation.is_activated():
+            return {category: RESULTS.non_active for category in HaieCriterionCategory}
+
+        results_by_category = {}
+        if (
+            regulation.has_perimeters
+            and regulation in self.moulinette.hedges_intersecting_regulations_perimeter
+        ):
+            all_perimeters = {
+                perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
+                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter[
+                    regulation
+                ].items()
+            }
+            hedges_by_category = self.moulinette.catalog[
+                "haies"
+            ].get_hedges_by_category(self.moulinette.config.single_procedure)
+            for category, hedges in hedges_by_category.items():
+                category_perimeter = []
+                for perimeter, perimeter_hedges in all_perimeters.items():
+                    perimeter_hedge_ids = {h.id for h in perimeter_hedges}
+                    if any(h.id in perimeter_hedge_ids for h in hedges):
+                        category_perimeter.append(perimeter)
+
+                activated_perimeters = [p for p in category_perimeter if p.is_activated]
+                if category_perimeter and not any(activated_perimeters):
+                    results_by_category[category] = RESULTS.non_disponible
+                if not category_perimeter:
+                    results_by_category[category] = RESULTS.non_concerne
+
+        all_results_by_category = defaultdict(list)
+        for criterion in regulation.criteria.all():
+            all_results_by_category[criterion.evaluator.category].append(
+                criterion.result
+            )
+
+        for category, results in all_results_by_category.items():
+            for status in RESULT_CASCADE:
+                if status in results:
+                    results_by_category[category] = status
+                    break
+
+        # If there is no criterion at all, we have to set a default value
+        for category in HaieCriterionCategory:
+            if category not in results_by_category:
+                if regulation.has_perimeters:
+                    results_by_category[category] = RESULTS.non_soumis
+                else:
+                    results_by_category[category] = RESULTS.non_disponible
+
+        return results_by_category
+
+    @property
+    def results_by_category(self):
+        """Return a regulation macro result for each category of at least one criterion."""
+
+        if not hasattr(self, "_result"):
+            raise RuntimeError("Call the evaluator `evaluate` method first")
+
+        return self._results_by_category
 
 
 class CriterionEvaluator(ABC):

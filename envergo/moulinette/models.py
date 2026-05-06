@@ -358,6 +358,16 @@ class Regulation(models.Model):
         return self._evaluator.result
 
     @property
+    def results_by_category(self):
+        """Return a regulation result for each category of at least one criterion."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing the results."
+            )
+
+        return self._evaluator.results_by_category
+
+    @property
     def procedure_type(self):
         """Return the regulation procedure type (autorisation / déclaration / hors r.u)."""
         if not hasattr(self, "_evaluator"):
@@ -2598,6 +2608,32 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         return result or RESULTS.non_soumis
 
+    @property
+    def results_by_category(self):
+        """Compute global result from individual regulation results depending on the criteria category."""
+        if hasattr(self, "_result"):
+            return self._result
+
+        if not self.is_evaluated():
+            self._result = RESULTS.non_disponible
+            return self._result
+
+        all_results_by_category = defaultdict(list)
+        for regulation in self.regulations:
+            for category, result in regulation.results_by_category.items():
+                all_results_by_category[category].append(result)
+
+        results_by_category = {}
+        for category, results in all_results_by_category.items():
+            for cascading_result in RESULT_CASCADE:
+                if cascading_result in results:
+                    results_by_category[category] = GLOBAL_RESULT_MATRIX[
+                        cascading_result
+                    ]
+                    break
+
+        return results_by_category
+
     def summary(self):
         """Build a data summary, for analytics purpose."""
         summary = self.data.copy()
@@ -2619,7 +2655,23 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         Criterion-specific debug data is provided by each evaluator's
         get_debug_context() method, rendered via {% criterion_debug_snippet %}.
         """
-        return {}
+        if "haies" in self.catalog:
+            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            hedges_by_category = {category: [] for category in HaieCriterionCategory}
+
+        hedges_by_type_and_category = defaultdict(lambda: defaultdict(list))
+        for category, hedges in hedges_by_category.items():
+            for hedge in hedges:
+                hedges_by_type_and_category[hedge.type][category].append(hedge)
+
+        return {
+            "hedges_by_type_and_category": {
+                k: dict(v) for k, v in hedges_by_type_and_category.items()
+            }
+        }
 
     def get_triage_params(self):
         return set(TriageFormHaie.base_fields.keys())
