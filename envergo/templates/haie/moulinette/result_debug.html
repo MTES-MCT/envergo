@@ -1,5 +1,7 @@
 {% extends 'haie/moulinette/result.html' %}
 
+{% load utils %}
+
 {% load evaluations static moulinette %}
 
 {% block result %}
@@ -37,17 +39,25 @@
       <li>
         Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
         <ul>
-          {% for h in haies.hedges_to_remove %}
-            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
-          {% endfor %}
+          {% with hedges_by_type_and_category|get_item:"TO_REMOVE" as hedges_by_category %}
+            {% for category, hedges in hedges_by_category.items %}
+              {% for h in hedges %}
+                <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ category.value }}</li>
+              {% endfor %}
+            {% endfor %}
+          {% endwith %}
         </ul>
       </li>
       <li>
         Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m
         <ul>
-          {% for h in haies.hedges_to_plant %}
-            <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }}</li>
-          {% endfor %}
+          {% with hedges_by_type_and_category|get_item:"TO_PLANT" as hedges_by_category %}
+            {% for category, hedges in hedges_by_category.items %}
+              {% for h in hedges %}
+                <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ category.value }}</li>
+              {% endfor %}
+            {% endfor %}
+          {% endwith %}
         </ul>
       </li>
     </ul>
@@ -123,7 +133,7 @@
     <h3>Conditions d'acceptabilité</h3>
     <ul class="fr-mb-2w">
       {% for condition in plantation_evaluation.conditions %}
-        <li class="category-{{ condition.criterion_evaluator.category.name }}">
+        <li>
           {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
           {% if condition.context %}
             <ul>
