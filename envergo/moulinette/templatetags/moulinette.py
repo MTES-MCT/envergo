@@ -233,7 +233,7 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     context_data = context.flatten()
     context_data.update(plantation_evaluation.get_context())
     category = context_data["main_category"]
-    template_name = f"haie/moulinette/result/{category.name}/{moulinette.result}.html"
+    template_name = f"haie/moulinette/result/{category.name}/{moulinette.results_by_category[category]}.html"
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
