@@ -2674,7 +2674,23 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         Criterion-specific debug data is provided by each evaluator's
         get_debug_context() method, rendered via {% criterion_debug_snippet %}.
         """
-        return {}
+        if "haies" in self.catalog:
+            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            hedges_by_category = {category: [] for category in HaieCriterionCategory}
+
+        hedges_by_type_and_category = defaultdict(lambda: defaultdict(list))
+        for category, hedges in hedges_by_category.items():
+            for hedge in hedges:
+                hedges_by_type_and_category[hedge.type][category].append(hedge)
+
+        return {
+            "hedges_by_type_and_category": {
+                k: dict(v) for k, v in hedges_by_type_and_category.items()
+            }
+        }
 
     def get_triage_params(self):
         return set(TriageFormHaie.base_fields.keys())
