@@ -215,6 +215,17 @@
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
     {% if moulinette.is_multi_category %}
+      const leafletMaps = [];
+      window.addEventListener("mapInitialized", (e) => leafletMaps.push(e.detail));
+
+      function invalidateVisibleMaps() {
+        leafletMaps.forEach(({id, map}) => {
+          if (!document.getElementById(id).closest('[hidden]')) {
+            map.invalidateSize();
+          }
+        });
+      }
+
       function displayCategoryContent() {
         // Hide/display content based on segmented control selection
         current = document.querySelector("input[name=\"segmented-category\"]:checked");
@@ -225,6 +236,7 @@
           input.addEventListener("change", () => {
             document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
             document.querySelectorAll(`.category-${input.value}`).forEach(el => el.hidden = false);
+            invalidateVisibleMaps();
           });
         });
       }
@@ -234,7 +246,6 @@
       let iframeUrl = HEDGES_PLANTATION_URL;
       let redirectUrl = RESULT_P_URL;
       var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
-      displayCategoryContent();
     });
   </script>
 {% endblock %}
