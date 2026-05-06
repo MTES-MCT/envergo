@@ -74,7 +74,7 @@
           {% for category in moulinette.results_by_category %}
             <li>
               {{ category.label }}
-              <a href="#result-{{ category }}">
+              <a href="#result-{{ category.name }}">
                 <span class="fr-link">
                   <span class="fr-hidden-xl">Détail</span>
                   <span class="fr-hidden fr-unhidden-xl">Aller au détail</span>
@@ -94,7 +94,7 @@
 
   {% block result_header %}{% endblock %}
   {% if "l350_3" in other_categories %}
-    <div class="fr-mb-3w">
+    <div id="result-l350_3" class="fr-mb-3w fr-callout other-category-header">
       {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.l350_3 %}
       <p>
         Le projet de destruction inclut des alignements d'arbres en bord de voie ouverte à la circulation du public. Ces linéaires sont protégés (art.
@@ -116,7 +116,7 @@
     </div>
   {% endif %}
   {% if "hru" in other_categories %}
-    <div class="fr-mb-3w fr-callout other-category-header">
+    <div id="result-hru" class="fr-mb-3w fr-callout other-category-header">
       {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.hru %}
       <p>Le projet de destruction inclut des linéaires non soumis à la procédure unique de déclaration, c'est-à-dire :</p>
       <ul>
