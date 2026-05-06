@@ -789,10 +789,43 @@ div#instructor-view-side-menu {
   }
 }
 
-#form-group-instructor_free_mention .label-content {
+#form-group-instructor_free_mention .label-content,
+#form-group-instructor_private_mention .label-content {
   font-weight: bold;
   font-size: 1.5rem;
   line-height: 2rem;
+}
+
+.notes-btn-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notes-edit-grid {
+  textarea {
+    resize: vertical;
+  }
+
+  @media (width >= 768px) {
+    display: flex;
+    gap: 1.5rem;
+
+    > div {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    > div > .fr-input-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    > div > .fr-input-group textarea {
+      flex: 1;
+    }
+  }
 }
 
 #normandie_plantation_table {
