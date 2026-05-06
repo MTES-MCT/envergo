@@ -10,6 +10,7 @@ from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    HaieRegulationFactory,
     PerimeterFactory,
     RegulationFactory,
     RUConfigHaieFactory,
@@ -145,7 +146,7 @@ def test_map_does_not_display_even_when_non_concerne(captage_criteria):
 @pytest.mark.haie
 def test_perimeter_detail_hidden_when_map_not_displayed(bizous_town_center, client):
     """When show_map is False, the perimeter detail must not appear in the HTML."""
-    regulation = RegulationFactory(
+    regulation = HaieRegulationFactory(
         regulation="protection_captages",
         evaluator=REGULATION_EVALUATOR_PATH,
         has_perimeters=True,
@@ -189,7 +190,7 @@ def test_perimeter_detail_hidden_when_map_not_displayed(bizous_town_center, clie
 @pytest.mark.haie
 def test_perimeter_detail_shown_when_map_displayed(bizous_town_center, client):
     """When show_map is True, the perimeter detail must appear in the HTML."""
-    regulation = RegulationFactory(
+    regulation = HaieRegulationFactory(
         regulation="protection_captages",
         evaluator=REGULATION_EVALUATOR_PATH,
         has_perimeters=True,

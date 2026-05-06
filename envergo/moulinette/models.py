@@ -2608,15 +2608,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         return result or RESULTS.non_soumis
 
-    @property
+    @cached_property
     def results_by_category(self):
         """Compute global result from individual regulation results depending on the criteria category."""
-        if hasattr(self, "_result"):
-            return self._result
-
         if not self.is_evaluated():
-            self._result = RESULTS.non_disponible
-            return self._result
+            raise RuntimeError(
+                "Moulinette must be evaluated before accessing the results."
+            )
 
         all_results_by_category = defaultdict(list)
         for regulation in self.regulations:
@@ -2632,7 +2630,32 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                     ]
                     break
 
-        return results_by_category
+        # use the procedure result for régime unique category
+        if HaieCriterionCategory.ru in results_by_category:
+            procedures = [regulation.procedure_type for regulation in self.regulations]
+            is_interdit = "interdit" in procedures
+            is_autorisation = "autorisation" in procedures
+
+            if is_interdit:
+                results_by_category[HaieCriterionCategory.ru] = RESULTS.interdit
+            elif is_autorisation:
+                results_by_category[HaieCriterionCategory.ru] = "autorisation"
+            elif results_by_category[HaieCriterionCategory.ru] not in [
+                RESULTS.non_soumis,
+                RESULTS.non_disponible,
+            ]:
+                results_by_category[HaieCriterionCategory.ru] = "declaration"
+
+        # remove the category if there is no hedge concerned
+        for category, hedges in self.catalog["hedges_by_category"].items():
+            if not hedges and category in results_by_category:
+                results_by_category.pop(category)
+
+        return {
+            k: results_by_category[k]
+            for k in HaieCriterionCategory
+            if k in results_by_category
+        }
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
@@ -2744,7 +2767,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 )
             )
         }
-
         return context
 
     def get_catalog_data(self):
@@ -2757,6 +2779,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["has_hedges_outside_department"] = (
                 hedges.has_hedges_outside_department(self.department)
             )
+            data["hedges_by_category"] = hedges.get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            data["hedges_by_category"] = {
+                category: [] for category in HaieCriterionCategory
+            }
 
         return data
 
@@ -2822,12 +2851,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         EXISTS subqueries.
         """
         dept_centroid = self.department.centroid
-        if "haies" in self.catalog:
-            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
-                self.config.single_procedure
-            )
-        else:
-            hedges_by_category = {category: [] for category in HaieCriterionCategory}
+        hedges_by_category = self.catalog["hedges_by_category"]
 
         # Build category → evaluator classpaths mapping
         evaluators_by_category = {category: [] for category in HaieCriterionCategory}
@@ -2910,17 +2934,24 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return fields
 
     def get_regulations_by_group(self):
-        """Group regulations by their result_group"""
+        """Group regulations by their result_group for each category."""
         regulations_list = sorted(
             self.regulations, key=lambda regulation: regulation.display_order
         )
 
-        regulations_list.sort(key=attrgetter("result_group"))
-        grouped = {
-            key: list(group)
-            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
-        }
-        return grouped
+        grouped_by_category = {}
+        for category in self.results_by_category:
+
+            def result_group_for(reg, cat=category):
+                return RESULTS_GROUP_MAPPING[reg.results_by_category[cat]]
+
+            sorted_regs = sorted(regulations_list, key=result_group_for)
+            grouped_by_category[category] = {
+                key: list(group)
+                for key, group in groupby(sorted_regs, key=result_group_for)
+            }
+
+        return grouped_by_category
 
     def get_map_center(self):
         """Returns at what coordinates is the perimeter."""
@@ -2979,6 +3010,22 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
+
+    @property
+    def is_multi_category(self):
+        """Do the hedges in this simulation fall under different categories of regulations
+        (e.g. régime Unique, L350-3, Hors régime unique )?"""
+        return len(self.results_by_category.keys()) > 1
+
+    @property
+    def is_submittable_to_pguh(self):
+        """Can this simulation be submitted to the PGUH?"""
+        return (
+            HaieCriterionCategory.ru in self.results_by_category.keys()
+            or HaieCriterionCategory.hru in self.results_by_category.keys()
+            or HaieCriterionCategory.l350_3 in self.results_by_category.keys()
+            and self.config.aa_l3503_handling == AaL3503Handling.PORTAL
+        )
 
 
 class ActionToTake(models.Model):

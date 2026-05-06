@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, EnumType, StrEnum
 from types import SimpleNamespace
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -398,11 +398,13 @@ class HaieRegulationEvaluator(RegulationEvaluator):
 
     def evaluate(self, regulation):
         super().evaluate(regulation)
-        self._procedure_type = self.get_procedure_type(regulation)
         self._results_by_category = self.get_results_by_category(regulation)
+        self._procedure_type = self.get_procedure_type(regulation)
 
     def get_procedure_type(self, regulation):
-        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(self.result)
+        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(
+            self.results_by_category[HaieCriterionCategory.ru]
+        )
         return procedure_type
 
     @property
@@ -423,15 +425,12 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             return {category: RESULTS.non_active for category in HaieCriterionCategory}
 
         results_by_category = {}
-        if (
-            regulation.has_perimeters
-            and regulation in self.moulinette.hedges_intersecting_regulations_perimeter
-        ):
+        if regulation.has_perimeters:
             all_perimeters = {
                 perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
-                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter[
-                    regulation
-                ].items()
+                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter.get(
+                    regulation, {}
+                ).items()
             }
             hedges_by_category = self.moulinette.catalog[
                 "haies"
@@ -679,10 +678,23 @@ class CriterionEvaluator(ABC):
         return {}
 
 
-class HaieCriterionCategory(Enum):
-    ru = "Régime unique"
-    l350_3 = "L350-3"
-    hru = "Hors régime unique"
+class _DjangoSafeEnumMeta(EnumType):
+    do_not_call_in_templates = True
+
+
+class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
+
+    def __new__(cls, value, label=""):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.label = label
+        return member
+
+
+class HaieCriterionCategory(LabelEnum):
+    ru = ("Régime unique", "Haies bénéficiant d'une procédure unique")
+    l350_3 = ("L350-3", "Alignements d'arbres en bord de voie")
+    hru = ("Hors régime unique", "Autres haies et alignements, hors procédure unique")
 
 
 class HaieCriterionEvaluator(CriterionEvaluator, ABC):

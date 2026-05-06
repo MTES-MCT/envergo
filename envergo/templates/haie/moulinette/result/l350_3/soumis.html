@@ -1,0 +1,12 @@
+{% load moulinette %}
+
+<p>
+  {% if moulinette.is_multi_category %}
+    Le projet inclut des alignements d’arbres en bord de voie ouverte à la circulation du public.
+  {% else %}
+    La destruction porte sur des alignements d’arbres en bord de voie ouverte à la circulation du public.
+  {% endif %}
+  Ces linéaires sont protégés (art. L350-3 du code de l’environnement) et relèvent d’une procédure spécifique.
+</p>
+
+{% include "haie/moulinette/result/_replantation.html" %}
