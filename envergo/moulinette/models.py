@@ -2651,7 +2651,11 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             if not hedges and category in results_by_category:
                 results_by_category.pop(category)
 
-        return results_by_category
+        return {
+            k: results_by_category[k]
+            for k in HaieCriterionCategory
+            if k in results_by_category
+        }
 
     def summary(self):
         """Build a data summary, for analytics purpose."""
