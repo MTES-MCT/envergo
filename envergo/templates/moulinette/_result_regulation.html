@@ -9,7 +9,11 @@
     {% if regulation.display_perimeter %}
       {% perimeter_detail regulation %}
     {% endif %}
-    {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
+    {% if category %}
+      {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug|add:"-"|add:category.name %}
+    {% else %}
+      {% include '_map_snippet.html' with map=regulation.map map_id=regulation.slug %}
+    {% endif %}
   {% endif %}
 
   {% block regulation_body %}{% endblock %}
