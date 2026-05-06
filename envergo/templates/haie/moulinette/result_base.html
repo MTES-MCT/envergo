@@ -132,27 +132,28 @@
   {% endif %}
 
   <h2 id="regulations-title">Détail des réglementations applicables</h2>
-  <div id="regulation-segmented-container" style="">
-    <p id="regulation-segmented-container__label" class="fr-text--xs">
-      <strong>Réglementations applicables
-      aux :</strong>
-    </p>
-    <fieldset class="fr-segmented">
-      <div class="fr-segmented__elements">
-        {% for category in moulinette.results_by_category %}
-          <div class="fr-segmented__element">
-            <input value="{{ category.name }}"
-                   {% if forloop.counter0 == 0 %}checked{% endif %}
-                   type="radio"
-                   id="segmented-{{ category.name }}"
-                   name="segmented-category">
-            <label class="fr-label" for="segmented-{{ category.name }}">{{ category.label }}</label>
-          </div>
-        {% endfor %}
-      </div>
-    </fieldset>
-  </div>
 
+  {% if moulinette.is_multi_category %}
+    <div id="regulation-segmented-container" style="">
+      <p id="regulation-segmented-container__label" class="fr-text--xs">
+        <strong>Réglementations applicables aux :</strong>
+      </p>
+      <fieldset class="fr-segmented">
+        <div class="fr-segmented__elements">
+          {% for category in moulinette.results_by_category %}
+            <div class="fr-segmented__element">
+              <input value="{{ category.name }}"
+                     {% if forloop.counter0 == 0 %}checked{% endif %}
+                     type="radio"
+                     id="segmented-{{ category.name }}"
+                     name="segmented-category">
+              <label class="fr-label" for="segmented-{{ category.name }}">{{ category.label }}</label>
+            </div>
+          {% endfor %}
+        </div>
+      </fieldset>
+    </div>
+  {% endif %}
   {% for category, groups in moulinette.get_regulations_by_group.items %}
     <div class="category-{{ category.name }}">
       {% for result, regulations in groups.items %}
@@ -213,20 +214,22 @@
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     var RESULT_P_URL = "{% url 'moulinette_result_plantation' %}";
-    function displayCategoryContent() {
-      // Hide/display content based on segmented control selection
-      current = document.querySelector("input[name=\"segmented-category\"]:checked")
-      document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
-      document.querySelectorAll(`.category-${current.value}`).forEach(el => el.hidden = false);
+    {% if moulinette.is_multi_category %}
+      function displayCategoryContent() {
+        // Hide/display content based on segmented control selection
+        current = document.querySelector("input[name=\"segmented-category\"]:checked");
+        document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
+        document.querySelectorAll(`.category-${current.value}`).forEach(el => el.hidden = false);
 
-      document.querySelectorAll("input[name=\"segmented-category\"]").forEach(input => {
-        input.addEventListener("change", () => {
-          document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
-          document.querySelectorAll(`.category-${input.value}`).forEach(el => el.hidden = false);
+        document.querySelectorAll("input[name=\"segmented-category\"]").forEach(input => {
+          input.addEventListener("change", () => {
+            document.querySelectorAll("[class^='category-']").forEach(el => el.hidden = true);
+            document.querySelectorAll(`.category-${input.value}`).forEach(el => el.hidden = false);
+          });
         });
-      });
-    }
-      window.addEventListener('load', displayCategoryContent);
+      }
+      window.addEventListener("load", displayCategoryContent);
+    {% endif %}
     window.addEventListener("load", function() {
       let iframeUrl = HEDGES_PLANTATION_URL;
       let redirectUrl = RESULT_P_URL;
