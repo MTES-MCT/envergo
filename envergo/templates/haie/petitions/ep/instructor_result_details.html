@@ -73,7 +73,11 @@
 </form>
 
 {% if moulinette.catalog.protected_species %}
-  {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+  {% if moulinette.config.single_procedure %}
+    {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species %}
+  {% else %}
+    {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+  {% endif %}
 {% else %}
-  <p>Pas de liste d’espèces associée à cette simulation</p>
+  <p>Pas de liste d'espèces associée à cette simulation</p>
 {% endif %}

@@ -6,6 +6,7 @@ from django.contrib import admin, messages
 from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.html import mark_safe
 
 from envergo.hedges.models import (
@@ -14,10 +15,11 @@ from envergo.hedges.models import (
     HedgeTypeFactory,
     Pacage,
     Species,
-    SpeciesMap,
-    SpeciesMapFile,
+    SpeciesHabitat,
+    SpeciesHabitatFile,
 )
-from envergo.hedges.tasks import process_species_map_file
+from envergo.hedges.tasks import process_species_habitat_file
+from envergo.moulinette.models import ConfigHaie
 
 
 @admin.register(HedgeData)
@@ -88,12 +90,28 @@ class HedgeDataAdmin(admin.ModelAdmin):
     def length_to_remove(self, obj):
         return round(obj.length_to_remove(), 2)
 
+    def is_single_procedure(self, obj):
+        """Check whether the department uses the single-procedure (RU) regime."""
+        department_code = obj.get_department()
+        if not department_code:
+            return False
+        config = (
+            ConfigHaie.objects.filter(department__department=department_code)
+            .valid_at(timezone.now().date())
+            .first()
+        )
+        return config.single_procedure if config else False
+
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
 
+        if self.is_single_procedure(obj):
+            species = obj.get_all_species()
+        else:
+            species = obj.get_all_species_hru()
         content = render_to_string(
             "hedges/admin/_hedges_species.html",
-            context={"species": obj.get_all_species()},
+            context={"species": species},
         )
         return mark_safe(content)
 
@@ -104,21 +122,28 @@ class SpeciesAdmin(admin.ModelAdmin):
         "common_name",
         "scientific_name",
         "group",
+        "adhoc_group",
         "level_of_concern",
         "highly_sensitive",
-        "taxref_ids",
+        "cd_ref",
+        "cd_noms",
     ]
     search_fields = ["group", "common_name", "scientific_name"]
     ordering = ["-common_name"]
     list_filter = ["group", "level_of_concern", "highly_sensitive"]
-    readonly_fields = ["kingdom", "taxref_ids"]
+    readonly_fields = [
+        "common_name",
+        "kingdom",
+        "cd_noms",
+        "cd_ref",
+        "group",
+        "adhoc_group",
+    ]
 
 
-class SpeciesMapAdminForm(forms.ModelForm):
+class SpeciesHabitatAdminForm(forms.ModelForm):
     hedge_types = forms.MultipleChoiceField(
-        choices=HedgeTypeFactory.build_from_context(
-            single_procedure=False
-        ).choices,  # EP s'applique uniquement à "droit constant" pour le moment
+        choices=HedgeTypeFactory.build_from_context(single_procedure=False).choices,
         widget=forms.CheckboxSelectMultiple,
         label="Types de haies considérés",
         required=False,
@@ -131,26 +156,29 @@ class SpeciesMapAdminForm(forms.ModelForm):
     )
 
 
-@admin.register(SpeciesMap)
-class SpeciesMapAdmin(admin.ModelAdmin):
-    form = SpeciesMapAdminForm
+@admin.register(SpeciesHabitat)
+class SpeciesHabitatAdmin(admin.ModelAdmin):
+    form = SpeciesHabitatAdminForm
     list_display = [
         "species",
         "map",
         "hedge_types",
         "hedge_properties",
+        "level_of_concern",
     ]
     search_fields = [
+        "species__cd_ref",
+        "species__adhoc_group",
         "species__common_name",
         "species__scientific_name",
-        "species__taxref_ids",
+        "species__cd_noms",
         "map__name",
     ]
     autocomplete_fields = ["species", "map"]
 
 
-@admin.register(SpeciesMapFile)
-class SpeciesMapFileAdmin(admin.ModelAdmin):
+@admin.register(SpeciesHabitatFile)
+class SpeciesHabitatFileAdmin(admin.ModelAdmin):
     list_display = [
         "name",
         "file",
@@ -202,7 +230,7 @@ class SpeciesMapFileAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         return qs.select_related("map").defer("map__geometry")
 
-    @admin.action(description="Importer la carte d'espèces")
+    @admin.action(description="Importer le fichier d'habitat")
     def process(self, request, queryset):
         if queryset.count() > 1:
             error = "Merci de ne sélectionner qu'une seule carte"
@@ -210,7 +238,7 @@ class SpeciesMapFileAdmin(admin.ModelAdmin):
             return
 
         map = queryset[0]
-        process_species_map_file.delay(map.id)
+        process_species_habitat_file.delay(map.id)
         msg = "Votre fichier est en cours de traitement."
         self.message_user(request, msg, level=messages.INFO)
 

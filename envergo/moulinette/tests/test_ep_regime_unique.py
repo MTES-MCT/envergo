@@ -261,6 +261,63 @@ def test_ep_ru_replantation_coefficient(
 
 
 # ---------------------------------------------------------------------------
+# Sensitive species bonus
+# ---------------------------------------------------------------------------
+
+
+def test_ep_ru_sensitive_species_bonus_on_derogation_simplifiee(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """Sensitive species add +0.25 to the coefficient for derogation_simplifiee."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ep_regime_unique
+    assert criterion.result_code == "derogation_simplifiee"
+
+    evaluator = criterion.get_evaluator()
+    assert evaluator.get_replantation_coefficient() == 1.75
+
+    evaluator.catalog["has_sensitive_species"] = True
+    assert evaluator.get_replantation_coefficient() == 2.0
+
+
+@pytest.mark.parametrize(
+    "length, density, expected_code",
+    [
+        (8, 60, "dispense"),
+        (120, 40, "derogation_inventaire"),
+    ],
+)
+def test_ep_ru_sensitive_species_no_bonus_other_results(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+    length,
+    density,
+    expected_code,
+):
+    """Sensitive species do NOT add a bonus for dispense or derogation_inventaire."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=density,
+        hedges=[make_hedge_factory(length=length)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ep_regime_unique
+    assert criterion.result_code == expected_code
+
+    evaluator = criterion.get_evaluator()
+    coeff_before = evaluator.get_replantation_coefficient()
+
+    evaluator.catalog["has_sensitive_species"] = True
+    assert evaluator.get_replantation_coefficient() == coeff_before
+
+
+# ---------------------------------------------------------------------------
 # Settings form (admin-configurable thresholds)
 # ---------------------------------------------------------------------------
 

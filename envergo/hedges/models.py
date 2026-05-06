@@ -6,10 +6,21 @@ from typing import Self
 import shapely
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
+from django.contrib.gis.measure import D
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models import Exists, F, OuterRef, Q
+from django.db.models import (
+    BooleanField,
+    Case,
+    Exists,
+    IntegerField,
+    OuterRef,
+    Q,
+    Subquery,
+    Value,
+    When,
+)
 from django.utils import timezone
 from model_utils import Choices
 from pyproj import Geod, Transformer
@@ -183,62 +194,29 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sous_ligne_electrique", None)
 
-    def get_species_filter(self):
-        """Build the filter to get species possibly living in a single hedge.
+    @property
+    def effective_hedge_type(self):
+        """Return the hedge type to use for species filtering.
 
-        Species have requirements. For example, a "Pipistrelle commune" bat
-        MAY live in an "alignement arboré" or "haie multistrate" and
-        requires old trees (vieil_arbre is checked).
-
-        Also, there is a two way mechanism to filter species geographically.
-
-        Species are linked to a map through a "SpeciesMap" object. But each Zone
-        linked to the map has an additional field that links the species living in the
-        specific zone
+        Recently planted hedges are treated as degraded from a biodiversity
+        standpoint, regardless of their declared type.
         """
-        # if the hedge is recently planted, we consider it as a degradee hedge in a biodiversity point of view
-        hedge_type = (
-            HedgeTypeBase.DEGRADEE
-            if self.prop("recemment_plantee")
-            else self.hedge_type
-        )
+        if self.prop("recemment_plantee"):
+            return HedgeTypeBase.DEGRADEE
+        return self.hedge_type
 
-        q_hedge_type = Q(species_maps__hedge_types__contains=[hedge_type])
+    @property
+    def missing_ecological_properties(self):
+        """Return hedge properties that are explicitly absent.
 
-        properties_to_exclude = []
-        for p, _ in HEDGE_PROPERTIES:
-            if p in self.additionalData and not self.additionalData[p]:
-                properties_to_exclude.append(p)
-
-        filter = q_hedge_type
-        if properties_to_exclude:
-            q_exclude = Q(species_maps__hedge_properties__overlap=properties_to_exclude)
-            filter &= ~q_exclude
-
-        zone_subquery = (
-            Zone.objects.filter(geometry__intersects=self.geos_geometry)
-            .filter(map_id=OuterRef("species_maps__map_id"))
-            .filter(species_taxrefs__overlap=OuterRef("taxref_ids"))
-        )
-        filter = filter & Q(Exists(zone_subquery))
-        return filter
-
-    def get_species(self):
-        """Return known species that may be related to this hedge."""
-
-        qs = (
-            Species.objects.filter(self.get_species_filter())
-            .annotate(map_id=F("species_maps__map_id"))
-            .order_by("group", "common_name")
-            .distinct("group", "common_name")
-        )
-        return qs
-
-    def get_zones(self):
-        zones = Zone.objects.filter(geometry__intersects=self.geos_geometry).filter(
-            map__map_type="species"
-        )
-        return zones
+        Species requiring any of these properties will be excluded from the
+        cortège, since the hedge does not satisfy the ecological condition.
+        """
+        return [
+            p
+            for p, _ in HEDGE_PROPERTIES
+            if p in self.additionalData and not self.additionalData[p]
+        ]
 
 
 class HedgeList(list[Hedge]):
@@ -321,6 +299,10 @@ class HedgeList(list[Hedge]):
         ru = self.ru()
         l350_3 = self.l350_3()
         return HedgeList([h for h in self if h not in ru and h not in l350_3])
+
+    def to_multilinestring(self):
+        """Return a MultiLineString combining all hedges in this list."""
+        return MultiLineString([h.geos_geometry for h in self], srid=EPSG_WGS84)
 
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
@@ -462,15 +444,6 @@ class HedgeData(models.Model):
         hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
         return hedges_centroid
 
-    def get_multilinestring_to_remove(self):
-        """Returns multilinestring from hedges to remove geometries"""
-        hedges_to_remove_mls = []
-        for hedge in self.hedges_to_remove():
-            geom = MultiLineString(hedge.geos_geometry)
-            if geom:
-                hedges_to_remove_mls.extend(geom)
-        return MultiLineString(hedges_to_remove_mls, srid=EPSG_WGS84)
-
     def get_department(self):
         hedges_centroid = self.get_centroid_to_remove()
         code_department = get_department_from_coords(
@@ -518,21 +491,13 @@ class HedgeData(models.Model):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
+    def get_all_species_hru(self):
+        """Return the local list of protected species (legacy HRU logic)."""
+        return Species.hru.for_hedges(self.hedges_to_remove())
+
     def get_all_species(self):
-        """Return the local list of protected species."""
-
-        filters = [h.get_species_filter() for h in self.hedges_to_remove()]
-        if not filters:
-            return Species.objects.none()
-
-        union = reduce(operator.or_, filters)
-        species = (
-            Species.objects.filter(union)
-            .annotate(map_id=F("species_maps__map_id"))
-            .order_by("group", "common_name")
-            .distinct("group", "common_name")
-        )
-        return species
+        """Return the RU list of protected species."""
+        return Species.ru.for_hedges(self.hedges_to_remove())
 
     def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
@@ -546,8 +511,8 @@ class HedgeData(models.Model):
     def compute_density_around_lines_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove in 400m buffer."""
 
-        hedges_to_remove_mls_merged = self.get_multilinestring_to_remove()
-        return compute_hedge_density_around_lines(hedges_to_remove_mls_merged, 400)
+        hedges_geom = self.hedges_to_remove().to_multilinestring()
+        return compute_hedge_density_around_lines(hedges_geom, 400)
 
     @property
     def density_around_centroid(self):
@@ -650,16 +615,6 @@ class HedgeData(models.Model):
         }
 
 
-SPECIES_GROUPS = Choices(
-    ("amphibiens", "Amphibiens"),
-    ("chauves-souris", "Chauves-souris"),
-    ("flore", "Flore"),
-    ("insectes", "Insectes"),
-    ("mammiferes-terrestres", "Mammifères terrestres"),
-    ("oiseaux", "Oiseaux"),
-    ("reptiles", "Reptiles"),
-)
-
 KINGDOMS = Choices(
     ("animalia", "Animalia"),
     ("archaea", "Archaea"),
@@ -671,6 +626,7 @@ KINGDOMS = Choices(
 )
 
 LEVELS_OF_CONCERN = Choices(
+    ("non_documente", "Non documenté"),
     ("faible", "Faible"),
     ("moyen", "Moyen"),
     ("fort", "Fort"),
@@ -679,57 +635,337 @@ LEVELS_OF_CONCERN = Choices(
 )
 
 
+class HruSpeciesQuerySet(models.QuerySet):
+    """Species queryset for the HRU (droit constant) pipeline.
+
+    species must be confirmed in zones that directly intersect the hedge,
+    AND their cd_noms must overlap the zone's species_taxrefs array.
+    """
+
+    def for_hedges(self, hedges):
+        """Return species confirmed in zones intersecting the given hedges."""
+
+        hedges = HedgeList(hedges)
+        filters = [self.build_filter(h) for h in hedges]
+        if not filters:
+            return self.none()
+
+        union = reduce(operator.or_, filters)
+        return self.filter(union).distinct().order_by("group", "common_name")
+
+    def build_filter(self, hedge):
+        """Build a Q filter for species confirmed in zones intersecting a hedge.
+
+        HRU is observation-based: species are only included when both their
+        geographic zone intersects the hedge AND their cd_noms appear in
+        the zone's species_taxrefs array (confirming local observation).
+        """
+        q_filter = Q(habitats__hedge_types__contains=[hedge.effective_hedge_type])
+
+        if hedge.missing_ecological_properties:
+            q_filter &= ~Q(
+                habitats__hedge_properties__overlap=hedge.missing_ecological_properties
+            )
+
+        zone_subquery = (
+            Zone.objects.filter(geometry__intersects=hedge.geos_geometry)
+            .filter(map_id=OuterRef("habitats__map_id"))
+            .filter(species_taxrefs__overlap=OuterRef("cd_noms"))
+        )
+        q_filter &= Q(Exists(zone_subquery))
+        return q_filter
+
+
+SPECIES_BUFFER_DISTANCE = D(m=400)
+
+
+def group_hedges_by_signature(hedges):
+    """Group hedges by their (hedge_type, missing_properties) filter signature.
+
+    Hedges sharing the same signature produce identical SpeciesHabitat filters,
+    so they can be treated as a single geographic group for zone proximity.
+    """
+    groups = {}
+    for h in hedges:
+        sig = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
+        groups.setdefault(sig, []).append(h)
+    return groups
+
+
+# Numeric ranks for sorting species by level_of_concern in the RU pipeline.
+# Derived from LEVELS_OF_CONCERN ordering (1 = lowest, 6 = highest).
+LEVEL_OF_CONCERN_ORDER = {
+    value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1)
+}
+
+LEVEL_OF_CONCERN_WHENS = [
+    When(level_of_concern=value, then=Value(rank))
+    for value, rank in LEVEL_OF_CONCERN_ORDER.items()
+]
+
+
+class RuSpeciesQuerySet(models.QuerySet):
+    """Species queryset for the RU (régime unique) pipeline.
+
+    All species from SpeciesHabitats within 400m are considered potentially present.
+    Highly sensitive species not observed locally (cd_ref absent from nearby
+    zone.species_taxrefs) are excluded entirely.
+
+    The zone data (nearby map ids and observed cd_refs) is prefetched in
+    a single query, then injected as plain Python values into the species
+    filter and annotations. This avoids per-hedge correlated subqueries
+    whose cost scales linearly with hedge count.
+    """
+
+    def for_hedges(self, hedges):
+        """Return species potentially near the given hedges.
+
+        Annotated with local_level_of_concern, observed_locally, and
+        level_order. Sorted by level of concern descending, then by name.
+        """
+        hedges = HedgeList(hedges)
+        if not hedges:
+            return self.none()
+
+        signature_map_ids, observed_cdrefs = self.prefetch_zone_data_by_signature(
+            hedges
+        )
+        if not signature_map_ids:
+            return self.none()
+
+        species_filter = self.build_grouped_filter(signature_map_ids, observed_cdrefs)
+
+        all_nearby_map_ids = set()
+        for ids in signature_map_ids.values():
+            all_nearby_map_ids.update(ids)
+        level_label = self.build_level_subquery(list(all_nearby_map_ids))
+
+        level_order_whens = [
+            When(local_level_of_concern=value, then=Value(rank))
+            for value, rank in LEVEL_OF_CONCERN_ORDER.items()
+        ]
+
+        return (
+            self.filter(species_filter)
+            .annotate(
+                local_level_of_concern=level_label,
+                observed_locally=Case(
+                    When(cd_ref__in=observed_cdrefs, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField(),
+                ),
+                level_order=Case(
+                    *level_order_whens,
+                    default=Value(0),
+                    output_field=IntegerField(),
+                ),
+            )
+            .distinct()
+            .order_by("-level_order", "common_name")
+        )
+
+    def prefetch_zone_data_by_signature(self, hedges):
+        """Fetch per-signature zone data in a single DB query.
+
+        Each zone within 400m of the hedge set is annotated with a boolean
+        per signature group, indicating whether the zone is also within 400m
+        of that specific group's hedges. This scopes nearby_map_ids per
+        signature without adding extra DB round trips.
+        """
+        signature_groups = group_hedges_by_signature(hedges)
+        all_hedges_geom = hedges.to_multilinestring()
+
+        zones = Zone.objects.filter(
+            geometry__dwithin=(all_hedges_geom, SPECIES_BUFFER_DISTANCE),
+            map__map_type="species",
+        )
+
+        sig_annotations = {}
+        sig_order = []
+        for i, (sig, sig_hedges) in enumerate(signature_groups.items()):
+            sig_geom = HedgeList(sig_hedges).to_multilinestring()
+            annotation_name = f"near_sig_{i}"
+            sig_annotations[annotation_name] = Case(
+                When(
+                    geometry__dwithin=(sig_geom, SPECIES_BUFFER_DISTANCE),
+                    then=Value(True),
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            )
+            sig_order.append((annotation_name, sig))
+
+        zones = zones.annotate(**sig_annotations)
+        value_fields = ["map_id", "species_taxrefs"] + [name for name, _ in sig_order]
+
+        all_observed_cdrefs = set()
+        signature_map_ids = {sig: set() for sig in signature_groups}
+
+        for row in zones.values_list(*value_fields):
+            map_id = row[0]
+            taxrefs = row[1]
+            if taxrefs:
+                all_observed_cdrefs.update(taxrefs)
+            for j, (_, sig) in enumerate(sig_order):
+                if row[2 + j]:
+                    signature_map_ids[sig].add(map_id)
+
+        result = {sig: list(ids) for sig, ids in signature_map_ids.items() if ids}
+        return result, all_observed_cdrefs
+
+    def build_majeur_exclusion(self, observed_cdrefs):
+        """Build a Q clause excluding "majeur" species not observed locally.
+
+        "Majeur" species are only kept in the cortège when their cd_ref
+        appears in the observed set. When no observations exist at all,
+        every "majeur" species is excluded.
+        """
+        if observed_cdrefs:
+            is_majeur = Q(habitats__level_of_concern="majeur")
+            not_observed = ~Q(cd_ref__in=observed_cdrefs)
+            return ~(is_majeur & not_observed)
+
+        return ~Q(habitats__level_of_concern="majeur")
+
+    def build_grouped_filter(self, signature_map_ids, observed_cdrefs):
+        """Build a single Q filter from per-signature nearby map IDs.
+
+        Each signature (hedge_type, missing_properties) has its own set of
+        nearby map IDs, ensuring that a species whose habitat is only near
+        hedges of type A cannot match type B's filter.
+        """
+        majeur_exclusion = self.build_majeur_exclusion(observed_cdrefs)
+
+        signature_filters = [
+            self.build_signature_filter(
+                hedge_type, missing_props, nearby_map_ids, majeur_exclusion
+            )
+            for (hedge_type, missing_props), nearby_map_ids in signature_map_ids.items()
+        ]
+        return reduce(operator.or_, signature_filters)
+
+    def build_signature_filter(
+        self, hedge_type, missing_props, nearby_map_ids, majeur_exclusion
+    ):
+        """Build the Q filter for one (hedge_type, missing_props) signature."""
+        on_nearby_map = Q(habitats__map_id__in=nearby_map_ids)
+        matches_hedge_type = Q(habitats__hedge_types__contains=[hedge_type])
+        signature_filter = on_nearby_map & matches_hedge_type
+
+        if missing_props:
+            requires_absent_property = Q(
+                habitats__hedge_properties__overlap=list(missing_props)
+            )
+            signature_filter &= ~requires_absent_property
+
+        signature_filter &= majeur_exclusion
+        return signature_filter
+
+    def build_level_subquery(self, nearby_map_ids):
+        """Build a subquery to pick the highest level_of_concern per species.
+
+        A species can appear in multiple SpeciesHabitats with different levels.
+        This subquery finds the highest-ranked match and returns the label
+        for display. Sorting rank is derived from the label in the outer
+        query via Case/When on LEVEL_OF_CONCERN_ORDER.
+        """
+        best_match = (
+            SpeciesHabitat.objects.filter(
+                species_id=OuterRef("pk"),
+                map_id__in=nearby_map_ids,
+            )
+            .annotate(
+                level_rank=Case(
+                    *LEVEL_OF_CONCERN_WHENS,
+                    default=Value(0),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("-level_rank")
+        )
+        return Subquery(best_match.values("level_of_concern")[:1])
+
+
 class Species(models.Model):
     """Represent a single species."""
 
-    # This is the unique species identifier (cd_nom) in the INPN TaxRef database
-    # https://inpn.mnhn.fr/telechargement/referentielEspece/referentielTaxo
-    # The reason why this is an array is because sometimes, there are duplicates
-    # (e.g) a species has been describe by several naturalists over the years before
-    # they realized it was a duplicate.
-    # Hence, for a given scientific name, there can be several TaxRef ids.
-    taxref_ids = ArrayField(
-        null=True, verbose_name="Ids TaxRef (cd_nom)", base_field=models.IntegerField()
+    # Multiple cd_nom values (unique species identifiers in the INPN TaxRef database)
+    # because a single species can have been described independently by several
+    # naturalists before the duplicates were recognized and merged under one cd_ref.
+    cd_noms = ArrayField(
+        null=True, verbose_name="CD_NOM (TaxRef)", base_field=models.IntegerField()
     )
 
-    # This "group" is an ad-hoc category, not related to the official biology taxonomy
-    group = models.CharField("Groupe", choices=SPECIES_GROUPS, max_length=64)
+    # Canonical TaxRef identifier — unique per species reference taxon.
+    cd_ref = models.IntegerField("CD_REF TaxRef", unique=True, null=True, blank=True)
+
+    # Some data provider (e.g Aisne) use a "group" classification that is manually
+    # curated and does not match any "official" taxonomy value.
+    adhoc_group = models.CharField(
+        "Groupe (obsolète)",
+        max_length=64,
+        blank=True,
+        help_text="Classification ad-hoc obsolète. Utiliser le groupe TaxRef.",
+    )
+
+    # Official group from TaxRef GROUP2_INPN field.
+    group = models.CharField("Groupe", max_length=128, blank=True)
 
     kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
-    common_name = models.CharField("Nom commun", max_length=255)
+    common_name = models.CharField(
+        "Nom commun",
+        max_length=255,
+        blank=True,
+        help_text="Importé depuis le référentiel TaxRef",
+    )
     scientific_name = models.CharField("Nom scientifique", max_length=255, unique=True)
     level_of_concern = models.CharField(
-        "Niveau d'enjeu", max_length=16, choices=LEVELS_OF_CONCERN
+        "Niveau d'enjeu",
+        max_length=16,
+        choices=LEVELS_OF_CONCERN,
+        blank=True,
+        help_text="Seulement pour l'Aisne. Cette valeur est désormais spécifiée dans le modèle Habitat d'espèce.",
     )
-    highly_sensitive = models.BooleanField("Particulièrement sensible", default=False)
+    highly_sensitive = models.BooleanField(
+        "Particulièrement sensible", default=False, help_text="Seulement pour l'Aisne."
+    )
+
+    objects = models.Manager()
+
+    # Regime unique and Droit constant use different rules to build a species list
+    # We build custom manager to provide a clear api
+    hru = HruSpeciesQuerySet.as_manager()
+    ru = RuSpeciesQuerySet.as_manager()
 
     class Meta:
         verbose_name = "Espèce"
         verbose_name_plural = "Espèces"
 
     def __str__(self):
-        return f"{self.common_name} ({self.scientific_name})"
+        if self.common_name:
+            return f"{self.common_name} ({self.scientific_name})"
+        return self.scientific_name
 
 
-class SpeciesMap(models.Model):
-    """Represent a single species map."""
+class SpeciesHabitat(models.Model):
+    """Habitat requirements and conservation status of a species in a geographic area."""
 
     species = models.ForeignKey(
         Species,
-        related_name="species_maps",
+        related_name="habitats",
         on_delete=models.CASCADE,
         verbose_name="Espèce",
     )
     map = models.ForeignKey(
         "geodata.Map",
-        related_name="species_maps",
+        related_name="habitats",
         on_delete=models.CASCADE,
         verbose_name="Carte",
     )
-    species_map_file = models.ForeignKey(
-        "SpeciesMapFile",
+    species_habitat_file = models.ForeignKey(
+        "SpeciesHabitatFile",
         verbose_name="Importé par",
-        related_name="species_maps",
+        related_name="habitats",
         null=True,
         on_delete=models.CASCADE,
     )
@@ -739,17 +975,25 @@ class SpeciesMap(models.Model):
         base_field=models.CharField(
             max_length=32,
             choices=HedgeTypeFactory.build_from_context(single_procedure=False).choices,
-        ),  # EP s'applique uniquement à "droit constant" pour le moment
+        ),
     )
     hedge_properties = ArrayField(
         verbose_name="Propriétés de la haie",
         help_text="Propriétés requises par l'espèce",
         base_field=models.CharField(max_length=32, choices=HEDGE_PROPERTIES),
     )
+    level_of_concern = models.CharField(
+        "Niveau d'enjeu local",
+        max_length=16,
+        choices=LEVELS_OF_CONCERN,
+        null=True,
+        blank=True,
+        help_text="Niveau d'enjeu spécifique à cette carte/département.",
+    )
 
     class Meta:
-        verbose_name = "Carte d'espèce"
-        verbose_name_plural = "Cartes d'espèces"
+        verbose_name = "Habitat d'espèce"
+        verbose_name_plural = "Habitats d'espèces"
         unique_together = ("species", "map")
 
 
@@ -760,8 +1004,8 @@ IMPORT_STATUSES = Choices(
 )
 
 
-class SpeciesMapFile(models.Model):
-    """Holds a csv file that links species and their caracteristics to a map."""
+class SpeciesHabitatFile(models.Model):
+    """Holds a CSV file that links species and their habitat characteristics to a map."""
 
     name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
     file = models.FileField("Fichier", upload_to="species_maps/")
@@ -778,8 +1022,8 @@ class SpeciesMapFile(models.Model):
     import_log = models.TextField("Log d'import", blank=True)
 
     class Meta:
-        verbose_name = "Fichier de carte d'espèces"
-        verbose_name_plural = "Fichiers de carte d'espèces"
+        verbose_name = "Fichier d'habitat d'espèce"
+        verbose_name_plural = "Fichiers d'habitat d'espèces"
 
     def __str__(self):
         return self.file.name

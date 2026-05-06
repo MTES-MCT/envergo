@@ -52,6 +52,10 @@
                 <th scope="row">Longueur totale ripisylve</th>
                 <td>{{ ep_ru_ripisylve_length }} m</td>
               </tr>
+              <tr>
+                <th scope="row">Espèces sensibles dans le cortège</th>
+                <td>{{ has_sensitive_species|yesno:"Oui,Non" }}</td>
+              </tr>
             </tbody>
           </table>
         </div>

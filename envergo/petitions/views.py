@@ -997,6 +997,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context = super().get_context_data(**kwargs)
         moulinette = self.object.get_moulinette()
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
 
         hedge_data = context["petition_project"].hedge_data
         context["ign_url"] = get_ign_centered_url(hedge_data)
