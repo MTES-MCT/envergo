@@ -826,8 +826,13 @@ class EspecesProtegeesRegimeUnique(
 
         species = catalog.get("protected_species")
         if species is not None:
-            catalog["protected_species_public"] = species.exclude(
-                local_level_of_concern="majeur"
+            species_list = list(species)
+            catalog["protected_species"] = species_list
+            catalog["protected_species_public"] = [
+                s for s in species_list if s.local_level_of_concern != "majeur"
+            ]
+            catalog["has_sensitive_species"] = any(
+                s.local_level_of_concern == "majeur" for s in species_list
             )
 
         catalog.update(self.get_density_catalog_data())
@@ -985,11 +990,19 @@ class EspecesProtegeesRegimeUnique(
 
         return result
 
-    def get_replantation_coefficient(self):
-        """Base RU coefficient plus a bonus depending on the EP result level."""
-        r_ru = compute_ru_compensation_ratio(self.moulinette)
+    def get_ep_ru_bonus(self):
+        """Total EP bonus: base per result level, plus sensitive-species majoration."""
         bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
-        return round(r_ru + bonus, 2)
+        if self.result_code == "derogation_simplifiee" and self.catalog.get(
+            "has_sensitive_species", False
+        ):
+            bonus += 0.25
+        return bonus
+
+    def get_replantation_coefficient(self):
+        """Base RU coefficient plus total EP bonus (result level + sensitive species)."""
+        r_ru = compute_ru_compensation_ratio(self.moulinette)
+        return round(r_ru + self.get_ep_ru_bonus(), 2)
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.
@@ -1024,7 +1037,7 @@ class EspecesProtegeesRegimeUnique(
 
         per_hedge_results = self.per_hedge_results
         per_hedge_coefficients = self.catalog.get("ru_per_hedge_coefficients", {})
-        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
+        bonus = self.get_ep_ru_bonus()
         hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["id"], "-")
@@ -1034,6 +1047,9 @@ class EspecesProtegeesRegimeUnique(
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
+        context["has_sensitive_species"] = self.catalog.get(
+            "has_sensitive_species", False
+        )
         context["hedge_debug_rows"] = hedge_rows
         # Surface the admin-configured thresholds so the debug page shows
         # exactly which values drove the cascade. None when settings are
