@@ -287,9 +287,12 @@ class EvaluationAdmin(admin.ModelAdmin):
             if form.is_valid():
                 message = form.cleaned_data.get("message")
                 try:
-                    evaluation.unpublish()
-                    version = evaluation.create_version(request.user, message)
-                    version.save()
+                    # Savepoint: if save() raises IntegrityError, only this block
+                    # rolls back, keeping the outer transaction usable for template rendering.
+                    with transaction.atomic():
+                        evaluation.unpublish()
+                        version = evaluation.create_version(request.user, message)
+                        version.save()
                     admin_url = reverse(
                         "admin:evaluations_evaluation_change", args=[evaluation.uid]
                     )
