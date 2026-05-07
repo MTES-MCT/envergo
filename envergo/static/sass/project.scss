@@ -598,6 +598,12 @@ section.debug {
 
   div.criterion-debug {
     margin-top: 1.5rem;
+
+    table caption {
+      font-size: 1rem;
+      line-height: 1.5rem;
+      margin: var(--text-spacing);
+    }
   }
 }
 
@@ -2540,6 +2546,7 @@ section#actions-to-take {
       font-size: 12px;
     }
 
+    .action-title,
     .action-btn {
       font-weight: normal;
       background-color: var(--background-action-low-blue-france);
@@ -2549,6 +2556,16 @@ section#actions-to-take {
       font-size: 0.875rem;
       line-height: 1.5rem;
       margin: var(--text-spacing);
+    }
+
+    /* only for evaluations generated from now : class `action-btn--clean` was not in markup before */
+    .action-btn--clean .fr-icon-arrow-down-s-line::before {
+      transition: transform 0.3s;
+    }
+
+    .action-btn--clean[aria-expanded="true"]
+      .fr-icon-arrow-down-s-line::before {
+      transform: rotate(-180deg);
     }
   }
 

@@ -153,8 +153,9 @@
     let iframeQuery = iframeParams.size ? "?" + iframeParams.toString() : "";
     let iframeUrl = baseUrl;
     if (hedgeId) {
-      iframeUrl += hedgeId + "/" + iframeQuery;
+      iframeUrl += hedgeId + "/";
     }
+    iframeUrl += iframeQuery;
     let redirectUrl = null;
 
     var submitCallback = function(data) {
