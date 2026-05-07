@@ -18,6 +18,86 @@ div#moulinette {
 main.home {
   section#simulateur {
     background-color: var(--blue-france-850-200);
+
+    .simulateur-label {
+      color: var(--blue-france-sun-113-625);
+      text-align: center;
+    }
+
+    .simulateur-search {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 1rem;
+
+      #department-combobox {
+        flex: 1;
+        max-width: 24rem;
+      }
+
+      #btn-start-simulation[data-disabled="true"] {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+    }
+
+    .separator {
+      border-color: var(--blue-france-sun-113-625);
+    }
+
+    &.simulateur--many .simulateur-content {
+      text-align: center;
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+  }
+
+  .etape-icon {
+    color: var(--error-425-625);
+    margin-bottom: 0.75rem;
+  }
+
+  #quand-demander {
+    text-align: center;
+
+    @media (width >= 36em) {
+      text-align: left;
+    }
+  }
+
+  #quand-demander .fr-grid-row--gutters {
+    @media (width <= 35.999em) {
+      display: inline-flex;
+      flex-direction: column;
+      text-align: left;
+    }
+  }
+
+  .travaux-nature {
+    margin-top: 1.5rem;
+
+    @media (width >= 36em) {
+      margin-top: 0;
+    }
+  }
+
+  .travaux-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .travaux-list .fr-badge {
+    aspect-ratio: 1;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &::before {
+      margin: 0;
+    }
   }
 }
 
@@ -1163,6 +1243,12 @@ button.hide-expanded[aria-expanded="true"] {
 
 #department-combobox {
   position: relative;
+
+  .autocomplete__menu {
+    position: absolute;
+    z-index: 100;
+    width: 100%;
+  }
 
   .department-combobox-clear {
     position: absolute;
