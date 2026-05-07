@@ -15,6 +15,11 @@ from envergo.hedges.regulations import (
     TreeAlignmentsCondition,
 )
 from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.hedges.tests.helpers import (
+    make_mock_hedge,
+    make_mock_hedge_data,
+    make_mock_evaluator,
+)
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
 from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
@@ -485,32 +490,6 @@ def test_essences_bocageres_condition(calvados_hedge_data, ep_criterion_evaluato
     assert not condition.result
 
 
-# --- Helpers for lightweight mock-based tests ---
-
-
-def make_mock_hedge(hedge_type, length):
-    """Create a mock hedge with type and length."""
-    h = Mock()
-    h.hedge_type = hedge_type
-    h.length = length
-    return h
-
-
-def make_mock_hedge_data(to_remove, to_plant):
-    """Create a mock hedge data with hedges to remove and plant."""
-    hd = Mock()
-    hd.hedges_to_remove.return_value = to_remove
-    hd.hedges_to_plant.return_value = to_plant
-    return hd
-
-
-def make_mock_evaluator(single_procedure=False):
-    """Create a mock criterion evaluator with the given context."""
-    ev = Mock()
-    ev.moulinette.config.single_procedure = single_procedure
-    return ev
-
-
 # --- Comprehensive AisneQualityCondition tests (public interface) ---
 
 
@@ -643,8 +622,8 @@ class TestAisneQualityConditionSubstitution:
         assert condition.result
         assert "convient" in condition.text
 
-    def test_ru_context_excludes_degradee(self):
-        """In RU context, degradee type is excluded from evaluation."""
+    def test_single_procedure_uses_reduced_type_enum(self):
+        """In single-procedure (RU) context, HedgeType enum excludes degradee."""
         hedge_data = make_mock_hedge_data(
             to_remove=[make_mock_hedge("mixte", 10)],
             to_plant=[make_mock_hedge("mixte", 10)],

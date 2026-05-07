@@ -1,36 +1,19 @@
 """Tests for the RUQualityCondition (régime unique EP)."""
 
-from math import ceil
-from unittest.mock import Mock
-
 from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.regulations import RUQualityCondition
+from envergo.hedges.tests.helpers import (
+    make_mock_hedge,
+    make_mock_hedge_data,
+    make_mock_evaluator as _make_mock_evaluator,
+)
 
 
-def make_mock_hedge(hedge_type, length, hedge_id=None):
-    """Create a mock hedge with type, length, and id."""
-    h = Mock()
-    h.hedge_type = hedge_type
-    h.length = length
-    h.id = hedge_id or f"{hedge_type}_{length}"
-    return h
-
-
-def make_mock_hedge_data(to_remove, to_plant):
-    """Create a mock hedge data with hedges to remove and plant."""
-    hd = Mock()
-    hd.hedges_to_remove.return_value = to_remove
-    hd.hedges_to_plant.return_value = to_plant
-    return hd
-
-
-def make_mock_evaluator(ep_bonus=0.0, result_code="derogation_simplifiee"):
-    """Create a mock criterion evaluator for EP RU context."""
-    ev = Mock()
-    ev.moulinette.config.single_procedure = True
-    ev.result_code = result_code
-    ev.get_ep_ru_bonus.return_value = ep_bonus
-    return ev
+def make_mock_evaluator(**kwargs):
+    """Wrap shared helper with RU-specific defaults."""
+    kwargs.setdefault("single_procedure", True)
+    kwargs.setdefault("ep_bonus", 0.0)
+    return _make_mock_evaluator(**kwargs)
 
 
 class TestRUQualityConditionCompensation:
