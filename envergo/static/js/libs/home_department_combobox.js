@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const departments = JSON.parse(raw.textContent);
   const container = document.getElementById("department-combobox");
   const btn = document.getElementById("btn-start-simulation");
+  const infoDiv = document.getElementById("department-info");
   if (!container || !btn) return;
 
   const triageUrl = btn.getAttribute("href");
@@ -16,6 +17,51 @@ document.addEventListener("DOMContentLoaded", () => {
   clearBtn.title = "Effacer";
   clearBtn.setAttribute("aria-label", "Effacer le département sélectionné");
   clearBtn.style.display = "none";
+
+  function showDepartmentInfo(dept) {
+    if (!infoDiv) return;
+
+    if (dept.is_config_valid) {
+      infoDiv.style.display = "none";
+      infoDiv.innerHTML = "";
+      return;
+    }
+
+    let html = "";
+    if (dept.contacts_and_links) {
+      html +=
+        '<div id="contacts_and_links" class="fr-p-2w">' +
+        dept.contacts_and_links +
+        "</div>" +
+        '<div class="fr-py-2w"><p>' +
+        "Vous représentez la DDT(M) du département et souhaitez compléter ou modifier les informations affichées ici ? " +
+        '<a href="https://tally.so/r/w4Agpb" target="_blank" rel="noopener">Cliquez ici</a>.' +
+        "</p></div>";
+    } else {
+      html +=
+        '<div class="fr-notice fr-notice--warning">' +
+        '<div class="fr-container"><div class="fr-notice__body"><p>' +
+        '<span class="fr-notice__title"></span>' +
+        '<span class="fr-notice__desc">' +
+        dept.label +
+        " : nous ne disposons pas encore d’information sur les contacts de l’administration en rapport avec la haie." +
+        "</span></p></div></div></div>" +
+        '<div class="fr-py-2w"><p>' +
+        "Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture, " +
+        "des ressources à présenter aux usagers ? " +
+        '<a href="https://tally.so/r/w4Agpb" target="_blank" rel="noopener">Cliquez ici</a>.' +
+        "</p></div>";
+    }
+
+    infoDiv.innerHTML = html;
+    infoDiv.style.display = "";
+  }
+
+  function hideDepartmentInfo() {
+    if (!infoDiv) return;
+    infoDiv.style.display = "none";
+    infoDiv.innerHTML = "";
+  }
 
   accessibleAutocomplete({
     element: container,
@@ -40,10 +86,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       selectedDept = departments.find((d) => d.label === value);
       if (!selectedDept) return;
-      btn.href = triageUrl + "?department=" + encodeURIComponent(selectedDept.code);
-      delete btn.dataset.disabled;
-      btn.setAttribute("aria-disabled", "false");
       clearBtn.style.display = "";
+
+      if (selectedDept.is_config_valid) {
+        btn.href = triageUrl + "?department=" + encodeURIComponent(selectedDept.code);
+        delete btn.dataset.disabled;
+        btn.setAttribute("aria-disabled", "false");
+      } else {
+        btn.href = triageUrl;
+        btn.dataset.disabled = "true";
+        btn.setAttribute("aria-disabled", "true");
+      }
+
+      showDepartmentInfo(selectedDept);
     },
   });
 
@@ -56,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.dataset.disabled = "true";
     btn.setAttribute("aria-disabled", "true");
     clearBtn.style.display = "none";
+    hideDepartmentInfo();
   });
 
 });
