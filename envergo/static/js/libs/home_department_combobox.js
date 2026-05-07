@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       selectedDept = departments.find((d) => d.label === value);
       if (!selectedDept) return;
-      btn.href = triageUrl + "?department=" + selectedDept.code;
+      btn.href = triageUrl + "?department=" + encodeURIComponent(selectedDept.code);
       delete btn.dataset.disabled;
       btn.setAttribute("aria-disabled", "false");
       clearBtn.style.display = "";
