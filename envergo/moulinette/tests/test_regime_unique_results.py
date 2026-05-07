@@ -118,10 +118,13 @@ def test_moulinette_result_alignement():
         single_procedure=True,
         single_procedure_settings={
             "coeff_compensation": {
-                "mixte": 1.5,
-                "degradee": 1.5,
-                "arbustive": 1.5,
-                "buissonnante": 1.5,
+                "default": {
+                    "X_densite": 60,
+                    "R1_non_arboree_HD": 1.5,
+                    "R2_non_arboree_LD": 1.5,
+                    "R3_arboree_HD": 1.5,
+                    "R4_arboree_LD": 1.5,
+                }
             }
         },
     )
@@ -221,10 +224,13 @@ def test_moulinette_result_interdit():
     config.single_procedure = True
     config.single_procedure_settings = {
         "coeff_compensation": {
-            "mixte": 1.5,
-            "degradee": 1.5,
-            "arbustive": 1.5,
-            "buissonnante": 1.5,
+            "default": {
+                "X_densite": 60,
+                "R1_non_arboree_HD": 1.5,
+                "R2_non_arboree_LD": 1.5,
+                "R3_arboree_HD": 1.5,
+                "R4_arboree_LD": 1.5,
+            }
         }
     }
     config.save()
