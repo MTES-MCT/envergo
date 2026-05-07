@@ -6,6 +6,11 @@ from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.regulations import NormandieQualityCondition
 from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.hedges.tests.helpers import (
+    make_mock_hedge,
+    make_mock_hedge_data,
+    make_mock_evaluator,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -207,34 +212,6 @@ def test_calvados_quality_condition_l350(hedge_data):
     assert condition.result
 
 
-# --- Helpers for lightweight mock-based tests ---
-
-
-def make_mock_hedge(hedge_type, length, hedge_id=None):
-    """Create a mock hedge with type, length, and id."""
-    h = Mock()
-    h.hedge_type = hedge_type
-    h.length = length
-    h.id = hedge_id or f"{hedge_type}_{length}"
-    return h
-
-
-def make_mock_hedge_data(to_remove, to_plant):
-    """Create a mock hedge data with hedges to remove and plant."""
-    hd = Mock()
-    hd.hedges_to_remove.return_value = to_remove
-    hd.hedges_to_plant.return_value = to_plant
-    return hd
-
-
-def make_mock_evaluator(single_procedure=False, result_code="soumis"):
-    """Create a mock criterion evaluator with the given context."""
-    ev = Mock()
-    ev.moulinette.config.single_procedure = single_procedure
-    ev.result_code = result_code
-    return ev
-
-
 def make_hedges_and_catalog(coefficients_by_type, aggregated_r=1.0):
     """Build mock hedges-to-remove and a catalog from desired per-type coefficients.
 
@@ -397,7 +374,7 @@ class TestNormandieQualityConditionCompensation:
         assert not condition.result
         text = condition.text
         assert "10\xa0m de haie mixte" in text
-        assert "5\xa0m de haie mixte ou d'alignement" in text
+        assert "5\xa0m de haie mixte ou d’alignement" in text
         assert "8\xa0m de haie arbustive ou mixte" in text
         assert "18\xa0m de haie buissonnante, arbustive ou mixte" in text
 
