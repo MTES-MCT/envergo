@@ -727,7 +727,7 @@ class EspecesProtegeesRegimeUnique(
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
-    plantation_conditions = [RUQualityCondition]
+    plantation_conditions = [MinLengthCondition, RUQualityCondition, SafetyCondition]
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
