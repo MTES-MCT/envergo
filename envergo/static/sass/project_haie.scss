@@ -33,6 +33,12 @@ main.home {
       #department-combobox {
         flex: 1;
         max-width: 24rem;
+
+        .autocomplete__menu {
+          position: absolute;
+          z-index: 100;
+          width: 100%;
+        }
       }
 
       #btn-start-simulation[data-disabled="true"] {
@@ -1243,12 +1249,6 @@ button.hide-expanded[aria-expanded="true"] {
 
 #department-combobox {
   position: relative;
-
-  .autocomplete__menu {
-    position: absolute;
-    z-index: 100;
-    width: 100%;
-  }
 
   .department-combobox-clear {
     position: absolute;
