@@ -6,6 +6,9 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_poly
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.regime_unique_haie import (
+    compute_ru_compensation_ratio,
+)
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -53,6 +56,42 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         ),
     ]
     return criteria
+
+
+def test_ru_and_l3503_criteria_in_ru_mode():
+    """In RU mode with mixte + alignement hedges, RU→soumis, L350-3→non_concerne."""
+    RUConfigHaieFactory()
+    data = make_moulinette_haie_data(
+        hedge_data=[
+            make_hedge(type_haie="mixte"),
+            make_hedge(hedge_id="D2", type_haie="alignement", bord_voie=True),
+        ],
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
+    assert moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
+    assert (
+        moulinette.regime_unique_haie.l350_3__regime_unique_haie.result_code
+        == "non_concerne"
+    )
+
+
+def test_hru_criterion_non_concerne_in_ru_mode():
+    """HRU criterion returns non_concerne when both HRU and RU hedges exist."""
+    RUConfigHaieFactory()
+    data = make_moulinette_haie_data(
+        hedge_data=[
+            make_hedge(type_haie="mixte"),
+            make_hedge(hedge_id="D2", type_haie="buissonnante", bord_batiment=True),
+        ],
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
+    assert (
+        moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
+        == "non_concerne"
+    )
+    assert moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
 
 
 @pytest.mark.parametrize(
@@ -328,7 +367,7 @@ class TestZoneResolution:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         assert evaluator.result_code == "non_disponible"
 
 
@@ -417,7 +456,8 @@ class TestPerHedgeCoefficients:
         ], f"{type_haie} should use R1_non_arboree_HD"
 
     def test_alignements_excluded_from_coefficients(self):
-        """Alignement hedges should not appear in per-hedge coefficients."""
+        """When all hedges are alignements, the RU evaluator is not loaded and
+        compensation ratio is 0.0 (alignements are excluded from RU)."""
         settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
         moulinette = make_moulinette_haie_with_density(
@@ -425,8 +465,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="alignement")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
-        assert coefficients == {}
+        assert compute_ru_compensation_ratio(moulinette) == 0.0
 
 
 class TestCompensationRatio:
@@ -441,7 +480,7 @@ class TestCompensationRatio:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         assert evaluator.get_replantation_coefficient() == 1.8
 
     def test_weighted_average_mixed_types(self):
@@ -457,7 +496,7 @@ class TestCompensationRatio:
             ],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         # (100*2.0 + 100*1.0) / 200 = 1.5
         assert evaluator.get_replantation_coefficient() == 1.5
 
@@ -470,19 +509,17 @@ class TestCompensationRatio:
             hedges=[make_hedge_factory(length=100, type_haie="alignement")],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
-        assert evaluator.get_replantation_coefficient() == 0.0
+        assert compute_ru_compensation_ratio(moulinette) == 0.0
 
     def test_droit_constant_returns_zero(self):
-        """When not in régime unique, ratio is 0.0."""
+        """When not in régime unique, compensation ratio is 0.0."""
         DCConfigHaieFactory()
         moulinette = make_moulinette_haie_with_density(
             density=80,
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
-        assert evaluator.get_replantation_coefficient() == 0.0
+        assert compute_ru_compensation_ratio(moulinette) == 0.0
 
     def test_zone_specific_config_used_for_ratio(self):
         """When a zonage matches, its coefficients drive the ratio, not the default."""
@@ -494,7 +531,7 @@ class TestCompensationRatio:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         # zone_A, R3_arboree_HD = 4.0
         assert evaluator.get_replantation_coefficient() == 4.0
 
@@ -617,7 +654,7 @@ class TestMultiZoneHedges:
             hedges=[hedge_south, hedge_far],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         assert evaluator.result_code == "non_disponible"
 
     def test_weighted_average_with_multi_zone_coefficients(self):
@@ -637,6 +674,6 @@ class TestMultiZoneHedges:
             hedges=[hedge_south, hedge_north],
             reimplantation="replantation",
         )
-        evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         # (100 * 2.0 + 100 * 4.0) / 200 = 3.0
         assert evaluator.get_replantation_coefficient() == 3.0

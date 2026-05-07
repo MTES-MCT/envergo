@@ -638,7 +638,8 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
         if ("category" in cls.__dict__ or "base_slug" in cls.__dict__) and hasattr(
             cls, "_base_slug"
         ):
-            cls.slug = f"{cls.category.name}__{cls._base_slug}"
+            if "slug" not in cls.__dict__:
+                cls.slug = f"{cls.category.name}__{cls._base_slug}"
 
         # Automatically append the category to choice_label and slug.
         # _base_choice_label holds the label without the category suffix, so that

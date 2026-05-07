@@ -207,3 +207,41 @@ def test_intersection_ru_criterion_excluded_when_only_hru_hedge_intersects_zone(
         hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, **HEDGE_HRU)]
     )
     assert MoulinetteHaie(data).get_criteria().count() == 0
+
+
+# ---------------------------------------------------------------------------
+# Cross-regulation scope filtering (EP régime unique)
+# ---------------------------------------------------------------------------
+
+EVALUATOR_EP_RU = "envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique"
+
+
+def test_ep_regime_unique_excluded_without_ru_hedges(france_map):
+    """EP RU criterion (category=ru) is excluded in DC mode — no RU hedges exist."""
+    regulation = RegulationFactory(regulation="ep")
+    CriterionFactory(
+        regulation=regulation,
+        evaluator=EVALUATOR_EP_RU,
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    DCConfigHaieFactory()
+    data = make_moulinette_haie_data(hedge_data=[make_hedge()])
+    assert MoulinetteHaie(data).get_criteria().count() == 0
+
+
+def test_ep_regime_unique_included_with_ru_hedges(france_map):
+    """EP RU criterion (category=ru) is included in RU mode with a RU hedge."""
+    regulation = RegulationFactory(regulation="ep")
+    CriterionFactory(
+        regulation=regulation,
+        evaluator=EVALUATOR_EP_RU,
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    RUConfigHaieFactory()
+    data = make_moulinette_haie_data(
+        reimplantation="remplacement",
+        hedge_data=[make_hedge(type_haie="mixte")],
+    )
+    assert MoulinetteHaie(data).get_criteria().count() == 1
