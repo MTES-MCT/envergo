@@ -1,3 +1,4 @@
+from math import ceil
 from unittest.mock import Mock
 
 import pytest
@@ -7,7 +8,7 @@ from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.regulations import (
     EssencesBocageresCondition,
     MinLengthCondition,
-    MinLengthPacCondition,
+    PacParcelCondition,
     AisneQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
@@ -172,15 +173,15 @@ def test_minimum_length_pac_condition(ep_criterion_evaluator):
     hedge_data.lineaire_detruit_pac.return_value = 100
     hedge_data.length_to_plant_pac.return_value = 0
 
-    condition = MinLengthPacCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    condition = PacParcelCondition(hedge_data, 2.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = MinLengthPacCondition(hedge_data, 4.0, ep_criterion_evaluator)
+    condition = PacParcelCondition(hedge_data, 4.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = MinLengthPacCondition(hedge_data, 0.0, ep_criterion_evaluator)
+    condition = PacParcelCondition(hedge_data, 0.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 0
 
@@ -334,7 +335,7 @@ def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
     hedge_data = calvados_hedge_data
     catalog = {
         "reimplantation": "replantation",
-        "lpm": 120,
+        "per_hedge_coefficients": {"D1": 1.0, "D2": 1.0, "D3": 1.0},
     }
 
     condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
@@ -348,9 +349,10 @@ def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
 
     condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
     condition.evaluate()
+    lpm = condition.compute_lpm()
     assert not condition.result
     assert condition.context["strengthening_length"] == 101.0
-    assert condition.context["missing_plantation_length"] == 96.0  # 80% * 120
+    assert condition.context["missing_plantation_length"] == ceil(0.8 * lpm)
 
 
 def test_alignement_arbres_condition():

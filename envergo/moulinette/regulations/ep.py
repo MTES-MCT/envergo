@@ -1,4 +1,3 @@
-from collections import defaultdict
 from decimal import Decimal as D
 from functools import cached_property
 from math import ceil
@@ -18,6 +17,7 @@ from envergo.hedges.regulations import (
     LineaireInterchamp,
     LineaireSurTalusCondition,
     MinLengthCondition,
+    NormandieMinLengthCondition,
     NormandieQualityCondition,
     PlantationConditionMixin,
     RUQualityCondition,
@@ -202,7 +202,7 @@ class EspecesProtegeesNormandie(
     slug = "ep_normandie"
     debug_template = "haie/moulinette/debug/ep_normandie.html"
     plantation_conditions = [
-        MinLengthCondition,
+        NormandieMinLengthCondition,
         SafetyCondition,
         StrenghteningCondition,
         LineaireSurTalusCondition,
@@ -487,9 +487,7 @@ class EspecesProtegeesNormandie(
             density_ratio_range = "lt_0.5"
 
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
-        LD = defaultdict(int)  # linéaire à détruire
-        LC = defaultdict(int)  # linéaire à compenser
-        LPm_r = defaultdict(int)  # linéaire minimum attendu réduit
+        per_hedge_coefficients = {}
 
         for hedge in haies.hedges_to_remove():
             if hedge.mode_destruction != "coupe_a_blanc":
@@ -521,37 +519,10 @@ class EspecesProtegeesNormandie(
             minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
             hedges_details.append(get_hedge_compensation_details(hedge, r))
 
-            # Note: if r == 0.0, the hedge does not need to be compensated, so it's
-            # not added to the list of destroyed hedges
             if r > 0.0:
-                LD[hedge.hedge_type] += hedge.length
-                LC[hedge.hedge_type] += hedge.length * float(r)
+                per_hedge_coefficients[hedge.id] = float(r)
 
-        # Total compensation length before compensation reductions
-        lpm = sum(LC.values())
-
-        # Compensation can be reduced when planting a better type
-        # Compensation rate cannot go below 1:1 though
-        reduced_lpm = 0
-
-        HedgeType = HedgeTypeFactory.build_from_context(
-            single_procedure=False
-        )  # Cet évaluateur n'est utilisé qu'avant la mise en place du régime unique.
-        for hedge_type in HedgeType.values:
-            lc_type = LC[hedge_type]
-            lc_type *= 0.8 if hedge_type != "mixte" else 1.0
-            lc_type = max(lc_type, LD[hedge_type])
-            LPm_r[hedge_type] = lc_type
-            reduced_lpm += lc_type
-
-        catalog.update(
-            {
-                "LC": LC,
-                "lpm": lpm,
-                "reduced_lpm": reduced_lpm,
-                "LPm_r": LPm_r,
-            }
-        )
+        catalog["per_hedge_coefficients"] = per_hedge_coefficients
 
         # Aggregate the R of each hedge to compute the global replantation coefficient.
         if haies.length_to_remove() > 0:
