@@ -13,13 +13,14 @@ from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import PACAGE_RE, HedgeTypeFactory, Pacage
 from envergo.hedges.regulations import (
+    AisneQualityCondition,
     EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
     MinLengthCondition,
     NormandieQualityCondition,
     PlantationConditionMixin,
-    QualityCondition,
+    RUQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
 )
@@ -102,7 +103,7 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
 
     choice_label = "EP > EP Aisne"
     slug = "ep_aisne"
-    plantation_conditions = [SafetyCondition, QualityCondition]
+    plantation_conditions = [SafetyCondition, AisneQualityCondition]
 
     CODE_MATRIX = {
         (False, True): "interdit",
@@ -755,7 +756,7 @@ class EspecesProtegeesRegimeUnique(
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
-    plantation_conditions = []
+    plantation_conditions = [RUQualityCondition]
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
