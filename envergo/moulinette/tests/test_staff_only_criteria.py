@@ -158,7 +158,15 @@ class TestICPEResults:
 
         assert res.status_code == 200
         assert "à vérifier" in content.lower()
-        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier.html")
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier_creation.html")
+
+    def test_modif_avec_pac_inconnu_is_a_verifier(self, staff_client):
+        res = self._get_result(staff_client, "modif_avec_pac", "inconnu")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "à vérifier" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier_modification.html")
 
 
 class TestICPEFormValidation:
