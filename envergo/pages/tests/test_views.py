@@ -1,4 +1,3 @@
-import json
 from datetime import date, timedelta
 
 import pytest
@@ -159,6 +158,17 @@ class TestHomeHaie:
         assert response.status_code == 200
         assert list(response.context["activated_configs"]) == []
 
+    def test_departments_data_in_context(self, client):
+        """The departments_data list is available for the client-side combobox."""
+        dept = DepartmentFactory()
+
+        response = client.get(reverse("home"))
+
+        assert response.status_code == 200
+        departments_data = response.context["departments_data"]
+        codes = [d["code"] for d in departments_data]
+        assert dept.department in codes
+
     def test_activated_department_redirects_to_triage(self, client):
         """Selecting an activated department should redirect to the triage page."""
         config = DCConfigHaieFactory(is_activated=True)
@@ -303,7 +313,7 @@ class TestContactHaie:
         assert response.status_code == 405
 
     def _get_department_data(self, response, dept):
-        departments = json.loads(response.context["departments_json"])
+        departments = response.context["departments_data"]
         return next(d for d in departments if d["id"] == dept.id)
 
     @pytest.mark.parametrize(
