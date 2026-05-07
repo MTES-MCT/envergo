@@ -5,7 +5,9 @@
     <button class="action-title action-btn fr-btn fr-btn--tertiary-no-outline"
             aria-expanded="false"
             aria-controls="action-{{ action.slug }}">
-      <span class="fr-icon-arrow-right-line fr-icon--sm">{{ action.label }}</span>
+      <span class="fr-icon-arrow-right-line fr-icon--sm" aria-hidden="true"></span>
+      {{ action.label }}
+      <span class="fr-icon-arrow-down-s-line fr-icon--sm" aria-hidden="true"></span>
     </button>
   {% else %}
     <span class="action-title">
