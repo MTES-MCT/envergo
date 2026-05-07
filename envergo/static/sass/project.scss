@@ -2546,7 +2546,8 @@ section#actions-to-take {
       font-size: 12px;
     }
 
-    .action-title {
+    .action-title,
+    .action-btn {
       font-weight: normal;
       background-color: var(--background-action-low-blue-france);
       min-height: unset;
@@ -2557,26 +2558,14 @@ section#actions-to-take {
       margin: var(--text-spacing);
     }
 
-    .action-btn {
-      &::after {
-        --icon-size: 1rem;
+    /* only for evaluations generated from now : class `action-btn--clean` was not in markup before */
+    .action-btn--clean .fr-icon-arrow-down-s-line::before {
+      transition: transform 0.3s;
+    }
 
-        display: inline-block;
-        vertical-align: calc((0.75em - var(--icon-size)) * 0.5);
-        background-color: currentcolor;
-        width: var(--icon-size);
-        height: var(--icon-size);
-        mask-size: 100% 100%;
-        mask-image: url("/static/icons/arrow-down-s-line.svg");
-        content: "";
-        transition: transform 0.3s;
-        margin-right: 0;
-        margin-left: auto;
-      }
-
-      &[aria-expanded="true"]::after {
-        transform: rotate(-180deg);
-      }
+    .action-btn--clean[aria-expanded="true"]
+      .fr-icon-arrow-down-s-line::before {
+      transform: rotate(-180deg);
     }
   }
 
