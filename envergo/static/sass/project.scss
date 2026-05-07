@@ -2557,6 +2557,15 @@ section#actions-to-take {
       line-height: 1.5rem;
       margin: var(--text-spacing);
     }
+
+    /* only for evaluations generated from now : class action-title was not in markup before */
+    .action-title .fr-icon-arrow-down-s-line::before {
+      transition: transform 0.3s;
+    }
+
+    .action-title[aria-expanded="true"] .fr-icon-arrow-down-s-line::before {
+      transform: rotate(-180deg);
+    }
   }
 
   // Display all tabs for print
