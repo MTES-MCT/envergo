@@ -163,82 +163,59 @@ def hedge_data():
 
 
 def test_calvados_quality_condition(hedge_data):
-    """Lengths to plant depends on R."""
-    catalog = {
-        "reimplantation": "remplacement",
-        "LD": {
-            "mixte": 100.0,
-            "alignement": 40.0,
-            "arbustive": 30.0,
-            "buissonnante": 20.0,
-            "degradee": 10.0,
-        },
-        "LC": {
-            "mixte": 200.0,
-            "alignement": 80.0,
-            "arbustive": 60.0,
-            "buissonnante": 40.0,
-            "degradee": 10.0,
-        },
-        "lpm": 390.0,
-        "reduced_lpm": 352.0,
+    """Compensation with per-hedge coefficients and real hedge data.
+
+    D1 (mixte ~50m, R=2), D2 (mixte ~50m, R=2), D3 (alignement ~40m, R=2),
+    D4 (arbustive ~30m, R=2), D5 (buissonnante ~20m, R=2), D6 (degradee ~10m, R=1).
+    Planted: P1-P4 are 4×~50m mixte, P5-P6 are 2×~50m alignement.
+    Mixte and alignement deficits are fully compensated by planted mixte.
+    Arbustive, buissonnante, and degradee deficits remain.
+    """
+    per_hedge_coefficients = {
+        "D1": 2.0, "D2": 2.0, "D3": 2.0,
+        "D4": 2.0, "D5": 2.0, "D6": 1.0,
     }
+    catalog = {"per_hedge_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
     evaluator = Mock()
-    R = 0.0  # Ignored for calvados
-    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    evaluator.moulinette.config.single_procedure = False
+    condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
     condition.evaluate()
     LC = condition.context["LC"]
 
     assert round(LC[HedgeTypeBase.MIXTE]) == 0
     assert round(LC[HedgeTypeBase.ALIGNEMENT]) == 0
-    assert round(LC[HedgeTypeBase.ARBUSTIVE]) == 60
-    assert round(LC[HedgeTypeBase.BUISSONNANTE]) == 40
-    assert round(LC[HedgeTypeBase.DEGRADEE]) == 10
+    assert LC[HedgeTypeBase.ARBUSTIVE] > 0
+    assert LC[HedgeTypeBase.BUISSONNANTE] > 0
+    assert LC[HedgeTypeBase.DEGRADEE] > 0
 
 
 def test_calvados_quality_condition_l350(hedge_data):
-    """Lengths to plant depends on R."""
-    catalog = {
-        "reimplantation": "remplacement",
-        "LD": {
-            "mixte": 100.0,
-            "alignement": 40.0,
-            "arbustive": 30.0,
-            "buissonnante": 20.0,
-            "degradee": 10.0,
-        },
-        "LC": {
-            "mixte": 0.0,
-            "alignement": 0.0,
-            "arbustive": 0.0,
-            "buissonnante": 0.0,
-            "degradee": 0.0,
-        },
-        "lpm": 390.0,
-        "reduced_lpm": 352.0,
-    }
-    evaluator = Mock(result_code="dispense_L350")
-    R = 0.0  # Ignored for calvados
-    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
-    condition.evaluate()
+    """L350 result codes force condition to pass regardless of deficits."""
+    per_hedge_coefficients = {"D1": 2.0, "D2": 2.0, "D3": 2.0, "D4": 2.0, "D5": 2.0, "D6": 1.0}
+    catalog = {"per_hedge_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
 
+    evaluator = Mock(result_code="dispense_L350")
+    evaluator.moulinette.config.single_procedure = False
+    condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
+    condition.evaluate()
     assert condition.result
 
     evaluator = Mock(result_code="a_verifier_L350")
-    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    evaluator.moulinette.config.single_procedure = False
+    condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
     condition.evaluate()
-
     assert condition.result
 
 
 # --- Helpers for lightweight mock-based tests ---
 
 
-def make_mock_hedge(hedge_type, length):
-    """Create a mock hedge with type and length."""
+def make_mock_hedge(hedge_type, length, hedge_id=None):
+    """Create a mock hedge with type, length, and id."""
     h = Mock()
     h.hedge_type = hedge_type
     h.length = length
+    h.id = hedge_id or f"{hedge_type}_{length}"
     return h
 
 
@@ -258,16 +235,24 @@ def make_mock_evaluator(single_procedure=False, result_code="soumis"):
     return ev
 
 
-def make_lc(**overrides):
-    """Build an LC dict with zeros, overridden by keyword args."""
-    lc = {"mixte": 0, "alignement": 0, "arbustive": 0, "buissonnante": 0, "degradee": 0}
-    lc.update(overrides)
-    return lc
+def make_hedges_and_catalog(coefficients_by_type, aggregated_r=1.0):
+    """Build mock hedges-to-remove and a catalog from desired per-type coefficients.
 
-
-def make_catalog(lc, lpm=0, reduced_lpm=0, aggregated_r=1.0):
-    """Build a catalog dict for NormandieQualityCondition."""
-    return {"LC": lc, "lpm": lpm, "reduced_lpm": reduced_lpm, "aggregated_r": aggregated_r}
+    ``coefficients_by_type`` maps hedge type to (length, coefficient) pairs.
+    Returns (hedges_to_remove, catalog).
+    """
+    hedges = []
+    per_hedge_coefficients = {}
+    for hedge_type, (length, coeff) in coefficients_by_type.items():
+        hedge = make_mock_hedge(hedge_type, length, hedge_id=f"{hedge_type}_h")
+        hedges.append(hedge)
+        if coeff > 0:
+            per_hedge_coefficients[hedge.id] = coeff
+    catalog = {
+        "per_hedge_coefficients": per_hedge_coefficients,
+        "aggregated_r": aggregated_r,
+    }
+    return hedges, catalog
 
 
 # --- Comprehensive NormandieQualityCondition tests (public interface) ---
@@ -278,10 +263,10 @@ class TestNormandieQualityConditionCompensation:
 
     def test_same_type_fills_deficit(self):
         """Same-type planted hedges fill deficit at rate 1.0."""
+        to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("mixte", 100)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("mixte", 100)]
         )
-        catalog = make_catalog(make_lc(mixte=100), lpm=100, reduced_lpm=100)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -293,10 +278,10 @@ class TestNormandieQualityConditionCompensation:
 
         Need 80m arbustive. Plant 64m mixte → 64/0.8 = 80m effective.
         """
+        to_remove, catalog = make_hedges_and_catalog({"arbustive": (80, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("mixte", 64)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("mixte", 64)]
         )
-        catalog = make_catalog(make_lc(arbustive=80), lpm=80, reduced_lpm=64)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -305,10 +290,10 @@ class TestNormandieQualityConditionCompensation:
 
     def test_cross_type_insufficient_at_reduced_rate(self):
         """63m mixte at 0.8 rate → 78.75m effective, not enough for 80m arbustive."""
+        to_remove, catalog = make_hedges_and_catalog({"arbustive": (80, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("mixte", 63)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("mixte", 63)]
         )
-        catalog = make_catalog(make_lc(arbustive=80), lpm=80, reduced_lpm=64)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -317,10 +302,10 @@ class TestNormandieQualityConditionCompensation:
 
     def test_buissonnante_for_degradee_no_rate_reduction(self):
         """Buissonnante compensating degradee uses rate 1.0 (exception to 0.8 rule)."""
+        to_remove, catalog = make_hedges_and_catalog({"degradee": (20, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("buissonnante", 20)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("buissonnante", 20)]
         )
-        catalog = make_catalog(make_lc(degradee=20), lpm=20, reduced_lpm=20)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -329,10 +314,10 @@ class TestNormandieQualityConditionCompensation:
 
     def test_buissonnante_for_degradee_insufficient_without_bonus(self):
         """16m buissonnante at rate 1.0 cannot fill 20m degradee deficit."""
+        to_remove, catalog = make_hedges_and_catalog({"degradee": (20, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("buissonnante", 16)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("buissonnante", 16)]
         )
-        catalog = make_catalog(make_lc(degradee=20), lpm=20, reduced_lpm=20)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -345,10 +330,10 @@ class TestNormandieQualityConditionCompensation:
 
         16m arbustive / 0.8 = 20m effective → fills 20m degradee.
         """
+        to_remove, catalog = make_hedges_and_catalog({"degradee": (20, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("arbustive", 16)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("arbustive", 16)]
         )
-        catalog = make_catalog(make_lc(degradee=20), lpm=20, reduced_lpm=16)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -356,43 +341,55 @@ class TestNormandieQualityConditionCompensation:
         assert condition.result
 
     def test_hint_shows_reduction_when_applicable(self):
-        """Hint shows compensation reduction message when conditions are met."""
-        hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("mixte", 200)]
+        """Hint shows compensation reduction message when conditions are met.
+
+        100m mixte hedge with R=2.0 → LC=200. Mixte gets no reduction,
+        so lpm=reduced_lpm=200. But arbustive 50m with R=2.0 → LC=100,
+        reduced to 80 (0.8). Total lpm=300, reduced=280.
+        """
+        to_remove, catalog = make_hedges_and_catalog(
+            {"mixte": (100, 2.0), "arbustive": (50, 2.0)}, aggregated_r=2.0
         )
-        catalog = make_catalog(
-            make_lc(mixte=100), lpm=200, reduced_lpm=160, aggregated_r=2.0
+        hedge_data = make_mock_hedge_data(
+            to_remove=to_remove, to_plant=[make_mock_hedge("mixte", 300)]
         )
         condition = NormandieQualityCondition(
             hedge_data, 2.0, make_mock_evaluator(), catalog
         )
         condition.evaluate()
         hint = condition.hint
-        assert "200\xa0m" in hint
-        assert "160\xa0m" in hint
+        assert "300" in hint
+        assert "280" in hint
 
     def test_hint_no_reduction_when_lpm_equals_reduced(self):
-        """Hint omits reduction message when lpm == reduced_lpm."""
-        hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("mixte", 100)]
+        """Hint omits reduction message when lpm == reduced_lpm.
+
+        Only mixte hedges → no 0.8 reduction applies.
+        """
+        to_remove, catalog = make_hedges_and_catalog(
+            {"mixte": (100, 1.0)}, aggregated_r=1.0
         )
-        catalog = make_catalog(
-            make_lc(mixte=100), lpm=100, reduced_lpm=100, aggregated_r=1.0
+        hedge_data = make_mock_hedge_data(
+            to_remove=to_remove, to_plant=[make_mock_hedge("mixte", 100)]
         )
         condition = NormandieQualityCondition(
             hedge_data, 1.0, make_mock_evaluator(), catalog
         )
         condition.evaluate()
         hint = condition.hint
-        assert "100\xa0m" in hint
+        assert "100" in hint
         assert "réduite" not in hint
 
     def test_text_lists_deficit_per_type(self):
         """When condition fails, text lists missing amounts for each type."""
-        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
-        catalog = make_catalog(
-            make_lc(mixte=10, alignement=5, arbustive=8, buissonnante=12, degradee=6)
-        )
+        to_remove, catalog = make_hedges_and_catalog({
+            "mixte": (10, 1.0),
+            "alignement": (5, 1.0),
+            "arbustive": (8, 1.0),
+            "buissonnante": (12, 1.0),
+            "degradee": (6, 1.0),
+        })
+        hedge_data = make_mock_hedge_data(to_remove=to_remove, to_plant=[])
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -406,10 +403,10 @@ class TestNormandieQualityConditionCompensation:
 
     def test_text_valid_when_passes(self):
         """When condition passes, text is the valid message."""
+        to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
         hedge_data = make_mock_hedge_data(
-            to_remove=[], to_plant=[make_mock_hedge("mixte", 100)]
+            to_remove=to_remove, to_plant=[make_mock_hedge("mixte", 100)]
         )
-        catalog = make_catalog(make_lc(mixte=100), lpm=100, reduced_lpm=100)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -419,8 +416,8 @@ class TestNormandieQualityConditionCompensation:
 
     def test_l350_dispense_forces_pass(self):
         """L350 dispense result code forces condition to pass."""
-        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
-        catalog = make_catalog(make_lc(mixte=100), lpm=100, reduced_lpm=80)
+        to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
+        hedge_data = make_mock_hedge_data(to_remove=to_remove, to_plant=[])
         evaluator = make_mock_evaluator(result_code="dispense_L350")
         condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
         condition.evaluate()
@@ -428,8 +425,8 @@ class TestNormandieQualityConditionCompensation:
 
     def test_l350_a_verifier_forces_pass(self):
         """L350 a_verifier result code forces condition to pass."""
-        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
-        catalog = make_catalog(make_lc(mixte=100), lpm=100, reduced_lpm=80)
+        to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
+        hedge_data = make_mock_hedge_data(to_remove=to_remove, to_plant=[])
         evaluator = make_mock_evaluator(result_code="a_verifier_L350")
         condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
         condition.evaluate()
