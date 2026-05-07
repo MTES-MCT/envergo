@@ -103,6 +103,30 @@ def test_moulinette_evaluation(captage_criteria, coords, expected_result):
         assert criterion.result == expected_result
 
 
+@pytest.mark.parametrize(
+    "coords, expected_result",
+    [
+        (COORDS_BIZOUS_INSIDE, "a_verifier"),
+        (COORDS_BIZOUS_OUTSIDE, "non_concerne"),
+    ],
+)
+def test_moulinette_evaluation_l3503_in_ru_mode(
+    captage_criteria, coords, expected_result
+):
+    """L350-3 criterion with alignement+bord_voie hedge in RU mode."""
+
+    RUConfigHaieFactory()
+    data = make_moulinette_haie_data(
+        hedge_data=[make_hedge(type_haie="alignement", bord_voie=True, coords=coords)],
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
+    assert moulinette.protection_captages.result == expected_result
+    if expected_result != "non_concerne":
+        criterion = moulinette.protection_captages.l350_3__protection_captages
+        assert criterion.result == expected_result
+
+
 def test_procedure_type_is_always_declaration(captage_criteria):
     """Whatever the result, the procedure type must stay 'declaration'."""
 

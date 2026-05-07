@@ -1,8 +1,9 @@
 import pytest
 
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.models import MoulinetteHaie, Regulation
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
+    DCConfigHaieFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
@@ -91,3 +92,52 @@ def test_moulinette_evaluation(
         assert criterion.get_evaluator().get_replantation_coefficient() == expected_r
 
     assert criterion.result_code == expected_result_code
+
+
+class TestCalvadosBeforeRu:
+    @pytest.fixture(autouse=True)
+    def calvados_criteria(self, france_map):
+        regulation = Regulation.objects.get(regulation="alignement_arbres")
+        CriterionFactory(
+            title="Alignement arbres > L350-3 (Calvados avant RU)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        )
+
+    @pytest.mark.parametrize(
+        "motif, expected_result_code",
+        [
+            ("securite", "soumis_securite"),
+            ("embellissement", "soumis_esthetique"),
+            ("amelioration_culture", "soumis_autorisation"),
+            ("chemin_acces", "soumis_autorisation"),
+            ("amenagement", "soumis_autorisation"),
+        ],
+    )
+    def test_soumis_with_alignement_bord_voie(self, motif, expected_result_code):
+        DCConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="alignement", bord_voie=True)],
+            motif=motif,
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        criterion = moulinette.alignement_arbres.alignement_arbres_calvados_before_ru
+        assert criterion.result_code == expected_result_code
+
+    @pytest.mark.parametrize(
+        "motif",
+        ["securite", "amelioration_culture", "embellissement"],
+    )
+    def test_non_soumis_without_bord_voie(self, motif):
+        DCConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="alignement", bord_voie=False)],
+            motif=motif,
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        criterion = moulinette.alignement_arbres.alignement_arbres_calvados_before_ru
+        assert criterion.result_code == "non_soumis"
