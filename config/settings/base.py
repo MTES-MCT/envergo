@@ -415,6 +415,8 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
     "MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH", default=10000
 )  # meters
 
+HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
+
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
