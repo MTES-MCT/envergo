@@ -787,7 +787,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
     )
     icpe_regime = DisplayChoiceField(
         label="Quel est le régime de classement de l'ICPE ?",
-        help_text="Les ICPE soumises à autorisation (A) ne sont pas traités par le simulateur, "
+        help_text="Les ICPE soumises à autorisation (A) ne sont pas traitées par le simulateur, "
         "car ils correspondent à des projets complexes et de grande envergure, au traitement "
         "administratif souvent spécifique.\n"
         "Si le projet modifie le régime de classement ICPE de l'installation, "
@@ -810,7 +810,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
             self.add_error(
                 "icpe_projet",
                 "Le choix « Non, aucune ICPE » est incompatible avec la réponse "
-                "ci-dessous qui indique qu'il s'agit d'une ICPE. "
+                "plus bas qui indique qu'il s'agit d'une ICPE. "
                 "Modifier l'une ou l'autre des réponses.",
             )
 
@@ -822,7 +822,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
             self.add_error(
                 "icpe_regime",
                 "Le choix « Aucune ICPE » est incompatible avec la réponse "
-                "ci-dessus qui indique qu'il s'agit d'une ICPE. "
+                "plus haut qui indique qu'il s'agit d'une ICPE. "
                 "Modifier l'une ou l'autre des réponses.",
             )
 
@@ -836,19 +836,21 @@ class ICPE(SelfDeclarationMixin, CriterionEvaluator):
     CODE_MATRIX = {
         (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
         (ICPE_PROJET_CREATION, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
-        (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier_creation",
         (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
         (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
-        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier_modification",
         (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_ENREGISTREMENT): "non_soumis_sans_pac",
         (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
-        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier_modification",
         (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis_pas_icpe",
     }
     RESULT_MATRIX = {
         "non_soumis_declaration": "non_soumis",
         "non_soumis_sans_pac": "non_soumis",
         "non_soumis_pas_icpe": "non_soumis",
+        "a_verifier_creation": "a_verifier",
+        "a_verifier_modification": "a_verifier",
     }
 
     def get_result_data(self):
