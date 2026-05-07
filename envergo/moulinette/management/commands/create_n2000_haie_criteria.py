@@ -15,8 +15,8 @@ Contexte :
 3. Crée 64 critères cas 2 (2 par département, cartes "N2000 Haie XX – soumis/non soumis")
 
 Local:   docker compose run --rm django python manage.py create_n2000_haie_criteria
-Staging: scalingo --app envergo-haie-staging run python manage.py create_n2000_haie_criteria
-Prod:    scalingo --app envergo-haie run python manage.py create_n2000_haie_criteria
+Staging: scalingo --app envergo-staging run python manage.py create_n2000_haie_criteria
+Prod:    scalingo --app envergo run python manage.py create_n2000_haie_criteria
 """
 
 from django.core.management.base import BaseCommand
