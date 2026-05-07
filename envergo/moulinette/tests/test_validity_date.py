@@ -50,6 +50,18 @@ def n2000_criteria(bizous_town_center):  # noqa
     return criteria
 
 
+def test_adjacent_config_haie_validity_ranges():
+    """Two ConfigHaie for the same department can have adjacent validity ranges."""
+    dept = DCConfigHaieFactory(
+        validity_range=DateRange(date(2025, 1, 1), date(2026, 1, 1), "[)"),
+    ).department
+
+    DCConfigHaieFactory(
+        department=dept,
+        validity_range=DateRange(date(2026, 1, 1), date(2027, 1, 1), "[)"),
+    )
+
+
 def test_moulinette_validity_date_on_criteria():
     """Test criteria evaluated according to date in moulinette data"""
     DCConfigHaieFactory()
