@@ -15,7 +15,7 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import DataError, models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
     CheckConstraint,
@@ -2708,12 +2708,15 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         if dept is None:
             return None
 
-        qs = (
-            Department.objects.defer("geometry")
-            .annotate(centroid=Centroid("geometry"))
-            .filter(department=dept)
-        )
-        return qs.first()
+        try:
+            qs = (
+                Department.objects.defer("geometry")
+                .annotate(centroid=Centroid("geometry"))
+                .filter(department=dept)
+            )
+            return qs.first()
+        except DataError:
+            return None
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
