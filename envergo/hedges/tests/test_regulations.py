@@ -8,7 +8,7 @@ from envergo.hedges.regulations import (
     EssencesBocageresCondition,
     MinLengthCondition,
     MinLengthPacCondition,
-    QualityCondition,
+    AisneQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
     TreeAlignmentsCondition,
@@ -203,24 +203,24 @@ def test_safety_condition(hedge_data, ep_criterion_evaluator):
     assert not condition.result
 
 
-def test_quality_condition_lengths_to_plant(hedge_data, ep_criterion_evaluator):
-    """Lengths to plant depends on R."""
+def test_quality_condition_amounts_to_compensate(hedge_data, ep_criterion_evaluator):
+    """Amounts to compensate depend on R."""
 
-    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
-    minimum_lengths_to_plant = condition.get_minimum_lengths_to_plant()
-    assert round(minimum_lengths_to_plant["degradee"]) == 2 * 50
-    assert round(minimum_lengths_to_plant["buissonnante"]) == 2 * 40
-    assert round(minimum_lengths_to_plant["arbustive"]) == 2 * 30
-    assert round(minimum_lengths_to_plant["mixte"]) == 2 * 20
-    assert round(minimum_lengths_to_plant["alignement"]) == 2 * 10
+    condition = AisneQualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    amounts = condition.get_amounts_to_compensate()
+    assert round(amounts[HedgeTypeBase.DEGRADEE]) == 2 * 50
+    assert round(amounts[HedgeTypeBase.BUISSONNANTE]) == 2 * 40
+    assert round(amounts[HedgeTypeBase.ARBUSTIVE]) == 2 * 30
+    assert round(amounts[HedgeTypeBase.MIXTE]) == 2 * 20
+    assert round(amounts[HedgeTypeBase.ALIGNEMENT]) == 2 * 10
 
-    condition = QualityCondition(hedge_data, 4.0, ep_criterion_evaluator)
-    minimum_lengths_to_plant = condition.get_minimum_lengths_to_plant()
-    assert round(minimum_lengths_to_plant["degradee"]) == 4 * 50
-    assert round(minimum_lengths_to_plant["buissonnante"]) == 4 * 40
-    assert round(minimum_lengths_to_plant["arbustive"]) == 4 * 30
-    assert round(minimum_lengths_to_plant["mixte"]) == 4 * 20
-    assert round(minimum_lengths_to_plant["alignement"]) == 4 * 10
+    condition = AisneQualityCondition(hedge_data, 4.0, ep_criterion_evaluator)
+    amounts = condition.get_amounts_to_compensate()
+    assert round(amounts[HedgeTypeBase.DEGRADEE]) == 4 * 50
+    assert round(amounts[HedgeTypeBase.BUISSONNANTE]) == 4 * 40
+    assert round(amounts[HedgeTypeBase.ARBUSTIVE]) == 4 * 30
+    assert round(amounts[HedgeTypeBase.MIXTE]) == 4 * 20
+    assert round(amounts[HedgeTypeBase.ALIGNEMENT]) == 4 * 10
 
 
 def test_hedge_quality_should_be_sufficient(ep_criterion_evaluator):
@@ -230,8 +230,8 @@ def test_hedge_quality_should_be_sufficient(ep_criterion_evaluator):
     hedge_data.lineaire_detruit_pac.return_value = 10
     hedge_data.length_to_plant_pac.return_value = 5
 
-    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
-    condition.get_minimum_lengths_to_plant = Mock(
+    condition = AisneQualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    condition.get_amounts_to_compensate = Mock(
         return_value={
             "degradee": 12,
             "buissonnante": 12,
@@ -240,7 +240,7 @@ def test_hedge_quality_should_be_sufficient(ep_criterion_evaluator):
             "alignement": 20,
         }
     )
-    condition.get_lengths_to_plant = Mock(
+    condition.get_amounts_planted = Mock(
         return_value={
             "buissonnante": 24,
             "arbustive": 16,
@@ -267,22 +267,22 @@ def test_hedge_quality_should_not_be_sufficient_dc(ep_criterion_evaluator):
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
 
-    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
-    condition.get_minimum_lengths_to_plant = Mock(
+    condition = AisneQualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    condition.get_amounts_to_compensate = Mock(
         return_value={
-            "degradee": 10,
+            HedgeTypeBase.DEGRADEE: 10,
             "buissonnante": 10,
             "arbustive": 10,
             "mixte": 10,
             "alignement": 10,
         }
     )
-    condition.get_lengths_to_plant = Mock(
+    condition.get_amounts_planted = Mock(
         return_value={
-            "buissonnante": 5,
-            "arbustive": 5,
-            "mixte": 5,
-            "alignement": 5,
+            HedgeTypeBase.BUISSONNANTE: 5,
+            HedgeTypeBase.ARBUSTIVE: 5,
+            HedgeTypeBase.MIXTE: 5,
+            HedgeTypeBase.ALIGNEMENT: 5,
         }
     )
     condition.evaluate()
@@ -303,8 +303,8 @@ def test_hedge_quality_should_not_be_sufficient_ru(ep_criterion_evaluator_ru):
     hedge_data.length_to_plant_pac.return_value = 5
     hedge_data.lineaire_detruit_pac.return_value = 10
 
-    condition = QualityCondition(hedge_data, 2.0, ep_criterion_evaluator_ru)
-    condition.get_minimum_lengths_to_plant = Mock(
+    condition = AisneQualityCondition(hedge_data, 2.0, ep_criterion_evaluator_ru)
+    condition.get_amounts_to_compensate = Mock(
         return_value={
             "buissonnante": 10,
             "arbustive": 10,
@@ -312,12 +312,12 @@ def test_hedge_quality_should_not_be_sufficient_ru(ep_criterion_evaluator_ru):
             "alignement": 10,
         }
     )
-    condition.get_lengths_to_plant = Mock(
+    condition.get_amounts_planted = Mock(
         return_value={
-            "buissonnante": 5,
-            "arbustive": 5,
-            "mixte": 5,
-            "alignement": 5,
+            HedgeTypeBase.BUISSONNANTE: 5,
+            HedgeTypeBase.ARBUSTIVE: 5,
+            HedgeTypeBase.MIXTE: 5,
+            HedgeTypeBase.ALIGNEMENT: 5,
         }
     )
     condition.evaluate()
@@ -481,3 +481,173 @@ def test_essences_bocageres_condition(calvados_hedge_data, ep_criterion_evaluato
     )
     condition.evaluate()
     assert not condition.result
+
+
+# --- Helpers for lightweight mock-based tests ---
+
+
+def make_mock_hedge(hedge_type, length):
+    """Create a mock hedge with type and length."""
+    h = Mock()
+    h.hedge_type = hedge_type
+    h.length = length
+    return h
+
+
+def make_mock_hedge_data(to_remove, to_plant):
+    """Create a mock hedge data with hedges to remove and plant."""
+    hd = Mock()
+    hd.hedges_to_remove.return_value = to_remove
+    hd.hedges_to_plant.return_value = to_plant
+    return hd
+
+
+def make_mock_evaluator(single_procedure=False):
+    """Create a mock criterion evaluator with the given context."""
+    ev = Mock()
+    ev.moulinette.config.single_procedure = single_procedure
+    return ev
+
+
+# --- Comprehensive AisneQualityCondition tests (public interface) ---
+
+
+class TestAisneQualityConditionSubstitution:
+    """Test substitution rules through evaluate() without mocking internals."""
+
+    def test_exact_match_passes(self):
+        """Planted amounts matching minimum requirements exactly → pass."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 10), make_mock_hedge("arbustive", 20)],
+            to_plant=[make_mock_hedge("mixte", 15), make_mock_hedge("arbustive", 30)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert condition.result
+
+    def test_alignement_deficit_filled_by_mixte(self):
+        """Alignement deficit can be compensated by surplus mixte."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("alignement", 20)],
+            to_plant=[make_mock_hedge("mixte", 30)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert condition.result
+
+    def test_buissonnante_deficit_filled_by_arbustive(self):
+        """Buissonnante deficit can be compensated by surplus arbustive."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("buissonnante", 20)],
+            to_plant=[make_mock_hedge("arbustive", 30)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert condition.result
+
+    def test_degradee_deficit_filled_by_chain(self):
+        """Degradee deficit can be filled by buissonnante, arbustive, or mixte."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("degradee", 30)],
+            to_plant=[
+                make_mock_hedge("buissonnante", 15),
+                make_mock_hedge("arbustive", 15),
+                make_mock_hedge("mixte", 15),
+            ],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert condition.result
+
+    def test_arbustive_deficit_cannot_be_substituted(self):
+        """No substitution exists for arbustive — must be matched exactly."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("arbustive", 20)],
+            to_plant=[make_mock_hedge("mixte", 100)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert not condition.result
+
+    def test_mixte_deficit_cannot_be_substituted(self):
+        """No substitution exists for mixte — must be matched exactly."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 20)],
+            to_plant=[make_mock_hedge("arbustive", 100)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert not condition.result
+
+    def test_degradee_excluded_from_planted(self):
+        """Planting degradee hedges does not count toward any compensation."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("degradee", 10)],
+            to_plant=[make_mock_hedge("degradee", 100)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert not condition.result
+
+    def test_r_coefficient_scales_minimum_lengths(self):
+        """Higher R requires proportionally more planting per type."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 10)],
+            to_plant=[make_mock_hedge("mixte", 15)],
+        )
+        condition_ok = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition_ok.evaluate()
+        assert condition_ok.result
+
+        condition_fail = AisneQualityCondition(hedge_data, 2.0, make_mock_evaluator())
+        condition_fail.evaluate()
+        assert not condition_fail.result
+
+    def test_must_display_false_when_nothing_to_compensate(self):
+        """must_display returns False when there are no hedges to remove."""
+        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        assert not condition.must_display()
+
+    def test_must_display_true_when_hedges_to_remove(self):
+        """must_display returns True when there are hedges to remove."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 10)], to_plant=[]
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        assert condition.must_display()
+
+    def test_text_contains_deficit_messages(self):
+        """When condition fails, text lists the missing amounts per type."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 10), make_mock_hedge("arbustive", 10)],
+            to_plant=[],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.0, make_mock_evaluator())
+        condition.evaluate()
+        assert not condition.result
+        text = " ".join(condition.text.split())
+        assert "de haie mixte" in text
+        assert "arbustive" in text
+
+    def test_text_valid_when_passes(self):
+        """When condition passes, text is the valid message."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 10)],
+            to_plant=[make_mock_hedge("mixte", 15)],
+        )
+        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition.evaluate()
+        assert condition.result
+        assert "convient" in condition.text
+
+    def test_ru_context_excludes_degradee(self):
+        """In RU context, degradee type is excluded from evaluation."""
+        hedge_data = make_mock_hedge_data(
+            to_remove=[make_mock_hedge("mixte", 10)],
+            to_plant=[make_mock_hedge("mixte", 10)],
+        )
+        evaluator = make_mock_evaluator(single_procedure=True)
+        condition = AisneQualityCondition(hedge_data, 1.0, evaluator)
+        condition.evaluate()
+        assert condition.result
