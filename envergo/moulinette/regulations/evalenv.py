@@ -772,8 +772,8 @@ class ICPEForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Installation classée (ICPE)",
-        help_text="À noter : ce simulateur détermine les procédures à suivre en fonction "
-        "du statut ICPE du projet. Il ne permet pas encore de déterminer si le projet "
+        help_text="À noter : ce simulateur détermine les procédures à suivre <u>en fonction</u> "
+        "du statut ICPE du projet. Il ne permet pas encore de déterminer <u>si</u> le projet "
         "est soumis à ICPE.",
         required=True,
         widget=forms.CheckboxInput,
@@ -789,7 +789,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
         label="Quel est le régime de classement de l'ICPE ?",
         help_text="Les ICPE soumises à autorisation (A) ne sont pas traitées par le simulateur, "
         "car ils correspondent à des projets complexes et de grande envergure, au traitement "
-        "administratif souvent spécifique.\n"
+        "administratif souvent spécifique.<br><br>"
         "Si le projet modifie le régime de classement ICPE de l'installation, "
         "choisir celui qu'aurait l'installation une fois le projet réalisé",
         required=True,
