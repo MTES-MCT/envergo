@@ -817,9 +817,7 @@ class EspecesProtegeesRegimeUnique(
             zone_data = get_ru_zone_data(self.moulinette)
             catalog.update(zone_data)
             zone_configs = zone_data["ru_per_hedge_zone_configs"]
-            catalog.update(
-                get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
-            )
+            catalog.update(get_ru_per_hedge_coefficients(self.moulinette, zone_configs))
 
         hedges = haies.hedges_to_remove().n_alignement()
 

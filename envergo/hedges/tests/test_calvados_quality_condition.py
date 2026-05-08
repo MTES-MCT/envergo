@@ -11,13 +11,8 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.regulations import NormandieQualityCondition
-from envergo.hedges.tests.factories import HedgeDataFactory
-from envergo.hedges.tests.helpers import (
-    make_hedge_data,
-    make_hedge_to_plant,
-    make_hedge_to_remove,
-    make_mock_evaluator,
-)
+from envergo.hedges.tests.conftest import make_mock_evaluator
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -184,8 +179,12 @@ def test_calvados_quality_condition(hedge_data):
     Arbustive, buissonnante, and degradee deficits remain.
     """
     per_hedge_coefficients = {
-        "D1": 2.0, "D2": 2.0, "D3": 2.0,
-        "D4": 2.0, "D5": 2.0, "D6": 1.0,
+        "D1": 2.0,
+        "D2": 2.0,
+        "D3": 2.0,
+        "D4": 2.0,
+        "D5": 2.0,
+        "D6": 1.0,
     }
     catalog = {"effective_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
     evaluator = Mock()
@@ -203,7 +202,14 @@ def test_calvados_quality_condition(hedge_data):
 
 def test_calvados_quality_condition_l350(hedge_data):
     """L350 result codes force condition to pass regardless of deficits."""
-    per_hedge_coefficients = {"D1": 2.0, "D2": 2.0, "D3": 2.0, "D4": 2.0, "D5": 2.0, "D6": 1.0}
+    per_hedge_coefficients = {
+        "D1": 2.0,
+        "D2": 2.0,
+        "D3": 2.0,
+        "D4": 2.0,
+        "D5": 2.0,
+        "D6": 1.0,
+    }
     catalog = {"effective_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
 
     evaluator = Mock(result_code="dispense_L350")
@@ -228,7 +234,10 @@ def make_hedges_and_catalog(coefficients_by_type, aggregated_r=1.0):
     hedges = []
     per_hedge_coefficients = {}
     for hedge_type, (length, coeff) in coefficients_by_type.items():
-        hedge = make_hedge_to_remove(hedge_type, length, hedge_id=f"{hedge_type}_h")
+        hedge_id = f"{hedge_type}_h"
+        hedge = HedgeFactory(
+            additionalData__type_haie=hedge_type, length=length, id=hedge_id
+        )
         hedges.append(hedge)
         if coeff > 0:
             per_hedge_coefficients[hedge.id] = coeff
@@ -248,8 +257,13 @@ class TestNormandieQualityConditionCompensation:
     def test_same_type_fills_deficit(self):
         """Same-type planted hedges fill deficit at rate 1.0."""
         to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove, to_plant=[make_hedge_to_plant("mixte", 105)]
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=105
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -263,8 +277,13 @@ class TestNormandieQualityConditionCompensation:
         Need ~80m arbustive. Plant ~70m mixte → 70/0.8 = 87.5m effective.
         """
         to_remove, catalog = make_hedges_and_catalog({"arbustive": (80, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove, to_plant=[make_hedge_to_plant("mixte", 70)]
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=70
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -275,8 +294,13 @@ class TestNormandieQualityConditionCompensation:
     def test_cross_type_insufficient_at_reduced_rate(self):
         """60m mixte at 0.8 rate → 75m effective, not enough for 80m arbustive."""
         to_remove, catalog = make_hedges_and_catalog({"arbustive": (80, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove, to_plant=[make_hedge_to_plant("mixte", 60)]
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=60
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -287,9 +311,13 @@ class TestNormandieQualityConditionCompensation:
     def test_buissonnante_for_degradee_no_rate_reduction(self):
         """Buissonnante compensating degradee uses rate 1.0 (exception to 0.8 rule)."""
         to_remove, catalog = make_hedges_and_catalog({"degradee": (20, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove,
-            to_plant=[make_hedge_to_plant("buissonnante", 25)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="buissonnante", length=25
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -300,9 +328,13 @@ class TestNormandieQualityConditionCompensation:
     def test_buissonnante_for_degradee_insufficient_without_bonus(self):
         """15m buissonnante at rate 1.0 cannot fill 20m degradee deficit."""
         to_remove, catalog = make_hedges_and_catalog({"degradee": (20, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove,
-            to_plant=[make_hedge_to_plant("buissonnante", 15)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="buissonnante", length=15
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -317,9 +349,13 @@ class TestNormandieQualityConditionCompensation:
         20m arbustive / 0.8 = 25m effective → fills 20m degradee.
         """
         to_remove, catalog = make_hedges_and_catalog({"degradee": (20, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove,
-            to_plant=[make_hedge_to_plant("arbustive", 20)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="arbustive", length=20
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -337,8 +373,13 @@ class TestNormandieQualityConditionCompensation:
         to_remove, catalog = make_hedges_and_catalog(
             {"mixte": (100, 2.0), "arbustive": (50, 2.0)}, aggregated_r=2.0
         )
-        hedge_data = make_hedge_data(
-            to_remove=to_remove, to_plant=[make_hedge_to_plant("mixte", 350)]
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=350
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 2.0, make_mock_evaluator(), catalog
@@ -354,8 +395,13 @@ class TestNormandieQualityConditionCompensation:
         to_remove, catalog = make_hedges_and_catalog(
             {"mixte": (100, 1.0)}, aggregated_r=1.0
         )
-        hedge_data = make_hedge_data(
-            to_remove=to_remove, to_plant=[make_hedge_to_plant("mixte", 105)]
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=105
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 1.0, make_mock_evaluator(), catalog
@@ -365,14 +411,16 @@ class TestNormandieQualityConditionCompensation:
 
     def test_text_lists_deficit_per_type(self):
         """When condition fails, text lists missing amounts for each type."""
-        to_remove, catalog = make_hedges_and_catalog({
-            "mixte": (10, 1.0),
-            "alignement": (5, 1.0),
-            "arbustive": (8, 1.0),
-            "buissonnante": (12, 1.0),
-            "degradee": (6, 1.0),
-        })
-        hedge_data = make_hedge_data(to_remove=to_remove)
+        to_remove, catalog = make_hedges_and_catalog(
+            {
+                "mixte": (10, 1.0),
+                "alignement": (5, 1.0),
+                "arbustive": (8, 1.0),
+                "buissonnante": (12, 1.0),
+                "degradee": (6, 1.0),
+            }
+        )
+        hedge_data = HedgeDataFactory(hedges=to_remove)
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
         )
@@ -387,8 +435,13 @@ class TestNormandieQualityConditionCompensation:
     def test_text_valid_when_passes(self):
         """When condition passes, text is the valid message."""
         to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
-        hedge_data = make_hedge_data(
-            to_remove=to_remove, to_plant=[make_hedge_to_plant("mixte", 105)]
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                *to_remove,
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=105
+                ),
+            ]
         )
         condition = NormandieQualityCondition(
             hedge_data, 0, make_mock_evaluator(), catalog
@@ -400,7 +453,7 @@ class TestNormandieQualityConditionCompensation:
     def test_l350_dispense_forces_pass(self):
         """L350 dispense result code forces condition to pass."""
         to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
-        hedge_data = make_hedge_data(to_remove=to_remove)
+        hedge_data = HedgeDataFactory(hedges=to_remove)
         evaluator = make_mock_evaluator(result_code="dispense_L350")
         condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
         condition.evaluate()
@@ -409,7 +462,7 @@ class TestNormandieQualityConditionCompensation:
     def test_l350_a_verifier_forces_pass(self):
         """L350 a_verifier result code forces condition to pass."""
         to_remove, catalog = make_hedges_and_catalog({"mixte": (100, 1.0)})
-        hedge_data = make_hedge_data(to_remove=to_remove)
+        hedge_data = HedgeDataFactory(hedges=to_remove)
         evaluator = make_mock_evaluator(result_code="a_verifier_L350")
         condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
         condition.evaluate()

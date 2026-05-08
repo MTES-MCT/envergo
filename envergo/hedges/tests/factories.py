@@ -10,6 +10,9 @@ class HedgeFactory(factory.Factory):
     class Meta:
         model = Hedge
 
+    class Params:
+        to_plant = factory.Trait(type="TO_PLANT")
+
     id = factory.sequence(lambda n: f"D{n}")
     type = "TO_REMOVE"
     latLngs = factory.LazyFunction(
