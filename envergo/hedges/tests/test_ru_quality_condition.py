@@ -28,7 +28,7 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("mixte", 200), make_mock_hedge("arbustive", 100)],
         )
         coefficients = {"h1": 2.0, "h2": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
@@ -41,37 +41,40 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("mixte", 50)],
         )
         coefficients = {"h1": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert not condition.result
         assert condition.remaining[HedgeTypeBase.MIXTE] == 150
 
-    def test_ep_bonus_applied_per_hedge(self):
-        """EP bonus is added to each hedge's coefficient."""
+    def test_effective_coefficients_include_bonus(self):
+        """Effective coefficients (raw + bonus) drive the compensation amount.
+
+        Raw R = 2.0, bonus = 0.5 → effective R = 2.5 → need 250m.
+        The condition reads pre-computed effective coefficients.
+        """
         r1 = make_mock_hedge("arbustive", 100, "h1")
         hedge_data = make_mock_hedge_data(
             to_remove=[r1],
             to_plant=[make_mock_hedge("arbustive", 250)],
         )
-        coefficients = {"h1": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
-        # bonus = 0.5 → effective R = 2.5 → need 250m
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(ep_bonus=0.5), catalog)
+        catalog = {"effective_coefficients": {"h1": 2.5}}
+        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
 
-    def test_ep_bonus_insufficient(self):
-        """Fails when bonus pushes requirement beyond planted amount."""
+    def test_effective_coefficients_insufficient(self):
+        """Fails when effective coefficient pushes requirement beyond planted amount.
+
+        Effective R = 2.5 → need 250m, only 200m planted.
+        """
         r1 = make_mock_hedge("arbustive", 100, "h1")
         hedge_data = make_mock_hedge_data(
             to_remove=[r1],
             to_plant=[make_mock_hedge("arbustive", 200)],
         )
-        coefficients = {"h1": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
-        # bonus = 0.5 → effective R = 2.5 → need 250m, only 200m planted
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(ep_bonus=0.5), catalog)
+        catalog = {"effective_coefficients": {"h1": 2.5}}
+        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert not condition.result
         assert condition.remaining[HedgeTypeBase.ARBUSTIVE] == 50
@@ -84,7 +87,7 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("arbustive", 150)],
         )
         coefficients = {"h1": 1.5}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
@@ -97,7 +100,7 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("mixte", 150)],
         )
         coefficients = {"h1": 1.5}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
@@ -110,7 +113,7 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("mixte", 200)],
         )
         coefficients = {"h1": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
@@ -123,7 +126,7 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("arbustive", 300)],
         )
         coefficients = {"h1": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert not condition.result
@@ -139,7 +142,7 @@ class TestRUQualityConditionCompensation:
         )
         # Only h2 has a coefficient — aa1 is excluded
         coefficients = {"h2": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
@@ -155,7 +158,7 @@ class TestRUQualityConditionCompensation:
         )
         # h1 has R=1.5, h2 has R=2.0 → need 150 + 200 = 350m
         coefficients = {"h1": 1.5, "h2": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert condition.result
@@ -169,7 +172,7 @@ class TestRUQualityConditionCompensation:
             to_plant=[make_mock_hedge("mixte", 349)],
         )
         coefficients = {"h1": 1.5, "h2": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert not condition.result
@@ -187,7 +190,7 @@ class TestRUQualityConditionText:
             to_plant=[make_mock_hedge("mixte", 100)],
         )
         coefficients = {"h1": 1.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert "convient" in condition.text
@@ -197,7 +200,7 @@ class TestRUQualityConditionText:
         r1 = make_mock_hedge("mixte", 100, "h1")
         hedge_data = make_mock_hedge_data(to_remove=[r1], to_plant=[])
         coefficients = {"h1": 2.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert "200\xa0m de haie arborée" in condition.text
@@ -207,7 +210,7 @@ class TestRUQualityConditionText:
         r1 = make_mock_hedge("arbustive", 100, "h1")
         hedge_data = make_mock_hedge_data(to_remove=[r1], to_plant=[])
         coefficients = {"h1": 1.5}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert "150\xa0m de haie arbustive ou arborée" in condition.text
@@ -217,7 +220,7 @@ class TestRUQualityConditionText:
         r1 = make_mock_hedge("buissonnante", 100, "h1")
         hedge_data = make_mock_hedge_data(to_remove=[r1], to_plant=[])
         coefficients = {"h1": 1.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         assert "100\xa0m de haie buissonnante, arbustive ou arborée" in condition.text
@@ -229,7 +232,7 @@ class TestRUQualityConditionText:
         r3 = make_mock_hedge("buissonnante", 20, "h3")
         hedge_data = make_mock_hedge_data(to_remove=[r1, r2, r3], to_plant=[])
         coefficients = {"h1": 1.0, "h2": 1.0, "h3": 1.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         condition.evaluate()
         text = condition.text
@@ -246,14 +249,14 @@ class TestRUQualityConditionMustDisplay:
         r1 = make_mock_hedge("mixte", 100, "h1")
         hedge_data = make_mock_hedge_data(to_remove=[r1], to_plant=[])
         coefficients = {"h1": 1.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         assert condition.must_display()
 
     def test_no_display_when_nothing_to_compensate(self):
         """Hidden when no hedges need compensation."""
         hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
-        catalog = {"ru_per_hedge_coefficients": {}}
+        catalog = {"effective_coefficients": {}}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
         assert not condition.must_display()
 
@@ -262,6 +265,6 @@ class TestRUQualityConditionMustDisplay:
         r1 = make_mock_hedge("mixte", 100, "h1")
         hedge_data = make_mock_hedge_data(to_remove=[r1], to_plant=[])
         coefficients = {"h1": 0.0}
-        catalog = {"ru_per_hedge_coefficients": coefficients}
+        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(ep_bonus=0.0), catalog)
         assert not condition.must_display()

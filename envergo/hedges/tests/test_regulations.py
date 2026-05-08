@@ -340,7 +340,7 @@ def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
     hedge_data = calvados_hedge_data
     catalog = {
         "reimplantation": "replantation",
-        "per_hedge_coefficients": {"D1": 1.0, "D2": 1.0, "D3": 1.0},
+        "effective_coefficients": {"D1": 1.0, "D2": 1.0, "D3": 1.0},
     }
 
     condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)

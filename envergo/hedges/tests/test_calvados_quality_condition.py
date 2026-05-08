@@ -180,7 +180,7 @@ def test_calvados_quality_condition(hedge_data):
         "D1": 2.0, "D2": 2.0, "D3": 2.0,
         "D4": 2.0, "D5": 2.0, "D6": 1.0,
     }
-    catalog = {"per_hedge_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
+    catalog = {"effective_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
     evaluator = Mock()
     evaluator.moulinette.config.single_procedure = False
     condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
@@ -197,7 +197,7 @@ def test_calvados_quality_condition(hedge_data):
 def test_calvados_quality_condition_l350(hedge_data):
     """L350 result codes force condition to pass regardless of deficits."""
     per_hedge_coefficients = {"D1": 2.0, "D2": 2.0, "D3": 2.0, "D4": 2.0, "D5": 2.0, "D6": 1.0}
-    catalog = {"per_hedge_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
+    catalog = {"effective_coefficients": per_hedge_coefficients, "aggregated_r": 2.0}
 
     evaluator = Mock(result_code="dispense_L350")
     evaluator.moulinette.config.single_procedure = False
@@ -226,7 +226,7 @@ def make_hedges_and_catalog(coefficients_by_type, aggregated_r=1.0):
         if coeff > 0:
             per_hedge_coefficients[hedge.id] = coeff
     catalog = {
-        "per_hedge_coefficients": per_hedge_coefficients,
+        "effective_coefficients": per_hedge_coefficients,
         "aggregated_r": aggregated_r,
     }
     return hedges, catalog
