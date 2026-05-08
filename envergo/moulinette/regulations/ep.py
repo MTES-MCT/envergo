@@ -811,7 +811,7 @@ class EspecesProtegeesRegimeUnique(
 
         if (
             self.moulinette.config.single_procedure
-            and "ru_per_hedge_coefficients" not in self.catalog
+            and "per_hedge_coefficients" not in self.catalog
         ):
             catalog.update(get_ru_zone_data(self.moulinette))
 
@@ -971,6 +971,13 @@ class EspecesProtegeesRegimeUnique(
             bonus += 0.25
         return bonus
 
+    def get_post_evaluate_data(self):
+        """Write effective per-hedge coefficients (raw + EP bonus) to catalog."""
+        bonus = self.get_ep_ru_bonus()
+        raw = self.catalog.get("per_hedge_coefficients", {})
+        effective = {h: c + bonus for h, c in raw.items()}
+        return {f"{self.slug}_effective_coefficients": effective}
+
     def get_replantation_coefficient(self):
         """Base RU coefficient plus total EP bonus (result level + sensitive species)."""
         r_ru = compute_ru_compensation_ratio(self.moulinette)
@@ -1008,14 +1015,15 @@ class EspecesProtegeesRegimeUnique(
         context = super().get_debug_context()
 
         per_hedge_results = self.per_hedge_results
-        per_hedge_coefficients = self.catalog.get("ru_per_hedge_coefficients", {})
-        bonus = self.get_ep_ru_bonus()
+        raw_coefficients = self.catalog.get("per_hedge_coefficients", {})
+        effective_key = f"{self.slug}_effective_coefficients"
+        effective_coefficients = self.catalog.get(effective_key, {})
         hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["id"], "-")
-            coeff_brut = per_hedge_coefficients.get(row["id"], 0.0)
+            coeff_brut = raw_coefficients.get(row["id"], 0.0)
             row["coeff_ru_brut"] = coeff_brut
-            row["coeff_ru_majore"] = round(coeff_brut + bonus, 2)
+            row["coeff_ru_majore"] = effective_coefficients.get(row["id"], coeff_brut)
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")

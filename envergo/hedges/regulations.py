@@ -130,13 +130,13 @@ class NormandieMinLengthCondition(MinLengthCondition):
     """
 
     def compute_reduced_minimum(self):
-        """Compute the total reduced minimum length from per-hedge coefficients.
+        """Compute the total reduced minimum length from effective coefficients.
 
         Fetches per-hedge coefficients from the catalog, computes per-type
         destruction and compensation lengths, applies the cross-type reduction,
         and returns the sum across all types.
         """
-        coefficients = self.catalog["per_hedge_coefficients"]
+        coefficients = self.catalog["effective_coefficients"]
         destruction, compensation = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -436,8 +436,8 @@ class NormandieQualityCondition(BaseQualityCondition):
     }
 
     def get_amounts_to_compensate(self):
-        """Compute LC from per-hedge coefficients."""
-        coefficients = self.catalog["per_hedge_coefficients"]
+        """Compute LC from effective per-hedge coefficients."""
+        coefficients = self.catalog["effective_coefficients"]
         _, compensation = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -477,7 +477,7 @@ class NormandieQualityCondition(BaseQualityCondition):
         LPm_r — reduced minimum per type (after cross-type reduction),
         lpm/reduced_lpm — scalar totals, lm/lp — scalar remaining/planted.
         """
-        coefficients = self.catalog["per_hedge_coefficients"]
+        coefficients = self.catalog["effective_coefficients"]
         destruction, _ = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -562,14 +562,12 @@ class RUQualityCondition(BaseQualityCondition):
     }
 
     def get_amounts_to_compensate(self):
-        """Per-hedge coefficient from zone config, plus EP bonus."""
-        coefficients = self.catalog["ru_per_hedge_coefficients"]
-        bonus = self.criterion_evaluator.get_ep_ru_bonus()
+        """Per-hedge compensation amounts from effective coefficients."""
+        coefficients = self.catalog["effective_coefficients"]
         lc = defaultdict(float)
         for hedge in self.hedge_data.hedges_to_remove():
             if hedge.id in coefficients:
-                r = coefficients[hedge.id] + bonus
-                lc[hedge.hedge_type] += hedge.length * r
+                lc[hedge.hedge_type] += hedge.length * coefficients[hedge.id]
         return dict(lc)
 
     @property
@@ -639,8 +637,8 @@ class StrenghteningCondition(PlantationCondition):
         return not is_remplacement
 
     def compute_lpm(self):
-        """Compute the total compensation length from per-hedge coefficients."""
-        coefficients = self.catalog.get("per_hedge_coefficients", {})
+        """Compute the total compensation length from effective per-hedge coefficients."""
+        coefficients = self.catalog.get("effective_coefficients", {})
         _, compensation = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -788,11 +786,26 @@ class PlantationConditionMixin:
         )
 
     def plantation_evaluate(self, hedge_data, R, catalog=None):
-        results = [
-            condition(hedge_data, R, self, catalog or {}).evaluate()
+        """Evaluate all plantation conditions for this evaluator.
+
+        Creates a catalog copy with an effective_coefficients key:
+        reads from {slug}_effective_coefficients if the evaluator wrote
+        adjusted values via get_post_evaluate_data(), otherwise falls
+        back to the raw per_hedge_coefficients.
+
+        The reason we have to do this is that each evaluator may generate different
+        coefficients.
+        """
+        catalog = dict(catalog or {})
+        slug_key = f"{self.slug}_effective_coefficients"
+        if slug_key in self.catalog:
+            catalog["effective_coefficients"] = self.catalog[slug_key]
+        elif "per_hedge_coefficients" in catalog:
+            catalog["effective_coefficients"] = catalog["per_hedge_coefficients"]
+        return [
+            condition(hedge_data, R, self, catalog).evaluate()
             for condition in self.plantation_conditions
         ]
-        return results
 
 
 class TreeAlignmentsCondition(PlantationCondition):

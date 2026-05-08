@@ -98,7 +98,7 @@ def get_ru_zone_data(moulinette):
 
     Returns a dict with three keys:
 
-    - ``ru_per_hedge_coefficients``: hedge_id → coefficient (float).
+    - ``per_hedge_coefficients``: hedge_id → coefficient (float).
     - ``ru_per_hedge_zone_info``: hedge_id → zone metadata for debug display.
     - ``ru_all_zones_resolved``: False if any hedge could not be matched to a
       zone config. Both evaluators use this to short-circuit to non_disponible.
@@ -155,7 +155,7 @@ def get_ru_zone_data(moulinette):
         }
 
     return {
-        "ru_per_hedge_coefficients": coefficients,
+        "per_hedge_coefficients": coefficients,
         "ru_per_hedge_zone_info": per_hedge_zone_info,
         "ru_all_zones_resolved": all_resolved,
     }
@@ -201,9 +201,9 @@ def compute_ru_compensation_ratio(moulinette):
 
     # Zone data (including per-hedge coefficients) may already be in the
     # catalog if another evaluator populated it.
-    if "ru_per_hedge_coefficients" not in moulinette.catalog:
+    if "per_hedge_coefficients" not in moulinette.catalog:
         moulinette.catalog.update(get_ru_zone_data(moulinette))
-    coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+    coefficients = moulinette.catalog["per_hedge_coefficients"]
 
     compensated_length = 0.0
     for hedge in hedges:
@@ -262,7 +262,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         catalog = super().get_catalog_data()
         if self.moulinette.config.single_procedure:
             catalog.update(self.get_density_catalog_data())
-            if "ru_per_hedge_coefficients" not in self.catalog:
+            if "per_hedge_coefficients" not in self.catalog:
                 catalog.update(get_ru_zone_data(self.moulinette))
         return catalog
 
