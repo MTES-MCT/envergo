@@ -6,19 +6,19 @@ import pytest
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.regulations import (
+    AisneQualityCondition,
     EssencesBocageresCondition,
     MinLengthCondition,
     PacParcelCondition,
-    AisneQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
     TreeAlignmentsCondition,
 )
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.hedges.tests.helpers import (
+    make_mock_evaluator,
     make_mock_hedge,
     make_mock_hedge_data,
-    make_mock_evaluator,
 )
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
@@ -632,3 +632,95 @@ class TestAisneQualityConditionSubstitution:
         condition = AisneQualityCondition(hedge_data, 1.0, evaluator)
         condition.evaluate()
         assert condition.result
+
+
+class SpyCondition(MinLengthCondition):
+    """Condition that records the catalog it receives.
+
+    plantation_evaluate() builds a private catalog copy with injected keys
+    before passing it to each condition. Real conditions consume the catalog
+    internally, so the only way to assert on what was injected is to
+    intercept the catalog at construction time.
+    """
+
+    captured_catalogs = []
+
+    def evaluate(self):
+        SpyCondition.captured_catalogs.append(dict(self.catalog))
+        self.result = True
+        return self
+
+
+class TestPlantationEvaluateInjection:
+    """Test that plantation_evaluate injects effective_coefficients correctly."""
+
+    def setup_method(self):
+        SpyCondition.captured_catalogs = []
+
+    def make_evaluator(self, slug, catalog, plantation_conditions=None):
+        """Build a mock evaluator with the PlantationConditionMixin interface."""
+        ev = Mock()
+        ev.slug = slug
+        ev.catalog = catalog
+        ev.plantation_conditions = plantation_conditions or [SpyCondition]
+        ev.get_replantation_coefficient.return_value = 1.0
+
+        from envergo.hedges.regulations import PlantationConditionMixin
+
+        ev.plantation_evaluate = PlantationConditionMixin.plantation_evaluate.__get__(
+            ev
+        )
+        return ev
+
+    def test_slug_key_takes_precedence(self):
+        """When {slug}_effective_coefficients exists, it is injected."""
+        raw = {"h1": 1.0}
+        effective = {"h1": 1.5}
+        moulinette_catalog = {
+            "per_hedge_coefficients": raw,
+            "myslug_effective_coefficients": effective,
+        }
+        ev = self.make_evaluator("myslug", moulinette_catalog)
+        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
+
+        ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
+
+        captured = SpyCondition.captured_catalogs[0]
+        assert captured["effective_coefficients"] is effective
+
+    def test_fallback_to_raw_when_no_slug_key(self):
+        """Without a slug key, per_hedge_coefficients becomes effective."""
+        raw = {"h1": 1.0}
+        moulinette_catalog = {}
+        ev = self.make_evaluator("myslug", moulinette_catalog)
+        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
+
+        ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
+
+        captured = SpyCondition.captured_catalogs[0]
+        assert captured["effective_coefficients"] is raw
+
+    def test_no_coefficients_at_all(self):
+        """When neither key exists, effective_coefficients is absent."""
+        ev = self.make_evaluator("myslug", {})
+        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
+
+        ev.plantation_evaluate(hedge_data, 1.0, {})
+
+        captured = SpyCondition.captured_catalogs[0]
+        assert "effective_coefficients" not in captured
+
+    def test_original_catalog_not_mutated(self):
+        """The passed-in catalog dict is not modified."""
+        raw = {"h1": 1.0}
+        effective = {"h1": 2.0}
+        moulinette_catalog = {"myslug_effective_coefficients": effective}
+        ev = self.make_evaluator("myslug", moulinette_catalog)
+        hedge_data = make_mock_hedge_data(to_remove=[], to_plant=[])
+
+        original_catalog = {"per_hedge_coefficients": raw}
+        original_keys = set(original_catalog.keys())
+
+        ev.plantation_evaluate(hedge_data, 1.0, original_catalog)
+
+        assert set(original_catalog.keys()) == original_keys

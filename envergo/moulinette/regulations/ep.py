@@ -32,6 +32,7 @@ from envergo.moulinette.regulations import (
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
     get_ru_debug_context,
+    get_ru_per_hedge_coefficients,
     get_ru_zone_data,
 )
 from envergo.utils.fields import get_human_readable_value
@@ -813,7 +814,12 @@ class EspecesProtegeesRegimeUnique(
             self.moulinette.config.single_procedure
             and "per_hedge_coefficients" not in self.catalog
         ):
-            catalog.update(get_ru_zone_data(self.moulinette))
+            zone_data = get_ru_zone_data(self.moulinette)
+            catalog.update(zone_data)
+            zone_configs = zone_data["ru_per_hedge_zone_configs"]
+            catalog.update(
+                get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
+            )
 
         hedges = haies.hedges_to_remove().n_alignement()
 
