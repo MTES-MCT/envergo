@@ -328,7 +328,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.8]
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         assert all(info["high_density"] is True for info in zone_info.values())
@@ -342,7 +342,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [2.0]
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         assert all(info["high_density"] is False for info in zone_info.values())
@@ -356,7 +356,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.5]
 
     def test_non_arboree_low_density(self):
@@ -368,7 +368,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.7]
 
     def test_density_at_threshold_is_high(self):
@@ -382,7 +382,7 @@ class TestPerHedgeCoefficients:
         )
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         assert all(info["high_density"] is True for info in zone_info.values())
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.8]
 
     @pytest.mark.parametrize("type_haie", ["buissonnante", "arbustive"])
@@ -395,7 +395,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie=type_haie)],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [
             1.5
         ], f"{type_haie} should use R1_non_arboree_HD"
@@ -409,7 +409,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="alignement")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert coefficients == {}
 
 
@@ -548,7 +548,7 @@ class TestMultiZoneHedges:
             hedges=[hedge_south, hedge_north],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         # Each hedge should be in its own zone
         assert zone_info[hedge_south.id]["zone_id"] == "zone_A"
@@ -574,7 +574,7 @@ class TestMultiZoneHedges:
             reimplantation="replantation",
         )
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         # Zone A: density 60 >= X_densite 50 → HD → R1_non_arboree_HD=1.0
         assert zone_info[hedge_south.id]["high_density"] is True
         assert coefficients[hedge_south.id] == 1.0
