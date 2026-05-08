@@ -12,10 +12,12 @@ class HedgeFactory(factory.Factory):
 
     id = factory.sequence(lambda n: f"D{n}")
     type = "TO_REMOVE"
-    latLngs = [
-        {"lat": 43.687177253462714, "lng": 3.58479488061279},
-        {"lat": 43.687301385409, "lng": 3.5859104885342323},
-    ]
+    latLngs = factory.LazyFunction(
+        lambda: [
+            {"lat": 43.687177253462714, "lng": 3.58479488061279},
+            {"lat": 43.687301385409, "lng": 3.5859104885342323},
+        ]
+    )
     additionalData = factory.Dict(
         {
             "mode_destruction": "autre",
@@ -50,7 +52,7 @@ class HedgeDataFactory(DjangoModelFactory):
 
     @factory.post_generation
     def hedges(obj, create, extracted, **kwargs):
-        if extracted:
+        if extracted is not None:
             obj.data = [hedge.toDict() for hedge in extracted]
             if create:
                 obj.save()

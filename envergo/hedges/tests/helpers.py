@@ -1,26 +1,34 @@
-"""Shared mock factories for hedge condition tests."""
+"""Shared test factories for hedge condition tests."""
 
-from itertools import count
 from unittest.mock import Mock
 
-_hedge_counter = count(1)
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 
 
-def make_mock_hedge(hedge_type, length, hedge_id=None):
-    """Create a mock hedge with type, length, and a unique id."""
-    h = Mock()
-    h.hedge_type = hedge_type
-    h.length = length
-    h.id = hedge_id or f"mock_{next(_hedge_counter)}"
-    return h
+def make_hedge_to_remove(hedge_type, length, hedge_id=None):
+    """Create a hedge-to-remove with the given type and approximate length."""
+    kwargs = {"additionalData": {"type_haie": hedge_type}, "length": length}
+    if hedge_id is not None:
+        kwargs["id"] = hedge_id
+    return HedgeFactory(**kwargs)
 
 
-def make_mock_hedge_data(to_remove, to_plant):
-    """Create a mock HedgeData with the given hedges to remove and plant."""
-    hd = Mock()
-    hd.hedges_to_remove.return_value = to_remove
-    hd.hedges_to_plant.return_value = to_plant
-    return hd
+def make_hedge_to_plant(hedge_type, length, hedge_id=None):
+    """Create a hedge-to-plant with the given type and approximate length."""
+    kwargs = {
+        "type": "TO_PLANT",
+        "additionalData": {"type_haie": hedge_type},
+        "length": length,
+    }
+    if hedge_id is not None:
+        kwargs["id"] = hedge_id
+    return HedgeFactory(**kwargs)
+
+
+def make_hedge_data(to_remove=None, to_plant=None):
+    """Create a HedgeData from lists of hedges to remove and plant."""
+    hedges = list(to_remove or []) + list(to_plant or [])
+    return HedgeDataFactory(hedges=hedges)
 
 
 def make_mock_evaluator(single_procedure=False, result_code="soumis", ep_bonus=None):
