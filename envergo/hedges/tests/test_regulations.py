@@ -14,13 +14,8 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
     TreeAlignmentsCondition,
 )
-from envergo.hedges.tests.factories import HedgeDataFactory
-from envergo.hedges.tests.helpers import (
-    make_hedge_data,
-    make_hedge_to_plant,
-    make_hedge_to_remove,
-    make_mock_evaluator,
-)
+from envergo.hedges.tests.conftest import make_mock_evaluator
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
 from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
@@ -499,9 +494,17 @@ class TestAisneQualityConditionSubstitution:
 
     def test_exact_match_passes(self):
         """Planted amounts matching minimum requirements exactly → pass."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 10), make_hedge_to_remove("arbustive", 20)],
-            to_plant=[make_hedge_to_plant("mixte", 15), make_hedge_to_plant("arbustive", 30)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=10),
+                HedgeFactory(additionalData__type_haie="arbustive", length=20),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=15
+                ),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="arbustive", length=30
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -509,9 +512,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_alignement_deficit_filled_by_mixte(self):
         """Alignement deficit can be compensated by surplus mixte."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("alignement", 20)],
-            to_plant=[make_hedge_to_plant("mixte", 30)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="alignement", length=20),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=30
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -519,9 +526,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_buissonnante_deficit_filled_by_arbustive(self):
         """Buissonnante deficit can be compensated by surplus arbustive."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("buissonnante", 20)],
-            to_plant=[make_hedge_to_plant("arbustive", 30)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="buissonnante", length=20),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="arbustive", length=30
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -529,13 +540,19 @@ class TestAisneQualityConditionSubstitution:
 
     def test_degradee_deficit_filled_by_chain(self):
         """Degradee deficit can be filled by buissonnante, arbustive, or mixte."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("degradee", 30)],
-            to_plant=[
-                make_hedge_to_plant("buissonnante", 16),
-                make_hedge_to_plant("arbustive", 16),
-                make_hedge_to_plant("mixte", 16),
-            ],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="degradee", length=30),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="buissonnante", length=16
+                ),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="arbustive", length=16
+                ),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=16
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -543,9 +560,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_arbustive_deficit_cannot_be_substituted(self):
         """No substitution exists for arbustive — must be matched exactly."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("arbustive", 20)],
-            to_plant=[make_hedge_to_plant("mixte", 100)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="arbustive", length=20),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=100
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -553,9 +574,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_mixte_deficit_cannot_be_substituted(self):
         """No substitution exists for mixte — must be matched exactly."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 20)],
-            to_plant=[make_hedge_to_plant("arbustive", 100)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=20),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="arbustive", length=100
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -563,9 +588,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_degradee_excluded_from_planted(self):
         """Planting degradee hedges does not count toward any compensation."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("degradee", 10)],
-            to_plant=[make_hedge_to_plant("degradee", 100)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="degradee", length=10),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="degradee", length=100
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -573,9 +602,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_r_coefficient_scales_minimum_lengths(self):
         """Higher R requires proportionally more planting per type."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 10)],
-            to_plant=[make_hedge_to_plant("mixte", 15)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=10),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=15
+                ),
+            ]
         )
         condition_ok = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition_ok.evaluate()
@@ -587,22 +620,27 @@ class TestAisneQualityConditionSubstitution:
 
     def test_must_display_false_when_nothing_to_compensate(self):
         """must_display returns False when there are no hedges to remove."""
-        hedge_data = make_hedge_data()
+        hedge_data = HedgeDataFactory(hedges=[])
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         assert not condition.must_display()
 
     def test_must_display_true_when_hedges_to_remove(self):
         """must_display returns True when there are hedges to remove."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 10)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=10),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         assert condition.must_display()
 
     def test_text_contains_deficit_messages(self):
         """When condition fails, text lists the missing amounts per type."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 10), make_hedge_to_remove("arbustive", 10)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=10),
+                HedgeFactory(additionalData__type_haie="arbustive", length=10),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.0, make_mock_evaluator())
         condition.evaluate()
@@ -613,9 +651,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_text_valid_when_passes(self):
         """When condition passes, text is the valid message."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 10)],
-            to_plant=[make_hedge_to_plant("mixte", 15)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=10),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=15
+                ),
+            ]
         )
         condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
         condition.evaluate()
@@ -624,9 +666,13 @@ class TestAisneQualityConditionSubstitution:
 
     def test_single_procedure_uses_reduced_type_enum(self):
         """In single-procedure (RU) context, HedgeType enum excludes degradee."""
-        hedge_data = make_hedge_data(
-            to_remove=[make_hedge_to_remove("mixte", 10)],
-            to_plant=[make_hedge_to_plant("mixte", 10)],
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(additionalData__type_haie="mixte", length=10),
+                HedgeFactory(
+                    to_plant=True, additionalData__type_haie="mixte", length=10
+                ),
+            ]
         )
         evaluator = make_mock_evaluator(single_procedure=True)
         condition = AisneQualityCondition(hedge_data, 1.0, evaluator)
@@ -681,7 +727,7 @@ class TestPlantationEvaluateInjection:
             "myslug_effective_coefficients": effective,
         }
         ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = make_hedge_data()
+        hedge_data = HedgeDataFactory(hedges=[])
 
         ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
 
@@ -693,7 +739,7 @@ class TestPlantationEvaluateInjection:
         raw = {"h1": 1.0}
         moulinette_catalog = {}
         ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = make_hedge_data()
+        hedge_data = HedgeDataFactory(hedges=[])
 
         ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
 
@@ -703,7 +749,7 @@ class TestPlantationEvaluateInjection:
     def test_no_coefficients_at_all(self):
         """When neither key exists, effective_coefficients is absent."""
         ev = self.make_evaluator("myslug", {})
-        hedge_data = make_hedge_data()
+        hedge_data = HedgeDataFactory(hedges=[])
 
         ev.plantation_evaluate(hedge_data, 1.0, {})
 
@@ -716,7 +762,7 @@ class TestPlantationEvaluateInjection:
         effective = {"h1": 2.0}
         moulinette_catalog = {"myslug_effective_coefficients": effective}
         ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = make_hedge_data()
+        hedge_data = HedgeDataFactory(hedges=[])
 
         original_catalog = {"per_hedge_coefficients": raw}
         original_keys = set(original_catalog.keys())
