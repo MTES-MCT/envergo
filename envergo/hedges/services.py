@@ -358,6 +358,20 @@ class PlantationEvaluator:
             else PlantationResults.Inadequate.value
         )
 
+    def find_condition(self, condition_cls, evaluator=None):
+        """Find an evaluated condition by type, optionally filtering by evaluator.
+
+        Returns the first matching condition, or ``None`` if no condition of
+        that type exists. When ``evaluator`` is given, only conditions whose
+        ``criterion_evaluator`` is that exact instance are considered.
+        """
+        for condition in self.conditions:
+            if not isinstance(condition, condition_cls):
+                continue
+            if evaluator is None or condition.criterion_evaluator is evaluator:
+                return condition
+        return None
+
     def get_context(self):
         context = {}
         for condition in self.conditions:
