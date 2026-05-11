@@ -62,40 +62,12 @@
       </div>
     </div>
   </div>
+{% endif %}
 
-  {% if hedge_debug_rows %}
-    <div class="fr-table fr-table--sm">
-      <div class="fr-table__wrapper">
-        <div class="fr-table__container">
-          <div class="fr-table__content">
-            <table>
-              <caption>Détail par haie</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Haie</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">Zone sensible</th>
-                  <th scope="col">Résultat partiel</th>
-                  <th scope="col">Coef RU brut</th>
-                  <th scope="col">Coef RU majoré</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in hedge_debug_rows %}
-                  <tr>
-                    <td>{{ row.id }}</td>
-                    <td>{{ row.hedge_type }}</td>
-                    <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
-                    <td>{{ row.partial_result }}</td>
-                    <td>{{ row.coeff_ru_brut }}</td>
-                    <td>{{ row.coeff_ru_majore }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  {% endif %}
+{% if hedge_debug_rows %}
+  {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_debug_rows show_partial_result=True table_class="fr-table fr-table--sm" %}
+{% endif %}
+
+{% if ru_zone_configs %}
+  {% include 'haie/_ru_coefficient_matrix.html' %}
 {% endif %}
