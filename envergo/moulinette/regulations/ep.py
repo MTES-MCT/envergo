@@ -30,6 +30,7 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
 )
 from envergo.moulinette.regulations.regime_unique_haie import (
+    build_ru_hedge_detail_rows,
     compute_ru_compensation_ratio,
     get_ru_debug_context,
     get_ru_per_hedge_coefficients,
@@ -714,6 +715,8 @@ EP_RU_REPLANTATION_BONUS = {
     "dispense": 0.0,
 }
 
+EP_RU_SENSITIVE_SPECIES_BONUS = 0.25
+
 
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
@@ -810,14 +813,16 @@ class EspecesProtegeesRegimeUnique(
 
         catalog.update(self.get_density_catalog_data())
 
-        if (
-            self.moulinette.config.single_procedure
-            and "per_hedge_coefficients" not in self.catalog
-        ):
+        if self.moulinette.config.single_procedure:
             zone_data = get_ru_zone_data(self.moulinette)
             catalog.update(zone_data)
             zone_configs = zone_data["ru_per_hedge_zone_configs"]
-            catalog.update(get_ru_per_hedge_coefficients(self.moulinette, zone_configs))
+            coeff_result = get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
+            catalog["ru_per_hedge_zone_info"] = coeff_result["ru_per_hedge_zone_info"]
+            if "per_hedge_coefficients" not in self.catalog:
+                catalog["per_hedge_coefficients"] = coeff_result[
+                    "per_hedge_coefficients"
+                ]
 
         hedges = haies.hedges_to_remove().n_alignement()
 
@@ -972,7 +977,7 @@ class EspecesProtegeesRegimeUnique(
         if self.result_code == "derogation_simplifiee" and self.catalog.get(
             "has_sensitive_species", False
         ):
-            bonus += 0.25
+            bonus += EP_RU_SENSITIVE_SPECIES_BONUS
         return bonus
 
     def get_post_evaluate_data(self):
@@ -1018,16 +1023,10 @@ class EspecesProtegeesRegimeUnique(
         """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
 
+        hedge_rows = build_ru_hedge_detail_rows(self.catalog, self.slug)
         per_hedge_results = self.per_hedge_results
-        raw_coefficients = self.catalog.get("per_hedge_coefficients", {})
-        effective_key = f"{self.slug}_effective_coefficients"
-        effective_coefficients = self.catalog.get(effective_key, {})
-        hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
-            row["partial_result"] = per_hedge_results.get(row["id"], "-")
-            coeff_brut = raw_coefficients.get(row["id"], 0.0)
-            row["coeff_ru_brut"] = coeff_brut
-            row["coeff_ru_majore"] = effective_coefficients.get(row["id"], coeff_brut)
+            row["partial_result"] = per_hedge_results.get(row["hedge_id"], "-")
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
@@ -1035,9 +1034,7 @@ class EspecesProtegeesRegimeUnique(
             "has_sensitive_species", False
         )
         context["hedge_debug_rows"] = hedge_rows
-        # Surface the admin-configured thresholds so the debug page shows
-        # exactly which values drove the cascade. None when settings are
-        # missing/invalid — the template hides the table in that case.
         context["ep_ru_settings"] = self.params
-        context.update(get_ru_debug_context(self.catalog))
+        ru_debug = get_ru_debug_context(self.catalog)
+        context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
         return context
