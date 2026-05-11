@@ -248,7 +248,7 @@ class Command(BaseCommand):
         """
         perimeter_name = f"N2000 {dept}"
         try:
-            return Perimeter.objects.get(name=perimeter_name)
+            return Perimeter.objects.get(backend_name=perimeter_name)
         except Perimeter.DoesNotExist:
             raise Perimeter.DoesNotExist(f"Périmètre '{perimeter_name}' introuvable")
 
