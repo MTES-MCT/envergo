@@ -788,7 +788,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
     icpe_regime = DisplayChoiceField(
         label="Quel est le régime de classement de l'ICPE ?",
         help_text="Les ICPE soumises à autorisation (A) ne sont pas traitées par le simulateur, "
-        "car ils correspondent à des projets complexes et de grande envergure, au traitement "
+        "car elles correspondent à des projets complexes et de grande envergure, au traitement "
         "administratif souvent spécifique.<br><br>"
         "Si le projet modifie le régime de classement ICPE de l'installation, "
         "choisir celui qu'aurait l'installation une fois le projet réalisé",
