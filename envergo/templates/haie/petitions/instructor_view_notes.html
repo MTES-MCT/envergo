@@ -12,7 +12,7 @@
 
 {% block project_content %}
 
-  <div class="project-inner-content">
+  <div class="project-inner-content project-inner-content--full">
 
     {% if has_change_permission %}
       {# ── Mode lecture (coordonnateur) ── #}
@@ -31,7 +31,7 @@
             </p>
             <div class="fr-text--md" id="private-notes-display">
               {% if petition_project.instructor_private_mention %}
-                {{ petition_project.instructor_private_mention|urlize|linebreaksbr }}
+                {{ petition_project.instructor_private_mention|safe|urlize_html|linebreaksbr }}
               {% else %}
                 <em>Aucune note.</em>
               {% endif %}
@@ -44,7 +44,7 @@
             </p>
             <div class="fr-text--md" id="public-notes-display">
               {% if petition_project.instructor_free_mention %}
-                {{ petition_project.instructor_free_mention|urlize|linebreaksbr }}
+                {{ petition_project.instructor_free_mention|safe|urlize_html|linebreaksbr }}
               {% else %}
                 <em>Aucune note.</em>
               {% endif %}
@@ -74,7 +74,7 @@
             <div>{% render_field form.instructor_free_mention %}</div>
           </div>
 
-          <div class="fr-mt-3w fr-btns-group fr-btns-group--inline">
+          <div class="fr-mt-3w fr-btns-group fr-btns-group--inline fr-btns-group--right">
             <button type="button" class="fr-btn fr-btn--secondary" id="notes-cancel-btn">Annuler</button>
             <button type="submit" class="fr-btn">Enregistrer</button>
           </div>
@@ -88,7 +88,7 @@
       </p>
       <div class="fr-text--md">
         {% if petition_project.instructor_free_mention %}
-          {{ petition_project.instructor_free_mention|urlize|linebreaksbr }}
+          {{ petition_project.instructor_free_mention|safe|urlize_html|linebreaksbr }}
         {% else %}
           <em>Aucune note.</em>
         {% endif %}
