@@ -131,8 +131,8 @@ class HedgeDataAdmin(admin.ModelAdmin):
 @admin.register(Species)
 class SpeciesAdmin(admin.ModelAdmin):
     list_display = [
-        "common_name",
         "scientific_name",
+        "common_name",
         "group",
         "adhoc_group",
         "level_of_concern",

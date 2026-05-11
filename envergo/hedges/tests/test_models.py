@@ -152,7 +152,7 @@ def test_hedge_species_are_filtered_by_geography(
 
 
 def test_zone_filters_are_not_mixed():  # noqa
-    acy_limé_map = MapFactory(map_type="species", zones=None)
+    acy_limé_map = MapFactory(map_type="species_legacy", zones=None)
     ZoneFactory(
         map=acy_limé_map, geometry=MultiPolygon([acy_polygon]), species_taxrefs=[1]
     )
@@ -358,8 +358,8 @@ def test_multiple_hedges_combine_their_species():
 def test_hru_no_duplicates_from_multiple_habitats():
     """A species linked to two matching SpeciesHabitats should appear only once."""
     species = SpeciesFactory()
-    map1 = MapFactory(map_type="species", zones__species_taxrefs=species.cd_noms)
-    map2 = MapFactory(map_type="species", zones__species_taxrefs=species.cd_noms)
+    map1 = MapFactory(map_type="species_legacy", zones__species_taxrefs=species.cd_noms)
+    map2 = MapFactory(map_type="species_legacy", zones__species_taxrefs=species.cd_noms)
     SpeciesHabitatFactory(species=species, map=map1)
     SpeciesHabitatFactory(species=species, map=map2)
 
