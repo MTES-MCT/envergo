@@ -402,10 +402,12 @@ def test_ep_ru_catalog_no_sensitive_species(ep_ru_criterion):
     """When no species have level 'majeur', has_sensitive_species is False
     and the public list equals the full list."""
     RUConfigHaieFactory()
-    setup_species_near_hedges([
-        (9001, "fort"),
-        (9002, "moyen"),
-    ])
+    setup_species_near_hedges(
+        [
+            (9001, "fort"),
+            (9002, "moyen"),
+        ]
+    )
 
     moulinette = make_moulinette_haie_with_density(
         density=60,
@@ -424,10 +426,12 @@ def test_ep_ru_catalog_no_sensitive_species(ep_ru_criterion):
 def test_ep_ru_catalog_with_sensitive_species(ep_ru_criterion):
     """When some species have level 'majeur', they are excluded from the public list."""
     RUConfigHaieFactory()
-    setup_species_near_hedges([
-        (9003, "fort"),
-        (9004, "majeur"),
-    ])
+    setup_species_near_hedges(
+        [
+            (9003, "fort"),
+            (9004, "majeur"),
+        ]
+    )
 
     moulinette = make_moulinette_haie_with_density(
         density=60,
