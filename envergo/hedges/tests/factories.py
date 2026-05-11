@@ -76,6 +76,7 @@ class SpeciesHabitatFactory(DjangoModelFactory):
     species = factory.SubFactory(SpeciesFactory)
     map = factory.SubFactory(
         MapFactory,
+        map_type="species_legacy",
         zones__species_taxrefs=factory.SelfAttribute("...species.cd_noms"),
     )
     hedge_types = ["degradee", "buissonnante", "arbustive", "alignement", "mixte"]

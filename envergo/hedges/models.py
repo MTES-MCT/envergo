@@ -26,7 +26,7 @@ from model_utils import Choices
 from pyproj import Geod, Transformer
 from shapely import LineString, centroid, union_all
 
-from envergo.geodata.models import Department, Zone
+from envergo.geodata.models import MAP_TYPES, Department, Zone
 from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
@@ -670,6 +670,7 @@ class HruSpeciesQuerySet(models.QuerySet):
         zone_subquery = (
             Zone.objects.filter(geometry__intersects=hedge.geos_geometry)
             .filter(map_id=OuterRef("habitats__map_id"))
+            .filter(map__map_type=MAP_TYPES.species_legacy)
             .filter(species_taxrefs__overlap=OuterRef("cd_noms"))
         )
         q_filter &= Q(Exists(zone_subquery))
@@ -777,7 +778,7 @@ class RuSpeciesQuerySet(models.QuerySet):
 
         zones = Zone.objects.filter(
             geometry__dwithin=(all_hedges_geom, SPECIES_BUFFER_DISTANCE),
-            map__map_type="species",
+            map__map_type=MAP_TYPES.species,
         )
 
         sig_annotations = {}
