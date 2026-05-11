@@ -16,29 +16,28 @@ from envergo.moulinette.regulations.regime_unique_haie import (
     build_ru_hedge_detail_rows,
     get_ru_debug_context,
 )
-from envergo.petitions.regulations import (
-    evaluator_instructor_view_context_getter,
-    get_line_buffer_density_context,
-)
+from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesNormandie)
 def ep_normandie_get_instructor_view_context(
-    evaluator, petition_project, moulinette
+    evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:
+    """Build context for Normandie EP instructor view."""
     context = ep_base_get_instructor_view_context(
         evaluator, petition_project, moulinette
     )
-    R = evaluator.get_replantation_coefficient()
-    hedge_data = moulinette.catalog.get("haies")
-    context["quality_condition"] = (
-        NormandieQualityCondition(hedge_data, R, evaluator, catalog=moulinette.catalog)
-        .evaluate()
-        .context
-    )
-    context["replantation_coefficient"] = R
+    context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
+    context["quality_condition"] = {}
 
-    # swap Mixte and alignement for a specific table display
+    if plantation_evaluation:
+        condition = plantation_evaluation.find_condition(
+            NormandieQualityCondition, evaluator
+        )
+        if condition:
+            context["quality_condition"] = condition.context
+
+    # Swap Mixte and alignement for a specific table display
     ordered_hedge_types = list(reversed(moulinette.hedge_types))
     values = [choice.value for choice in ordered_hedge_types]
     if "mixte" in values and "alignement" in values:
@@ -54,8 +53,9 @@ def ep_normandie_get_instructor_view_context(
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesAisne)
 def ep_aisne_get_instructor_view_context(
-    evaluator, petition_project, moulinette
+    evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:
+    """Build context for Aisne EP instructor view."""
     context = ep_base_get_instructor_view_context(
         evaluator, petition_project, moulinette
     )
@@ -65,15 +65,16 @@ def ep_aisne_get_instructor_view_context(
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesSimple)
 def ep_simple_get_instructor_view_context(
-    evaluator, petition_project, moulinette
+    evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:
-    """Build Espèces Protégées informations for instructor page view"""
+    """Build context for simple EP instructor view."""
     return ep_base_get_instructor_view_context(evaluator, petition_project, moulinette)
 
 
 def ep_base_get_instructor_view_context(
     evaluator, petition_project, moulinette
 ) -> dict:
+    """Build the shared context common to all EP instructor views."""
     hedges_properties = reduce_hedges_properties_to_displayable_items(
         moulinette, petition_project
     )
@@ -85,19 +86,16 @@ def ep_base_get_instructor_view_context(
 
 @evaluator_instructor_view_context_getter(EspecesProtegeesRegimeUnique)
 def ep_regime_unique_get_instructor_view_context(
-    evaluator, petition_project, moulinette
+    evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:
-    """Build density + EP régime unique parameters for the instructor view."""
+    """Build EP régime unique parameters for the instructor view."""
     context = ep_base_get_instructor_view_context(
         evaluator, petition_project, moulinette
     )
-    context.update(get_line_buffer_density_context(petition_project, moulinette))
 
     is_regime_unique = moulinette.config.single_procedure
     ep_ru_aa_only = moulinette.catalog.get("ep_ru_aa_only", True)
     context["show_ep_ru_params"] = is_regime_unique and not ep_ru_aa_only
-    context["ep_ru_total_length"] = moulinette.catalog.get("ep_ru_total_length")
-    context["ep_ru_ripisylve_length"] = moulinette.catalog.get("ep_ru_ripisylve_length")
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
 
     # Bonus breakdown for majoration display
@@ -120,14 +118,11 @@ def ep_regime_unique_get_instructor_view_context(
     ru_debug = get_ru_debug_context(moulinette.catalog)
     context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
 
-    # Quality condition for "Plantation proposée" table
-    R = evaluator.get_replantation_coefficient()
-    hedge_data = moulinette.catalog.get("haies")
-    context["quality_condition"] = (
-        RUQualityCondition(hedge_data, R, evaluator, catalog=moulinette.catalog)
-        .evaluate()
-        .context
-    )
+    context["quality_condition"] = {}
+    if plantation_evaluation:
+        condition = plantation_evaluation.find_condition(RUQualityCondition, evaluator)
+        if condition:
+            context["quality_condition"] = condition.context
 
     # Hedge types ordered for table display (reversed so mixte comes first)
     ordered_hedge_types = list(reversed(moulinette.hedge_types))
