@@ -8,8 +8,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const infoDiv = document.getElementById("department-info");
   if (!container || !btn) return;
 
-  const triageUrl = btn.getAttribute("href");
+  const triageUrl = btn.dataset.href;
   let selectedDept = null;
+
+  btn.addEventListener("click", () => {
+    if (!btn.disabled && btn.dataset.href) {
+      window.location.href = btn.dataset.href;
+    }
+  });
 
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
@@ -90,13 +96,11 @@ document.addEventListener("DOMContentLoaded", () => {
       clearBtn.style.display = "";
 
       if (selectedDept.is_config_valid) {
-        btn.href = triageUrl + "?department=" + encodeURIComponent(selectedDept.code);
-        delete btn.dataset.disabled;
-        btn.setAttribute("aria-disabled", "false");
+        btn.dataset.href = triageUrl + "?department=" + encodeURIComponent(selectedDept.code);
+        btn.disabled = false;
       } else {
-        btn.href = triageUrl;
-        btn.dataset.disabled = "true";
-        btn.setAttribute("aria-disabled", "true");
+        btn.dataset.href = triageUrl;
+        btn.disabled = true;
       }
 
       showDepartmentInfo(selectedDept);
@@ -108,9 +112,8 @@ document.addEventListener("DOMContentLoaded", () => {
   clearBtn.addEventListener("click", () => {
     document.getElementById("department").value = "";
     selectedDept = null;
-    btn.href = triageUrl;
-    btn.dataset.disabled = "true";
-    btn.setAttribute("aria-disabled", "true");
+    btn.dataset.href = triageUrl;
+    btn.disabled = true;
     clearBtn.style.display = "none";
     hideDepartmentInfo();
   });

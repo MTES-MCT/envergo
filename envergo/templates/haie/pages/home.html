@@ -70,17 +70,19 @@
     </div>
   </section>
 
-  <section id="simulateur"
-           class="fr-py-5w fr-mb-5w {% if activated_configs|length > 6 %}simulateur--many{% endif %}">
+  <section id="simulateur" class="fr-py-5w fr-mb-5w">
     <div class="fr-container">
       <div class="simulateur-content">
-        <h3 style="text-align: center;">Simuler un projet de travaux sur haie</h3>
-        <p style="text-align: center;">
-          Simulez ici votre projet pour connaître les règles de protection et la
-          replantation attendue.
+        <div class="simulateur-header">
+          <h3>Simuler un projet de travaux sur haie</h3>
+          <p>
+            Simulez ici votre projet pour connaître les règles de protection et la
+            replantation attendue.
+            <br>
+            Puis déposez votre demande d'autorisation.
+          </p>
           <br>
-          Puis déposez votre demande d'autorisation.
-        </p>
+        </div>
 
         {% if activated_configs|length <= max_department_tiles %}
           <div class="fr-grid-row fr-grid-row--center fr-mb-3w">
@@ -107,10 +109,10 @@
 
         <div class="simulateur-search">
           <div id="department-combobox"></div>
-          <a id="btn-start-simulation"
-             href="{% url 'triage' %}"
-             class="fr-btn"
-             data-disabled="true">Commencer la simulation</a>
+          <button id="btn-start-simulation"
+                  class="fr-btn"
+                  data-href="{% url 'triage' %}"
+                  disabled>Commencer la simulation</button>
         </div>
       </div>
       <div id="department-info" class="fr-mt-4w" style="display: none;"></div>
@@ -154,7 +156,7 @@
     <div class="fr-container">
       <div class="fr-grid-row fr-grid-row--center">
         <div class="fr-col-12 fr-col-md-8 fr-col-lg-6">
-          <h2 class="fr-h4">Quels travaux le guichet unique de la haie couvre-t-il actuellement ?</h2>
+          <h2 class="fr-h3">Quels travaux le guichet unique de la haie couvre-t-il actuellement ?</h2>
           <div class="fr-grid-row fr-grid-row--gutters">
             <div class="fr-col-12 fr-col-sm-6">
               <p class="fr-text--bold fr-mb-1w">Végétation concernée</p>
