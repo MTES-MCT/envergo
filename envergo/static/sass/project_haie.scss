@@ -851,6 +851,10 @@ div#instructor-view-side-menu {
 .project-inner-content {
   max-width: 42em;
 
+  &--full {
+    max-width: none;
+  }
+
   &.paused {
     #due-date-container {
       color: var(--text-mention-grey);
