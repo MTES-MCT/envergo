@@ -1,0 +1,32 @@
+<div class="fr-table fr-table--sm">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <caption>Matrice de coefficients</caption>
+          <tbody>
+            {% for zone_id, config in ru_zone_configs.items %}
+              <tr>
+                <th scope="col">
+                  Zone {{ zone_id }} <span class="fr-text--light">(X_densité : {{ config.X_densite }} ml/ha)</span>
+                </th>
+                <th scope="col">Haute densité</th>
+                <th scope="col">Basse densité</th>
+              </tr>
+              <tr>
+                <th scope="row">Non arborée</th>
+                <td>{{ config.R1_non_arboree_HD }}</td>
+                <td>{{ config.R2_non_arboree_LD }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Arborée</th>
+                <td>{{ config.R3_arboree_HD }}</td>
+                <td>{{ config.R4_arboree_LD }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

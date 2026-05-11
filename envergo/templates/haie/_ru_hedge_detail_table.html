@@ -1,0 +1,49 @@
+<div class="{{ table_class|default:'fr-table fr-table--no-caption' }}">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <caption>Détail par haie</caption>
+          <thead>
+            <tr>
+              <th scope="col">Haie</th>
+              <th scope="col">Type</th>
+              <th scope="col">Longueur</th>
+              <th scope="col">Zone</th>
+              <th scope="col">X_densite</th>
+              <th scope="col">Densité</th>
+              {% if show_partial_result %}
+                <th scope="col">Résultat partiel</th>
+              {% endif %}
+              <th scope="col">Coef RU brut</th>
+              <th scope="col">Coef RU majoré</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td>{{ row.hedge_id }}</td>
+                <td>{{ row.hedge_type }}</td>
+                <td>{{ row.length }} m</td>
+                <td>{{ row.zone_id|default:"-" }}</td>
+                <td>
+                  {% if row.x_densite != None %}
+                    {{ row.x_densite }} ml/ha
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>{{ row.high_density|yesno:"Haute,Basse,-" }}</td>
+                {% if show_partial_result %}
+                  <td>{{ row.partial_result }}</td>
+                {% endif %}
+                <td>{{ row.coeff_ru_brut }}</td>
+                <td>{{ row.coeff_ru_majore }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

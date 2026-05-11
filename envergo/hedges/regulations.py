@@ -290,6 +290,16 @@ class BaseQualityCondition(PlantationCondition):
         """Hook for regulation-specific result overrides after compensation."""
         pass
 
+    def pad_all_types(self, sparse_dict):
+        """Return a copy with all hedge types present, defaulting missing ones to 0.0.
+
+        The Django template ``get_item`` filter raises KeyError on missing keys,
+        so the template expects every hedge type to be present in the dict.
+        """
+        padded = {t: 0.0 for t in self.hedge_type_enum.values}
+        padded.update(sparse_dict)
+        return padded
+
     def build_context(self, initial_deficits, initial_compensating):
         """Populate self.context with data for text/hint rendering.
 
@@ -485,16 +495,6 @@ class NormandieQualityCondition(BaseQualityCondition):
         if result_code in ("dispense_L350", "a_verifier_L350"):
             self.result = True
 
-    def pad_all_types(self, sparse_dict):
-        """Return a copy with all hedge types present, defaulting missing ones to 0.0.
-
-        The Django template ``get_item`` filter raises KeyError on missing keys,
-        so the template expects every hedge type to be present in the dict.
-        """
-        padded = {t: 0.0 for t in self.hedge_type_enum.values}
-        padded.update(sparse_dict)
-        return padded
-
     def build_context(self, initial_deficits, initial_compensating):
         """Populate context with compensation data for the instructor template.
 
@@ -596,6 +596,22 @@ class RUQualityCondition(BaseQualityCondition):
             if hedge.id in coefficients:
                 lc[hedge.hedge_type] += hedge.length * coefficients[hedge.id]
         return dict(lc)
+
+    def build_context(self, initial_deficits, initial_compensating):
+        """Populate context with compensation data for the instructor template.
+
+        RU has no cross-type rate reduction, so LPm_r equals LPm.
+        """
+        self.context = {
+            "lpm": ceil(sum(initial_deficits.values())),
+            "reduced_lpm": ceil(sum(initial_deficits.values())),
+            "LPm_r": self.pad_all_types(initial_deficits),
+            "LC": self.pad_all_types(self.remaining),
+            "LP": self.pad_all_types(initial_compensating),
+            "LPm": self.pad_all_types(initial_deficits),
+            "lm": sum(self.remaining.values()),
+            "lp": sum(initial_compensating.values()),
+        }
 
     @property
     def text(self):

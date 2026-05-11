@@ -243,6 +243,35 @@ def get_ru_debug_context(catalog):
     }
 
 
+def build_ru_hedge_detail_rows(catalog, evaluator_slug):
+    """Build per-hedge rows merging zone info with compensation coefficients.
+
+    Each row contains zone metadata (zone_id, x_densite, high_density, length)
+    plus raw and effective coefficients — everything needed by the unified
+    "Détail par haie" partial template.
+    """
+    per_hedge_info = catalog.get("ru_per_hedge_zone_info", {})
+    effective_key = f"{evaluator_slug}_effective_coefficients"
+    effective_coefficients = catalog.get(effective_key, {})
+
+    rows = []
+    for hedge_id, info in per_hedge_info.items():
+        coeff_brut = info["coefficient"]
+        rows.append(
+            {
+                "hedge_id": info["hedge_id"],
+                "hedge_type": info["type"],
+                "length": info["length"],
+                "zone_id": info["zone_id"],
+                "x_densite": info["x_densite"],
+                "high_density": info["high_density"],
+                "coeff_ru_brut": coeff_brut,
+                "coeff_ru_majore": effective_coefficients.get(hedge_id, coeff_brut),
+            }
+        )
+    return rows
+
+
 def compute_ru_compensation_ratio(moulinette):
     """Compute the régime unique compensation ratio.
 
