@@ -252,7 +252,11 @@ class Command(BaseCommand):
         except Perimeter.DoesNotExist:
             raise Perimeter.DoesNotExist(f"Périmètre '{perimeter_name}' introuvable")
 
-    def get_activation_map(self, map_name):
+    def get_activation_map(self, dept, suffix=None):
+        if suffix:
+            map_name = f"N2000 Haie {dept} – {suffix}"
+        else:
+            map_name = f"N2000 Haie {dept}"
         try:
             return Map.objects.get(name=map_name)
         except Map.DoesNotExist:
@@ -264,7 +268,7 @@ class Command(BaseCommand):
         Cas 1 = résultat homogène sur tout le département.
         """
         for dept, result, concerne_aa in CASE_1:
-            activation_map = self.get_activation_map(f"N2000 {dept}")
+            activation_map = self.get_activation_map(dept)
             perimeter = self.get_perimeter(dept)
 
             criterion, created = Criterion.objects.get_or_create(
@@ -304,7 +308,7 @@ class Command(BaseCommand):
             # "soumis" dans evaluator_settings mais "non soumis" (sans underscore)
             # dans les noms de cartes et backend_title
             suffix = "soumis" if result == "soumis" else "non soumis"
-            activation_map = self.get_activation_map(f"N2000 Haie {dept} – {suffix}")
+            activation_map = self.get_activation_map(dept, suffix)
             perimeter = self.get_perimeter(dept)
 
             criterion, created = Criterion.objects.get_or_create(
