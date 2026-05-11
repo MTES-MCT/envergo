@@ -8,7 +8,12 @@ haie evaluator and the EP régime unique evaluator.
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
-from envergo.hedges.regulations import PlantationConditionMixin
+from envergo.hedges.regulations import (
+    MinLengthCondition,
+    PlantationConditionMixin,
+    RUQualityCondition,
+    SafetyCondition,
+)
 from envergo.moulinette.regulations import (
     CriterionEvaluator,
     HaieRegulationEvaluator,
@@ -83,58 +88,50 @@ def zone_config_for_hedge(zone_attrs, coeff_compensation):
     return zone_id, zone_config
 
 
-def get_ru_zone_data(moulinette):
-    """Return catalog entries for per-hedge zone configs and coefficients.
+def compute_hedge_coefficient(hedge, zone_config, density_400):
+    """Compute the compensation coefficient for a single hedge.
 
-    Each hedge is resolved to its own zone (based on the hedge's centroid),
-    and gets its own coefficient from that zone's matrix. Because X_densite
-    thresholds differ per zone, the same project-wide density_400 can classify
-    as high density in one zone and low density in another.
-
-    Returns a dict with three keys:
-
-    - ``ru_per_hedge_coefficients``: hedge_id → coefficient (float).
-    - ``ru_per_hedge_zone_info``: hedge_id → zone metadata for debug display.
-    - ``ru_all_zones_resolved``: False if any hedge could not be matched to a
-      zone config. Both evaluators use this to short-circuit to non_disponible.
+    Uses the zone's density threshold and the hedge type to look up the
+    correct coefficient in the zone config matrix. Returns
+    ``(coefficient, high_density)`` where ``high_density`` is a bool
+    (or None when no zone config was provided).
     """
-    config = moulinette.config
-    settings = config.single_procedure_settings
-    coeff_compensation = settings.get("coeff_compensation", {})
+    if zone_config is None:
+        return 0.0, None
 
-    haies = moulinette.catalog["haies"]
-    hedges = haies.hedges_to_remove().n_alignement()
+    x_densite = zone_config.get("X_densite", 0.0)
+    high_density = density_400 >= x_densite
+    density_key = "HD" if high_density else "LD"
+    # "mixte" is the only RU hedge type that counts as tree-bearing
+    type_key = "arboree" if hedge.hedge_type == "mixte" else "non_arboree"
+    config_key = COEFF_KEY[(type_key, density_key)]
+    coefficient = zone_config.get(config_key, 0.0)
+    return coefficient, high_density
 
-    # Resolve per-hedge zones: zone attributes dicts when zonage is
-    # enabled, the literal "default" sentinel otherwise.
-    if not config.has_ru_zonage:
-        matched_zones = {h.id: "default" for h in hedges}
-    else:
-        dept_code = moulinette.department.department
-        matched_zones = resolve_hedge_zones(hedges, dept_code)
 
-    # Assign coefficients and build per-hedge info
-    density_400 = haies.density_around_lines.get("density_400") or 0.0
+def compute_per_hedge_coefficients(hedges, per_hedge_zone_configs, density_400):
+    """Assign a compensation coefficient to each hedge based on its zone config.
+
+    ``per_hedge_zone_configs`` maps ``hedge_id → (zone_id, zone_config)``
+    as returned by ``resolve_per_hedge_zone_configs``.
+
+    Returns ``(coefficients, per_hedge_zone_info, all_resolved)`` where:
+
+    - ``coefficients``: hedge_id → coefficient (float).
+    - ``per_hedge_zone_info``: hedge_id → zone metadata dict for debug display.
+    - ``all_resolved``: False if any hedge could not be matched to a zone config.
+    """
     coefficients = {}
     per_hedge_zone_info = {}
     all_resolved = True
 
     for hedge in hedges:
-        zone_id, zone_config = zone_config_for_hedge(
-            matched_zones[hedge.id], coeff_compensation
+        zone_id, zone_config = per_hedge_zone_configs[hedge.id]
+        coefficient, high_density = compute_hedge_coefficient(
+            hedge, zone_config, density_400
         )
 
-        high_density = None
-        coefficient = 0.0
-        if zone_config is not None:
-            x_densite = zone_config.get("X_densite", 0.0)
-            high_density = density_400 >= x_densite
-            density_key = "HD" if high_density else "LD"
-            # "mixte" is the only RU hedge type that counts as tree-bearing
-            type_key = "arboree" if hedge.hedge_type == "mixte" else "non_arboree"
-            config_key = COEFF_KEY[(type_key, density_key)]
-            coefficient = zone_config.get(config_key, 0.0)
-        else:
+        if zone_config is None:
             all_resolved = False
 
         coefficients[hedge.id] = coefficient
@@ -149,10 +146,78 @@ def get_ru_zone_data(moulinette):
             "coefficient": coefficient,
         }
 
+    return coefficients, per_hedge_zone_info, all_resolved
+
+
+def resolve_per_hedge_zone_configs(moulinette, hedges):
+    """Resolve each hedge to its ``(zone_id, zone_config)`` pair.
+
+    Performs geographic lookup (or uses the "default" sentinel when zonage
+    is disabled), then maps each result through the department's
+    ``coeff_compensation`` config. Returns ``{hedge_id: (zone_id, zone_config)}``.
+    """
+    config = moulinette.config
+    settings = config.single_procedure_settings
+    coeff_compensation = settings.get("coeff_compensation", {})
+
+    if not config.has_ru_zonage:
+        matched_zones = {h.id: "default" for h in hedges}
+    else:
+        dept_code = moulinette.department.department
+        matched_zones = resolve_hedge_zones(hedges, dept_code)
+
     return {
-        "ru_per_hedge_coefficients": coefficients,
-        "ru_per_hedge_zone_info": per_hedge_zone_info,
+        hedge.id: zone_config_for_hedge(matched_zones[hedge.id], coeff_compensation)
+        for hedge in hedges
+    }
+
+
+def get_ru_zone_data(moulinette):
+    """Resolve each hedge to its zonage zone and return zone metadata.
+
+    Returns a dict with two keys:
+
+    - ``ru_per_hedge_zone_configs``: hedge_id → (zone_id, zone_config).
+    - ``ru_all_zones_resolved``: False if any hedge could not be matched to a
+      zone config. Both evaluators use this to short-circuit to non_disponible.
+    """
+    haies = moulinette.catalog["haies"]
+    hedges = haies.hedges_to_remove().n_alignement()
+    per_hedge_zone_configs = resolve_per_hedge_zone_configs(moulinette, hedges)
+
+    all_resolved = all(
+        config is not None for _, config in per_hedge_zone_configs.values()
+    )
+
+    return {
+        "ru_per_hedge_zone_configs": per_hedge_zone_configs,
         "ru_all_zones_resolved": all_resolved,
+    }
+
+
+def get_ru_per_hedge_coefficients(moulinette, per_hedge_zone_configs):
+    """Compute per-hedge compensation coefficients from zone configs and density.
+
+    Because X_densite thresholds differ per zone, the same project-wide
+    density_400 can classify as high density in one zone and low density
+    in another.
+
+    Returns a dict with two keys:
+
+    - ``per_hedge_coefficients``: hedge_id → coefficient (float).
+    - ``ru_per_hedge_zone_info``: hedge_id → zone metadata for debug display.
+    """
+    haies = moulinette.catalog["haies"]
+    hedges = haies.hedges_to_remove().n_alignement()
+    density_400 = haies.density_around_lines.get("density_400") or 0.0
+
+    coefficients, per_hedge_zone_info, _ = compute_per_hedge_coefficients(
+        hedges, per_hedge_zone_configs, density_400
+    )
+
+    return {
+        "per_hedge_coefficients": coefficients,
+        "ru_per_hedge_zone_info": per_hedge_zone_info,
     }
 
 
@@ -178,6 +243,35 @@ def get_ru_debug_context(catalog):
     }
 
 
+def build_ru_hedge_detail_rows(catalog, evaluator_slug):
+    """Build per-hedge rows merging zone info with compensation coefficients.
+
+    Each row contains zone metadata (zone_id, x_densite, high_density, length)
+    plus raw and effective coefficients — everything needed by the unified
+    "Détail par haie" partial template.
+    """
+    per_hedge_info = catalog.get("ru_per_hedge_zone_info", {})
+    effective_key = f"{evaluator_slug}_effective_coefficients"
+    effective_coefficients = catalog.get(effective_key, {})
+
+    rows = []
+    for hedge_id, info in per_hedge_info.items():
+        coeff_brut = info["coefficient"]
+        rows.append(
+            {
+                "hedge_id": info["hedge_id"],
+                "hedge_type": info["type"],
+                "length": info["length"],
+                "zone_id": info["zone_id"],
+                "x_densite": info["x_densite"],
+                "high_density": info["high_density"],
+                "coeff_ru_brut": coeff_brut,
+                "coeff_ru_majore": effective_coefficients.get(hedge_id, coeff_brut),
+            }
+        )
+    return rows
+
+
 def compute_ru_compensation_ratio(moulinette):
     """Compute the régime unique compensation ratio.
 
@@ -194,11 +288,14 @@ def compute_ru_compensation_ratio(moulinette):
     if not total_length:
         return 0.0
 
-    # Zone data (including per-hedge coefficients) may already be in the
-    # catalog if another evaluator populated it.
-    if "ru_per_hedge_coefficients" not in moulinette.catalog:
+    if "ru_per_hedge_zone_configs" not in moulinette.catalog:
         moulinette.catalog.update(get_ru_zone_data(moulinette))
-    coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+    if "per_hedge_coefficients" not in moulinette.catalog:
+        zone_configs = moulinette.catalog["ru_per_hedge_zone_configs"]
+        moulinette.catalog.update(
+            get_ru_per_hedge_coefficients(moulinette, zone_configs)
+        )
+    coefficients = moulinette.catalog["per_hedge_coefficients"]
 
     compensated_length = 0.0
     for hedge in hedges:
@@ -228,7 +325,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
 
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
-    plantation_conditions = []
+    plantation_conditions = [MinLengthCondition, RUQualityCondition, SafetyCondition]
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,
@@ -257,8 +354,13 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         catalog = super().get_catalog_data()
         if self.moulinette.config.single_procedure:
             catalog.update(self.get_density_catalog_data())
-            if "ru_per_hedge_coefficients" not in self.catalog:
-                catalog.update(get_ru_zone_data(self.moulinette))
+            if "per_hedge_coefficients" not in self.catalog:
+                zone_data = get_ru_zone_data(self.moulinette)
+                catalog.update(zone_data)
+                zone_configs = zone_data["ru_per_hedge_zone_configs"]
+                catalog.update(
+                    get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
+                )
         return catalog
 
     def get_result_data(self):
