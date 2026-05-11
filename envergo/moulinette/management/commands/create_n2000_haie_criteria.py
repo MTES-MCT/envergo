@@ -246,7 +246,11 @@ class Command(BaseCommand):
         Chaque département a un périmètre nommé "N2000 XX" qui regroupe
         tous les sites Natura 2000 du département.
         """
-        return Perimeter.objects.get(name=f"N2000 {dept}")
+        perimeter_name = f"N2000 {dept}"
+        try:
+            return Perimeter.objects.get(name=perimeter_name)
+        except Perimeter.DoesNotExist:
+            raise Perimeter.DoesNotExist(f"Périmètre '{perimeter_name}' introuvable")
 
     def create_case1_criteria(self, regulation):
         """Crée 1 critère par département cas 1.
