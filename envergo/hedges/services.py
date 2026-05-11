@@ -361,9 +361,8 @@ class PlantationEvaluator:
     def find_condition(self, condition_cls, evaluator=None):
         """Find an evaluated condition by type, optionally filtering by evaluator.
 
-        Returns the first matching condition, or ``None`` if no condition of
-        that type exists. When ``evaluator`` is given, only conditions whose
-        ``criterion_evaluator`` is that exact instance are considered.
+        Evaluator filtering uses identity (``is``), which requires both this
+        evaluator and the caller to share the same moulinette instance.
         """
         for condition in self.conditions:
             if not isinstance(condition, condition_cls):
