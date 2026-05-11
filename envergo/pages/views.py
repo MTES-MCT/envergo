@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import date, timedelta
 from urllib.parse import urlencode, urljoin
@@ -69,6 +68,17 @@ class DepartmentSearchMixin:
                 ),
                 output_field=TextField(),
             ),
+            contacts_and_links=Coalesce(
+                NullIf(
+                    Subquery(valid_config_qs.values("contacts_and_links")[:1]),
+                    Value(""),
+                ),
+                NullIf(
+                    Subquery(other_config_qs.values("contacts_and_links")[:1]),
+                    Value(""),
+                ),
+                output_field=TextField(),
+            ),
         )
 
     def get_context_data(self, **kwargs):
@@ -79,21 +89,21 @@ class DepartmentSearchMixin:
                 "code": d.department,
                 "label": str(d),
                 "contacts_info": d.contacts_info,
+                "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
             }
             for d in self.get_queryset_with_contacts()
         ]
-        context["departments_json"] = json.dumps(departments_data)
+        context["departments_data"] = departments_data
         return context
 
 
-class HomeHaieView(TemplateView):
+class HomeHaieView(DepartmentSearchMixin, TemplateView):
     template_name = "haie/pages/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Only show activated departments in the button list
         configs = (
             ConfigHaie.objects.valid_at(timezone.now().date())
             .filter(is_activated=True)
@@ -102,15 +112,10 @@ class HomeHaieView(TemplateView):
             .order_by("department__department")
         )
         context["activated_configs"] = configs
-        context["departments"] = Department.objects.defer("geometry").order_by(
-            "department"
-        )
+        context["max_department_tiles"] = settings.HOME_MAX_DEPARTMENT_TILES
         return context
 
     def post(self, request, *args, **kwargs):
-        """Post response with department
-        TODO: use mixin queryset and update template
-        """
         data = request.POST
         department_id = data.get("department")
         department = None
@@ -118,7 +123,7 @@ class HomeHaieView(TemplateView):
             try:
                 department = Department.objects.defer("geometry").get(id=department_id)
             except Department.DoesNotExist:
-                pass  # Invalid id submitted — department stays None, handled gracefully below
+                pass
 
         config = ConfigHaie.objects.get_valid_config(department) if department else None
 
