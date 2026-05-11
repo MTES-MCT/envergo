@@ -26,14 +26,11 @@ main.home {
 
     .simulateur-search {
       display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      flex-direction: column;
+      align-items: stretch;
       gap: 1rem;
 
       #department-combobox {
-        flex: 1;
-        max-width: 24rem;
-
         .autocomplete__menu {
           position: absolute;
           z-index: 100;
@@ -41,9 +38,15 @@ main.home {
         }
       }
 
-      #btn-start-simulation[data-disabled="true"] {
-        opacity: 0.5;
-        pointer-events: none;
+      @media (width >= 48em) {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+
+        #department-combobox {
+          flex: 1;
+          max-width: 24rem;
+        }
       }
     }
 
@@ -51,8 +54,11 @@ main.home {
       border-color: var(--blue-france-sun-113-625);
     }
 
-    &.simulateur--many .simulateur-content {
+    .simulateur-header {
       text-align: center;
+    }
+
+    &.simulateur--many .simulateur-content {
       max-width: 42rem;
       margin: 0 auto;
     }
