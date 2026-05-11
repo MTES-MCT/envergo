@@ -830,12 +830,15 @@ class TestResultsByCategory:
 
 
 # ---------------------------------------------------------------------------
-# get_debug_context — hedges_by_type_and_category structure
+# get_debug_context — hedges_and_category_by_type structure
 # ---------------------------------------------------------------------------
 
 
 class TestDebugContext:
-    """Test MoulinetteHaie.get_debug_context returns hedges_by_type_and_category."""
+    """Test MoulinetteHaie.get_debug_context returns hedges_and_category_by_type.
+
+    The structure is {hedge_type: [(hedge, category), ...]} sorted by hedge ID.
+    """
 
     def test_hedges_by_type_and_category_structure(self):
         """Debug context groups hedges by type (TO_REMOVE/TO_PLANT) then category."""
@@ -849,7 +852,7 @@ class TestDebugContext:
         )
         moulinette = MoulinetteHaie(data)
         ctx = moulinette.get_debug_context()
-        htc = ctx["hedges_by_type_and_category"]
+        htc = ctx["hedges_and_category_by_type"]
         assert "TO_REMOVE" in htc
         assert "TO_PLANT" in htc
 
@@ -859,15 +862,20 @@ class TestDebugContext:
         data = make_moulinette_haie_data(
             hedge_data=[
                 make_hedge(hedge_id="D1", hedge_type="TO_REMOVE", type_haie="mixte"),
+                make_hedge(
+                    hedge_id="D2", hedge_type="TO_REMOVE", type_haie="alignement"
+                ),
+                make_hedge(hedge_id="D3", hedge_type="TO_REMOVE", type_haie="mixte"),
             ],
             reimplantation="replantation",
         )
         moulinette = MoulinetteHaie(data)
         ctx = moulinette.get_debug_context()
-        htc = ctx["hedges_by_type_and_category"]
-        ru_remove = htc["TO_REMOVE"].get(HaieCriterionCategory.ru, [])
-        assert len(ru_remove) == 1
-        assert ru_remove[0].id == "D1"
+        htc = ctx["hedges_and_category_by_type"]
+        assert len(htc["TO_REMOVE"]) == 3
+        assert htc["TO_REMOVE"][0][0].id == "D1"
+        assert htc["TO_REMOVE"][1][0].id == "D2"
+        assert htc["TO_REMOVE"][2][0].id == "D3"
 
     def test_dc_mode_all_hedges_in_hru(self):
         """In DC mode, all hedges go to HRU category."""
@@ -880,8 +888,8 @@ class TestDebugContext:
         )
         moulinette = MoulinetteHaie(data)
         ctx = moulinette.get_debug_context()
-        htc = ctx["hedges_by_type_and_category"]
-        hru_remove = htc["TO_REMOVE"].get(HaieCriterionCategory.hru, [])
+        htc = ctx["hedges_and_category_by_type"]
+        hru_remove = [h for h, c in htc["TO_REMOVE"] if c == HaieCriterionCategory.hru]
         assert len(hru_remove) == 1
 
     def test_empty_hedges_returns_empty_categories(self):
@@ -894,5 +902,5 @@ class TestDebugContext:
         moulinette = MoulinetteHaie(data)
         del moulinette.catalog["haies"]
         ctx = moulinette.get_debug_context()
-        htc = ctx["hedges_by_type_and_category"]
+        htc = ctx["hedges_and_category_by_type"]
         assert htc == {}

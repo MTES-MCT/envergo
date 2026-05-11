@@ -2677,14 +2677,19 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         else:
             hedges_by_category = {category: [] for category in HaieCriterionCategory}
 
-        hedges_by_type_and_category = defaultdict(lambda: defaultdict(list))
+        hedges_and_category_by_type = defaultdict(list)
         for category, hedges in hedges_by_category.items():
             for hedge in hedges:
-                hedges_by_type_and_category[hedge.type][category].append(hedge)
+                hedges_and_category_by_type[hedge.type].append((hedge, category))
+
+        def sort_key(item):
+            h, _ = item
+            return h.id[0], int(h.id[1:])
 
         return {
-            "hedges_by_type_and_category": {
-                k: dict(v) for k, v in hedges_by_type_and_category.items()
+            "hedges_and_category_by_type": {
+                k: sorted(v, key=sort_key)
+                for k, v in hedges_and_category_by_type.items()
             }
         }
 
