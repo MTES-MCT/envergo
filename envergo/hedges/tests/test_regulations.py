@@ -747,14 +747,14 @@ class TestPlantationEvaluateInjection:
         assert captured["effective_coefficients"] is raw
 
     def test_no_coefficients_at_all(self):
-        """When neither key exists, effective_coefficients is absent."""
+        """When neither key exists, effective_coefficients defaults to empty dict."""
         ev = self.make_evaluator("myslug", {})
         hedge_data = HedgeDataFactory(hedges=[])
 
         ev.plantation_evaluate(hedge_data, 1.0, {})
 
         captured = SpyCondition.captured_catalogs[0]
-        assert "effective_coefficients" not in captured
+        assert captured["effective_coefficients"] == {}
 
     def test_original_catalog_not_mutated(self):
         """The passed-in catalog dict is not modified."""

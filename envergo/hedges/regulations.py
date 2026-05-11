@@ -824,6 +824,8 @@ class PlantationConditionMixin:
             catalog["effective_coefficients"] = self.catalog[slug_key]
         elif "per_hedge_coefficients" in catalog:
             catalog["effective_coefficients"] = catalog["per_hedge_coefficients"]
+        else:
+            catalog["effective_coefficients"] = {}
         return [
             condition(hedge_data, R, self, catalog).evaluate()
             for condition in self.plantation_conditions
