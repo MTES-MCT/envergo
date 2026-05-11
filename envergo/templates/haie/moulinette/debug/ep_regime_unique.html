@@ -72,6 +72,8 @@
                   <th scope="col">Type</th>
                   <th scope="col">Zone sensible</th>
                   <th scope="col">Résultat partiel</th>
+                  <th scope="col">Coef RU brut</th>
+                  <th scope="col">Coef RU majoré</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,6 +83,8 @@
                     <td>{{ row.hedge_type }}</td>
                     <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
                     <td>{{ row.partial_result }}</td>
+                    <td>{{ row.coeff_ru_brut }}</td>
+                    <td>{{ row.coeff_ru_majore }}</td>
                   </tr>
                 {% endfor %}
               </tbody>

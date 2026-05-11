@@ -39,26 +39,24 @@
       <li>
         Longueur à détruire : {{ haies.length_to_remove|floatformat:"g" }} m
         <ul>
-          {% with hedges_by_type_and_category|get_item:"TO_REMOVE" as hedges_by_category %}
-            {% for category, hedges in hedges_by_category.items %}
-              {% for h in hedges %}
-                <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ category.value }}</li>
-              {% endfor %}
+          {% with hedges_and_category_by_type|get_item:"TO_REMOVE" as hedges_and_category %}
+            {% for h, category in hedges_and_category %}
+              <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} · évaluateur {{ category.value }}</li>
             {% endfor %}
           {% endwith %}
         </ul>
       </li>
       <li>
         Longueur à planter : {{ haies.length_to_plant|floatformat:"g" }} m
-        <ul>
-          {% with hedges_by_type_and_category|get_item:"TO_PLANT" as hedges_by_category %}
-            {% for category, hedges in hedges_by_category.items %}
-              {% for h in hedges %}
+        {% if haies.length_to_plant > 0 %}
+          <ul>
+            {% with hedges_and_category_by_type|get_item:"TO_PLANT" as hedges_and_category %}
+              {% for h, category in hedges_and_category %}
                 <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ category.value }}</li>
               {% endfor %}
-            {% endfor %}
-          {% endwith %}
-        </ul>
+            {% endwith %}
+          </ul>
+        {% endif %}
       </li>
     </ul>
 
@@ -97,35 +95,34 @@
 
       {% with criteria=regulation.criteria.all %}
         {% if criteria %}
-          <ul>
-            {% for criterion in criteria %}
-              <li class="fr-mb-2w category-{{ criterion.evaluator.category.name }}">
+          {% for criterion in criteria %}
+            <section class="fr-mb-2w category-{{ criterion.evaluator.category.name }}">
+              <h4>
                 {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
                 <small>({{ criterion.result_code }})</small>
+              </h4>
+              <p>
                 {% if criterion.get_evaluator.get_replantation_coefficient %}
-                  <br />
                   R = {{ criterion.get_evaluator.get_replantation_coefficient|floatformat:"2g" }}
                 {% else %}
-                  <br />
                   R = ND
                 {% endif %}
+                <br />
                 {% if criterion.get_evaluator.plantation_conditions %}
-                  <br />
                   Conditions d'acceptabilité =
                   {% for condition in criterion.get_evaluator.plantation_conditions %}
                     {{ condition.label }}
                     {% if not forloop.last %},&nbsp;{% endif %}
                   {% endfor %}
                 {% else %}
-                  <br />
                   Conditions d'acceptabilité = aucune
                 {% endif %}
+              </p>
 
-                {% criterion_debug_snippet criterion as debug_content %}
-                {% if debug_content %}<div class="criterion-debug">{{ debug_content }}</div>{% endif %}
-              </li>
-            {% endfor %}
-          </ul>
+              {% criterion_debug_snippet criterion as debug_content %}
+              {% if debug_content %}<div class="criterion-debug">{{ debug_content }}</div>{% endif %}
+            </section>
+          {% endfor %}
         {% endif %}
       {% endwith %}
     {% endfor %}
