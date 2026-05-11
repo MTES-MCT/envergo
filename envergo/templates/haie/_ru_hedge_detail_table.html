@@ -12,9 +12,7 @@
               <th scope="col">Zone</th>
               <th scope="col">X_densite</th>
               <th scope="col">Densité</th>
-              {% if show_partial_result %}
-                <th scope="col">Résultat partiel</th>
-              {% endif %}
+              {% if show_partial_result %}<th scope="col">Résultat partiel</th>{% endif %}
               <th scope="col">Coef RU brut</th>
               <th scope="col">Coef RU majoré</th>
             </tr>
@@ -34,9 +32,7 @@
                   {% endif %}
                 </td>
                 <td>{{ row.high_density|yesno:"Haute,Basse,-" }}</td>
-                {% if show_partial_result %}
-                  <td>{{ row.partial_result }}</td>
-                {% endif %}
+                {% if show_partial_result %}<td>{{ row.partial_result }}</td>{% endif %}
                 <td>{{ row.coeff_ru_brut }}</td>
                 <td>{{ row.coeff_ru_majore }}</td>
               </tr>
