@@ -805,6 +805,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         queryset = (
             PetitionProject.objects.all()
+            .select_related("department")
+            .defer("department__geometry")
             .prefetch_related(
                 Prefetch(
                     "status_history",
