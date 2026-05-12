@@ -410,8 +410,12 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         self.demarches_simplifiees_last_sync = timezone.now()
         self.save()
 
+    def get_config(self):
+        """Delegate to the moulinette, which is the canonical config owner."""
+        return self.get_moulinette().config
+
     def get_moulinette(self):
-        """Recreate moulinette from moulinette url and hedge data"""
+        """Recreate moulinette from moulinette url and hedge data."""
         if not hasattr(self, "_moulinette"):
             moulinette_data = self._parse_moulinette_data()
             moulinette_data["haies"] = self.hedge_data
