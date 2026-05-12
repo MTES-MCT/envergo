@@ -2595,8 +2595,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         return result or RESULTS.non_soumis
 
-    def summary(self):
-        """Build a data summary, for analytics purpose."""
+    @cached_property
+    def summary_data(self):
+        """Compute the data summary once.
+
+        Callers that need to mutate the result should use summary() which
+        returns a fresh copy each time.
+        """
         summary = self.data.copy()
         summary.update(self.cleaned_additional_data())
 
@@ -2609,6 +2614,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             haies = self.catalog["haies"]
             summary.update(haies.get_statistics())
         return summary
+
+    def summary(self):
+        """Return a data summary for analytics.
+
+        Returns a copy so callers can mutate it freely.
+        """
+        return self.summary_data.copy()
 
     def get_debug_context(self):
         """Return moulinette-wide debug context.
