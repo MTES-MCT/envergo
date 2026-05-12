@@ -178,8 +178,8 @@
           {% endif %}
         {% endfor %}
 
-        {% if forloop.counter0 == 0 and forloop.parentloop.counter0 == 0 %}
-          {% block liability_info %}{% endblock %}
+        {% if forloop.counter0 == 0 %}
+          {% show_haie_liability_info category %}
         {% endif %}
       {% endfor %}
     </div>

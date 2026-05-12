@@ -283,36 +283,27 @@ def show_plantation_result(context, plantation_evaluation):
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_moulinette_liability_info(context, result):
-    """Render the liability_info content depending on the moulinette result."""
+def show_haie_liability_info(context, category):
+    """Render per-category liability info, dispatching between destruction and plantation paths."""
 
-    template_name = f"haie/moulinette/liability_info/{result}.html"
+    moulinette = context["moulinette"]
+    result = moulinette.results_by_category[category]
+    context_data = context.flatten()
+    context_data["category"] = category
+
+    if context.get("is_result_plantation"):
+        plantation_evaluation = context["plantation_evaluation"]
+        result_code = f"{result}_{plantation_evaluation.result}"
+        template_name = f"haie/moulinette/plantation_liability_info/{result_code}.html"
+    else:
+        template_name = f"haie/moulinette/liability_info/{result}.html"
+
     try:
-        content = render_to_string((template_name,), context.flatten())
+        content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
         logger.error(
-            f"Template for GUH liability info is missing. {result}",
-            extra={"result": result, "template_name": template_name},
-        )
-        content = ""
-
-    return content
-
-
-@register.simple_tag(takes_context=True)
-def show_haie_plantation_liability_info(context, plantation_evaluation):
-    """Render the liability_info content depending on the result and plantation evaluation for the result p page."""
-
-    template_name = f"haie/moulinette/plantation_liability_info/{plantation_evaluation.result_code}.html"
-    try:
-        content = render_to_string((template_name,), context.flatten())
-    except TemplateDoesNotExist:
-        logger.error(
-            f"Template for GUH liability info is missing. {plantation_evaluation.result_code}",
-            extra={
-                "plantation_evaluation": plantation_evaluation.result_code,
-                "template_name": template_name,
-            },
+            "Template for GUH liability info is missing.",
+            extra={"template_name": template_name, "category": category.name},
         )
         content = ""
 
