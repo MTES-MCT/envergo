@@ -71,3 +71,8 @@
 {% if ru_zone_configs %}
   {% include 'haie/_ru_coefficient_matrix.html' %}
 {% endif %}
+
+{% if protected_species %}
+  <h6 class="fr-mt-3w">Cortège complet (incluant espèces à enjeu majeur)</h6>
+  {% include 'hedges/_species_table_ru.html' with species=protected_species %}
+{% endif %}
