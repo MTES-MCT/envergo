@@ -2671,19 +2671,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
 
-        hedge_id = None
-        hedge_data = None
-        if "haies" in request.GET and request.method == "GET":
-            hedge_id = request.GET["haies"]
-        elif "haies" in request.POST and request.method == "POST":
-            hedge_id = request.POST["haies"]
-        if hedge_id:
-            try:
-                hedge_data = HedgeData.objects.get(id=hedge_id)
-            except (HedgeData.DoesNotExist, ValidationError):
-                pass
-
-        context["hedge_data"] = hedge_data
+        context["hedge_data"] = self.catalog.get("haies", None)
         # Fetch all the regulations that have perimeters intersected by hedges to plant but not hedges to remove
         # For single procedure moulinette, filter the regulations that cannot switch the result to "autorisation"
         context["hedges_to_plant_intersecting_regulations_perimeter"] = {
