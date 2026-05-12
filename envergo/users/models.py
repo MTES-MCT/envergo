@@ -56,7 +56,7 @@ class User(AbstractUser):
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
     def has_access_to_staff_only_criterion(self, site):
-        if not self.is_staff:
+        if not self.is_staff and not self.is_superuser:
             return False
         is_amenagement_site = site.domain == settings.ENVERGO_AMENAGEMENT_DOMAIN
         is_haie_site = site.domain == settings.ENVERGO_HAIE_DOMAIN
