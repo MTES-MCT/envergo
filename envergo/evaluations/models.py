@@ -404,6 +404,7 @@ class Evaluation(models.Model):
             "moulinette": moulinette,
             "evaluation_url": evaluation_url,
             "share_print_url": share_print_url,
+            "is_staff": True,  # avis include staff-only criteria (e.g. ICPE)
             **moulinette.get_extra_context(emulated_request),
         }
         context.update(moulinette.catalog)

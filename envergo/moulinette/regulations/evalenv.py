@@ -829,7 +829,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
         return cleaned_data
 
 
-class ICPE(SelfDeclarationMixin, CriterionEvaluator):
+class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Éval Env > ICPE"
     slug = "icpe"
     form_class = ICPEForm
@@ -852,6 +852,12 @@ class ICPE(SelfDeclarationMixin, CriterionEvaluator):
         "a_verifier_creation": "a_verifier",
         "a_verifier_modification": "a_verifier",
     }
+    CODE_ACTIONS_TO_TAKE_MATRIX = {
+        "cas_par_cas": {TO_ADD: {"pc_icpe_e"}},
+        "non_soumis_declaration": {TO_ADD: {"pc_icpe_d"}},
+        "a_verifier_creation": {TO_ADD: {"pc_icpe_inconnu"}},
+        "a_verifier_modification": {TO_ADD: {"pc_icpe_inconnu"}},
+    }
 
     def get_result_data(self):
         form = self.get_form()
@@ -859,6 +865,9 @@ class ICPE(SelfDeclarationMixin, CriterionEvaluator):
         icpe_projet = form.cleaned_data.get("icpe_projet")
         icpe_regime = form.cleaned_data.get("icpe_regime")
         return icpe_projet, icpe_regime
+
+    def get_actions_to_take(self):
+        return self.CODE_ACTIONS_TO_TAKE_MATRIX.get(self._result_code, {})
 
 
 class OtherCriteria(SelfDeclarationMixin, CriterionEvaluator):
