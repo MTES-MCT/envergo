@@ -16,3 +16,13 @@
     le porter à connaissance ICPE fait office de demande d'examen au cas par cas.
   </p>
 {% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-a-verifier" %}
+
+<div class="more fr-collapse" id="read-more-evalenv-a-verifier">
+
+  {% include 'moulinette/eval_env/_cas_par_cas_details.html' with icpe_only_conditional=regulation.no_other_cas_par_cas_than_icpe %}
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-a-verifier" %}
+
+</div>
