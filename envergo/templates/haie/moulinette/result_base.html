@@ -64,7 +64,8 @@
 
   {% if moulinette.is_multi_category %}
     <section>
-      <div class="fr-callout fr-icon-information-line fr-mb-4w">
+      <div id="multi-categories-callout"
+           class="fr-callout fr-icon-information-line fr-mb-4w">
         <p class="fr-mb-1w">
           Le projet concerne des haies et/ou
           alignements d'arbres de plusieurs catégories
@@ -74,8 +75,8 @@
           {% for category in moulinette.results_by_category %}
             <li>
               {{ category.label }}
-              <a href="#result-{{ category.name }}">
-                <span class="fr-link">
+              <a href="#result-{{ category.name }}" class="fr-ml-2v">
+                <span class="fr-link fr-text--sm">
                   <span class="fr-hidden-xl">Détail</span>
                   <span class="fr-hidden fr-unhidden-xl">Aller au détail</span>
                 </span>

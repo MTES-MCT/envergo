@@ -1222,3 +1222,7 @@ button.hide-expanded[aria-expanded="true"] {
     margin-top: 1.5rem;
   }
 }
+
+#multi-categories-callout.fr-callout[class*=" fr-icon-"]::before {
+  background-color: var(--blue-france-sun-113-625);
+}
