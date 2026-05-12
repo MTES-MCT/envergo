@@ -113,7 +113,7 @@ def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
 
     # Force the moulinette result
     moulinette = evaluation.get_moulinette()
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     evaluation._moulinette.result = "soumis"
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])

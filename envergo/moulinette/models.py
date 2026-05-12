@@ -1874,9 +1874,8 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         all_forms.extend(self.additional_forms)
         all_forms.extend(self.optional_forms)
 
-        triage_form = self.get_triage_form()
-        if triage_form:
-            all_forms.append(triage_form)
+        if self.triage_form:
+            all_forms.append(self.triage_form)
 
         return all_forms
 
@@ -1916,35 +1915,38 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
         data = {}
         for form in self.all_forms:
-            form.full_clean()
             if hasattr(form, "prefixed_cleaned_data"):
                 data.update(form.prefixed_cleaned_data)
-            elif hasattr(form, "cleaned_data"):
+            elif form.is_valid() and hasattr(form, "cleaned_data"):
                 data.update(form.cleaned_data)
         return data
 
+    @cached_property
     def form_errors(self):
-        """Return the list of all form validation errors."""
+        """Return the list of all form validation errors.
 
+        Cached because form data is immutable after moulinette construction,
+        so repeated validation always produces the same result.
+        """
         errors = {}
         for form in self.get_all_forms():
-            form.full_clean()
             for k, v in form.errors.items():
                 errors[k] = v
         return errors
 
     def is_valid(self):
         """The moulinette is valid if it can run the evaluation.
+
         - the main form is valid
         - all additional required forms are valid
         - all activated optional forms are valid
         """
-        return self.main_form.is_valid() and not bool(self.form_errors())
+        return self.main_form.is_valid() and not bool(self.form_errors)
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
 
-        return bool(self.form_errors())
+        return bool(self.form_errors)
 
     def cleaned_additional_data(self):
         """Return combined additional data from custom criterion forms."""
