@@ -248,7 +248,12 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
         super().__init__(*args, **kwargs)
 
     def get_display_value(self, value):
-        data = self.clean(value)
+        """Format hedge data for display in field summaries.
+
+        Accepts either a raw value (UUID string) or an already-cleaned
+        HedgeData instance to avoid redundant DB lookups.
+        """
+        data = value if isinstance(value, HedgeData) else self.clean(value)
         display_value = (
             f"{floatformat(data.length_to_remove(), "0g")} m / "
             f"{floatformat(data.length_to_plant(), "0g")} m"
