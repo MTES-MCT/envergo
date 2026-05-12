@@ -488,6 +488,15 @@ class Regulation(models.Model):
         ]
         return contacts
 
+    @property
+    def no_other_cas_par_cas_than_icpe(self):
+        """True when no criterion other than ICPE triggers cas_par_cas."""
+        return not any(
+            c
+            for c in self.criteria.all()
+            if c.result == RESULTS.cas_par_cas and c.slug != "icpe"
+        )
+
     def ein_out_of_n2000_site(self):
         """Is the project subject to n2000 even if it is not in a Natura 2000 zone ?
 
@@ -1883,16 +1892,12 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
         return form_classes
 
-    @cached_property
-    def optional_forms(self):
-        return self.get_optional_forms(exclude_staff_only_criterion=False)
-
     def get_all_forms(self):
         """Return all forms associated with the Moulinette."""
 
         all_forms = [self.main_form]
         all_forms.extend(self.additional_forms)
-        all_forms.extend(self.optional_forms)
+        all_forms.extend(self.get_optional_forms(exclude_staff_only_criterion=False))
 
         triage_form = self.get_triage_form()
         if triage_form:
@@ -1998,7 +2003,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         """Get a {field_name: field} dict of all optional questions fields."""
 
         fields = OrderedDict()
-        for form in self.optional_forms:
+        for form in self.get_optional_forms(exclude_staff_only_criterion=False):
             for field in form:
                 field_name = form.add_prefix(field.name)
                 if field_name not in fields:

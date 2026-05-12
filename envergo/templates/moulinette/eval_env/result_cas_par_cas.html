@@ -1,66 +1,56 @@
 {% load static %}
 
-<p>Le projet est soumis à examen au cas par cas.</p>
+{% if regulation.icpe.result == "cas_par_cas" and regulation.no_other_cas_par_cas_than_icpe %}
 
-<h3>Marche à suivre</h3>
+  <p>Le projet est soumis à examen au cas par cas, parce qu'il crée ou modifie une ICPE soumise à enregistrement.</p>
 
-<ul>
-  <li>
-    <p>Demande d’examen au cas par cas à déposer à la DREAL</p>
-    <p>
-      <em>→ Délai de réponse : 35 jours</em>
-    </p>
-  </li>
-</ul>
+  <h3>Marche à suivre</h3>
 
-{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
-
-<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
-
-  <h4>Pourquoi un examen au cas par cas ?</h4>
-
-  <p>
-    Lors de l’examen au cas par cas d’un projet, l’administration décide s’il est soumis ou non
-    à une procédure complète d’évaluation environnementale.
-  </p>
-
-  <p>
-    Cette décision est prise en 35 jours. Le porteur de projet peut ainsi planifier en amont
-    et relativement rapidement les étapes réglementaires de son projet et les études à mener :
-  </p>
   <ul>
     <li>
-      S’il est décidé que le projet est soumis à Évaluation environnementale,
-      une étude d’impact devra être réalisée (durée : 1 an), et l’instruction du permis de construire
-      ou d’aménager sera rallongée (durée : 7 à 12 mois) car elle inclura une phase de consultation du public.
-    </li>
-    <li>
-      Dans le cas contraire, le projet sera libre d’obligations complémentaires au titre de
-      l'évaluation environnementale.
+      <p>
+        Aucun dossier supplémentaire n'a à être déposé, car le dossier ICPE fait office de
+        demande d'examen au cas par cas.
+      </p>
+      <p>
+        <em>→ Délai de réponse&nbsp;: 35 jours</em>
+      </p>
     </li>
   </ul>
 
-  <h4>Comment déposer une demande d’examen au cas par cas ?</h4>
+  {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-icpe-only" %}
 
-  {{ config.evalenv_procedure_casparcas|safe }}
+  <div class="more fr-collapse" id="read-more-evalenv-icpe-only">
 
-  <h4>Comment l'instruction d'une demande d’examen au cas par cas se déroule-t-elle ?</h4>
+    {% include 'moulinette/eval_env/_cas_par_cas_details.html' with icpe_only_indicative=True %}
 
-  <p>
-    Le délai d'instruction est fixé à 35 jours à compter de la date où la demande est considérée comme complète.
-    Si le dossier est incomplet, une demande de compléments peut être adressée au porteur de projet sous 15 jours.
-  </p>
+    {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-icpe-only" %}
 
-  <p>
-    À la fin de cette instruction,
-    il est notifié au porteur si son projet est soumis à Évaluation environnementale ou non.
-  </p>
+  </div>
 
-  <p>
-    L’absence de réponse à l’issue des 35 jours vaut décision implicite :
-    le projet est soumis à Évaluation environnementale et a l’obligation de réaliser une étude d’impact.
-  </p>
+{% else %}
+
+  <p>Le projet est soumis à examen au cas par cas.</p>
+
+  <h3>Marche à suivre</h3>
+
+  <ul>
+    <li>
+      <p>Demande d'examen au cas par cas à déposer à la DREAL</p>
+      <p>
+        <em>→ Délai de réponse&nbsp;: 35 jours</em>
+      </p>
+    </li>
+  </ul>
 
   {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
-</div>
+  <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+
+    {% include 'moulinette/eval_env/_cas_par_cas_details.html' %}
+
+    {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+  </div>
+
+{% endif %}
