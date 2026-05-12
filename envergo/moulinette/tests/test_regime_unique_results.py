@@ -272,5 +272,5 @@ def test_moulinette_result_autorisation(france_map):
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.ep.hru__ep_aisne.result == "derogation_simplifiee"
+    assert moulinette.ep.ru__ep_regime_unique.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

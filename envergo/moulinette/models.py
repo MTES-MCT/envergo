@@ -3035,6 +3035,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     def is_multi_category(self):
         """Do the hedges in this simulation fall under different categories of regulations
         (e.g. régime Unique, L350-3, Hors régime unique )?"""
+        if not self.is_evaluated():
+            return False
         return len(self.results_by_category.keys()) > 1
 
     @property
