@@ -69,7 +69,7 @@ def n2000_criteria(france_map):  # noqa
 def test_zh_small_footprint_outside_wetlands():
     """Project with footprint < 100m² are not subject to the 3310."""
     moulinette = MoulinetteAmenagement(_bizou_data(50))
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     moulinette.catalog["wetlands_within_25m"] = False
     moulinette.evaluate()
     assert moulinette.natura2000.zone_humide.result == "non_concerne"

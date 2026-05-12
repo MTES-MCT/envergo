@@ -348,7 +348,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     )
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     info = ep_aisne_get_instructor_view_context(
         moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
     )
@@ -479,7 +479,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     )
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     info = ep_normandie_get_instructor_view_context(
         moulinette.ep.ep_normandie._evaluator,
@@ -664,7 +664,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     DCConfigHaieFactory()
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     info = bcae8_get_instructor_view_context(
         moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
     )
@@ -802,7 +802,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     DCConfigHaieFactory()
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     context = alignement_arbres_get_instructor_view_context(
         moulinette.alignement_arbres.alignement_arbres._evaluator,

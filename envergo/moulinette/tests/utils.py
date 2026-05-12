@@ -192,7 +192,7 @@ def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **e
     hedge_data_instance.save()
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     return moulinette
 
 

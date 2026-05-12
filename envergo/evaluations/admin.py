@@ -91,7 +91,7 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
             moulinette = MoulinetteClass(moulinette_data)
             if not moulinette.is_valid():
                 self.add_error("moulinette_url", _("The moulinette url is invalid."))
-                for field, errors in moulinette.form_errors().items():
+                for field, errors in moulinette.form_errors.items():
                     for error in errors:
                         self.add_error(
                             "moulinette_url", mark_safe(f"{field} : {error}")

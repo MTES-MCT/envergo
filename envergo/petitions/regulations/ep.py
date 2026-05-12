@@ -118,24 +118,11 @@ def ep_regime_unique_get_instructor_view_context(
     ru_debug = get_ru_debug_context(moulinette.catalog)
     context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
 
-<<<<<<< HEAD
     context["quality_condition"] = {}
     if plantation_evaluation:
         condition = plantation_evaluation.find_condition(RUQualityCondition, evaluator)
         if condition:
             context["quality_condition"] = condition.context
-||||||| parent of 70e8a0fad (Refactor the debug template)
-    context["ep_ru_hedge_rows"] = evaluator.build_hedge_rows()
-=======
-    # Quality condition for "Plantation proposée" table
-    R = evaluator.get_replantation_coefficient()
-    hedge_data = moulinette.catalog.get("haies")
-    context["quality_condition"] = (
-        RUQualityCondition(hedge_data, R, evaluator, catalog=moulinette.catalog)
-        .evaluate()
-        .context
-    )
->>>>>>> 70e8a0fad (Refactor the debug template)
 
     # Hedge types ordered for table display (reversed so mixte comes first)
     ordered_hedge_types = list(reversed(moulinette.hedge_types))
