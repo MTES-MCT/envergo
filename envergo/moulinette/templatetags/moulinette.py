@@ -243,19 +243,17 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
         )
         content = ""
 
-    header = get_multi_categories_header(category, context, moulinette)
-    content = header + content
+    if moulinette.is_multi_category:
+        header = get_multi_categories_header(category, context)
+        content = header + content
     return content
 
 
-def get_multi_categories_header(category, context, moulinette) -> SafeString:
-    if moulinette.is_multi_category:
-        header = render_to_string(
-            "haie/moulinette/_category_hedges.html",
-            {"category": category, "hedge_data": context["hedge_data"]},
-        )
-    else:
-        header = ""
+def get_multi_categories_header(category, context) -> SafeString:
+    header = render_to_string(
+        "haie/moulinette/_category_hedges.html",
+        {"category": category, "hedge_data": context["hedge_data"]},
+    )
     return mark_safe(header)
 
 
@@ -275,10 +273,9 @@ def show_plantation_result(context, plantation_evaluation):
     else:
         try:
             content = render_to_string((template_name,), context_data)
-            header = get_multi_categories_header(
-                context["main_category"], context, context["moulinette"]
-            )
-            content = header + content
+            if context["moulinette"].is_multi_category:
+                header = get_multi_categories_header(context["main_category"], context)
+                content = header + content
             html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
         except TemplateDoesNotExist:
             logger.error(
