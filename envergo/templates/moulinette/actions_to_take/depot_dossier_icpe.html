@@ -1,0 +1,36 @@
+{% if moulinette.eval_env.icpe.result == "a_verifier" %}
+  <p>
+    La nature du dossier dépend du régime ICPE de l'installation, qu'il s'agisse
+    d'une création
+    (<a href="https://entreprendre.service-public.fr/vosdroits/F33414"
+   target="_blank"
+   rel="noopener">en savoir plus</a>)
+    ou d'une modification
+    (<a href="https://entreprendre.service-public.fr/vosdroits/F31192"
+   target="_blank"
+   rel="noopener">en savoir plus</a>).
+  </p>
+{% endif %}
+
+{% if icpe_projet == "modif_avec_pac" or icpe_projet == "modif_sans_pac" %}
+  <p>
+    Un porter-à-connaissance ICPE pour informer le préfet de la modification de l'installation existante.
+    <a href="https://entreprendre.service-public.fr/vosdroits/F31192"
+       target="_blank"
+       rel="noopener">En savoir plus</a>
+  </p>
+{% elif icpe_projet == "creation" and icpe_regime == "declaration" %}
+  <p>
+    Une déclaration ICPE.
+    <a href="https://entreprendre.service-public.fr/vosdroits/F33414"
+       target="_blank"
+       rel="noopener">En savoir plus</a>
+  </p>
+{% elif icpe_projet == "creation" and icpe_regime == "enregistrement" %}
+  <p>
+    Une déclaration ICPE.
+    <a href="https://entreprendre.service-public.fr/vosdroits/F33414"
+       target="_blank"
+       rel="noopener">En savoir plus</a>
+  </p>
+{% endif %}
