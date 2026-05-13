@@ -586,7 +586,7 @@ class Regulation(models.Model):
                     get_template(
                         template_path.format(
                             self.slug,
-                            criterion.evaluator.category,
+                            criterion.evaluator.category.name,
                             criterion.evaluator.base_slug,
                         )
                     )
