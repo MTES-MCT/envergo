@@ -981,16 +981,33 @@ class EspecesProtegeesRegimeUnique(
         return bonus
 
     def get_post_evaluate_data(self):
-        """Write effective per-hedge coefficients (raw + EP bonus) to catalog."""
+        """Write effective per-hedge coefficients (raw + EP bonus) to catalog.
+
+        Dispense means no compensation is required, so effective coefficients
+        are empty. The slug key must still be present so that
+        ``plantation_evaluate()`` picks it up instead of falling back to the
+        raw ``per_hedge_coefficients``.
+        """
+        slug_key = f"{self.slug}_effective_coefficients"
+        if self.result_code == "dispense":
+            return {slug_key: {}}
         bonus = self.get_ep_ru_bonus()
         raw = self.catalog.get("per_hedge_coefficients", {})
         effective = {h: c + bonus for h, c in raw.items()}
-        return {f"{self.slug}_effective_coefficients": effective}
+        return {slug_key: effective}
 
     def get_replantation_coefficient(self):
-        """Base RU coefficient plus total EP bonus (result level + sensitive species)."""
-        r_ru = compute_ru_compensation_ratio(self.moulinette)
-        return round(r_ru + self.get_ep_ru_bonus(), 2)
+        """Weighted average of the effective per-hedge coefficients.
+
+        Reads from the slug-keyed effective coefficients written by
+        ``get_post_evaluate_data()``, which already include the EP bonus.
+        For dispense, the effective dict is empty and R is 0.
+        """
+        slug_key = f"{self.slug}_effective_coefficients"
+        effective = self.catalog.get(slug_key, {})
+        return compute_ru_compensation_ratio(
+            self.moulinette, coefficients=effective
+        )
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.
