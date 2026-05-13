@@ -15,7 +15,7 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connection, models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
     CheckConstraint,
@@ -52,7 +52,13 @@ from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
+from envergo.hedges.models import (
+    TO_PLANT,
+    TO_REMOVE,
+    HedgeData,
+    HedgeList,
+    HedgeTypeFactory,
+)
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -2729,13 +2735,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return regulations
 
     def get_perimeters(self):
-        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant)
+        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant).
 
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
         hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
         if hedges:
-            zone_subquery = self.get_zone_subquery(hedges)
+            map_ids = self.get_intersecting_map_ids(hedges)
             perimeters = (
                 Perimeter.objects.annotate(
                     distance=Value(
@@ -2743,23 +2749,21 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                     )  # We use an exists subquery that check for intersection so the distance is 0
                 )
                 .annotate(geometry=F("activation_map__geometry"))
-                .filter(Exists(zone_subquery))
+                .filter(activation_map_id__in=map_ids)
                 .order_by("id")
                 .distinct("id")
             )
         else:
-            # if there is no hedge in the project
-            # no perimeters can be activated as we do not know where the project will be.
             perimeters = Perimeter.objects.none()
 
         return perimeters
 
     def get_criteria(self):
-        """Fetch the criteria that can be activated for this project
+        """Fetch the criteria that can be activated for this project.
 
-        There is two kind of activation mode for a criterion:
-         * department_centroid : the criteria is activated if the department centroid is in the activation map
-         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
+        There are two activation modes for a criterion:
+         * department_centroid: activated if the department centroid is in the activation map
+         * hedges_intersection: activated if the activation map intersects with the hedges
         """
         dept_centroid = self.department.centroid
         hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
@@ -2780,24 +2784,40 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         # Filter for hedges_intersection activation mode
         hedges_intersection_criteria = super().get_criteria().none()
         if hedges:
-            zone_subquery = self.get_zone_subquery(hedges)
+            map_ids = self.get_intersecting_map_ids(hedges)
             hedges_intersection_criteria = (
                 super()
                 .get_criteria()
-                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
+                .filter(
+                    activation_map_id__in=map_ids,
+                    activation_mode="hedges_intersection",
+                )
             )
 
         return department_centroid_criteria | hedges_intersection_criteria
 
-    def get_zone_subquery(self, hedges):
-        query = Q()
-        for hedge in hedges:
-            query |= Q(geometry__intersects=hedge.geos_geometry)
+    def get_intersecting_map_ids(self, hedges):
+        """Find all map IDs whose zones intersect any of the given hedges.
 
-        zone_subquery = Zone.objects.filter(
-            Q(map_id=OuterRef("activation_map_id")) & query
-        ).values("id")
-        return zone_subquery
+        Zone.geometry is a geography column, so ST_Intersects defaults to
+        spheroidal math — accurate but very expensive on complex multipolygons
+        (some zones have tens of thousands of points). The ::geometry cast
+        switches to planar (Cartesian) math, which is orders of magnitude
+        faster. At the scale of hedges (~hundreds of meters), the difference
+        between spheroidal and planar intersection is submillimeter.
+
+        The geography GIST index still handles bounding box pre-filtering (the
+        && operator), so only a few dozen candidate zones reach the exact check.
+        """
+        merged = HedgeList(hedges).to_multilinestring()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT DISTINCT map_id FROM geodata_zone "
+                "WHERE geometry && %s::geography "
+                "AND ST_Intersects(geometry::geometry, %s::geometry)",
+                [merged.ewkt, merged.ewkt],
+            )
+            return [row[0] for row in cursor.fetchall()]
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
