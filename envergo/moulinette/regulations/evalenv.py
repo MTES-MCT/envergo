@@ -885,6 +885,7 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
         form = self.get_form()
         if form and form.is_valid():
             data["icpe_regime"] = form.cleaned_data.get("icpe_regime")
+            data["icpe_projet"] = form.cleaned_data.get("icpe_projet")
         return data
 
     def get_result_data(self):

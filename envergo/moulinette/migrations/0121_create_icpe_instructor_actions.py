@@ -29,9 +29,40 @@ def create_icpe_instructor_actions(apps, schema_editor):
         defaults={
             "type": "action",
             "target": "petitioner",
-            "order": 2,
+            "order": 1,
             "label": "Déposer un dossier ICPE",
-            "details": "",
+            "details": "moulinette/actions_to_take/depot_dossier_icpe.html",
+        },
+    )
+
+    ActionToTake.objects.get_or_create(
+        slug="pc_icpe_d",
+        defaults={
+            "type": "pc",
+            "target": "instructor",
+            "order": 1,
+            "label": "La preuve de dépôt de la déclaration ICPE",
+            "details": "moulinette/actions_to_take/pc_icpe_d.html",
+        },
+    )
+    ActionToTake.objects.get_or_create(
+        slug="pc_icpe_e",
+        defaults={
+            "type": "pc",
+            "target": "instructor",
+            "order": 1,
+            "label": "Le récépissé de la demande d'enregistrement ICPE",
+            "details": "moulinette/actions_to_take/pc_icpe_e.html",
+        },
+    )
+    ActionToTake.objects.get_or_create(
+        slug="pc_icpe_inconnu",
+        defaults={
+            "type": "pc",
+            "target": "instructor",
+            "order": 1,
+            "label": "La preuve de dépôt de la demande ICPE",
+            "details": "moulinette/actions_to_take/pc_icpe_inconnu.html",
         },
     )
 
@@ -44,7 +75,14 @@ def create_icpe_instructor_actions(apps, schema_editor):
 def reverse(apps, schema_editor):
     ActionToTake = apps.get_model("moulinette", "ActionToTake")
     ActionToTake.objects.filter(
-        slug__in=["mention_arrete_icpe_e", "suspension_delai_icpe", "depot_dossier_icpe"]
+        slug__in=[
+            "mention_arrete_icpe_e",
+            "suspension_delai_icpe",
+            "depot_dossier_icpe",
+            "pc_icpe_d",
+            "pc_icpe_e",
+            "pc_icpe_inconnu",
+        ]
     ).delete()
     ActionToTake.objects.filter(slug="pc_cas_par_cas").update(details="")
 
