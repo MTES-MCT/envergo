@@ -220,9 +220,12 @@
       window.addEventListener("mapInitialized", (e) => leafletMaps.push(e.detail));
 
       function invalidateVisibleMaps() {
-        leafletMaps.forEach(({id, map}) => {
+        leafletMaps.forEach(({id, map, fitBoundsArgs}) => {
           if (!document.getElementById(id).closest('[hidden]')) {
             map.invalidateSize();
+            if (fitBoundsArgs) {
+              map.fitBounds(...fitBoundsArgs);
+            }
           }
         });
       }
