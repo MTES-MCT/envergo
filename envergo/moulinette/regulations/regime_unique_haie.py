@@ -273,8 +273,6 @@ class RegimeUniqueHaieRu(
             "ru_all_zones_resolved", False
         ):
             return "non_disponible"
-        if not self.hedges.to_remove():
-            return "non_concerne"
 
         return "soumis"
 
