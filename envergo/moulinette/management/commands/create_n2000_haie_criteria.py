@@ -19,7 +19,7 @@ Staging: scalingo --app envergo-staging run python manage.py create_n2000_haie_c
 Prod:    scalingo --app envergo run python manage.py create_n2000_haie_criteria
 """
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from envergo.geodata.models import Map
@@ -170,33 +170,96 @@ CASE_2 = [
     ("90", "soumis", "non"),
 ]
 
-# Liste unique des départements cas 2 (pour le renommage des cartes)
-CASE_2_DEPARTMENTS = sorted({dept for dept, _, _ in CASE_2})
+CASE_1_DEPARTMENTS = {dept for dept, _, _ in CASE_1}
+CASE_2_DEPARTMENTS = {dept for dept, _, _ in CASE_2}
+ALL_DEPARTMENTS = sorted(ALREADY_CREATED | CASE_1_DEPARTMENTS | CASE_2_DEPARTMENTS)
 
 
 class Command(BaseCommand):
     help = "Crée les critères Natura 2000 Haie pour tous les départements"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Vérifie les prérequis sans modifier la base de données",
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
+        self.dry_run = options["dry_run"]
+
+        # Étape 0 : vérifier que toutes les données requises sont en base
+        self.stdout.write("=== Vérification des prérequis ===")
+        self.check_prerequisites()
+
         regulation = Regulation.objects.get(regulation="natura2000_haie")
 
-        # Étape 0 : vérifier que les critères déjà créés existent bien
-        self.stdout.write("=== Vérification des critères existants ===")
+        # Étape 1 : vérifier que les critères déjà créés existent bien
+        self.stdout.write("\n=== Vérification des critères existants ===")
         self.check_existing_criteria(regulation)
 
-        # Étape 1 : renommer les cartes des départements cas 2
+        # Étape 2 : renommer les cartes des départements cas 2
         # avant de créer les critères qui les référencent
         self.stdout.write("\n=== Renommage des cartes cas 2 ===")
         self.rename_case2_maps()
 
-        # Étape 2 : créer les critères cas 1 (1 critère par département)
+        # Étape 3 : créer les critères cas 1 (1 critère par département)
         self.stdout.write("\n=== Création des critères cas 1 ===")
         self.create_case1_criteria(regulation)
 
-        # Étape 3 : créer les critères cas 2 (2 critères par département)
+        # Étape 4 : créer les critères cas 2 (2 critères par département)
         self.stdout.write("\n=== Création des critères cas 2 ===")
         self.create_case2_criteria(regulation)
+
+        if self.dry_run:
+            transaction.set_rollback(True)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "\n=== Dry run terminé, toutes les modifications ont été annulées ==="
+                )
+            )
+
+    def check_prerequisites(self):
+        errors = []
+
+        # Réglementation
+        if not Regulation.objects.filter(regulation="natura2000_haie").exists():
+            errors.append("Réglementation 'natura2000_haie' introuvable")
+
+        # Périmètres : N2000 XX pour chaque département
+        existing_perimeters = set(
+            Perimeter.objects.filter(
+                backend_name__in=[f"N2000 {d}" for d in ALL_DEPARTMENTS]
+            ).values_list("backend_name", flat=True)
+        )
+        for dept in ALL_DEPARTMENTS:
+            if f"N2000 {dept}" not in existing_perimeters:
+                errors.append(f"Périmètre 'N2000 {dept}' introuvable")
+
+        # Cartes cas 1 : N2000 XX
+        case1_map_names = [f"N2000 {dept}" for dept, _, _ in CASE_1]
+        existing_maps = set(
+            Map.objects.filter(name__in=case1_map_names).values_list("name", flat=True)
+        )
+        for dept, _, _ in CASE_1:
+            map_name = f"N2000 {dept}"
+            if map_name not in existing_maps:
+                errors.append(f"Carte cas 1 '{map_name}' introuvable")
+
+        # Cartes cas 2 : anciens noms (avant renommage)
+        for dept in CASE_2_DEPARTMENTS:
+            for map_name in [f"N2000 Haie {dept}", f"N2000 Haie {dept} – NC"]:
+                if not Map.objects.filter(name=map_name).exists():
+                    errors.append(f"Carte cas 2 '{map_name}' introuvable")
+
+        if errors:
+            self.stderr.write(self.style.ERROR("Prérequis manquants :"))
+            for error in errors:
+                self.stderr.write(self.style.ERROR(f"  - {error}"))
+            raise CommandError(f"{len(errors)} prérequis manquant(s), abandon.")
+        else:
+            self.stdout.write(self.style.SUCCESS("  Tous les prérequis sont validés"))
 
     def check_existing_criteria(self, regulation):
         """Vérifie que les départements déjà créés (02, 14, 22, 29, 35, 56)
