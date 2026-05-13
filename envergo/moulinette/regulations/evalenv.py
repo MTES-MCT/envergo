@@ -853,11 +853,39 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
         "a_verifier_modification": "a_verifier",
     }
     CODE_ACTIONS_TO_TAKE_MATRIX = {
-        "cas_par_cas": {TO_ADD: {"pc_icpe_e"}},
-        "non_soumis_declaration": {TO_ADD: {"pc_icpe_d"}},
-        "a_verifier_creation": {TO_ADD: {"pc_icpe_inconnu"}},
-        "a_verifier_modification": {TO_ADD: {"pc_icpe_inconnu"}},
+        "cas_par_cas": {
+            TO_ADD: {
+                "mention_arrete_icpe_e",
+                "suspension_delai_icpe",
+                "depot_dossier_icpe",
+                "pc_icpe_e",
+            }
+        },
+        "non_soumis_declaration": {TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"}},
+        "a_verifier_creation": {
+            TO_ADD: {
+                "mention_arrete_icpe_e",
+                "suspension_delai_icpe",
+                "depot_dossier_icpe",
+                "pc_icpe_inconnu",
+            }
+        },
+        "a_verifier_modification": {
+            TO_ADD: {
+                "mention_arrete_icpe_e",
+                "suspension_delai_icpe",
+                "depot_dossier_icpe",
+                "pc_icpe_inconnu",
+            }
+        },
     }
+
+    def get_catalog_data(self):
+        data = super().get_catalog_data()
+        form = self.get_form()
+        if form and form.is_valid():
+            data["icpe_regime"] = form.cleaned_data.get("icpe_regime")
+        return data
 
     def get_result_data(self):
         form = self.get_form()

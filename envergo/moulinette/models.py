@@ -234,6 +234,9 @@ ACTIONS_TO_TAKE = Choices(
     ("pc_icpe_d", "PC ICPE déclaration"),
     ("pc_icpe_e", "PC ICPE enregistrement"),
     ("pc_icpe_inconnu", "PC ICPE régime inconnu"),
+    ("mention_arrete_icpe_e", "Mention arrêté ICPE E"),
+    ("suspension_delai_icpe", "Suspension délai ICPE"),
+    ("depot_dossier_icpe", "Dépôt dossier ICPE"),
 )
 
 
