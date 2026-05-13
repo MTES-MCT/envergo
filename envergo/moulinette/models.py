@@ -2809,6 +2809,9 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         The geography GIST index still handles bounding box pre-filtering (the
         && operator), so only a few dozen candidate zones reach the exact check.
         """
+        if hasattr(self, "_intersecting_map_ids"):
+            return self._intersecting_map_ids
+
         merged = HedgeList(hedges).to_multilinestring()
         with connection.cursor() as cursor:
             cursor.execute(
@@ -2817,7 +2820,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 "AND ST_Intersects(geometry::geometry, %s::geometry)",
                 [merged.ewkt, merged.ewkt],
             )
-            return [row[0] for row in cursor.fetchall()]
+            self._intersecting_map_ids = [row[0] for row in cursor.fetchall()]
+        return self._intersecting_map_ids
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""
