@@ -685,20 +685,22 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
 
 
 def query_hedges_display_geojson(buffer_geos, simplify_tolerance):
-    """Return simplified hedge geometries inside `buffer_geos` as GeoJSON.
+    """Return simplified hedge geometries clipped to `buffer_geos` as GeoJSON.
 
-    Returns a parsed MultiLineString dict, or None if no haies match.
-    ST_Multi wraps the ST_Collect result to guarantee MultiLineString
-    output (ST_Collect alone can return GeometryCollection).
-
-    This is a separate query from `query_hedge_lengths_for_buffers` because
-    combining them into a single scan was empirically ~430 ms slower.
+    Simplifies before clipping so vertices can't drift outside the buffer.
+    Returns a parsed MultiLineString dict, or None if no hedges match.
     """
 
     sql = """
-        SELECT ST_AsGeoJSON(ST_Multi(ST_Collect(
-            ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s)
-        )))
+        SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
+            CASE
+                WHEN ST_CoveredBy(l.geometry, ST_GeomFromEWKT(%(buffer)s))
+                THEN ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s)
+                ELSE ST_Intersection(
+                    ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s),
+                    ST_GeomFromEWKT(%(buffer)s))
+            END
+        ), 2))
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
         WHERE m.map_type = %(map_type)s
@@ -811,8 +813,10 @@ def compute_hedge_densities_around_point(
     # Run a distinct query for the hedges lines to display with leaflet
     # It's quicker and lighter to display simplified geometries
     if display_simplify_tolerance is not None:
+        max_r = max(radii)
+        display_circle = truncated[max_r] or max_circle
         result["display_geojson"] = query_hedges_display_geojson(
-            max_circle, display_simplify_tolerance
+            display_circle, display_simplify_tolerance
         )
 
     return result
@@ -846,8 +850,9 @@ def compute_hedge_density_around_lines(
     }
 
     if display_simplify_tolerance is not None:
+        display_buffer = truncated or buffer_zone
         artifacts["display_geojson"] = query_hedges_display_geojson(
-            buffer_zone, display_simplify_tolerance
+            display_buffer, display_simplify_tolerance
         )
 
     return {"density": density, "artifacts": artifacts}
