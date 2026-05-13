@@ -10,7 +10,7 @@
       <h3>Détail des rubriques</h3>
 
       {% for criterion in regulation.criteria.all %}
-        {% if criterion.is_staff_only and not is_staff %}
+        {% if criterion.is_staff_only and not show_staff_only_criteria %}
           {# Critère masqué pour les non-staff #}
         {% elif criterion.should_be_displayed %}
           {% include 'moulinette/_result_regulation_criterion.html' with regulation=regulation criterion=criterion %}
