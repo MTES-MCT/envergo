@@ -94,7 +94,7 @@
   {% endif %}
 
   {% block result_header %}{% endblock %}
-  {% if "l350_3" in other_categories %}
+  {% if HaieCriterionCategory.l350_3 in moulinette.other_categories %}
     <div id="result-l350_3" class="fr-mb-3w fr-callout other-category-header">
       {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.l350_3 %}
       <p>
@@ -116,7 +116,7 @@
       {% endif %}
     </div>
   {% endif %}
-  {% if "hru" in other_categories %}
+  {% if HaieCriterionCategory.hru in moulinette.other_categories %}
     <div id="result-hru" class="fr-mb-3w fr-callout other-category-header">
       {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.hru %}
       <p>Le projet de destruction inclut des linéaires non soumis à la procédure unique de déclaration, c'est-à-dire :</p>

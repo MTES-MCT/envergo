@@ -561,6 +561,24 @@ class Regulation(models.Model):
         """
         return self.map_factory.create_map() if self.map_factory else None
 
+    @property
+    def maps_by_category(self):
+        """Returns a map to be displayed for each category of the moulinette for the regulation.
+
+        Returns a dict with the category as keys and `envergo.moulinette.regulations.Map` object or None as values.
+        These maps objects will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        maps_by_category = {}
+        for category in self.moulinette.results_by_category:
+            maps_by_category[category] = (
+                self.map_factory.create_map(category)
+                if self.is_activated() and self.show_map and self.map_factory
+                else None
+            )
+
+        return maps_by_category
+
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
         return self.is_activated() and self.show_map and self.map
@@ -3038,6 +3056,53 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         if not self.is_evaluated():
             return False
         return len(self.results_by_category.keys()) > 1
+
+    @property
+    def main_category(self) -> HaieCriterionCategory | None:
+        """Return the most relevant main category of the moulinette.
+
+        RU if it is applicable, or depending on the cascade elsewhere.
+        return None if the moulinette is not evaluated
+        """
+
+        if not self.is_evaluated():
+            return None
+        if HaieCriterionCategory.ru in self.results_by_category:
+            category = HaieCriterionCategory.ru
+        else:
+            category = None
+            hru_result = self.results_by_category.get(HaieCriterionCategory.hru)
+            l350_3_result = self.results_by_category.get(HaieCriterionCategory.l350_3)
+            for result in RESULT_CASCADE:
+                if result == l350_3_result:
+                    category = HaieCriterionCategory.l350_3
+                    break
+                elif result == hru_result:
+                    category = HaieCriterionCategory.hru
+                    break
+            if not category:
+                # There is no result from the Cascade for any category.
+                # e.g. if there is no regulation
+                raise NotImplementedError(
+                    "This simulation has no results in any category."
+                )
+
+        return category
+
+    @property
+    def other_categories(self) -> list[HaieCriterionCategory] | None:
+        """Return the existing categories of the moulinette that are not the most relevant (not the main category).
+
+        return None if the moulinette is not evaluated
+        """
+        if not self.is_evaluated():
+            return None
+        other_categories = [
+            other_category
+            for other_category in self.results_by_category
+            if other_category != self.main_category
+        ]
+        return other_categories
 
     @property
     def is_submittable_to_pguh(self):

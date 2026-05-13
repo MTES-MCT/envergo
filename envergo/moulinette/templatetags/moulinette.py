@@ -232,7 +232,7 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     """Render the global moulinette result content."""
     context_data = context.flatten()
     context_data.update(plantation_evaluation.get_context())
-    category = context_data["main_category"]
+    category = moulinette.main_category
     template_name = f"haie/moulinette/result/{category.name}/{moulinette.results_by_category[category]}.html"
     try:
         content = render_to_string((template_name,), context_data)
@@ -273,8 +273,9 @@ def show_plantation_result(context, plantation_evaluation):
     else:
         try:
             content = render_to_string((template_name,), context_data)
-            if context["moulinette"].is_multi_category:
-                header = get_multi_categories_header(context["main_category"], context)
+            moulinette = context["moulinette"]
+            if moulinette.is_multi_category:
+                header = get_multi_categories_header(moulinette.main_category, context)
                 content = header + content
             html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
         except TemplateDoesNotExist:

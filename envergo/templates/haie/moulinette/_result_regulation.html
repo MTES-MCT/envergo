@@ -1,9 +1,20 @@
 {% extends 'moulinette/_result_regulation.html' %}
 
-{% load moulinette %}
+{% load moulinette utils %}
 
 {% block regulation_title %}
   <h4>{% include 'haie/moulinette/_result_regulation_title.html' with regulation=regulation category=category %}</h4>
+{% endblock %}
+
+{% block map %}
+  {% with map=regulation.maps_by_category|get_item:category %}
+    {% if map %}
+      {% if regulation.display_perimeter %}
+        {% perimeter_detail regulation %}
+      {% endif %}
+      {% include '_map_snippet.html' with map=map map_id=regulation.slug|add:"-"|add:category.name %}
+    {% endif %}
+  {% endwith %}
 {% endblock %}
 
 {% block regulation_body %}

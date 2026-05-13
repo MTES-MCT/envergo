@@ -162,7 +162,7 @@ class MapFactory(ABC):
         return polygons
 
     @abstractmethod
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map."""
         raise NotImplementedError
 
@@ -179,7 +179,7 @@ class PerimetersBoundedWithCenterMapMarkerMapFactory(MapFactory):
     def human_readable_name(cls):
         return "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre du projet"
 
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map centered on moulinette location."""
         polygons = self.create_perimeter_polygons()
 
@@ -206,18 +206,24 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
     def human_readable_name(cls):
         return "Une carte centrée sur les haies à détruire (GUH uniquement)"
 
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map centered on the hedges to remove."""
         polygons = self.create_perimeter_polygons()
         if polygons:
             haies = self.regulation.moulinette.catalog.get("haies")
+            if haies:
+                haies = haies.hedges()
+                if category:
+                    haies = haies.category(
+                        self.regulation.moulinette.config.single_procedure, category
+                    )
             if haies:
                 hedges_to_remove = MapPolygon(
                     [
                         SimpleNamespace(
                             geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                         )
-                        for hedge in haies.hedges_to_remove()
+                        for hedge in haies.to_remove()
                     ],
                     "red",
                     "Haies à détruire",
@@ -249,23 +255,29 @@ class HedgesCentricMapFactory(MapFactory):
     def human_readable_name(cls):
         return "Une carte centrée sur les haies, à la fois à détruire et à planter (GUH uniquement)"
 
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map centered on the hedges."""
         polygons = self.create_perimeter_polygons()
         if polygons:
             haies = self.regulation.moulinette.catalog.get("haies")
             if haies:
+                haies = haies.hedges()
+                if category:
+                    haies = haies.category(
+                        self.regulation.moulinette.config.single_procedure, category
+                    )
+            if haies:
                 hedges_to_remove_geometries = [
                     SimpleNamespace(
                         geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                     )
-                    for hedge in haies.hedges_to_remove()
+                    for hedge in haies.to_remove()
                 ]
                 hedges_to_plant_geometries = [
                     SimpleNamespace(
                         geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                     )
-                    for hedge in haies.hedges_to_plant()
+                    for hedge in haies.to_plant()
                 ]
 
                 if hedges_to_plant_geometries:
