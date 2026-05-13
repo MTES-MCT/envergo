@@ -1,10 +1,10 @@
 <p class="hedges-category-header">
   <strong>{{ category.label }}</strong> ·
   {% if category.name == "ru" %}
-    {{ hedge_data.hedges.ru.names }}
+    {{ hedge_data.hedges.ru.sort_by_type.names }}
   {% elif category.name == "l350_3" %}
-    {{ hedge_data.hedges.l350_3.names }}
+    {{ hedge_data.hedges.l350_3.sort_by_type.names }}
   {% elif category.name == "hru" %}
-    {{ hedge_data.hedges.hru.names }}
+    {{ hedge_data.hedges.hru.sort_by_type.names }}
   {% endif %}
 </p>

@@ -98,10 +98,10 @@
     <div id="result-l350_3" class="fr-mb-3w fr-callout other-category-header">
       {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.l350_3 %}
       <p>
-        Le projet de destruction inclut des alignements d'arbres en bord de voie ouverte à la circulation du public. Ces linéaires sont protégés (art.
-        <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045213878"
-           target="_blank"
-           rel="noopener">L350-3 du code de l'environnement</a>) et relèvent d'une procédure spécifique, hors de la déclaration unique concernant les haies.
+        Le projet de destruction inclut des alignements d'arbres en bord de voie ouverte à la circulation du public. Ces linéaires sont protégés
+        (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045213878"
+   target="_blank"
+   rel="noopener">art. L350-3 du code de l'environnement</a>) et relèvent d'une procédure spécifique, hors de la déclaration unique concernant les haies.
       </p>
       {% if moulinette.config.aa_l3503_handling == AaL3503Handling.PORTAL %}
         <p>
@@ -148,7 +148,7 @@
                      type="radio"
                      id="segmented-{{ category.name }}"
                      name="segmented-category">
-              <label class="fr-label" for="segmented-{{ category.name }}">{{ category.label }}</label>
+              <label class="fr-label" for="segmented-{{ category.name }}">{{ category.short_label }}</label>
             </div>
           {% endfor %}
         </div>

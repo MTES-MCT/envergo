@@ -12,7 +12,7 @@ from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.formats import date_format
-from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeString, mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
@@ -243,14 +243,20 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
         )
         content = ""
 
+    header = get_multi_categories_header(category, context, moulinette)
+    content = header + content
+    return content
+
+
+def get_multi_categories_header(category, context, moulinette) -> SafeString:
     if moulinette.is_multi_category:
         header = render_to_string(
             "haie/moulinette/_category_hedges.html",
             {"category": category, "hedge_data": context["hedge_data"]},
         )
-        content = header + content
-
-    return content
+    else:
+        header = ""
+    return mark_safe(header)
 
 
 @register.simple_tag(takes_context=True)
@@ -269,6 +275,10 @@ def show_plantation_result(context, plantation_evaluation):
     else:
         try:
             content = render_to_string((template_name,), context_data)
+            header = get_multi_categories_header(
+                context["main_category"], context, context["moulinette"]
+            )
+            content = header + content
             html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
         except TemplateDoesNotExist:
             logger.error(

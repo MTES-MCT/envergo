@@ -684,17 +684,30 @@ class _DjangoSafeEnumMeta(EnumType):
 
 class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
 
-    def __new__(cls, value, label=""):
+    def __new__(cls, value, label="", short_label=""):
         member = str.__new__(cls, value)
         member._value_ = value
         member.label = label
+        member.short_label = short_label
         return member
 
 
 class HaieCriterionCategory(LabelEnum):
-    ru = ("Régime unique", "Haies bénéficiant d'une procédure unique")
-    l350_3 = ("L350-3", "Alignements d'arbres en bord de voie")
-    hru = ("Hors régime unique", "Autres haies et alignements, hors procédure unique")
+    ru = (
+        "Régime unique",
+        "Haies bénéficiant d'une procédure unique",
+        "Haies (procédure unique)",
+    )
+    l350_3 = (
+        "L350-3",
+        "Alignements d'arbres en bord de voie",
+        "Alignements d'arbres bord de voie",
+    )
+    hru = (
+        "Hors régime unique",
+        "Autres haies et alignements, hors procédure unique",
+        "Linéaires hors procédure unique",
+    )
 
 
 class HaieCriterionEvaluator(CriterionEvaluator, ABC):
