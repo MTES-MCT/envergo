@@ -236,7 +236,7 @@ def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
 @pytest.mark.parametrize(
     "length, density, expected_code, expected_coeff",
     [
-        (8, 60, "dispense", 1.5),  # R_ru=1.5 + bonus=0.0
+        (8, 60, "dispense", 0.0),  # dispense → no compensation
         (50, 60, "derogation_simplifiee", 1.75),  # R_ru=1.5 + bonus=0.25
         (120, 40, "derogation_inventaire", 2.0),  # R_ru=1.5 + bonus=0.5
     ],
@@ -284,6 +284,7 @@ def test_ep_ru_sensitive_species_bonus_on_derogation_simplifiee(
     assert evaluator.get_replantation_coefficient() == 1.75
 
     evaluator.catalog["has_sensitive_species"] = True
+    evaluator.evaluate()
     assert evaluator.get_replantation_coefficient() == 2.0
 
 
@@ -315,6 +316,7 @@ def test_ep_ru_sensitive_species_no_bonus_other_results(
     coeff_before = evaluator.get_replantation_coefficient()
 
     evaluator.catalog["has_sensitive_species"] = True
+    evaluator.evaluate()
     assert evaluator.get_replantation_coefficient() == coeff_before
 
 
@@ -510,11 +512,11 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
         assert ep_effective[hedge_id] > raw[hedge_id]
 
 
-def test_ep_ru_dispense_effective_equals_raw(
+def test_ep_ru_dispense_effective_empty(
     ep_ru_criterion,
     regime_unique_haie_criterion,
 ):
-    """Dispense result → bonus is 0.0 → effective coefficients equal raw."""
+    """Dispense result → effective coefficients are empty and R is 0."""
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=60,
@@ -526,8 +528,5 @@ def test_ep_ru_dispense_effective_equals_raw(
 
     evaluator = criterion.get_evaluator()
     slug_key = f"{evaluator.slug}_effective_coefficients"
-    effective = moulinette.catalog[slug_key]
-    raw = moulinette.catalog["per_hedge_coefficients"]
-
-    for hedge_id in raw:
-        assert effective[hedge_id] == raw[hedge_id]
+    assert moulinette.catalog[slug_key] == {}
+    assert evaluator.get_replantation_coefficient() == 0.0
