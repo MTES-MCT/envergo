@@ -102,7 +102,7 @@ class MoulinetteMixin:
         else:
             is_staff = False
         exclude_staff_only_criterion = not is_staff
-        context["is_staff"] = is_staff
+        context["show_staff_only_criteria"] = is_staff
 
         if self.moulinette.is_evaluated():
 
