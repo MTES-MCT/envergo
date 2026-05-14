@@ -772,7 +772,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Installation classée (ICPE)",
-        help_text="À noter : ce simulateur détermine les procédures à suivre <b>en fonction</b> "
+        help_text="À noter : ce simulateur détermine les procédures à suivre <b>en fonction</b> "
         "du statut ICPE du projet. Il ne permet pas encore de déterminer <b>si</b> le projet "
         "est soumis à ICPE.",
         required=True,
@@ -834,26 +834,40 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     slug = "icpe"
     form_class = ICPEForm
     CODE_MATRIX = {
-        (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
-        (ICPE_PROJET_CREATION, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas_creation",
+        (
+            ICPE_PROJET_CREATION,
+            ICPE_REGIME_DECLARATION,
+        ): "non_soumis_declaration_creation",
         (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier_creation",
-        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
-        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas_modif",
+        (
+            ICPE_PROJET_MODIF_AVEC_PAC,
+            ICPE_REGIME_DECLARATION,
+        ): "non_soumis_declaration_modif",
         (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier_modification",
         (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_ENREGISTREMENT): "non_soumis_sans_pac",
-        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_DECLARATION): "non_soumis_declaration",
-        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier_modification",
+        (
+            ICPE_PROJET_MODIF_SANS_PAC,
+            ICPE_REGIME_DECLARATION,
+        ): "non_soumis_declaration_sans_pac",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier_sans_pac",
         (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis_pas_icpe",
     }
     RESULT_MATRIX = {
-        "non_soumis_declaration": "non_soumis",
+        "cas_par_cas_creation": "cas_par_cas",
+        "cas_par_cas_modif": "cas_par_cas",
+        "non_soumis_declaration_creation": "non_soumis",
+        "non_soumis_declaration_modif": "non_soumis",
+        "non_soumis_declaration_sans_pac": "non_soumis",
         "non_soumis_sans_pac": "non_soumis",
         "non_soumis_pas_icpe": "non_soumis",
         "a_verifier_creation": "a_verifier",
         "a_verifier_modification": "a_verifier",
+        "a_verifier_sans_pac": "a_verifier",
     }
     CODE_ACTIONS_TO_TAKE_MATRIX = {
-        "cas_par_cas": {
+        "cas_par_cas_creation": {
             TO_ADD: {
                 "mention_arrete_icpe_e",
                 "suspension_delai_icpe",
@@ -861,7 +875,19 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
                 "pc_icpe_e",
             }
         },
-        "non_soumis_declaration": {TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"}},
+        "cas_par_cas_modif": {
+            TO_ADD: {
+                "mention_arrete_icpe_e",
+                "suspension_delai_icpe",
+                "depot_pac_icpe",
+                "pc_icpe_e",
+            }
+        },
+        "non_soumis_declaration_creation": {
+            TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"}
+        },
+        "non_soumis_declaration_modif": {TO_ADD: {"pc_icpe_d", "depot_pac_icpe"}},
+        "non_soumis_declaration_sans_pac": {TO_ADD: {"pc_icpe_d"}},
         "a_verifier_creation": {
             TO_ADD: {
                 "mention_arrete_icpe_e",
@@ -874,7 +900,14 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
             TO_ADD: {
                 "mention_arrete_icpe_e",
                 "suspension_delai_icpe",
-                "depot_dossier_icpe",
+                "depot_pac_icpe",
+                "pc_icpe_inconnu",
+            }
+        },
+        "a_verifier_sans_pac": {
+            TO_ADD: {
+                "mention_arrete_icpe_e",
+                "suspension_delai_icpe",
                 "pc_icpe_inconnu",
             }
         },

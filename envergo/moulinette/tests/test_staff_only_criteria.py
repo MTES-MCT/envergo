@@ -19,10 +19,9 @@ BASE_PARAMS = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
 
 
 @pytest.fixture
-def staff_client():
-    user = UserFactory(is_staff=True)
+def staff_client(staff_user):
     client = Client()
-    client.force_login(user)
+    client.force_login(staff_user)
     return client
 
 

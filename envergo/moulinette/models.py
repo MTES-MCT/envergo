@@ -237,6 +237,7 @@ ACTIONS_TO_TAKE = Choices(
     ("mention_arrete_icpe_e", "Mention arrêté ICPE E"),
     ("suspension_delai_icpe", "Suspension délai ICPE"),
     ("depot_dossier_icpe", "Dépôt dossier ICPE"),
+    ("depot_pac_icpe", "Dépôt PAC ICPE"),
 )
 
 
