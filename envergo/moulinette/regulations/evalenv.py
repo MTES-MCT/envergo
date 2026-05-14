@@ -772,7 +772,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
 
     activate = forms.BooleanField(
         label="Installation classée (ICPE)",
-        help_text="À noter : ce simulateur détermine les procédures à suivre <b>en fonction</b> "
+        help_text="À noter : ce simulateur détermine les procédures à suivre <b>en fonction</b> "
         "du statut ICPE du projet. Il ne permet pas encore de déterminer <b>si</b> le projet "
         "est soumis à ICPE.",
         required=True,
