@@ -29,11 +29,6 @@
                   <tr>
                     <th>Destinataire</th>
                     <th>Statut</th>
-                    <th>Maj. statut</th>
-                    <th>Nb ouverture</th>
-                    <th>Dernière ouverture</th>
-                    <th>Nb clics</th>
-                    <th>Dernier clic</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -45,13 +40,8 @@
                           <abbr title="{{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})">❗️ Non délivré</abbr>
                         </td>
                       {% else %}
-                        <td>{{ status.status }}</td>
+                        <td>-</td>
                       {% endif %}
-                      <td>{{ status.latest_status|date:'SHORT_DATETIME_FORMAT' }}</td>
-                      <td>{{ status.nb_opened }}</td>
-                      <td>{{ status.latest_opened|date:'SHORT_DATETIME_FORMAT' }}</td>
-                      <td>{{ status.nb_clicked }}</td>
-                      <td>{{ status.latest_clicked|date:'SHORT_DATETIME_FORMAT' }}</td>
                     </tr>
                   {% endfor %}
                 </tbody>
