@@ -635,19 +635,22 @@ WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
 def query_hedge_length(truncated_buffer, untruncated_circle):
     """Sum the clipped hedge length inside a buffer.
 
-    We need to compute lengths of hedges clipped to the circle, BUT running
-    ST_Intersection on every hedge is expensive. In many cases, most hedges
-    are fully INSIDE the circle.
+    We need to compute lengths of hedges clipped to the truncated buffer, BUT
+    running ST_Intersection on every hedge is expensive. In many cases, most
+    hedges are fully INSIDE the buffer.
 
-    So we use a CASE statement, and only run the intersection when the hedge
-    is not fully inside the circle.
+    So we use a CASE statement: ST_CoveredBy against the truncated buffer is
+    the fast path (no clipping needed), and ST_Intersection is only called for
+    hedges that cross the buffer boundary.
 
-    In a simulation with heavy hedge density, it significantly improves the query perf.
+    The WHERE clause uses the simpler untruncated circle for spatial index
+    pre-filtering — it's a superset of the truncated buffer but much cheaper
+    to evaluate against the index.
 
     Args:
         truncated_buffer: land-trimmed polygon, or None if off-land.
         untruncated_circle: the raw circle before land trimming. Used for
-            row filtering (WHERE) and as a fast containment check.
+            row filtering (WHERE) only.
 
     Returns length in meters (float).
     """
@@ -655,7 +658,7 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
     if truncated_buffer is None or truncated_buffer.empty:
         return 0.0
 
-    circle_ewkt = untruncated_circle.ewkt
+    truncated_ewkt = truncated_buffer.ewkt
     sql = f"""
         SELECT COALESCE(SUM(CASE
             WHEN ST_CoveredBy(l.geometry, ST_GeomFromEWKT(%s))
@@ -675,10 +678,10 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
         cursor.execute(
             sql,
             [
-                circle_ewkt,
-                truncated_buffer.ewkt,
+                truncated_ewkt,
+                truncated_ewkt,
                 MAP_TYPES.haies,
-                circle_ewkt,
+                untruncated_circle.ewkt,
             ],
         )
         return cursor.fetchone()[0]
