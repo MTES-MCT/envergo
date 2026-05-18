@@ -8,6 +8,7 @@ from django.contrib.gis.geos import (
 )
 
 from envergo.geodata.models import MAP_TYPES
+from envergo.geodata.utils import trim_land
 from envergo.geodata.tests.factories import (
     LineFactory,
     MapFactory,
