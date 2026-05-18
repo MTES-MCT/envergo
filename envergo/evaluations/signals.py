@@ -42,6 +42,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     event_name = event.event_type
     recipient = event.recipient
     message_id = event.message_id
+    timestamp = event.timestamp
     reject_reason = event.reject_reason
 
     logger.info(f"Received event {event.event_type} for message id {message_id}")
@@ -64,6 +65,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
         recipient=recipient,
         defaults={
             "status": event_name,
+            "latest_status": timestamp,
             "on_error": False,
         },
     )
