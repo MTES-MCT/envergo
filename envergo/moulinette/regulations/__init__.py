@@ -226,7 +226,7 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
                         for hedge in haies.to_remove()
                     ],
                     "red",
-                    "Haies à détruire",
+                    "Linéaires à détruire",
                     class_name="hedge to-remove",
                 )
 
@@ -284,7 +284,7 @@ class HedgesCentricMapFactory(MapFactory):
                     hedges_to_plant = MapPolygon(
                         hedges_to_plant_geometries,
                         "#0f0",
-                        "Haies à planter",
+                        "Linéaires à planter",
                         class_name="hedge to-plant",
                     )
                     polygons.append(hedges_to_plant)
@@ -293,7 +293,7 @@ class HedgesCentricMapFactory(MapFactory):
                     hedges_to_remove = MapPolygon(
                         hedges_to_remove_geometries,
                         "#f00",
-                        "Haies à détruire",
+                        "Linéaires à détruire",
                         class_name="hedge to-remove",
                     )
                     polygons.append(hedges_to_remove)
