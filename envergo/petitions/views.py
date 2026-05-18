@@ -899,57 +899,67 @@ class BasePetitionProjectInstructorView(
     - log read event (XXX why?)
     """
 
+    invitation_token = None
+
+    def has_invalid_invitation_token(self, invitation_token: str):
+        """Returns True if the invitation token exists but is expired."""
+        invitation_token_qs = InvitationToken.objects.filter(token=invitation_token)
+        if invitation_token_qs.exists():
+            self.invitation_token = invitation_token_qs.first()
+            if not self.invitation_token.is_valid(self.request.user):
+                return True
+        return False
+
+    def get_new_link_url(self, reference: str) -> dict:
+        """Returns new link url"""
+        ask_new_link_url_base = "https://tally.so/r/Gxol8e"
+        user = self.request.user
+        city = get_context_from_ds(self.object)["ds_info"][
+            "city"
+        ]  # TODO: avoid getting info from DS
+        petition_project_consultation_url = self.request.build_absolute_uri(
+            reverse(
+                "petition_project_instructor_consultations_view",
+                kwargs={"reference": self.object.reference},
+            )
+        )
+        ask_new_link_params = {
+            "user_name": user.name,
+            "user_email": user.email,
+            "reference": reference,
+            "city": city,
+            "token": self.invitation_token.token,
+            "instructor_email": self.invitation_token.created_by.email,
+            "callback_url": petition_project_consultation_url,
+        }
+        return f"{ask_new_link_url_base}?{urlencode(ask_new_link_params)}"
+
     def get(self, request, *args, **kwargs):
+        """Returns a 403 error if the user has not view permission,
+        returns a specific 403 page if invitation token has expired."""
         self.object = self.get_object()
         if not self.has_view_permission(request, self.object):
             # If token used is not valid, returns specific 403
             invitation_token = request.GET.get(
                 settings.INVITATION_TOKEN_COOKIE_NAME, ""
             )
-            if invitation_token:
-                invitation_token_qs = InvitationToken.objects.filter(
-                    token=invitation_token
+            if invitation_token and self.has_invalid_invitation_token(invitation_token):
+                context = {}
+                # Add button url in context and return specific 403 template
+                context["ask_new_link_url"] = self.get_new_link_url(
+                    kwargs.get("reference")
                 )
-                if invitation_token_qs.exists():
-                    invitation_token_object = invitation_token_qs.get()
-                    if not invitation_token_object.is_valid(self.request.user):
-                        # Add button url in context and return specific 403 template
-                        ask_new_link_url_base = "https://tally.so/r/Gxol8e"
-                        user = self.request.user
-                        city = get_context_from_ds(self.object)["ds_info"][
-                            "city"
-                        ]  # TODO: avoid getting info from DS
-                        petition_project_consultation_url = (
-                            self.request.build_absolute_uri(
-                                reverse(
-                                    "petition_project_instructor_consultations_view",
-                                    kwargs={"reference": self.object.reference},
-                                )
-                            )
-                        )
-                        ask_new_link_params = {
-                            "user_name": user.name,
-                            "user_email": user.email,
-                            "reference": kwargs.get("reference"),
-                            "city": city,
-                            "token": invitation_token,
-                            "instructor_email": invitation_token_object.created_by.email,
-                            "callback_url": petition_project_consultation_url,
-                        }
-                        context = {
-                            "ask_new_link_url": f"{ask_new_link_url_base}?{urlencode(ask_new_link_params)}"
-                        }
-                        # Add matomo url to context
-                        context["matomo_custom_url"] = self.request.build_absolute_uri(
-                            reverse("petition_project_invitation_token_expired")
-                        )
+                # Add matomo url to context
+                context["matomo_custom_url"] = self.request.build_absolute_uri(
+                    reverse("petition_project_invitation_token_expired")
+                )
 
-                        return TemplateResponse(
-                            request=request,
-                            context=context,
-                            template="haie/petitions/403_token_expired.html",
-                            status=403,
-                        )
+                return TemplateResponse(
+                    request=request,
+                    context=context,
+                    template="haie/petitions/403_token_expired.html",
+                    status=403,
+                )
 
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403

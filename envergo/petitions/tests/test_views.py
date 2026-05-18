@@ -2657,7 +2657,7 @@ def test_invitation_workflow_full_cycle(client, haie_instructor_44, haie_user, s
 def test_instructor_view_token_matomo_invitation(
     client, haie_instructor_44, haie_user, site
 ):
-    """Test that instructor view returns 403 when user use an invalid token"""
+    """Test that instructor view returns 403 when user uses an invalid token"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
 

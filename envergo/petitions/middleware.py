@@ -26,7 +26,7 @@ class HandleInvitationTokenMiddleware:
         # User is authenticated. We look for invitation tokens in url
         # or in session data.
         # When user was not logged before a cookie has been stored.
-        # but token is in url too, so delete cookie if they are equals.
+        # If token is in url too, cookie is deleted if they are equals.
         # This avoids to process_token twice and have two messages.
         if request.user.is_authenticated:
             if url_token:
