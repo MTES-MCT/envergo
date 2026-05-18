@@ -633,24 +633,33 @@ WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
 
 
 def query_hedge_length(truncated_buffer, untruncated_circle):
-    """Sum the clipped hedge length inside a buffer.
+    """Sum the geodetic length of hedges clipped to the truncated buffer.
 
-    We need to compute lengths of hedges clipped to the truncated buffer, BUT
-    running ST_Intersection on every hedge is expensive. In many cases, most
-    hedges are fully INSIDE the buffer.
+    The truncated buffer is the circle intersected with terres émergées — it
+    can be a complex polygon (thousands of vertices along coastlines or forest
+    boundaries). Only hedges inside this polygon count toward density.
 
-    So we use a CASE statement: ST_CoveredBy against the truncated buffer is
-    the fast path (no clipping needed), and ST_Intersection is only called for
-    hedges that cross the buffer boundary.
+    A CTE pre-computes three geometries once:
+      - trunc: the truncated buffer (complex, used for clipping)
+      - circ: the raw circle (simple, used for fast containment checks)
+      - excluded: ST_Difference(circ, trunc) — sea / forest zones
 
-    The WHERE clause uses the simpler untruncated circle for spatial index
-    pre-filtering — it's a superset of the truncated buffer but much cheaper
-    to evaluate against the index.
+    The WHERE clause pre-filters hedges against the simple circle (efficient
+    spatial index lookup). Then for each hedge, a CASE chooses between:
+
+      Fast path — hedge is fully inside the truncated buffer:
+        ST_CoveredBy(hedge, circ) AND NOT ST_Intersects(hedge, excluded)
+        Both tests are cheap: the circle has few vertices, and the excluded
+        zone is small so bbox pre-filtering eliminates most hedges instantly.
+        The full hedge length is measured without clipping.
+
+      Slow path — hedge crosses a boundary (coast, forest, or circle edge):
+        ST_Intersection(hedge, trunc) clips the hedge to the truncated buffer
+        and measures the remaining portion.
 
     Args:
         truncated_buffer: land-trimmed polygon, or None if off-land.
-        untruncated_circle: the raw circle before land trimming. Used for
-            row filtering (WHERE) only.
+        untruncated_circle: the raw circle before land trimming.
 
     Returns length in meters (float).
     """
@@ -658,61 +667,87 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
     if truncated_buffer is None or truncated_buffer.empty:
         return 0.0
 
-    truncated_ewkt = truncated_buffer.ewkt
     sql = f"""
+        WITH zones AS (
+            SELECT
+                ST_GeomFromEWKT(%(truncated)s) AS trunc,
+                ST_GeomFromEWKT(%(circle)s) AS circ,
+                ST_Difference(
+                    ST_GeomFromEWKT(%(circle)s),
+                    ST_GeomFromEWKT(%(truncated)s)
+                ) AS excluded
+        )
         SELECT COALESCE(SUM(CASE
-            WHEN ST_CoveredBy(l.geometry, ST_GeomFromEWKT(%s))
+            WHEN ST_CoveredBy(l.geometry, zones.circ)
+                 AND NOT ST_Intersects(l.geometry, zones.excluded)
             THEN ST_LengthSpheroid(
                 l.geometry::geometry(GEOMETRY,4326), '{WGS84_SPHEROID}')
             ELSE ST_LengthSpheroid(
-                ST_Intersection(l.geometry, ST_GeomFromEWKT(%s))
+                ST_Intersection(l.geometry, zones.trunc)
                 ::geometry(GEOMETRY,4326), '{WGS84_SPHEROID}')
         END), 0)
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
-        WHERE m.map_type = %s
-          AND ST_Intersects(l.geometry, ST_GeomFromEWKT(%s));
+        CROSS JOIN zones
+        WHERE m.map_type = %(map_type)s
+          AND ST_Intersects(l.geometry, zones.circ);
     """
 
     with connection.cursor() as cursor:
         cursor.execute(
             sql,
-            [
-                truncated_ewkt,
-                truncated_ewkt,
-                MAP_TYPES.haies,
-                untruncated_circle.ewkt,
-            ],
+            {
+                "truncated": truncated_buffer.ewkt,
+                "circle": untruncated_circle.ewkt,
+                "map_type": MAP_TYPES.haies,
+            },
         )
         return cursor.fetchone()[0]
 
 
-def query_hedges_display_geojson(buffer_geos, simplify_tolerance):
-    """Return simplified hedge geometries clipped to `buffer_geos` as GeoJSON.
+def query_hedges_display_geojson(
+    truncated_buffer, untruncated_circle, simplify_tolerance
+):
+    """Return simplified hedge geometries clipped to the truncated buffer.
+
+    Uses the same fast-path strategy as `query_hedge_length`: hedges fully
+    inside the circle and outside the excluded zone skip ST_Intersection.
 
     Simplifies before clipping so vertices can't drift outside the buffer.
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """
 
     sql = """
+        WITH zones AS (
+            SELECT
+                ST_GeomFromEWKT(%(truncated)s) AS trunc,
+                ST_GeomFromEWKT(%(circle)s) AS circ,
+                ST_Difference(
+                    ST_GeomFromEWKT(%(circle)s),
+                    ST_GeomFromEWKT(%(truncated)s)
+                ) AS excluded
+        )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
             CASE
-                WHEN ST_CoveredBy(l.geometry, ST_GeomFromEWKT(%(buffer)s))
+                WHEN ST_CoveredBy(l.geometry, zones.circ)
+                     AND NOT ST_Intersects(l.geometry, zones.excluded)
                 THEN ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s)
                 ELSE ST_Intersection(
                     ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s),
-                    ST_GeomFromEWKT(%(buffer)s))
+                    zones.trunc)
             END
         ), 2))
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
+        CROSS JOIN zones
         WHERE m.map_type = %(map_type)s
-          AND ST_Intersects(l.geometry, ST_GeomFromEWKT(%(buffer)s));
+          AND ST_Intersects(l.geometry, zones.circ);
     """
     params = {
         "tol": simplify_tolerance,
         "map_type": MAP_TYPES.haies,
-        "buffer": buffer_geos.ewkt,
+        "truncated": truncated_buffer.ewkt,
+        "circle": untruncated_circle.ewkt,
     }
     with connection.cursor() as cursor:
         cursor.execute(sql, params)
@@ -813,13 +848,11 @@ def compute_hedge_densities_around_point(
             },
         }
 
-    # Run a distinct query for the hedges lines to display with leaflet
-    # It's quicker and lighter to display simplified geometries
     if display_simplify_tolerance is not None:
         max_r = max(radii)
-        display_circle = truncated[max_r] or max_circle
+        display_truncated = truncated[max_r] or max_circle
         result["display_geojson"] = query_hedges_display_geojson(
-            display_circle, display_simplify_tolerance
+            display_truncated, max_circle, display_simplify_tolerance
         )
 
     return result
@@ -853,9 +886,9 @@ def compute_hedge_density_around_lines(
     }
 
     if display_simplify_tolerance is not None:
-        display_buffer = truncated or buffer_zone
+        display_truncated = truncated or buffer_zone
         artifacts["display_geojson"] = query_hedges_display_geojson(
-            display_buffer, display_simplify_tolerance
+            display_truncated, buffer_zone, display_simplify_tolerance
         )
 
     return {"density": density, "artifacts": artifacts}
