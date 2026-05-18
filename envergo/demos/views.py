@@ -204,7 +204,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
                 "className": "hedge to-remove",
-                "legend": "Haies à détruire",
+                "legend": "Linéaires à détruire",
                 "opacity": 1.0,
             },
             {
