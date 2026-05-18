@@ -16,7 +16,6 @@ from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
     query_hedge_length,
-    trim_land,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.haie]
