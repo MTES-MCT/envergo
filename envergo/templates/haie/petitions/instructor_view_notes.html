@@ -25,9 +25,9 @@
 
         <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-12 fr-col-md-6">
-            <h3 class="fr-h6 fr-mb-1w">Notes internes au service coordonnateur</h3>
-            <p class="fr-text--sm fr-hint-text fr-mb-2w">
-              Partagez ici tout ce qui est utile à votre suivi de la demande. Les services consultés n'ont pas accès à ces notes.
+            <p class="notes-label">
+              <span class="label-content fr-text--bold">Notes internes au service coordonnateur</span>
+              <span class="fr-hint-text">Partagez ici tout ce qui est utile à votre suivi de la demande. Les services consultés n'ont pas accès à ces notes.</span>
             </p>
             <div class="fr-text--md" id="private-notes-display">
               {% if petition_project.instructor_private_mention %}
@@ -38,9 +38,9 @@
             </div>
           </div>
           <div class="fr-col-12 fr-col-md-6">
-            <h3 class="fr-h6 fr-mb-1w">Notes pour tous les services consultés</h3>
-            <p class="fr-text--sm fr-hint-text fr-mb-2w">
-              Partagez ici tout ce qui est utile à la collaboration entre services instructeurs.
+            <p class="notes-label">
+              <span class="label-content fr-text--bold">Notes pour tous les services consultés</span>
+              <span class="fr-hint-text">Partagez ici tout ce qui est utile à la collaboration entre services instructeurs.</span>
             </p>
             <div class="fr-text--md" id="public-notes-display">
               {% if petition_project.instructor_free_mention %}
