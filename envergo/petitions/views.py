@@ -898,7 +898,7 @@ class BasePetitionProjectInstructorView(
     invitation_token = None
 
     def has_invalid_invitation_token(self, invitation_token: str):
-        """Returns True if the invitation token exists but is expired."""
+        """Returns True if the invitation token exists but is invalid."""
         invitation_token_qs = InvitationToken.objects.filter(token=invitation_token)
         if invitation_token_qs.exists():
             self.invitation_token = invitation_token_qs.first()
@@ -933,7 +933,8 @@ class BasePetitionProjectInstructorView(
         returns a specific 403 page if invitation token has expired."""
         self.object = self.get_object()
         if not self.has_view_permission(request, self.object):
-            # If token used is not valid, returns specific 403
+            # If token exists but is not valid, returns specific 403,
+            # else returns base 403
             invitation_token = request.GET.get(
                 settings.INVITATION_TOKEN_COOKIE_NAME, ""
             )
