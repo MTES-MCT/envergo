@@ -1,9 +1,14 @@
-## Scalingo
+# Déployer une nouvelle app
 
-- git push
-- ajouter les variables d'environnement
-  - USE_DOCKER="yes"
-  - DJANGO_SETTINGS_MODULE="config.settings.production"
+## Sur Scalingo
+
+Créer une app sur Scalingo, puis déployer via git en suivant [la documentation déployer avec git](https://doc.scalingo.com/platform/deployment/deploy-with-git).
+
+Ajouter les variables d'environnement
+- USE_DOCKER="yes"
+- DJANGO_SETTINGS_MODULE="config.settings.production"
+
+### Spécificités gdal
 
 - Pour gdal
 https://doc.scalingo.com/platform/app/app-with-gdal
@@ -29,28 +34,30 @@ Retour à iso prod :
 
 déploiement success mais toujours erreur `The directory '/app/node_modules' in the STATICFILES_DIRS setting does not exist`
 
-## Domaine
+### Domaine
 
-- ajouter une entrée DNS pour votre domaine https://doc.scalingo.com/platform/app/domain#configure-your-domain-name
-- ajouter le domaine dans settings > public routing
+- ajouter une entrée DNS pour votre domaine
+- ajouter le domaine dans settings > public routing de votre app scalingo
 
-## Celery
+[Documentation configurer son nom de domaine](https://doc.scalingo.com/platform/app/domain#configure-your-domain-name)
+
+### Celery
 
 Ajouter un conteneur Celery et cliquer sur scale
 
-## Sentry
+### Sentry
 
 c'est bon avec les mêmes variables d'environnement que sur staging et prod
 
-## Configuration post déploiement
+### Configuration post déploiement
 
 Se connecter à l'application via le CLI scalingo
 
 ```bash
-scalingo --region osc-secnum-fr1 --app haie-formation run bash
+scalingo --region <region> --app <nom-app> run bash
 ```
 
-### Configuration du site
+#### Configuration du site
 
 Créer un site avec le nom de domaine utilisé
 
@@ -60,8 +67,8 @@ Créer un site avec le nom de domaine utilisé
 
 ```pycon
 >>> from django.contrib.sites.models import Site
->>> Site.objects.get_or_create(domain="formation.haie.beta.gouv.fr", name="Haie formation")
-(<Site: formation.haie.beta.gouv.fr>, True)
+>>> Site.objects.get_or_create(domain="<envergo.example.fr>", name="<Envergo app>")
+(<Site: envergo.example.fr>, True)
 >>>
 ```
 
@@ -71,7 +78,7 @@ https://sentry.incubateur.net/organizations/betagouv/issues/237123
 
 J'ai mis comme pour les deux autres `COMPRESS_ENABLED=False` et c'est corrigé.
 
-### Création d'un superuser
+#### Création d'un superuser
 
 - S'inscrire via https://formation.haie.beta.gouv.fr/comptes/enregistrement/
 - Récupérer le lien de validation d'email depuis la console Scalingo
@@ -85,13 +92,13 @@ J'ai mis comme pour les deux autres `COMPRESS_ENABLED=False` et c'est corrigé.
 >>> user1.save()
 ```
 
-### Import des données carto
+#### Import des données carto
 
 - les départements
 - les haies
 - pour le reste on laisse Théo faire
 
-### Démarches numériques
+#### Démarches numériques
 
 - créer un jeton sur votre compte démarches numériques, de préférence un compte dédié à votre projet
 - déterminez l'id de l'instructeur qui sera indiqué sur les communications email
@@ -103,11 +110,11 @@ DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID=
 DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN=
 ```
 
-### Brevo
+#### Brevo
 
 TODO
 
-### S3
+#### S3
 
 cf doc, liste des variables d'environnement à saisir :
 
@@ -120,7 +127,7 @@ DJANGO_AWS_STORAGE_BUCKET_NAME=
 DJANGO_AWS_UPLOAD_BUCKET_NAME=
 ```
 
-### Mattermost
+#### Mattermost
 
 accès
 créer un webhook
