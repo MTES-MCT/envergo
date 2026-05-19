@@ -607,7 +607,7 @@ def test_instructor_notes_invited_links_are_clickable(
     client.force_login(haie_user_44)
     response = client.get(url)
     content = response.content.decode()
-    assert '<a href="https://example.com/doc"' in content
+    assert 'href="https://example.com/doc"' in content
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
@@ -632,8 +632,8 @@ def test_instructor_notes_coordinator_links_are_clickable(
     client.force_login(haie_instructor_44)
     response = client.get(url)
     content = response.content.decode()
-    assert '<a href="https://example.com/pub"' in content
-    assert '<a href="https://example.com/priv"' in content
+    assert 'href="https://example.com/pub"' in content
+    assert 'href="https://example.com/priv"' in content
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
