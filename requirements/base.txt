@@ -73,7 +73,7 @@ django==4.2.28
     #   django-redis
 django-allauth==65.10.0
     # via -r base.in
-django-anymail[sendinblue]==13.0.1
+django-anymail[sendinblue]==14.0
     # via -r base.in
 django-appconf==1.1.0
     # via django-compressor
@@ -112,6 +112,7 @@ hiredis==3.2.1
 idna==3.10
     # via
     #   anyio
+    #   django-anymail
     #   requests
     #   yarl
 kombu==5.5.4

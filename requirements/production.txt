@@ -109,7 +109,7 @@ django==4.2.28
     #   django-storages
 django-allauth==65.10.0
     # via -r base.txt
-django-anymail[sendinblue]==13.0.1
+django-anymail[sendinblue]==14.0
     # via -r base.txt
 django-appconf==1.1.0
     # via
@@ -157,6 +157,7 @@ idna==3.10
     # via
     #   -r base.txt
     #   anyio
+    #   django-anymail
     #   requests
     #   yarl
 jmespath==1.0.1
