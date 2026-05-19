@@ -31,7 +31,7 @@
     "gulp-uglify-es": "^3.0.0",
     "node-sass-tilde-importer": "^1.0.2",
     "pixrem": "^5.0.0",
-    "prettier": "3.5.0",
+    "prettier": "3.8.3",
     "sass": "^1.84.0",
     "stylelint": "^16.14.1",
     "stylelint-config-standard-scss": "^14.0.0"
