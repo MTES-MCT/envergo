@@ -910,9 +910,7 @@ class BasePetitionProjectInstructorView(
         """Returns new link url"""
         ask_new_link_url_base = "https://tally.so/r/Gxol8e"
         user = self.request.user
-        city = get_context_from_ds(self.object)["ds_info"][
-            "city"
-        ]  # TODO: avoid getting info from DS
+        city = get_context_from_ds(self.object)["ds_info"]["city"]
         petition_project_consultation_url = self.request.build_absolute_uri(
             reverse(
                 "petition_project_instructor_consultations_view",
