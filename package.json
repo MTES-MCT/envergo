@@ -33,7 +33,7 @@
     "pixrem": "^5.0.0",
     "prettier": "3.5.0",
     "sass": "^1.84.0",
-    "stylelint": "^16.14.1",
+    "stylelint": "^17.5.0",
     "stylelint-config-standard-scss": "^14.0.0"
   },
   "browserslist": [
