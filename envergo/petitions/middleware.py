@@ -102,17 +102,5 @@ class HandleInvitationTokenMiddleware:
 
                 messages.info(request, "Un dossier a été rattaché à votre compte.")
 
-            # We don't display an error if the token was already accepted earlier
-            # by this user
-            elif invitation.user != request.user:
-                messages.warning(
-                    request,
-                    """
-                    Le lien d'invitation utilisé n'est plus valide.
-                    Il a peut-être déjà été utilisé ou a expiré.
-                    Veuillez contacter la personne qui vous l'a transmis pour obtenir
-                    un nouveau lien.""",
-                )
-
     def clear_token(self, response):
         response.delete_cookie(settings.INVITATION_TOKEN_COOKIE_NAME)
