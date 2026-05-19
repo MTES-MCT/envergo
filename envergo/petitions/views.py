@@ -902,7 +902,7 @@ class BasePetitionProjectInstructorView(
     invitation_token = None
 
     def has_invalid_invitation_token(self, invitation_token: str):
-        """Returns True if the invitation token exists but is expired."""
+        """Returns True if the invitation token exists but is invalid."""
         invitation_token_qs = InvitationToken.objects.filter(token=invitation_token)
         if invitation_token_qs.exists():
             self.invitation_token = invitation_token_qs.first()
@@ -914,9 +914,7 @@ class BasePetitionProjectInstructorView(
         """Returns new link url"""
         ask_new_link_url_base = "https://tally.so/r/Gxol8e"
         user = self.request.user
-        city = get_context_from_ds(self.object)["ds_info"][
-            "city"
-        ]  # TODO: avoid getting info from DS
+        city = get_context_from_ds(self.object)["ds_info"]["city"]
         petition_project_consultation_url = self.request.build_absolute_uri(
             reverse(
                 "petition_project_instructor_consultations_view",
@@ -938,8 +936,10 @@ class BasePetitionProjectInstructorView(
         """Returns a 403 error if the user has not view permission,
         returns a specific 403 page if invitation token has expired."""
         self.object = self.get_object()
+
         if not self.has_view_permission(request, self.object):
-            # If token used is not valid, returns specific 403
+            # If token exists but is not valid, returns specific 403,
+            # else returns base 403
             invitation_token = request.GET.get(
                 settings.INVITATION_TOKEN_COOKIE_NAME, ""
             )
