@@ -180,7 +180,7 @@ rjsmin==1.2.5
     # via django-compressor
 scipy==1.16.1
     # via -r base.in
-shapely==2.1.1
+shapely==2.1.2
     # via -r base.in
 six==1.17.0
     # via python-dateutil

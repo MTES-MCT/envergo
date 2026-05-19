@@ -399,7 +399,7 @@ rjsmin==1.2.5
     #   django-compressor
 scipy==1.16.1
     # via -r base.txt
-shapely==2.1.1
+shapely==2.1.2
     # via -r base.txt
 six==1.17.0
     # via
