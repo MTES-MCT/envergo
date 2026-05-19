@@ -1,8 +1,10 @@
-{% extends 'demos/_demo_base.html' %}
+{% extends 'base.html' %}
 
-{% load static l10n evaluations moulinette %}
+{% load static l10n %}
 
-{% block title %}Démonstrateur densité de haie{% endblock %}
+{% block title %}Démonstrateur{% endblock %}
+
+{% block main-classes %}demos{% endblock %}
 
 {% block content %}
   <article id="{% block article_id %}{% endblock %}">
@@ -20,28 +22,21 @@
         {% endblock %}
       </div>
       <div class="fr-col-5">
-        {% block result_column %}
 
+        {% block howto %}{% endblock %}
+
+        {% block result_content %}
           {% if result_available %}
-            <div class="fr-table fr-mb-3w">
-              <div class="fr-table__wrapper">
-                <div class="fr-table__container">
-                  <div class="fr-table__content">
-                    {% block table %}{% endblock %}
-                  </div>
-                </div>
-              </div>
-            </div>
+            {% block result %}{% endblock %}
           {% else %}
             {% block no_result %}{% endblock %}
           {% endif %}
-
-          {% block feedback %}{% endblock %}
-
-          <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
         {% endblock %}
-      </div>
 
+        {% block feedback %}{% endblock %}
+
+        <div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
+      </div>
     </div>
   </article>
 {% endblock %}
@@ -57,7 +52,6 @@
   <script defer src="{% static 'leaflet/leaflet.js' %}"></script>
   <script defer src="{% static 'leaflet/draw/leaflet.draw.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
-  <script defer src="{% static 'js/demos/hedge_density_map.js' %}"></script>
   <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
   <script>

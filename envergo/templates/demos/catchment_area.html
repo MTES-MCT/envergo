@@ -1,12 +1,12 @@
-{% extends 'demos/demo_base.html' %}
+{% extends 'demos/_demo_base.html' %}
 
 {% load static l10n %}
 
 {% block title %}Démonstrateur 2150{% endblock %}
 
-{% block content-title %}Estimation de bassin versant : démonstrateur{% endblock %}
+{% block article_heading %}Estimation de bassin versant : démonstrateur{% endblock %}
 
-{% block content-demo-map %}
+{% block map_column %}
   <form method="get" action="">
     {{ form.lng.as_hidden }}
     {{ form.lat.as_hidden }}
@@ -25,14 +25,16 @@
   </form>
 {% endblock %}
 
-{% block content-demo-results %}
+{% block howto %}
   <h2 class="fr-h4">Mode d'emploi</h2>
   <p>
     Consultez <a href="https://docs.google.com/presentation/d/1O1Q4Z9Cj00v6gyuvoigPes2yX32vp7n1OMr_IVEU86g/edit#slide=id.p"
     target="_blank"
     rel="noopener">le document d'explication</a> (mode d'emploi et description de l'algorithme de calcul).
   </p>
+{% endblock %}
 
+{% block result_content %}
   {% if result_available %}
     <h2 class="fr-h4">Résultat du calcul</h2>
     <p>
@@ -105,17 +107,19 @@
 
 {% endif %}
 
-<h2 class="fr-h4">Pour améliorer ce démonstrateur</h2>
+{% endblock %}
 
-<p>
-  Nous sommes preneurs de tous vos retours, positifs et critiques : contactez-nous à <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
-</p>
+{% block feedback %}
+  <h2 class="fr-h4">Pour améliorer ce démonstrateur</h2>
 
-<p>
-  Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il vous permet de partager avec nous une simulation.
-</p>
+  <p>
+    Nous sommes preneurs de tous vos retours, positifs et critiques : contactez-nous à <a href="mailto:contact@envergo.beta.gouv.fr">contact@envergo.beta.gouv.fr</a>
+  </p>
 
-<div class="share-btn hide-print fr-my-8w">{% include '_share_url_btn.html' %}</div>
+  <p>
+    Merci de joindre des exemples concrets qui fonctionnent ou ne fonctionnent pas, en utilisant le bouton ci-dessous : il
+    vous permet de partager avec nous une simulation.
+  </p>
 {% endblock %}
 
 {% block extra_body %}
@@ -125,17 +129,16 @@
 {% block extra_js %}
   {{ super }}
   <script defer src="{% static 'js/demos/catchment_area_map.js' %}"></script>
-  <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 
   <script>
-      var getColor = function (d) {
-        // Thanks to ColorBrewer for the color scale
-        // https://colorbrewer2.org/#type=sequential&scheme=RdPu&n=9
-        let scale = ["#00000000", "#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177", "#49006a"];
-        let d_clamped = Math.max(0, Math.min(d, 12000));
-        let color_index = Math.floor(d_clamped / 12000 * (scale.length - 1));
-        return scale[color_index];
-      }
+  var getColor = function (d) {
+    // Thanks to ColorBrewer for the color scale
+    // https://colorbrewer2.org/#type=sequential&scheme=RdPu&n=9
+    let scale = ["#00000000", "#fff7f3", "#fde0dd", "#fcc5c0", "#fa9fb5", "#f768a1", "#dd3497", "#ae017e", "#7a0177", "#49006a"];
+    let d_clamped = Math.max(0, Math.min(d, 12000));
+    let color_index = Math.floor(d_clamped / 12000 * (scale.length - 1));
+    return scale[color_index];
+  }
 
     var DISPLAY_MARKER = {{ display_marker|yesno:'true,false' }};
     var CENTER_MAP = {lng: {{ center_map.0|unlocalize }}, lat: {{ center_map.1|unlocalize }}};
@@ -169,8 +172,8 @@
         debug: DEBUG,
       }
 
-      let map = new DemoMap(options);
-    });
+    let map = new DemoMap(options);
+  });
 
   </script>
 
