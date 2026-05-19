@@ -149,7 +149,7 @@ graphql-core==3.2.6
     # via
     #   -r base.txt
     #   gql
-gunicorn==23.0.0
+gunicorn==25.1.0
     # via -r production.in
 hiredis==3.2.1
     # via -r base.txt
