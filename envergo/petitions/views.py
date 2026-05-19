@@ -932,6 +932,7 @@ class BasePetitionProjectInstructorView(
         """Returns a 403 error if the user has not view permission,
         returns a specific 403 page if invitation token has expired."""
         self.object = self.get_object()
+
         if not self.has_view_permission(request, self.object):
             # If token exists but is not valid, returns specific 403,
             # else returns base 403
