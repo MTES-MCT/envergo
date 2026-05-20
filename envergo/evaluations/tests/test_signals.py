@@ -2,7 +2,6 @@ import pytest
 from anymail.signals import AnymailTrackingEvent, tracking
 from django.utils import timezone
 
-from envergo.evaluations.models import RecipientStatus
 from envergo.evaluations.tests.factories import RegulatoryNoticeLogFactory
 
 pytestmark = pytest.mark.django_db
@@ -26,13 +25,10 @@ def event():
     return event
 
 
-def test_webhook_event_not_catching(event):
-    statuses_qs = RecipientStatus.objects.all()
-    assert statuses_qs.count() == 0
-
+def test_webhook_event_not_catching(event, mailoutbox):
     RegulatoryNoticeLogFactory(message_id="test_message_id")
     tracking.send(sender=None, event=event, esp_name="sendinblue")
-    assert statuses_qs.count() == 0
+    assert len(mailoutbox) == 0
 
 
 def test_webhook_error_catching(event, mailoutbox):
@@ -40,12 +36,8 @@ def test_webhook_error_catching(event, mailoutbox):
 
     event.event_type = "bounced"
 
-    statuses_qs = RecipientStatus.objects.all()
-    assert statuses_qs.count() == 0
-
     RegulatoryNoticeLogFactory(message_id="test_message_id")
     tracking.send(sender=None, event=event, esp_name="sendinblue")
-    assert statuses_qs.count() == 0
     assert len(mailoutbox) == 1
 
     mail = mailoutbox[0]
