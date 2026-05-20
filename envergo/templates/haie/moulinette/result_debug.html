@@ -41,7 +41,9 @@
         <ul>
           {% with hedges_and_category_by_type|get_item:"TO_REMOVE" as hedges_and_category %}
             {% for h, category in hedges_and_category %}
-              <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} · évaluateur {{ category.value }}</li>
+              <li>
+                {{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ h.category }} · évaluateur {{ category.value }}
+              </li>
             {% endfor %}
           {% endwith %}
         </ul>
@@ -52,7 +54,9 @@
           <ul>
             {% with hedges_and_category_by_type|get_item:"TO_PLANT" as hedges_and_category %}
               {% for h, category in hedges_and_category %}
-                <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ évaluateur {{ category.value }}</li>
+                <li>
+                  {{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ h.category }} ⋅ évaluateur {{ category.value }}
+                </li>
               {% endfor %}
             {% endwith %}
           </ul>

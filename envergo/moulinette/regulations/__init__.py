@@ -144,10 +144,23 @@ class MapFactory(ABC):
             "#bab0ab",
         ]
 
-    def create_perimeter_polygons(self):
+    def create_perimeter_polygons(self, category=None):
         """Create MapPolygon objects from perimeters."""
 
-        perimeters = self.regulation.perimeters.all()
+        if category:
+            # create the map, only if there is some hedges of this category.
+            perimeters = []
+            for (
+                perimeter,
+                hedges_by_type,
+            ) in self.regulation.moulinette.hedges_intersecting_regulations_perimeter.get(
+                self.regulation, {}
+            ).items():
+                for _, hedges in hedges_by_type.items():
+                    if any(hedge.category == category for hedge in hedges):
+                        perimeters.append(perimeter)
+        else:
+            perimeters = self.regulation.perimeters.all()
         polygons = None
         if perimeters:
             polygons = [
@@ -181,7 +194,7 @@ class PerimetersBoundedWithCenterMapMarkerMapFactory(MapFactory):
 
     def create_map(self, category=None) -> Map | None:
         """Create a map centered on moulinette location."""
-        polygons = self.create_perimeter_polygons()
+        polygons = self.create_perimeter_polygons(category)
 
         if polygons:
             map = Map(
@@ -208,13 +221,13 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
 
     def create_map(self, category=None) -> Map | None:
         """Create a map centered on the hedges to remove."""
-        polygons = self.create_perimeter_polygons()
+        polygons = self.create_perimeter_polygons(category)
         if polygons:
             haies = self.regulation.moulinette.catalog.get("haies")
             if haies:
                 haies = haies.hedges()
                 if category:
-                    haies = haies.category(
+                    haies = haies.evaluator_category(
                         self.regulation.moulinette.config.single_procedure, category
                     )
             if haies:
@@ -257,13 +270,13 @@ class HedgesCentricMapFactory(MapFactory):
 
     def create_map(self, category=None) -> Map | None:
         """Create a map centered on the hedges."""
-        polygons = self.create_perimeter_polygons()
+        polygons = self.create_perimeter_polygons(category)
         if polygons:
             haies = self.regulation.moulinette.catalog.get("haies")
             if haies:
                 haies = haies.hedges()
                 if category:
-                    haies = haies.category(
+                    haies = haies.evaluator_category(
                         self.regulation.moulinette.config.single_procedure, category
                     )
             if haies:
@@ -763,7 +776,9 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
             self.hedges = (
                 self.moulinette.catalog["haies"]
                 .hedges()
-                .category(self.moulinette.config.single_procedure, self.category)
+                .evaluator_category(
+                    self.moulinette.config.single_procedure, self.category
+                )
             )
         else:
             from envergo.hedges.models import HedgeList

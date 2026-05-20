@@ -184,6 +184,29 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sous_ligne_electrique", None)
 
+    @property
+    def category(self):
+        """Return the category of the hedge (régime unique, L350-3 or hores régime unique)."""
+        if (
+            self.hedge_type != HedgeTypeBase.ALIGNEMENT
+            and (
+                not self.prop("bord_batiment") or not self.has_property("bord_batiment")
+            )
+            and (not self.prop("parc_jardin") or not self.has_property("parc_jardin"))
+            and (
+                not self.prop("place_publique")
+                or not self.has_property("place_publique")
+            )
+        ):
+            return HaieCriterionCategory.ru
+
+        if self.hedge_type == HedgeTypeBase.ALIGNEMENT and (
+            self.prop("bord_voie") or not self.has_property("bord_voie")
+        ):
+            return HaieCriterionCategory.l350_3
+
+        return HaieCriterionCategory.hru
+
     def get_species_filter(self):
         """Build the filter to get species possibly living in a single hedge.
 
@@ -316,22 +339,17 @@ class HedgeList(list[Hedge]):
 
     def ru(self) -> Self:
         """Select all hedges that are covered by the single procedure (régime unique, RU)."""
-        return (
-            self.n_alignement()
-            .prop("!bord_batiment")
-            .prop("!parc_jardin")
-            .prop("!place_publique")
-        )
+        return HedgeList([h for h in self if h.category == HaieCriterionCategory.ru])
 
     def l350_3(self) -> Self:
         """Select all tree alignment that are covered the L350-3 regulation."""
-        return self.alignement().prop("bord_voie")
+        return HedgeList(
+            [h for h in self if h.category == HaieCriterionCategory.l350_3]
+        )
 
     def hru(self) -> Self:
         """Select all hedges are not covered by either the single procedure or L350-3"""
-        ru = self.ru()
-        l350_3 = self.l350_3()
-        return HedgeList([h for h in self if h not in ru and h not in l350_3])
+        return HedgeList([h for h in self if h.category == HaieCriterionCategory.hru])
 
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
@@ -365,7 +383,7 @@ class HedgeList(list[Hedge]):
             hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
         return hedges
 
-    def category(self, single_procedure, category) -> Self:
+    def evaluator_category(self, single_procedure, category) -> Self:
         """List the hedges depending on the given category.
 
         When a category has no hedges to remove, its "to plant" hedges are
@@ -721,7 +739,7 @@ class HedgeData(models.Model):
     ) -> dict[HaieCriterionCategory, HedgeList]:
         """Get the hedges list for each category."""
         hedges_by_category = {
-            category: self.hedges().category(single_procedure, category)
+            category: self.hedges().evaluator_category(single_procedure, category)
             for category in HaieCriterionCategory
         }
 
