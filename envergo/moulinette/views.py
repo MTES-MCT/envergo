@@ -337,14 +337,17 @@ class MoulinetteForm(MoulinetteMixin, FormView):
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}
                 )
-
+        metadata = {
+            "data": form.data,
+            "errors": form_errors,
+        }
+        mtm_keys = get_matomo_tags(self.request)
+        metadata.update(mtm_keys)
         log_event(
             "erreur",
             "formulaire-simu",
             self.request,
-            data=form.data,
-            errors=form_errors,
-            mtm_keys=get_matomo_tags(self.request),
+            **metadata,
             user_type=get_user_type(self.request.user),
         )
         return self.render_to_response(context)
