@@ -162,6 +162,15 @@ def test_moulinette_post_form_error(client):
     assert "data" in error_event.metadata
     assert error_event.metadata["data"] == data
 
+    # GIVEN an url with mtm params
+    res = client.post(f"{url}?mtm_campaign=campaign", data)
+    error_event = Event.objects.filter(
+        category="erreur", event="formulaire-simu"
+    ).last()
+    # THEN mtm_keys are in event
+    assert "mtm_keys" in error_event.metadata
+    assert error_event.metadata["mtm_keys"] == {"mtm_campaign": "campaign"}
+
 
 def test_moulinette_post_qc_form_error(client):
     # GIVEN a moulinette configured with one criterion requiring complementary questions

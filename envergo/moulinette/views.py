@@ -279,7 +279,6 @@ class MoulinetteMixin:
                 if moulinette.is_triage_valid()
                 else "soumission_autre"
             )
-
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
 
@@ -338,12 +337,14 @@ class MoulinetteForm(MoulinetteMixin, FormView):
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}
                 )
+
         log_event(
             "erreur",
             "formulaire-simu",
             self.request,
             data=form.data,
             errors=form_errors,
+            mtm_keys=get_matomo_tags(self.request),
             user_type=get_user_type(self.request.user),
         )
         return self.render_to_response(context)
