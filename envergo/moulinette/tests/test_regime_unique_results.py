@@ -30,14 +30,7 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
-            activation_map=france_map,
-            activation_mode="department_centroid",
-        ),
-        CriterionFactory(
-            title="Alignement arbres > L350-3",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -187,7 +180,7 @@ def test_moulinette_result_non_alignement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.alignement_arbres.result == "non_concerne"
+    assert moulinette.alignement_arbres.result == "non_disponible"
     assert moulinette.result == "declaration"
 
 

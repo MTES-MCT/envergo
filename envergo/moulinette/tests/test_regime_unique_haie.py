@@ -38,21 +38,7 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
-            activation_map=france_map,
-            activation_mode="department_centroid",
-        ),
-        CriterionFactory(
-            title="Regime unique haie",
-            regulation=regulation,
             evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
-            activation_map=france_map,
-            activation_mode="department_centroid",
-        ),
-        CriterionFactory(
-            title="Regime unique haie",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -60,8 +46,8 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
     return criteria
 
 
-def test_ru_and_l3503_criteria_in_ru_mode():
-    """In RU mode with mixte + alignement hedges, RU→soumis, L350-3→non_concerne."""
+def test_ru_criteria_in_ru_mode():
+    """In RU mode with mixte + alignement hedges, RU→soumis."""
     RUConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[
@@ -72,10 +58,6 @@ def test_ru_and_l3503_criteria_in_ru_mode():
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
-    assert (
-        moulinette.regime_unique_haie.l350_3__regime_unique_haie.result_code
-        == "non_concerne"
-    )
 
 
 def test_hru_criterion_non_concerne_in_ru_mode():
@@ -89,10 +71,6 @@ def test_hru_criterion_non_concerne_in_ru_mode():
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert (
-        moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
-        == "non_concerne"
-    )
     assert moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
 
 
@@ -106,8 +84,8 @@ def test_hru_criterion_non_concerne_in_ru_mode():
         ),
         (
             "alignement",
-            "non_concerne",
-            "non_concerne",
+            "non_disponible",
+            "non_disponible",
         ),
     ],
 )
@@ -122,32 +100,24 @@ def test_moulinette_evaluation_single_procedure(
     assert moulinette.regime_unique_haie.result == expected_result
     if type_haie == "mixte":
         criterion = moulinette.regime_unique_haie.ru__regime_unique_haie
-    else:
-        criterion = moulinette.regime_unique_haie.l350_3__regime_unique_haie
-
-    assert criterion.result_code == expected_result_code
+        assert criterion.result_code == expected_result_code
 
 
 @pytest.mark.parametrize(
-    "type_haie, expected_result, expected_result_code",
+    "type_haie, expected_result",
     [
-        ("mixte", "non_active", "non_active"),
-        ("alignement", "non_active", "non_active"),
+        ("mixte", "non_disponible"),
+        ("alignement", "non_disponible"),
     ],
 )
-def test_moulinette_evaluation_droit_constant(
-    type_haie, expected_result, expected_result_code
-):
+def test_moulinette_evaluation_droit_constant(type_haie, expected_result):
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
-    assert (
-        moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
-        == expected_result_code
-    )
+    assert moulinette.regime_unique_haie.criteria.count() == 0
 
 
 @pytest.mark.parametrize(
@@ -711,7 +681,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_active
+        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
         assert rbc[HaieCriterionCategory.ru] == RESULTS.non_disponible
         assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
 

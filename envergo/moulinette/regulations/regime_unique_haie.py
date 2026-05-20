@@ -219,7 +219,9 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class RegimeUniqueHaieHru(HaieCriterionEvaluator):
+class RegimeUniqueHaieRu(
+    PlantationConditionMixin, HedgeDensityMixin, HaieCriterionEvaluator
+):
     """Criterion evaluator for the régime unique haie procedure.
 
     Determines whether a hedge project falls under the régime unique
@@ -229,35 +231,6 @@ class RegimeUniqueHaieHru(HaieCriterionEvaluator):
 
     choice_label = "Régime unique haie > Régime unique haie"
     base_slug = "regime_unique_haie"
-    category = HaieCriterionCategory.hru
-
-    RESULT_MATRIX = {
-        "non_concerne": RESULTS.non_concerne,
-        "non_active": RESULTS.non_active,
-    }
-
-    CODE_MATRIX = {
-        "regime_unique": "non_concerne",
-        "droit_constant": "non_active",
-    }
-
-    def get_result_data(self):
-        regime_unique = self.moulinette.config.single_procedure
-
-        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
-        return procedure_mode
-
-
-class RegimeUniqueHaieRu(
-    PlantationConditionMixin, HedgeDensityMixin, RegimeUniqueHaieHru
-):
-    """Criterion evaluator for the régime unique haie procedure.
-
-    Determines whether a hedge project falls under the régime unique
-    (single procedure) or droit constant, and whether it is soumis or
-    non concerné based on hedge types.
-    """
-
     plantation_conditions = []
     category = HaieCriterionCategory.ru
 
@@ -267,14 +240,25 @@ class RegimeUniqueHaieRu(
         "soumis": RESULTS.soumis,
     }
 
-    def get_result_code(self, result_data):
-        """Override to detect missing zone config before the CODE_MATRIX lookup."""
-        if self.moulinette.config.single_procedure and not self.catalog.get(
-            "ru_all_zones_resolved", False
-        ):
-            return "non_disponible"
+    CODE_MATRIX = {
+        ("regime_unique", "ru_all_zones_resolved"): "soumis",
+        ("regime_unique", "unresolved"): "non_disponible",
+        ("droit_constant", "ru_all_zones_resolved"): "non_active",
+        ("droit_constant", "unresolved"): "non_active",
+    }
 
-        return "soumis"
+    def get_result_data(self):
+        regime_unique = self.moulinette.config.single_procedure
+
+        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
+
+        zones_resolved = (
+            "ru_all_zones_resolved"
+            if self.catalog.get("ru_all_zones_resolved", False)
+            else "unresolved"
+        )
+
+        return procedure_mode, zones_resolved
 
     def get_catalog_data(self):
         """Inject density and zone-based coefficient data when in régime unique."""
@@ -294,17 +278,3 @@ class RegimeUniqueHaieRu(
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
         return compute_ru_compensation_ratio(self.moulinette)
-
-
-class RegimeUniqueHaieL3503(RegimeUniqueHaieHru):
-    """Criterion evaluator for the régime unique haie procedure.
-
-    Determines whether a hedge project falls under the régime unique
-    (single procedure) or droit constant, and whether it is soumis or
-    non concerné based on hedge types.
-    """
-
-    category = HaieCriterionCategory.l350_3
-
-    def evaluate(self):
-        self._result_code, self._result = "non_concerne", "non_concerne"
