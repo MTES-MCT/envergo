@@ -559,34 +559,34 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
         "quality_condition": {
             "LC": {
                 "alignement": 0.0,
-                "arbustive": 11.020243366815471,
+                "arbustive": pytest.approx(11.020243366815471),
                 "buissonnante": 0.0,
                 "degradee": 0.0,
                 "mixte": 0.0,
             },
             "LP": {
                 "alignement": 0.0,
-                "arbustive": 27.55060841703869,
+                "arbustive": pytest.approx(27.55060841703869),
                 "buissonnante": 0.0,
                 "degradee": 0.0,
                 "mixte": 0.0,
             },
             "LPm": {
                 "alignement": 0.0,
-                "arbustive": 38.57085178385416,
+                "arbustive": pytest.approx(38.57085178385416),
                 "buissonnante": 0.0,
                 "degradee": 0.0,
                 "mixte": 0.0,
             },
             "LPm_r": {
                 "alignement": 0.0,
-                "arbustive": 30.85668142708333,
+                "arbustive": pytest.approx(30.85668142708333),
                 "buissonnante": 0.0,
                 "degradee": 0.0,
                 "mixte": 0.0,
             },
-            "lm": 11.020243366815471,
-            "lp": 27.55060841703869,
+            "lm": pytest.approx(11.020243366815471),
+            "lp": pytest.approx(27.55060841703869),
             "lpm": 39,
             "reduced_lpm": 31,
         },
@@ -669,8 +669,8 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     )
     # noqa: E501
     expected_result = {
-        "lineaire_detruit_pac": 27.55060841703869,
-        "lineaire_to_plant_pac": 27.55060841703869,
+        "lineaire_detruit_pac": pytest.approx(27.55060841703869),
+        "lineaire_to_plant_pac": pytest.approx(27.55060841703869),
         "pac_destruction_detail": [ANY],
         "pac_plantation_detail": [ANY],
         "percentage_pac": ANY,
