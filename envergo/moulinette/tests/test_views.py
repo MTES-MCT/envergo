@@ -164,12 +164,12 @@ def test_moulinette_post_form_error(client):
 
     # GIVEN an url with mtm params
     res = client.post(f"{url}?mtm_campaign=campaign", data)
+    # THEN mtm_keys are in event
     error_event = Event.objects.filter(
         category="erreur", event="formulaire-simu"
     ).last()
-    # THEN mtm_keys are in event
-    assert "mtm_keys" in error_event.metadata
-    assert error_event.metadata["mtm_keys"] == {"mtm_campaign": "campaign"}
+    assert "mtm_campaign" in error_event.metadata
+    assert error_event.metadata["mtm_campaign"] == "campaign"
 
 
 def test_moulinette_post_qc_form_error(client):
