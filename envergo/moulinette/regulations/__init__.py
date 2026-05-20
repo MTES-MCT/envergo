@@ -149,6 +149,15 @@ class MapFactory(ABC):
 
         if category:
             # create the map, only if there is some hedges of this category.
+            hedges_to_display = (
+                self.regulation.moulinette.catalog["haies"]
+                .hedges()
+                .evaluator_category(
+                    self.regulation.moulinette.config.single_procedure, category
+                )
+            )
+            ids_to_display = {hedge.id for hedge in hedges_to_display}
+
             perimeters = []
             for (
                 perimeter,
@@ -157,7 +166,9 @@ class MapFactory(ABC):
                 self.regulation, {}
             ).items():
                 for _, hedges in hedges_by_type.items():
-                    if any(hedge.category == category for hedge in hedges):
+
+                    hedge_ids = {hedge.id for hedge in hedges}
+                    if ids_to_display & hedge_ids:
                         perimeters.append(perimeter)
         else:
             perimeters = self.regulation.perimeters.all()
