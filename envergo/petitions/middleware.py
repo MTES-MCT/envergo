@@ -25,11 +25,16 @@ class HandleInvitationTokenMiddleware:
 
         # User is authenticated. We look for invitation tokens in url
         # or in session data.
+        # When user was not logged before a cookie has been stored.
+        # If token is in url too, cookie is deleted if they are equals.
+        # This avoids to process_token twice and have two messages.
         if request.user.is_authenticated:
             if url_token:
                 self.process_token(request, url_token)
+                if url_token == cookie_token:
+                    delete_cookie_token = True
 
-            if cookie_token:
+            if cookie_token and url_token != cookie_token:
                 self.process_token(request, cookie_token)
                 delete_cookie_token = True
 
@@ -85,28 +90,17 @@ class HandleInvitationTokenMiddleware:
         )
 
     def process_token(self, request, token):
-        """Accepts the invitation."""
+        """Accepts the invitation if the user has not yet view permission."""
 
         invitation = InvitationToken.objects.filter(token=token).first()
-
-        if invitation:
+        if invitation and not invitation.petition_project.has_view_permission(
+            request.user
+        ):
             if invitation.is_valid(request.user):
                 invitation.user = request.user
                 invitation.save()
 
                 messages.info(request, "Un dossier a été rattaché à votre compte.")
-
-            # We don't display an error if the token was already accepted earlier
-            # by this user
-            elif invitation.user != request.user:
-                messages.warning(
-                    request,
-                    """
-                    Le lien d'invitation utilisé n'est plus valide.
-                    Il a peut-être déjà été utilisé ou a expiré.
-                    Veuillez contacter la personne qui vous l'a transmis pour obtenir
-                    un nouveau lien.""",
-                )
 
     def clear_token(self, response):
         response.delete_cookie(settings.INVITATION_TOKEN_COOKIE_NAME)

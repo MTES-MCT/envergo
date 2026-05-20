@@ -5,7 +5,7 @@ Any drift beyond floating-point noise is a real regression.
 """
 
 import pytest
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import LineString, MultiLineString, Point, Polygon
 
 from envergo.geodata.tests.factories import (
     LineFactory,
@@ -15,6 +15,7 @@ from envergo.geodata.tests.factories import (
 from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
+    query_hedge_length,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.haie]
@@ -130,3 +131,50 @@ def test_density_around_lines_pinned_values(hedge_density_fixture):
         EXPECTED_AROUND_LINES_400["area_ha"], **APPROX
     )
     assert result["artifacts"]["truncated_buffer_zone"] is not None
+
+
+def test_query_hedge_length_excludes_forest_portion():
+    """Hedge crossing a forest hole should only count the non-forest portion.
+
+    The terres émergées map has holes for forest zones. A hedge fully inside
+    the circle but partially crossing a forest hole should only count the
+    portion outside the hole.
+
+    Regression: the fast-path ST_CoveredBy check used the untruncated circle,
+    so hedges fully inside the circle had their full length counted even when
+    part of them fell in a forest hole.
+    """
+    # Straight horizontal hedge — easy to reason about when cut in half.
+    hedge = MultiLineString(
+        [LineString([(3.50, 49.32), (3.60, 49.32)])],
+    )
+    LineFactory(geometry=hedge)
+
+    # Circle fully containing the hedge.
+    outer = [
+        (3.45, 49.30),
+        (3.65, 49.30),
+        (3.65, 49.35),
+        (3.45, 49.35),
+        (3.45, 49.30),
+    ]
+    circle = Polygon(outer, srid=4326)
+
+    # Truncated buffer: same extent, with a forest hole over the eastern half.
+    # The hole is inset from the outer ring to avoid shared edges (GEOS
+    # TopologyException).
+    forest = [
+        (3.55, 49.305),
+        (3.64, 49.305),
+        (3.64, 49.345),
+        (3.55, 49.345),
+        (3.55, 49.305),
+    ]
+    truncated = Polygon(outer, forest, srid=4326)
+
+    # Expected: only the western half (3.50→3.55) is counted.
+    # Pinned from ST_LengthSpheroid on that segment.
+    expected_length = 3635.0917235660813
+
+    actual_length = query_hedge_length(truncated, circle)
+    assert actual_length == pytest.approx(expected_length, **APPROX)
