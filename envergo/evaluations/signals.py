@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from envergo.evaluations.models import Evaluation, RecipientStatus, RegulatoryNoticeLog
+from envergo.evaluations.models import Evaluation, RegulatoryNoticeLog
 from envergo.evaluations.tasks import (
     post_evaluation_to_automation,
     warn_admin_of_email_error,
@@ -29,12 +29,10 @@ ERROR_EVENTS = [
     "failed",
 ]
 
-ALL_EVENTS = ERROR_EVENTS
-
 
 @receiver(tracking)
 def handle_mail_event(sender, event, esp_name, **kwargs):
-    """Handle events received from Brevo.
+    """Handle error events received from Brevo.
 
     The events we are trackinrg are related to the evaluations emails ("avis réglementaires").
     We only track errors.
@@ -45,8 +43,7 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     timestamp = event.timestamp
     reject_reason = event.reject_reason
 
-    logger.info(f"Received event {event.event_type} for message id {message_id}")
-    if event_name not in ALL_EVENTS:
+    if event_name not in ERROR_EVENTS:
         return
 
     try:
@@ -58,29 +55,13 @@ def handle_mail_event(sender, event, esp_name, **kwargs):
     logger.info(
         f"Received event {event_name} for {recipient} on notice {regulatory_notice_log.pk}"
     )
-    on_error = event_name in ERROR_EVENTS
-    warn_of_email_error = False
-    status, _created = RecipientStatus.objects.get_or_create(
-        regulatory_notice_log=regulatory_notice_log,
-        recipient=recipient,
-        defaults={
-            "status": event_name,
-            "latest_status": timestamp,
-            "on_error": False,
-        },
-    )
-
-    if on_error:
-        status.reject_reason = reject_reason or ""
-        # We only warn admin if it's the first time we receive an error status
-        if not status.on_error:
-            warn_of_email_error = True
-            status.on_error = True
-
-    status.save()
-
-    if warn_of_email_error:
-        warn_admin_of_email_error.delay(status.id)
+    error_status = {
+        "recipient": recipient,
+        "timestamp": timestamp,
+        "error_type": event_name,
+        "reject_reason": reject_reason or "",
+    }
+    warn_admin_of_email_error.delay(regulatory_notice_log.id, error_status)
 
 
 @receiver(post_save, sender=Evaluation)

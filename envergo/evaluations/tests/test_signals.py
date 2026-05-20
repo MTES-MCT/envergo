@@ -43,14 +43,9 @@ def test_webhook_error_catching(event, mailoutbox):
     statuses_qs = RecipientStatus.objects.all()
     assert statuses_qs.count() == 0
 
-    log = RegulatoryNoticeLogFactory(message_id="test_message_id")
+    RegulatoryNoticeLogFactory(message_id="test_message_id")
     tracking.send(sender=None, event=event, esp_name="sendinblue")
-    assert statuses_qs.count() == 1
-
-    log_event = statuses_qs[0]
-    assert log_event.recipient == event.recipient
-    assert log_event.regulatory_notice_log == log
-    assert log_event.on_error
+    assert statuses_qs.count() == 0
     assert len(mailoutbox) == 1
 
     mail = mailoutbox[0]
