@@ -1,4 +1,5 @@
 import json
+import os
 
 from celery.result import AsyncResult
 from django import forms
@@ -7,7 +8,7 @@ from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
-from django.utils.html import mark_safe
+from django.utils.html import format_html, mark_safe
 
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
@@ -161,7 +162,8 @@ class SpeciesHabitatAdmin(admin.ModelAdmin):
     form = SpeciesHabitatAdminForm
     list_display = [
         "species",
-        "map",
+        "map_link",
+        "import_file_link",
         "hedge_types",
         "hedge_properties",
         "level_of_concern",
@@ -173,8 +175,35 @@ class SpeciesHabitatAdmin(admin.ModelAdmin):
         "species__scientific_name",
         "species__cd_noms",
         "map__name",
+        "species_habitat_file__file",
     ]
     autocomplete_fields = ["species", "map"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related("species", "map", "species_habitat_file").defer(
+            "map__geometry"
+        )
+        return qs
+
+    @admin.display(description="Carte", ordering="map__name")
+    def map_link(self, obj):
+        """Link to the related Map admin page."""
+        url = reverse("admin:geodata_map_change", args=[obj.map_id])
+        return format_html('<a href="{}">{}</a>', url, obj.map)
+
+    @admin.display(description="Import file", ordering="species_habitat_file__file")
+    def import_file_link(self, obj):
+        """Link to the related SpeciesHabitatFile admin page."""
+        if not obj.species_habitat_file:
+            return ""
+
+        label = os.path.basename(obj.species_habitat_file.file.path)
+        url = reverse(
+            "admin:hedges_specieshabitatfile_change",
+            args=[obj.species_habitat_file_id],
+        )
+        return format_html('<a href="{}">{}</a>', url, label)
 
 
 @admin.register(SpeciesHabitatFile)
