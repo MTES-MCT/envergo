@@ -23,29 +23,20 @@
             <a href="{% url 'admin:evaluations_regulatorynoticelog_mail_body' log.id %}">Voir</a>
           </td>
           <td>
-            {% if log.recipient_statuses.all %}
-              <table>
-                <thead>
-                  <tr>
-                    <th>Destinataire</th>
-                    <th>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for status in log.recipient_statuses.all %}
-                    <tr class="sent_history_recipient_row{% if status.on_error %} error{% endif %}">
-                      <td>{{ status.recipient }}</td>
-                      {% if status.on_error %}
-                        <td>
-                          <abbr title="{{ status.status }} ({{ status.reject_reason|default:"raison inconnue" }})">❗️ Non délivré</abbr>
-                        </td>
-                      {% else %}
-                        <td>-</td>
-                      {% endif %}
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            {% if log.to %}
+              <p>
+                <strong>À :</strong> {{ log.to|join:", " }}
+              </p>
+            {% endif %}
+            {% if log.cc %}
+              <p>
+                <strong>Cc :</strong> {{ log.cc|join:", " }}
+              </p>
+            {% endif %}
+            {% if log.bcc %}
+              <p>
+                <strong>Bcc :</strong> {{ log.bcc|join:", " }}
+              </p>
             {% endif %}
           </td>
         </tr>
