@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import operator
 import uuid
 from functools import reduce
-from typing import Self
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from envergo.moulinette.regulations import HaieCriterionCategory
 
 import shapely
 from django.conf import settings
@@ -21,7 +26,6 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_lines,
     get_department_from_coords,
 )
-from envergo.moulinette.regulations import HaieCriterionCategory
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -357,6 +361,8 @@ class HedgeList(list[Hedge]):
 
     def category(self, single_procedure, category) -> Self:
         """List the hedges depending on the given category."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         if single_procedure:
             if category == HaieCriterionCategory.hru:
                 return self.hru()
@@ -671,6 +677,8 @@ class HedgeData(models.Model):
         self, single_procedure
     ) -> dict[HaieCriterionCategory, HedgeList]:
         """Get the hedges list for each category."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         hedges_by_category = {
             category: self.hedges().category(single_procedure, category)
             for category in HaieCriterionCategory
