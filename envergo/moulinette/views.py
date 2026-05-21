@@ -97,10 +97,7 @@ class MoulinetteMixin:
         context.update(self.moulinette.catalog)
 
         user = self.request.user
-        if user.is_authenticated:
-            is_staff = user.has_access_to_staff_only_criterion(self.request.site)
-        else:
-            is_staff = False
+        is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
         exclude_staff_only_criterion = not is_staff
         context["show_staff_only_criteria"] = is_staff
 

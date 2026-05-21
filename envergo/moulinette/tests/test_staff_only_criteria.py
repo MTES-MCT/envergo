@@ -1,6 +1,5 @@
 import pytest
 from django.core.exceptions import ValidationError
-from django.test import Client
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
@@ -16,13 +15,6 @@ from envergo.users.tests.factories import UserFactory
 pytestmark = pytest.mark.django_db
 
 BASE_PARAMS = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
-
-
-@pytest.fixture
-def staff_client(staff_user):
-    client = Client()
-    client.force_login(staff_user)
-    return client
 
 
 @pytest.fixture(autouse=True)
@@ -81,14 +73,14 @@ class TestICPEStaffOnlyVisibility:
         assertTemplateUsed(res, "moulinette/result.html")
         assert "installation classée (icpe)" in res.content.decode().lower()
 
-    def test_staff_haie_only_cannot_see_icpe_form(self, client):
+    def test_staff_haie_only_can_see_icpe_form(self, client):
         user = UserFactory(is_staff=True, access_amenagement=False, access_haie=True)
         client.force_login(user)
         url = reverse("moulinette_form")
         res = client.get(url)
 
         assert res.status_code == 200
-        assert "Installation classée (ICPE)" not in res.content.decode()
+        assert "Installation classée (ICPE)" in res.content.decode()
 
     def test_superuser_non_staff_can_see_icpe_form(self, client):
         user = UserFactory(is_superuser=True, is_staff=False)

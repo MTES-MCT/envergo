@@ -69,6 +69,15 @@ def staff_user() -> User:
 
 
 @pytest.fixture
+def staff_client(staff_user):
+    from django.test import Client
+
+    client = Client()
+    client.force_login(staff_user)
+    return client
+
+
+@pytest.fixture
 def admin_user() -> User:
     return UserFactory(is_staff=True, is_superuser=True)
 
