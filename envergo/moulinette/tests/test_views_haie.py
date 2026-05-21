@@ -1012,3 +1012,11 @@ def test_triage_get_initial_normalizes_projet_specifique_to_projet(client):
         assert (
             form.initial.get("contexte") == "projet"
         ), f"Expected initial contexte='projet' when URL has contexte='{contexte}'"
+
+
+def test_triage_nul_byte_in_department(client):
+    """NUL bytes in the department param should not cause a DataError (Sentry #267046)."""
+    DCConfigHaieFactory()
+    url = reverse("triage")
+    res = client.get(f"{url}?department=44%00")
+    assert res.status_code in (200, 302)
