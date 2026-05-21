@@ -109,6 +109,29 @@ def make_hedge(
     }
 
 
+def make_ru_hedge(id, type="TO_REMOVE"):
+    """A hedge that qualifies as RU (non-alignement, no exclusion props)."""
+    return HedgeFactory(**make_hedge(hedge_id=id, hedge_type=type, type_haie="mixte"))
+
+
+def make_l350_3_hedge(id, type="TO_REMOVE"):
+    """A hedge that qualifies as L350-3 (alignement + bord_voie)."""
+    return HedgeFactory(
+        **make_hedge(
+            hedge_id=id, hedge_type=type, type_haie="alignement", bord_voie=True
+        )
+    )
+
+
+def make_hru_hedge(id, type="TO_REMOVE"):
+    """A hedge that qualifies as HRU (alignement without bord_voie)."""
+    return HedgeFactory(
+        **make_hedge(
+            hedge_id=id, hedge_type=type, type_haie="alignement", bord_voie=False
+        )
+    )
+
+
 def make_hedge_factory(length, type_haie="buissonnante", **extra):
     """Create a HedgeFactory with sur_parcelle_pac=False.
 

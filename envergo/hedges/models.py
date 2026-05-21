@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import operator
 import uuid
 from functools import reduce
-from typing import Self
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from envergo.moulinette.regulations import HaieCriterionCategory
 
 import shapely
 from django.conf import settings
@@ -21,7 +26,6 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_lines,
     get_department_from_coords,
 )
-from envergo.moulinette.regulations import HaieCriterionCategory
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -384,14 +388,20 @@ class HedgeList(list[Hedge]):
         return hedges
 
     def evaluator_category(self, single_procedure, category) -> Self:
-        """List the hedges depending on the given category.
+        """Return the subset of hedges an evaluator should assess for `category`.
 
-        When a category has no hedges to remove, its "to plant" hedges are
-        absorbed by another present category (priority: HRU > RU > L350-3).
+        Without single_procedure: all hedges go to HRU, other categories are empty.
+
+        With single_procedure: hedges to remove are split by Hedge.category.
+        Hedges to plant whose category has no removal counterpart are orphans —
+        they get absorbed by an active category (priority: HRU > RU > L350-3).
+        L350-3 never absorbs orphans from other categories.
         """
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         if not single_procedure:
             if category == HaieCriterionCategory.hru:
-                return self
+                return HedgeList(self)
             else:
                 return HedgeList()
 
@@ -411,7 +421,7 @@ class HedgeList(list[Hedge]):
                 return hru
             if not has_ru and not has_l350_3:
                 # Only one category (HRU): all hedges to plant are categorized as HRU
-                return self
+                return HedgeList(self)
             if not has_ru:
                 # Two categories (HRU and L350-3): RU to plant are categorized as HRU
                 return HedgeList(hru + ru)
@@ -427,13 +437,13 @@ class HedgeList(list[Hedge]):
                 # Two categories (RU and L350-3): HRU to plant are categorized as RU
                 return HedgeList(hru + ru)
             # Only one category (RU): all hedges to plant are categorized as RU
-            return self
+            return HedgeList(self)
         elif category == HaieCriterionCategory.l350_3:
             if not has_l350_3:
                 return HedgeList()
             if not has_hru and not has_ru:
                 # Only one category (L350-3): all hedges to plant are categorized as L350-3
-                return self
+                return HedgeList(self)
             # L350-3 never absorbs from other categories
             return l350_3
 
@@ -738,6 +748,8 @@ class HedgeData(models.Model):
         self, single_procedure
     ) -> dict[HaieCriterionCategory, HedgeList]:
         """Get the hedges list for each category."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         hedges_by_category = {
             category: self.hedges().evaluator_category(single_procedure, category)
             for category in HaieCriterionCategory

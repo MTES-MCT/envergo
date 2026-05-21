@@ -82,7 +82,8 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
 
 class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
     category = HaieCriterionCategory.hru
-    slug = "alignement_arbres_calvados_before_ru"
+    base_slug = "alignement_arbres_calvados_before_ru"
+    slug = base_slug
     choice_label = "Alignements d'arbres > L350-3 (Calvados avant régime unique)"
     plantation_conditions = [TreeAlignmentsCondition]
 
