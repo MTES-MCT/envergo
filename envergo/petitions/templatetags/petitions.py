@@ -68,7 +68,7 @@ def instructor_view_part(
     else:
         if issubclass(criterion.evaluator, HaieCriterionEvaluator):
             template_path = (
-                f"haie/petitions/{regulation.slug}/{criterion.evaluator.category}/"
+                f"haie/petitions/{regulation.slug}/{criterion.evaluator.category.name}/"
                 f"{criterion.evaluator.base_slug}_{part_name}.html"
             )
         else:
