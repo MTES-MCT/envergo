@@ -1829,6 +1829,10 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def additional_forms(self):
         return self.get_additional_forms()
 
+    @cached_property
+    def optional_forms(self):
+        return self.get_optional_forms(exclude_staff_only_criterion=False)
+
     def get_optional_forms(self, exclude_staff_only_criterion=True):
         """Get a list of instanciated optional forms.
 

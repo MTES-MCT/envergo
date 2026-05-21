@@ -43,6 +43,7 @@ def create_icpe_instructor_actions(apps, schema_editor):
             "order": 1,
             "label": "La preuve de dépôt de la déclaration ICPE",
             "details": "moulinette/actions_to_take/pc_icpe_d.html",
+            "documents_to_attach": ["PA37", "PC25"],
         },
     )
     ActionToTake.objects.get_or_create(
@@ -53,6 +54,7 @@ def create_icpe_instructor_actions(apps, schema_editor):
             "order": 1,
             "label": "Le récépissé de la demande d'enregistrement ICPE",
             "details": "moulinette/actions_to_take/pc_icpe_e.html",
+            "documents_to_attach": ["PA37-1", "PC25-1"],
         },
     )
     ActionToTake.objects.get_or_create(
@@ -63,12 +65,19 @@ def create_icpe_instructor_actions(apps, schema_editor):
             "order": 1,
             "label": "La preuve de dépôt de la demande ICPE",
             "details": "moulinette/actions_to_take/pc_icpe_inconnu.html",
+            "documents_to_attach": [
+                "PA37 (ICPE-D) ou PA37-1 (ICPE-E)",
+                "PC25 (ICPE-D) ou PC25-1 (ICPE-E)",
+            ],
         },
     )
 
-    # Add template to pc_cas_par_cas (exists but has no details template)
+    # Update existing actions that had no details template
     ActionToTake.objects.filter(slug="pc_cas_par_cas").update(
         details="moulinette/actions_to_take/pc_cas_par_cas.html",
+    )
+    ActionToTake.objects.filter(slug="depot_dossier_icpe").update(
+        details="moulinette/actions_to_take/depot_dossier_icpe.html",
     )
 
 
