@@ -191,6 +191,8 @@ class Hedge:
     @property
     def category(self):
         """Return the category of the hedge (régime unique, L350-3 or hores régime unique)."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         if (
             self.hedge_type != HedgeTypeBase.ALIGNEMENT
             and (
@@ -343,16 +345,22 @@ class HedgeList(list[Hedge]):
 
     def ru(self) -> Self:
         """Select all hedges that are covered by the single procedure (régime unique, RU)."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         return HedgeList([h for h in self if h.category == HaieCriterionCategory.ru])
 
     def l350_3(self) -> Self:
         """Select all tree alignment that are covered the L350-3 regulation."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         return HedgeList(
             [h for h in self if h.category == HaieCriterionCategory.l350_3]
         )
 
     def hru(self) -> Self:
         """Select all hedges are not covered by either the single procedure or L350-3"""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
         return HedgeList([h for h in self if h.category == HaieCriterionCategory.hru])
 
     def filter(self, f) -> Self:
