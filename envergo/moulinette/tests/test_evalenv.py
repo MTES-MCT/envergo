@@ -1,5 +1,4 @@
 import pytest
-from django.test import Client
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
@@ -389,11 +388,15 @@ def test_evalenv_subtractive_actions_to_take():
 ICPE_BASE_PARAMS = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
 
 
-@pytest.fixture
-def staff_client(staff_user):
-    client = Client()
-    client.force_login(staff_user)
-    return client
+def _get_icpe_result(staff_client, icpe_projet, icpe_regime):
+    params = (
+        f"{ICPE_BASE_PARAMS}"
+        f"&evalenv_icpe-activate=on"
+        f"&evalenv_icpe-icpe_projet={icpe_projet}"
+        f"&evalenv_icpe-icpe_regime={icpe_regime}"
+    )
+    url = f"{reverse('moulinette_result')}?{params}"
+    return staff_client.get(url)
 
 
 @pytest.fixture
@@ -412,18 +415,8 @@ def icpe_criterion(france_map):
 
 @pytest.mark.usefixtures("icpe_criterion")
 class TestICPEResults:
-    def _get_result(self, staff_client, icpe_projet, icpe_regime):
-        params = (
-            f"{ICPE_BASE_PARAMS}"
-            f"&evalenv_icpe-activate=on"
-            f"&evalenv_icpe-icpe_projet={icpe_projet}"
-            f"&evalenv_icpe-icpe_regime={icpe_regime}"
-        )
-        url = f"{reverse('moulinette_result')}?{params}"
-        return staff_client.get(url)
-
     def test_creation_enregistrement_is_cas_par_cas(self, staff_client):
-        res = self._get_result(staff_client, "creation", "enregistrement")
+        res = _get_icpe_result(staff_client, "creation", "enregistrement")
         content = res.content.decode()
 
         assert res.status_code == 200
@@ -431,7 +424,7 @@ class TestICPEResults:
         assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas_creation.html")
 
     def test_modif_avec_pac_enregistrement_is_cas_par_cas(self, staff_client):
-        res = self._get_result(staff_client, "modif_avec_pac", "enregistrement")
+        res = _get_icpe_result(staff_client, "modif_avec_pac", "enregistrement")
         content = res.content.decode()
 
         assert res.status_code == 200
@@ -439,7 +432,7 @@ class TestICPEResults:
         assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas_modif.html")
 
     def test_creation_declaration_is_non_soumis(self, staff_client):
-        res = self._get_result(staff_client, "creation", "declaration")
+        res = _get_icpe_result(staff_client, "creation", "declaration")
         content = res.content.decode()
 
         assert res.status_code == 200
@@ -449,7 +442,7 @@ class TestICPEResults:
         )
 
     def test_modif_sans_pac_enregistrement_is_non_soumis(self, staff_client):
-        res = self._get_result(staff_client, "modif_sans_pac", "enregistrement")
+        res = _get_icpe_result(staff_client, "modif_sans_pac", "enregistrement")
         content = res.content.decode()
 
         assert res.status_code == 200
@@ -457,7 +450,7 @@ class TestICPEResults:
         assertTemplateUsed(res, "moulinette/eval_env/icpe_non_soumis_sans_pac.html")
 
     def test_aucun_aucun_is_non_soumis(self, staff_client):
-        res = self._get_result(staff_client, "aucun", "aucun")
+        res = _get_icpe_result(staff_client, "aucun", "aucun")
         content = res.content.decode()
 
         assert res.status_code == 200
@@ -465,7 +458,7 @@ class TestICPEResults:
         assertTemplateUsed(res, "moulinette/eval_env/icpe_non_soumis_pas_icpe.html")
 
     def test_creation_inconnu_is_a_verifier(self, staff_client):
-        res = self._get_result(staff_client, "creation", "inconnu")
+        res = _get_icpe_result(staff_client, "creation", "inconnu")
         content = res.content.decode()
 
         assert res.status_code == 200
@@ -473,43 +466,61 @@ class TestICPEResults:
         assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier_creation.html")
 
     def test_modif_avec_pac_inconnu_is_a_verifier(self, staff_client):
-        res = self._get_result(staff_client, "modif_avec_pac", "inconnu")
+        res = _get_icpe_result(staff_client, "modif_avec_pac", "inconnu")
         content = res.content.decode()
 
         assert res.status_code == 200
         assert "à vérifier" in content.lower()
         assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier_modification.html")
 
+    def test_modif_avec_pac_declaration_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_avec_pac", "declaration")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(
+            res, "moulinette/eval_env/icpe_non_soumis_declaration_modif.html"
+        )
+
+    def test_modif_sans_pac_declaration_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_sans_pac", "declaration")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(
+            res, "moulinette/eval_env/icpe_non_soumis_declaration_sans_pac.html"
+        )
+
+    def test_modif_sans_pac_inconnu_is_a_verifier(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_sans_pac", "inconnu")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "à vérifier" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier_sans_pac.html")
+
 
 @pytest.mark.usefixtures("icpe_criterion")
 class TestICPEFormValidation:
-    def _get_result(self, staff_client, icpe_projet, icpe_regime):
-        params = (
-            f"{ICPE_BASE_PARAMS}"
-            f"&evalenv_icpe-activate=on"
-            f"&evalenv_icpe-icpe_projet={icpe_projet}"
-            f"&evalenv_icpe-icpe_regime={icpe_regime}"
-        )
-        url = f"{reverse('moulinette_result')}?{params}"
-        return staff_client.get(url)
-
     def test_aucun_projet_with_regime_is_invalid(self, staff_client):
         """aucun projet + enregistrement regime = contradictory, redirects to form."""
-        res = self._get_result(staff_client, "aucun", "enregistrement")
+        res = _get_icpe_result(staff_client, "aucun", "enregistrement")
 
         assert res.status_code == 302
         assert "/formulaire/" in res["Location"]
 
     def test_projet_with_aucun_regime_is_invalid(self, staff_client):
         """creation projet + aucun regime = contradictory, redirects to form."""
-        res = self._get_result(staff_client, "creation", "aucun")
+        res = _get_icpe_result(staff_client, "creation", "aucun")
 
         assert res.status_code == 302
         assert "/formulaire/" in res["Location"]
 
     def test_coherent_answers_are_valid(self, staff_client):
         """creation + enregistrement = valid, shows result page."""
-        res = self._get_result(staff_client, "creation", "enregistrement")
+        res = _get_icpe_result(staff_client, "creation", "enregistrement")
 
         assert res.status_code == 200
         assertTemplateUsed(res, "moulinette/result.html")

@@ -833,6 +833,9 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Éval Env > ICPE"
     slug = "icpe"
     form_class = ICPEForm
+
+    CODES = ["cas_par_cas", "non_soumis", "a_verifier"]
+
     CODE_MATRIX = {
         (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas_creation",
         (
@@ -911,6 +914,8 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
                 "pc_icpe_inconnu",
             }
         },
+        "non_soumis_sans_pac": {},
+        "non_soumis_pas_icpe": {},
     }
 
     def get_catalog_data(self):
