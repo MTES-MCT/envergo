@@ -2,6 +2,8 @@ import logging
 import re
 
 from django import forms
+from django.core.exceptions import ValidationError
+from django.db import DataError
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +92,24 @@ def extract_display_function(choices):
     return lambda value: next(
         (choice[2] for choice in choices if choice[0] == value), None
     )
+
+
+class SafeModelChoiceField(forms.ModelChoiceField):
+    """ModelChoiceField that converts DataError to ValidationError.
+
+    Django's ModelChoiceField passes user input directly to a DB query.
+    Malformed values raise a raw psycopg DataError instead of a
+    user-facing ValidationError, causing a 500. Known triggers:
+    NUL bytes, invalid encoding, or values exceeding the PK column length.
+    """
+
+    def clean(self, value):
+        try:
+            return super().clean(value)
+        except DataError:
+            raise ValidationError(
+                self.error_messages["invalid_choice"], code="invalid_choice"
+            )
 
 
 class UnitInput(forms.TextInput):

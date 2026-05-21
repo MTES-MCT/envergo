@@ -172,7 +172,11 @@ class InvitationTokenAdmin(admin.ModelAdmin):
         "id",
         "created_at",
         "created_by_list",
+        "petition_project",
+        "user_list",
+        "token",
     )
+    search_fields = ["token"]
     ordering = ("-created_at",)
     readonly_fields = ("token",)
     form = InvitationTokenAdminForm
@@ -181,7 +185,12 @@ class InvitationTokenAdmin(admin.ModelAdmin):
         created_by = obj.created_by
         return created_by.email if created_by else ""
 
+    def user_list(self, obj):
+        user = obj.user
+        return user.email if user else ""
+
     created_by_list.short_description = "Compte invitant"
+    user_list.short_description = "Compte invité"
 
 
 @admin.register(Simulation)

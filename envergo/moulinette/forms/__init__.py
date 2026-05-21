@@ -15,6 +15,7 @@ from envergo.moulinette.forms.fields import (
     DisplayCharField,
     DisplayChoiceField,
     DisplayIntegerField,
+    SafeModelChoiceField,
     UnitInput,
     extract_choices,
     extract_display_function,
@@ -340,7 +341,7 @@ CONTEXT_CHOICES = (
 
 
 class MoulinetteFormHaie(BaseMoulinetteForm):
-    department = forms.ModelChoiceField(
+    department = SafeModelChoiceField(
         queryset=Department.objects.all(),
         required=True,
         to_field_name="department",

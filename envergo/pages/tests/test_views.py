@@ -249,6 +249,14 @@ class TestHomeHaie:
 
         assert response.status_code == 200
 
+    def test_malicious_department_id_does_not_500(self, client):
+        """SQL injection payloads in department field should not cause a 500."""
+        response = client.post(
+            reverse("home"),
+            {"department": "(select(0)from(select(sleep(15)))v)"},
+        )
+        assert response.status_code == 200
+
 
 @pytest.mark.haie
 class TestContactHaie:
