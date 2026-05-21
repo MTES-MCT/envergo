@@ -95,7 +95,13 @@ def extract_display_function(choices):
 
 
 class SafeModelChoiceField(forms.ModelChoiceField):
-    """ModelChoiceField that converts DataError (e.g. NUL bytes) to ValidationError."""
+    """ModelChoiceField that converts DataError to ValidationError.
+
+    Django's ModelChoiceField passes user input directly to a DB query.
+    Malformed values raise a raw psycopg DataError instead of a
+    user-facing ValidationError, causing a 500. Known triggers:
+    NUL bytes, invalid encoding, or values exceeding the PK column length.
+    """
 
     def clean(self, value):
         try:

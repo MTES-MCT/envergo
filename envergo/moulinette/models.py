@@ -2716,6 +2716,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
             return qs.first()
         except DataError:
+            # Malformed values raise a raw psycopg DataError, causing a 500. Known triggers:
+            # NUL bytes, invalid encoding, or values exceeding the PK column length.
             return None
 
     def get_regulations(self):
