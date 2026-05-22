@@ -19,15 +19,13 @@ def regime_unique_haie_get_instructor_view_context(
     ru_debug = get_ru_debug_context(moulinette.catalog)
     context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
 
-    context["ru_hedge_rows"] = build_ru_hedge_detail_rows(
+    context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
         moulinette.catalog, evaluator.slug
     )
 
     context["quality_condition"] = {}
     if plantation_evaluation:
-        condition = plantation_evaluation.find_condition(
-            RUQualityCondition, evaluator
-        )
+        condition = plantation_evaluation.find_condition(RUQualityCondition, evaluator)
         if condition:
             context["quality_condition"] = condition.context
 
