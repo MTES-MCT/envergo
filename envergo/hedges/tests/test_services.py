@@ -1,14 +1,22 @@
 import pytest
 
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
+from envergo.hedges.regulations import MinLengthCondition
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.ep import EspecesProtegeesRegimeUnique
+from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
+)
+from envergo.moulinette.tests.utils import (
+    make_hedge_factory,
+    make_moulinette_haie_with_density,
 )
 
 pytestmark = pytest.mark.django_db
@@ -122,3 +130,56 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
         for condition in evaluator.conditions
         if condition.label == "Longueur de la haie plantée"
     )
+
+
+def test_ep_dispense_excludes_conditions_from_result(ep_ru_criterion, ru_criterion):
+    """When EP RU evaluates to 'dispense', its conditions must not exist at all.
+
+    EP dispense means no derogation is needed, so EP-specific plantation
+    conditions are irrelevant — they must not be created, not just hidden.
+    Only RU's conditions should drive the overall result.
+    """
+    # GIVEN a régime unique department with both EP RU and RU active,
+    # and a short hedge (8m <= l_bas=10m) that triggers EP dispense
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=8)],
+        reimplantation="replantation",
+    )
+
+    # Sanity check: EP RU should be in dispense
+    assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+
+    # WHEN the plantation evaluator runs
+    evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+    evaluator.evaluate()
+
+    # THEN no condition from the EP evaluator should be in the list at all
+    ep_conditions = [
+        c
+        for c in evaluator.conditions
+        if isinstance(c.criterion_evaluator, EspecesProtegeesRegimeUnique)
+    ]
+    assert ep_conditions == [], (
+        f"EP dispense should produce zero conditions, but found: "
+        f"{[c.label for c in ep_conditions]}"
+    )
+
+    # AND no EP condition should appear in invalid_conditions
+    ep_invalid = [
+        c
+        for c in evaluator.invalid_conditions
+        if c.criterion_evaluator
+        and isinstance(c.criterion_evaluator, EspecesProtegeesRegimeUnique)
+    ]
+    assert ep_invalid == []
+
+    # AND RU's MinLengthCondition should still be present
+    ru_min_length = [
+        c
+        for c in evaluator.conditions
+        if isinstance(c, MinLengthCondition)
+        and isinstance(c.criterion_evaluator, RegimeUniqueHaie)
+    ]
+    assert len(ru_min_length) == 1
