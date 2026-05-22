@@ -831,7 +831,6 @@ class PlantationConditionMixin:
         if self.result_code in self.plantation_skip_results:
             return []
 
-
         catalog = dict(catalog or {})
         slug_key = f"{self.slug}_effective_coefficients"
         if slug_key in self.catalog:
