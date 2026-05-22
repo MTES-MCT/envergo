@@ -110,7 +110,7 @@ def ep_regime_unique_get_instructor_view_context(
     )
 
     # Per-hedge rows with zone info and coefficients
-    context["ep_ru_hedge_rows"] = build_ru_hedge_detail_rows(
+    context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
         moulinette.catalog, evaluator.slug
     )
 

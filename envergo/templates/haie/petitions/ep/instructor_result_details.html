@@ -25,34 +25,8 @@
     {% include 'haie/petitions/_item.html' with label="Densité bocagère" value=density_400|floatformat:"1g" unit="ml/ha" %}
   </ul>
 
-  {% if ep_ru_hedge_rows %}
-    <div class="fr-table fr-table--no-caption">
-      <div class="fr-table__wrapper">
-        <div class="fr-table__container">
-          <div class="fr-table__content">
-            <table>
-              <caption>Caractéristiques des haies à détruire</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Haie</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">En zone sensible</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in ep_ru_hedge_rows %}
-                  <tr>
-                    <td>{{ row.id }}</td>
-                    <td>{{ row.hedge_type }}</td>
-                    <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+  {% if hedge_detail_rows %}
+    {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_detail_rows show_coeff_majore=True %}
   {% endif %}
 {% endif %}
 
