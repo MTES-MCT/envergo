@@ -15,14 +15,16 @@
     {% endif %}
 
     {% if ep_ru_species_bonus %}
-      {% include ‘haie/petitions/_item.html’ with label="Majoration espèces" value="0,25 car présence d’espèces à enjeu majeur observées localement" %}
+      {% include 'haie/petitions/_item.html' with label="Majoration espèces" value="0,25 car présence d’espèces à enjeu majeur observées localement" %}
     {% else %}
       {% include 'haie/petitions/_item.html' with label="Majoration espèces" value="pas de majoration" %}
     {% endif %}
+
+    {% include 'haie/petitions/_item.html' with label="Densité bocagère" value=density_400|floatformat:"1g" unit="ml/ha" %}
   </ul>
 
   {% if ep_ru_hedge_rows %}
-    {% include 'haie/_ru_hedge_detail_table.html' with rows=ep_ru_hedge_rows %}
+    {% include 'haie/_ru_hedge_detail_table.html' with rows=ep_ru_hedge_rows show_coeff_majore=True %}
   {% endif %}
 
   {% if ru_zone_configs %}
@@ -31,7 +33,7 @@
         <button type="button"
                 class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="accordion-coeff-matrix">Afficher le détail des matrices de coefficients</button>
+                aria-controls="accordion-coeff-matrix">Afficher le détail des matrices de coefficients du régime unique</button>
       </h3>
       <div id="accordion-coeff-matrix" class="fr-collapse">{% include 'haie/_ru_coefficient_matrix.html' %}</div>
     </section>
