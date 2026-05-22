@@ -801,6 +801,12 @@ class PlantationConditionMixin:
 
     plantation_conditions: list[PlantationCondition]
 
+    # Evaluator result_codes for which plantation conditions are irrelevant.
+    # Uses result_code (string), not result (RESULTS enum), because different
+    # result_codes can map to the same enum value — e.g. Normandie's
+    # "dispense_10m" maps to RESULTS.dispense but should still produce conditions.
+    plantation_skip_results: frozenset = frozenset()
+
     @abstractmethod
     def get_replantation_coefficient(self):
         raise NotImplementedError(
@@ -810,7 +816,11 @@ class PlantationConditionMixin:
     def plantation_evaluate(self, hedge_data, R, catalog=None):
         """Evaluate all plantation conditions for this evaluator.
 
-        Creates a catalog copy with an effective_coefficients key:
+        Returns an empty list when the evaluator's result_code is in
+        plantation_skip_results — those states mean no plantation obligation
+        exists for this evaluator, so conditions should not be created at all.
+
+        Otherwise, creates a catalog copy with an effective_coefficients key:
         reads from {slug}_effective_coefficients if the evaluator wrote
         adjusted values via get_post_evaluate_data(), otherwise falls
         back to the raw per_hedge_coefficients.
@@ -818,6 +828,10 @@ class PlantationConditionMixin:
         The reason we have to do this is that each evaluator may generate different
         coefficients.
         """
+        if self.result_code in self.plantation_skip_results:
+            return []
+
+
         catalog = dict(catalog or {})
         slug_key = f"{self.slug}_effective_coefficients"
         if slug_key in self.catalog:

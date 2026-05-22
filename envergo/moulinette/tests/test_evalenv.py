@@ -86,7 +86,7 @@ def test_evalenv_small_footprint():
     del data["data"]["emprise"]
 
     moulinette = MoulinetteAmenagement(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert not moulinette.has_missing_data()
 
 

@@ -65,7 +65,7 @@
 {% endif %}
 
 {% if hedge_debug_rows %}
-  {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_debug_rows show_partial_result=True table_class="fr-table fr-table--sm" %}
+  {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_debug_rows show_partial_result=True show_coeff_majore=True table_class="fr-table fr-table--sm" %}
 {% endif %}
 
 {% if ru_zone_configs %}

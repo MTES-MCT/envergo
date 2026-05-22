@@ -153,7 +153,9 @@ def field_summary(field):
     """
     value_help_text = None
     if hasattr(field.field, "get_display_value"):
-        value = field.field.get_display_value(field.value())
+        cleaned = getattr(field.form, "cleaned_data", {}).get(field.name)
+        display_input = cleaned if cleaned is not None else field.value()
+        value = field.field.get_display_value(display_input)
     elif hasattr(field.field, "choices"):
         value = dict(field.field.choices).get(field.value(), field.value())
         if isinstance(value, dict):

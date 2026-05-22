@@ -339,7 +339,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         context = self.get_context_data(form=form)
 
         form_errors = defaultdict(list)
-        for field, errors in self.moulinette.form_errors().items():
+        for field, errors in self.moulinette.form_errors.items():
             for error in errors.as_data():
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}

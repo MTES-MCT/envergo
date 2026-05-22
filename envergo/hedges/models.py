@@ -1,6 +1,6 @@
 import operator
 import uuid
-from functools import reduce
+from functools import cached_property, reduce
 from typing import Self
 
 import shapely
@@ -444,12 +444,14 @@ class HedgeData(models.Model):
         hedges_centroid = centroid(union_all(hedges_to_remove_geometries))
         return hedges_centroid
 
-    def get_department(self):
+    @cached_property
+    def department_code(self):
+        """Resolve the department code from the centroid of hedges to remove."""
         hedges_centroid = self.get_centroid_to_remove()
-        code_department = get_department_from_coords(
-            hedges_centroid.x, hedges_centroid.y
-        )
-        return code_department
+        return get_department_from_coords(hedges_centroid.x, hedges_centroid.y)
+
+    def get_department(self):
+        return self.department_code
 
     def hedges_filter(self, hedge_to, hedge_type, *props) -> HedgeList:
         """HedgeData filter
@@ -925,10 +927,12 @@ class Species(models.Model):
         max_length=16,
         choices=LEVELS_OF_CONCERN,
         blank=True,
-        help_text="Seulement pour l'Aisne. Cette valeur est désormais spécifiée dans le modèle Habitat d'espèce.",
+        help_text="Seulement pour l'Aisne avant régime unique. Pour le régime unique, l’enjeu est désormais spécifié dans le modèle Habitat d'espèce.",
     )
     highly_sensitive = models.BooleanField(
-        "Particulièrement sensible", default=False, help_text="Seulement pour l'Aisne."
+        "Particulièrement sensible",
+        default=False,
+        help_text="Seulement pour l’Aisne avant le régime unique.",
     )
 
     objects = models.Manager()
