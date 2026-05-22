@@ -12,7 +12,10 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesRegimeUnique,
     EspecesProtegeesSimple,
 )
-from envergo.moulinette.regulations.regime_unique_haie import get_ru_debug_context
+from envergo.moulinette.regulations.regime_unique_haie import (
+    build_ru_hedge_detail_rows,
+    get_ru_debug_context,
+)
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
@@ -106,8 +109,10 @@ def ep_regime_unique_get_instructor_view_context(
         EP_RU_SENSITIVE_SPECIES_BONUS if species_bonus_applies else 0.0
     )
 
-    # Per-hedge rows for the simplified EP table (id, type, zone sensible)
-    context["ep_ru_hedge_rows"] = evaluator.build_hedge_rows()
+    # Per-hedge rows with zone info and coefficients
+    context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
+        moulinette.catalog, evaluator.slug
+    )
 
     # Zone configs for the coefficient matrix accordion
     ru_debug = get_ru_debug_context(moulinette.catalog)
