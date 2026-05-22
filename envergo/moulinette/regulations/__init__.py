@@ -623,6 +623,10 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
     base_slug: str | None = None
 
     def __init_subclass__(cls, **kwargs):
+        """Compute the slug of the evaluator by combining base slug and category if it is not already set.
+
+        Add also the category in the choice label.
+        """
         super().__init_subclass__(**kwargs)
 
         if "base_slug" not in cls.__dict__ and not hasattr(cls, "_base_slug"):
@@ -652,6 +656,7 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
             cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
 
     def __init__(self, criterion, moulinette, distance, settings):
+        """Get the hedges relevant to this evaluator depending on its category."""
         super().__init__(criterion, moulinette, distance, settings)
         if "haies" in self.moulinette.catalog:
             self.hedges = (
