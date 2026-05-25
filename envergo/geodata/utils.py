@@ -737,38 +737,53 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
 def query_hedges_display_geojson(
     truncated_buffer, untruncated_circle, simplify_tolerance
 ):
-    """Return simplified hedge geometries clipped to the truncated buffer.
+    """Return hedge geometries clipped to the truncated buffer for display.
 
-    Since this is for map display, the truncated buffer is simplified at 10×
-    the hedge tolerance before clipping. This reduces vertex count (e.g. 2077
-    → ~880 for a complex coastline) and makes ST_Intersection much cheaper,
-    with no visible difference at the display zoom level.
+    Uses the same CTE excluded-zone strategy as `query_hedge_length`:
 
-    The WHERE clause filters against the simple untruncated circle for
-    efficient spatial index lookups.
+      Fast path — hedge fully inside the truncated buffer: simplify only,
+        no clipping needed. Covers the vast majority of hedges.
+
+      Slow path — hedge crosses a boundary (coast, forest, circle edge):
+        clip against a simplified truncated buffer, then simplify. Clipping
+        before simplification preserves precise intersection points at the
+        buffer boundary. The buffer is simplified (10× hedge tolerance) to
+        reduce intersection cost — only boundary hedges are affected, and at
+        display zoom the difference is imperceptible.
 
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """
 
     sql = """
-        WITH buf AS (
-            SELECT ST_SimplifyPreserveTopology(
-                ST_GeomFromEWKT(%(truncated)s)::geometry, %(buf_tol)s
-            ) AS geom
+        WITH zones AS (
+            SELECT
+                ST_GeomFromEWKT(%(circle)s) AS circ,
+                ST_SimplifyPreserveTopology(
+                    ST_GeomFromEWKT(%(truncated)s)::geometry, %(buf_tol)s
+                ) AS trunc_simple,
+                ST_Difference(
+                    ST_GeomFromEWKT(%(circle)s),
+                    ST_GeomFromEWKT(%(truncated)s)
+                ) AS excluded
         )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
-            ST_Intersection(
-                ST_SimplifyPreserveTopology(l.geometry::geometry, %(hedge_tol)s),
-                buf.geom)
+            CASE
+                WHEN ST_CoveredBy(l.geometry, zones.circ)
+                     AND NOT ST_Intersects(l.geometry, zones.excluded)
+                THEN ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s)
+                ELSE ST_SimplifyPreserveTopology(
+                    ST_Intersection(l.geometry, zones.trunc_simple)
+                    ::geometry, %(tol)s)
+            END
         ), 2))
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
-        CROSS JOIN buf
+        CROSS JOIN zones
         WHERE m.map_type = %(map_type)s
-          AND ST_Intersects(l.geometry, ST_GeomFromEWKT(%(circle)s));
+          AND ST_Intersects(l.geometry, zones.circ);
     """
     params = {
-        "hedge_tol": simplify_tolerance,
+        "tol": simplify_tolerance,
         "buf_tol": simplify_tolerance * 10,
         "map_type": MAP_TYPES.haies,
         "truncated": truncated_buffer.ewkt,
