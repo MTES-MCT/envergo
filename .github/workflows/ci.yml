@@ -29,9 +29,6 @@ jobs:
         with:
           python-version: 3.12.8
 
-      # Run all pre-commit hooks on all the files.
-      # Getting only staged files can be tricky in case a new PR is opened
-      # since the action is run on a branch in detached head state
       - name: Install and Run Pre-commit
         uses: pre-commit/action@v3.0.1
 
