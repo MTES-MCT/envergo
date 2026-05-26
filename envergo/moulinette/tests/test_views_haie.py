@@ -340,6 +340,18 @@ def test_moulinette_post_form_error(client):
     assert "data" in error_event.metadata
     assert error_event.metadata["data"] == data
 
+    # GIVEN an url with mtm params
+    res = client.post(
+        f"{url}?department=44&element=haie&travaux=destruction&mtm_campaign=campaign",
+        data,
+    )
+    # THEN mtm_keys are in event
+    error_event = Event.objects.filter(
+        category="erreur", event="formulaire-simu"
+    ).last()
+    assert "mtm_campaign" in error_event.metadata
+    assert error_event.metadata["mtm_campaign"] == "campaign"
+
 
 def test_moulinette_post_form_max_hedge_length_exceeded(client):
     """The form shows an error when hedges to remove exceed MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH."""
