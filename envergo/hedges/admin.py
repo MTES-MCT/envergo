@@ -198,7 +198,7 @@ class SpeciesHabitatAdmin(admin.ModelAdmin):
         if not obj.species_habitat_file:
             return ""
 
-        label = os.path.basename(obj.species_habitat_file.file.path)
+        label = os.path.basename(obj.species_habitat_file.file.name)
         url = reverse(
             "admin:hedges_specieshabitatfile_change",
             args=[obj.species_habitat_file_id],
