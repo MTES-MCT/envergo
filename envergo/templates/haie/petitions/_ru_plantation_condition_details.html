@@ -3,7 +3,7 @@
 <h5 class="fr-mt-3w">Calcul de la compensation attendue</h5>
 
 <ul class="instructor-view-list">
-  {% include 'haie/petitions/_item.html' with label="Densité bocagère des haies à détruire (rayon 400 m)" value=density_400|floatformat:"1g" unit="ml/ha" %}
+  {% include 'haie/petitions/_item.html' with label="Densité bocagère des haies à détruire (rayon 400 m) :" value=density_400|floatformat:"1g" unit="ml/ha" %}
   {% if show_ep_majorations %}
     {% if ep_ru_procedure_bonus %}
       {% if ep_ru_procedure_bonus == 0.5 %}
@@ -37,7 +37,9 @@
         Afficher le détail des matrices de coefficients du régime unique
       </button>
     </h3>
-    <div id="accordion-coeff-matrix-{{ regulation_slug }}" class="fr-collapse">{% include 'haie/_ru_coefficient_matrix.html' %}</div>
+    <div id="accordion-coeff-matrix-{{ regulation_slug }}" class="fr-collapse">
+      {% include 'haie/_ru_coefficient_matrix.html' %}
+    </div>
   </section>
 {% endif %}
 
