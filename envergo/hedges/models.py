@@ -905,14 +905,14 @@ class Species(models.Model):
     # Some data provider (e.g Aisne) use a "group" classification that is manually
     # curated and does not match any "official" taxonomy value.
     adhoc_group = models.CharField(
-        "Groupe (obsolète)",
+        "Groupe simplifié",
         max_length=64,
         blank=True,
-        help_text="Classification ad-hoc obsolète. Utiliser le groupe TaxRef.",
+        help_text="Classification ad-hoc issue du producteur de données.",
     )
 
     # Official group from TaxRef GROUP2_INPN field.
-    group = models.CharField("Groupe", max_length=128, blank=True)
+    group = models.CharField("Groupe (taxref)", max_length=128, blank=True)
 
     kingdom = models.CharField("Règne", choices=KINGDOMS, max_length=32, blank=True)
     common_name = models.CharField(
