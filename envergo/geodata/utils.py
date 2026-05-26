@@ -466,14 +466,12 @@ def fill_polygon_stats():
     This is only used manually when the need arises, for debugging purpose.
     """
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
+        cursor.execute("""
         UPDATE geodata_zone
         SET
             area = ST_Area(geometry),
             npoints = ST_NPoints(geometry::geometry);
-        """
-        )
+        """)
 
 
 def get_catchment_area(lng, lat):
@@ -705,22 +703,16 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
         return cursor.fetchone()[0]
 
 
-def query_hedges_display_geojson(
-    truncated_buffer, untruncated_circle, simplify_tolerance
-):
+def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
     """Return hedge geometries clipped to the truncated buffer for display.
 
     Uses the same CTE excluded-zone strategy as `query_hedge_length`:
 
-      Fast path — hedge fully inside the truncated buffer: simplify only,
-        no clipping needed. Covers the vast majority of hedges.
+      Fast path — hedge fully inside the truncated buffer (covered by the
+        simple circle and not touching the excluded zone): return as-is.
 
       Slow path — hedge crosses a boundary (coast, forest, circle edge):
-        clip against a simplified truncated buffer, then simplify. Clipping
-        before simplification preserves precise intersection points at the
-        buffer boundary. The buffer is simplified (10× hedge tolerance) to
-        reduce intersection cost — only boundary hedges are affected, and at
-        display zoom the difference is imperceptible.
+        clip against the truncated buffer via ST_Intersection.
 
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """
@@ -729,9 +721,7 @@ def query_hedges_display_geojson(
         WITH zones AS (
             SELECT
                 ST_GeomFromEWKT(%(circle)s) AS circ,
-                ST_SimplifyPreserveTopology(
-                    ST_GeomFromEWKT(%(truncated)s)::geometry, %(buf_tol)s
-                ) AS trunc_simple,
+                ST_GeomFromEWKT(%(truncated)s) AS trunc,
                 ST_Difference(
                     ST_GeomFromEWKT(%(circle)s),
                     ST_GeomFromEWKT(%(truncated)s)
@@ -741,10 +731,8 @@ def query_hedges_display_geojson(
             CASE
                 WHEN ST_CoveredBy(l.geometry, zones.circ)
                      AND NOT ST_Intersects(l.geometry, zones.excluded)
-                THEN ST_SimplifyPreserveTopology(l.geometry::geometry, %(tol)s)
-                ELSE ST_SimplifyPreserveTopology(
-                    ST_Intersection(l.geometry, zones.trunc_simple)
-                    ::geometry, %(tol)s)
+                THEN l.geometry::geometry
+                ELSE ST_Intersection(l.geometry, zones.trunc)::geometry
             END
         ), 2))
         FROM geodata_line l
@@ -754,8 +742,6 @@ def query_hedges_display_geojson(
           AND ST_Intersects(l.geometry, zones.circ);
     """
     params = {
-        "tol": simplify_tolerance,
-        "buf_tol": simplify_tolerance * 10,
         "map_type": MAP_TYPES.haies,
         "truncated": truncated_buffer.ewkt,
         "circle": untruncated_circle.ewkt,
@@ -818,7 +804,7 @@ def compute_hedge_densities_around_point(
     point_geos,
     radii,
     *,
-    display_simplify_tolerance=None,
+    include_display_geojson=False,
 ):
     """Compute hedge density at multiple concentric radii around a point.
 
@@ -859,23 +845,23 @@ def compute_hedge_densities_around_point(
             },
         }
 
-    if display_simplify_tolerance is not None:
+    if include_display_geojson:
         max_r = max(radii)
         display_truncated = truncated[max_r] or max_circle
         result["display_geojson"] = query_hedges_display_geojson(
-            display_truncated, max_circle, display_simplify_tolerance
+            display_truncated, max_circle
         )
 
     return result
 
 
 def compute_hedge_density_around_lines(
-    line_geos, radius, *, display_simplify_tolerance=None
+    line_geos, radius, *, include_display_geojson=False
 ):
     """Compute the density of hedges in buffer radius.
 
-    If `display_simplify_tolerance` is set, `artifacts` also contains a
-    `display_geojson` key with the simplified hedges inside the buffer.
+    If `include_display_geojson` is set, `artifacts` also contains a
+    `display_geojson` key with the hedges clipped to the buffer.
     """
 
     line_centroid = line_geos.centroid
@@ -896,10 +882,10 @@ def compute_hedge_density_around_lines(
         "area_ha": ha,
     }
 
-    if display_simplify_tolerance is not None:
+    if include_display_geojson:
         display_truncated = truncated or buffer_zone
         artifacts["display_geojson"] = query_hedges_display_geojson(
-            display_truncated, buffer_zone, display_simplify_tolerance
+            display_truncated, buffer_zone
         )
 
     return {"density": density, "artifacts": artifacts}
