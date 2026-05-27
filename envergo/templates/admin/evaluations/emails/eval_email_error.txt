@@ -1,4 +1,3 @@
-
 Un email d'avis réglementaire n'a pas pu être délivré.
 
 {{ eval_url }}
