@@ -2626,12 +2626,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     @property
     def results_by_category(self):
         """Compute global result from individual regulation results depending on the criteria category."""
-        if hasattr(self, "_result"):
-            return self._result
-
         if not self.is_evaluated():
-            self._result = RESULTS.non_disponible
-            return self._result
+            return {}
 
         all_results_by_category = defaultdict(list)
         for regulation in self.regulations:
