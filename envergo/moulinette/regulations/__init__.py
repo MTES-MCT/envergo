@@ -430,6 +430,11 @@ class AmenagementRegulationEvaluator(RegulationEvaluator):
 
     choice_label = "Aménagement > Défaut"
 
+    @property
+    def results_by_category(self):
+        """Return a regulation macro result for each category of at least one criterion."""
+        raise NotImplementedError("Not needed for Envergo aménagement")
+
 
 class HaieRegulationEvaluator(RegulationEvaluator):
     """Specific evaluator for the haies site."""
