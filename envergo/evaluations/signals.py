@@ -13,14 +13,6 @@ from envergo.evaluations.tasks import (
 
 logger = logging.getLogger(__name__)
 
-# Those are the events we want to receive from the ESP and track
-# There is also an order of priority, and the latest status in not
-# necessarily the one we want to keep
-# E.g if a message is already "clicked", and later the recipient
-# opens it again and we receive an "opened" event, we want the status
-# to stay "clicked"
-TRACKED_EVENTS = ["queued", "delivered", "opened", "clicked"]
-
 # Those are the events that mean the message was not delivered
 ERROR_EVENTS = [
     "deferred",
@@ -34,7 +26,7 @@ ERROR_EVENTS = [
 def handle_mail_event(sender, event, esp_name, **kwargs):
     """Handle error events received from Brevo.
 
-    The events we are trackinrg are related to the evaluations emails ("avis réglementaires").
+    The events we are tracking are related to the evaluations emails ("avis réglementaires").
     We only track errors.
     """
     event_name = event.event_type
