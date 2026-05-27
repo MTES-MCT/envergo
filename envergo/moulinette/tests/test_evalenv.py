@@ -71,6 +71,14 @@ def evalenv_criteria(france_map):  # noqa
             activation_map=france_map,
             is_optional=True,
         ),
+        CriterionFactory(
+            title="Cas par cas pour une installation classée (ICPE)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.evalenv.ICPE",
+            activation_map=france_map,
+            is_optional=True,
+            is_staff_only=True,
+        ),
     ]
     return criteria
 
@@ -525,3 +533,31 @@ class TestICPEFormValidation:
 
         assert res.status_code == 200
         assertTemplateUsed(res, "moulinette/result.html")
+
+
+def test_actions_to_take_cas_par_cas_or_not():
+    ActionToTakeFactory(slug="depot_cas_par_cas", target="petitioner")
+    icpe_data = {
+        "activate": "on",
+        "icpe_projet": "creation",
+        "icpe_regime": "enregistrement",
+    }
+    data = _bizou_data(
+        # lat=COORDS_NANTES[0],
+        # lng=COORDS_NANTES[1],
+        created_surface=10000,
+        terrain_assiette=95000,
+        operation_amenagement="oui",
+        **icpe_data,
+    )
+    moulinette = MoulinetteAmenagement(data)
+    assert moulinette.eval_env.actions_to_take == {
+        "to_add": {
+            "depot_cas_par_cas",
+        },
+    }
+    actions_to_take_flatten = {
+        target: [action.slug for action in actions_list]
+        for target, actions_list in moulinette.actions_to_take.items()
+    }
+    assert actions_to_take_flatten == {"petitioner": ["depot_cas_par_cas"]}
