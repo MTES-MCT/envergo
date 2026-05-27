@@ -795,6 +795,9 @@ class ICPEForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=ICPE_REGIME_CHOICES,
+        get_display_value=lambda value: (
+            "Inconnu" if value == ICPE_REGIME_INCONNU else "À l'issue du projet"
+        ),
     )
 
     def clean(self):
@@ -876,20 +879,36 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
                 "suspension_delai_icpe",
                 "depot_dossier_icpe",
                 "pc_icpe_e",
+                "non_depot_lse",
             }
         },
         "cas_par_cas_modif": {
             TO_ADD: {
                 "mention_arrete_icpe_e",
                 "suspension_delai_icpe",
-                "depot_pac_icpe",
+                "depot_dossier_icpe",
                 "pc_icpe_e",
-            }
+                "non_depot_lse",
+            },
+            TO_SUBTRACT: {
+                "depot_dossier_lse",
+                "mention_arrete_lse",
+                "depot_pac_lse",
+                "pc_ein",
+            },
         },
         "non_soumis_declaration_creation": {
             TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"}
         },
-        "non_soumis_declaration_modif": {TO_ADD: {"pc_icpe_d", "depot_pac_icpe"}},
+        "non_soumis_declaration_modif": {
+            TO_ADD: {"pc_icpe_d", "depot_dossier_icpe", "non_depot_lse"},
+            TO_SUBTRACT: {
+                "depot_dossier_lse",
+                "depot_pac_lse",
+                "mention_arrete_lse",
+                "pc_ein",
+            },
+        },
         "non_soumis_declaration_sans_pac": {TO_ADD: {"pc_icpe_d"}},
         "a_verifier_creation": {
             TO_ADD: {
@@ -903,9 +922,11 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
             TO_ADD: {
                 "mention_arrete_icpe_e",
                 "suspension_delai_icpe",
-                "depot_pac_icpe",
+                "depot_dossier_icpe",
                 "pc_icpe_inconnu",
-            }
+                "non_depot_lse",
+            },
+            TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
         },
         "a_verifier_sans_pac": {
             TO_ADD: {
