@@ -6,9 +6,9 @@ from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
-    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -22,7 +22,7 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -71,7 +71,7 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
     ep_criteria, alignementarbres_criteria, n2000_criteria
 ):
     # GIVEN two regulations, one activated, one not activated, and one without activated perimeter on a department
-    DCConfigHaieFactory(regulations_available=["alignement_arbres", "natura2000_haie"])
+    RUConfigHaieFactory(regulations_available=["alignement_arbres", "natura2000_haie"])
     hedges = HedgeDataFactory(
         data=[
             {

@@ -6,6 +6,7 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 
 
@@ -20,7 +21,21 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -143,20 +158,7 @@ def test_moulinette_result_alignement():
 
 
 def test_moulinette_result_non_alignement():
-    DCConfigHaieFactory(
-        single_procedure=True,
-        single_procedure_settings={
-            "coeff_compensation": {
-                "default": {
-                    "X_densite": 60,
-                    "R1_non_arboree_HD": 1.5,
-                    "R2_non_arboree_LD": 1.5,
-                    "R3_arboree_HD": 1.5,
-                    "R4_arboree_LD": 1.5,
-                }
-            }
-        },
-    )
+    RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -183,8 +185,7 @@ def test_moulinette_result_non_alignement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.conditionnalite_pac.result == "non_soumis"
-    assert moulinette.alignement_arbres.result == "non_soumis"
+    assert moulinette.alignement_arbres.result == "non_concerne"
     assert moulinette.result == "declaration"
 
 
@@ -237,20 +238,7 @@ def test_moulinette_result_interdit():
 
 
 def test_moulinette_result_autorisation(ep_criteria):
-    DCConfigHaieFactory(
-        single_procedure=True,
-        single_procedure_settings={
-            "coeff_compensation": {
-                "default": {
-                    "X_densite": 60,
-                    "R1_non_arboree_HD": 1.5,
-                    "R2_non_arboree_LD": 1.5,
-                    "R3_arboree_HD": 1.5,
-                    "R4_arboree_LD": 1.5,
-                }
-            }
-        },
-    )
+    RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -258,8 +246,9 @@ def test_moulinette_result_autorisation(ep_criteria):
                     "type_haie": "mixte",
                     "sur_parcelle_pac": False,
                     "mode_destruction": "coupe_a_blanc",
+                    "place_publique": True,
                 },
-            )
+            ),
         ]
     )
     data = {
@@ -280,5 +269,5 @@ def test_moulinette_result_autorisation(ep_criteria):
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.ep.ep_aisne.result == "derogation_simplifiee"
+    assert moulinette.ep.hru__ep_aisne.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

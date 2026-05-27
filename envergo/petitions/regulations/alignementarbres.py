@@ -1,11 +1,15 @@
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
 from envergo.hedges.regulations import TreeAlignmentsCondition
 from envergo.moulinette.forms import MOTIF_CHOICES
-from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
+from envergo.moulinette.regulations.alignementarbres import (
+    AlignementsArbresCalvadosBeforeRu,
+    AlignementsArbresL3503,
+)
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
-@evaluator_instructor_view_context_getter(AlignementsArbres)
+@evaluator_instructor_view_context_getter(AlignementsArbresL3503)
+@evaluator_instructor_view_context_getter(AlignementsArbresCalvadosBeforeRu)
 def alignement_arbres_get_instructor_view_context(
     evaluator, petition_project, moulinette
 ) -> dict:

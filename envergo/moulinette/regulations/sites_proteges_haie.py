@@ -1,4 +1,7 @@
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class SitesProtegesRegulation(HaieRegulationEvaluator):
@@ -10,9 +13,9 @@ class SitesProtegesRegulation(HaieRegulationEvaluator):
     }
 
 
-class SitesPatrimoniauxRemarquablesHaie(CriterionEvaluator):
+class SitesPatrimoniauxRemarquablesHaie(HaieCriterionEvaluator):
     choice_label = "Sites protégés > SPR Haie"
-    slug = "spr_haie"
+    base_slug = "spr_haie"
     plantation_conditions = []
 
     def get_catalog_data(self):
@@ -26,9 +29,9 @@ class SitesPatrimoniauxRemarquablesHaie(CriterionEvaluator):
         self._result_code, self._result = "soumis", "soumis"
 
 
-class MonumentsHistoriquesHaie(CriterionEvaluator):
+class MonumentsHistoriquesHaie(HaieCriterionEvaluator):
     choice_label = "Sites protégés > MH Haie"
-    slug = "mh_haie"
+    base_slug = "mh_haie"
     plantation_conditions = []
 
     def get_catalog_data(self):

@@ -443,7 +443,7 @@ class CriterionEvaluator(ABC):
     # The form class to use to ask the admin for necessary settings
     settings_form_class = None
 
-    def __init__(self, moulinette, distance, settings):
+    def __init__(self, criterion, moulinette, distance, settings):
         """Initialize the evaluator.
 
         Args:
@@ -455,6 +455,7 @@ class CriterionEvaluator(ABC):
             raise RuntimeError(
                 f"CriterionEvaluator {type(self).__name__} must have a `slug` attribute."
             )
+        self.criterion = criterion
         self.moulinette = moulinette
         self.distance = distance
         # Settings must be assigned before `get_catalog_data` because some
@@ -607,6 +608,66 @@ class CriterionEvaluator(ABC):
         rendering debug_template.
         """
         return {}
+
+
+class HaieCriterionCategory(Enum):
+    ru = "Régime unique"
+    l350_3 = "L350-3"
+    hru = "Hors régime unique"
+
+
+class HaieCriterionEvaluator(CriterionEvaluator, ABC):
+    """Add a category for criterion evaluator on GUH to filter the hedges to evaluate."""
+
+    category: HaieCriterionCategory = HaieCriterionCategory.hru
+    base_slug: str | None = None
+
+    def __init_subclass__(cls, **kwargs):
+        """Compute the slug of the evaluator by combining base slug and category if it is not already set.
+
+        Add also the category in the choice label.
+        """
+        super().__init_subclass__(**kwargs)
+
+        if "base_slug" not in cls.__dict__ and not hasattr(cls, "_base_slug"):
+            # base_slug is required.
+            # The base slug isn't necessarily unique. It's typically shared by evaluators computing the same criteria
+            # across different category hedges.
+            # It's used, among others, to retrieve the criteria templates in combination with the category.
+            raise RuntimeError(
+                f"HaieCriterionEvaluator {type(cls).__name__} must have a `base_slug` attribute."
+            )
+        if "base_slug" in cls.__dict__:
+            cls._base_slug = cls.__dict__["base_slug"]
+        if ("category" in cls.__dict__ or "base_slug" in cls.__dict__) and hasattr(
+            cls, "_base_slug"
+        ):
+            if "slug" not in cls.__dict__:
+                cls.slug = f"{cls.category.name}__{cls._base_slug}"
+
+        # Automatically append the category to choice_label and slug.
+        # _base_choice_label holds the label without the category suffix, so that
+        # subclasses overriding only `category` can recompute the full label correctly.
+        if "choice_label" in cls.__dict__:
+            cls._base_choice_label = cls.__dict__["choice_label"]
+        if ("category" in cls.__dict__ or "choice_label" in cls.__dict__) and hasattr(
+            cls, "_base_choice_label"
+        ):
+            cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
+
+    def __init__(self, criterion, moulinette, distance, settings):
+        """Get the hedges relevant to this evaluator depending on its category."""
+        super().__init__(criterion, moulinette, distance, settings)
+        if "haies" in self.moulinette.catalog:
+            self.hedges = (
+                self.moulinette.catalog["haies"]
+                .hedges()
+                .category(self.moulinette.config.single_procedure, self.category)
+            )
+        else:
+            from envergo.hedges.models import HedgeList
+
+            self.hedges = HedgeList()
 
 
 SELF_DECLARATION_ELIGIBILITY_MATRIX = {

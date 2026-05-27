@@ -24,7 +24,8 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import (
-    CriterionEvaluator,
+    HaieCriterionCategory,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -61,11 +62,11 @@ class EPMixin:
         return catalog
 
 
-class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluator):
+class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, HaieCriterionEvaluator):
     """Basic criterion: always returns "soumis."""
 
     choice_label = "EP > EP simple"
-    slug = "ep_simple"
+    base_slug = "ep_simple"
     plantation_conditions = [SafetyCondition]
 
     CODE_MATRIX = {
@@ -76,11 +77,11 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluat
         return "soumis"
 
 
-class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluator):
+class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEvaluator):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Aisne"
-    slug = "ep_aisne"
+    base_slug = "ep_aisne"
     plantation_conditions = [SafetyCondition, QualityCondition]
 
     CODE_MATRIX = {
@@ -171,12 +172,12 @@ class EPNormandieForm(forms.Form):
 
 
 class EspecesProtegeesNormandie(
-    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
 ):
     """Check for protected species living in hedges."""
 
     choice_label = "EP > EP Normandie"
-    slug = "ep_normandie"
+    base_slug = "ep_normandie"
     debug_template = "haie/moulinette/debug/ep_normandie.html"
     plantation_conditions = [
         MinLengthCondition,
@@ -565,26 +566,20 @@ class EspecesProtegeesNormandie(
         # this evaluator needs the result of the alignement_arbres criterion to get its own result
         # the regulation weight should be configurated to fetch the alignement_arbres before this one
         # if the alignement_arbres criterion is activated but has not been evaluated yet, it should raise an error
+        reg = getattr(self.moulinette, "alignement_arbres", None)
+        criterion = getattr(reg, "l350_3__alignement_arbres", None) or getattr(
+            reg, "alignement_arbres_calvados_before_ru", None
+        )  # Calvados was supporting L350-3 before RU, so we need to check its specific criterion.
+
         if (
             self.catalog.get("alignement_bord_voie_every_hedge", False)
-            and hasattr(self.moulinette, "alignement_arbres")
-            and self.moulinette.alignement_arbres.is_activated
-            and hasattr(self.moulinette.alignement_arbres, "alignement_arbres")
+            and reg is not None
+            and reg.is_activated
+            and criterion is not None
         ):
-            if (
-                self.moulinette.alignement_arbres.alignement_arbres.result_code
-                == "soumis_securite"
-            ):
+            if criterion.result_code == "soumis_securite":
                 result = "dispense_L350"
-            elif (
-                self.moulinette.alignement_arbres.alignement_arbres.result_code
-                == "soumis_esthetique"
-            ):
-                result = "a_verifier_L350"
-            elif (
-                self.moulinette.alignement_arbres.alignement_arbres.result_code
-                == "soumis_autorisation"
-            ):
+            elif criterion.result_code in ("soumis_esthetique", "soumis_autorisation"):
                 result = "a_verifier_L350"
             else:  # non soumis
                 result = super().get_result_code(result_data)
@@ -721,7 +716,7 @@ EP_RU_REPLANTATION_BONUS = {
 
 
 class EspecesProtegeesRegimeUnique(
-    PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
+    PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
 ):
     """EP criterion for the "régime unique" procedure.
 
@@ -731,11 +726,12 @@ class EspecesProtegeesRegimeUnique(
     """
 
     choice_label = "EP > EP Régime unique"
-    slug = "ep_regime_unique"
+    base_slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
     plantation_conditions = []
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
+    category = HaieCriterionCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,

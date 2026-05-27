@@ -626,9 +626,11 @@ class TreeAlignmentsCondition(PlantationCondition):
             h.length for h in hedges_to_plant_aa_bord_voie
         )
 
-        from envergo.moulinette.regulations.alignementarbres import AlignementsArbres
+        from envergo.moulinette.regulations.alignementarbres import (
+            AlignementsArbresL3503,
+        )
 
-        r_aa = AlignementsArbres.get_result_based_replantation_coefficient(
+        r_aa = AlignementsArbresL3503.get_result_based_replantation_coefficient(
             self.criterion_evaluator.result_code
         )
 

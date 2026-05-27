@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import operator
 import uuid
 from functools import reduce
-from typing import Self
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from envergo.moulinette.regulations import HaieCriterionCategory
 
 import shapely
 from django.conf import settings
@@ -354,6 +359,25 @@ class HedgeList(list[Hedge]):
             hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
         return hedges
 
+    def category(self, single_procedure, category) -> Self:
+        """List the hedges depending on the given category."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        if single_procedure:
+            if category == HaieCriterionCategory.hru:
+                return self.hru()
+            elif category == HaieCriterionCategory.ru:
+                return self.ru()
+            elif category == HaieCriterionCategory.l350_3:
+                return self.l350_3()
+            else:
+                raise ValueError(f"Category not recognized : {category}")
+        else:
+            if category == HaieCriterionCategory.hru:
+                return self
+            else:
+                return HedgeList([])
+
 
 class HedgeData(models.Model):
     """Hedge data model.
@@ -648,6 +672,19 @@ class HedgeData(models.Model):
             ),
             "dept_haie_detruite": self.get_department(),
         }
+
+    def get_hedges_by_category(
+        self, single_procedure
+    ) -> dict[HaieCriterionCategory, HedgeList]:
+        """Get the hedges list for each category."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        hedges_by_category = {
+            category: self.hedges().category(single_procedure, category)
+            for category in HaieCriterionCategory
+        }
+
+        return hedges_by_category
 
 
 SPECIES_GROUPS = Choices(

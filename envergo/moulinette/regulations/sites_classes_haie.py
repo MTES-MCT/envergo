@@ -1,5 +1,8 @@
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class SitesClassesRegulation(HaieRegulationEvaluator):
@@ -11,9 +14,9 @@ class SitesClassesRegulation(HaieRegulationEvaluator):
     }
 
 
-class SitesClassesHaie(CriterionEvaluator):
+class SitesClassesHaie(HaieCriterionEvaluator):
     choice_label = "Sites classés > Sites classés Haie"
-    slug = "sites_classes_haie"
+    base_slug = "sites_classes_haie"
     plantation_conditions = []
 
     RESULT_MATRIX = {

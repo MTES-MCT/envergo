@@ -8,7 +8,10 @@ from django.core.exceptions import ValidationError
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
 from envergo.moulinette.forms.fields import DisplayIntegerField, UnitInput
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,9 +181,9 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8(PlantationConditionMixin, CriterionEvaluator):
+class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
-    slug = "bcae8"
+    base_slug = "bcae8"
     form_class = Bcae8Form
     plantation_conditions = [MinLengthPacCondition]
 
