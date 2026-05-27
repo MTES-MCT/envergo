@@ -1,11 +1,13 @@
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
+from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
 )
@@ -677,3 +679,228 @@ class TestMultiZoneHedges:
         evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
         # (100 * 2.0 + 100 * 4.0) / 200 = 3.0
         assert evaluator.get_replantation_coefficient() == 3.0
+
+
+# ---------------------------------------------------------------------------
+# Evaluator to_remove() guard — non_concerne when no hedges to remove
+# ---------------------------------------------------------------------------
+
+
+class TestNoHedgesToRemoveGuard:
+    """Evaluators return non_concerne when their category has no TO_REMOVE hedges."""
+
+    def test_ru_non_concerne_when_no_ru_to_remove(self):
+        """RegimeUniqueHaieRu returns non_concerne when RU category has no TO_REMOVE."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                # TO_REMOVE in HRU (bord_batiment → HRU), satisfies form validation
+                make_hedge(
+                    hedge_id="D1",
+                    type_haie="buissonnante",
+                    bord_batiment=True,
+                ),
+                # TO_PLANT in RU — no TO_REMOVE in RU category
+                make_hedge(
+                    hedge_id="P1",
+                    hedge_type="TO_PLANT",
+                    type_haie="mixte",
+                ),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert (
+            moulinette.regime_unique_haie.ru__regime_unique_haie.result_code
+            == "non_concerne"
+        )
+
+    def test_ru_soumis_with_to_remove_hedges(self):
+        """RegimeUniqueHaieRu returns soumis when TO_REMOVE hedges exist."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert (
+            moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
+        )
+
+    def test_hru_non_concerne_when_no_hru_to_remove(self):
+        """RegimeUniqueHaieHru returns non_concerne when HRU has no TO_REMOVE."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                # TO_REMOVE in RU (mixte → RU), no TO_REMOVE in HRU
+                make_hedge(type_haie="mixte"),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert (
+            moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
+            == "non_concerne"
+        )
+
+    def test_l3503_non_concerne_always_in_ru_mode(self):
+        """RegimeUniqueHaieL3503 always returns non_concerne in RU mode."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert (
+            moulinette.regime_unique_haie.l350_3__regime_unique_haie.result_code
+            == "non_concerne"
+        )
+
+
+# ---------------------------------------------------------------------------
+# results_by_category — per-category result at regulation and moulinette level
+# ---------------------------------------------------------------------------
+
+
+class TestResultsByCategory:
+    """Test results_by_category at regulation and moulinette level."""
+
+    def test_regulation_results_by_category_ru_mode(self):
+        """In RU mode with mixte TO_REMOVE hedges, RU category is soumis."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        rbc = moulinette.regime_unique_haie.results_by_category
+        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_concerne
+        assert rbc[HaieCriterionCategory.ru] == RESULTS.soumis
+        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_concerne
+
+    def test_regulation_results_by_category_dc_mode(self):
+        """In DC mode, all categories are non_active."""
+        DCConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        rbc = moulinette.regime_unique_haie.results_by_category
+        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_active
+        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_active
+        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_active
+
+    def test_regulation_results_non_activated(self):
+        """A non-activated regulation returns non_active for all categories."""
+        RUConfigHaieFactory(regulations_available=[])
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        rbc = moulinette.regime_unique_haie.results_by_category
+        for category in HaieCriterionCategory:
+            assert rbc[category] == RESULTS.non_active
+
+    def test_moulinette_results_by_category_aggregation(self):
+        """MoulinetteHaie.results_by_category maps through GLOBAL_RESULT_MATRIX."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        rbc = moulinette.results_by_category
+        # soumis → soumis through GLOBAL_RESULT_MATRIX
+        assert rbc[HaieCriterionCategory.ru] == RESULTS.soumis
+
+    def test_only_to_plant_hedges_all_non_concerne(self):
+        """With only TO_PLANT hedges, all category results are non_concerne."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(hedge_type="TO_PLANT", type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        rbc = moulinette.regime_unique_haie.results_by_category
+        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_concerne
+        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_concerne
+        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_concerne
+
+
+# ---------------------------------------------------------------------------
+# get_debug_context — hedges_and_category_by_type structure
+# ---------------------------------------------------------------------------
+
+
+class TestDebugContext:
+    """Test MoulinetteHaie.get_debug_context returns hedges_and_category_by_type.
+
+    The structure is {hedge_type: [(hedge, category), ...]} sorted by hedge ID.
+    """
+
+    def test_hedges_by_type_and_category_structure(self):
+        """Debug context groups hedges by type (TO_REMOVE/TO_PLANT) then category."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(hedge_id="D1", hedge_type="TO_REMOVE", type_haie="mixte"),
+                make_hedge(hedge_id="P1", hedge_type="TO_PLANT", type_haie="mixte"),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        ctx = moulinette.get_debug_context()
+        htc = ctx["hedges_and_category_by_type"]
+        assert "TO_REMOVE" in htc
+        assert "TO_PLANT" in htc
+
+    def test_hedges_assigned_to_correct_category(self):
+        """TO_REMOVE mixte hedges go to RU category in RU mode."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(hedge_id="D1", hedge_type="TO_REMOVE", type_haie="mixte"),
+                make_hedge(
+                    hedge_id="D2", hedge_type="TO_REMOVE", type_haie="alignement"
+                ),
+                make_hedge(hedge_id="D3", hedge_type="TO_REMOVE", type_haie="mixte"),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        ctx = moulinette.get_debug_context()
+        htc = ctx["hedges_and_category_by_type"]
+        assert len(htc["TO_REMOVE"]) == 3
+        assert htc["TO_REMOVE"][0][0].id == "D1"
+        assert htc["TO_REMOVE"][1][0].id == "D2"
+        assert htc["TO_REMOVE"][2][0].id == "D3"
+
+    def test_dc_mode_all_hedges_in_hru(self):
+        """In DC mode, all hedges go to HRU category."""
+        DCConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(hedge_id="D1", hedge_type="TO_REMOVE", type_haie="mixte"),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        ctx = moulinette.get_debug_context()
+        htc = ctx["hedges_and_category_by_type"]
+        hru_remove = [h for h, c in htc["TO_REMOVE"] if c == HaieCriterionCategory.hru]
+        assert len(hru_remove) == 1
+
+    def test_empty_hedges_returns_empty_categories(self):
+        """Without haies in catalog, returns empty lists for all categories."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        del moulinette.catalog["haies"]
+        ctx = moulinette.get_debug_context()
+        htc = ctx["hedges_and_category_by_type"]
+        assert htc == {}

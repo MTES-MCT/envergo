@@ -263,6 +263,7 @@ class RegimeUniqueHaieRu(
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,
+        "non_concerne": RESULTS.non_concerne,
         "soumis": RESULTS.soumis,
     }
 
@@ -272,6 +273,7 @@ class RegimeUniqueHaieRu(
             "ru_all_zones_resolved", False
         ):
             return "non_disponible"
+
         return "soumis"
 
     def get_catalog_data(self):
