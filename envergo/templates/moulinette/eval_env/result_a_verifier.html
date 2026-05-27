@@ -3,7 +3,7 @@
   réglementation sur les installations classées pour la protection de l'environnement (ICPE).
 </p>
 
-{% if regulation.icpe.is_a_verifier_creation %}
+{% if regulation.icpe.get_evaluator.is_a_verifier_creation %}
   <p>
     Le projet crée une nouvelle ICPE. Si celle-ci est soumise à enregistrement, le projet est
     soumis à examen au cas par cas. Dans ce cas, le dossier d'enregistrement ICPE fait office

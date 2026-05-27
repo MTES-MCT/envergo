@@ -99,7 +99,6 @@ class MoulinetteMixin:
         user = self.request.user
         is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
         exclude_staff_only_criterion = not is_staff
-        context["show_staff_only_criteria"] = is_staff
 
         if self.moulinette.is_evaluated():
 
