@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django import forms
 from django.utils.html import mark_safe
 
@@ -840,49 +842,35 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     CODES = ["cas_par_cas", "non_soumis", "a_verifier"]
 
     CODE_MATRIX = {
-        (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas_creation",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
         (
             ICPE_PROJET_CREATION,
             ICPE_REGIME_DECLARATION,
         ): "non_soumis_declaration_creation",
-        (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier_creation",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier",
         (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas_modif",
         (
             ICPE_PROJET_MODIF_AVEC_PAC,
             ICPE_REGIME_DECLARATION,
         ): "non_soumis_declaration_modif",
-        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier_modification",
-        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_ENREGISTREMENT): "non_soumis_sans_pac",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier_modif",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_ENREGISTREMENT): "non_soumis",
         (
             ICPE_PROJET_MODIF_SANS_PAC,
             ICPE_REGIME_DECLARATION,
-        ): "non_soumis_declaration_sans_pac",
-        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier_sans_pac",
-        (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis_pas_icpe",
+        ): "non_soumis",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis",
     }
     RESULT_MATRIX = {
-        "cas_par_cas_creation": "cas_par_cas",
         "cas_par_cas_modif": "cas_par_cas",
         "non_soumis_declaration_creation": "non_soumis",
         "non_soumis_declaration_modif": "non_soumis",
-        "non_soumis_declaration_sans_pac": "non_soumis",
-        "non_soumis_sans_pac": "non_soumis",
-        "non_soumis_pas_icpe": "non_soumis",
-        "a_verifier_creation": "a_verifier",
-        "a_verifier_modification": "a_verifier",
-        "a_verifier_sans_pac": "a_verifier",
+        "a_verifier_modif": "a_verifier",
     }
-    CODE_ACTIONS_TO_TAKE_MATRIX = {
-        "cas_par_cas_creation": {
-            TO_ADD: {
-                "mention_arrete_icpe_e",
-                "suspension_delai_icpe",
-                "depot_dossier_icpe",
-                "pc_icpe_e",
-                "non_depot_lse",
-            }
-        },
-        "cas_par_cas_modif": {
+
+    ACTIONS_TO_TAKE_MATRIX = {
+        "cas_par_cas": {
             TO_ADD: {
                 "mention_arrete_icpe_e",
                 "suspension_delai_icpe",
@@ -890,35 +878,17 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
                 "pc_icpe_e",
                 "non_depot_lse",
             },
-            TO_SUBTRACT: {
-                "depot_dossier_lse",
-                "mention_arrete_lse",
-                "depot_pac_lse",
-                "pc_ein",
-            },
+            TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
         },
-        "non_soumis_declaration_creation": {
-            TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"}
-        },
-        "non_soumis_declaration_modif": {
+        "non_soumis": {
             TO_ADD: {"pc_icpe_d", "depot_dossier_icpe", "non_depot_lse"},
             TO_SUBTRACT: {
                 "depot_dossier_lse",
                 "depot_pac_lse",
                 "mention_arrete_lse",
-                "pc_ein",
             },
         },
-        "non_soumis_declaration_sans_pac": {TO_ADD: {"pc_icpe_d"}},
-        "a_verifier_creation": {
-            TO_ADD: {
-                "mention_arrete_icpe_e",
-                "suspension_delai_icpe",
-                "depot_dossier_icpe",
-                "pc_icpe_inconnu",
-            }
-        },
-        "a_verifier_modification": {
+        "a_verifier": {
             TO_ADD: {
                 "mention_arrete_icpe_e",
                 "suspension_delai_icpe",
@@ -928,34 +898,40 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
             },
             TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
         },
-        "a_verifier_sans_pac": {
-            TO_ADD: {
-                "mention_arrete_icpe_e",
-                "suspension_delai_icpe",
-                "pc_icpe_inconnu",
-            }
-        },
-        "non_soumis_sans_pac": {},
-        "non_soumis_pas_icpe": {},
     }
+
+    @cached_property
+    def _form_data(self):
+        form = self.get_form()
+        if form and form.is_valid():
+            return form.cleaned_data
+        return {}
+
+    @property
+    def icpe_projet(self):
+        return self._form_data.get("icpe_projet")
+
+    @property
+    def icpe_regime(self):
+        return self._form_data.get("icpe_regime")
+
+    @property
+    def is_a_verifier_creation(self):
+        return (
+            self.result_code == "a_verifier"
+            and self.icpe_projet == ICPE_PROJET_CREATION
+        )
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
-        form = self.get_form()
-        if form and form.is_valid():
-            data["icpe_regime"] = form.cleaned_data.get("icpe_regime")
-            data["icpe_projet"] = form.cleaned_data.get("icpe_projet")
+        if self.icpe_regime is not None:
+            data["icpe_regime"] = self.icpe_regime
+        if self.icpe_projet is not None:
+            data["icpe_projet"] = self.icpe_projet
         return data
 
     def get_result_data(self):
-        form = self.get_form()
-        form.is_valid()
-        icpe_projet = form.cleaned_data.get("icpe_projet")
-        icpe_regime = form.cleaned_data.get("icpe_regime")
-        return icpe_projet, icpe_regime
-
-    def get_actions_to_take(self):
-        return self.CODE_ACTIONS_TO_TAKE_MATRIX.get(self._result_code, {})
+        return self.icpe_projet, self.icpe_regime
 
 
 class OtherCriteria(SelfDeclarationMixin, CriterionEvaluator):

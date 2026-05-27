@@ -3,13 +3,13 @@
   réglementation sur les installations classées pour la protection de l'environnement (ICPE).
 </p>
 
-{% if regulation.icpe.result_code == "a_verifier_creation" %}
+{% if regulation.icpe.is_a_verifier_creation %}
   <p>
     Le projet crée une nouvelle ICPE. Si celle-ci est soumise à enregistrement, le projet est
     soumis à examen au cas par cas. Dans ce cas, le dossier d'enregistrement ICPE fait office
     de demande d'examen au cas par cas.
   </p>
-{% elif regulation.icpe.result_code == "a_verifier_modification" %}
+{% elif regulation.icpe.result_code == "a_verifier_modif" %}
   <p>
     Le projet modifie une ICPE existante. Si un dossier de modification doit être déposé, et que
     l'ICPE est soumise à enregistrement, le projet est soumis à examen au cas par cas. Dans ce cas,
