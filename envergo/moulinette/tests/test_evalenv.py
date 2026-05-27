@@ -535,8 +535,13 @@ class TestICPEFormValidation:
         assertTemplateUsed(res, "moulinette/result.html")
 
 
-def test_actions_to_take_cas_par_cas_or_not():
+def test_icpe_actions_to_take_cas_par_cas_or_not():
+    """Test if action to take cas par cas is substracted when icpe is the only rubrique"""
+
+    # GIVEN an action "depot cas par cas"
     ActionToTakeFactory(slug="depot_cas_par_cas", target="petitioner")
+
+    # WHEN criterion icpe and terrain assiette are activated
     icpe_data = {
         "activate": "on",
         "icpe_projet": "creation",
@@ -551,6 +556,7 @@ def test_actions_to_take_cas_par_cas_or_not():
         **icpe_data,
     )
     moulinette = MoulinetteAmenagement(data)
+    # THEN action depot cas par cas is added (mais ça marche pas)
     assert moulinette.eval_env.actions_to_take == {
         "to_add": {
             "depot_cas_par_cas",
