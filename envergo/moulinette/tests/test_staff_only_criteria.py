@@ -46,7 +46,7 @@ class TestICPEStaffOnlyVisibility:
         assert res.status_code == 200
         assert "Installation classée (ICPE)" in res.content.decode()
 
-    def test_non_staff_cannot_see_icpe_result(self, client):
+    def test_non_staff_can_see_icpe_result(self, client):
         params = (
             f"{BASE_PARAMS}"
             "&evalenv_icpe-activate=on"
@@ -57,7 +57,7 @@ class TestICPEStaffOnlyVisibility:
         res = client.get(url)
 
         assert res.status_code == 200
-        assert "installation classée (icpe)" not in res.content.decode().lower()
+        assert "installation classée (icpe)" in res.content.decode().lower()
 
     def test_staff_can_see_icpe_result(self, staff_client):
         params = (
