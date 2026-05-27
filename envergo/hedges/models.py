@@ -360,23 +360,66 @@ class HedgeList(list[Hedge]):
         return hedges
 
     def category(self, single_procedure, category) -> Self:
-        """List the hedges depending on the given category."""
+        """Return the subset of hedges an evaluator should assess for `category`.
+
+        Without single_procedure: all hedges go to HRU, other categories are empty.
+
+        With single_procedure: hedges to remove are split by Hedge.category.
+        Hedges to plant whose category has no removal counterpart are orphans —
+        they get absorbed by an active category (priority: HRU > RU > L350-3).
+        When HRU or RU is also active, L350-3 does not absorb their orphans.
+        """
         from envergo.moulinette.regulations import HaieCriterionCategory
 
-        if single_procedure:
+        if not single_procedure:
             if category == HaieCriterionCategory.hru:
-                return self.hru()
-            elif category == HaieCriterionCategory.ru:
-                return self.ru()
-            elif category == HaieCriterionCategory.l350_3:
-                return self.l350_3()
+                return HedgeList(self)
             else:
-                raise ValueError(f"Category not recognized : {category}")
-        else:
-            if category == HaieCriterionCategory.hru:
-                return self
-            else:
-                return HedgeList([])
+                return HedgeList()
+
+        hru = self.hru()
+        ru = self.ru()
+        l350_3 = self.l350_3()
+
+        has_hru = bool(hru.to_remove())
+        has_ru = bool(ru.to_remove())
+        has_l350_3 = bool(l350_3.to_remove())
+
+        if category == HaieCriterionCategory.hru:
+            if not has_hru:
+                return HedgeList()
+            if has_ru and has_l350_3:
+                # All categories present: return only HRU
+                return hru
+            if not has_ru and not has_l350_3:
+                # Only one category (HRU): all hedges to plant are categorized as HRU
+                return HedgeList(self)
+            if not has_ru:
+                # Two categories (HRU and L350-3): RU to plant are categorized as HRU
+                return HedgeList(hru + ru)
+            # Two categories (HRU and RU): L350-3 to plant are categorized as HRU
+            return HedgeList(hru + l350_3)
+        elif category == HaieCriterionCategory.ru:
+            if not has_ru:
+                return HedgeList()
+            if has_hru:
+                # HRU present (absorbs orphans): return only RU
+                return ru
+            if has_l350_3:
+                # Two categories (RU and L350-3): HRU to plant are categorized as RU
+                return HedgeList(hru + ru)
+            # Only one category (RU): all hedges to plant are categorized as RU
+            return HedgeList(self)
+        elif category == HaieCriterionCategory.l350_3:
+            if not has_l350_3:
+                return HedgeList()
+            if not has_hru and not has_ru:
+                # Only one category (L350-3): all hedges to plant are categorized as L350-3
+                return HedgeList(self)
+            # HRU or RU also present (absorbs orphans): return only L350-3
+            return l350_3
+
+        raise ValueError(f"Category not recognized : {category}")
 
 
 class HedgeData(models.Model):
