@@ -889,32 +889,6 @@ class RegulatoryNoticeLog(models.Model):
         ordering = ("-sent_at",)
 
 
-class RecipientStatus(models.Model):
-    regulatory_notice_log = models.ForeignKey(
-        RegulatoryNoticeLog, on_delete=models.CASCADE, related_name="recipient_statuses"
-    )
-    recipient = models.EmailField(_("Recipient"))
-    status = models.CharField(_("Status"), max_length=64)
-    latest_status = models.DateTimeField(_("Latest status"))
-    nb_opened = models.IntegerField(_("Nb opened"), default=0)
-    latest_opened = models.DateTimeField(_("Latest opened"), null=True)
-    nb_clicked = models.IntegerField(_("Nb clicked"), default=0)
-    latest_clicked = models.DateTimeField(_("Latest clicked"), null=True)
-    on_error = models.BooleanField(_("On error"), default=False)
-    reject_reason = models.CharField(
-        _("Reject reason"), max_length=64, blank=True, default=""
-    )
-
-    class Meta:
-        verbose_name = _("Recipient status")
-        verbose_name_plural = _("Recipient statuses")
-        constraints = [
-            models.UniqueConstraint(
-                name="unique_index", fields=["regulatory_notice_log", "recipient"]
-            )
-        ]
-
-
 class EvaluationSnapshot(ResultSnapshotBase):
     """Snapshot of moulinette results for an Evaluation."""
 
