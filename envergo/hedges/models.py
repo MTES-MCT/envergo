@@ -290,16 +290,6 @@ class HedgeList(list[Hedge]):
     def names(self):
         return ", ".join(h.id for h in self)
 
-    def sort_by_type(self) -> "HedgeList":
-        """Sort this list by the type of the hedge (to remove first, then to plant) and names"""
-        type_order = {TO_REMOVE: 0, TO_PLANT: 1}
-        return HedgeList(
-            sorted(
-                self, key=lambda h: (type_order.get(h.type, 2), h.id[0], int(h.id[1:]))
-            ),
-            label=self.label,
-        )
-
     @property
     def length(self):
         return sum(h.length for h in self)

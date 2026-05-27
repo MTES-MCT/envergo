@@ -53,7 +53,6 @@ PLANTATION_RESULT_MATRIX = {
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
     ("declaration", PlantationResults.Adequate.value): "declaration",
-    # not used for now:
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,

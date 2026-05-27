@@ -1,0 +1,73 @@
+{% load moulinette %}
+
+{% if not is_read_only %}
+  {% if moulinette.config.aa_l3503_handling == AaL3503Handling.PORTAL %}
+    <h6>
+      ✅ <strong>Le dossier est prêt à être complété</strong>
+    </h6>
+
+    <p>
+      Ce portail vous permet de déposer en ligne le dossier portant sur la destruction d’alignements d’arbres en bord de
+      voie.
+    </p>
+
+    <p>
+      Il est transmis pour instruction aux services de l’État en charge de la réglementation sur les allées et
+      alignements d’arbres (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045213878"
+   title="Texte de loi L350-3 du code de l’environnement - ouvre une nouvelle fenêtre"
+   target="_blank"
+   rel="noopener external">art. L350-3 du code de l’environnement</a>).
+    </p>
+
+    <p>
+      <button class="fr-btn fr-btn--primary"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="demarches-simplifiees-modal">Compléter le dossier</button>
+    </p>
+  {% elif moulinette.config.aa_l3503_handling == AaL3503Handling.THIRD_PARTY_FORM %}
+    <h6>
+      📄 <strong>Le dossier est à déposer sur un autre portail</strong>
+    </h6>
+
+    <p>
+      Le dépôt du dossier concernant la destruction d’alignements d’arbres en bord de voie se fait sur un autre
+      portail.
+    </p>
+
+    <p>
+      Il est transmis pour instruction aux services de l’État en charge de la réglementation sur les allées et
+      alignements d’arbres (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000045213878"
+   title="Texte de loi L350-3 du code de l’environnement - ouvre une nouvelle fenêtre"
+   target="_blank"
+   rel="noopener external">art. L350-3 du code de l’environnement</a>).
+    </p>
+
+    <p>
+      <a class="fr-btn"
+         href="{{ moulinette.config.aa_l3503_form_url }}"
+         target="_blank"
+         rel="noopener">Aller au formulaire alignements d’arbre</a>
+    </p>
+  {% else %}
+    <h6>
+      📄 <strong>Un dossier doit être transmis aux services de l’État</strong>
+    </h6>
+
+    {% if moulinette.config.aa_l3503_contact_info %}
+      <p>
+        Pour transmettre aux services de l’État compétents un dossier concernant la destruction d’alignements d’arbres en bord de voie :
+      </p>
+      <div>{{ moulinette.config.aa_l3503_contact_info|safe }}</div>
+    {% endif %}
+  {% endif %}
+{% else %}
+  <h6>
+    ✅ <strong>La demande est en cours</strong>
+  </h6>
+
+  <p>
+    Une fois la demande déposée, les services instructeurs examineront le projet.
+    Ils pourront vous contacter pour obtenir des compléments d’information.
+  </p>
+{% endif %}

@@ -2,10 +2,9 @@
 
 <h6>📃 Le projet doit être modifié pour être autorisable.</h6>
 
-<p>Le projet de plantation proposé ne semble pas adapté au regard des haies détruites.</p>
+<p>Le projet de plantation proposé ne semble pas adapté au regard des linéaires détruits.</p>
 
 {% if not is_read_only %}
-
   <p>
     Nous vous invitons à <a class="hedge-input-open-btn"
     href="#"
@@ -16,7 +15,7 @@
     <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-left fr-icon-arrow-left-line"
             type="button"
             data-fr-opened="false"
-            aria-controls="hedge-input-modal">Modifier les haies à planter</button>
+            aria-controls="hedge-input-modal">Modifier les linéaires à planter</button>
   </p>
   {% if not is_alternative %}
     <p>
@@ -25,8 +24,8 @@
             tabindex="0"
             class="inline-button"
             aria-controls="demarches-simplifiees-modal"
-            data-fr-opened="false">déposer votre demande d’autorisation.</span>
-      Elle sera examinée, mais il est probable qu’un refus soit prononcé.
+            data-fr-opened="false">déposer un dossier.</span>
+      Il sera examiné, mais il est probable qu’un refus soit prononcé.
     </p>
   {% endif %}
 {% endif %}
