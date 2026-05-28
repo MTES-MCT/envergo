@@ -39,8 +39,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 2.0, "h2": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert condition.result
 
@@ -55,8 +56,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert not condition.result
         assert condition.remaining[HedgeTypeBase.MIXTE] == pytest.approx(150, abs=1)
@@ -77,8 +79,9 @@ class TestRUQualityConditionCompensation:
                 ),
             ]
         )
-        catalog = {"effective_coefficients": {"h1": 2.5}}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients={"h1": 2.5}),
+        )
         condition.evaluate()
         assert condition.result
 
@@ -97,8 +100,9 @@ class TestRUQualityConditionCompensation:
                 ),
             ]
         )
-        catalog = {"effective_coefficients": {"h1": 2.5}}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients={"h1": 2.5}),
+        )
         condition.evaluate()
         assert not condition.result
         assert condition.remaining[HedgeTypeBase.ARBUSTIVE] == pytest.approx(50, abs=1)
@@ -116,8 +120,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 1.5}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert condition.result
 
@@ -134,8 +139,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 1.5}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert condition.result
 
@@ -152,8 +158,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert condition.result
 
@@ -168,8 +175,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert not condition.result
         assert condition.remaining[HedgeTypeBase.MIXTE] == pytest.approx(200, abs=1)
@@ -189,8 +197,9 @@ class TestRUQualityConditionCompensation:
         )
         # Only h2 has a coefficient — aa1 is excluded
         coefficients = {"h2": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert condition.result
         assert HedgeTypeBase.ALIGNEMENT not in condition.remaining
@@ -208,8 +217,9 @@ class TestRUQualityConditionCompensation:
         )
         # h1 has R=1.5, h2 has R=2.0 → need ~150 + ~200 = ~350m
         coefficients = {"h1": 1.5, "h2": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert condition.result
 
@@ -225,8 +235,9 @@ class TestRUQualityConditionCompensation:
             ]
         )
         coefficients = {"h1": 1.5, "h2": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert not condition.result
         assert condition.remaining[HedgeTypeBase.MIXTE] > 0
@@ -246,8 +257,9 @@ class TestRUQualityConditionText:
             ]
         )
         coefficients = {"h1": 1.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert "convient" in condition.text
 
@@ -259,8 +271,9 @@ class TestRUQualityConditionText:
             ]
         )
         coefficients = {"h1": 2.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert "de haie arborée" in condition.text
 
@@ -274,8 +287,9 @@ class TestRUQualityConditionText:
             ]
         )
         coefficients = {"h1": 1.5}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert "de haie arbustive ou arborée" in condition.text
 
@@ -289,8 +303,9 @@ class TestRUQualityConditionText:
             ]
         )
         coefficients = {"h1": 1.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         assert "de haie buissonnante, arbustive ou arborée" in condition.text
 
@@ -306,8 +321,9 @@ class TestRUQualityConditionText:
             ]
         )
         coefficients = {"h1": 1.0, "h2": 1.0, "h3": 1.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         condition.evaluate()
         text = condition.text
         assert "arborée" in text
@@ -326,15 +342,15 @@ class TestRUQualityConditionMustDisplay:
             ]
         )
         coefficients = {"h1": 1.0}
-        catalog = {"effective_coefficients": coefficients}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(
+            hedge_data, 0, make_mock_evaluator(effective_coefficients=coefficients),
+        )
         assert condition.must_display()
 
     def test_no_display_when_nothing_to_compensate(self):
         """Hidden when no hedges need compensation."""
         hedge_data = HedgeDataFactory(hedges=[])
-        catalog = {"effective_coefficients": {}}
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator(), catalog)
+        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator())
         assert not condition.must_display()
 
     def test_no_display_when_all_coefficients_zero(self):
@@ -345,8 +361,7 @@ class TestRUQualityConditionMustDisplay:
             ]
         )
         coefficients = {"h1": 0.0}
-        catalog = {"effective_coefficients": coefficients}
         condition = RUQualityCondition(
-            hedge_data, 0, make_mock_evaluator(ep_bonus=0.0), catalog
+            hedge_data, 0, make_mock_evaluator(ep_bonus=0.0, effective_coefficients=coefficients),
         )
         assert not condition.must_display()

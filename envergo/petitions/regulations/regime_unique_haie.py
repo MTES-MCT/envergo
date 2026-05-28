@@ -20,7 +20,7 @@ def regime_unique_haie_get_instructor_view_context(
     context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
 
     context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
-        moulinette.catalog, evaluator.slug
+        moulinette.catalog, evaluator
     )
 
     context["quality_condition"] = {}
