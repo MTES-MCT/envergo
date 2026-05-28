@@ -127,6 +127,20 @@ class MinLengthCondition(PlantationCondition):
         return self.context["length_to_check"] > 0
 
 
+class RUMinLengthCondition(MinLengthCondition):
+    """Evaluate if there is enough hedges to plant in the project.
+
+    The difference with the base MinLengthCondition:
+     - MinLengthCondition uses the global R, which is the max R for each evaluators.
+     - RuMinLengthCondition uses the specific R for the current evaluator.
+    """
+
+    def evaluate(self):
+        # Override R with the local evaluator value
+        self.R = self.criterion_evaluator.get_replantation_coefficient()
+        return super().evaluate()
+
+
 class NormandieMinLengthCondition(MinLengthCondition):
     """MinLengthCondition with cross-type reduction for Normandie.
 
