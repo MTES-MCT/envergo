@@ -422,6 +422,7 @@ class TestICPEResults:
         assert res.status_code == 200
         assert "cas par cas" in content.lower()
         assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas.html")
+        assert "crée" in content
 
     def test_modif_avec_pac_enregistrement_is_cas_par_cas(self, staff_client):
         res = _get_icpe_result(staff_client, "modif_avec_pac", "enregistrement")
@@ -430,6 +431,8 @@ class TestICPEResults:
         assert res.status_code == 200
         assert "cas par cas" in content.lower()
         assertTemplateUsed(res, "moulinette/eval_env/result_cas_par_cas.html")
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas_modif.html")
+        assert "modifie" in content
 
     def test_creation_declaration_is_non_soumis(self, staff_client):
         res = _get_icpe_result(staff_client, "creation", "declaration")
