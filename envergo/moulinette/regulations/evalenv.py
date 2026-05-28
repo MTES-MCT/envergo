@@ -834,6 +834,37 @@ class ICPEForm(OptionalFormMixin, forms.Form):
         return cleaned_data
 
 
+ICPE_CAS_PAR_CAS_ACTIONS = {
+    TO_ADD: {
+        "mention_arrete_icpe_e",
+        "suspension_delai_icpe",
+        "depot_dossier_icpe",
+        "pc_icpe_e",
+        "non_depot_lse",
+    },
+    TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
+}
+
+ICPE_NON_SOUMIS_ACTIONS = {
+    TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"},
+}
+ICPE_NON_SOUMIS_DECLARATION_ACTIONS = {
+    TO_ADD: {"pc_icpe_d", "depot_dossier_icpe", "non_depot_lse"},
+    TO_SUBTRACT: {"depot_pac_lse", "depot_dossier_lse", "mention_arrete_lse"},
+}
+
+ICPE_A_VERIFIER_ACTIONS = {
+    TO_ADD: {
+        "mention_arrete_icpe_e",
+        "suspension_delai_icpe",
+        "depot_dossier_icpe",
+        "pc_icpe_inconnu",
+        "non_depot_lse",
+    },
+    TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
+}
+
+
 class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     choice_label = "Éval Env > ICPE"
     slug = "icpe"
@@ -869,36 +900,18 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
         "a_verifier_modif": "a_verifier",
     }
 
-    ACTIONS_TO_TAKE_MATRIX = {
-        "cas_par_cas": {
-            TO_ADD: {
-                "mention_arrete_icpe_e",
-                "suspension_delai_icpe",
-                "depot_dossier_icpe",
-                "pc_icpe_e",
-                "non_depot_lse",
-            },
-            TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
-        },
-        "non_soumis": {
-            TO_ADD: {"pc_icpe_d", "depot_dossier_icpe", "non_depot_lse"},
-            TO_SUBTRACT: {
-                "depot_dossier_lse",
-                "depot_pac_lse",
-                "mention_arrete_lse",
-            },
-        },
-        "a_verifier": {
-            TO_ADD: {
-                "mention_arrete_icpe_e",
-                "suspension_delai_icpe",
-                "depot_dossier_icpe",
-                "pc_icpe_inconnu",
-                "non_depot_lse",
-            },
-            TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
-        },
+    CODE_TO_ACTIONS_TO_TAKE_MATRIX = {
+        "cas_par_cas": ICPE_CAS_PAR_CAS_ACTIONS,
+        "cas_par_cas_modif": ICPE_CAS_PAR_CAS_ACTIONS,
+        "non_soumis": ICPE_NON_SOUMIS_ACTIONS,
+        "non_soumis_declaration_creation": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
+        "non_soumis_declaration_modif": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
+        "a_verifier": ICPE_A_VERIFIER_ACTIONS,
+        "a_verifier_modif": ICPE_A_VERIFIER_ACTIONS,
     }
+
+    def get_actions_to_take(self) -> dict[str, set[str]]:
+        return self.CODE_TO_ACTIONS_TO_TAKE_MATRIX.get(self._result_code, {})
 
     @cached_property
     def _form_data(self):
