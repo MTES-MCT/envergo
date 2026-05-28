@@ -99,6 +99,11 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         context.update(get_ru_debug_context(self.catalog))
         return context
 
+    @property
+    def effective_coefficients(self):
+        """Raw per-hedge zone-based compensation coefficients."""
+        return self.catalog.get("per_hedge_coefficients", {})
+
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
         return compute_ru_compensation_ratio(self.moulinette)
