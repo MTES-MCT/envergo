@@ -332,14 +332,13 @@ def test_hedge_quality_should_not_be_sufficient_ru(ep_criterion_evaluator_ru):
     }
 
 
-def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
+def test_strengthening_condition(calvados_hedge_data):
     hedge_data = calvados_hedge_data
-    catalog = {
-        "reimplantation": "replantation",
-        "effective_coefficients": {"D1": 1.0, "D2": 1.0, "D3": 1.0},
-    }
+    coefficients = {"D1": 1.0, "D2": 1.0, "D3": 1.0}
+    catalog = {"reimplantation": "replantation"}
+    evaluator = make_mock_evaluator(effective_coefficients=coefficients)
 
-    condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, evaluator, catalog)
     condition.evaluate()
     assert condition.result
     assert condition.context["strengthening_length"] == 0.0
@@ -348,7 +347,7 @@ def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
     hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
     hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
 
-    condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, evaluator, catalog)
     condition.evaluate()
     lpm = condition.compute_lpm()
     assert not condition.result
@@ -680,95 +679,3 @@ class TestAisneQualityConditionSubstitution:
         assert condition.result
 
 
-class SpyCondition(MinLengthCondition):
-    """Condition that records the catalog it receives.
-
-    plantation_evaluate() builds a private catalog copy with injected keys
-    before passing it to each condition. Real conditions consume the catalog
-    internally, so the only way to assert on what was injected is to
-    intercept the catalog at construction time.
-    """
-
-    captured_catalogs = []
-
-    def evaluate(self):
-        SpyCondition.captured_catalogs.append(dict(self.catalog))
-        self.result = True
-        return self
-
-
-class TestPlantationEvaluateInjection:
-    """Test that plantation_evaluate injects effective_coefficients correctly."""
-
-    def setup_method(self):
-        SpyCondition.captured_catalogs = []
-
-    def make_evaluator(self, slug, catalog, plantation_conditions=None):
-        """Build a mock evaluator with the PlantationConditionMixin interface."""
-        ev = Mock()
-        ev.slug = slug
-        ev.catalog = catalog
-        ev.plantation_conditions = plantation_conditions or [SpyCondition]
-        ev.plantation_skip_results = frozenset()
-        ev.result_code = "soumis"
-        ev.get_replantation_coefficient.return_value = 1.0
-
-        from envergo.hedges.regulations import PlantationConditionMixin
-
-        ev.plantation_evaluate = PlantationConditionMixin.plantation_evaluate.__get__(
-            ev
-        )
-        return ev
-
-    def test_slug_key_takes_precedence(self):
-        """When {slug}_effective_coefficients exists, it is injected."""
-        raw = {"h1": 1.0}
-        effective = {"h1": 1.5}
-        moulinette_catalog = {
-            "per_hedge_coefficients": raw,
-            "myslug_effective_coefficients": effective,
-        }
-        ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = HedgeDataFactory(hedges=[])
-
-        ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
-
-        captured = SpyCondition.captured_catalogs[0]
-        assert captured["effective_coefficients"] is effective
-
-    def test_fallback_to_raw_when_no_slug_key(self):
-        """Without a slug key, per_hedge_coefficients becomes effective."""
-        raw = {"h1": 1.0}
-        moulinette_catalog = {}
-        ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = HedgeDataFactory(hedges=[])
-
-        ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
-
-        captured = SpyCondition.captured_catalogs[0]
-        assert captured["effective_coefficients"] is raw
-
-    def test_no_coefficients_at_all(self):
-        """When neither key exists, effective_coefficients defaults to empty dict."""
-        ev = self.make_evaluator("myslug", {})
-        hedge_data = HedgeDataFactory(hedges=[])
-
-        ev.plantation_evaluate(hedge_data, 1.0, {})
-
-        captured = SpyCondition.captured_catalogs[0]
-        assert captured["effective_coefficients"] == {}
-
-    def test_original_catalog_not_mutated(self):
-        """The passed-in catalog dict is not modified."""
-        raw = {"h1": 1.0}
-        effective = {"h1": 2.0}
-        moulinette_catalog = {"myslug_effective_coefficients": effective}
-        ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = HedgeDataFactory(hedges=[])
-
-        original_catalog = {"per_hedge_coefficients": raw}
-        original_keys = set(original_catalog.keys())
-
-        ev.plantation_evaluate(hedge_data, 1.0, original_catalog)
-
-        assert set(original_catalog.keys()) == original_keys
