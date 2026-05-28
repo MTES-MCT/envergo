@@ -20,6 +20,7 @@ from envergo.hedges.regulations import (
     NormandieMinLengthCondition,
     NormandieQualityCondition,
     PlantationConditionMixin,
+    RUMinLengthCondition,
     RUQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
@@ -731,7 +732,7 @@ class EspecesProtegeesRegimeUnique(
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
-    plantation_conditions = [MinLengthCondition, RUQualityCondition, SafetyCondition]
+    plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
     plantation_skip_results = frozenset({"dispense", "non_concerne", "non_disponible"})
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
