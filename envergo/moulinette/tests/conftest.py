@@ -12,6 +12,7 @@ import pytest
 from envergo.geodata.conftest import (  # noqa: F401
     bizous_town_center,
     france_map,
+    france_zh,
     herault_department,
     herault_map,
     loire_atlantique_department,
