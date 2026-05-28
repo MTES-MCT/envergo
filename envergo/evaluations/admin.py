@@ -28,7 +28,6 @@ from envergo.evaluations.models import (
     Evaluation,
     EvaluationSnapshot,
     EvaluationVersion,
-    RecipientStatus,
     RegulatoryNoticeLog,
     Request,
     RequestFile,
@@ -491,12 +490,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         One sent regulatory notice (from the admin) can generate several emails
         because there are several recipients.
         """
-        statuses = RecipientStatus.objects.order_by("recipient")
         logs = (
             RegulatoryNoticeLog.objects.filter(evaluation=obj)
             .order_by("-sent_at")
             .select_related("sender")
-            .prefetch_related(Prefetch("recipient_statuses", queryset=statuses))
         )
 
         content = render_to_string(

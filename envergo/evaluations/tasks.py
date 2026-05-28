@@ -18,7 +18,7 @@ from envergo.evaluations.models import (
     USER_TYPES,
     Evaluation,
     EvaluationSnapshot,
-    RecipientStatus,
+    RegulatoryNoticeLog,
     Request,
 )
 from envergo.utils.mattermost import notify
@@ -143,12 +143,10 @@ def post_evalreq_to_automation(request_id, host):
 
 
 @app.task
-def warn_admin_of_email_error(recipient_status_id):
-    status = RecipientStatus.objects.select_related(
-        "regulatory_notice_log__evaluation", "regulatory_notice_log__sender"
-    ).get(id=recipient_status_id)
+def warn_admin_of_email_error(regulatory_notice_log_id, error_status):
+    """Send email with error info"""
 
-    log = status.regulatory_notice_log
+    log = RegulatoryNoticeLog.objects.get(id=regulatory_notice_log_id)
     evaluation = log.evaluation
     evalreq = evaluation.request
     base_url = get_base_url(
@@ -161,7 +159,7 @@ def warn_admin_of_email_error(recipient_status_id):
     full_eval_url = f"{base_url}{eval_url}"
 
     context = {
-        "status": status,
+        "status": error_status,
         "evaluation": evaluation,
         "log": log,
         "eval_url": full_eval_url,
