@@ -204,7 +204,10 @@ def field_summary(field):
         else value
     )
     html = f"<strong>{label}</strong> {value}"
-    if hasattr(field.field, "display_help_text"):
+    if hasattr(field.field, "get_display_help_text"):
+        display_help_text = field.field.get_display_help_text(field.value())
+        html += f' <br /><span class="fr-hint-text">{display_help_text}</span>'
+    elif hasattr(field.field, "display_help_text"):
         if field.field.display_help_text:
             html += f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
     elif field.help_text:
