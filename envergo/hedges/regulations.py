@@ -3,10 +3,44 @@ from collections import defaultdict
 from math import ceil, isclose
 
 from django.conf import settings
+from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeTypeBase, HedgeTypeFactory
+
+
+def compute_lengths_per_type(hedges, coefficients):
+    """Compute per-type destruction and compensation lengths from per-hedge coefficients.
+
+    Returns (destruction, compensation) where destruction is {type: raw length}
+    and compensation is {type: length × R} for hedges that have a coefficient.
+    """
+    destruction = defaultdict(float)
+    compensation = defaultdict(float)
+    for hedge in hedges:
+        if hedge.id in coefficients:
+            destruction[hedge.hedge_type] += hedge.length
+            compensation[hedge.hedge_type] += hedge.length * coefficients[hedge.id]
+    return dict(destruction), dict(compensation)
+
+
+def apply_cross_type_reduction(compensation, destruction, hedge_types):
+    """Apply the Normandie 20% cross-type reduction, floored at 1:1 ratio.
+
+    When planting a higher-quality type than what was removed, the required
+    compensation length is reduced by 20%. The reduction cannot go below the
+    raw destruction length (1:1 floor). MIXTE (top quality) gets no reduction.
+
+    Returns a dict mapping each hedge type to its reduced compensation length.
+    """
+    reduced = {}
+    for hedge_type in hedge_types:
+        amount = compensation.get(hedge_type, 0.0)
+        if hedge_type != HedgeTypeBase.MIXTE:
+            amount *= 0.8
+        reduced[hedge_type] = max(amount, destruction.get(hedge_type, 0.0))
+    return reduced
 
 
 class PlantationCondition(ABC):
@@ -15,7 +49,6 @@ class PlantationCondition(ABC):
     label: str
     result: bool
     order: int = 0
-    context: dict = dict()
     valid_text: str = "Condition validée"
     invalid_text: str = "Condition non validée"
     hint_text: str = ""
@@ -27,14 +60,42 @@ class PlantationCondition(ABC):
     def __init__(self, hedge_data, R, criterion_evaluator, catalog=None):
         self.hedge_data = hedge_data
         self.R = R
-        self.catalog = catalog or {}
+        self.catalog = dict(catalog) if catalog else {}
         self.criterion_evaluator = criterion_evaluator
+        self.context = {}
+        self.resolve_effective_coefficients()
+
+    def resolve_effective_coefficients(self):
+        """Ensure effective_coefficients is present in the local catalog.
+
+        When instantiated via plantation_evaluate(), the catalog already
+        contains this key. When instantiated directly (e.g. from instructor
+        view code), this resolves it from the evaluator's moulinette catalog.
+
+        Note: THIS IS A HACK. Conditions should ALWAYS be instanciated in a coherent
+        way through plantation_evaluate. But the refactoring is out of scope and will
+        be provided in another PR.
+        """
+        if "effective_coefficients" in self.catalog:
+            return
+        if self.criterion_evaluator is None:
+            return
+        evaluator_catalog = getattr(self.criterion_evaluator, "catalog", None)
+        if not isinstance(evaluator_catalog, dict):
+            return
+        slug_key = f"{self.criterion_evaluator.slug}_effective_coefficients"
+        if slug_key in evaluator_catalog:
+            self.catalog["effective_coefficients"] = evaluator_catalog[slug_key]
+        elif "per_hedge_coefficients" in evaluator_catalog:
+            self.catalog["effective_coefficients"] = evaluator_catalog[
+                "per_hedge_coefficients"
+            ]
 
     def must_display(self):
-        """Should the condition be displayed?
+        """Whether this condition should appear in the simulation results.
 
-        It does not make any sense to display the condition if it is related to a
-        minimal length to plant and the length to plant is 0.
+        Subclasses override to hide conditions that are irrelevant for a given
+        project (e.g. no compensation required, so nothing to check).
         """
         return True
 
@@ -69,35 +130,78 @@ class MinLengthCondition(PlantationCondition):
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_remove = self.hedge_data.length_to_remove()
 
-        # Depending on the cases, we want to use the "classic" minimum length to
-        # plant, or the "reduced" version (for Normandie rules)
         minimum_length_to_plant = length_to_remove * self.R
-        length_to_check = minimum_length_to_plant
-        if "reduced_lpm" in self.catalog and "aggregated_r" in self.catalog:
-            if isclose(self.R, self.catalog["aggregated_r"]):
-                length_to_check = self.catalog["reduced_lpm"]
+        self.result = length_to_plant >= minimum_length_to_plant
 
-        self.result = length_to_plant >= length_to_check
-
-        left_to_plant = max(0, length_to_check - length_to_plant)
+        left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
         self.context = {
             "R": self.R,
             "length_to_plant": round(length_to_plant),
             "length_to_remove": round(length_to_remove),
             "minimum_length_to_plant": ceil(minimum_length_to_plant),
             "left_to_plant": ceil(left_to_plant),
-            "length_to_check": ceil(length_to_check),
+            "length_to_check": ceil(minimum_length_to_plant),
         }
-
-        if round(length_to_check) < round(minimum_length_to_plant):
-            self.context["reduced_minimum_length_to_plant"] = ceil(length_to_check)
         return self
 
     def must_display(self):
         return self.context["length_to_check"] > 0
 
 
-class MinLengthPacCondition(PlantationCondition):
+class NormandieMinLengthCondition(MinLengthCondition):
+    """MinLengthCondition with cross-type reduction for Normandie.
+
+    When planting a higher-quality type than the removed hedge, the required
+    compensation length can be reduced by 20% (floored at 1:1). This condition
+    uses the reduced minimum when applicable.
+    """
+
+    def compute_reduced_minimum(self):
+        """Compute the total reduced minimum length from effective coefficients.
+
+        Fetches per-hedge coefficients from the catalog, computes per-type
+        destruction and compensation lengths, applies the cross-type reduction,
+        and returns the sum across all types.
+        """
+        coefficients = self.catalog["effective_coefficients"]
+        destruction, compensation = compute_lengths_per_type(
+            self.hedge_data.hedges_to_remove(), coefficients
+        )
+        hedge_type_enum = HedgeTypeFactory.build_from_context(
+            self.criterion_evaluator.moulinette.config.single_procedure
+        )
+        reduced = apply_cross_type_reduction(
+            compensation, destruction, hedge_type_enum.values
+        )
+        return sum(reduced.values())
+
+    def evaluate(self):
+        """Evaluate minimum length with optional cross-type reduction.
+
+        Runs the base MinLengthCondition logic, then applies the Normandie
+        reduction when R matches the aggregated coefficient. The reduced
+        minimum replaces the base minimum only if it is strictly lower.
+        """
+        super().evaluate()
+
+        reduced_lpm = self.compute_reduced_minimum()
+        if isclose(self.R, self.catalog["aggregated_r"]):
+            length_to_plant = self.context["length_to_plant"]
+            length_to_check = reduced_lpm
+            self.result = length_to_plant >= length_to_check
+
+            left_to_plant = max(0, length_to_check - length_to_plant)
+            self.context["left_to_plant"] = ceil(left_to_plant)
+            self.context["length_to_check"] = ceil(length_to_check)
+
+            if round(length_to_check) < round(self.context["minimum_length_to_plant"]):
+                self.context["reduced_minimum_length_to_plant"] = ceil(length_to_check)
+
+        return self
+
+
+class PacParcelCondition(PlantationCondition):
+    """Checks that enough hedges are planted on PAC parcels."""
 
     label = "Maintien des haies PAC"
     order = 1
@@ -126,7 +230,15 @@ class MinLengthPacCondition(PlantationCondition):
         return self.context["minimum_length_to_plant_pac"] > 0
 
 
-class QualityCondition(PlantationCondition):
+class BaseQualityCondition(PlantationCondition):
+    """Base class for hedge quality compensation conditions.
+
+    Verifies that planted hedges match the ecological quality of removed hedges.
+    Each type of removed hedge must be compensated by planting the same type or
+    an acceptable higher-quality substitute, according to a regulation-specific
+    compensation table.
+    """
+
     label = "Type de haie plantée"
     order = 2
     valid_text = "Le type de haie plantée convient."
@@ -134,9 +246,225 @@ class QualityCondition(PlantationCondition):
       Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
     """
 
-    substitution_types = {
-        HedgeTypeBase.ALIGNEMENT: [HedgeTypeBase.MIXTE],
-        HedgeTypeBase.BUISSONNANTE: [HedgeTypeBase.ARBUSTIVE],
+    # {removed_type: [acceptable_planted_types, preferred first]}.
+    # Iteration order matters: types listed first are filled first by the
+    # substitution algorithm, so place the hardest-to-fill types first.
+    compensations: dict[str, list[str]]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hedge_type_enum = HedgeTypeFactory.build_from_context(
+            self.criterion_evaluator.moulinette.config.single_procedure
+        )
+
+    @abstractmethod
+    def get_amounts_to_compensate(self) -> dict[str, float]:
+        """Return the total hedge length requiring compensation, keyed by hedge type.
+
+        Each key is a HedgeTypeBase value (e.g. ``HedgeTypeBase.MIXTE``), each
+        value is the total length in metres that must be compensated for that
+        type. Types with zero compensation may be omitted or set to 0.
+        """
+        raise NotImplementedError
+
+    def get_amounts_planted(self) -> dict[str, float]:
+        """Return per-type lengths planted, excluding degradee."""
+        lengths = defaultdict(float)
+        for hedge in self.hedge_data.hedges_to_plant():
+            lengths[hedge.hedge_type] += hedge.length
+        return {
+            key: lengths[key]
+            for key, _ in self.hedge_type_enum.choices
+            if key != HedgeTypeBase.DEGRADEE
+        }
+
+    def get_compensation_rate(self, removed_type, planted_type):
+        """Rate applied when compensating removed_type with planted_type.
+
+        Returns 1.0 by default (1:1 compensation). Override in subclasses
+        to grant bonuses for planting higher-quality types.
+        """
+        return 1.0
+
+    def apply_result_overrides(self):
+        """Hook for regulation-specific result overrides after compensation."""
+        pass
+
+    def pad_all_types(self, sparse_dict):
+        """Return a copy with all hedge types present, defaulting missing ones to 0.0.
+
+        The Django template ``get_item`` filter raises KeyError on missing keys,
+        so the template expects every hedge type to be present in the dict.
+        """
+        padded = {t: 0.0 for t in self.hedge_type_enum.values}
+        padded.update(sparse_dict)
+        return padded
+
+    def build_context(self, initial_deficits, initial_compensating):
+        """Populate self.context with data for text/hint rendering.
+
+        Called after the compensation algorithm runs. ``self.remaining``
+        holds the per-type deficits that were not filled.
+        """
+        self.context = {}
+
+    def evaluate(self):
+        """Evaluate whether planted hedges compensate the quality of removed hedges.
+
+        Two-phase algorithm:
+
+         1) each type absorbs its own planted amount
+         2) remaining deficits are filled by higher-quality substitutes
+        according to ``self.compensations``.
+        """
+        initial_deficits = self.get_amounts_to_compensate()
+        initial_compensating = self.get_amounts_planted()
+
+        deficits, compensating = self.match_same_types(
+            initial_deficits, initial_compensating
+        )
+        deficits, compensating = self.fill_with_substitutes(deficits, compensating)
+
+        self.result = all(v <= 0 for v in deficits.values())
+
+        self.remaining = deficits
+        self.apply_result_overrides()
+        self.build_context(initial_deficits, initial_compensating)
+        return self
+
+    def compensate(self, deficits, compensating, deficit_type, substitute):
+        """Use a substitute's planted amount to fill a deficit.
+
+        Mutates both dicts in place. Does nothing if either side is empty.
+        """
+        if deficits.get(deficit_type, 0) <= 0 or compensating.get(substitute, 0) <= 0:
+            return
+        rate = self.get_compensation_rate(deficit_type, substitute)
+        filled = min(deficits[deficit_type], compensating[substitute] / rate)
+        deficits[deficit_type] -= filled
+        compensating[substitute] -= filled * rate
+
+    def match_same_types(self, initial_deficits, initial_compensating):
+        """Return (deficits, compensating) after absorbing same-type matches."""
+        deficits = dict(initial_deficits)
+        compensating = dict(initial_compensating)
+        for hedge_type in list(deficits):
+            self.compensate(deficits, compensating, hedge_type, hedge_type)
+        return deficits, compensating
+
+    def fill_with_substitutes(self, initial_deficits, initial_compensating):
+        """Return (deficits, compensating) after cross-type substitution."""
+        deficits = dict(initial_deficits)
+        compensating = dict(initial_compensating)
+        for deficit_type, substitutes in self.compensations.items():
+            for substitute in substitutes:
+                if substitute == deficit_type:
+                    continue
+                self.compensate(deficits, compensating, deficit_type, substitute)
+        return deficits, compensating
+
+    def deficit_line(self, amount, type_description):
+        """Format a single deficit message, or None if no deficit."""
+        if amount <= 0:
+            return None
+        return format_html(
+            "Il manque au moins {} m de {}.",
+            ceil(amount),
+            type_description,
+        )
+
+    def must_display(self):
+        """True when any hedge type requires compensation."""
+        amounts = self.get_amounts_to_compensate()
+        return sum(amounts.values()) > 0
+
+
+class AisneQualityCondition(BaseQualityCondition):
+    """Quality condition for Aisne (EP Aisne).
+
+    Uses a flat replantation coefficient R for all hedges.
+    Substitution is 1:1 with no quality-upgrade bonus.
+    """
+
+    compensations = {
+        HedgeTypeBase.ALIGNEMENT: [HedgeTypeBase.ALIGNEMENT, HedgeTypeBase.MIXTE],
+        HedgeTypeBase.BUISSONNANTE: [
+            HedgeTypeBase.BUISSONNANTE,
+            HedgeTypeBase.ARBUSTIVE,
+        ],
+        HedgeTypeBase.DEGRADEE: [
+            HedgeTypeBase.BUISSONNANTE,
+            HedgeTypeBase.ARBUSTIVE,
+            HedgeTypeBase.MIXTE,
+        ],
+        HedgeTypeBase.ARBUSTIVE: [HedgeTypeBase.ARBUSTIVE],
+        HedgeTypeBase.MIXTE: [HedgeTypeBase.MIXTE],
+    }
+
+    def get_amounts_to_compensate(self):
+        """Flat coefficient: length_removed × R for each type."""
+        lengths_by_type = defaultdict(int)
+        for hedge in self.hedge_data.hedges_to_remove():
+            lengths_by_type[hedge.hedge_type] += hedge.length
+        return {
+            key: self.R * lengths_by_type[key]
+            for key, _ in self.hedge_type_enum.choices
+        }
+
+    def build_context(self, initial_deficits, initial_compensating):
+        self.context = {"missing_plantation": self.remaining}
+
+    @property
+    def text(self):
+        """Return the text to display for the condition."""
+        if self.result:
+            return mark_safe(self.valid_text)
+
+        mp = self.context["missing_plantation"]
+        mixte = mp.get(HedgeTypeBase.MIXTE, 0)
+        alignement = mp.get(HedgeTypeBase.ALIGNEMENT, 0)
+        arbustive = mp.get(HedgeTypeBase.ARBUSTIVE, 0)
+        buissonnante = mp.get(HedgeTypeBase.BUISSONNANTE, 0)
+        degradee = mp.get(HedgeTypeBase.DEGRADEE, 0)
+
+        mixte_label = self.hedge_type_enum.MIXTE.label.lower()
+        lines = [self.invalid_text]
+        if alignement > 0:
+            lines.append(
+                self.deficit_line(
+                    mixte + alignement, f"{mixte_label} ou alignement d’arbres"
+                )
+            )
+        lines.append(self.deficit_line(mixte + degradee, "haie mixte"))
+        if buissonnante > 0:
+            lines.append(
+                self.deficit_line(buissonnante + arbustive, "haie basse ou arbustive")
+            )
+        lines.append(self.deficit_line(arbustive, "haie arbustive"))
+
+        lines = [line for line in lines if line is not None]
+        return format_html_join(
+            mark_safe("<br />\n"), "{}", ((line,) for line in lines)
+        )
+
+
+class NormandieQualityCondition(BaseQualityCondition):
+    """Quality condition for Normandie (EP Normandie).
+
+    Uses pre-computed per-hedge coefficients from a density/zone matrix.
+    Cross-type compensation grants a 20% length reduction (rate 0.8),
+    except buissonnante compensating degradee (rate 1.0).
+    """
+
+    compensations = {
+        HedgeTypeBase.ALIGNEMENT: [HedgeTypeBase.ALIGNEMENT, HedgeTypeBase.MIXTE],
+        HedgeTypeBase.MIXTE: [HedgeTypeBase.MIXTE],
+        HedgeTypeBase.ARBUSTIVE: [HedgeTypeBase.ARBUSTIVE, HedgeTypeBase.MIXTE],
+        HedgeTypeBase.BUISSONNANTE: [
+            HedgeTypeBase.BUISSONNANTE,
+            HedgeTypeBase.ARBUSTIVE,
+            HedgeTypeBase.MIXTE,
+        ],
         HedgeTypeBase.DEGRADEE: [
             HedgeTypeBase.BUISSONNANTE,
             HedgeTypeBase.ARBUSTIVE,
@@ -144,252 +472,88 @@ class QualityCondition(PlantationCondition):
         ],
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # get the available hedge types for this context
-        self.HedgeType = HedgeTypeFactory.build_from_context(
-            self.criterion_evaluator.moulinette.config.single_procedure
+    def get_amounts_to_compensate(self):
+        """Compute LC from effective per-hedge coefficients."""
+        coefficients = self.catalog["effective_coefficients"]
+        _, compensation = compute_lengths_per_type(
+            self.hedge_data.hedges_to_remove(), coefficients
         )
+        return compensation
 
-    def evaluate(self):
-        """Generic evaluation of plantation quality based on substitution rules."""
-
-        minimum = self.get_minimum_lengths_to_plant()
-        planted = self.get_lengths_to_plant()
-
-        hedge_types = list(self.HedgeType)
-
-        # Initial deficit after direct matching
-        missing = {
-            type: max(0, minimum.get(type, 0) - planted.get(type, 0))
-            for type in hedge_types
-        }
-
-        # Surplus available for substitution
-        surplus = {
-            type: max(0, planted.get(type, 0) - minimum.get(type, 0))
-            for type in hedge_types
-        }
-
-        # Apply substitution rules
-        for target, substitutes in self.substitution_types.items():
-            deficit = missing.get(target, 0)
-            if deficit == 0:
-                continue
-
-            for source in substitutes:
-                available = surplus.get(source, 0)
-                if available <= 0:
-                    continue
-
-                used = min(deficit, available)
-
-                missing[target] -= used
-                surplus[source] -= used
-                deficit -= used
-
-                if deficit == 0:
-                    break
-
-        total_missing = sum(missing.values())
-
-        self.result = total_missing == 0
-        self.context = {
-            "missing_plantation": missing,
-        }
-
-        return self
-
-    def get_minimum_lengths_to_plant(self):
-        lengths_by_type = defaultdict(int)
-        for to_remove in self.hedge_data.hedges_to_remove():
-            lengths_by_type[to_remove.hedge_type] += to_remove.length
-        return {key: self.R * lengths_by_type[key] for key, _ in self.HedgeType.choices}
-
-    def get_lengths_to_plant(self):
-        lengths_by_type = defaultdict(int)
-        for to_plant in self.hedge_data.hedges_to_plant():
-            lengths_by_type[to_plant.hedge_type] += to_plant.length
-
-        return {
-            key: lengths_by_type[key]
-            for key, _ in self.HedgeType.choices
-            if key != HedgeTypeBase.DEGRADEE  # on ne peut pas planter de haie dégradée
-        }
-
-    def must_display(self):
-        lengths = self.get_minimum_lengths_to_plant()
-        sum_lengths = sum(lengths.values())
-        return sum_lengths > 0
-
-    @property
-    def text(self):
-        """Return the text to display for the condition."""
-        if self.result:
-            t = [self.valid_text]
-        else:
-            missing_plantation = self.context["missing_plantation"]
-            t = [
-                "Le type de haie plantée ne permet pas de compenser la qualité écologique des haies détruites."
-            ]
-
-            if missing_plantation.get(HedgeTypeBase.ALIGNEMENT, 0) > 0:
-                t.append(
-                    f"""
-                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.MIXTE, 0) +
-                                             missing_plantation.get(HedgeTypeBase.ALIGNEMENT, 0))} m
-                    de {self.HedgeType.MIXTE.name.lower()} ou alignement d'arbres.
-                    """
-                )
-
-            if (
-                missing_plantation.get(HedgeTypeBase.MIXTE, 0) > 0
-                or missing_plantation.get(HedgeTypeBase.DEGRADEE, 0) > 0
-            ):
-                t.append(
-                    f"""
-                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.MIXTE, 0) +
-                                             missing_plantation.get(HedgeTypeBase.DEGRADEE, 0))} m
-                    de haie mixte.
-                """
-                )
-
-            if missing_plantation.get(HedgeTypeBase.BUISSONNANTE, 0) > 0:
-                t.append(
-                    f"""
-                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.BUISSONNANTE, 0) +
-                                             missing_plantation.get(HedgeTypeBase.ARBUSTIVE, 0))} m
-                    de haie basse ou arbustive.
-                """
-                )
-
-            if missing_plantation.get(HedgeTypeBase.ARBUSTIVE, 0) > 0:
-                t.append(
-                    f"""
-                    Il manque au moins {ceil(missing_plantation.get(HedgeTypeBase.ARBUSTIVE, 0))} m de haie
-                    arbustive.
-                """
-                )
-
-        return mark_safe("<br />\n".join(t))
-
-
-class NormandieQualityCondition(PlantationCondition):
-    label = "Type de haie plantée"
-    order = 2
-    valid_text = "Le type de haie plantée convient."
-    invalid_text = """
-      Le type de haie plantée n'est pas adapté au vu de celui des haies détruites.
-    """
-
-    # Hedge of type on the left can be replaced by the types on the right
-    compensations = {
-        "mixte": ["mixte"],
-        "alignement": ["alignement", "mixte"],
-        "arbustive": ["arbustive", "mixte"],
-        "buissonnante": ["buissonnante", "arbustive", "mixte"],
-        "degradee": ["buissonnante", "arbustive", "mixte"],
-    }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # get the available hedge types for this context
-        self.HedgeType = HedgeTypeFactory.build_from_context(
-            self.criterion_evaluator.moulinette.config.single_procedure
+    def get_compensation_rate(self, removed_type, planted_type):
+        """0.8 rate for quality upgrades, except buissonnante→degradee."""
+        is_same_type = planted_type == removed_type
+        is_buissonnante_for_degradee = (
+            removed_type == HedgeTypeBase.DEGRADEE
+            and planted_type == HedgeTypeBase.BUISSONNANTE
         )
+        return 1.0 if (is_same_type or is_buissonnante_for_degradee) else 0.8
 
-    def evaluate(self):
-        LC = self.catalog["LC"].copy()  # linéaire à compenser
-        LP = defaultdict(int)  # linéaire à planter
-
-        LPm = LC.copy()
-
-        # Les haies à planter
-        for hedge in self.hedge_data.hedges_to_plant():
-            LP[hedge.hedge_type] += hedge.length
-
-        LP_origin = LP.copy()
-
-        # On calcule l'application des compensations
-        # Pour chaque linéaire à compenser, on réparti les linéaires à planter
-        # en fonction des substitutions possibles.
-
-        for hedge_type in reversed(self.HedgeType.values):
-            for compensation_type in self.compensations[hedge_type]:
-
-                # Si on compense avec un type de qualité supérieur, le taux
-                # de compensation est réduit de 20%
-                rate = 1.0 if compensation_type == hedge_type else 0.8
-
-                # Note: planter de la buissonnante n'est pas considéré comme une
-                # amélioration de la dégradée, car il n'est pas possible de planter
-                # de la dégradée.
-                if hedge_type == "degradee" and compensation_type == "buissonnante":
-                    rate = 1.0
-
-                # Le linéaire planté vient réduire le linéaire à compenser
-                compensation = min(LC[hedge_type], LP[compensation_type] / rate)
-                LC[hedge_type] -= compensation
-                LP[compensation_type] -= compensation * rate
-
-        # À la fin, le linéaire à compenser doit être nul
-        remaining_lc = sum(LC.values())
-        self.result = remaining_lc == 0
-
-        if (
-            self.criterion_evaluator.result_code == "dispense_L350"
-            or self.criterion_evaluator.result_code == "a_verifier_L350"
-        ):
-            # If the EP Normandie result code is "dispense_L350" or "a_verifier_L350,
-            # we consider that the condition is always valid.
+    def apply_result_overrides(self):
+        """Force pass for L350 result codes."""
+        result_code = self.criterion_evaluator.result_code
+        if result_code in ("dispense_L350", "a_verifier_L350"):
             self.result = True
 
-        self.context["lpm"] = ceil(self.catalog["lpm"])
-        self.context["reduced_lpm"] = ceil(self.catalog["reduced_lpm"])
-        self.context["LC"] = LC
-        self.context["LP"] = LP_origin
-        self.context["LPm"] = LPm
-        self.context["lm"] = remaining_lc
-        self.context["lp"] = sum(LP_origin.values())
+    def build_context(self, initial_deficits, initial_compensating):
+        """Populate context with compensation data for the instructor template.
 
-        return self
+        Keys use the short abbreviations from the regulation spec:
+        LC — remaining deficits after compensation (Longueur à Compenser restante),
+        LP — planted lengths per type, LPm — minimum required per type,
+        LPm_r — reduced minimum per type (after cross-type reduction),
+        lpm/reduced_lpm — scalar totals, lm/lp — scalar remaining/planted.
+        """
+        coefficients = self.catalog["effective_coefficients"]
+        destruction, _ = compute_lengths_per_type(
+            self.hedge_data.hedges_to_remove(), coefficients
+        )
+        lpm_r = apply_cross_type_reduction(
+            initial_deficits, destruction, self.hedge_type_enum.values
+        )
+
+        self.context = {
+            "lpm": ceil(sum(initial_deficits.values())),
+            "reduced_lpm": ceil(sum(lpm_r.values())),
+            "LPm_r": lpm_r,
+            "LC": self.pad_all_types(self.remaining),
+            "LP": self.pad_all_types(initial_compensating),
+            "LPm": self.pad_all_types(initial_deficits),
+            "lm": sum(self.remaining.values()),
+            "lp": sum(initial_compensating.values()),
+        }
 
     @property
     def text(self):
         if self.result:
-            t = self.valid_text
-        else:
-            lines = [self.invalid_text]
+            return mark_safe(self.valid_text)
 
-            LC = self.context["LC"]
-
-            if LC["mixte"] > 0.0:
-                lines.append(f"Il manque au moins {ceil(LC["mixte"])} m de haie mixte.")
-
-            if LC["alignement"] > 0.0:
-                lines.append(
-                    f"Il manque au moins {ceil(LC["alignement"])} m de haie mixte ou d'alignement d'arbres."
-                )
-
-            if LC["arbustive"] > 0.0:
-                lines.append(
-                    f"Il manque au moins {ceil(LC["arbustive"])} m de haie arbustive ou mixte."
-                )
-
-            t1_t2 = LC["degradee"] + LC["buissonnante"]
-            if t1_t2 > 0.0:
-                lines.append(
-                    f"Il manque au moins {ceil(t1_t2)} m de haie buissonnante, arbustive ou mixte."
-                )
-
-            t = "<br />\n".join(lines)
-
-        return mark_safe(t % self.context)
+        LC = self.context["LC"]
+        lines = [
+            self.invalid_text,
+            self.deficit_line(LC.get(HedgeTypeBase.MIXTE, 0), "haie mixte"),
+            self.deficit_line(
+                LC.get(HedgeTypeBase.ALIGNEMENT, 0),
+                "haie mixte ou d’alignement d’arbres",
+            ),
+            self.deficit_line(
+                LC.get(HedgeTypeBase.ARBUSTIVE, 0), "haie arbustive ou mixte"
+            ),
+            self.deficit_line(
+                LC.get(HedgeTypeBase.DEGRADEE, 0)
+                + LC.get(HedgeTypeBase.BUISSONNANTE, 0),
+                "haie buissonnante, arbustive ou mixte",
+            ),
+        ]
+        lines = [line for line in lines if line is not None]
+        return format_html_join(
+            mark_safe("<br />\n"), "{}", ((line,) for line in lines)
+        )
 
     @property
     def hint(self):
         lines = [
-            f"<strong>Linéaire attendu en compensation : {self.context["lpm"]} m.</strong><br>"
+            f"<strong>Linéaire attendu en compensation : {self.context['lpm']} m.</strong><br>"
         ]
 
         if isclose(self.R, self.catalog["aggregated_r"]) and not isclose(
@@ -404,6 +568,72 @@ class NormandieQualityCondition(PlantationCondition):
             )
 
         return mark_safe(" ".join(lines))
+
+
+class RUQualityCondition(BaseQualityCondition):
+    """Quality condition for the régime unique (EP RU).
+
+    Uses per-hedge coefficients from zone config plus an EP bonus (majoration)
+    to compute the amounts to compensate. Alignement and degradee hedges are
+    excluded. No quality-upgrade rate bonus — substitution is always 1:1.
+    """
+
+    compensations = {
+        HedgeTypeBase.BUISSONNANTE: [
+            HedgeTypeBase.BUISSONNANTE,
+            HedgeTypeBase.ARBUSTIVE,
+            HedgeTypeBase.MIXTE,
+        ],
+        HedgeTypeBase.ARBUSTIVE: [HedgeTypeBase.ARBUSTIVE, HedgeTypeBase.MIXTE],
+        HedgeTypeBase.MIXTE: [HedgeTypeBase.MIXTE],
+    }
+
+    def get_amounts_to_compensate(self):
+        """Per-hedge compensation amounts from effective coefficients."""
+        coefficients = self.catalog["effective_coefficients"]
+        lc = defaultdict(float)
+        for hedge in self.hedge_data.hedges_to_remove():
+            if hedge.id in coefficients:
+                lc[hedge.hedge_type] += hedge.length * coefficients[hedge.id]
+        return dict(lc)
+
+    def build_context(self, initial_deficits, initial_compensating):
+        """Populate context with compensation data for the instructor template.
+
+        RU has no cross-type rate reduction, so LPm_r equals LPm.
+        """
+        self.context = {
+            "lpm": ceil(sum(initial_deficits.values())),
+            "reduced_lpm": ceil(sum(initial_deficits.values())),
+            "LPm_r": self.pad_all_types(initial_deficits),
+            "LC": self.pad_all_types(self.remaining),
+            "LP": self.pad_all_types(initial_compensating),
+            "LPm": self.pad_all_types(initial_deficits),
+            "lm": sum(self.remaining.values()),
+            "lp": sum(initial_compensating.values()),
+        }
+
+    @property
+    def text(self):
+        if self.result:
+            return mark_safe(self.valid_text)
+
+        r = self.remaining
+        lines = [
+            self.invalid_text,
+            self.deficit_line(r.get(HedgeTypeBase.MIXTE, 0), "haie arborée"),
+            self.deficit_line(
+                r.get(HedgeTypeBase.ARBUSTIVE, 0), "haie arbustive ou arborée"
+            ),
+            self.deficit_line(
+                r.get(HedgeTypeBase.BUISSONNANTE, 0),
+                "haie buissonnante, arbustive ou arborée",
+            ),
+        ]
+        lines = [line for line in lines if line is not None]
+        return format_html_join(
+            mark_safe("<br />\n"), "{}", ((line,) for line in lines)
+        )
 
 
 class SafetyCondition(PlantationCondition):
@@ -449,8 +679,16 @@ class StrenghteningCondition(PlantationCondition):
         is_remplacement = self.catalog.get("reimplantation") == "remplacement"
         return not is_remplacement
 
+    def compute_lpm(self):
+        """Compute the total compensation length from effective per-hedge coefficients."""
+        coefficients = self.catalog.get("effective_coefficients", {})
+        _, compensation = compute_lengths_per_type(
+            self.hedge_data.hedges_to_remove(), coefficients
+        )
+        return sum(compensation.values())
+
     def evaluate(self):
-        lpm = self.catalog["lpm"]
+        lpm = self.compute_lpm()
         length_to_plant = self.hedge_data.length_to_plant()
         length_to_plant_by_mode = defaultdict(int)
         for hedge in self.hedge_data.hedges_to_plant():
@@ -591,11 +829,26 @@ class PlantationConditionMixin:
         )
 
     def plantation_evaluate(self, hedge_data, R, catalog=None):
-        results = [
-            condition(hedge_data, R, self, catalog or {}).evaluate()
+        """Evaluate all plantation conditions for this evaluator.
+
+        Creates a catalog copy with an effective_coefficients key:
+        reads from {slug}_effective_coefficients if the evaluator wrote
+        adjusted values via get_post_evaluate_data(), otherwise falls
+        back to the raw per_hedge_coefficients.
+
+        The reason we have to do this is that each evaluator may generate different
+        coefficients.
+        """
+        catalog = dict(catalog or {})
+        slug_key = f"{self.slug}_effective_coefficients"
+        if slug_key in self.catalog:
+            catalog["effective_coefficients"] = self.catalog[slug_key]
+        elif "per_hedge_coefficients" in catalog:
+            catalog["effective_coefficients"] = catalog["per_hedge_coefficients"]
+        return [
+            condition(hedge_data, R, self, catalog).evaluate()
             for condition in self.plantation_conditions
         ]
-        return results
 
 
 class TreeAlignmentsCondition(PlantationCondition):
