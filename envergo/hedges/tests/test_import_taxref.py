@@ -1,4 +1,4 @@
-"""Tests for the import_taxref management command."""
+"""Tests for the update_species_from_taxref management command."""
 
 import csv
 import os
@@ -42,7 +42,7 @@ def create_taxref_zip(tmpdir, rows):
     return zip_path
 
 
-def test_import_taxref_populates_cd_ref():
+def test_update_species_from_taxref_populates_cd_ref():
     """Species matched by scientific_name should get cd_ref populated."""
     SpeciesFactory(scientific_name="Orchis militaris", cd_ref=None)
 
@@ -61,13 +61,13 @@ def test_import_taxref_populates_cd_ref():
                 },
             ],
         )
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
     assert species.cd_ref == 110920
 
 
-def test_import_taxref_populates_group():
+def test_update_species_from_taxref_populates_group():
     """Species should get group from GROUP2_INPN."""
     SpeciesFactory(scientific_name="Orchis militaris", cd_ref=None)
 
@@ -86,13 +86,13 @@ def test_import_taxref_populates_group():
                 },
             ],
         )
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
     assert species.group == "Angiospermes"
 
 
-def test_import_taxref_populates_common_name_from_nom_vern():
+def test_update_species_from_taxref_populates_common_name_from_nom_vern():
     """Blank common_name should be filled from NOM_VERN (first name before comma)."""
     SpeciesFactory(
         scientific_name="Orchis militaris",
@@ -115,13 +115,13 @@ def test_import_taxref_populates_common_name_from_nom_vern():
                 },
             ],
         )
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Orchis militaris")
     assert species.common_name == "Orchis militaire"
 
 
-def test_import_taxref_matches_by_cd_ref():
+def test_update_species_from_taxref_matches_by_cd_ref():
     """Species with only a cd_ref (stub from CSV import) should be matched and enriched."""
     SpeciesFactory(
         cd_ref=110920,
@@ -144,7 +144,7 @@ def test_import_taxref_matches_by_cd_ref():
                 },
             ],
         )
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(cd_ref=110920)
     assert species.scientific_name == "Orchis militaris"
@@ -153,7 +153,7 @@ def test_import_taxref_matches_by_cd_ref():
     assert species.group == "Angiospermes"
 
 
-def test_import_taxref_leaves_common_name_blank_when_no_nom_vern():
+def test_update_species_from_taxref_leaves_common_name_blank_when_no_nom_vern():
     """Species with empty NOM_VERN in TaxRef should keep a blank common_name."""
     SpeciesFactory(
         cd_ref=6124,
@@ -176,7 +176,7 @@ def test_import_taxref_leaves_common_name_blank_when_no_nom_vern():
                 },
             ],
         )
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(cd_ref=6124)
     assert species.scientific_name == "Rhytidium rugosum"
@@ -209,7 +209,7 @@ def test_merge_stub_into_legacy_species():
 
     with TemporaryDirectory() as tmpdir:
         zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Bubo bubo")
     assert species.common_name == "Grand-duc d'Europe"
@@ -238,7 +238,7 @@ def test_merge_reassigns_species_habitat():
 
     with TemporaryDirectory() as tmpdir:
         zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     keeper = Species.objects.get(scientific_name="Bubo bubo")
     assert keeper.habitats.count() == 2
@@ -264,7 +264,7 @@ def test_merge_keeps_legacy_habitat_on_conflict():
 
     with TemporaryDirectory() as tmpdir:
         zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     keeper = Species.objects.get(scientific_name="Bubo bubo")
     assert keeper.habitats.count() == 1
@@ -286,7 +286,7 @@ def test_merge_preserves_legacy_common_name():
 
     with TemporaryDirectory() as tmpdir:
         zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     species = Species.objects.get(scientific_name="Bubo bubo")
     assert species.common_name == "Hibou grand-duc"
@@ -306,7 +306,7 @@ def test_no_merge_when_both_have_cd_ref():
 
     with TemporaryDirectory() as tmpdir:
         zip_path = create_taxref_zip(tmpdir, [TAXREF_ROW_BUBO])
-        call_command("import_taxref", zip_path)
+        call_command("update_species_from_taxref", zip_path)
 
     stub = Species.objects.get(cd_ref=3482)
     assert stub.scientific_name == "CD_REF_3482"
