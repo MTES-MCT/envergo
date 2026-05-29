@@ -456,11 +456,11 @@ def test_ep_ru_catalog_with_sensitive_species(ep_ru_criterion):
 # ---------------------------------------------------------------------------
 
 
-def test_ep_ru_effective_coefficients_include_bonus(
+def test_ep_ru_post_evaluate_writes_effective_coefficients(
     ep_ru_criterion,
     regime_unique_haie_criterion,
 ):
-    """The effective_coefficients property returns raw + EP bonus."""
+    """After evaluate(), effective coefficients appear in the catalog under the slug key."""
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=60,
@@ -471,7 +471,9 @@ def test_ep_ru_effective_coefficients_include_bonus(
     evaluator = criterion.get_evaluator()
     assert criterion.result_code == "derogation_simplifiee"
 
-    effective = evaluator.effective_coefficients
+    slug_key = f"{evaluator.slug}_effective_coefficients"
+    assert slug_key in moulinette.catalog
+    effective = moulinette.catalog[slug_key]
     raw = moulinette.catalog["per_hedge_coefficients"]
     bonus = evaluator.get_ep_ru_bonus()
     assert bonus > 0
@@ -487,8 +489,8 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
     """EPRU effective coefficients include the EP bonus; RU's do not.
 
     Both evaluators share the same raw per_hedge_coefficients. After
-    evaluate(), EPRU's effective_coefficients property adds the bonus
-    while RU's returns the raw values unchanged.
+    evaluate(), EPRU writes a slug-namespaced effective key with the
+    bonus applied. RU has no such key — its effective equals raw.
     """
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
@@ -499,14 +501,15 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
     raw = moulinette.catalog["per_hedge_coefficients"]
 
     ep_evaluator = moulinette.ep.ep_regime_unique.get_evaluator()
-    ep_effective = ep_evaluator.effective_coefficients
+    ep_slug_key = f"{ep_evaluator.slug}_effective_coefficients"
+    ep_effective = moulinette.catalog[ep_slug_key]
 
     ru_evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
-    ru_effective = ru_evaluator.effective_coefficients
+    ru_slug_key = f"{ru_evaluator.slug}_effective_coefficients"
+    assert ru_slug_key not in moulinette.catalog
 
     for hedge_id in raw:
         assert ep_effective[hedge_id] > raw[hedge_id]
-        assert ru_effective[hedge_id] == raw[hedge_id]
 
 
 def test_ep_ru_dispense_effective_empty(
@@ -524,5 +527,6 @@ def test_ep_ru_dispense_effective_empty(
     assert criterion.result_code == "dispense"
 
     evaluator = criterion.get_evaluator()
-    assert evaluator.effective_coefficients == {}
+    slug_key = f"{evaluator.slug}_effective_coefficients"
+    assert moulinette.catalog[slug_key] == {}
     assert evaluator.get_replantation_coefficient() == 0.0

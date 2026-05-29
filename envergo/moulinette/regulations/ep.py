@@ -20,7 +20,6 @@ from envergo.hedges.regulations import (
     NormandieMinLengthCondition,
     NormandieQualityCondition,
     PlantationConditionMixin,
-    RUMinLengthCondition,
     RUQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
@@ -30,7 +29,7 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique_haie import (
+from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
     compute_ru_compensation_ratio,
     get_ru_debug_context,
@@ -590,11 +589,6 @@ class EspecesProtegeesNormandie(
 
         return result
 
-    @property
-    def effective_coefficients(self):
-        """Normandie density-based per-hedge compensation coefficients."""
-        return self.catalog.get("per_hedge_coefficients", {})
-
     def get_replantation_coefficient(self):
         if self.result_code == "dispense_L350" or self.result_code == "a_verifier_L350":
             # If the result is "dispense_L350" or "a_verifier_L350", the replantation coefficient is 1.0
@@ -737,7 +731,7 @@ class EspecesProtegeesRegimeUnique(
     choice_label = "EP > EP Régime unique"
     slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
-    plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
+    plantation_conditions = [MinLengthCondition, RUQualityCondition, SafetyCondition]
     plantation_skip_results = frozenset({"dispense", "non_concerne", "non_disponible"})
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
@@ -987,24 +981,32 @@ class EspecesProtegeesRegimeUnique(
             bonus += EP_RU_SENSITIVE_SPECIES_BONUS
         return bonus
 
-    @property
-    def effective_coefficients(self):
-        """Raw per-hedge coefficients adjusted with the EP bonus.
+    def get_post_evaluate_data(self):
+        """Write effective per-hedge coefficients (raw + EP bonus) to catalog.
 
         Dispense means no compensation is required, so effective coefficients
-        are empty.
+        are empty. The slug key must still be present so that
+        ``plantation_evaluate()`` picks it up instead of falling back to the
+        raw ``per_hedge_coefficients``.
         """
+        slug_key = f"{self.slug}_effective_coefficients"
         if self.result_code == "dispense":
-            return {}
+            return {slug_key: {}}
         bonus = self.get_ep_ru_bonus()
         raw = self.catalog.get("per_hedge_coefficients", {})
-        return {h: c + bonus for h, c in raw.items()}
+        effective = {h: c + bonus for h, c in raw.items()}
+        return {slug_key: effective}
 
     def get_replantation_coefficient(self):
-        """Weighted average of the effective per-hedge coefficients."""
-        return compute_ru_compensation_ratio(
-            self.moulinette, coefficients=self.effective_coefficients
-        )
+        """Weighted average of the effective per-hedge coefficients.
+
+        Reads from the slug-keyed effective coefficients written by
+        ``get_post_evaluate_data()``, which already include the EP bonus.
+        For dispense, the effective dict is empty and R is 0.
+        """
+        slug_key = f"{self.slug}_effective_coefficients"
+        effective = self.catalog.get(slug_key, {})
+        return compute_ru_compensation_ratio(self.moulinette, coefficients=effective)
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.
@@ -1037,7 +1039,7 @@ class EspecesProtegeesRegimeUnique(
         """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
 
-        hedge_rows = build_ru_hedge_detail_rows(self.catalog, self)
+        hedge_rows = build_ru_hedge_detail_rows(self.catalog, self.slug)
         per_hedge_results = self.per_hedge_results
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["hedge_id"], "-")
