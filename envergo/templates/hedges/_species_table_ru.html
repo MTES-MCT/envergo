@@ -15,8 +15,8 @@
           </thead>
           <tbody>
             {% for s in species %}
-              <tr>
-                <td>{{ s.group }}</td>
+              <tr {% if s.local_level_of_concern == "majeur" %}class="fr-text--bold"{% endif %}>
+                <td>{{ s.adhoc_group }}</td>
                 <td>
                   {% if s.common_name %}
                     {{ s.common_name }}

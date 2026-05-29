@@ -158,7 +158,7 @@ def find_or_create_species(row):
     """Look up a Species from a CSV row, creating a stub if needed.
 
     Missing species are auto-created with a placeholder scientific_name that
-    import_taxref will later enrich.
+    update_species_from_taxref will later enrich.
     """
     if "CD_REF" in row and row["CD_REF"]:
         cd_ref = int(row["CD_REF"])

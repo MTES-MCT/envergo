@@ -2,9 +2,9 @@
 
 When the RU CSV import creates a Species from a CD_REF alone, it uses
 a placeholder scientific_name because the CSV doesn't carry name data.
-The placeholder is later replaced by import_taxref with real TaxRef data.
+The placeholder is later replaced by update_species_from_taxref with real TaxRef data.
 
-Both the creation side (tasks.py) and the enrichment side (import_taxref.py)
+Both the creation side (tasks.py) and the enrichment side (update_species_from_taxref.py)
 must agree on the placeholder format. This module is the single source of
 truth for that convention.
 """

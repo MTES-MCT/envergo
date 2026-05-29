@@ -350,7 +350,9 @@ class PlantationEvaluator:
                 MinLengthCondition(self.hedge_data, R, None, None).evaluate()
             )
 
-        conditions = filter(lambda c: c.result is not None, conditions)
+        conditions = [
+            c for c in conditions if c.result is not None and c.must_display()
+        ]
         self._conditions = sorted(conditions, key=attrgetter("order"))
         self._result = (
             PlantationResults.Adequate.value
@@ -395,6 +397,5 @@ class PlantationEvaluator:
                 "context": condition.context,
             }
             for condition in self.conditions
-            if condition.must_display()
         ]
         return data

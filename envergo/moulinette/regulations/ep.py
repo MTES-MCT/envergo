@@ -29,7 +29,7 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique_haie import (
+from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
     compute_ru_compensation_ratio,
     get_ru_debug_context,
@@ -732,6 +732,7 @@ class EspecesProtegeesRegimeUnique(
     slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
     plantation_conditions = [MinLengthCondition, RUQualityCondition, SafetyCondition]
+    plantation_skip_results = frozenset({"dispense", "non_concerne", "non_disponible"})
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
 
@@ -1005,9 +1006,7 @@ class EspecesProtegeesRegimeUnique(
         """
         slug_key = f"{self.slug}_effective_coefficients"
         effective = self.catalog.get(slug_key, {})
-        return compute_ru_compensation_ratio(
-            self.moulinette, coefficients=effective
-        )
+        return compute_ru_compensation_ratio(self.moulinette, coefficients=effective)
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.

@@ -52,13 +52,7 @@ from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import (
-    TO_PLANT,
-    TO_REMOVE,
-    HedgeData,
-    HedgeList,
-    HedgeTypeFactory,
-)
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList, HedgeTypeFactory
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,

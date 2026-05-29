@@ -103,10 +103,7 @@ def regulation_plantation_conditions(plantation_evaluation, regulation):
     condition_to_display = []
     for condition in plantation_evaluation.conditions:
         for criterion in regulation.criteria.all():
-            if (
-                condition.criterion_evaluator == criterion.get_evaluator()
-                and condition.must_display()
-            ):
+            if condition.criterion_evaluator == criterion.get_evaluator():
                 condition_to_display.append(condition)
 
     template = "hedges/_plantation_conditions.html"
@@ -123,10 +120,7 @@ def regulation_has_condition_to_display(plantation_evaluation, regulation):
     """Check if there are any plantation conditions to display for a given regulation."""
     for condition in plantation_evaluation.conditions:
         for criterion in regulation.criteria.all():
-            if (
-                condition.criterion_evaluator == criterion.get_evaluator()
-                and condition.must_display()
-            ):
+            if condition.criterion_evaluator == criterion.get_evaluator():
                 return True
     return False
 

@@ -709,6 +709,8 @@ class TestPlantationEvaluateInjection:
         ev.slug = slug
         ev.catalog = catalog
         ev.plantation_conditions = plantation_conditions or [SpyCondition]
+        ev.plantation_skip_results = frozenset()
+        ev.result_code = "soumis"
         ev.get_replantation_coefficient.return_value = 1.0
 
         from envergo.hedges.regulations import PlantationConditionMixin
