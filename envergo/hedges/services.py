@@ -302,9 +302,19 @@ class PlantationEvaluator:
         )
 
     @property
-    def display_for_alternatives(self):
+    def global_results_by_category(self):
+        return {
+            category: PLANTATION_RESULT_MATRIX.get(
+                (category_result, self.result), RESULTS.interdit
+            )
+            for category, category_result in self.moulinette.results_by_category.items()
+        }
+
+    def display_for_alternatives(self, category):
         """Should this evaluation global result be displayed for project alternatives?"""
-        return DISPLAY_FOR_ALTERNATIVES_MATRIX[self.global_result]
+        return DISPLAY_FOR_ALTERNATIVES_MATRIX[
+            self.global_results_by_category[category]
+        ]
 
     @property
     def result_code(self):

@@ -26,7 +26,12 @@ from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
+from envergo.moulinette.models import (
+    CityHallSubmission,
+    ConfigHaie,
+    Criterion,
+    Regulation,
+)
 from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
@@ -601,6 +606,7 @@ class MoulinetteHaieResult(
             context["result_p_url"] = result_p_url
 
             context["HaieCriterionCategory"] = HaieCriterionCategory
+            context["CityHallSubmission"] = CityHallSubmission
 
         return context
 

@@ -3,7 +3,7 @@ import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from datetime import date
-from enum import IntEnum
+from enum import Enum, IntEnum
 from functools import reduce
 from itertools import groupby
 from operator import attrgetter
@@ -2552,6 +2552,15 @@ class MoulinetteAmenagement(Moulinette):
         return self.catalog["lng_lat"]
 
 
+class CityHallSubmission(Enum):
+    do_not_call_in_templates = True
+
+    NONE = 0  # nothing to submit
+    AUTORISATION_URBA = 1  # PA, PC, DP ou permis de démolir must be submitted
+    COMPLETE = 2  # All the hedges are hru and/or l350_3 and must be submitted
+    PARTIAL = 3  # Some hedges (hru and/or l350_3) must be submitted
+
+
 class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     REGULATIONS = [
         "conditionnalite_pac",
@@ -3118,6 +3127,21 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             or HaieCriterionCategory.l350_3 in self.results_by_category.keys()
             and self.config.aa_l3503_handling == AaL3503Handling.PORTAL
         )
+
+    @property
+    def city_hall_submission(self) -> CityHallSubmission:
+        """Does this project need to be submitted to city hall, and how ?"""
+        if self.triage_form["contexte"].value() == "projet-urba":
+            return CityHallSubmission.AUTORISATION_URBA
+
+        categories = self.results_by_category.keys()
+        if HaieCriterionCategory.ru in categories:
+            if len(categories) == 1:
+                return CityHallSubmission.NONE
+            else:
+                return CityHallSubmission.PARTIAL
+        else:
+            return CityHallSubmission.COMPLETE
 
 
 class ActionToTake(models.Model):

@@ -258,26 +258,32 @@ def get_multi_categories_header(category, context) -> SafeString:
 
 
 @register.simple_tag(takes_context=True)
-def show_plantation_result(context, plantation_evaluation):
+def show_plantation_result(context, plantation_evaluation, category, is_main=True):
     """Render the global plantation result content."""
     context_data = context.flatten()
     template_name = (
-        f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
+        f"haie/moulinette/plantation_result/{category.name}/"
+        f"{plantation_evaluation.global_results_by_category[category]}.html"
     )
 
-    if (
-        context.get("is_alternative", False)
-        and not plantation_evaluation.display_for_alternatives
-    ):
+    if context.get(
+        "is_alternative", False
+    ) and not plantation_evaluation.display_for_alternatives(category):
         html = ""
     else:
         try:
             content = render_to_string((template_name,), context_data)
             moulinette = context["moulinette"]
             if moulinette.is_multi_category:
-                header = get_multi_categories_header(moulinette.main_category, context)
+                header = get_multi_categories_header(category, context)
                 content = header + content
-            html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
+            if is_main:
+                html = f'<div id="result-{category.name}" class="alt fr-p-3w fr-mb-3w">{content}</div>'
+            else:
+                html = (
+                    f'<div id="result-{category.name}" '
+                    f'class="fr-mb-3w fr-callout other-category-header">{content}</div>'
+                )
         except TemplateDoesNotExist:
             logger.error(
                 "Template for GUH global plantation result is missing.",

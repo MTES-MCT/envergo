@@ -3,7 +3,7 @@
     ✅ <strong>La déclaration est prête à être complétée</strong>
   </h6>
 
-  {% if not moulinette.is_multi_category and moulinette.catalog.contexte != "projet-urba" %}
+  {% if moulinette.city_hall_submission == CityHallSubmission.NONE %}
     <p>Ce portail vous permet de déposer en ligne un dossier unique à l’administration.</p>
   {% elif moulinette.is_multi_category %}
     <p>
