@@ -797,7 +797,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
         required=True,
         widget=forms.RadioSelect,
         choices=ICPE_REGIME_CHOICES,
-        get_display_value=lambda value: (
+        get_display_help_text=lambda value: (
             "Inconnu" if value == ICPE_REGIME_INCONNU else "À l'issue du projet"
         ),
     )
