@@ -44,6 +44,9 @@
 
 <h4>Comment l'instruction d'une demande d'examen au cas par cas se déroule-t-elle&nbsp;?</h4>
 
+{% if icpe_only_indicative or icpe_only_conditional %}
+<p>L’instruction de la demande d’examen au cas par cas est intégrée à l’instruction ICPE.</p>
+{% else %}
 <p>
   Le délai d'instruction est fixé à 35 jours à compter de la date où la demande est considérée comme complète.
   Si le dossier est incomplet, une demande de compléments peut être adressée au porteur de projet sous 15&nbsp;jours.
@@ -58,3 +61,4 @@
   L'absence de réponse à l'issue des 35 jours vaut décision implicite&nbsp;:
   le projet est soumis à Évaluation environnementale et a l'obligation de réaliser une étude d'impact.
 </p>
+{% endif %}
