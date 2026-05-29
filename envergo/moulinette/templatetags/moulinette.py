@@ -261,6 +261,7 @@ def get_multi_categories_header(category, context) -> SafeString:
 def show_plantation_result(context, plantation_evaluation, category, is_main=True):
     """Render the global plantation result content."""
     context_data = context.flatten()
+    context_data["category"] = category
     template_name = (
         f"haie/moulinette/plantation_result/{category.name}/"
         f"{plantation_evaluation.global_results_by_category[category]}.html"

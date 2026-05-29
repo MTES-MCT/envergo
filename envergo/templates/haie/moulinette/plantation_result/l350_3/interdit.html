@@ -22,7 +22,8 @@
               tabindex="0"
               class="inline-button"
               aria-controls="demarches-simplifiees-modal"
-              data-fr-opened="false">déposer un dossier.</span>
+              data-fr-opened="false"
+              data-category="{{ category.name }}">déposer un dossier.</span>
         Il sera examiné, mais il est probable qu’un refus soit prononcé.
       </p>
     {% elif moulinette.config.aa_l3503_handling == AaL3503Handling.THIRD_PARTY_FORM %}

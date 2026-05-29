@@ -58,7 +58,13 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
-from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT, HedgeTypeFactory
+from envergo.hedges.models import (
+    EPSG_LAMB93,
+    EPSG_WGS84,
+    TO_PLANT,
+    HedgeData,
+    HedgeTypeFactory,
+)
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.moulinette.utils import MoulinetteUrl
@@ -295,10 +301,24 @@ class PetitionProjectCreate(FormView):
         return res
 
     def form_valid(self, form):
+        moulinette_url = form.cleaned_data["moulinette_url"]
+        category = form.cleaned_data["category"]
 
-        form.instance.hedge_data_id = extract_param_from_url(
-            form.cleaned_data["moulinette_url"], "haies"
+        moulinette = MoulinetteUrl(moulinette_url).get_moulinette()
+        single_procedure = moulinette.config.single_procedure
+
+        hedge_data_id = extract_param_from_url(moulinette_url, "haies")
+        original_hedge_data = HedgeData.objects.get(pk=hedge_data_id)
+        filtered_hedges = original_hedge_data.hedges().evaluator_category(
+            single_procedure, category
         )
+
+        new_hedge_data = HedgeData.objects.create(
+            data=[h.toDict() for h in filtered_hedges]
+        )
+        updated_url = update_qs(moulinette_url, {"haies": str(new_hedge_data.id)})
+        form.instance.moulinette_url = updated_url
+        form.instance.hedge_data = new_hedge_data
 
         with transaction.atomic():
             petition_project = form.save()

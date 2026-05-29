@@ -29,6 +29,10 @@
                   method="post">
               {% csrf_token %}
               <input type="hidden" name="moulinette_url" value="{{ moulinette_url }}" />
+              <input type="hidden"
+                     name="category"
+                     id="demarche-simplifiee-category"
+                     value="" />
               <div id="demarches-simplifiees-modal-btns">
                 <div>
                   <input type="button"

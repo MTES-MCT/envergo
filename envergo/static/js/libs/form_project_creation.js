@@ -11,6 +11,14 @@
   exports.DemarchesSimplifieesModal = DemarchesSimplifieesModal;
 
   DemarchesSimplifieesModal.prototype.init = function () {
+    this.categoryInput = this.formElt.querySelector('#demarche-simplifiee-category');
+    document.querySelectorAll('[aria-controls="demarches-simplifiees-modal"][data-category]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (this.categoryInput) {
+          this.categoryInput.value = btn.dataset.category;
+        }
+      });
+    });
     this.formElt.addEventListener('submit', this.deactivate.bind(this));
     this.formElt.addEventListener('submit', this.submit.bind(this));
   };
