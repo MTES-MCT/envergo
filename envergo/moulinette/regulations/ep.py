@@ -29,7 +29,7 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique_haie import (
+from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
     compute_ru_compensation_ratio,
     get_ru_debug_context,

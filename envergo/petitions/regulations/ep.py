@@ -12,7 +12,7 @@ from envergo.moulinette.regulations.ep import (
     EspecesProtegeesRegimeUnique,
     EspecesProtegeesSimple,
 )
-from envergo.moulinette.regulations.regime_unique_haie import (
+from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
     get_ru_debug_context,
 )

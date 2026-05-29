@@ -1,0 +1,300 @@
+"""Régime unique — zone-based compensation coefficients.
+
+Shared infrastructure for the régime unique compensation system: per-hedge
+zone resolution (mapping each hedge's centroid to a coefficient matrix),
+coefficient assignment based on density and hedge type, and a weighted-average
+compensation ratio.
+
+Used by both the régime unique haie evaluator and the EP régime unique
+evaluator.
+"""
+
+from envergo.geodata.models import MAP_TYPES, Zone
+
+# Maps (hedge_category, density_level) to the official coefficient key name.
+# Numbering follows the instruction technique sent to prefects.
+COEFF_KEY = {
+    ("arboree", "HD"): "R3_arboree_HD",
+    ("arboree", "LD"): "R4_arboree_LD",
+    ("non_arboree", "HD"): "R1_non_arboree_HD",
+    ("non_arboree", "LD"): "R2_non_arboree_LD",
+}
+
+# Maximum distance (metres) for nearest-zone fallback.
+# This is not a business rule but a technical safeguard.
+MAX_ZONE_DISTANCE_M = 50_000  # 50 km
+
+
+def resolve_hedge_zones(hedges, dept_code):
+    """Match each hedge to its zonage zone based on centroid containment.
+
+    Returns ``{hedge_id: zone_attributes_dict | None}``.
+    """
+    if not hedges:
+        return {}
+
+    centroids = {h.id: h.geos_centroid for h in hedges}
+    zones = Zone.objects.find_covering(centroids, MAP_TYPES.zonage, dept_code)
+
+    # When a hedge doesn't fall into a zonage, we have to find the nearest zone instead.
+    # Functionally, that is questionable. Zonages are administrative perimeters
+    # defined by prefects, so you are either in a zonage or not.
+    # But the only ways a hedge centroid might not fall into any zonage is either
+    # there is a flaw in the data (e.g missing map) or the hedge topology makes
+    # the centroid fall outside the department.
+    # In any case we have to have a fallback.
+    unmatched = {hid: centroids[hid] for hid in centroids if hid not in zones}
+    if unmatched:
+        nearest = Zone.objects.find_nearest_batch(
+            unmatched, MAP_TYPES.zonage, dept_code, MAX_ZONE_DISTANCE_M
+        )
+        zones.update(nearest)
+
+    return {
+        hedge_id: zones[hedge_id].attributes if hedge_id in zones else None
+        for hedge_id in centroids
+    }
+
+
+def zone_config_for_hedge(zone_attrs, coeff_compensation):
+    """Extract (zone_id, zone_config) from zone attributes and the config dict.
+
+    Three outcomes:
+
+    - ``("default", config_or_none)`` when zonage is disabled (zone_attrs is
+      the ``"default"`` sentinel).
+    - ``(None, None)`` when no zone was matched (zone_attrs is ``None``).
+    - ``(zone_id, config_or_none)`` when a zone was matched — config is
+      ``None`` if ``identifiant_zone`` is missing or has no entry in
+      coeff_compensation.
+    """
+    if zone_attrs == "default":
+        return "default", coeff_compensation.get("default")
+
+    if zone_attrs is None:
+        return None, None
+
+    zone_id = zone_attrs.get("identifiant_zone")
+    zone_config = coeff_compensation.get(zone_id) if zone_id else None
+    return zone_id, zone_config
+
+
+def compute_hedge_coefficient(hedge, zone_config, density_400):
+    """Compute the compensation coefficient for a single hedge.
+
+    Uses the zone's density threshold and the hedge type to look up the
+    correct coefficient in the zone config matrix. Returns
+    ``(coefficient, high_density)`` where ``high_density`` is a bool
+    (or None when no zone config was provided).
+    """
+    if zone_config is None:
+        return 0.0, None
+
+    x_densite = zone_config.get("X_densite", 0.0)
+    high_density = density_400 >= x_densite
+    density_key = "HD" if high_density else "LD"
+    # "mixte" is the only RU hedge type that counts as tree-bearing
+    type_key = "arboree" if hedge.hedge_type == "mixte" else "non_arboree"
+    config_key = COEFF_KEY[(type_key, density_key)]
+    coefficient = zone_config.get(config_key, 0.0)
+    return coefficient, high_density
+
+
+def compute_per_hedge_coefficients(hedges, per_hedge_zone_configs, density_400):
+    """Assign a compensation coefficient to each hedge based on its zone config.
+
+    ``per_hedge_zone_configs`` maps ``hedge_id → (zone_id, zone_config)``
+    as returned by ``resolve_per_hedge_zone_configs``.
+
+    Returns ``(coefficients, per_hedge_zone_info, all_resolved)`` where:
+
+    - ``coefficients``: hedge_id → coefficient (float).
+    - ``per_hedge_zone_info``: hedge_id → zone metadata dict for debug display.
+    - ``all_resolved``: False if any hedge could not be matched to a zone config.
+    """
+    coefficients = {}
+    per_hedge_zone_info = {}
+    all_resolved = True
+
+    for hedge in hedges:
+        zone_id, zone_config = per_hedge_zone_configs[hedge.id]
+        coefficient, high_density = compute_hedge_coefficient(
+            hedge, zone_config, density_400
+        )
+
+        if zone_config is None:
+            all_resolved = False
+
+        coefficients[hedge.id] = coefficient
+        per_hedge_zone_info[hedge.id] = {
+            "hedge_id": hedge.id,
+            "zone_id": zone_id,
+            "zone_config": zone_config,
+            "high_density": high_density,
+            "x_densite": zone_config.get("X_densite") if zone_config else None,
+            "type": "Arborée" if hedge.hedge_type == "mixte" else "Non arborée",
+            "length": round(hedge.length),
+            "coefficient": coefficient,
+        }
+
+    return coefficients, per_hedge_zone_info, all_resolved
+
+
+def resolve_per_hedge_zone_configs(moulinette, hedges):
+    """Resolve each hedge to its ``(zone_id, zone_config)`` pair.
+
+    Performs geographic lookup (or uses the "default" sentinel when zonage
+    is disabled), then maps each result through the department's
+    ``coeff_compensation`` config. Returns ``{hedge_id: (zone_id, zone_config)}``.
+    """
+    config = moulinette.config
+    settings = config.single_procedure_settings
+    coeff_compensation = settings.get("coeff_compensation", {})
+
+    if not config.has_ru_zonage:
+        matched_zones = {h.id: "default" for h in hedges}
+    else:
+        dept_code = moulinette.department.department
+        matched_zones = resolve_hedge_zones(hedges, dept_code)
+
+    return {
+        hedge.id: zone_config_for_hedge(matched_zones[hedge.id], coeff_compensation)
+        for hedge in hedges
+    }
+
+
+def get_ru_zone_data(moulinette):
+    """Resolve each hedge to its zonage zone and return zone metadata.
+
+    Returns a dict with two keys:
+
+    - ``ru_per_hedge_zone_configs``: hedge_id → (zone_id, zone_config).
+    - ``ru_all_zones_resolved``: False if any hedge could not be matched to a
+      zone config. Both evaluators use this to short-circuit to non_disponible.
+    """
+    haies = moulinette.catalog["haies"]
+    hedges = haies.hedges_to_remove().n_alignement()
+    per_hedge_zone_configs = resolve_per_hedge_zone_configs(moulinette, hedges)
+
+    all_resolved = all(
+        config is not None for _, config in per_hedge_zone_configs.values()
+    )
+
+    return {
+        "ru_per_hedge_zone_configs": per_hedge_zone_configs,
+        "ru_all_zones_resolved": all_resolved,
+    }
+
+
+def get_ru_per_hedge_coefficients(moulinette, per_hedge_zone_configs):
+    """Compute per-hedge compensation coefficients from zone configs and density.
+
+    Because X_densite thresholds differ per zone, the same project-wide
+    density_400 can classify as high density in one zone and low density
+    in another.
+
+    Returns a dict with two keys:
+
+    - ``per_hedge_coefficients``: hedge_id → coefficient (float).
+    - ``ru_per_hedge_zone_info``: hedge_id → zone metadata for debug display.
+    """
+    haies = moulinette.catalog["haies"]
+    hedges = haies.hedges_to_remove().n_alignement()
+    density_400 = haies.density_around_lines.get("density_400") or 0.0
+
+    coefficients, per_hedge_zone_info, _ = compute_per_hedge_coefficients(
+        hedges, per_hedge_zone_configs, density_400
+    )
+
+    return {
+        "per_hedge_coefficients": coefficients,
+        "ru_per_hedge_zone_info": per_hedge_zone_info,
+    }
+
+
+def collect_zone_configs(per_hedge_zone_info):
+    """Return a dict of distinct zone_id → zone_config from per-hedge info."""
+    seen = {}
+    for info in per_hedge_zone_info.values():
+        zone_id = info["zone_id"]
+        if zone_id and zone_id not in seen and info["zone_config"] is not None:
+            seen[zone_id] = info["zone_config"]
+    return seen
+
+
+def get_ru_debug_context(catalog):
+    """Build the RU zone debug context entries from catalog data.
+
+    Shared by both RegimeUniqueHaie and EspecesProtegeesRegimeUnique.
+    """
+    per_hedge_info = catalog.get("ru_per_hedge_zone_info", {})
+    return {
+        "ru_hedge_rows": list(per_hedge_info.values()),
+        "ru_zone_configs": collect_zone_configs(per_hedge_info),
+    }
+
+
+def build_ru_hedge_detail_rows(catalog, evaluator_slug):
+    """Build per-hedge rows merging zone info with compensation coefficients.
+
+    Each row contains zone metadata (zone_id, x_densite, high_density, length)
+    plus raw and effective coefficients — everything needed by the unified
+    "Détail par haie" partial template.
+    """
+    per_hedge_info = catalog.get("ru_per_hedge_zone_info", {})
+    effective_key = f"{evaluator_slug}_effective_coefficients"
+    effective_coefficients = catalog.get(effective_key, {})
+
+    rows = []
+    for hedge_id, info in per_hedge_info.items():
+        coeff_brut = info["coefficient"]
+        rows.append(
+            {
+                "hedge_id": info["hedge_id"],
+                "hedge_type": info["type"],
+                "length": info["length"],
+                "zone_id": info["zone_id"],
+                "x_densite": info["x_densite"],
+                "high_density": info["high_density"],
+                "coeff_ru_brut": coeff_brut,
+                "coeff_ru_majore": effective_coefficients.get(hedge_id, coeff_brut),
+            }
+        )
+    return rows
+
+
+def compute_ru_compensation_ratio(moulinette, coefficients=None):
+    """Compute the régime unique compensation ratio.
+
+    Returns the weighted average of per-hedge compensation coefficients,
+    weighted by hedge length. Alignements are excluded.
+
+    When ``coefficients`` is provided, uses that dict directly (e.g. EP RU
+    effective coefficients that already include the bonus). Otherwise resolves
+    raw coefficients from the moulinette catalog. Returns 0.0 when the
+    department is not in régime unique.
+    """
+    if not moulinette.config.single_procedure:
+        return 0.0
+
+    haies = moulinette.catalog["haies"]
+    hedges = haies.hedges_to_remove().n_alignement()
+    total_length = hedges.length
+    if not total_length:
+        return 0.0
+
+    if coefficients is None:
+        if "ru_per_hedge_zone_configs" not in moulinette.catalog:
+            moulinette.catalog.update(get_ru_zone_data(moulinette))
+        if "per_hedge_coefficients" not in moulinette.catalog:
+            zone_configs = moulinette.catalog["ru_per_hedge_zone_configs"]
+            moulinette.catalog.update(
+                get_ru_per_hedge_coefficients(moulinette, zone_configs)
+            )
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
+
+    compensated_length = 0.0
+    for hedge in hedges:
+        compensated_length += hedge.length * coefficients.get(hedge.id, 0.0)
+
+    return round(compensated_length / total_length, 2)
