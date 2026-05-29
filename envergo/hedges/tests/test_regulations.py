@@ -10,6 +10,8 @@ from envergo.hedges.regulations import (
     EssencesBocageresCondition,
     MinLengthCondition,
     PacParcelCondition,
+    RUMinLengthCondition,
+    RUQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
     TreeAlignmentsCondition,
@@ -677,5 +679,134 @@ class TestAisneQualityConditionSubstitution:
         condition = AisneQualityCondition(hedge_data, 1.0, evaluator)
         condition.evaluate()
         assert condition.result
+
+
+class TestIsStricterThan:
+    """Tests for the is_stricter_than / compare_strictness protocol."""
+
+    def test_different_classes_raises_type_error(self):
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator = make_mock_evaluator(single_procedure=True)
+        evaluator.get_replantation_coefficient.return_value = 1.0
+
+        min_length = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        min_length.evaluate()
+        safety = SafetyCondition(hedge_data, 1.0, evaluator)
+        safety.evaluate()
+
+        with pytest.raises(TypeError):
+            min_length.is_stricter_than(safety)
+
+    def test_base_class_returns_false(self):
+        """Non-overridden compare_strictness returns False (no deduplication)."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator = make_mock_evaluator(single_procedure=True)
+
+        cond_a = MinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_a.evaluate()
+        cond_b = MinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_b.evaluate()
+
+        assert not cond_a.is_stricter_than(cond_b)
+        assert not cond_b.is_stricter_than(cond_a)
+
+    def test_ru_min_length_higher_requirement_is_stricter(self):
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_low = make_mock_evaluator(single_procedure=True)
+        evaluator_low.get_replantation_coefficient.return_value = 1.0
+        evaluator_high = make_mock_evaluator(single_procedure=True)
+        evaluator_high.get_replantation_coefficient.return_value = 1.5
+
+        cond_low = RUMinLengthCondition(hedge_data, 1.0, evaluator_low)
+        cond_low.evaluate()
+        cond_high = RUMinLengthCondition(hedge_data, 1.5, evaluator_high)
+        cond_high.evaluate()
+
+        assert cond_high.is_stricter_than(cond_low)
+        assert not cond_low.is_stricter_than(cond_high)
+
+    def test_ru_min_length_equal_requirement_neither_stricter(self):
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator = make_mock_evaluator(single_procedure=True)
+        evaluator.get_replantation_coefficient.return_value = 1.0
+
+        cond_a = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_a.evaluate()
+        cond_b = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_b.evaluate()
+
+        assert not cond_a.is_stricter_than(cond_b)
+        assert not cond_b.is_stricter_than(cond_a)
+
+    def test_ru_quality_higher_lpm_is_stricter(self):
+        to_remove = HedgeFactory(
+            length=100, additionalData__type_haie="buissonnante"
+        )
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                to_remove,
+                HedgeFactory(
+                    to_plant=True,
+                    length=200,
+                    additionalData__type_haie="buissonnante",
+                ),
+            ]
+        )
+        hedge_id = to_remove.id
+        evaluator_low = make_mock_evaluator(
+            single_procedure=True,
+            effective_coefficients={hedge_id: 1.0},
+        )
+        evaluator_high = make_mock_evaluator(
+            single_procedure=True,
+            effective_coefficients={hedge_id: 1.5},
+        )
+
+        cond_low = RUQualityCondition(hedge_data, 1.0, evaluator_low)
+        cond_low.evaluate()
+        cond_high = RUQualityCondition(hedge_data, 1.5, evaluator_high)
+        cond_high.evaluate()
+
+        assert cond_high.is_stricter_than(cond_low)
+        assert not cond_low.is_stricter_than(cond_high)
+
+    def test_safety_uses_base_behavior(self):
+        """SafetyCondition is stateless — neither claims stricter, one is picked arbitrarily."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_a = make_mock_evaluator(single_procedure=True)
+        evaluator_b = make_mock_evaluator(single_procedure=True)
+
+        cond_a = SafetyCondition(hedge_data, 1.0, evaluator_a)
+        cond_a.evaluate()
+        cond_b = SafetyCondition(hedge_data, 1.0, evaluator_b)
+        cond_b.evaluate()
+
+        assert not cond_a.is_stricter_than(cond_b)
+        assert not cond_b.is_stricter_than(cond_a)
 
 
