@@ -545,9 +545,10 @@ class NormandieQualityCondition(BaseQualityCondition):
                 f"""
                 La compensation peut être réduite à {self.context["reduced_lpm"]} m en
                 proposant de planter des haies de type supérieur à celui des haies à détruire
-                (<a href="{settings.HAIE_FAQ_URLS["NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION"]}" target="_blank" rel="noopener">voir le guide</a>).
+                (<a href="{settings.HAIE_FAQ_URLS["NORMANDIE_HEDGES_FOR_COMPENSATION_REDUCTION"]}"
+                target="_blank" rel="noopener">voir le guide</a>).
                 """
-            )  # noqa: E501
+            )
 
         return mark_safe(" ".join(lines))
 
