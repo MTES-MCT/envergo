@@ -51,13 +51,26 @@ class EPRegulation(HaieRegulationEvaluator):
 
 
 class EPMixin:
-    """Legacy criterion for protected species."""
+    """Mixin that populates the catalog with the protected species list.
+
+    Subclasses override get_protected_species() to select the pipeline
+    (HRU vs RU). Defaults to RU.
+    """
+
+    def get_protected_species(self, haies):
+        """Return the protected species queryset for the catalog.
+
+        Input is a HedgeData instance; output is an annotated Species
+        queryset. Defaults to the RU pipeline. HRU evaluators override
+        this to call haies.get_all_species_hru().
+        """
+        return haies.get_all_species()
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if haies:
-            catalog["protected_species"] = haies.get_all_species()
+            catalog["protected_species"] = self.get_protected_species(haies)
         return catalog
 
 
@@ -72,12 +85,20 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, CriterionEvaluat
         "soumis": "soumis",
     }
 
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
+
     def get_result_data(self):
         return "soumis"
 
 
 class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluator):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
 
     choice_label = "EP > EP Aisne"
     slug = "ep_aisne"
@@ -98,16 +119,13 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, CriterionEvaluato
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies:
-            species = haies.get_all_species()
-            catalog["protected_species"] = species
-            catalog["fauna_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "animalia"
-            ]
-            catalog["flora_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "plantae"
-            ]
+        species = catalog.get("protected_species", [])
+        catalog["fauna_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "animalia"
+        ]
+        catalog["flora_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "plantae"
+        ]
         return catalog
 
     def get_result_data(self):
@@ -173,7 +191,11 @@ class EPNormandieForm(forms.Form):
 class EspecesProtegeesNormandie(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, CriterionEvaluator
 ):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, haies):
+        """Use the HRU species pipeline."""
+        return haies.get_all_species_hru()
 
     choice_label = "EP > EP Normandie"
     slug = "ep_normandie"
@@ -791,12 +813,27 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
-        """Populate the catalog with EP régime unique inputs."""
+        """Populate the catalog with EP régime unique inputs.
 
+        Species are populated by EPMixin using the default RU pipeline.
+        The public list excludes "majeur" species (sensitive data only
+        shown on the instruction page, not the public result page).
+        """
         catalog = super().get_catalog_data()
         haies = self.catalog.get("haies")
         if not haies:
             return catalog
+
+        species = catalog.get("protected_species")
+        if species is not None:
+            species_list = list(species)
+            catalog["protected_species"] = species_list
+            catalog["protected_species_public"] = [
+                s for s in species_list if s.local_level_of_concern != "majeur"
+            ]
+            catalog["has_sensitive_species"] = any(
+                s.local_level_of_concern == "majeur" for s in species_list
+            )
 
         catalog.update(self.get_density_catalog_data())
 
@@ -953,11 +990,19 @@ class EspecesProtegeesRegimeUnique(
 
         return result
 
-    def get_replantation_coefficient(self):
-        """Base RU coefficient plus a bonus depending on the EP result level."""
-        r_ru = compute_ru_compensation_ratio(self.moulinette)
+    def get_ep_ru_bonus(self):
+        """Total EP bonus: base per result level, plus sensitive-species majoration."""
         bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
-        return round(r_ru + bonus, 2)
+        if self.result_code == "derogation_simplifiee" and self.catalog.get(
+            "has_sensitive_species", False
+        ):
+            bonus += 0.25
+        return bonus
+
+    def get_replantation_coefficient(self):
+        """Base RU coefficient plus total EP bonus (result level + sensitive species)."""
+        r_ru = compute_ru_compensation_ratio(self.moulinette)
+        return round(r_ru + self.get_ep_ru_bonus(), 2)
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.
@@ -992,7 +1037,7 @@ class EspecesProtegeesRegimeUnique(
 
         per_hedge_results = self.per_hedge_results
         per_hedge_coefficients = self.catalog.get("ru_per_hedge_coefficients", {})
-        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
+        bonus = self.get_ep_ru_bonus()
         hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["id"], "-")
@@ -1002,6 +1047,9 @@ class EspecesProtegeesRegimeUnique(
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
+        context["has_sensitive_species"] = self.catalog.get(
+            "has_sensitive_species", False
+        )
         context["hedge_debug_rows"] = hedge_rows
         # Surface the admin-configured thresholds so the debug page shows
         # exactly which values drove the cascade. None when settings are

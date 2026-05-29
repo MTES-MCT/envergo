@@ -73,7 +73,19 @@
 </form>
 
 {% if moulinette.catalog.protected_species %}
-  {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+  {% if moulinette.config.single_procedure %}
+    {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species %}
+  {% else %}
+    {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+  {% endif %}
 {% else %}
-  <p>Pas de liste d’espèces associée à cette simulation</p>
+  <p>Pas de liste d'espèces associée à cette simulation</p>
+{% endif %}
+
+{% if has_sensitive_species and moulinette.config.single_procedure %}
+  <div class="fr-alert fr-alert--warning fr-mb-3w">
+    <p>
+      Le cortège-type contient des espèces à enjeu majeur avec des données d'observation proches du projet. Ces données sensibles n'ont pas été communiquées au demandeur : vous pouvez le faire <a href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">via la messagerie</a>.
+    </p>
+  </div>
 {% endif %}

@@ -52,6 +52,10 @@
                 <th scope="row">Longueur totale ripisylve</th>
                 <td>{{ ep_ru_ripisylve_length }} m</td>
               </tr>
+              <tr>
+                <th scope="row">Espèces sensibles dans le cortège</th>
+                <td>{{ has_sensitive_species|yesno:"Oui,Non" }}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -94,4 +98,9 @@
       </div>
     </div>
   {% endif %}
+{% endif %}
+
+{% if protected_species and user.is_staff %}
+  <h6 class="fr-mt-3w">Cortège complet (incluant espèces à enjeu majeur)</h6>
+  {% include 'hedges/_species_table_ru.html' with species=protected_species %}
 {% endif %}

@@ -1,3 +1,5 @@
+{% load hedges %}
+
 <div class="fr-table fr-table--no-caption">
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
@@ -6,19 +8,23 @@
           <caption>Liste des espèces protégées potentiellement présentes</caption>
           <thead>
             <tr>
-              <th>Groupe</th>
-              <th>Nom commun</th>
-              <th>Nom scientifique</th>
+              <th scope="col">Groupe</th>
+              <th scope="col">Nom</th>
+              <th scope="col">Niveau d'enjeu</th>
             </tr>
           </thead>
           <tbody>
             {% for s in species %}
               <tr>
-                <td>{{ s.adhoc_group }}</td>
-                <td>{{ s.common_name }}</td>
+                <td>{{ s.group }}</td>
                 <td>
-                  <i>{{ s.scientific_name }}</i>
+                  {% if s.common_name %}
+                    {{ s.common_name }}
+                    <br />
+                  {% endif %}
+                  <i lang="la">{{ s.scientific_name }}</i>
                 </td>
+                <td>{{ s.local_level_of_concern|level_of_concern_display }}</td>
               </tr>
             {% empty %}
               <tr>
