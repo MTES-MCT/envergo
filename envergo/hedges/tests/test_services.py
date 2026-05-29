@@ -1,7 +1,12 @@
 import pytest
 
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
-from envergo.hedges.regulations import MinLengthCondition
+from envergo.hedges.regulations import (
+    MinLengthCondition,
+    RUMinLengthCondition,
+    RUQualityCondition,
+    SafetyCondition,
+)
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
@@ -183,3 +188,126 @@ def test_ep_dispense_excludes_conditions_from_result(ep_ru_criterion, ru_criteri
         and isinstance(c.criterion_evaluator, RegimeUniqueHaie)
     ]
     assert len(ru_min_length) == 1
+
+
+class TestConditionDeduplication:
+    """Tests for condition deduplication when multiple evaluators share condition classes."""
+
+    def test_global_conditions_are_deduplicated(self, ep_ru_criterion, ru_criterion):
+        """When both RU and EPRU are active, global conditions contains one of each class."""
+        RUConfigHaieFactory()
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+
+        evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        evaluator.evaluate()
+
+        condition_types = [type(c) for c in evaluator.conditions]
+        assert condition_types.count(RUMinLengthCondition) == 1
+        assert condition_types.count(RUQualityCondition) == 1
+        assert condition_types.count(SafetyCondition) == 1
+
+    def test_strictest_condition_is_kept(self, ep_ru_criterion, ru_criterion):
+        """The deduplicated condition comes from EPRU (stricter coefficients)."""
+        RUConfigHaieFactory()
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+
+        # Sanity check: EPRU should not be in dispense
+        assert moulinette.ep.ep_regime_unique.result_code != "dispense"
+
+        evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        evaluator.evaluate()
+
+        min_length = next(
+            c for c in evaluator.conditions if isinstance(c, RUMinLengthCondition)
+        )
+        assert isinstance(min_length.criterion_evaluator, EspecesProtegeesRegimeUnique)
+
+    def test_all_conditions_contains_duplicates(self, ep_ru_criterion, ru_criterion):
+        """all_conditions retains both evaluators' conditions (no deduplication)."""
+        RUConfigHaieFactory()
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+        assert moulinette.ep.ep_regime_unique.result_code != "dispense"
+
+        evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        evaluator.evaluate()
+
+        all_types = [type(c) for c in evaluator.all_conditions]
+        assert all_types.count(RUMinLengthCondition) == 2
+        assert all_types.count(RUQualityCondition) == 2
+        assert all_types.count(SafetyCondition) == 2
+
+    def test_find_condition_uses_all_conditions(self, ep_ru_criterion, ru_criterion):
+        """find_condition can locate a specific evaluator's condition even after dedup."""
+        RUConfigHaieFactory()
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+        assert moulinette.ep.ep_regime_unique.result_code != "dispense"
+
+        evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        evaluator.evaluate()
+
+        ru_evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
+        ep_evaluator = moulinette.ep.ep_regime_unique.get_evaluator()
+
+        ru_cond = evaluator.find_condition(RUMinLengthCondition, ru_evaluator)
+        ep_cond = evaluator.find_condition(RUMinLengthCondition, ep_evaluator)
+
+        assert ru_cond is not None
+        assert ep_cond is not None
+        assert ru_cond is not ep_cond
+        assert isinstance(ru_cond.criterion_evaluator, RegimeUniqueHaie)
+        assert isinstance(ep_cond.criterion_evaluator, EspecesProtegeesRegimeUnique)
+
+    def test_ep_dispense_no_deduplication_needed(self, ep_ru_criterion, ru_criterion):
+        """When EPRU is in dispense, only RU conditions exist — no duplicates."""
+        RUConfigHaieFactory()
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=8)],
+            reimplantation="replantation",
+        )
+        assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+
+        evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        evaluator.evaluate()
+
+        all_types = [type(c) for c in evaluator.all_conditions]
+        assert all_types.count(RUMinLengthCondition) == 1
+        assert all_types.count(SafetyCondition) == 1
+
+        # conditions and all_conditions should be identical
+        assert evaluator.conditions == evaluator.all_conditions
+
+    def test_to_json_returns_deduplicated(self, ep_ru_criterion, ru_criterion):
+        """to_json serializes only the deduplicated conditions."""
+        RUConfigHaieFactory()
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+        assert moulinette.ep.ep_regime_unique.result_code != "dispense"
+
+        evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        evaluator.evaluate()
+
+        json_data = evaluator.to_json()
+        labels = [item["label"] for item in json_data]
+        assert labels.count("Longueur de la haie plantée") == 1
+        assert labels.count("Type de haie plantée") == 1
+        assert labels.count("Sécurité") == 1

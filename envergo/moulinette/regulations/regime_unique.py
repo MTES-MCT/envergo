@@ -234,7 +234,7 @@ def get_ru_debug_context(catalog):
     }
 
 
-def build_ru_hedge_detail_rows(catalog, evaluator_slug):
+def build_ru_hedge_detail_rows(catalog, evaluator):
     """Build per-hedge rows merging zone info with compensation coefficients.
 
     Each row contains zone metadata (zone_id, x_densite, high_density, length)
@@ -242,8 +242,7 @@ def build_ru_hedge_detail_rows(catalog, evaluator_slug):
     "Détail par haie" partial template.
     """
     per_hedge_info = catalog.get("ru_per_hedge_zone_info", {})
-    effective_key = f"{evaluator_slug}_effective_coefficients"
-    effective_coefficients = catalog.get(effective_key, {})
+    effective_coefficients = evaluator.effective_coefficients
 
     rows = []
     for hedge_id, info in per_hedge_info.items():

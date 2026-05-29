@@ -78,6 +78,29 @@ class PlantationCondition(ABC):
         """
         return True
 
+    def is_stricter_than(self, other):
+        """Whether self imposes stricter requirements than other.
+
+        Only meaningful for conditions of the same class — raises TypeError
+        otherwise. Delegates to compare_strictness for the actual comparison.
+        """
+        if type(self) is not type(other):
+            raise TypeError(
+                f"Cannot compare strictness between {type(self).__name__} "
+                f"and {type(other).__name__}"
+            )
+        return self.compare_strictness(other)
+
+    def compare_strictness(self, other):
+        """Compare strictness with another instance of the same condition class.
+
+        Called by is_stricter_than after type validation. Override in subclasses
+        that can be duplicated across evaluators. Returns False by default,
+        meaning neither instance claims to be stricter — deduplication picks
+        one arbitrarily.
+        """
+        return False
+
     @abstractmethod
     def evaluate(self):
         raise NotImplementedError(
@@ -127,6 +150,24 @@ class MinLengthCondition(PlantationCondition):
         return self.context["length_to_check"] > 0
 
 
+class RUMinLengthCondition(MinLengthCondition):
+    """Evaluate if there is enough hedges to plant in the project.
+
+    The difference with the base MinLengthCondition:
+     - MinLengthCondition uses the global R, which is the max R for each evaluators.
+     - RuMinLengthCondition uses the specific R for the current evaluator.
+    """
+
+    def evaluate(self):
+        # Override R with the local evaluator value
+        self.R = self.criterion_evaluator.get_replantation_coefficient()
+        return super().evaluate()
+
+    def compare_strictness(self, other):
+        """The condition requiring the longer minimum length is stricter."""
+        return self.context["length_to_check"] > other.context["length_to_check"]
+
+
 class NormandieMinLengthCondition(MinLengthCondition):
     """MinLengthCondition with cross-type reduction for Normandie.
 
@@ -142,7 +183,7 @@ class NormandieMinLengthCondition(MinLengthCondition):
         destruction and compensation lengths, applies the cross-type reduction,
         and returns the sum across all types.
         """
-        coefficients = self.catalog["effective_coefficients"]
+        coefficients = self.criterion_evaluator.effective_coefficients
         destruction, compensation = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -456,7 +497,7 @@ class NormandieQualityCondition(BaseQualityCondition):
 
     def get_amounts_to_compensate(self):
         """Compute LC from effective per-hedge coefficients."""
-        coefficients = self.catalog["effective_coefficients"]
+        coefficients = self.criterion_evaluator.effective_coefficients
         _, compensation = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -486,7 +527,7 @@ class NormandieQualityCondition(BaseQualityCondition):
         LPm_r — reduced minimum per type (after cross-type reduction),
         lpm/reduced_lpm — scalar totals, lm/lp — scalar remaining/planted.
         """
-        coefficients = self.catalog["effective_coefficients"]
+        coefficients = self.criterion_evaluator.effective_coefficients
         destruction, _ = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -573,7 +614,7 @@ class RUQualityCondition(BaseQualityCondition):
 
     def get_amounts_to_compensate(self):
         """Per-hedge compensation amounts from effective coefficients."""
-        coefficients = self.catalog["effective_coefficients"]
+        coefficients = self.criterion_evaluator.effective_coefficients
         lc = defaultdict(float)
         for hedge in self.hedge_data.hedges_to_remove():
             if hedge.id in coefficients:
@@ -595,6 +636,10 @@ class RUQualityCondition(BaseQualityCondition):
             "lm": sum(self.remaining.values()),
             "lp": sum(initial_compensating.values()),
         }
+
+    def compare_strictness(self, other):
+        """The condition requiring more total compensation is stricter."""
+        return self.context.get("lpm", 0) > other.context.get("lpm", 0)
 
     @property
     def text(self):
@@ -664,7 +709,7 @@ class StrenghteningCondition(PlantationCondition):
 
     def compute_lpm(self):
         """Compute the total compensation length from effective per-hedge coefficients."""
-        coefficients = self.catalog.get("effective_coefficients", {})
+        coefficients = self.criterion_evaluator.effective_coefficients
         _, compensation = compute_lengths_per_type(
             self.hedge_data.hedges_to_remove(), coefficients
         )
@@ -817,32 +862,27 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
+    @property
+    def effective_coefficients(self):
+        """Per-hedge compensation coefficients used by plantation conditions.
+
+        Returns a ``{hedge_id: float}`` dict mapping each hedge-to-remove to
+        its compensation multiplier. Override in evaluators whose conditions
+        depend on per-hedge coefficients.
+        """
+        return {}
+
     def plantation_evaluate(self, hedge_data, R, catalog=None):
         """Evaluate all plantation conditions for this evaluator.
 
         Returns an empty list when the evaluator's result_code is in
         plantation_skip_results — those states mean no plantation obligation
         exists for this evaluator, so conditions should not be created at all.
-
-        Otherwise, creates a catalog copy with an effective_coefficients key:
-        reads from {slug}_effective_coefficients if the evaluator wrote
-        adjusted values via get_post_evaluate_data(), otherwise falls
-        back to the raw per_hedge_coefficients.
-
-        The reason we have to do this is that each evaluator may generate different
-        coefficients.
         """
         if self.result_code in self.plantation_skip_results:
             return []
 
         catalog = dict(catalog or {})
-        slug_key = f"{self.slug}_effective_coefficients"
-        if slug_key in self.catalog:
-            catalog["effective_coefficients"] = self.catalog[slug_key]
-        elif "per_hedge_coefficients" in catalog:
-            catalog["effective_coefficients"] = catalog["per_hedge_coefficients"]
-        else:
-            catalog["effective_coefficients"] = {}
         return [
             condition(hedge_data, R, self, catalog).evaluate()
             for condition in self.plantation_conditions
