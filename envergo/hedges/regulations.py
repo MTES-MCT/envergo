@@ -58,38 +58,17 @@ class PlantationCondition(ABC):
     do_not_call_in_templates = True
 
     def __init__(self, hedge_data, R, criterion_evaluator, catalog=None):
+        """Initialize a plantation condition.
+
+        Conditions should be instantiated via
+        ``PlantationConditionMixin.plantation_evaluate()``, which populates the
+        catalog with the correct ``effective_coefficients`` entry.
+        """
         self.hedge_data = hedge_data
         self.R = R
         self.catalog = dict(catalog) if catalog else {}
         self.criterion_evaluator = criterion_evaluator
         self.context = {}
-        self.resolve_effective_coefficients()
-
-    def resolve_effective_coefficients(self):
-        """Ensure effective_coefficients is present in the local catalog.
-
-        When instantiated via plantation_evaluate(), the catalog already
-        contains this key. When instantiated directly (e.g. from instructor
-        view code), this resolves it from the evaluator's moulinette catalog.
-
-        Note: THIS IS A HACK. Conditions should ALWAYS be instanciated in a coherent
-        way through plantation_evaluate. But the refactoring is out of scope and will
-        be provided in another PR.
-        """
-        if "effective_coefficients" in self.catalog:
-            return
-        if self.criterion_evaluator is None:
-            return
-        evaluator_catalog = getattr(self.criterion_evaluator, "catalog", None)
-        if not isinstance(evaluator_catalog, dict):
-            return
-        slug_key = f"{self.criterion_evaluator.slug}_effective_coefficients"
-        if slug_key in evaluator_catalog:
-            self.catalog["effective_coefficients"] = evaluator_catalog[slug_key]
-        elif "per_hedge_coefficients" in evaluator_catalog:
-            self.catalog["effective_coefficients"] = evaluator_catalog[
-                "per_hedge_coefficients"
-            ]
 
     def must_display(self):
         """Whether this condition should appear in the simulation results.
@@ -845,6 +824,8 @@ class PlantationConditionMixin:
             catalog["effective_coefficients"] = self.catalog[slug_key]
         elif "per_hedge_coefficients" in catalog:
             catalog["effective_coefficients"] = catalog["per_hedge_coefficients"]
+        else:
+            catalog["effective_coefficients"] = {}
         return [
             condition(hedge_data, R, self, catalog).evaluate()
             for condition in self.plantation_conditions

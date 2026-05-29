@@ -272,12 +272,16 @@ def build_ru_hedge_detail_rows(catalog, evaluator_slug):
     return rows
 
 
-def compute_ru_compensation_ratio(moulinette):
+def compute_ru_compensation_ratio(moulinette, coefficients=None):
     """Compute the régime unique compensation ratio.
 
-    Returns the weighted average of per-hedge compensation coefficients
-    (zone-aware, density-sensitive), weighted by hedge length. Alignements
-    are excluded. Returns 0.0 when the department is not in régime unique.
+    Returns the weighted average of per-hedge compensation coefficients,
+    weighted by hedge length. Alignements are excluded.
+
+    When ``coefficients`` is provided, uses that dict directly (e.g. EP RU
+    effective coefficients that already include the bonus). Otherwise resolves
+    raw coefficients from the moulinette catalog. Returns 0.0 when the
+    department is not in régime unique.
     """
     if not moulinette.config.single_procedure:
         return 0.0
@@ -288,14 +292,15 @@ def compute_ru_compensation_ratio(moulinette):
     if not total_length:
         return 0.0
 
-    if "ru_per_hedge_zone_configs" not in moulinette.catalog:
-        moulinette.catalog.update(get_ru_zone_data(moulinette))
-    if "per_hedge_coefficients" not in moulinette.catalog:
-        zone_configs = moulinette.catalog["ru_per_hedge_zone_configs"]
-        moulinette.catalog.update(
-            get_ru_per_hedge_coefficients(moulinette, zone_configs)
-        )
-    coefficients = moulinette.catalog["per_hedge_coefficients"]
+    if coefficients is None:
+        if "ru_per_hedge_zone_configs" not in moulinette.catalog:
+            moulinette.catalog.update(get_ru_zone_data(moulinette))
+        if "per_hedge_coefficients" not in moulinette.catalog:
+            zone_configs = moulinette.catalog["ru_per_hedge_zone_configs"]
+            moulinette.catalog.update(
+                get_ru_per_hedge_coefficients(moulinette, zone_configs)
+            )
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
 
     compensated_length = 0.0
     for hedge in hedges:

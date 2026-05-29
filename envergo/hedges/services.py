@@ -358,6 +358,19 @@ class PlantationEvaluator:
             else PlantationResults.Inadequate.value
         )
 
+    def find_condition(self, condition_cls, evaluator=None):
+        """Find an evaluated condition by type, optionally filtering by evaluator.
+
+        Evaluator filtering uses identity (``is``), which requires both this
+        evaluator and the caller to share the same moulinette instance.
+        """
+        for condition in self.conditions:
+            if not isinstance(condition, condition_cls):
+                continue
+            if evaluator is None or condition.criterion_evaluator is evaluator:
+                return condition
+        return None
+
     def get_context(self):
         context = {}
         for condition in self.conditions:
