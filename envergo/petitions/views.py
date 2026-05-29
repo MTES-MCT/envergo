@@ -778,6 +778,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_action = None
     context_object_name = "petition_project"
 
+    def get_object(self, queryset=None):
+        """Return the cached object, fetching it only once per request."""
+        if hasattr(self, "object") and self.object is not None:
+            return self.object
+        return super().get_object(queryset)
+
     def has_view_permission(self, request, object):
         """Check if request has view permission on object"""
         return object.has_view_permission(request.user)
@@ -800,6 +806,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         queryset = (
             PetitionProject.objects.all()
+            .select_related("department")
+            .defer("department__geometry")
             .prefetch_related(
                 Prefetch(
                     "status_history",

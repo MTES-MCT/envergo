@@ -91,7 +91,7 @@ def test_moulinette_droit_constant():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.result == "soumis"
 
@@ -137,7 +137,7 @@ def test_moulinette_result_alignement():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.result == "hors_regime_unique"
 
@@ -181,7 +181,7 @@ def test_moulinette_result_non_alignement():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.conditionnalite_pac.result == "non_soumis"
     assert moulinette.alignement_arbres.result == "non_soumis"
@@ -216,7 +216,7 @@ def test_moulinette_result_interdit():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.result == "interdit"
 
@@ -278,7 +278,7 @@ def test_moulinette_result_autorisation(ep_criteria):
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.ep.ep_aisne.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

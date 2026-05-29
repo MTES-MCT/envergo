@@ -70,7 +70,7 @@ def test_ep_is_soumis(ep_criteria):  # noqa
             data["data"]["motif"] = motif_choice
             data["data"]["reimplantation"] = reimplantation_choice
             moulinette = MoulinetteHaie(data)
-            assert moulinette.is_valid(), moulinette.form_errors()
+            assert moulinette.is_valid(), moulinette.form_errors
             assert moulinette.result == "soumis", (
                 motif_choice,
                 reimplantation_choice,
@@ -107,7 +107,7 @@ def test_ep_normandie_interdit(ep_normandie_criterion, zonage_normandie):  # noq
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.result == "interdit"
 
 
@@ -136,7 +136,7 @@ def test_ep_normandie_dispense_10m(ep_normandie_criterion, zonage_normandie):  #
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == "dispense_10m"
 
 
@@ -179,7 +179,7 @@ def test_ep_normandie_dispense_20m(ep_normandie_criterion, zonage_normandie):  #
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == "dispense_20m"
 
 
@@ -222,7 +222,7 @@ def test_ep_normandie_interdit_20m(ep_normandie_criterion, zonage_normandie):  #
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == "interdit"
 
 
@@ -256,7 +256,7 @@ def test_ep_normandie_dispense_coupe_a_blanc(
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == "dispense_coupe_a_blanc"
 
 
@@ -289,7 +289,7 @@ def test_ep_normandie_interdit_remplacement(
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     # Replacing hedges is no longer forbidden in Normandie
     assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
 
@@ -322,7 +322,7 @@ def test_ep_normandie_derogation_simplifiee(
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == "derogation_simplifiee"
 
 
@@ -355,7 +355,7 @@ def test_ep_normandie_dispense(ep_normandie_criterion):  # noqa
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == "dispense"
 
 
@@ -407,7 +407,7 @@ def test_ep_normandie_l350(motif_result, ep_normandie_criterion, france_map):  #
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     assert moulinette.ep.ep_normandie.result_code == result_code
 
 
@@ -498,7 +498,7 @@ def test_min_length_condition_normandie(
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.get_context().get("minimum_length_to_plant") == 59
@@ -544,7 +544,7 @@ def test_replantation_coefficient_normandie(
     )
 
     moulinette = MoulinetteHaie(data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     evaluator = PlantationEvaluator(moulinette, hedges)
 
     assert evaluator.replantation_coefficient == r
