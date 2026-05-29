@@ -78,6 +78,29 @@ class PlantationCondition(ABC):
         """
         return True
 
+    def is_stricter_than(self, other):
+        """Whether self imposes stricter requirements than other.
+
+        Only meaningful for conditions of the same class — raises TypeError
+        otherwise. Delegates to compare_strictness for the actual comparison.
+        """
+        if type(self) is not type(other):
+            raise TypeError(
+                f"Cannot compare strictness between {type(self).__name__} "
+                f"and {type(other).__name__}"
+            )
+        return self.compare_strictness(other)
+
+    def compare_strictness(self, other):
+        """Compare strictness with another instance of the same condition class.
+
+        Called by is_stricter_than after type validation. Override in subclasses
+        that can be duplicated across evaluators. Returns False by default,
+        meaning neither instance claims to be stricter — deduplication picks
+        one arbitrarily.
+        """
+        return False
+
     @abstractmethod
     def evaluate(self):
         raise NotImplementedError(
@@ -139,6 +162,10 @@ class RUMinLengthCondition(MinLengthCondition):
         # Override R with the local evaluator value
         self.R = self.criterion_evaluator.get_replantation_coefficient()
         return super().evaluate()
+
+    def compare_strictness(self, other):
+        """The condition requiring the longer minimum length is stricter."""
+        return self.context["length_to_check"] > other.context["length_to_check"]
 
 
 class NormandieMinLengthCondition(MinLengthCondition):
@@ -609,6 +636,10 @@ class RUQualityCondition(BaseQualityCondition):
             "lm": sum(self.remaining.values()),
             "lp": sum(initial_compensating.values()),
         }
+
+    def compare_strictness(self, other):
+        """The condition requiring more total compensation is stricter."""
+        return self.context.get("lpm", 0) > other.context.get("lpm", 0)
 
     @property
     def text(self):
