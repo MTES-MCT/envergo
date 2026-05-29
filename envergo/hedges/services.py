@@ -1,6 +1,8 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import Enum
+from functools import cmp_to_key
 from itertools import product
 from operator import attrgetter
 from types import SimpleNamespace
@@ -293,6 +295,18 @@ class PlantationEvaluator:
         return self._conditions
 
     @property
+    def all_conditions(self):
+        """All evaluated conditions, including duplicates across evaluators.
+
+        Per-regulation views use this to show each evaluator's own conditions.
+        The ``conditions`` property returns the deduplicated list.
+        """
+        if not hasattr(self, "_all_conditions"):
+            self.evaluate()
+
+        return self._all_conditions
+
+    @property
     def global_result(self):
         """Return the project result combining both removal and plantation.
 
@@ -350,23 +364,49 @@ class PlantationEvaluator:
                 MinLengthCondition(self.hedge_data, R, None, None).evaluate()
             )
 
-        conditions = [
+        all_displayable = [
             c for c in conditions if c.result is not None and c.must_display()
         ]
-        self._conditions = sorted(conditions, key=attrgetter("order"))
+        self._all_conditions = sorted(all_displayable, key=attrgetter("order"))
+        self._conditions = sorted(
+            self.deduplicate_conditions(all_displayable), key=attrgetter("order")
+        )
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
 
+    def deduplicate_conditions(self, conditions):
+        """Keep only the strictest instance of each condition class.
+
+        Groups conditions by type and selects the strictest from each group
+        using is_stricter_than as a pairwise comparator.
+        """
+        groups = defaultdict(list)
+        for c in conditions:
+            groups[type(c)].append(c)
+
+        def compare_strictness(a, b):
+            if a.is_stricter_than(b):
+                return 1
+            if b.is_stricter_than(a):
+                return -1
+            return 0
+
+        return [
+            max(group, key=cmp_to_key(compare_strictness))
+            for group in groups.values()
+        ]
+
     def find_condition(self, condition_cls, evaluator=None):
         """Find an evaluated condition by type, optionally filtering by evaluator.
 
-        Evaluator filtering uses identity (``is``), which requires both this
-        evaluator and the caller to share the same moulinette instance.
+        Searches the full (non-deduplicated) condition list so that
+        per-regulation views can find conditions from a specific evaluator
+        even when that condition was removed from the global list.
         """
-        for condition in self.conditions:
+        for condition in self.all_conditions:
             if not isinstance(condition, condition_cls):
                 continue
             if evaluator is None or condition.criterion_evaluator is evaluator:
