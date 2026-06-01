@@ -185,7 +185,7 @@ class ZoneFactory(DjangoModelFactory):
 
 
 class TerresEmergeesMapFactory(MapFactory):
-    """A `terres_emergees` Map with no auto-generated zones.
+    """A `density_reference` Map with no auto-generated zones.
 
     The default `MapFactory` auto-creates one `ZoneFactory` zone via
     `RelatedFactoryList`, with the default `france_multipolygon` geometry.
@@ -194,7 +194,7 @@ class TerresEmergeesMapFactory(MapFactory):
     related-factory list to size 0.
     """
 
-    map_type = MAP_TYPES.terres_emergees
+    map_type = MAP_TYPES.density_reference
     zones = factory.RelatedFactoryList(
         "envergo.geodata.tests.factories.ZoneFactory",
         factory_related_name="map",
@@ -203,10 +203,10 @@ class TerresEmergeesMapFactory(MapFactory):
 
 
 class TerresEmergeesZoneFactory(DjangoModelFactory):
-    """A `terres_emergees` zone covering France's mainland.
+    """A `density_reference` zone covering France's mainland.
 
     Tests that exercise the on-land branch of the hedge density computation
-    need at least one `terres_emergees` zone in the DB — without one, the
+    need at least one `density_reference` zone in the DB — without one, the
     on-land check returns False and the code silently falls through to the
     off-land sentinel (`density=1.0`). The default `MapFactory` /
     `ZoneFactory` pair does not create such a zone, so use this factory
