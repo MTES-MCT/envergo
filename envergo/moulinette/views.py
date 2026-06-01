@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import DetailView, FormView, ListView
 
+from envergo.geodata.models import Map, MAP_TYPES
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
     get_matomo_tags,
@@ -894,8 +895,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         )
 
         grouped_criteria_by_regulation = {
-            k: list(v)
-            for k, v in groupby(criteria_list, key=attrgetter("regulation.regulation"))
+            k: list(v) for k, v in groupby(criteria_list, key=attrgetter("regulation"))
         }
         context["regulation_list"] = regulation_list
         context["grouped_criteria"] = grouped_criteria_by_regulation
@@ -904,4 +904,13 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["department_settings_form"] = (
             f"https://tally.so/r/Pd9b9e?{department_query_string}"
         )
+
+        # Compute the hedge density reference map list
+        density_maps = (
+            Map.objects.filter(map_type=MAP_TYPES.terres_emergees)
+            .filter(departments__contains=[department.department])
+            .defer("geometry")
+        )
+        context["density_maps"] = density_maps
+
         return context
