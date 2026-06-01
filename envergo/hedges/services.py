@@ -289,6 +289,9 @@ class PlantationEvaluator:
 
     @property
     def conditions(self):
+        """Deduplicated subset — when several evaluators produce the same condition
+        class, only the strictest is kept. See ``all_conditions`` for the full list.
+        """
         if not hasattr(self, "_conditions"):
             self.evaluate()
 
@@ -296,10 +299,8 @@ class PlantationEvaluator:
 
     @property
     def all_conditions(self):
-        """All evaluated conditions, including duplicates across evaluators.
-
-        Per-regulation views use this to show each evaluator's own conditions.
-        The ``conditions`` property returns the deduplicated list.
+        """Full list before deduplication, used when the caller needs to
+        disambiguate by evaluator. See ``conditions`` for the deduplicated subset.
         """
         if not hasattr(self, "_all_conditions"):
             self.evaluate()
@@ -330,7 +331,7 @@ class PlantationEvaluator:
         return f"{self.moulinette.result}_{self.result}"
 
     def evaluate(self):
-        """Returns if the plantation is compliant with the regulation"""
+        """Populate ``_all_conditions``, ``_conditions`` (deduplicated), and ``_result``."""
 
         R = self.replantation_coefficient
         conditions = []
@@ -364,47 +365,41 @@ class PlantationEvaluator:
                 MinLengthCondition(self.hedge_data, R, None, None).evaluate()
             )
 
-        all_displayable = [
-            c for c in conditions if c.result is not None and c.must_display()
-        ]
-        self._all_conditions = sorted(all_displayable, key=attrgetter("order"))
-        self._conditions = sorted(
-            self.deduplicate_conditions(all_displayable), key=attrgetter("order")
+        all_displayable = sorted(
+            [c for c in conditions if c.result is not None and c.must_display()],
+            key=attrgetter("order"),
         )
+        self._all_conditions = all_displayable
+        self._conditions = self.deduplicate_conditions(all_displayable)
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
 
-    def deduplicate_conditions(self, conditions):
-        """Keep only the strictest instance of each condition class.
-
-        Groups conditions by type and selects the strictest from each group
-        using is_stricter_than as a pairwise comparator.
+    @staticmethod
+    def deduplicate_conditions(conditions):
+        """When all conditions in a group tie (no compare_strictness override),
+        the first one in evaluator iteration order wins.
         """
         groups = defaultdict(list)
-        for c in conditions:
-            groups[type(c)].append(c)
+        for condition in conditions:
+            groups[type(condition)].append(condition)
 
-        def compare_strictness(a, b):
+        def strictness_cmp(a, b):
             if a.is_stricter_than(b):
                 return 1
             if b.is_stricter_than(a):
                 return -1
             return 0
 
-        return [
-            max(group, key=cmp_to_key(compare_strictness))
-            for group in groups.values()
-        ]
+        return [max(group, key=cmp_to_key(strictness_cmp)) for group in groups.values()]
 
     def find_condition(self, condition_cls, evaluator=None):
-        """Find an evaluated condition by type, optionally filtering by evaluator.
-
-        Searches the full (non-deduplicated) condition list so that
-        per-regulation views can find conditions from a specific evaluator
-        even when that condition was removed from the global list.
+        """Searches ``all_conditions`` so per-regulation views can locate a
+        specific evaluator's condition even after deduplication. Evaluator
+        filtering uses identity (``is``), so caller and condition must share
+        the same moulinette instance.
         """
         for condition in self.all_conditions:
             if not isinstance(condition, condition_cls):

@@ -685,6 +685,7 @@ class TestIsStricterThan:
     """Tests for the is_stricter_than / compare_strictness protocol."""
 
     def test_different_classes_raises_type_error(self):
+        """Comparing different condition classes raises TypeError."""
         hedge_data = HedgeDataFactory(
             hedges=[
                 HedgeFactory(length=100),
@@ -721,6 +722,7 @@ class TestIsStricterThan:
         assert not cond_b.is_stricter_than(cond_a)
 
     def test_ru_min_length_higher_requirement_is_stricter(self):
+        """Higher local R produces a longer minimum — the stricter condition."""
         hedge_data = HedgeDataFactory(
             hedges=[
                 HedgeFactory(length=100),
@@ -741,6 +743,7 @@ class TestIsStricterThan:
         assert not cond_low.is_stricter_than(cond_high)
 
     def test_ru_min_length_equal_requirement_neither_stricter(self):
+        """Same R on both conditions — neither claims stricter."""
         hedge_data = HedgeDataFactory(
             hedges=[
                 HedgeFactory(length=100),
@@ -759,9 +762,8 @@ class TestIsStricterThan:
         assert not cond_b.is_stricter_than(cond_a)
 
     def test_ru_quality_higher_lpm_is_stricter(self):
-        to_remove = HedgeFactory(
-            length=100, additionalData__type_haie="buissonnante"
-        )
+        """Higher per-hedge coefficients produce a larger LPm — the stricter condition."""
+        to_remove = HedgeFactory(length=100, additionalData__type_haie="buissonnante")
         hedge_data = HedgeDataFactory(
             hedges=[
                 to_remove,
@@ -808,5 +810,3 @@ class TestIsStricterThan:
 
         assert not cond_a.is_stricter_than(cond_b)
         assert not cond_b.is_stricter_than(cond_a)
-
-

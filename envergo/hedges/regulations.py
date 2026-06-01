@@ -83,6 +83,7 @@ class PlantationCondition(ABC):
 
         Only meaningful for conditions of the same class — raises TypeError
         otherwise. Delegates to compare_strictness for the actual comparison.
+        Subclasses should override compare_strictness, not this method.
         """
         if type(self) is not type(other):
             raise TypeError(
@@ -96,8 +97,8 @@ class PlantationCondition(ABC):
 
         Called by is_stricter_than after type validation. Override in subclasses
         that can be duplicated across evaluators. Returns False by default,
-        meaning neither instance claims to be stricter — deduplication picks
-        one arbitrarily.
+        meaning neither instance claims to be stricter — deduplication keeps
+        the first one in evaluator iteration order (deterministic).
         """
         return False
 
@@ -638,8 +639,7 @@ class RUQualityCondition(BaseQualityCondition):
         }
 
     def compare_strictness(self, other):
-        """The condition requiring more total compensation is stricter."""
-        return self.context.get("lpm", 0) > other.context.get("lpm", 0)
+        return self.context["lpm"] > other.context["lpm"]
 
     @property
     def text(self):

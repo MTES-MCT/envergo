@@ -16,7 +16,6 @@ from envergo.hedges.regulations import (
     EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
-    MinLengthCondition,
     NormandieMinLengthCondition,
     NormandieQualityCondition,
     PlantationConditionMixin,
