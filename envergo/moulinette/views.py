@@ -14,7 +14,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import DetailView, FormView, ListView
 
-from envergo.geodata.models import Map, MAP_TYPES
 from envergo.analytics.forms import FeedbackFormUseful, FeedbackFormUseless
 from envergo.analytics.utils import (
     get_matomo_tags,
@@ -24,6 +23,7 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
+from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
@@ -907,7 +907,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
 
         # Compute the hedge density reference map list
         density_maps = (
-            Map.objects.filter(map_type=MAP_TYPES.terres_emergees)
+            Map.objects.filter(map_type=MAP_TYPES.density_reference)
             .filter(departments__contains=[department.department])
             .defer("geometry")
         )
