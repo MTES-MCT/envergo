@@ -304,8 +304,11 @@ class PetitionProjectCreate(FormView):
         moulinette_url = form.cleaned_data["moulinette_url"]
         category = form.cleaned_data["category"]
 
-        moulinette = MoulinetteUrl(moulinette_url).get_moulinette()
-        single_procedure = moulinette.config.single_procedure
+        department = extract_param_from_url(moulinette_url, "department")
+        date_str = extract_param_from_url(moulinette_url, "date")
+        config_date = datetime.date.fromisoformat(date_str) if date_str else None
+        config = ConfigHaie.objects.get_valid_config(department, config_date)
+        single_procedure = config.single_procedure
 
         hedge_data_id = extract_param_from_url(moulinette_url, "haies")
         original_hedge_data = HedgeData.objects.get(pk=hedge_data_id)
@@ -313,12 +316,22 @@ class PetitionProjectCreate(FormView):
             single_procedure, category
         )
 
-        new_hedge_data = HedgeData.objects.create(
-            data=[h.toDict() for h in filtered_hedges]
-        )
-        updated_url = update_qs(moulinette_url, {"haies": str(new_hedge_data.id)})
-        form.instance.moulinette_url = updated_url
-        form.instance.hedge_data = new_hedge_data
+        if len(filtered_hedges) == len(original_hedge_data.data):
+            form.instance.hedge_data = original_hedge_data
+        else:
+            new_hedge_data = HedgeData.objects.create(
+                data=[h.toDict() for h in filtered_hedges]
+            )
+            has_pac = any(h.is_on_pac for h in filtered_hedges.to_remove())
+            updated_url = update_qs(
+                moulinette_url,
+                {
+                    "haies": str(new_hedge_data.id),
+                    "localisation_pac": "oui" if has_pac else "non",
+                },
+            )
+            form.instance.moulinette_url = updated_url
+            form.instance.hedge_data = new_hedge_data
 
         with transaction.atomic():
             petition_project = form.save()
