@@ -395,8 +395,7 @@ class PlantationEvaluator:
             return 0
 
         return [
-            max(group, key=cmp_to_key(compare_strictness))
-            for group in groups.values()
+            max(group, key=cmp_to_key(compare_strictness)) for group in groups.values()
         ]
 
     def find_condition(self, condition_cls, evaluator=None):

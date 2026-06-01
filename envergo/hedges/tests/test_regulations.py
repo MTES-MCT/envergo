@@ -759,9 +759,7 @@ class TestIsStricterThan:
         assert not cond_b.is_stricter_than(cond_a)
 
     def test_ru_quality_higher_lpm_is_stricter(self):
-        to_remove = HedgeFactory(
-            length=100, additionalData__type_haie="buissonnante"
-        )
+        to_remove = HedgeFactory(length=100, additionalData__type_haie="buissonnante")
         hedge_data = HedgeDataFactory(
             hedges=[
                 to_remove,
@@ -808,5 +806,3 @@ class TestIsStricterThan:
 
         assert not cond_a.is_stricter_than(cond_b)
         assert not cond_b.is_stricter_than(cond_a)
-
-
