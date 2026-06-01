@@ -645,7 +645,7 @@ def trim_land(geom):
             )
             FROM unioned_geom u, input_poly i;
         """,
-            [geom.ewkt, geom.ewkt, MAP_TYPES.terres_emergees],
+            [geom.ewkt, geom.ewkt, MAP_TYPES.density_reference],
         )
         wkt = cursor.fetchone()[0]
         if wkt:

@@ -1,0 +1,17 @@
+{% load moulinette utils %}
+
+<li class="fr-mb-2w">
+  <p class="fr-mb-1w">
+    <strong>{{ map.name }}</strong>
+  </p>
+  <p class="fr-text--sm fr-mb-1w">
+    <strong>Description :</strong> {{ map.description|safe|urlize_html|linebreaksbr }}
+  </p>
+  {% if map.file %}
+    <div class="fr-mb-1w">
+      <a class="fr-link fr-icon-download-line fr-link--icon-right"
+         target="_self"
+         href="{{ map.file.url }}">{{ map.file }}</a>
+    </div>
+  {% endif %}
+</li>
