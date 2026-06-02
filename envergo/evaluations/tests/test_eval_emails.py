@@ -78,23 +78,29 @@ def fake_moulinette(
     # We create mocks based on a real regulation, so it's easier to fake results
     regulation = RegulationFactory()
     sage_perimeter = Mock(contact_email="sage@example.com")
+    is_evalenv_cas_par_cas = (
+        evalenv is not None and evalenv.startswith("cas_par_cas")
+    )
     moulinette.regulations = [
         Mock(
             wraps=regulation,
             result=lse,
             slug="loi_sur_leau",
+            is_cas_par_cas=False,
             do_not_call_in_templates=True,
         ),
         Mock(
             wraps=regulation,
             result=n2000,
             slug="natura2000",
+            is_cas_par_cas=False,
             do_not_call_in_templates=True,
         ),
         Mock(
             wraps=regulation,
             result=evalenv,
             slug="eval_env",
+            is_cas_par_cas=is_evalenv_cas_par_cas,
             do_not_call_in_templates=True,
         ),
         Mock(
@@ -102,6 +108,7 @@ def fake_moulinette(
             result=sage,
             perimeters=Mock(all=MagicMock(return_value=[sage_perimeter])),
             slug="sage",
+            is_cas_par_cas=False,
             do_not_call_in_templates=True,
             results_by_perimeter=(
                 sage_results_by_perimeter
