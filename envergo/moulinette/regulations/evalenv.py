@@ -768,6 +768,14 @@ ICPE_REGIME_CHOICES = (
     (ICPE_REGIME_AUCUN, "Aucune ICPE"),
 )
 
+ICPE_REGIME_HELP_TEXT = (
+    "Les ICPE soumises à autorisation (A) ne sont pas traitées par le simulateur, "
+    "car elles correspondent à des projets complexes et de grande envergure, au traitement "
+    "administratif souvent spécifique.<br><br>"
+    "Si le projet modifie le régime de classement ICPE de l'installation, "
+    "choisir celui qu'aurait l'installation une fois le projet réalisé"
+)
+
 
 class ICPEForm(OptionalFormMixin, forms.Form):
     prefix = "evalenv_icpe"
@@ -789,16 +797,19 @@ class ICPEForm(OptionalFormMixin, forms.Form):
     )
     icpe_regime = DisplayChoiceField(
         label="Quel est le régime de classement de l'ICPE ?",
-        help_text="Les ICPE soumises à autorisation (A) ne sont pas traitées par le simulateur, "
-        "car elles correspondent à des projets complexes et de grande envergure, au traitement "
-        "administratif souvent spécifique.<br><br>"
-        "Si le projet modifie le régime de classement ICPE de l'installation, "
-        "choisir celui qu'aurait l'installation une fois le projet réalisé",
+        help_text=ICPE_REGIME_HELP_TEXT,
         required=True,
         widget=forms.RadioSelect,
         choices=ICPE_REGIME_CHOICES,
+        get_display_value=lambda value: (
+            "Inconnu"
+            if value == ICPE_REGIME_INCONNU
+            else dict(ICPE_REGIME_CHOICES).get(value)
+        ),
         get_display_help_text=lambda value: (
-            "Inconnu" if value == ICPE_REGIME_INCONNU else "À l'issue du projet"
+            "À l'issue du projet"
+            if value == ICPE_REGIME_INCONNU
+            else ICPE_REGIME_HELP_TEXT
         ),
     )
 

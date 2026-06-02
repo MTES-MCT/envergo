@@ -27,9 +27,13 @@
     modification, il n'y a pas matière à instruction ICPE et donc pas d'examen au cas par cas.
   </p>
 
-{% elif criterion.get_evaluator.icpe_projet == 'modif_sans_pac' and criterion.get_evaluator.icpe_regime == 'declaration'}
+{% elif criterion.get_evaluator.icpe_projet == 'modif_sans_pac' and criterion.get_evaluator.icpe_regime == 'declaration' %}
 
-  <p>Au vu des informations saisies, le projet concerne une installation classée pour la protection de l’environnement (ICPE) soumise à déclaration.</p>
+  <p>
+    Au vu des informations saisies, le projet concerne une installation classée pour la protection de l’environnement (ICPE) soumise à déclaration.
+  </p>
 
-  <p>Il n’est donc pas concerné par cette rubrique de l’évaluation environnementale, qui ne porte que sur les ICPE soumises à enregistrement ou autorisation.</p>
+  <p>
+    Il n’est donc pas concerné par cette rubrique de l’évaluation environnementale, qui ne porte que sur les ICPE soumises à enregistrement ou autorisation.
+  </p>
 {% endif %}
