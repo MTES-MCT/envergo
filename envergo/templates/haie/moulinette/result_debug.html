@@ -45,7 +45,7 @@
     <h2>Conditions d'acceptabilité</h2>
 
     <ul class="fr-mb-2w">
-      {% for condition in plantation_evaluation.conditions %}
+      {% for condition in plantation_evaluation.all_conditions %}
         <li>
           {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
           {% if condition.context %}

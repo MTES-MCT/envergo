@@ -10,6 +10,8 @@ from envergo.hedges.regulations import (
     EssencesBocageresCondition,
     MinLengthCondition,
     PacParcelCondition,
+    RUMinLengthCondition,
+    RUQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
     TreeAlignmentsCondition,
@@ -332,14 +334,13 @@ def test_hedge_quality_should_not_be_sufficient_ru(ep_criterion_evaluator_ru):
     }
 
 
-def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
+def test_strengthening_condition(calvados_hedge_data):
     hedge_data = calvados_hedge_data
-    catalog = {
-        "reimplantation": "replantation",
-        "effective_coefficients": {"D1": 1.0, "D2": 1.0, "D3": 1.0},
-    }
+    coefficients = {"D1": 1.0, "D2": 1.0, "D3": 1.0}
+    catalog = {"reimplantation": "replantation"}
+    evaluator = make_mock_evaluator(effective_coefficients=coefficients)
 
-    condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, evaluator, catalog)
     condition.evaluate()
     assert condition.result
     assert condition.context["strengthening_length"] == 0.0
@@ -348,7 +349,7 @@ def test_strengthening_condition(calvados_hedge_data, ep_criterion_evaluator):
     hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
     hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
 
-    condition = StrenghteningCondition(hedge_data, 1.0, ep_criterion_evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data, 1.0, evaluator, catalog)
     condition.evaluate()
     lpm = condition.compute_lpm()
     assert not condition.result
@@ -680,95 +681,132 @@ class TestAisneQualityConditionSubstitution:
         assert condition.result
 
 
-class SpyCondition(MinLengthCondition):
-    """Condition that records the catalog it receives.
+class TestIsStricterThan:
+    """Tests for the is_stricter_than / compare_strictness protocol."""
 
-    plantation_evaluate() builds a private catalog copy with injected keys
-    before passing it to each condition. Real conditions consume the catalog
-    internally, so the only way to assert on what was injected is to
-    intercept the catalog at construction time.
-    """
-
-    captured_catalogs = []
-
-    def evaluate(self):
-        SpyCondition.captured_catalogs.append(dict(self.catalog))
-        self.result = True
-        return self
-
-
-class TestPlantationEvaluateInjection:
-    """Test that plantation_evaluate injects effective_coefficients correctly."""
-
-    def setup_method(self):
-        SpyCondition.captured_catalogs = []
-
-    def make_evaluator(self, slug, catalog, plantation_conditions=None):
-        """Build a mock evaluator with the PlantationConditionMixin interface."""
-        ev = Mock()
-        ev.slug = slug
-        ev.catalog = catalog
-        ev.plantation_conditions = plantation_conditions or [SpyCondition]
-        ev.plantation_skip_results = frozenset()
-        ev.result_code = "soumis"
-        ev.get_replantation_coefficient.return_value = 1.0
-
-        from envergo.hedges.regulations import PlantationConditionMixin
-
-        ev.plantation_evaluate = PlantationConditionMixin.plantation_evaluate.__get__(
-            ev
+    def test_different_classes_raises_type_error(self):
+        """Comparing different condition classes raises TypeError."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
         )
-        return ev
+        evaluator = make_mock_evaluator(single_procedure=True)
+        evaluator.get_replantation_coefficient.return_value = 1.0
 
-    def test_slug_key_takes_precedence(self):
-        """When {slug}_effective_coefficients exists, it is injected."""
-        raw = {"h1": 1.0}
-        effective = {"h1": 1.5}
-        moulinette_catalog = {
-            "per_hedge_coefficients": raw,
-            "myslug_effective_coefficients": effective,
-        }
-        ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = HedgeDataFactory(hedges=[])
+        min_length = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        min_length.evaluate()
+        safety = SafetyCondition(hedge_data, 1.0, evaluator)
+        safety.evaluate()
 
-        ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
+        with pytest.raises(TypeError):
+            min_length.is_stricter_than(safety)
 
-        captured = SpyCondition.captured_catalogs[0]
-        assert captured["effective_coefficients"] is effective
+    def test_base_class_returns_false(self):
+        """Non-overridden compare_strictness returns False (no deduplication)."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator = make_mock_evaluator(single_procedure=True)
 
-    def test_fallback_to_raw_when_no_slug_key(self):
-        """Without a slug key, per_hedge_coefficients becomes effective."""
-        raw = {"h1": 1.0}
-        moulinette_catalog = {}
-        ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = HedgeDataFactory(hedges=[])
+        cond_a = MinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_a.evaluate()
+        cond_b = MinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_b.evaluate()
 
-        ev.plantation_evaluate(hedge_data, 1.0, {"per_hedge_coefficients": raw})
+        assert not cond_a.is_stricter_than(cond_b)
+        assert not cond_b.is_stricter_than(cond_a)
 
-        captured = SpyCondition.captured_catalogs[0]
-        assert captured["effective_coefficients"] is raw
+    def test_ru_min_length_higher_requirement_is_stricter(self):
+        """Higher local R produces a longer minimum — the stricter condition."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_low = make_mock_evaluator(single_procedure=True)
+        evaluator_low.get_replantation_coefficient.return_value = 1.0
+        evaluator_high = make_mock_evaluator(single_procedure=True)
+        evaluator_high.get_replantation_coefficient.return_value = 1.5
 
-    def test_no_coefficients_at_all(self):
-        """When neither key exists, effective_coefficients defaults to empty dict."""
-        ev = self.make_evaluator("myslug", {})
-        hedge_data = HedgeDataFactory(hedges=[])
+        cond_low = RUMinLengthCondition(hedge_data, 1.0, evaluator_low)
+        cond_low.evaluate()
+        cond_high = RUMinLengthCondition(hedge_data, 1.5, evaluator_high)
+        cond_high.evaluate()
 
-        ev.plantation_evaluate(hedge_data, 1.0, {})
+        assert cond_high.is_stricter_than(cond_low)
+        assert not cond_low.is_stricter_than(cond_high)
 
-        captured = SpyCondition.captured_catalogs[0]
-        assert captured["effective_coefficients"] == {}
+    def test_ru_min_length_equal_requirement_neither_stricter(self):
+        """Same R on both conditions — neither claims stricter."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator = make_mock_evaluator(single_procedure=True)
+        evaluator.get_replantation_coefficient.return_value = 1.0
 
-    def test_original_catalog_not_mutated(self):
-        """The passed-in catalog dict is not modified."""
-        raw = {"h1": 1.0}
-        effective = {"h1": 2.0}
-        moulinette_catalog = {"myslug_effective_coefficients": effective}
-        ev = self.make_evaluator("myslug", moulinette_catalog)
-        hedge_data = HedgeDataFactory(hedges=[])
+        cond_a = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_a.evaluate()
+        cond_b = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_b.evaluate()
 
-        original_catalog = {"per_hedge_coefficients": raw}
-        original_keys = set(original_catalog.keys())
+        assert not cond_a.is_stricter_than(cond_b)
+        assert not cond_b.is_stricter_than(cond_a)
 
-        ev.plantation_evaluate(hedge_data, 1.0, original_catalog)
+    def test_ru_quality_higher_lpm_is_stricter(self):
+        """Higher per-hedge coefficients produce a larger LPm — the stricter condition."""
+        to_remove = HedgeFactory(length=100, additionalData__type_haie="buissonnante")
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                to_remove,
+                HedgeFactory(
+                    to_plant=True,
+                    length=200,
+                    additionalData__type_haie="buissonnante",
+                ),
+            ]
+        )
+        hedge_id = to_remove.id
+        evaluator_low = make_mock_evaluator(
+            single_procedure=True,
+            effective_coefficients={hedge_id: 1.0},
+        )
+        evaluator_high = make_mock_evaluator(
+            single_procedure=True,
+            effective_coefficients={hedge_id: 1.5},
+        )
 
-        assert set(original_catalog.keys()) == original_keys
+        cond_low = RUQualityCondition(hedge_data, 1.0, evaluator_low)
+        cond_low.evaluate()
+        cond_high = RUQualityCondition(hedge_data, 1.5, evaluator_high)
+        cond_high.evaluate()
+
+        assert cond_high.is_stricter_than(cond_low)
+        assert not cond_low.is_stricter_than(cond_high)
+
+    def test_safety_uses_base_behavior(self):
+        """SafetyCondition is stateless — neither claims stricter, one is picked arbitrarily."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_a = make_mock_evaluator(single_procedure=True)
+        evaluator_b = make_mock_evaluator(single_procedure=True)
+
+        cond_a = SafetyCondition(hedge_data, 1.0, evaluator_a)
+        cond_a.evaluate()
+        cond_b = SafetyCondition(hedge_data, 1.0, evaluator_b)
+        cond_b.evaluate()
+
+        assert not cond_a.is_stricter_than(cond_b)
+        assert not cond_b.is_stricter_than(cond_a)
