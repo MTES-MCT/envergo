@@ -806,11 +806,7 @@ class ICPEForm(OptionalFormMixin, forms.Form):
             if value == ICPE_REGIME_INCONNU
             else dict(ICPE_REGIME_CHOICES).get(value)
         ),
-        get_display_help_text=lambda value: (
-            "À l'issue du projet"
-            if value == ICPE_REGIME_INCONNU
-            else ICPE_REGIME_HELP_TEXT
-        ),
+        display_help_text="À l'issue du projet",
     )
 
     def clean(self):
