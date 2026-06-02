@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.urls import reverse
 
@@ -113,7 +115,7 @@ def test_evaluation_email_sending(admin_client, evaluation, mailoutbox):
 
     # Force the moulinette result
     moulinette = evaluation.get_moulinette()
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     evaluation._moulinette.result = "soumis"
 
     url = reverse("admin:evaluations_evaluation_email_avis", args=[evaluation.pk])
@@ -305,3 +307,21 @@ def test_display_published_version_message(evaluation, admin_client, admin_user)
     content = res.content.decode()
     # THEN There is no message indicating that the version is outdated
     assert "✅ Publié" in content
+
+
+def test_publish_view_handles_integrity_error(admin_client, admin_user, evaluation):
+    """When unpublish fails silently (e.g. race condition), the IntegrityError
+    should be caught gracefully instead of crashing with TransactionManagementError."""
+    # Ensure a published version already exists so the constraint fires
+    existing_version = evaluation.versions.first()
+    existing_version.published = True
+    existing_version.save()
+
+    url = reverse("admin:evaluations_evaluation_publish", args=[evaluation.uid])
+    with patch.object(type(evaluation), "unpublish", lambda self: None), patch.object(
+        type(evaluation), "render_content", lambda self: "<p>test</p>"
+    ):
+        res = admin_client.post(url, {"message": "test publish"}, follow=True)
+
+    assert res.status_code == 200
+    assert "Une erreur est survenue" in res.content.decode()

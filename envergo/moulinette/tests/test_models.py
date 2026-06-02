@@ -94,7 +94,7 @@ def test_moulinette_config(moulinette_data):
     ConfigAmenagementFactory(is_activated=False)
     moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.has_config()
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
 
 @pytest.mark.parametrize("footprint", [50])

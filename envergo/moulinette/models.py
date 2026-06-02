@@ -15,7 +15,7 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import DataError, connection, models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
     CheckConstraint,
@@ -52,7 +52,7 @@ from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeData, HedgeTypeFactory
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList, HedgeTypeFactory
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -1874,9 +1874,8 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         all_forms.extend(self.additional_forms)
         all_forms.extend(self.optional_forms)
 
-        triage_form = self.get_triage_form()
-        if triage_form:
-            all_forms.append(triage_form)
+        if self.triage_form:
+            all_forms.append(self.triage_form)
 
         return all_forms
 
@@ -1916,35 +1915,38 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
         data = {}
         for form in self.all_forms:
-            form.full_clean()
             if hasattr(form, "prefixed_cleaned_data"):
                 data.update(form.prefixed_cleaned_data)
-            elif hasattr(form, "cleaned_data"):
+            elif form.is_valid() and hasattr(form, "cleaned_data"):
                 data.update(form.cleaned_data)
         return data
 
+    @cached_property
     def form_errors(self):
-        """Return the list of all form validation errors."""
+        """Return the list of all form validation errors.
 
+        Cached because form data is immutable after moulinette construction,
+        so repeated validation always produces the same result.
+        """
         errors = {}
         for form in self.get_all_forms():
-            form.full_clean()
             for k, v in form.errors.items():
                 errors[k] = v
         return errors
 
     def is_valid(self):
         """The moulinette is valid if it can run the evaluation.
+
         - the main form is valid
         - all additional required forms are valid
         - all activated optional forms are valid
         """
-        return self.main_form.is_valid() and not bool(self.form_errors())
+        return self.main_form.is_valid() and not bool(self.form_errors)
 
     def has_missing_data(self):
         """Make sure all the data required to compute the result is provided."""
 
-        return bool(self.form_errors())
+        return bool(self.form_errors)
 
     def cleaned_additional_data(self):
         """Return combined additional data from custom criterion forms."""
@@ -2593,8 +2595,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         return result or RESULTS.non_soumis
 
-    def summary(self):
-        """Build a data summary, for analytics purpose."""
+    @cached_property
+    def summary_data(self):
+        """Compute the data summary once.
+
+        Callers that need to mutate the result should use summary() which
+        returns a fresh copy each time.
+        """
         summary = self.data.copy()
         summary.update(self.cleaned_additional_data())
 
@@ -2607,6 +2614,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             haies = self.catalog["haies"]
             summary.update(haies.get_statistics())
         return summary
+
+    def summary(self):
+        """Return a data summary for analytics.
+
+        Returns a copy so callers can mutate it freely.
+        """
+        return self.summary_data.copy()
 
     def get_debug_context(self):
         """Return moulinette-wide debug context.
@@ -2657,19 +2671,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html
 
-        hedge_id = None
-        hedge_data = None
-        if "haies" in request.GET and request.method == "GET":
-            hedge_id = request.GET["haies"]
-        elif "haies" in request.POST and request.method == "POST":
-            hedge_id = request.POST["haies"]
-        if hedge_id:
-            try:
-                hedge_data = HedgeData.objects.get(id=hedge_id)
-            except (HedgeData.DoesNotExist, ValidationError):
-                pass
-
-        context["hedge_data"] = hedge_data
+        context["hedge_data"] = self.catalog.get("haies", None)
         # Fetch all the regulations that have perimeters intersected by hedges to plant but not hedges to remove
         # For single procedure moulinette, filter the regulations that cannot switch the result to "autorisation"
         context["hedges_to_plant_intersecting_regulations_perimeter"] = {
@@ -2708,12 +2710,17 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         if dept is None:
             return None
 
-        qs = (
-            Department.objects.defer("geometry")
-            .annotate(centroid=Centroid("geometry"))
-            .filter(department=dept)
-        )
-        return qs.first()
+        try:
+            qs = (
+                Department.objects.defer("geometry")
+                .annotate(centroid=Centroid("geometry"))
+                .filter(department=dept)
+            )
+            return qs.first()
+        except DataError:
+            # Malformed values raise a raw psycopg DataError, causing a 500. Known triggers:
+            # NUL bytes, invalid encoding, or values exceeding the PK column length.
+            return None
 
     def get_regulations(self):
         """Find the activated regulations and their criteria."""
@@ -2727,13 +2734,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return regulations
 
     def get_perimeters(self):
-        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant)
+        """Fetch the perimeters that are intersecting at least one hedge (either to remove or to plant).
 
         Contrary to the criteria, using the department's centroid as a basis does not make sense for the perimeters.
         """
         hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
         if hedges:
-            zone_subquery = self.get_zone_subquery(hedges)
+            map_ids = self.get_intersecting_map_ids(hedges)
             perimeters = (
                 Perimeter.objects.annotate(
                     distance=Value(
@@ -2741,23 +2748,21 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                     )  # We use an exists subquery that check for intersection so the distance is 0
                 )
                 .annotate(geometry=F("activation_map__geometry"))
-                .filter(Exists(zone_subquery))
+                .filter(activation_map_id__in=map_ids)
                 .order_by("id")
                 .distinct("id")
             )
         else:
-            # if there is no hedge in the project
-            # no perimeters can be activated as we do not know where the project will be.
             perimeters = Perimeter.objects.none()
 
         return perimeters
 
     def get_criteria(self):
-        """Fetch the criteria that can be activated for this project
+        """Fetch the criteria that can be activated for this project.
 
-        There is two kind of activation mode for a criterion:
-         * department_centroid : the criteria is activated if the department centroid is in the activation map
-         * hedges_intersection : the criteria is activated if the activation map intersects with the hedges to remove
+        There are two activation modes for a criterion:
+         * department_centroid: activated if the department centroid is in the activation map
+         * hedges_intersection: activated if the activation map intersects with the hedges
         """
         dept_centroid = self.department.centroid
         hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
@@ -2778,24 +2783,44 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         # Filter for hedges_intersection activation mode
         hedges_intersection_criteria = super().get_criteria().none()
         if hedges:
-            zone_subquery = self.get_zone_subquery(hedges)
+            map_ids = self.get_intersecting_map_ids(hedges)
             hedges_intersection_criteria = (
                 super()
                 .get_criteria()
-                .filter(Exists(zone_subquery), activation_mode="hedges_intersection")
+                .filter(
+                    activation_map_id__in=map_ids,
+                    activation_mode="hedges_intersection",
+                )
             )
 
         return department_centroid_criteria | hedges_intersection_criteria
 
-    def get_zone_subquery(self, hedges):
-        query = Q()
-        for hedge in hedges:
-            query |= Q(geometry__intersects=hedge.geos_geometry)
+    def get_intersecting_map_ids(self, hedges):
+        """Find all map IDs whose zones intersect any of the given hedges.
 
-        zone_subquery = Zone.objects.filter(
-            Q(map_id=OuterRef("activation_map_id")) & query
-        ).values("id")
-        return zone_subquery
+        Zone.geometry is a geography column, so ST_Intersects defaults to
+        spheroidal math — accurate but very expensive on complex multipolygons
+        (some zones have tens of thousands of points). The ::geometry cast
+        switches to planar (Cartesian) math, which is orders of magnitude
+        faster. At the scale of hedges (~hundreds of meters), the difference
+        between spheroidal and planar intersection is submillimeter.
+
+        The geography GIST index still handles bounding box pre-filtering (the
+        && operator), so only a few dozen candidate zones reach the exact check.
+        """
+        if hasattr(self, "_intersecting_map_ids"):
+            return self._intersecting_map_ids
+
+        merged = HedgeList(hedges).to_multilinestring()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT DISTINCT map_id FROM geodata_zone "
+                "WHERE geometry && %s::geography "
+                "AND ST_Intersects(geometry::geometry, %s::geometry)",
+                [merged.ewkt, merged.ewkt],
+            )
+            self._intersecting_map_ids = [row[0] for row in cursor.fetchall()]
+        return self._intersecting_map_ids
 
     def summary_fields(self):
         """Add fake fields to display pac related data."""

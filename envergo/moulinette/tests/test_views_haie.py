@@ -340,6 +340,18 @@ def test_moulinette_post_form_error(client):
     assert "data" in error_event.metadata
     assert error_event.metadata["data"] == data
 
+    # GIVEN an url with mtm params
+    res = client.post(
+        f"{url}?department=44&element=haie&travaux=destruction&mtm_campaign=campaign",
+        data,
+    )
+    # THEN mtm_keys are in event
+    error_event = Event.objects.filter(
+        category="erreur", event="formulaire-simu"
+    ).last()
+    assert "mtm_campaign" in error_event.metadata
+    assert error_event.metadata["mtm_campaign"] == "campaign"
+
 
 def test_moulinette_post_form_max_hedge_length_exceeded(client):
     """The form shows an error when hedges to remove exceed MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH."""
@@ -1012,3 +1024,11 @@ def test_triage_get_initial_normalizes_projet_specifique_to_projet(client):
         assert (
             form.initial.get("contexte") == "projet"
         ), f"Expected initial contexte='projet' when URL has contexte='{contexte}'"
+
+
+def test_triage_nul_byte_in_department(client):
+    """NUL bytes in the department param should not cause a DataError (Sentry #267046)."""
+    DCConfigHaieFactory()
+    url = reverse("triage")
+    res = client.get(f"{url}?department=44%00")
+    assert res.status_code in (200, 302)

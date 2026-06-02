@@ -350,13 +350,28 @@ class PlantationEvaluator:
                 MinLengthCondition(self.hedge_data, R, None, None).evaluate()
             )
 
-        conditions = filter(lambda c: c.result is not None, conditions)
+        conditions = [
+            c for c in conditions if c.result is not None and c.must_display()
+        ]
         self._conditions = sorted(conditions, key=attrgetter("order"))
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
+
+    def find_condition(self, condition_cls, evaluator=None):
+        """Find an evaluated condition by type, optionally filtering by evaluator.
+
+        Evaluator filtering uses identity (``is``), which requires both this
+        evaluator and the caller to share the same moulinette instance.
+        """
+        for condition in self.conditions:
+            if not isinstance(condition, condition_cls):
+                continue
+            if evaluator is None or condition.criterion_evaluator is evaluator:
+                return condition
+        return None
 
     def get_context(self):
         context = {}
@@ -382,6 +397,5 @@ class PlantationEvaluator:
                 "context": condition.context,
             }
             for condition in self.conditions
-            if condition.must_display()
         ]
         return data

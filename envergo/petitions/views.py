@@ -778,6 +778,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_action = None
     context_object_name = "petition_project"
 
+    def get_object(self, queryset=None):
+        """Return the cached object, fetching it only once per request."""
+        if hasattr(self, "object") and self.object is not None:
+            return self.object
+        return super().get_object(queryset)
+
     def has_view_permission(self, request, object):
         """Check if request has view permission on object"""
         return object.has_view_permission(request.user)
@@ -800,6 +806,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         queryset = (
             PetitionProject.objects.all()
+            .select_related("department")
+            .defer("department__geometry")
             .prefetch_related(
                 Prefetch(
                     "status_history",
@@ -1065,6 +1073,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context = super().get_context_data(**kwargs)
         moulinette = self.object.get_moulinette()
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
 
         hedge_data = context["petition_project"].hedge_data
         context["ign_url"] = get_ign_centered_url(hedge_data)

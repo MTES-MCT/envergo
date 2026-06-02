@@ -28,7 +28,6 @@ from envergo.evaluations.models import (
     Evaluation,
     EvaluationSnapshot,
     EvaluationVersion,
-    RecipientStatus,
     RegulatoryNoticeLog,
     Request,
     RequestFile,
@@ -92,7 +91,7 @@ class EvaluationAdminForm(EvalAdminFormMixin, forms.ModelForm):
             moulinette = MoulinetteClass(moulinette_data)
             if not moulinette.is_valid():
                 self.add_error("moulinette_url", _("The moulinette url is invalid."))
-                for field, errors in moulinette.form_errors().items():
+                for field, errors in moulinette.form_errors.items():
                     for error in errors:
                         self.add_error(
                             "moulinette_url", mark_safe(f"{field} : {error}")
@@ -287,9 +286,12 @@ class EvaluationAdmin(admin.ModelAdmin):
             if form.is_valid():
                 message = form.cleaned_data.get("message")
                 try:
-                    evaluation.unpublish()
-                    version = evaluation.create_version(request.user, message)
-                    version.save()
+                    # Savepoint: if save() raises IntegrityError, only this block
+                    # rolls back, keeping the outer transaction usable for template rendering.
+                    with transaction.atomic():
+                        evaluation.unpublish()
+                        version = evaluation.create_version(request.user, message)
+                        version.save()
                     admin_url = reverse(
                         "admin:evaluations_evaluation_change", args=[evaluation.uid]
                     )
@@ -488,12 +490,10 @@ class EvaluationAdmin(admin.ModelAdmin):
         One sent regulatory notice (from the admin) can generate several emails
         because there are several recipients.
         """
-        statuses = RecipientStatus.objects.order_by("recipient")
         logs = (
             RegulatoryNoticeLog.objects.filter(evaluation=obj)
             .order_by("-sent_at")
             .select_related("sender")
-            .prefetch_related(Prefetch("recipient_statuses", queryset=statuses))
         )
 
         content = render_to_string(

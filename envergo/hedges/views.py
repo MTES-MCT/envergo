@@ -217,6 +217,9 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         }
         return kwargs
 
+    def get(self, request, *args, **kwargs):
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
     def post(self, request, *args, **kwargs):
         if not self.moulinette.is_valid():
             return JsonResponse({"error": "Moulinette is not valid"}, status=400)

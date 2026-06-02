@@ -10,6 +10,7 @@ from gql.transport.exceptions import TransportQueryError
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.hedges.models import HedgeTypeBase
+from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
@@ -347,7 +348,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     )
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     info = ep_aisne_get_instructor_view_context(
         moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
     )
@@ -478,9 +479,13 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     )
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
+    plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     info = ep_normandie_get_instructor_view_context(
-        moulinette.ep.ep_normandie._evaluator, petition_project, moulinette
+        moulinette.ep.ep_normandie._evaluator,
+        petition_project,
+        moulinette,
+        plantation_eval,
     )
 
     expected_result = {
@@ -554,19 +559,32 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
         ],
         "quality_condition": {
             "LC": {
-                "alignement": 0,
+                "alignement": 0.0,
                 "arbustive": pytest.approx(11.020243366815471),
-                "buissonnante": 0,
-                "degradee": 0,
-                "mixte": 0,
+                "buissonnante": 0.0,
+                "degradee": 0.0,
+                "mixte": 0.0,
             },
-            "LP": {"arbustive": pytest.approx(27.55060841703869)},
+            "LP": {
+                "alignement": 0.0,
+                "arbustive": pytest.approx(27.55060841703869),
+                "buissonnante": 0.0,
+                "degradee": 0.0,
+                "mixte": 0.0,
+            },
             "LPm": {
-                "alignement": 0,
+                "alignement": 0.0,
                 "arbustive": pytest.approx(38.57085178385416),
-                "buissonnante": 0,
-                "degradee": 0,
-                "mixte": 0,
+                "buissonnante": 0.0,
+                "degradee": 0.0,
+                "mixte": 0.0,
+            },
+            "LPm_r": {
+                "alignement": 0.0,
+                "arbustive": pytest.approx(30.85668142708333),
+                "buissonnante": 0.0,
+                "degradee": 0.0,
+                "mixte": 0.0,
             },
             "lm": pytest.approx(11.020243366815471),
             "lp": pytest.approx(27.55060841703869),
@@ -646,7 +664,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     DCConfigHaieFactory()
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
     info = bcae8_get_instructor_view_context(
         moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
     )
@@ -784,11 +802,13 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     DCConfigHaieFactory()
 
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
+    plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     context = alignement_arbres_get_instructor_view_context(
         moulinette.alignement_arbres.alignement_arbres._evaluator,
         petition_project,
         moulinette,
+        plantation_eval,
     )
     assert "Amélioration des conditions d’exploitation agricole" in context["motif"]
 

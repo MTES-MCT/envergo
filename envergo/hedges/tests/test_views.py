@@ -86,3 +86,9 @@ def test_hedge_input_uses_config_matching_simulation_date(client):
     res = client.get(url, {"department": "44", "date": today_str})
     assert res.status_code == 200
     assert 'name="plantation-connexion_boisement"' not in res.content.decode()
+
+
+def test_hedge_conditions_get_returns_405(client):
+    url = reverse("hedge_conditions")
+    res = client.get(url, {"department": "44"})
+    assert res.status_code == 405
