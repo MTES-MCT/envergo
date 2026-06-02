@@ -8,6 +8,7 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.petitions.demarches_simplifiees.models import DossierState
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -163,3 +164,67 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 
     # The DS API should never be called since no valid config exists
     mock_post.assert_not_called()
+
+
+@pytest.mark.haie
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_dossier_submission_admin_alert_stage_instruction(
+    mock_post, mock_notify_command, mock_notify_model
+):
+    """Test if project is with stage instruction on creation when DS returns 'En instruction'"""
+    # Define the mock response
+    mock_response_1 = {
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {
+                    "hasNextPage": True,
+                    "endCursor": "MjAyNC0xMS0xOVQxMDoyMzowMy45NTc0NDAwMDBaOzIxMDU5Njc1",
+                },
+                "nodes": [
+                    {
+                        "number": 21059675,
+                        "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+                        "state": "en_construction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
+                    },
+                    {
+                        "number": 123,
+                        "id": "UW9zc2llci0yRiO3ODQ0Mw==",
+                        "state": "en_instruction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "champs": [
+                            {
+                                "id": "ABC123",
+                                "label": "Url du simulateur",
+                                "stringValue": "",
+                            },
+                        ],
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
+                    },
+                ],
+            },
+        }
+    }
+    mock_post.side_effect = [mock_response_1]
+    project = PetitionProjectFactory()
+    assert "date=" not in project.moulinette_url
+    DCConfigHaieFactory()
+    call_command("dossier_submission_admin_alert")
+
+    project.refresh_from_db()
+    assert project.demarches_simplifiees_state == DossierState.en_instruction.value
+    assert project.status_history.last().stage == "instruction_d"
