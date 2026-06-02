@@ -30,6 +30,12 @@ ZONE_U_THRESHOLD = 40000
 class EvalEnvRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Eval Env"
 
+    @property
+    def is_cas_par_cas(self):
+        """Whether the eval env result is any variant of cas par cas."""
+
+        return self.result is not None and self.result.startswith("cas_par_cas")
+
     ACTIONS_TO_TAKE_MATRIX = {
         "systematique": {
             TO_ADD: {"depot_etude_impact", "pc_etude_impact"},

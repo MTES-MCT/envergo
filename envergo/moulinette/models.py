@@ -362,6 +362,13 @@ class Regulation(models.Model):
         return self._evaluator.result
 
     @property
+    def is_cas_par_cas(self):
+        """Whether this regulation's result is any variant of cas par cas."""
+        if not hasattr(self, "_evaluator"):
+            return False
+        return self.result is not None and self.result.startswith("cas_par_cas")
+
+    @property
     def procedure_type(self):
         """Return the regulation procedure type (autorisation / déclaration / hors r.u)."""
         if not hasattr(self, "_evaluator"):

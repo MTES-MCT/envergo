@@ -639,9 +639,9 @@ class EvaluationEmail:
                 else:
                     logger.warning("Manque l'email de la DDT(M) N2000")
 
-            if moulinette.eval_env and moulinette.eval_env.result in (
-                "systematique",
-                "cas_par_cas",
+            if moulinette.eval_env and (
+                moulinette.eval_env.result == "systematique"
+                or moulinette.eval_env.is_cas_par_cas
             ):
                 if config.dreal_eval_env_email:
                     bcc_recipients.append(config.dreal_eval_env_email)
