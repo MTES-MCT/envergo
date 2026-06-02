@@ -913,11 +913,20 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
 
     CODE_TO_ACTIONS_TO_TAKE_MATRIX = {
         "cas_par_cas": ICPE_CAS_PAR_CAS_ACTIONS,
-        "cas_par_cas_modif": ICPE_CAS_PAR_CAS_ACTIONS,
+        "cas_par_cas_modif": {
+            **ICPE_CAS_PAR_CAS_ACTIONS,
+            TO_SUBTRACT: ICPE_CAS_PAR_CAS_ACTIONS[TO_SUBTRACT] | {"pc_ein"},
+        },
         "non_soumis_declaration_creation": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
-        "non_soumis_declaration_modif": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
+        "non_soumis_declaration_modif": {
+            **ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
+            TO_SUBTRACT: ICPE_NON_SOUMIS_DECLARATION_ACTIONS[TO_SUBTRACT] | {"pc_ein"},
+        },
         "a_verifier": ICPE_A_VERIFIER_ACTIONS,
-        "a_verifier_modif": ICPE_A_VERIFIER_ACTIONS,
+        "a_verifier_modif": {
+            **ICPE_A_VERIFIER_ACTIONS,
+            TO_SUBTRACT: ICPE_A_VERIFIER_ACTIONS[TO_SUBTRACT] | {"pc_ein"},
+        },
     }
 
     def get_actions_to_take(self) -> dict[str, set[str]]:
