@@ -914,7 +914,6 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     CODE_TO_ACTIONS_TO_TAKE_MATRIX = {
         "cas_par_cas": ICPE_CAS_PAR_CAS_ACTIONS,
         "cas_par_cas_modif": ICPE_CAS_PAR_CAS_ACTIONS,
-        "non_soumis": ICPE_NON_SOUMIS_ACTIONS,
         "non_soumis_declaration_creation": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
         "non_soumis_declaration_modif": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
         "a_verifier": ICPE_A_VERIFIER_ACTIONS,
