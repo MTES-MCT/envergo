@@ -1,0 +1,7 @@
+[run]
+source = envergo
+
+[report]
+omit =
+    envergo/*/tests/*
+    envergo/*/migrations/*
