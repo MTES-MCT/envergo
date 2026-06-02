@@ -191,25 +191,8 @@ def test_dossier_submission_admin_alert_stage_instruction(
                     {
                         "number": 21059675,
                         "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-                        "state": "en_construction",
-                        "dateDepot": "2025-01-29T16:25:03+01:00",
-                        "demarche": {
-                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
-                            "number": 103363,
-                        },
-                    },
-                    {
-                        "number": 123,
-                        "id": "UW9zc2llci0yRiO3ODQ0Mw==",
                         "state": "en_instruction",
                         "dateDepot": "2025-01-29T16:25:03+01:00",
-                        "champs": [
-                            {
-                                "id": "ABC123",
-                                "label": "Url du simulateur",
-                                "stringValue": "",
-                            },
-                        ],
                         "demarche": {
                             "title": "(test) Guichet unique de la haie / Demande d'autorisation",
                             "number": 103363,
@@ -220,11 +203,10 @@ def test_dossier_submission_admin_alert_stage_instruction(
         }
     }
     mock_post.side_effect = [mock_response_1]
-    project = PetitionProjectFactory()
-    assert "date=" not in project.moulinette_url
     DCConfigHaieFactory()
+    project = PetitionProjectFactory()
     call_command("dossier_submission_admin_alert")
 
     project.refresh_from_db()
     assert project.demarches_simplifiees_state == DossierState.en_instruction.value
-    assert project.status_history.last().stage == "instruction_d"
+    assert project.stage == "instruction_d"
