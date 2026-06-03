@@ -335,10 +335,14 @@
                 <strong class="highlight-obligation">Le projet est soumis à évaluation environnementale</strong>.
                 <p>Le porteur de projet doit faire réaliser une étude d'impact.</p>
               </li>
-            {% elif moulinette.eval_env.result == "cas_par_cas" %}
+            {% elif moulinette.eval_env.is_cas_par_cas %}
               <li class="fr-mb-5w">
                 <strong class="highlight-obligation">Le projet est soumis à examen au cas par cas</strong>.
-                <p>Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.</p>
+                {% if moulinette.eval_env.result == "cas_par_cas_icpe" %}
+                  <p>Le dossier ICPE fait office de demande d'examen au cas par cas.</p>
+                {% else %}
+                  <p>Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.</p>
+                {% endif %}
               </li>
             {% endif %}
 

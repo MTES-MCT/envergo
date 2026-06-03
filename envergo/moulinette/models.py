@@ -125,6 +125,7 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.interdit: RESULTS.interdit,
     RESULTS.systematique: RESULTS.soumis,
     RESULTS.cas_par_cas: RESULTS.soumis,
+    RESULTS.cas_par_cas_icpe: RESULTS.soumis,
     RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
     RESULTS.soumis_declaration: RESULTS.soumis,
@@ -175,6 +176,7 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.interdit: ResultGroupEnum.BlockingRegulations,
     RESULTS.systematique: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.cas_par_cas_icpe: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_declaration: ResultGroupEnum.RestrictiveRegulations,
@@ -358,6 +360,13 @@ class Regulation(models.Model):
             )
 
         return self._evaluator.result
+
+    @property
+    def is_cas_par_cas(self):
+        """Whether this regulation's result is any variant of cas par cas."""
+        if not hasattr(self, "_evaluator"):
+            return False
+        return self.result is not None and self.result.startswith("cas_par_cas")
 
     @property
     def procedure_type(self):

@@ -430,7 +430,7 @@ class TestICPEResults:
 
         assert res.status_code == 200
         assert "cas par cas" in content.lower()
-        assertTemplateUsed(res, "moulinette/eval_env/result_cas_par_cas.html")
+        assertTemplateUsed(res, "moulinette/eval_env/result_cas_par_cas_icpe.html")
         assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas_modif.html")
         assert "modifie" in content
 

@@ -12,11 +12,15 @@
         <br />
         Le porteur de projet doit faire réaliser une étude d'impact.
       </li>
-    {% elif moulinette.eval_env.result == "cas_par_cas" %}
+    {% elif moulinette.eval_env.is_cas_par_cas %}
       <li>
         <strong style="background-color: #ffd3a6;">Le projet est soumis à examen au cas par cas</strong>.
         <br />
-        Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
+        {% if moulinette.eval_env.result == "cas_par_cas_icpe" %}
+          Le dossier ICPE fait office de demande d'examen au cas par cas.
+        {% else %}
+          Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
+        {% endif %}
       </li>
     {% endif %}
 
