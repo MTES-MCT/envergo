@@ -22,6 +22,7 @@ from envergo.hedges.tests.factories import (
 )
 from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.tests.utils import (
+    make_hedge,
     make_hru_hedge,
     make_l350_3_hedge,
     make_ru_hedge,
@@ -930,32 +931,20 @@ class TestHedgeCategory:
     - HRU: everything else
     """
 
-    def _make_hedge(self, hedge_type="mixte", **props):
-        return HedgeFactory(
-            additionalData={
-                "type_haie": hedge_type,
-                "mode_destruction": "autre",
-                "sur_parcelle_pac": False,
-                "proximite_mare": False,
-                "vieil_arbre": False,
-                "ripisylve": False,
-                "connexion_boisement": False,
-                **props,
-            },
-        )
-
     # --- RU ---
 
     def test_non_alignement_no_exclusion_props_is_ru(self):
-        hedge = self._make_hedge(hedge_type="mixte")
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte"))
         assert hedge.category == HaieCriterionCategory.ru
 
     def test_non_alignement_exclusion_props_false_is_ru(self):
-        hedge = self._make_hedge(
-            hedge_type="arbustive",
-            bord_batiment=False,
-            parc_jardin=False,
-            place_publique=False,
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="arbustive",
+                bord_batiment=False,
+                parc_jardin=False,
+                place_publique=False,
+            )
         )
         assert hedge.category == HaieCriterionCategory.ru
 
@@ -963,53 +952,57 @@ class TestHedgeCategory:
         "hedge_type", ["degradee", "buissonnante", "arbustive", "mixte"]
     )
     def test_all_non_alignement_types_are_ru(self, hedge_type):
-        hedge = self._make_hedge(hedge_type=hedge_type)
+        hedge = HedgeFactory(**make_hedge(type_haie=hedge_type))
         assert hedge.category == HaieCriterionCategory.ru
 
     # --- L350-3 ---
 
     def test_alignement_with_bord_voie_is_l350_3(self):
-        hedge = self._make_hedge(hedge_type="alignement", bord_voie=True)
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement", bord_voie=True))
         assert hedge.category == HaieCriterionCategory.l350_3
 
     def test_alignement_without_bord_voie_key_is_l350_3(self):
         """When bord_voie is not in the data at all, alignement defaults to L350-3."""
-        hedge = self._make_hedge(hedge_type="alignement")
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement"))
         assert hedge.category == HaieCriterionCategory.l350_3
 
     # --- HRU ---
 
     def test_alignement_bord_voie_false_is_hru(self):
-        hedge = self._make_hedge(hedge_type="alignement", bord_voie=False)
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement", bord_voie=False))
         assert hedge.category == HaieCriterionCategory.hru
 
     def test_non_alignement_with_bord_batiment_is_hru(self):
-        hedge = self._make_hedge(hedge_type="mixte", bord_batiment=True)
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", bord_batiment=True))
         assert hedge.category == HaieCriterionCategory.hru
 
     def test_non_alignement_with_parc_jardin_is_hru(self):
-        hedge = self._make_hedge(hedge_type="mixte", parc_jardin=True)
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", parc_jardin=True))
         assert hedge.category == HaieCriterionCategory.hru
 
     def test_non_alignement_with_place_publique_is_hru(self):
-        hedge = self._make_hedge(hedge_type="mixte", place_publique=True)
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", place_publique=True))
         assert hedge.category == HaieCriterionCategory.hru
 
     def test_non_alignement_with_multiple_exclusion_props_is_hru(self):
-        hedge = self._make_hedge(
-            hedge_type="mixte",
-            bord_batiment=True,
-            parc_jardin=True,
-            place_publique=True,
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="mixte",
+                bord_batiment=True,
+                parc_jardin=True,
+                place_publique=True,
+            )
         )
         assert hedge.category == HaieCriterionCategory.hru
 
     def test_non_alignement_with_one_true_exclusion_among_false_is_hru(self):
-        hedge = self._make_hedge(
-            hedge_type="mixte",
-            bord_batiment=False,
-            parc_jardin=True,
-            place_publique=False,
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="mixte",
+                bord_batiment=False,
+                parc_jardin=True,
+                place_publique=False,
+            )
         )
         assert hedge.category == HaieCriterionCategory.hru
 
@@ -1017,10 +1010,12 @@ class TestHedgeCategory:
 
     def test_alignement_with_bord_voie_and_exclusion_props_is_l350_3(self):
         """Alignement + bord_voie wins over exclusion props."""
-        hedge = self._make_hedge(
-            hedge_type="alignement",
-            bord_voie=True,
-            bord_batiment=True,
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="alignement",
+                bord_voie=True,
+                bord_batiment=True,
+            )
         )
         assert hedge.category == HaieCriterionCategory.l350_3
 

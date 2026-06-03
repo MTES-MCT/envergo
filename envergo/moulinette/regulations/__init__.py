@@ -745,6 +745,11 @@ class _DjangoSafeEnumMeta(EnumType):
 
 
 class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
+    """StrEnum whose members carry a `label` and `short_label` attribute.
+
+    Declare members as 3-tuples: (value, label, short_label).
+    The Django-safe metaclass prevents accidental template invocation.
+    """
 
     def __new__(cls, value, label="", short_label=""):
         member = str.__new__(cls, value)
