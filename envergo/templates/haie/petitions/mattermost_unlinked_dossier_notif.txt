@@ -1,6 +1,6 @@
-### Récupération des statuts des dossiers depuis Démarches-simplifiées : :warning: anomalie
+### Récupération des statuts des dossiers depuis Démarche numérique : :warning: anomalie
 
-Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH.
+Un dossier a été déposé sur « Démarche numérique », qui ne correspond à aucun projet dans la base du GUH.
 
 Il peut s'agir :
  * d'un dossier dupliqué sur DS par l’utilisateur, à partir du dossier pré-rempli

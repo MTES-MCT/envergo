@@ -1,8 +1,8 @@
-### Envoi d'un message sur Démarches-simplifiées : :x: erreur
+### Envoi d'un message sur Démarche numérique : :x: erreur
 
-L'API de Démarches Simplifiées a retourné une erreur lors de l'envoi d'un message sur le dossier {{dossier_number}} de la démarche n°{{demarche_number}}.
+L'API de « Démarche numérique » a retourné une erreur lors de l'envoi d'un message sur le dossier {{dossier_number}} de la démarche n°{{demarche_number}}.
 
-Réponse de Démarches Simplifiées :
+Réponse de « Démarche numérique » :
 ```
 {{ error|safe }}
 ```

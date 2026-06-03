@@ -186,7 +186,7 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         )
         config_haie.clean()
     assert exc_info.value.messages == [
-        "Chaque champ (ou annotation privée) doit contenir au moins l'id côté Démarches Simplifiées et la "
+        "Chaque champ (ou annotation privée) doit contenir au moins l'id côté « Démarche numérique » et la "
         "source de la valeur côté guichet unique de la haie."
     ]
 

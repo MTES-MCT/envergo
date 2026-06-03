@@ -1,10 +1,10 @@
 # Services externes
 
-## Démarches simplifiées
+## Démarche numérique
 
-Un module démarches simplifiées est disponible dans le module petitions.
+Un module « Démarche numérique » est disponible dans le module petitions.
 
-Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans Démarches Simplifiées.
+Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans « Démarche numérique ».
 
 Celui-ci permet d'envoyer des requêtes GraphQL pour :
 

@@ -59,8 +59,8 @@ pytestmark = pytest.mark.django_db
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
-    """Test fetch project details from démarches simplifiées"""
-    # GIVEN a project with a valid dossier in Démarches Simplifiées
+    """Test fetch project details from « Démarche numérique »"""
+    # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
@@ -147,7 +147,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0
@@ -195,7 +195,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 
     args, kwargs = mock_notify.call_args
     assert (
-        "L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier"
+        "L'API de « Démarche numérique » a retourné une erreur lors de la récupération du dossier"
         in args[0]
     )
     assert "haie" in args[1]
@@ -221,7 +221,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 
     args, kwargs = mock_notify.call_args
     assert (
-        "La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu."
+        "La réponse de l'API de « Démarche numérique » ne répond pas au format attendu."
         in args[0]
     )
     assert "haie" in args[1]
@@ -231,7 +231,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 
 @patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
 def test_compute_instructor_information(mock_get_dossier):
-    """Test compute instructor information from démarche simplifiées dossier data"""
+    """Test compute instructor information from « Démarche numérique » dossier data"""
     mock_get_dossier.return_value = Dossier.from_dict(
         GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
     )
@@ -856,8 +856,8 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 def test_get_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
-    # GIVEN a project with a valid dossier in Démarches Simplifiées
+    """Test send message for project via « Démarche numérique »"""
+    # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
@@ -885,7 +885,7 @@ def test_get_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via « Démarche numérique »"""
 
     DCConfigHaieFactory()
 
@@ -925,7 +925,7 @@ def test_send_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via « Démarche numérique »"""
 
     DCConfigHaieFactory()
 

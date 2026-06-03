@@ -146,7 +146,7 @@ def get_project_context(petition_project, moulinette) -> dict:
 
 
 def get_context_from_ds(petition_project) -> dict:
-    """Get parts of context for instructor pages from Demarches Simplifiées"""
+    """Get parts of context for instructor pages from « Démarche numérique »"""
     # Get ds details
     config = petition_project.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
@@ -166,7 +166,7 @@ def get_context_from_ds(petition_project) -> dict:
         or not display_dn_fields.get("pacage", None)
     ):
         logger.error(
-            "Missing Demarches Simplifiees ids in Haie Config",
+            "Missing « Démarche numérique » ids in Haie Config",
             extra={
                 "config.id": config.id,
             },
@@ -295,7 +295,7 @@ def get_messages_and_senders_from_ds(
 
     if not dossier_with_messages:
         logger.error(
-            f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
+            f"Cannot get messages from « Démarche numérique » for dossier number {dossier_number}"
         )
         return None, None, None
 
@@ -388,11 +388,11 @@ def get_demarches_simplifiees_dossier(
     petition_project,
     force_update: bool = False,
 ) -> Dossier | None:
-    """Get dossier from Demarches Simplifiees either from DB if it is up to date, or from Demarches Simplifiees API.
+    """Get dossier from « Démarche numérique » either from DB if it is up to date, or from « Démarche numérique » API.
 
     args:
         petition_project: The petition project to update with the fetched details.
-        force_update: If True, forces an update from Demarches Simplifiees even if the last sync is recent.
+        force_update: If True, forces an update from « Démarche numérique » even if the last sync is recent.
     returns:
         Dossier object if found, None otherwise.
     """
@@ -405,7 +405,7 @@ def get_demarches_simplifiees_dossier(
         or petition_project.demarches_simplifiees_last_sync is not None
         and petition_project.demarches_simplifiees_last_sync < one_hour_ago_utc
     ):
-        # If the last sync is older than one hour, we fetch the dossier from Demarches Simplifiees
+        # If the last sync is older than one hour, we fetch the dossier from « Démarche numérique »
         dossier_number = petition_project.demarches_simplifiees_dossier_number
         ds_client = DemarchesSimplifieesClient()
         dossier_as_dict = ds_client.get_dossier_with_messages(dossier_number)
@@ -480,7 +480,7 @@ def update_demarches_simplifiees_status(petition_project, new_status):
     else:
         # update failed, notification should have been sent by the DS client
         raise DemarchesSimplifieesError(
-            "", {}, "Unable to update status on Démarches Simplifiées"
+            "", {}, "Unable to update status on « Démarche numérique »"
         )
 
 
