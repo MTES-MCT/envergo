@@ -59,7 +59,7 @@ pytestmark = pytest.mark.django_db
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
-    """Test fetch project details from démarches simplifiées"""
+    """Test fetch project details from « Démarche numérique »"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
@@ -147,7 +147,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0
@@ -856,7 +856,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 def test_get_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via « Démarche numérique »"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
@@ -885,7 +885,7 @@ def test_get_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via « Démarche numérique »"""
 
     DCConfigHaieFactory()
 
@@ -925,7 +925,7 @@ def test_send_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via « Démarche numérique »"""
 
     DCConfigHaieFactory()
 
