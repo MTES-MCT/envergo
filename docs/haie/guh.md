@@ -2,7 +2,7 @@
 
 ## Ajouter une nouvelle config
 
-### Configurer le compte unique sur Démarches Simplifiées
+### Configurer le compte unique sur Démarche numérique
 
 Lorsqu'une nouvelle démarche est créée sur le compte `guichet.haie@haie.beta.gouv.fr` les étapes suivantes doivent être effectuées :
 
