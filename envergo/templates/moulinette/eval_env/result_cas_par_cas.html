@@ -1,60 +1,28 @@
 {% load static %}
 
-{% if regulation.icpe.result == "cas_par_cas" and regulation.no_other_cas_par_cas_than_icpe %}
+<p>Le projet est soumis à examen au cas par cas.</p>
 
-  <p>Le projet est soumis à examen au cas par cas, parce qu'il crée ou modifie une ICPE soumise à enregistrement.</p>
+<h3>Marche à suivre</h3>
 
-  <h3>Marche à suivre</h3>
-
-  <ul>
-    <li>
-      <p>
-        Aucun dossier supplémentaire n'a à être déposé, car le dossier ICPE fait office de
-        demande d'examen au cas par cas.
-      </p>
-      <p>
-        <em>→ Délai de réponse&nbsp;: 35 jours</em>
-      </p>
-    </li>
-  </ul>
-
-  {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-icpe-only" %}
-
-  <div class="more fr-collapse" id="read-more-evalenv-icpe-only">
-
-    {% include 'moulinette/eval_env/_cas_par_cas_details.html' with icpe_only_indicative=True %}
-
-    {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-icpe-only" %}
-
-  </div>
-
-{% else %}
-
-  <p>Le projet est soumis à examen au cas par cas.</p>
-
-  <h3>Marche à suivre</h3>
-
-  <ul>
-    <li>
-      <p>
-        Demande d'examen au cas par cas à déposer <a href="https://evaluation-environnementale.ecologie.gouv.fr/#/auth/signin"
+<ul>
+  <li>
+    <p>
+      Demande d'examen au cas par cas à déposer <a href="https://evaluation-environnementale.ecologie.gouv.fr/#/auth/signin"
     target="_blank"
     rel="noopener">en ligne</a>
-      </p>
-      <p>
-        <em>→ Délai de réponse&nbsp;: 35 jours</em>
-      </p>
-    </li>
-  </ul>
+    </p>
+    <p>
+      <em>→ Délai de réponse : 35 jours</em>
+    </p>
+  </li>
+</ul>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+
+  {% include 'moulinette/eval_env/_cas_par_cas_details.html' %}
 
   {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
 
-  <div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
-
-    {% include 'moulinette/eval_env/_cas_par_cas_details.html' %}
-
-    {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
-
-  </div>
-
-{% endif %}
+</div>
