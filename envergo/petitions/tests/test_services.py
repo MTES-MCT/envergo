@@ -856,7 +856,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 def test_get_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via démarche numérique"""
     # GIVEN a project with a valid dossier in Démarches Simplifiées
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
@@ -885,7 +885,7 @@ def test_get_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via démarche numérique"""
 
     DCConfigHaieFactory()
 
@@ -925,7 +925,7 @@ def test_send_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via démarche numérique"""
 
     DCConfigHaieFactory()
 

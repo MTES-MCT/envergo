@@ -1109,7 +1109,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 class PetitionProjectInstructorDossierDSView(
     BasePetitionProjectInstructorView, DetailView
 ):
-    """View for petition project page with demarches simplifiées data"""
+    """View for petition project page with démarche numérique data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
 
