@@ -58,6 +58,8 @@
       </p>
     </div>
   {% endif %}
+  {% block result_foreword %}{% endblock %}
+
   {% block sensitive_areas %}
     {% include 'haie/moulinette/_sensitive_areas.html' %}
   {% endblock %}
@@ -93,7 +95,7 @@
     </section>
   {% endif %}
 
-  {% block result_header %}{% endblock %}
+  {% block moulinette_result %}{% endblock %}
   {% block other_categories_results %}{% endblock %}
 
   <h2 id="regulations-title">Détail des réglementations applicables</h2>

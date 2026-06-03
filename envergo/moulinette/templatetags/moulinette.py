@@ -262,16 +262,18 @@ def show_plantation_result(context, plantation_evaluation, category, is_main=Tru
     """Render the global plantation result content."""
     context_data = context.flatten()
     context_data["category"] = category
-    template_name = (
-        f"haie/moulinette/plantation_result/{category.name}/"
-        f"{plantation_evaluation.global_results_by_category[category]}.html"
-    )
-
     if context.get(
         "is_alternative", False
     ) and not plantation_evaluation.display_for_alternatives(category):
         html = ""
     else:
+        if context.get("is_read_only", False):
+            template_name = "haie/moulinette/plantation_result/read_only.html"
+        else:
+            template_name = (
+                f"haie/moulinette/plantation_result/{category.name}/"
+                f"{plantation_evaluation.global_results_by_category[category]}.html"
+            )
         try:
             content = render_to_string((template_name,), context_data)
             moulinette = context["moulinette"]

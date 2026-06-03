@@ -39,9 +39,11 @@
   {% endif %}
 {% endblock %}
 
-{% block result_header %}
+{% block result_foreword %}
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
+{% endblock %}
 
+{% block moulinette_result %}
   {% show_plantation_result plantation_evaluation moulinette.main_category %}
 
   <p class="fr-hint-text fr-mb-3w">

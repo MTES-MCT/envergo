@@ -25,7 +25,7 @@
       <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
       {% if moulinette.config %}
         <li>
-          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+          Département : <a href="{% url 'admin:moulinette_confighaie_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
         </li>
         <li>Régime unique : {{ moulinette.config.single_procedure|yesno }}</li>
       {% else %}
