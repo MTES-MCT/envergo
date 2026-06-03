@@ -626,6 +626,7 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.action_requise: True,
     RESULTS.non_disponible: False,
     RESULTS.cas_par_cas: True,
+    RESULTS.cas_par_cas_icpe: True,
     RESULTS.systematique: True,
     RESULTS.non_applicable: False,
     RESULTS.non_concerne: False,

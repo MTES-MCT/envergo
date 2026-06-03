@@ -883,7 +883,7 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
     slug = "icpe"
     form_class = ICPEForm
 
-    CODES = ["cas_par_cas", "non_soumis", "a_verifier"]
+    CODES = ["cas_par_cas_icpe", "non_soumis", "a_verifier"]
 
     CODE_MATRIX = {
         (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
@@ -907,7 +907,8 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
         (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis",
     }
     RESULT_MATRIX = {
-        "cas_par_cas_modif": "cas_par_cas",
+        "cas_par_cas": "cas_par_cas_icpe",
+        "cas_par_cas_modif": "cas_par_cas_icpe",
         "non_soumis_declaration_creation": "non_soumis",
         "non_soumis_declaration_modif": "non_soumis",
         "a_verifier_modif": "a_verifier",
