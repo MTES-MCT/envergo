@@ -76,7 +76,7 @@ from envergo.moulinette.regulations import (
     MapFactory,
 )
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
-from envergo.utils.tools import insert_before
+from envergo.utils.tools import _DjangoSafeChoicesMeta, insert_before
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -1260,7 +1260,7 @@ def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
     ]
 
 
-class AaL3503Handling(models.TextChoices):
+class AaL3503Handling(models.TextChoices, metaclass=_DjangoSafeChoicesMeta):
     """How tree alignment projects (article L350-3) are handled by a department."""
 
     PORTAL = "portal", "Dépôt sur le portail"

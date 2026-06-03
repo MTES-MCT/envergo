@@ -2,13 +2,14 @@ import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum, EnumType, StrEnum
+from enum import Enum, StrEnum
 from types import SimpleNamespace
 
 from django.contrib.gis.geos import GEOSGeometry
 
 from envergo.evaluations.models import RESULT_CASCADE, RESULTS, TAG_STYLES_BY_RESULT
 from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
+from envergo.utils.tools import _DjangoSafeEnumMeta
 
 
 class Stake(Enum):
@@ -712,10 +713,6 @@ class CriterionEvaluator(ABC):
         rendering debug_template.
         """
         return {}
-
-
-class _DjangoSafeEnumMeta(EnumType):
-    do_not_call_in_templates = True
 
 
 class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):

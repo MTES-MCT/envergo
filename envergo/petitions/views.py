@@ -57,6 +57,7 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
+from envergo.geodata.models import Department
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.hedges.models import (
     EPSG_LAMB93,
@@ -66,7 +67,7 @@ from envergo.hedges.models import (
     HedgeTypeFactory,
 )
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
-from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
+from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
@@ -304,9 +305,10 @@ class PetitionProjectCreate(FormView):
         moulinette_url = form.cleaned_data["moulinette_url"]
         category = form.cleaned_data["category"]
 
-        department = extract_param_from_url(moulinette_url, "department")
+        department_nb = extract_param_from_url(moulinette_url, "department")
         date_str = extract_param_from_url(moulinette_url, "date")
         config_date = datetime.date.fromisoformat(date_str) if date_str else None
+        department = Department.objects.defer("geometry").get(department=department_nb)
         config = ConfigHaie.objects.get_valid_config(department, config_date)
         single_procedure = config.single_procedure
 
@@ -395,38 +397,26 @@ class PetitionProjectCreate(FormView):
         """
 
         moulinette_url = project.moulinette_url
-        parsed_url = urlparse(moulinette_url)
-        moulinette_data = parse_qs(parsed_url.query)
-        # Flatten the dictionary
-        for key, value in moulinette_data.items():
-            if isinstance(value, list) and len(value) == 1:
-                moulinette_data[key] = value[0]
-        department = moulinette_data.get("department")  # department is mandatory
-        if not department:
-            logger.error(
-                "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
-                extra={"moulinette_url": moulinette_url},
-            )
-            return None, None
-
-        moulinette_data["haies"] = project.hedge_data
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
+        moulinette = MoulinetteUrl(moulinette_url).get_moulinette()
         config = moulinette.config
         if config is None:
+            department = extract_param_from_url(moulinette_url, "department")
+            date_str = extract_param_from_url(moulinette_url, "date")
             logger.error(
-                "No valid ConfigHaie found for department",
-                extra={"department": department},
+                "No valid ConfigHaie found for department and date",
+                extra={"department": department, "date": date_str},
             )
             return None, None
         self.request.alerts.config = config
         demarche_id = config.demarche_simplifiee_number
-
         if not demarche_id:
+            department = extract_param_from_url(moulinette_url, "department")
             logger.error(
                 "An activated department should always have a demarche_simplifiee_number",
-                extra={"haie config": config.id, "department": department},
+                extra={
+                    "haie config": config.id,
+                    "department": department,
+                },
             )
 
             self.request.alerts.append(

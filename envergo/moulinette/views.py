@@ -27,6 +27,7 @@ from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import (
+    AaL3503Handling,
     CityHallSubmission,
     ConfigHaie,
     Criterion,
@@ -607,6 +608,7 @@ class MoulinetteHaieResult(
 
             context["HaieCriterionCategory"] = HaieCriterionCategory
             context["CityHallSubmission"] = CityHallSubmission
+            context["AaL3503Handling"] = AaL3503Handling
 
         return context
 
