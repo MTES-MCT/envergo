@@ -356,7 +356,7 @@ class PetitionProjectCreate(FormView):
         return res
 
     def pre_fill_demarche_simplifiee(self, project):
-        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
+        """Send a http request to pre-fill a dossier on demarche.numerique.gouv.fr based on moulinette data.
 
         Return the url of the created dossier and its number if successful, None otherwise
         """
@@ -408,7 +408,7 @@ class PetitionProjectCreate(FormView):
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
-                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
+                    "Invalid pre-fill configuration for a dossier on demarche.numerique.gouv.fr",
                     extra={"haie config": config.id, "field": field},
                 )
 
@@ -448,7 +448,7 @@ class PetitionProjectCreate(FormView):
             dossier_number = data.get("dossier_number")
         else:
             logger.error(
-                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                "Error while pre-filling a dossier on demarche.numerique.gouv.fr",
                 extra={
                     "api_url": response.request.url,
                     "request_body": response.request.body,
@@ -472,7 +472,7 @@ class PetitionProjectCreate(FormView):
     def get_value_from_source(
         self, petition_project, moulinette, source, mapping, config
     ):
-        """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
+        """Get the value to pre-fill a dossier on demarche.numerique.gouv.fr from a source.
 
         Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
@@ -599,7 +599,7 @@ class PetitionProjectCreate(FormView):
             # if the mapping object is not empty but do not contain the value, log an info
             if value not in mapping:
                 logger.info(
-                    "The value to pre-fill a dossier on demarches-simplifiees.fr is not in the mapping",
+                    "The value to pre-fill a dossier on demarche.numerique.gouv.fr is not in the mapping",
                     extra={
                         "source": source,
                         "mapping": mapping,
