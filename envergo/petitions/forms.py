@@ -109,7 +109,7 @@ def validate_mime_type(value):
 
 
 class PetitionProjectInstructorMessageForm(forms.Form):
-    """Form to send a message through demarches simplifiées API."""
+    """Form to send a message through démarche numérique API."""
 
     message_body = forms.CharField(
         label="Message",

@@ -146,7 +146,7 @@ def get_project_context(petition_project, moulinette) -> dict:
 
 
 def get_context_from_ds(petition_project) -> dict:
-    """Get parts of context for instructor pages from Demarches Simplifiées"""
+    """Get parts of context for instructor pages from démarche numérique"""
     # Get ds details
     config = petition_project.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
