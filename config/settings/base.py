@@ -417,16 +417,16 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
 
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
-    # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
+    # https://doc.demarche.numerique.gouv.fr/pour-aller-plus-loin/api-de-preremplissage
     "ENABLED": env("DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED", default=False),
-    "DOSSIER_BASE_URL": "https://www.demarches-simplifiees.fr",
+    "DOSSIER_BASE_URL": "https://demarche.numerique.gouv.fr",
     "PRE_FILL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
-        default="https://www.demarches-simplifiees.fr/api/public/v1/",
+        default="https://demarche.numerique.gouv.fr/api/public/v1/",
     ),
     "GRAPHQL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_GRAPHQL_API_URL",
-        default="https://www.demarches-simplifiees.fr/api/v2/graphql",
+        default="https://demarche.numerique.gouv.fr/api/v2/graphql",
     ),
     "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
     "DOSSIER_DOMAIN_BLACK_LIST": env.list(
