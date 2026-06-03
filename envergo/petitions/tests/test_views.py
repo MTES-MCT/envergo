@@ -1735,7 +1735,7 @@ def test_petition_project_request_for_info(
         kwargs={"reference": project.reference},
     )
     form_data = {
-        "due_date": next_month,
+        "info_due_date": next_month,
         "request_message": "Test",
     }
     res = client.post(rai_url, form_data, follow=True)

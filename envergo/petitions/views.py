@@ -1681,7 +1681,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 StatusLog.objects.create(
                     petition_project=project,
                     type=LOG_TYPES.suspension,
-                    due_date=form.cleaned_data["due_date"],
+                    due_date=form.cleaned_data["info_due_date"],
                     original_due_date=project.due_date,
                     created_by=self.request.user,
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
