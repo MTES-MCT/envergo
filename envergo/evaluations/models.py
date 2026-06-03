@@ -80,6 +80,7 @@ RESULTS = Choices(
     ("action_requise", "Action requise"),
     ("non_disponible", "Non disponible"),
     ("cas_par_cas", "Cas par cas"),
+    ("cas_par_cas_icpe", "Cas par cas"),
     ("systematique", "Soumis"),
     ("non_applicable", "Non applicable"),
     ("non_concerne", "Non concerné"),
@@ -103,6 +104,7 @@ RESULT_CASCADE = [
     RESULTS.interdit,
     RESULTS.systematique,
     RESULTS.cas_par_cas,
+    RESULTS.cas_par_cas_icpe,
     RESULTS.soumis_ou_pac,
     RESULTS.soumis_declaration,
     RESULTS.soumis,
@@ -154,6 +156,7 @@ TAG_STYLES_BY_RESULT = {
     RESULTS.non_disponible: TagStyleEnum.Grey,
     RESULTS.non_applicable: TagStyleEnum.Grey,
     RESULTS.cas_par_cas: TagStyleEnum.Orange,
+    RESULTS.cas_par_cas_icpe: TagStyleEnum.Orange,
     RESULTS.systematique: TagStyleEnum.LightRed,
     RESULTS.non_concerne: TagStyleEnum.Green,
     RESULTS.a_verifier: TagStyleEnum.Yellow,
@@ -636,9 +639,9 @@ class EvaluationEmail:
                 else:
                     logger.warning("Manque l'email de la DDT(M) N2000")
 
-            if moulinette.eval_env and moulinette.eval_env.result in (
-                "systematique",
-                "cas_par_cas",
+            if moulinette.eval_env and (
+                moulinette.eval_env.result == "systematique"
+                or moulinette.eval_env.is_cas_par_cas
             ):
                 if config.dreal_eval_env_email:
                     bcc_recipients.append(config.dreal_eval_env_email)
