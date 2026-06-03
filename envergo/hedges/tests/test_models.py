@@ -22,6 +22,7 @@ from envergo.hedges.tests.factories import (
 )
 from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.tests.utils import (
+    make_hedge,
     make_hru_hedge,
     make_l350_3_hedge,
     make_ru_hedge,
@@ -921,8 +922,106 @@ class TestDensityLazyComputation:
             hedge_data.density
 
 
+class TestHedgeCategory:
+    """Tests for Hedge.category property.
+
+    Classification rules:
+    - RU: non-alignement, exclusion props (bord_batiment, parc_jardin, place_publique) absent or False
+    - L350-3: alignement, bord_voie present and True OR bord_voie absent
+    - HRU: everything else
+    """
+
+    # --- RU ---
+
+    def test_non_alignement_no_exclusion_props_is_ru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte"))
+        assert hedge.category == HaieCriterionCategory.ru
+
+    def test_non_alignement_exclusion_props_false_is_ru(self):
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="arbustive",
+                bord_batiment=False,
+                parc_jardin=False,
+                place_publique=False,
+            )
+        )
+        assert hedge.category == HaieCriterionCategory.ru
+
+    @pytest.mark.parametrize(
+        "hedge_type", ["degradee", "buissonnante", "arbustive", "mixte"]
+    )
+    def test_all_non_alignement_types_are_ru(self, hedge_type):
+        hedge = HedgeFactory(**make_hedge(type_haie=hedge_type))
+        assert hedge.category == HaieCriterionCategory.ru
+
+    # --- L350-3 ---
+
+    def test_alignement_with_bord_voie_is_l350_3(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement", bord_voie=True))
+        assert hedge.category == HaieCriterionCategory.l350_3
+
+    def test_alignement_without_bord_voie_key_is_l350_3(self):
+        """When bord_voie is not in the data at all, alignement defaults to L350-3."""
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement"))
+        assert hedge.category == HaieCriterionCategory.l350_3
+
+    # --- HRU ---
+
+    def test_alignement_bord_voie_false_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement", bord_voie=False))
+        assert hedge.category == HaieCriterionCategory.hru
+
+    def test_non_alignement_with_bord_batiment_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", bord_batiment=True))
+        assert hedge.category == HaieCriterionCategory.hru
+
+    def test_non_alignement_with_parc_jardin_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", parc_jardin=True))
+        assert hedge.category == HaieCriterionCategory.hru
+
+    def test_non_alignement_with_place_publique_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", place_publique=True))
+        assert hedge.category == HaieCriterionCategory.hru
+
+    def test_non_alignement_with_multiple_exclusion_props_is_hru(self):
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="mixte",
+                bord_batiment=True,
+                parc_jardin=True,
+                place_publique=True,
+            )
+        )
+        assert hedge.category == HaieCriterionCategory.hru
+
+    def test_non_alignement_with_one_true_exclusion_among_false_is_hru(self):
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="mixte",
+                bord_batiment=False,
+                parc_jardin=True,
+                place_publique=False,
+            )
+        )
+        assert hedge.category == HaieCriterionCategory.hru
+
+    # --- Edge: mixed props ---
+
+    def test_alignement_with_bord_voie_and_exclusion_props_is_l350_3(self):
+        """Alignement + bord_voie wins over exclusion props."""
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="alignement",
+                bord_voie=True,
+                bord_batiment=True,
+            )
+        )
+        assert hedge.category == HaieCriterionCategory.l350_3
+
+
 class TestHedgeListCategory:
-    """Tests for HedgeList.category() method.
+    """Tests for HedgeList.evaluator_category() method.
 
     Category classification:
     - RU: non-alignement hedges without bord_batiment/parc_jardin/place_publique
@@ -934,17 +1033,17 @@ class TestHedgeListCategory:
 
     def test_not_single_procedure_hru_returns_all(self):
         hedges = HedgeList([make_ru_hedge("R1"), make_hru_hedge("H1")])
-        result = hedges.category(False, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(False, HaieCriterionCategory.hru)
         assert result == hedges
 
     def test_not_single_procedure_ru_returns_empty(self):
         hedges = HedgeList([make_ru_hedge("R1"), make_hru_hedge("H1")])
-        result = hedges.category(False, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(False, HaieCriterionCategory.ru)
         assert len(result) == 0
 
     def test_not_single_procedure_l350_3_returns_empty(self):
         hedges = HedgeList([make_ru_hedge("R1"), make_hru_hedge("H1")])
-        result = hedges.category(False, HaieCriterionCategory.l350_3)
+        result = hedges.evaluator_category(False, HaieCriterionCategory.l350_3)
         assert len(result) == 0
 
     # --- HRU category ---
@@ -956,7 +1055,7 @@ class TestHedgeListCategory:
                 make_hru_hedge("H1", type="TO_PLANT"),
             ]
         )
-        result = hedges.category(True, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.hru)
         assert len(result) == 0
 
     def test_hru_all_categories_present_returns_only_hru(self):
@@ -966,7 +1065,7 @@ class TestHedgeListCategory:
         plant = make_ru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([hru, ru, l350_3, plant])
 
-        result = hedges.category(True, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.hru)
         assert hru in result
         assert ru not in result
         assert l350_3 not in result
@@ -977,7 +1076,7 @@ class TestHedgeListCategory:
         plant = make_ru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([hru, plant])
 
-        result = hedges.category(True, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.hru)
         assert result == hedges
 
     def test_hru_with_l350_3_absorbs_ru_plantings(self):
@@ -986,7 +1085,7 @@ class TestHedgeListCategory:
         ru_plant = make_ru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([hru, l350_3, ru_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.hru)
         assert hru in result
         assert ru_plant in result
         assert l350_3 not in result
@@ -997,7 +1096,7 @@ class TestHedgeListCategory:
         l350_3_plant = make_l350_3_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([hru, ru, l350_3_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.hru)
         assert hru in result
         assert l350_3_plant in result
         assert ru not in result
@@ -1011,7 +1110,7 @@ class TestHedgeListCategory:
                 make_ru_hedge("R1", type="TO_PLANT"),
             ]
         )
-        result = hedges.category(True, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.ru)
         assert len(result) == 0
 
     def test_ru_with_hru_present_returns_only_ru(self):
@@ -1021,7 +1120,7 @@ class TestHedgeListCategory:
         plant = make_hru_hedge("P2", type="TO_PLANT")
         hedges = HedgeList([hru, ru, plant, ru_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.ru)
         assert ru in result
         assert hru not in result
         assert plant not in result
@@ -1035,7 +1134,7 @@ class TestHedgeListCategory:
         hru_plant = make_hru_hedge("P2", type="TO_PLANT")
         hedges = HedgeList([hru, ru, l350_3, ru_plant, hru_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.ru)
         assert ru in result
         assert hru not in result
         assert l350_3 not in result
@@ -1049,7 +1148,7 @@ class TestHedgeListCategory:
         l350_3_plant = make_l350_3_hedge("P2", type="TO_PLANT")
         hedges = HedgeList([ru, l350_3, hru_plant, l350_3_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.ru)
         assert ru in result
         assert hru_plant in result
         assert l350_3 not in result
@@ -1060,7 +1159,7 @@ class TestHedgeListCategory:
         plant = make_hru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([ru, plant])
 
-        result = hedges.category(True, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.ru)
         assert result == hedges
 
     # --- L350-3 category ---
@@ -1072,7 +1171,7 @@ class TestHedgeListCategory:
                 make_l350_3_hedge("L1", type="TO_PLANT"),
             ]
         )
-        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.l350_3)
         assert len(result) == 0
 
     def test_l350_3_only_category_returns_all(self):
@@ -1080,7 +1179,7 @@ class TestHedgeListCategory:
         plant = make_ru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([l350_3, plant])
 
-        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.l350_3)
         assert result == hedges
 
     def test_l350_3_with_hru_returns_only_l350_3(self):
@@ -1089,7 +1188,7 @@ class TestHedgeListCategory:
         plant = make_ru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([hru, l350_3, plant])
 
-        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.l350_3)
         assert l350_3 in result
         assert hru not in result
         assert plant not in result
@@ -1099,7 +1198,7 @@ class TestHedgeListCategory:
         l350_3 = make_l350_3_hedge("L1")
         hedges = HedgeList([ru, l350_3])
 
-        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.l350_3)
         assert l350_3 in result
         assert ru not in result
 
@@ -1109,7 +1208,7 @@ class TestHedgeListCategory:
         l350_3 = make_l350_3_hedge("L1")
         hedges = HedgeList([hru, ru, l350_3])
 
-        result = hedges.category(True, HaieCriterionCategory.l350_3)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.l350_3)
         assert l350_3 in result
         assert hru not in result
         assert ru not in result
@@ -1124,7 +1223,7 @@ class TestHedgeListCategory:
         ru_plant = make_ru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([hru_remove, hru_plant, l350_3, ru_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.hru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.hru)
         assert hru_remove in result
         assert hru_plant in result
         assert ru_plant in result
@@ -1138,7 +1237,7 @@ class TestHedgeListCategory:
         hru_plant = make_hru_hedge("P1", type="TO_PLANT")
         hedges = HedgeList([ru_remove, ru_plant, l350_3, hru_plant])
 
-        result = hedges.category(True, HaieCriterionCategory.ru)
+        result = hedges.evaluator_category(True, HaieCriterionCategory.ru)
         assert ru_remove in result
         assert ru_plant in result
         assert hru_plant in result
@@ -1156,7 +1255,9 @@ class TestHedgeListCategory:
         l350_3_plant = make_l350_3_hedge("L2", type="TO_PLANT")
         hedges = HedgeList([hru, ru, l350_3, hru_plant, ru_plant, l350_3_plant])
 
-        results = {cat: hedges.category(True, cat) for cat in HaieCriterionCategory}
+        results = {
+            cat: hedges.evaluator_category(True, cat) for cat in HaieCriterionCategory
+        }
         all_assigned = []
         for cat_hedges in results.values():
             all_assigned.extend(cat_hedges)
@@ -1170,7 +1271,9 @@ class TestHedgeListCategory:
         l350_3_plant = make_l350_3_hedge("L1", type="TO_PLANT")
         hedges = HedgeList([hru, ru, l350_3_plant])
 
-        results = {cat: hedges.category(True, cat) for cat in HaieCriterionCategory}
+        results = {
+            cat: hedges.evaluator_category(True, cat) for cat in HaieCriterionCategory
+        }
         active = {cat: h for cat, h in results.items() if len(h) > 0}
         assert HaieCriterionCategory.l350_3 not in active
         all_assigned = []
@@ -1185,8 +1288,8 @@ class TestHedgeListCategory:
         """Empty list returns empty for all categories."""
         hedges = HedgeList()
         for cat in HaieCriterionCategory:
-            assert len(hedges.category(True, cat)) == 0
-            assert len(hedges.category(False, cat)) == 0
+            assert len(hedges.evaluator_category(True, cat)) == 0
+            assert len(hedges.evaluator_category(False, cat)) == 0
 
     def test_only_to_plant_hedges_returns_empty(self):
         """When no category has TO_REMOVE hedges, all categories return empty."""
@@ -1198,11 +1301,11 @@ class TestHedgeListCategory:
             ]
         )
         for cat in HaieCriterionCategory:
-            assert len(hedges.category(True, cat)) == 0
+            assert len(hedges.evaluator_category(True, cat)) == 0
 
     # --- Invalid category ---
 
     def test_invalid_category_raises(self):
         hedges = HedgeList([make_ru_hedge("R1")])
         with pytest.raises(ValueError, match="Category not recognized"):
-            hedges.category(True, "invalid")
+            hedges.evaluator_category(True, "invalid")

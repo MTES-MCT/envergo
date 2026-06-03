@@ -45,6 +45,15 @@ class RegulationFactory(DjangoModelFactory):
     has_perimeters = False
 
 
+class HaieRegulationFactory(DjangoModelFactory):
+    class Meta:
+        model = Regulation
+
+    regulation = "ep"
+    evaluator = "envergo.moulinette.regulations.HaieRegulationEvaluator"
+    has_perimeters = False
+
+
 class ActionToTakeFactory(DjangoModelFactory):
     class Meta:
         model = ActionToTake

@@ -177,7 +177,7 @@ def create_density_map(
                 for hedge in hedges_to_remove
             ],
             "red",
-            "Haies à détruire",
+            "Linéaires à détruire",
             class_name="hedge to-remove",
         ),
     ]
@@ -239,7 +239,7 @@ def create_line_buffer_density_map(
                 for hedge in hedges_to_remove
             ],
             "red",
-            "Haies à détruire",
+            "Linéaires à détruire",
             class_name="hedge to-remove",
         ),
     ]

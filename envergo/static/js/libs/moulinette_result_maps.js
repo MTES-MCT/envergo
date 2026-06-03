@@ -111,12 +111,15 @@
       polygonJson.addTo(map);
     }
 
+    let fitBoundsArgs = null;
     if(mapData["zoomOnGeometry"]){
       const geometry = mapData["zoomOnGeometry"];
       const geometryJson = L.geoJSON(geometry);
       const geometryBounds = geometryJson.getBounds();
-      map.fitBounds(geometryBounds, { padding: [0.1, 0.1], maxZoom: 18 });
+      fitBoundsArgs = [geometryBounds, { padding: [0.1, 0.1], maxZoom: 18 }];
+      map.fitBounds(...fitBoundsArgs);
     } else if (mapData["zoom"] === null) {
+      fitBoundsArgs = [bounds];
       map.fitBounds(bounds);
     }
 
@@ -178,7 +181,7 @@
       _paq.push(['trackEvent', 'Content', action, "CadastreOff"]);
     }.bind(this));
 
-    const event = new CustomEvent('mapInitialized', { detail: {id: mapId, map: map, data: mapData}});
+    const event = new CustomEvent('mapInitialized', { detail: {id: mapId, map: map, data: mapData, fitBoundsArgs: fitBoundsArgs}});
     window.dispatchEvent(event);
 
     return map;

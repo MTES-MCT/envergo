@@ -1,5 +1,4 @@
 import logging
-from abc import ABC
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
@@ -22,26 +21,9 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
     }
 
 
-class AlignementsArbresBase(HaieCriterionEvaluator, ABC):
+class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Alignements d'arbres > L350-3"
     base_slug = "alignement_arbres"
-
-
-class AlignementsArbresRu(AlignementsArbresBase):
-    category = HaieCriterionCategory.ru
-
-    def evaluate(self):
-        self._result_code, self._result = "non_concerne", "non_concerne"
-
-
-class AlignementsArbresHru(AlignementsArbresBase):
-    category = HaieCriterionCategory.hru
-
-    def evaluate(self):
-        self._result_code, self._result = "non_concerne", "non_concerne"
-
-
-class AlignementsArbresL3503(PlantationConditionMixin, AlignementsArbresBase):
     category = HaieCriterionCategory.l350_3
     plantation_conditions = [TreeAlignmentsCondition]
 

@@ -3,7 +3,8 @@
 {% load static moulinette %}
 
 {% block result_header %}
-  <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette plantation_evaluation %}</div>
+  <div id="result-{{ moulinette.main_category.name }}"
+       class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette plantation_evaluation %}</div>
 
   <p class="fr-hint-text fr-mb-3w">
     Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
@@ -36,10 +37,6 @@
   {% else %}
     {{ block.super }}
   {% endif %}
-{% endblock %}
-
-{% block liability_info %}
-  {% show_haie_moulinette_liability_info moulinette.result %}
 {% endblock %}
 
 {% block extra_body %}

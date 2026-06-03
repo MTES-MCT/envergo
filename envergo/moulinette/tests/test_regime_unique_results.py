@@ -5,9 +5,11 @@ from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    HaieRegulationFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import setup_ep_regime_unique
 
 
 @pytest.fixture(autouse=True)
@@ -28,14 +30,7 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
-            activation_map=france_map,
-            activation_mode="department_centroid",
-        ),
-        CriterionFactory(
-            title="Alignement arbres > L350-3",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -63,7 +58,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
+    regulation = HaieRegulationFactory(
         regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
     )
     criteria = [
@@ -185,7 +180,7 @@ def test_moulinette_result_non_alignement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.alignement_arbres.result == "non_concerne"
+    assert moulinette.alignement_arbres.result == "non_disponible"
     assert moulinette.result == "declaration"
 
 
@@ -237,7 +232,8 @@ def test_moulinette_result_interdit():
     assert moulinette.result == "interdit"
 
 
-def test_moulinette_result_autorisation(ep_criteria):
+def test_moulinette_result_autorisation(france_map):
+    setup_ep_regime_unique(france_map)
     RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
@@ -246,7 +242,7 @@ def test_moulinette_result_autorisation(ep_criteria):
                     "type_haie": "mixte",
                     "sur_parcelle_pac": False,
                     "mode_destruction": "coupe_a_blanc",
-                    "place_publique": True,
+                    "place_publique": False,
                 },
             ),
         ]
@@ -269,5 +265,5 @@ def test_moulinette_result_autorisation(ep_criteria):
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors()
 
-    assert moulinette.ep.hru__ep_aisne.result == "derogation_simplifiee"
+    assert moulinette.ep.ru__ep_regime_unique.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

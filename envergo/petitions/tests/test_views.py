@@ -21,7 +21,7 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
-    RegulationFactory,
+    HaieRegulationFactory,
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
@@ -72,7 +72,7 @@ def fake_haie_settings(settings):
 
 @pytest.fixture()
 def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
-    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    regulation = HaieRegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
@@ -87,7 +87,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="ep")
+    regulation = HaieRegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
             title="Espèces protégées",

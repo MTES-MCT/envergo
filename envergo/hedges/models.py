@@ -188,6 +188,31 @@ class Hedge:
     def sous_ligne_electrique(self):
         return self.additionalData.get("sous_ligne_electrique", None)
 
+    @property
+    def category(self):
+        """Return the category of the hedge (régime unique, L350-3 or hores régime unique)."""
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        if (
+            self.hedge_type != HedgeTypeBase.ALIGNEMENT
+            and (
+                not self.prop("bord_batiment") or not self.has_property("bord_batiment")
+            )
+            and (not self.prop("parc_jardin") or not self.has_property("parc_jardin"))
+            and (
+                not self.prop("place_publique")
+                or not self.has_property("place_publique")
+            )
+        ):
+            return HaieCriterionCategory.ru
+
+        if self.hedge_type == HedgeTypeBase.ALIGNEMENT and (
+            self.prop("bord_voie") or not self.has_property("bord_voie")
+        ):
+            return HaieCriterionCategory.l350_3
+
+        return HaieCriterionCategory.hru
+
     def get_species_filter(self):
         """Build the filter to get species possibly living in a single hedge.
 
@@ -265,6 +290,16 @@ class HedgeList(list[Hedge]):
     def names(self):
         return ", ".join(h.id for h in self)
 
+    def sort_by_type(self) -> "HedgeList":
+        """Sort this list by the type of the hedge (to remove first, then to plant) and names"""
+        type_order = {TO_REMOVE: 0, TO_PLANT: 1}
+        return HedgeList(
+            sorted(
+                self, key=lambda h: (type_order.get(h.type, 2), h.id[0], int(h.id[1:]))
+            ),
+            label=self.label,
+        )
+
     @property
     def length(self):
         return sum(h.length for h in self)
@@ -310,22 +345,23 @@ class HedgeList(list[Hedge]):
 
     def ru(self) -> Self:
         """Select all hedges that are covered by the single procedure (régime unique, RU)."""
-        return (
-            self.n_alignement()
-            .prop("!bord_batiment")
-            .prop("!parc_jardin")
-            .prop("!place_publique")
-        )
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        return HedgeList([h for h in self if h.category == HaieCriterionCategory.ru])
 
     def l350_3(self) -> Self:
         """Select all tree alignment that are covered the L350-3 regulation."""
-        return self.alignement().prop("bord_voie")
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        return HedgeList(
+            [h for h in self if h.category == HaieCriterionCategory.l350_3]
+        )
 
     def hru(self) -> Self:
         """Select all hedges are not covered by either the single procedure or L350-3"""
-        ru = self.ru()
-        l350_3 = self.l350_3()
-        return HedgeList([h for h in self if h not in ru and h not in l350_3])
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        return HedgeList([h for h in self if h.category == HaieCriterionCategory.hru])
 
     def filter(self, f) -> Self:
         """Filter the hedge list using a specific filtering method."""
@@ -359,7 +395,7 @@ class HedgeList(list[Hedge]):
             hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
         return hedges
 
-    def category(self, single_procedure, category) -> Self:
+    def evaluator_category(self, single_procedure, category) -> Self:
         """Return the subset of hedges an evaluator should assess for `category`.
 
         Without single_procedure: all hedges go to HRU, other categories are empty.
@@ -723,7 +759,7 @@ class HedgeData(models.Model):
         from envergo.moulinette.regulations import HaieCriterionCategory
 
         hedges_by_category = {
-            category: self.hedges().category(single_procedure, category)
+            category: self.hedges().evaluator_category(single_procedure, category)
             for category in HaieCriterionCategory
         }
 

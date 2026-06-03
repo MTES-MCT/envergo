@@ -800,10 +800,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         n2000_regulation
         in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
     )
-    assert (
-        "La localisation des linéaires à planter dans des zones sensibles "
-        in res.content.decode()
-    )
+    assert "La plantation se situe en zone sensible " in res.content.decode()
 
     # # Given a department configured as régime unique
     config_44.delete()
@@ -820,10 +817,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         n2000_regulation
         not in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
     )
-    assert (
-        "La localisation des linéaires à planter dans des zones sensibles "
-        in res.content.decode()
-    )
+    assert "La plantation se situe en zone sensible " in res.content.decode()
 
 
 def test_confighaie_settings_view_with_multiple_configs(

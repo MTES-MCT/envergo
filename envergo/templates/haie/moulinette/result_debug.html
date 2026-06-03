@@ -41,7 +41,9 @@
         <ul>
           {% with hedges_and_category_by_type|get_item:"TO_REMOVE" as hedges_and_category %}
             {% for h, category in hedges_and_category %}
-              <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} · évaluateur {{ category.value }}</li>
+              <li>
+                {{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ h.category }} · évaluateur {{ category.value }}
+              </li>
             {% endfor %}
           {% endwith %}
         </ul>
@@ -52,7 +54,9 @@
           <ul>
             {% with hedges_and_category_by_type|get_item:"TO_PLANT" as hedges_and_category %}
               {% for h, category in hedges_and_category %}
-                <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ category.value }}</li>
+                <li>
+                  {{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ h.category }} ⋅ évaluateur {{ category.value }}
+                </li>
               {% endfor %}
             {% endwith %}
           </ul>
@@ -97,10 +101,9 @@
         {% if criteria %}
           {% for criterion in criteria %}
             <section class="fr-mb-2w category-{{ criterion.evaluator.category.name }}">
-              <h4>
-                {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
-                <small>({{ criterion.result_code }})</small>
-              </h4>
+              <h5>{{ criterion.backend_title }} :</h5>
+              {% result_tag criterion.result criterion.result_tag_style %}
+              <small>({{ criterion.result_code }})</small>
               <p>
                 {% if criterion.get_evaluator.get_replantation_coefficient %}
                   R = {{ criterion.get_evaluator.get_replantation_coefficient|floatformat:"2g" }}

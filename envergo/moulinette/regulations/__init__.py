@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, EnumType, StrEnum
 from types import SimpleNamespace
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -144,10 +144,34 @@ class MapFactory(ABC):
             "#bab0ab",
         ]
 
-    def create_perimeter_polygons(self):
+    def create_perimeter_polygons(self, category=None):
         """Create MapPolygon objects from perimeters."""
 
-        perimeters = self.regulation.perimeters.all()
+        if category:
+            # create the map, only if there is some hedges of this category.
+            hedges_to_display = (
+                self.regulation.moulinette.catalog["haies"]
+                .hedges()
+                .evaluator_category(
+                    self.regulation.moulinette.config.single_procedure, category
+                )
+            )
+            ids_to_display = {hedge.id for hedge in hedges_to_display}
+
+            perimeters = []
+            for (
+                perimeter,
+                hedges_by_type,
+            ) in self.regulation.moulinette.hedges_intersecting_regulations_perimeter.get(
+                self.regulation, {}
+            ).items():
+                for _, hedges in hedges_by_type.items():
+
+                    hedge_ids = {hedge.id for hedge in hedges}
+                    if ids_to_display & hedge_ids:
+                        perimeters.append(perimeter)
+        else:
+            perimeters = self.regulation.perimeters.all()
         polygons = None
         if perimeters:
             polygons = [
@@ -162,7 +186,7 @@ class MapFactory(ABC):
         return polygons
 
     @abstractmethod
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map."""
         raise NotImplementedError
 
@@ -179,9 +203,9 @@ class PerimetersBoundedWithCenterMapMarkerMapFactory(MapFactory):
     def human_readable_name(cls):
         return "Une carte montrant l’ensemble des périmètres, avec un marqueur sur le centre du projet"
 
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map centered on moulinette location."""
-        polygons = self.create_perimeter_polygons()
+        polygons = self.create_perimeter_polygons(category)
 
         if polygons:
             map = Map(
@@ -206,21 +230,27 @@ class HedgesToRemoveCentricMapFactory(MapFactory):
     def human_readable_name(cls):
         return "Une carte centrée sur les haies à détruire (GUH uniquement)"
 
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map centered on the hedges to remove."""
-        polygons = self.create_perimeter_polygons()
+        polygons = self.create_perimeter_polygons(category)
         if polygons:
             haies = self.regulation.moulinette.catalog.get("haies")
+            if haies:
+                haies = haies.hedges()
+                if category:
+                    haies = haies.evaluator_category(
+                        self.regulation.moulinette.config.single_procedure, category
+                    )
             if haies:
                 hedges_to_remove = MapPolygon(
                     [
                         SimpleNamespace(
                             geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                         )
-                        for hedge in haies.hedges_to_remove()
+                        for hedge in haies.to_remove()
                     ],
                     "red",
-                    "Haies à détruire",
+                    "Linéaires à détruire",
                     class_name="hedge to-remove",
                 )
 
@@ -249,30 +279,36 @@ class HedgesCentricMapFactory(MapFactory):
     def human_readable_name(cls):
         return "Une carte centrée sur les haies, à la fois à détruire et à planter (GUH uniquement)"
 
-    def create_map(self) -> Map | None:
+    def create_map(self, category=None) -> Map | None:
         """Create a map centered on the hedges."""
-        polygons = self.create_perimeter_polygons()
+        polygons = self.create_perimeter_polygons(category)
         if polygons:
             haies = self.regulation.moulinette.catalog.get("haies")
+            if haies:
+                haies = haies.hedges()
+                if category:
+                    haies = haies.evaluator_category(
+                        self.regulation.moulinette.config.single_procedure, category
+                    )
             if haies:
                 hedges_to_remove_geometries = [
                     SimpleNamespace(
                         geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                     )
-                    for hedge in haies.hedges_to_remove()
+                    for hedge in haies.to_remove()
                 ]
                 hedges_to_plant_geometries = [
                     SimpleNamespace(
                         geometry=GEOSGeometry(hedge.geometry.wkt, srid=EPSG_WGS84)
                     )
-                    for hedge in haies.hedges_to_plant()
+                    for hedge in haies.to_plant()
                 ]
 
                 if hedges_to_plant_geometries:
                     hedges_to_plant = MapPolygon(
                         hedges_to_plant_geometries,
                         "#0f0",
-                        "Haies à planter",
+                        "Linéaires à planter",
                         class_name="hedge to-plant",
                     )
                     polygons.append(hedges_to_plant)
@@ -281,7 +317,7 @@ class HedgesCentricMapFactory(MapFactory):
                     hedges_to_remove = MapPolygon(
                         hedges_to_remove_geometries,
                         "#f00",
-                        "Haies à détruire",
+                        "Linéaires à détruire",
                         class_name="hedge to-remove",
                     )
                     polygons.append(hedges_to_remove)
@@ -409,11 +445,13 @@ class HaieRegulationEvaluator(RegulationEvaluator):
 
     def evaluate(self, regulation):
         super().evaluate(regulation)
-        self._procedure_type = self.get_procedure_type(regulation)
         self._results_by_category = self.get_results_by_category(regulation)
+        self._procedure_type = self.get_procedure_type(regulation)
 
     def get_procedure_type(self, regulation):
-        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(self.result)
+        procedure_type = self.PROCEDURE_TYPE_MATRIX.get(
+            self.results_by_category[HaieCriterionCategory.ru]
+        )
         return procedure_type
 
     @property
@@ -449,15 +487,15 @@ class HaieRegulationEvaluator(RegulationEvaluator):
 
             all_perimeters = {
                 perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
-                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter[
-                    regulation
-                ].items()
+                for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter.get(
+                    regulation, {}
+                ).items()
             }
             hedges_by_category = self.moulinette.catalog[
                 "haies"
             ].get_hedges_by_category(self.moulinette.config.single_procedure)
-
-            for category, hedges in hedges_by_category.items():
+            for category in HaieCriterionCategory:
+                hedges = hedges_by_category.get(category, [])
                 category_perimeters = [
                     perimeter
                     for perimeter, perimeter_hedges in all_perimeters.items()
@@ -702,10 +740,41 @@ class CriterionEvaluator(ABC):
         return {}
 
 
-class HaieCriterionCategory(Enum):
-    ru = "Régime unique"
-    l350_3 = "L350-3"
-    hru = "Hors régime unique"
+class _DjangoSafeEnumMeta(EnumType):
+    do_not_call_in_templates = True
+
+
+class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
+    """StrEnum whose members carry a `label` and `short_label` attribute.
+
+    Declare members as 3-tuples: (value, label, short_label).
+    The Django-safe metaclass prevents accidental template invocation.
+    """
+
+    def __new__(cls, value, label="", short_label=""):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.label = label
+        member.short_label = short_label
+        return member
+
+
+class HaieCriterionCategory(LabelEnum):
+    ru = (
+        "Régime unique",
+        "Haies bénéficiant d'une procédure unique",
+        "Haies (procédure unique)",
+    )
+    l350_3 = (
+        "L350-3",
+        "Alignements d'arbres en bord de voie",
+        "Alignements d'arbres bord de voie",
+    )
+    hru = (
+        "Hors régime unique",
+        "Autres haies et alignements, hors procédure unique",
+        "Linéaires hors procédure unique",
+    )
 
 
 class HaieCriterionEvaluator(CriterionEvaluator, ABC):
@@ -715,6 +784,10 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
     base_slug: str | None = None
 
     def __init_subclass__(cls, **kwargs):
+        """Compute the slug of the evaluator by combining base slug and category if it is not already set.
+
+        Add also the category in the choice label.
+        """
         super().__init_subclass__(**kwargs)
 
         if "base_slug" not in cls.__dict__ and not hasattr(cls, "_base_slug"):
@@ -744,12 +817,15 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
             cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
 
     def __init__(self, criterion, moulinette, distance, settings):
+        """Get the hedges relevant to this evaluator depending on its category."""
         super().__init__(criterion, moulinette, distance, settings)
         if "haies" in self.moulinette.catalog:
             self.hedges = (
                 self.moulinette.catalog["haies"]
                 .hedges()
-                .category(self.moulinette.config.single_procedure, self.category)
+                .evaluator_category(
+                    self.moulinette.config.single_procedure, self.category
+                )
             )
         else:
             from envergo.hedges.models import HedgeList

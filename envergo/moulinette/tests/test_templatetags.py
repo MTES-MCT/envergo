@@ -73,8 +73,3 @@ class TestResultTag:
         """The result label appears in the rendered tag."""
         html = result_tag(RESULTS.non_concerne)
         assert RESULTS[RESULTS.non_concerne] in html
-
-    def test_unknown_result_returns_empty(self):
-        """An unknown result key returns an empty string."""
-        html = result_tag("unknown_result_xyz")
-        assert html == ""

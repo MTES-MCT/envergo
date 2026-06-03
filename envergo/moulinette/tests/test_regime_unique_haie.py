@@ -38,21 +38,7 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
-            activation_map=france_map,
-            activation_mode="department_centroid",
-        ),
-        CriterionFactory(
-            title="Regime unique haie",
-            regulation=regulation,
             evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
-            activation_map=france_map,
-            activation_mode="department_centroid",
-        ),
-        CriterionFactory(
-            title="Regime unique haie",
-            regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -60,8 +46,8 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
     return criteria
 
 
-def test_ru_and_l3503_criteria_in_ru_mode():
-    """In RU mode with mixte + alignement hedges, RU→soumis, L350-3→non_concerne."""
+def test_ru_criteria_in_ru_mode():
+    """In RU mode with mixte + alignement hedges, RU→soumis."""
     RUConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[
@@ -72,10 +58,6 @@ def test_ru_and_l3503_criteria_in_ru_mode():
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
-    assert (
-        moulinette.regime_unique_haie.l350_3__regime_unique_haie.result_code
-        == "non_concerne"
-    )
 
 
 def test_hru_criterion_non_concerne_in_ru_mode():
@@ -89,10 +71,6 @@ def test_hru_criterion_non_concerne_in_ru_mode():
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert (
-        moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
-        == "non_concerne"
-    )
     assert moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
 
 
@@ -106,8 +84,8 @@ def test_hru_criterion_non_concerne_in_ru_mode():
         ),
         (
             "alignement",
-            "non_concerne",
-            "non_concerne",
+            "non_disponible",
+            "non_disponible",
         ),
     ],
 )
@@ -122,32 +100,24 @@ def test_moulinette_evaluation_single_procedure(
     assert moulinette.regime_unique_haie.result == expected_result
     if type_haie == "mixte":
         criterion = moulinette.regime_unique_haie.ru__regime_unique_haie
-    else:
-        criterion = moulinette.regime_unique_haie.l350_3__regime_unique_haie
-
-    assert criterion.result_code == expected_result_code
+        assert criterion.result_code == expected_result_code
 
 
 @pytest.mark.parametrize(
-    "type_haie, expected_result, expected_result_code",
+    "type_haie, expected_result",
     [
-        ("mixte", "non_active", "non_active"),
-        ("alignement", "non_active", "non_active"),
+        ("mixte", "non_disponible"),
+        ("alignement", "non_disponible"),
     ],
 )
-def test_moulinette_evaluation_droit_constant(
-    type_haie, expected_result, expected_result_code
-):
+def test_moulinette_evaluation_droit_constant(type_haie, expected_result):
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
-    assert (
-        moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
-        == expected_result_code
-    )
+    assert moulinette.regime_unique_haie.criteria.count() == 0
 
 
 @pytest.mark.parametrize(
@@ -682,82 +652,6 @@ class TestMultiZoneHedges:
 
 
 # ---------------------------------------------------------------------------
-# Evaluator to_remove() guard — non_concerne when no hedges to remove
-# ---------------------------------------------------------------------------
-
-
-class TestNoHedgesToRemoveGuard:
-    """Evaluators return non_concerne when their category has no TO_REMOVE hedges."""
-
-    def test_ru_non_concerne_when_no_ru_to_remove(self):
-        """RegimeUniqueHaieRu returns non_concerne when RU category has no TO_REMOVE."""
-        RUConfigHaieFactory()
-        data = make_moulinette_haie_data(
-            hedge_data=[
-                # TO_REMOVE in HRU (bord_batiment → HRU), satisfies form validation
-                make_hedge(
-                    hedge_id="D1",
-                    type_haie="buissonnante",
-                    bord_batiment=True,
-                ),
-                # TO_PLANT in RU — no TO_REMOVE in RU category
-                make_hedge(
-                    hedge_id="P1",
-                    hedge_type="TO_PLANT",
-                    type_haie="mixte",
-                ),
-            ],
-            reimplantation="replantation",
-        )
-        moulinette = MoulinetteHaie(data)
-        assert (
-            moulinette.regime_unique_haie.ru__regime_unique_haie.result_code
-            == "non_concerne"
-        )
-
-    def test_ru_soumis_with_to_remove_hedges(self):
-        """RegimeUniqueHaieRu returns soumis when TO_REMOVE hedges exist."""
-        RUConfigHaieFactory()
-        data = make_moulinette_haie_data(
-            hedge_data=[make_hedge(type_haie="mixte")],
-            reimplantation="replantation",
-        )
-        moulinette = MoulinetteHaie(data)
-        assert (
-            moulinette.regime_unique_haie.ru__regime_unique_haie.result_code == "soumis"
-        )
-
-    def test_hru_non_concerne_when_no_hru_to_remove(self):
-        """RegimeUniqueHaieHru returns non_concerne when HRU has no TO_REMOVE."""
-        RUConfigHaieFactory()
-        data = make_moulinette_haie_data(
-            hedge_data=[
-                # TO_REMOVE in RU (mixte → RU), no TO_REMOVE in HRU
-                make_hedge(type_haie="mixte"),
-            ],
-            reimplantation="replantation",
-        )
-        moulinette = MoulinetteHaie(data)
-        assert (
-            moulinette.regime_unique_haie.hru__regime_unique_haie.result_code
-            == "non_concerne"
-        )
-
-    def test_l3503_non_concerne_always_in_ru_mode(self):
-        """RegimeUniqueHaieL3503 always returns non_concerne in RU mode."""
-        RUConfigHaieFactory()
-        data = make_moulinette_haie_data(
-            hedge_data=[make_hedge(type_haie="mixte")],
-            reimplantation="replantation",
-        )
-        moulinette = MoulinetteHaie(data)
-        assert (
-            moulinette.regime_unique_haie.l350_3__regime_unique_haie.result_code
-            == "non_concerne"
-        )
-
-
-# ---------------------------------------------------------------------------
 # results_by_category — per-category result at regulation and moulinette level
 # ---------------------------------------------------------------------------
 
@@ -774,9 +668,9 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_concerne
+        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
         assert rbc[HaieCriterionCategory.ru] == RESULTS.soumis
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_concerne
+        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_by_category_dc_mode(self):
         """In DC mode, all categories are non_active."""
@@ -787,9 +681,9 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_active
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_active
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_active
+        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
+        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_disponible
+        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_non_activated(self):
         """A non-activated regulation returns non_active for all categories."""
@@ -812,21 +706,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.results_by_category
-        # soumis → soumis through GLOBAL_RESULT_MATRIX
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.soumis
-
-    def test_only_to_plant_hedges_all_non_concerne(self):
-        """With only TO_PLANT hedges, all category results are non_concerne."""
-        RUConfigHaieFactory()
-        data = make_moulinette_haie_data(
-            hedge_data=[make_hedge(hedge_type="TO_PLANT", type_haie="mixte")],
-            reimplantation="replantation",
-        )
-        moulinette = MoulinetteHaie(data)
-        rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_concerne
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_concerne
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_concerne
+        assert rbc[HaieCriterionCategory.ru] == "declaration"
 
 
 # ---------------------------------------------------------------------------
