@@ -418,11 +418,22 @@ class RegulationEvaluator(ABC):
 
         return self._result
 
+    @property
+    @abstractmethod
+    def results_by_category(self):
+        """Return a regulation macro result for each category of at least one criterion."""
+        raise NotImplementedError()
+
 
 class AmenagementRegulationEvaluator(RegulationEvaluator):
     """Specific evaluator for the amenagement site."""
 
     choice_label = "Aménagement > Défaut"
+
+    @property
+    def results_by_category(self):
+        """Return a regulation macro result for each category of at least one criterion."""
+        raise NotImplementedError("Not needed for Envergo aménagement")
 
 
 class HaieRegulationEvaluator(RegulationEvaluator):
@@ -453,16 +464,28 @@ class HaieRegulationEvaluator(RegulationEvaluator):
         return self._procedure_type
 
     def get_results_by_category(self, regulation):
+        """Compute a result per hedge category, mirroring get_result logic.
 
-        # We start by handling edge cases:
-        # - when the regulation is not activated for the department
-        # - when the perimeter is not activated
-        # - when no perimeter is found
+        Same cascade principle as RegulationEvaluator.get_result, but applied
+        per category: perimeter checks freeze a category result before the
+        criteria cascade runs, so unavailable / unconcerned categories are
+        never overridden.
+        """
+
         if not regulation.is_activated():
             return {category: RESULTS.non_active for category in HaieCriterionCategory}
 
+        # --- Perimeter guard (per category) --------------------------------
         results_by_category = {}
         if regulation.has_perimeters:
+            if (
+                regulation
+                not in self.moulinette.hedges_intersecting_regulations_perimeter
+            ):
+                return {
+                    category: RESULTS.non_concerne for category in HaieCriterionCategory
+                }
+
             all_perimeters = {
                 perimeter: [h for hedges in hedges_by_type.values() for h in hedges]
                 for perimeter, hedges_by_type in self.moulinette.hedges_intersecting_regulations_perimeter.get(
@@ -472,19 +495,20 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             hedges_by_category = self.moulinette.catalog[
                 "haies"
             ].get_hedges_by_category(self.moulinette.config.single_procedure)
-            for category, hedges in hedges_by_category.items():
-                category_perimeter = []
-                for perimeter, perimeter_hedges in all_perimeters.items():
-                    perimeter_hedge_ids = {h.id for h in perimeter_hedges}
-                    if any(h.id in perimeter_hedge_ids for h in hedges):
-                        category_perimeter.append(perimeter)
+            for category in HaieCriterionCategory:
+                hedges = hedges_by_category.get(category, [])
+                category_perimeters = [
+                    perimeter
+                    for perimeter, perimeter_hedges in all_perimeters.items()
+                    if any(h.id in {ph.id for ph in perimeter_hedges} for h in hedges)
+                ]
 
-                activated_perimeters = [p for p in category_perimeter if p.is_activated]
-                if category_perimeter and not any(activated_perimeters):
-                    results_by_category[category] = RESULTS.non_disponible
-                if not category_perimeter:
+                if not category_perimeters:
                     results_by_category[category] = RESULTS.non_concerne
+                elif not any(p.is_activated for p in category_perimeters):
+                    results_by_category[category] = RESULTS.non_disponible
 
+        # --- Criteria cascade (skips frozen categories) --------------------
         all_results_by_category = defaultdict(list)
         for criterion in regulation.criteria.all():
             all_results_by_category[criterion.evaluator.category].append(
@@ -492,12 +516,14 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             )
 
         for category, results in all_results_by_category.items():
+            if category in results_by_category:
+                continue
             for status in RESULT_CASCADE:
                 if status in results:
                     results_by_category[category] = status
                     break
 
-        # If there is no criterion at all, we have to set a default value
+        # --- Default for categories with no criteria -----------------------
         for category in HaieCriterionCategory:
             if category not in results_by_category:
                 if regulation.has_perimeters:
@@ -511,7 +537,7 @@ class HaieRegulationEvaluator(RegulationEvaluator):
     def results_by_category(self):
         """Return a regulation macro result for each category of at least one criterion."""
 
-        if not hasattr(self, "_result"):
+        if not hasattr(self, "_results_by_category"):
             raise RuntimeError("Call the evaluator `evaluate` method first")
 
         return self._results_by_category
@@ -716,6 +742,11 @@ class CriterionEvaluator(ABC):
 
 
 class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
+    """StrEnum whose members carry a `label` and `short_label` attribute.
+
+    Declare members as 3-tuples: (value, label, short_label).
+    The Django-safe metaclass prevents accidental template invocation.
+    """
 
     def __new__(cls, value, label="", short_label=""):
         member = str.__new__(cls, value)
