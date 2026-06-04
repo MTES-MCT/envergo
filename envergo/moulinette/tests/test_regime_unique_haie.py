@@ -6,7 +6,7 @@ from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.tests.factories import HedgeFactory
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
 from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
@@ -784,3 +784,52 @@ class TestDebugContext:
         ctx = moulinette.get_debug_context()
         htc = ctx["hedges_and_category_by_type"]
         assert htc == {}
+
+
+class TestCityHallSubmission:
+
+    def test_projet_urba_returns_autorisation_urba(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            contexte="projet-urba",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert moulinette.city_hall_submission == CityHallSubmission.AUTORISATION_URBA
+
+    def test_ru_only_returns_none(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HaieCriterionCategory.ru in moulinette.results_by_category
+        assert moulinette.city_hall_submission == CityHallSubmission.NONE
+
+    def test_hru_only_returns_complete(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(type_haie="alignement", bord_voie=False),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HaieCriterionCategory.ru not in moulinette.results_by_category
+        assert moulinette.city_hall_submission == CityHallSubmission.COMPLETE
+
+    def test_ru_and_hru_returns_partial(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(hedge_id="D1", type_haie="mixte"),
+                make_hedge(hedge_id="D2", type_haie="alignement", bord_voie=False),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HaieCriterionCategory.ru in moulinette.results_by_category
+        assert len(moulinette.results_by_category) > 1
+        assert moulinette.city_hall_submission == CityHallSubmission.PARTIAL
