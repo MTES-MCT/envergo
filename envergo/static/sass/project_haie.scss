@@ -459,7 +459,8 @@ dialog#hedge-input-modal {
 
 dialog.hedge-data-dialog {
   #form-group-removal-type_haie label span.label-content,
-  #form-group-plantation-type_haie label span.label-content {
+  #form-group-plantation-type_haie label span.label-content,
+  .hedge-data-dialog-header {
     display: flex;
     justify-content: space-between;
   }

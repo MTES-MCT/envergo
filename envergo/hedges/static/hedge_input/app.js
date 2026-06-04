@@ -60,6 +60,8 @@ const showHedgeModal = (hedge, hedgeType) => {
   const form = dialog.querySelector("form");
   const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
   const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
+  const hedgeBadgeHru = dialog.querySelector(".hedge-badge-hru");
+  const hedgeBadgeL3503 = dialog.querySelector(".hedge-badge-l350-3");
   const resetForm = () => {
     form.reset();
     const inputs = form.querySelectorAll("input");
@@ -98,6 +100,8 @@ const showHedgeModal = (hedge, hedgeType) => {
   }
   hedgeName.textContent = hedge.id;
   hedgeLength.textContent = hedge.length.toFixed(0);
+  hedgeBadgeHru.style.display = hedge.type === TO_REMOVE && hedge.category() === 'hru' ? '' : 'none';
+  hedgeBadgeL3503.style.display = hedge.type === TO_REMOVE && hedge.category() === 'l350_3' ? '' : 'none';
 
   // Save form data to the hedge object
   // This is the form submit event handler
