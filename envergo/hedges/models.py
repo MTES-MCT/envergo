@@ -190,7 +190,11 @@ class Hedge:
 
     @property
     def category(self):
-        """Return the category of the hedge (régime unique, L350-3 or hores régime unique)."""
+        """Return the category of the hedge (régime unique, L350-3 or hores régime unique).
+
+        This method logic is duplicate on front side (envergo/hedges/static/hedge_input/app.js)
+        Any changes made here must be reflected there.
+        """
         from envergo.moulinette.regulations import HaieCriterionCategory
 
         if (

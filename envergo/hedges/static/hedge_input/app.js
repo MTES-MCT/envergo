@@ -60,6 +60,8 @@ const showHedgeModal = (hedge, hedgeType) => {
   const form = dialog.querySelector("form");
   const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
   const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
+  const hedgeBadgeHru = dialog.querySelector(".hedge-badge-hru");
+  const hedgeBadgeL3503 = dialog.querySelector(".hedge-badge-l350-3");
   const resetForm = () => {
     form.reset();
     const inputs = form.querySelectorAll("input");
@@ -98,6 +100,8 @@ const showHedgeModal = (hedge, hedgeType) => {
   }
   hedgeName.textContent = hedge.id;
   hedgeLength.textContent = hedge.length.toFixed(0);
+  hedgeBadgeHru.style.display = hedge.type === TO_REMOVE && hedge.category() === 'hru' ? '' : 'none';
+  hedgeBadgeL3503.style.display = hedge.type === TO_REMOVE && hedge.category() === 'l350_3' ? '' : 'none';
 
   // Save form data to the hedge object
   // This is the form submit event handler
@@ -305,6 +309,29 @@ class Hedge {
     const { type_haie } = this.additionalData;
 
     return type_haie !== undefined && type_haie && (!("position" in this.additionalData) || this.additionalData.position);
+  }
+
+  category() {
+    // This method logic is duplicate on backend side (envergo/hedges/models.py)
+    // Any changes made here must be reflected there.
+    const { type_haie } = this.additionalData;
+
+    if (type_haie !== "alignement"
+      && (!("bord_batiment" in this.additionalData) || !this.additionalData.bord_batiment)
+      && (!("parc_jardin" in this.additionalData) || !this.additionalData.parc_jardin)
+      && (!("place_publique" in this.additionalData) || !this.additionalData.place_publique))
+    {
+      return "ru"
+    }
+    else if(type_haie === "alignement"
+      && (!("bord_voie" in this.additionalData) || this.additionalData.bord_voie)){
+
+      return "l350_3"
+    }
+    else{
+
+      return "hru"
+    }
   }
 
   remove() {
@@ -649,6 +676,8 @@ createApp({
       // Prepare the hedge data to be sent in the request body
       const hedgeData = serializeHedgesData();
 
+      if(conditionsUrl)
+      {
       fetch(conditionsUrl, {
         method: 'POST',
         headers: {
@@ -677,6 +706,10 @@ createApp({
           console.error('Error:', error);
           conditions.status = "error";
         });
+      }
+      else{
+        conditions.status = "unavailable";
+      }
     }
 
     const addTooltip = (e) => {
@@ -695,7 +728,7 @@ createApp({
     //  1. we are drawing a new hedge
     //  2. we are editing an existing hedge by dragging a marker
     const updateTooltip = (e) => {
-      let latLngs = null;;
+      let latLngs = null;
 
       if (e.vertex) {
         latLngs = e.vertex.latlngs;
