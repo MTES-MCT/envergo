@@ -1,17 +1,39 @@
+from unittest.mock import PropertyMock, patch
+
 import pytest
 
-from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
-from envergo.hedges.services import PlantationEvaluator
+from envergo.evaluations.models import RESULTS
+from envergo.geodata.conftest import bizous_town_center, france_map  # noqa: F401
+from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     PerimeterFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def regime_unique_haie_criteria(france_map):  # noqa: F811
+    regulation = RegulationFactory(
+        regulation="regime_unique_haie",
+        evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRegulation",
+    )
+    return [
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+    ]
 
 
 @pytest.fixture
@@ -122,3 +144,67 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
         for condition in evaluator.conditions
         if condition.label == "Longueur de la haie plantée"
     )
+
+
+class TestGlobalResultsByCategory:
+
+    def test_combines_category_result_with_plantation_result(
+        self, regime_unique_haie_criteria
+    ):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        hedges = moulinette.catalog["haies"]
+        evaluator = PlantationEvaluator(moulinette, hedges)
+        evaluator.evaluate()
+
+        # category_result="declaration" + plantation_result="inadequate" (no plantation hedges)
+        # -> PLANTATION_RESULT_MATRIX maps to "inadequate"
+        results = evaluator.global_results_by_category
+        assert results[HaieCriterionCategory.ru] == PlantationResults.Inadequate.value
+
+
+class TestDisplayForAlternatives:
+
+    def test_interdit_displays_for_alternatives(self, regime_unique_haie_criteria):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        hedges = moulinette.catalog["haies"]
+        evaluator = PlantationEvaluator(moulinette, hedges)
+        evaluator.evaluate()
+
+        with patch.object(
+            type(evaluator),
+            "global_results_by_category",
+            new_callable=PropertyMock,
+            return_value={HaieCriterionCategory.ru: RESULTS.interdit},
+        ):
+            assert evaluator.display_for_alternatives(HaieCriterionCategory.ru) is True
+
+    def test_non_soumis_does_not_display_for_alternatives(
+        self, regime_unique_haie_criteria
+    ):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        hedges = moulinette.catalog["haies"]
+        evaluator = PlantationEvaluator(moulinette, hedges)
+        evaluator.evaluate()
+
+        with patch.object(
+            type(evaluator),
+            "global_results_by_category",
+            new_callable=PropertyMock,
+            return_value={HaieCriterionCategory.ru: RESULTS.non_soumis},
+        ):
+            assert evaluator.display_for_alternatives(HaieCriterionCategory.ru) is False
