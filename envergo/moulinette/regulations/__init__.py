@@ -495,8 +495,8 @@ class HaieRegulationEvaluator(RegulationEvaluator):
             hedges_by_category = self.moulinette.catalog[
                 "haies"
             ].get_hedges_by_category(self.moulinette.config.single_procedure)
-
-            for category, hedges in hedges_by_category.items():
+            for category in HaieCriterionCategory:
+                hedges = hedges_by_category.get(category, [])
                 category_perimeters = [
                     perimeter
                     for perimeter, perimeter_hedges in all_perimeters.items()
@@ -742,6 +742,11 @@ class CriterionEvaluator(ABC):
 
 
 class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
+    """StrEnum whose members carry a `label` and `short_label` attribute.
+
+    Declare members as 3-tuples: (value, label, short_label).
+    The Django-safe metaclass prevents accidental template invocation.
+    """
 
     def __new__(cls, value, label="", short_label=""):
         member = str.__new__(cls, value)
