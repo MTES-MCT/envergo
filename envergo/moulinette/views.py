@@ -919,5 +919,6 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
             .defer("geometry")
         )
         context["density_maps"] = density_maps
+        context["ru_zone_configs"] = self.object.zone_configs
 
         return context

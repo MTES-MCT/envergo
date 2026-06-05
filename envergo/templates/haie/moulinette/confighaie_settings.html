@@ -31,6 +31,11 @@
         <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
       </p>
 
+      {% if object.single_procedure %}
+        <h2>Coefficients de compensation régime unique</h2>
+        {% include 'haie/_ru_coefficient_matrix.html' %}
+      {% endif %}
+
       <h2 id="title-contact">Informations de contact</h2>
       <div class="fr-callout">
         <p class="fr-text--sm">
