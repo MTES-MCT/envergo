@@ -1517,6 +1517,16 @@ class ConfigHaie(ConfigBase):
             ),
         ]
 
+    @property
+    def zone_configs(self):
+        """Return the matrix of zone -> compensation coeffs."""
+
+        if not self.single_procedure:
+            return {}
+
+        coeffs = self.single_procedure_settings.get("coeff_compensation")
+        return coeffs
+
 
 TEMPLATE_KEYS = [
     "autorisation_urba_pa",
