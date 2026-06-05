@@ -538,7 +538,7 @@ class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
                     **mtm_keys,
                 )
 
-            # Post to automation systems even is the request was already submitted, duplicates will be filtered later
+            # Post to automation systems even if the request was already submitted, duplicates will be filtered later
             transaction.on_commit(post_to_automation)
 
         return super().form_valid(form)
