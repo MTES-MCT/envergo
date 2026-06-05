@@ -2,7 +2,6 @@ from urllib.parse import urlparse
 
 from django import forms
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
 from envergo.urlmappings.models import UrlMapping
 
