@@ -502,14 +502,10 @@ class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
 
         request = form.instance
 
-        # Send notifications, once data is commited
-        def confirm_request():
+        def send_notifications():
             confirm_request_to_requester.delay(request.id, self.request.get_host())
             confirm_request_to_admin.delay(request.id, self.request.get_host())
-            request.submitted = True
-            request.save()
 
-        # Send data to after sales third party services, once data is commited
         def post_to_automation():
             post_evalreq_to_automation.delay(request.id, self.request.get_host())
 
@@ -517,8 +513,12 @@ class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
         # The product is often used for demo purpose. In that case, we don't
         # want to send confirmation emails or any other notifications.
         if settings.TEST_EMAIL not in request.urbanism_department_emails:
-            if request.submitted is False:
-                transaction.on_commit(confirm_request)
+            # Atomic UPDATE prevents duplicate notifications on double-submit
+            updated = Request.objects.filter(id=request.id, submitted=False).update(
+                submitted=True
+            )
+            if updated:
+                transaction.on_commit(send_notifications)
                 mtm_keys = {
                     k: v
                     for k, v in self.request.session.items()
