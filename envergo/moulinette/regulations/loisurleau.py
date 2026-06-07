@@ -31,6 +31,20 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
         "action_requise": {TO_ADD: {"mention_arrete_lse"}},
     }
 
+    @property
+    def has_icpe(self):
+        """Whether the project is also subject to an ICPE (eval env > ICPE).
+
+        Used by LSE result templates to adapt the wording depending on whether
+        an ICPE is involved.
+        """
+        eval_env = self.moulinette.get_regulation("eval_env")
+        icpe = getattr(eval_env, "icpe", None) if eval_env else None
+        return icpe is not None and icpe.result not in (
+            "non_soumis",
+            "non_disponible",
+        )
+
 
 class ZoneHumide(
     ZoneHumideMixin,
