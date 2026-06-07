@@ -957,6 +957,13 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
             and self.icpe_projet == ICPE_PROJET_CREATION
         )
 
+    @property
+    def is_a_verifier_modif(self):
+        return self.result_code == "a_verifier_modif" or (
+            self.icpe_projet == ICPE_PROJET_MODIF_SANS_PAC
+            and self.icpe_regime == ICPE_REGIME_INCONNU
+        )
+
     def get_catalog_data(self):
         data = super().get_catalog_data()
         if self.icpe_regime is not None:
