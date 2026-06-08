@@ -379,3 +379,149 @@ def test_evalenv_subtractive_actions_to_take():
     assert actions_to_take_flatten == {
         "petitioner": ["depot_etude_impact"]
     }  # there is no pc_etude_impact in DB
+
+
+# ---------------------------------------------------------------------------
+# ICPE criterion
+# ---------------------------------------------------------------------------
+
+ICPE_BASE_PARAMS = "created_surface=500&final_surface=500&lng=-1.54394&lat=47.21381"
+
+
+def _get_icpe_result(staff_client, icpe_projet, icpe_regime):
+    params = (
+        f"{ICPE_BASE_PARAMS}"
+        f"&evalenv_icpe-activate=on"
+        f"&evalenv_icpe-icpe_projet={icpe_projet}"
+        f"&evalenv_icpe-icpe_regime={icpe_regime}"
+    )
+    url = f"{reverse('moulinette_result')}?{params}"
+    return staff_client.get(url)
+
+
+@pytest.fixture
+def icpe_criterion(france_map):
+    ConfigAmenagementFactory(is_activated=True)
+    regulation = RegulationFactory(regulation="eval_env")
+    return CriterionFactory(
+        title="Cas par cas pour une installation classée (ICPE)",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.evalenv.ICPE",
+        activation_map=france_map,
+        is_optional=True,
+        is_staff_only=True,
+    )
+
+
+@pytest.mark.usefixtures("icpe_criterion")
+class TestICPEResults:
+    def test_creation_enregistrement_is_cas_par_cas(self, staff_client):
+        res = _get_icpe_result(staff_client, "creation", "enregistrement")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "cas par cas" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas.html")
+        assert "crée" in content
+
+    def test_modif_avec_pac_enregistrement_is_cas_par_cas(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_avec_pac", "enregistrement")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "cas par cas" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/result_cas_par_cas_icpe.html")
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_cas_par_cas_modif.html")
+        assert "modifie" in content
+
+    def test_creation_declaration_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "creation", "declaration")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(
+            res, "moulinette/eval_env/icpe_non_soumis_declaration_creation.html"
+        )
+
+    def test_modif_sans_pac_enregistrement_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_sans_pac", "enregistrement")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_non_soumis.html")
+
+    def test_aucun_aucun_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "aucun", "aucun")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_non_soumis.html")
+
+    def test_creation_inconnu_is_a_verifier(self, staff_client):
+        res = _get_icpe_result(staff_client, "creation", "inconnu")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "à vérifier" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier.html")
+
+    def test_modif_avec_pac_inconnu_is_a_verifier(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_avec_pac", "inconnu")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "à vérifier" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier_modif.html")
+
+    def test_modif_avec_pac_declaration_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_avec_pac", "declaration")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(
+            res, "moulinette/eval_env/icpe_non_soumis_declaration_modif.html"
+        )
+
+    def test_modif_sans_pac_declaration_is_non_soumis(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_sans_pac", "declaration")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "non soumis" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_non_soumis.html")
+
+    def test_modif_sans_pac_inconnu_is_a_verifier(self, staff_client):
+        res = _get_icpe_result(staff_client, "modif_sans_pac", "inconnu")
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "à vérifier" in content.lower()
+        assertTemplateUsed(res, "moulinette/eval_env/icpe_a_verifier.html")
+
+
+@pytest.mark.usefixtures("icpe_criterion")
+class TestICPEFormValidation:
+    def test_aucun_projet_with_regime_is_invalid(self, staff_client):
+        """aucun projet + enregistrement regime = contradictory, redirects to form."""
+        res = _get_icpe_result(staff_client, "aucun", "enregistrement")
+
+        assert res.status_code == 302
+        assert "/formulaire/" in res["Location"]
+
+    def test_projet_with_aucun_regime_is_invalid(self, staff_client):
+        """creation projet + aucun regime = contradictory, redirects to form."""
+        res = _get_icpe_result(staff_client, "creation", "aucun")
+
+        assert res.status_code == 302
+        assert "/formulaire/" in res["Location"]
+
+    def test_coherent_answers_are_valid(self, staff_client):
+        """creation + enregistrement = valid, shows result page."""
+        res = _get_icpe_result(staff_client, "creation", "enregistrement")
+
+        assert res.status_code == 200
+        assertTemplateUsed(res, "moulinette/result.html")

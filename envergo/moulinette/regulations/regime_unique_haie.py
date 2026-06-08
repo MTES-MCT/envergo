@@ -6,8 +6,8 @@ Determines whether a hedge project falls under the régime unique
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
-    MinLengthCondition,
     PlantationConditionMixin,
+    RUMinLengthCondition,
     RUQualityCondition,
     SafetyCondition,
 )
@@ -45,7 +45,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
 
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
-    plantation_conditions = [MinLengthCondition, RUQualityCondition, SafetyCondition]
+    plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,
@@ -98,6 +98,11 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         context = super().get_debug_context()
         context.update(get_ru_debug_context(self.catalog))
         return context
+
+    @property
+    def effective_coefficients(self):
+        """Raw per-hedge zone-based compensation coefficients."""
+        return self.catalog.get("per_hedge_coefficients", {})
 
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
