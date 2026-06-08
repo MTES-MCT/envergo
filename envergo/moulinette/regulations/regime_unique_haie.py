@@ -8,9 +8,9 @@ haie evaluator and the EP régime unique evaluator.
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import PlantationConditionMixin
 from envergo.moulinette.regulations import (
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
@@ -232,7 +232,7 @@ class RegimeUniqueHaieRu(
     choice_label = "Régime unique haie > Régime unique haie"
     base_slug = "regime_unique_haie"
     plantation_conditions = []
-    category = HaieCriterionCategory.ru
+    category = HedgeCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,

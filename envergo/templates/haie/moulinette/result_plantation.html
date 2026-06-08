@@ -53,11 +53,11 @@
 {% endblock %}
 
 {% block other_categories_results %}
-  {% if HaieCriterionCategory.l350_3 in moulinette.other_categories %}
-    {% show_plantation_result plantation_evaluation HaieCriterionCategory.l350_3 is_main=False %}
+  {% if HedgeCategory.l350_3 in moulinette.other_categories %}
+    {% show_plantation_result plantation_evaluation HedgeCategory.l350_3 is_main=False %}
   {% endif %}
-  {% if HaieCriterionCategory.hru in moulinette.other_categories %}
-    {% show_plantation_result plantation_evaluation HaieCriterionCategory.hru is_main=False %}
+  {% if HedgeCategory.hru in moulinette.other_categories %}
+    {% show_plantation_result plantation_evaluation HedgeCategory.hru is_main=False %}
   {% endif %}
   {% if moulinette.city_hall_submission == CityHallSubmission.AUTORISATION_URBA %}
     <div class="fr-mb-3w fr-callout other-category-header">

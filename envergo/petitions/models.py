@@ -21,7 +21,7 @@ from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
@@ -118,6 +118,13 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     hedge_data = models.ForeignKey(
         HedgeData,
         on_delete=models.PROTECT,
+    )
+
+    _category = models.CharField(
+        "Catégorie du dossier",
+        max_length=20,
+        choices=HedgeCategory.choices,
+        db_index=True,
     )
 
     demarches_simplifiees_dossier_number = models.IntegerField(
@@ -548,6 +555,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return Regulation.objects.filter(
             regulation__in=self.config.regulations_available
         ).order_by("weight")
+
+    @property
+    def category(self):
+        return HedgeCategory(self._category) if self._category else None
+
+    @category.setter
+    def category(self, value):
+        self._category = value.value if isinstance(value, HedgeCategory) else value
 
 
 USER_TYPE = Choices(

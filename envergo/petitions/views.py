@@ -303,7 +303,7 @@ class PetitionProjectCreate(FormView):
 
     def form_valid(self, form):
         moulinette_url = form.cleaned_data["moulinette_url"]
-        category = form.cleaned_data["category"]
+        category = form.cleaned_data["_category"]
 
         department_nb = extract_param_from_url(moulinette_url, "department")
         date_str = extract_param_from_url(moulinette_url, "date")
