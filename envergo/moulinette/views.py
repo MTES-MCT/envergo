@@ -96,6 +96,9 @@ class MoulinetteMixin:
         context["moulinette"] = self.moulinette
         context.update(self.moulinette.catalog)
 
+        user = self.request.user
+        is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
+
         if self.moulinette.is_evaluated():
 
             context["has_errors"] = (
@@ -155,7 +158,10 @@ class MoulinetteMixin:
             self.request.user.is_staff
             and self.request.user.groups.filter(name="Staff ops").exists()
         )
-        context["optional_forms"] = self.moulinette.optional_forms
+        optional_forms = self.moulinette.optional_forms
+        if not is_staff:
+            optional_forms = [f for f in optional_forms if not f.is_staff_only]
+        context["optional_forms"] = optional_forms
         context["triage_form"] = self.moulinette.triage_form
 
         context = {**context, **self.moulinette.get_extra_context(self.request)}

@@ -125,6 +125,7 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.interdit: RESULTS.interdit,
     RESULTS.systematique: RESULTS.soumis,
     RESULTS.cas_par_cas: RESULTS.soumis,
+    RESULTS.cas_par_cas_icpe: RESULTS.soumis,
     RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
     RESULTS.soumis_declaration: RESULTS.soumis,
@@ -175,6 +176,7 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.interdit: ResultGroupEnum.BlockingRegulations,
     RESULTS.systematique: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.cas_par_cas_icpe: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_declaration: ResultGroupEnum.RestrictiveRegulations,
@@ -231,6 +233,13 @@ ACTIONS_TO_TAKE = Choices(
     ("pc_cas_par_cas", "PC cas par cas"),
     ("pc_ein", "PC EIN"),
     ("pc_etude_impact", "PC étude impact"),
+    ("pc_icpe_d", "PC ICPE déclaration"),
+    ("pc_icpe_e", "PC ICPE enregistrement"),
+    ("pc_icpe_inconnu", "PC ICPE régime inconnu"),
+    ("mention_arrete_icpe_e", "Mention arrêté ICPE E"),
+    ("suspension_delai_icpe", "Suspension délai ICPE"),
+    ("depot_dossier_icpe", "Dépôt dossier ICPE"),
+    ("depot_pac_icpe", "Dépôt PAC ICPE"),
 )
 
 
@@ -351,6 +360,13 @@ class Regulation(models.Model):
             )
 
         return self._evaluator.result
+
+    @property
+    def is_cas_par_cas(self):
+        """Whether this regulation's result is any variant of cas par cas."""
+        if not hasattr(self, "_evaluator"):
+            return False
+        return self.result is not None and self.result.startswith("cas_par_cas")
 
     @property
     def procedure_type(self):
@@ -487,6 +503,15 @@ class Regulation(models.Model):
             c.discussion_contact for c in self.criteria.all() if c.discussion_contact
         ]
         return contacts
+
+    @property
+    def no_other_cas_par_cas_than_icpe(self):
+        """True when no criterion other than ICPE triggers cas_par_cas."""
+        return not any(
+            c
+            for c in self.criteria.all()
+            if c.result == RESULTS.cas_par_cas and c.slug != "icpe"
+        )
 
     def ein_out_of_n2000_site(self):
         """Is the project subject to n2000 even if it is not in a Natura 2000 zone ?
@@ -689,6 +714,11 @@ class Criterion(models.Model):
         default=False,
         help_text="Ne s'applique que sur activation expresse de l'utilisateur (questions « optionnelles »)",
     )
+    is_staff_only = models.BooleanField(
+        _("Is staff only"),
+        default=False,
+        help_text="Ne s'affiche et ne s'applique que pour les utilisateurs staff",
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -773,6 +803,10 @@ class Criterion(models.Model):
                 {
                     "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
                 }
+            )
+        if self.is_staff_only and not self.is_optional:
+            raise ValidationError(
+                {"is_optional": "Un critère staff-only doit être optionnel."}
             )
 
     @property
@@ -1804,6 +1838,10 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def additional_forms(self):
         return self.get_additional_forms()
 
+    @cached_property
+    def optional_forms(self):
+        return self.get_optional_forms()
+
     def get_optional_forms(self):
         """Get a list of instanciated optional forms.
 
@@ -1838,34 +1876,32 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
+    def get_optional_criteria_list(self):
+        if self.is_evaluated():
+            criteria = [
+                c
+                for regulation in self.regulations
+                for c in regulation.criteria.all()
+                if c.is_optional
+            ]
+        else:
+            criteria = list(self.get_optional_criteria())
+
+        return criteria
+
     def optional_form_classes(self):
-        """Return the list of forms for optional questions.
-
-        If the moulinette is bound, we can fetch the precise optional criterion list and
-        get their forms.
-
-        Otherwise, we have to fetch every single existing optional criterion.
-        """
+        """Return the list of forms for optional questions."""
         form_classes = []
 
-        if self.is_evaluated():
-            for regulation in self.regulations:
-                for criterion in regulation.criteria.all():
-                    if criterion.is_optional:
-                        form_class = criterion.get_form_class()
-                        if form_class and form_class not in form_classes:
-                            form_classes.append(form_class)
-        else:
-            for criterion in self.get_optional_criteria():
+        for criterion in self.get_optional_criteria_list():
+            if self.is_evaluated():
+                form_class = criterion.get_form_class()
+            else:
                 form_class = criterion.evaluator.form_class
-                if form_class and form_class not in form_classes:
-                    form_classes.append(form_class)
+            if form_class and form_class not in form_classes:
+                form_classes.append(form_class)
 
         return form_classes
-
-    @cached_property
-    def optional_forms(self):
-        return self.get_optional_forms()
 
     def get_all_forms(self):
         """Return all forms associated with the Moulinette."""
@@ -2083,7 +2119,6 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         criteria = Criterion.objects.filter(
             is_optional=True, regulation__regulation__in=self.REGULATIONS
         ).order_by("weight")
-
         return criteria
 
     def get_regulations(self):
