@@ -1,5 +1,5 @@
-{% if not moulinette.eval_env.icpe or moulinette.eval_env.icpe.result == "non_soumis" or moulinette.eval_env.icpe.result == "non_disponible" %}
-  {% include 'moulinette/loi_sur_leau/result_action_requise_sans_icpe.html' %}
-{% else %}
+{% if moulinette.loi_sur_leau.get_evaluator.has_icpe %}
   {% include 'moulinette/loi_sur_leau/result_action_requise_avec_icpe.html' %}
+{% else %}
+  {% include 'moulinette/loi_sur_leau/result_action_requise_sans_icpe.html' %}
 {% endif %}

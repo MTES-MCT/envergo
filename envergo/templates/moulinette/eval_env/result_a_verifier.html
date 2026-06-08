@@ -9,7 +9,7 @@
     soumis à examen au cas par cas. Dans ce cas, le dossier d'enregistrement ICPE fait office
     de demande d'examen au cas par cas.
   </p>
-{% elif regulation.icpe.result_code == "a_verifier_modif" or regulation.icpe.get_evaluator.icpe_projet == "modif_sans_pac" and regulation.icpe.get_evaluator.icpe_regime == "inconnu" %}
+{% elif regulation.icpe.get_evaluator.is_a_verifier_modif %}
   <p>
     Le projet modifie une ICPE existante. Si un dossier de modification doit être déposé, et que
     l'ICPE est soumise à enregistrement, le projet est soumis à examen au cas par cas. Dans ce cas,

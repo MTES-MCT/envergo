@@ -229,6 +229,8 @@ class TerrainAssiette(SelfDeclarationMixin, CriterionEvaluator):
 
 
 class OptionalFormMixin:
+    is_staff_only = False
+
     @property
     def prefixed_cleaned_data(self):
         """Return cleaned data but use prefixed keys.
@@ -784,6 +786,7 @@ ICPE_REGIME_HELP_TEXT = (
 
 
 class ICPEForm(OptionalFormMixin, forms.Form):
+    is_staff_only = True
     prefix = "evalenv_icpe"
 
     activate = forms.BooleanField(
@@ -955,6 +958,13 @@ class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
         return (
             self.result_code == "a_verifier"
             and self.icpe_projet == ICPE_PROJET_CREATION
+        )
+
+    @property
+    def is_a_verifier_modif(self):
+        return self.result_code == "a_verifier_modif" or (
+            self.icpe_projet == ICPE_PROJET_MODIF_SANS_PAC
+            and self.icpe_regime == ICPE_REGIME_INCONNU
         )
 
     def get_catalog_data(self):

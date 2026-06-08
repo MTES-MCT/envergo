@@ -1863,9 +1863,9 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
     @cached_property
     def optional_forms(self):
-        return self.get_optional_forms(exclude_staff_only_criterion=False)
+        return self.get_optional_forms()
 
-    def get_optional_forms(self, exclude_staff_only_criterion=True):
+    def get_optional_forms(self):
         """Get a list of instanciated optional forms.
 
         Optional forms can be selectively activated during a simulation.
@@ -1877,9 +1877,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
            the moulinette regulations.
         """
         forms = []
-        form_classes = self.optional_form_classes(
-            exclude_staff_only_criterion=exclude_staff_only_criterion
-        )
+        form_classes = self.optional_form_classes()
 
         for form_class in form_classes:
             # Every optional form has a "activate" field
@@ -1901,7 +1899,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
-    def _get_optional_criteria_list(self, exclude_staff_only_criterion=True):
+    def get_optional_criteria_list(self):
         if self.is_evaluated():
             criteria = [
                 c
@@ -1912,16 +1910,13 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         else:
             criteria = list(self.get_optional_criteria())
 
-        if exclude_staff_only_criterion:
-            criteria = [c for c in criteria if not c.is_staff_only]
-
         return criteria
 
-    def optional_form_classes(self, exclude_staff_only_criterion=True):
+    def optional_form_classes(self):
         """Return the list of forms for optional questions."""
         form_classes = []
 
-        for criterion in self._get_optional_criteria_list(exclude_staff_only_criterion):
+        for criterion in self.get_optional_criteria_list():
             if self.is_evaluated():
                 form_class = criterion.get_form_class()
             else:
@@ -1936,7 +1931,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
 
         all_forms = [self.main_form]
         all_forms.extend(self.additional_forms)
-        all_forms.extend(self.get_optional_forms(exclude_staff_only_criterion=False))
+        all_forms.extend(self.optional_forms)
 
         if self.triage_form:
             all_forms.append(self.triage_form)
@@ -2044,7 +2039,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         """Get a {field_name: field} dict of all optional questions fields."""
 
         fields = OrderedDict()
-        for form in self.get_optional_forms(exclude_staff_only_criterion=False):
+        for form in self.optional_forms:
             for field in form:
                 field_name = form.add_prefix(field.name)
                 if field_name not in fields:

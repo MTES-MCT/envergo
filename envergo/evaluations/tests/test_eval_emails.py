@@ -78,9 +78,7 @@ def fake_moulinette(
     # We create mocks based on a real regulation, so it's easier to fake results
     regulation = RegulationFactory()
     sage_perimeter = Mock(contact_email="sage@example.com")
-    is_evalenv_cas_par_cas = (
-        evalenv is not None and evalenv.startswith("cas_par_cas")
-    )
+    is_evalenv_cas_par_cas = evalenv is not None and evalenv.startswith("cas_par_cas")
     moulinette.regulations = [
         Mock(
             wraps=regulation,

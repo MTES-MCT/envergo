@@ -117,9 +117,7 @@ class TestCasParCasIcpeMacroResult:
 
     def test_icpe_plus_emprise_cas_par_cas_gives_cas_par_cas(self):
         """ICPE cas_par_cas + Emprise cas_par_cas -> macro = cas_par_cas (not icpe)."""
-        data = mouais_data_with_icpe(
-            10000, "creation", "enregistrement", emprise=10000
-        )
+        data = mouais_data_with_icpe(10000, "creation", "enregistrement", emprise=10000)
         del data["data"]["zone_u"]
         moulinette = MoulinetteAmenagement(data)
 
@@ -207,9 +205,7 @@ class TestCasParCasIcpeActions:
         ActionToTakeFactory(slug="pc_cas_par_cas", target="instructor")
         ActionToTakeFactory(slug="depot_dossier_icpe", target="petitioner")
 
-        data = mouais_data_with_icpe(
-            10000, "creation", "enregistrement", emprise=10000
-        )
+        data = mouais_data_with_icpe(10000, "creation", "enregistrement", emprise=10000)
         del data["data"]["zone_u"]
         moulinette = MoulinetteAmenagement(data)
 

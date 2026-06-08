@@ -7,10 +7,10 @@ Au vu des informations qui nous ont été transmises, il apparaît que :
     Le porteur de projet doit faire réaliser une étude d'impact.
 
 {% elif moulinette.eval_env.result == "cas_par_cas" %}  - Le projet est soumis à examen au cas par cas.
-Le porteur de projet doit déposer une demande d'examen au cas par cas à la DREAL.
+Le porteur de projet doit déposer une demande d'examen au cas par cas.
 
 {% endif %}{% if moulinette.loi_sur_leau.result == "soumis" %}  - Le projet est soumis à la Loi sur l'eau.
-Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau à la DDT(M).
+Le porteur de projet doit déposer un dossier de déclaration Loi sur l'eau.
 
 {% elif moulinette.loi_sur_leau.required_actions_soumis %}  - Le projet est susceptible d'être soumis à la Loi sur l’eau. Une action du porteur du projet est requise. Celui-ci doit mener les études prouvant que le projet :
 
