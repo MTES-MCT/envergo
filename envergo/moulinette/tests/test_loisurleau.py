@@ -486,15 +486,62 @@ class TestLSETemplateWithICPEActive:
             res, "moulinette/loi_sur_leau/result_action_requise_avec_icpe.html"
         )
 
-    def test_soumis_with_icpe_declaration_creation_uses_sans_icpe(self, client):
-        """ICPE declaration/creation → result non_soumis → LSE uses sans_icpe."""
+    def test_soumis_with_icpe_declaration_creation_uses_avec_icpe(self, client):
+        """ICPE declaration/creation has result_code non_soumis_declaration_creation.
+
+        Even though the ICPE result maps to non_soumis, the project still
+        involves an ICPE, so LSE must use the avec_icpe template.
+        """
         res = client.get(
             _get_lse_url(
                 surface=1500, icpe_projet="creation", icpe_regime="declaration"
             )
         )
         assert res.status_code == 200
-        assertTemplateUsed(res, "moulinette/loi_sur_leau/result_soumis_sans_icpe.html")
+        assertTemplateUsed(res, "moulinette/loi_sur_leau/result_soumis_avec_icpe.html")
+
+    def test_soumis_ou_pac_with_icpe_declaration_creation(self, client):
+        """ICPE declaration/creation → result_code non_soumis_declaration_creation.
+
+        The LSE regulation result is soumis_ou_pac (driven by EcoulementSansBV
+        at surface >= 10000). The project involves an ICPE, so the avec_icpe
+        template must be used.
+        """
+        res = client.get(
+            _get_lse_url(
+                surface=10000, icpe_projet="creation", icpe_regime="declaration"
+            )
+        )
+        assert res.status_code == 200
+        assertTemplateUsed(
+            res, "moulinette/loi_sur_leau/result_soumis_ou_pac_avec_icpe.html"
+        )
+
+    def test_action_requise_with_icpe_declaration_creation(self, client):
+        """ICPE declaration/creation → has_icpe is True for action_requise too."""
+        res = client.get(
+            _get_lse_url(
+                surface=800, icpe_projet="creation", icpe_regime="declaration"
+            )
+        )
+        assert res.status_code == 200
+        assertTemplateUsed(
+            res, "moulinette/loi_sur_leau/result_action_requise_avec_icpe.html"
+        )
+
+    def test_soumis_with_icpe_declaration_modif(self, client):
+        """ICPE declaration/modif_avec_pac → result_code non_soumis_declaration_modif.
+
+        Same behavior as non_soumis_declaration_creation: the project involves
+        an ICPE, so has_icpe must be True.
+        """
+        res = client.get(
+            _get_lse_url(
+                surface=1500, icpe_projet="modif_avec_pac", icpe_regime="declaration"
+            )
+        )
+        assert res.status_code == 200
+        assertTemplateUsed(res, "moulinette/loi_sur_leau/result_soumis_avec_icpe.html")
 
     def test_action_requise_with_icpe_a_verifier(self, client):
         res = client.get(
