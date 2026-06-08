@@ -645,7 +645,7 @@ def trim_land(geom):
             SELECT ST_AsText(ST_Intersection(u.merged, i.geom))
             FROM unioned u, input_poly i;
         """,
-            [geom.ewkt, geom.ewkt, MAP_TYPES.terres_emergees],
+            [geom.ewkt, geom.ewkt, MAP_TYPES.density_reference],
         )
         wkt = cursor.fetchone()[0]
         if wkt:
