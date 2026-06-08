@@ -129,8 +129,7 @@ class TestStaffOnlyFiltering:
         """optional_fields includes fields from staff-only forms."""
         moulinette = self.make_moulinette()
         assert any(
-            key.startswith("evalenv_icpe-")
-            for key in moulinette.optional_fields.keys()
+            key.startswith("evalenv_icpe-") for key in moulinette.optional_fields.keys()
         )
 
 
