@@ -189,8 +189,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.dry_run = options["dry_run"]
 
+        # Étape préliminaire : corriger les noms de cartes importés avec une
+        # espace fine insécable (U+202F) au lieu d'une espace normale.
+        # Doit passer avant la vérification des prérequis, qui cherche les
+        # cartes avec une espace normale.
+        self.stdout.write("=== Correction des espaces fines insécables (U+202F) ===")
+        self.fix_map_name_spaces()
+
         # Étape 0 : vérifier que toutes les données requises sont en base
-        self.stdout.write("=== Vérification des prérequis ===")
+        self.stdout.write("\n=== Vérification des prérequis ===")
         self.check_prerequisites()
 
         regulation = Regulation.objects.get(regulation="natura2000_haie")
@@ -219,6 +226,24 @@ class Command(BaseCommand):
                     "\n=== Dry run terminé, toutes les modifications ont été annulées ==="
                 )
             )
+
+    def fix_map_name_spaces(self):
+        """Corrige les noms de cartes commençant par "N2000" suivi d'une espace
+        fine insécable (U+202F), en remplaçant le U+202F par une espace normale.
+
+        Certaines cartes ont été importées avec une espace fine insécable, ce
+        qui empêche les étapes suivantes de les retrouver par leur nom.
+
+        Idempotent : ne fait rien si aucune carte n'est concernée.
+        """
+        narrow_nbsp = "\u202f"  # espace fine insécable
+        maps = Map.objects.filter(name__startswith=f"N2000{narrow_nbsp}")
+        for map_obj in maps:
+            old_name = map_obj.name
+            new_name = old_name.replace(narrow_nbsp, " ")
+            map_obj.name = new_name
+            map_obj.save(update_fields=["name"])
+            self.stdout.write(f"  Renamed '{old_name}' → '{new_name}'")
 
     def check_prerequisites(self):
         errors = []
