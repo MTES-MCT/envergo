@@ -40,7 +40,7 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
         """
         eval_env = self.moulinette.get_regulation("eval_env")
         icpe = getattr(eval_env, "icpe", None) if eval_env else None
-        return icpe is not None and icpe.result not in (
+        return icpe is not None and icpe.result_code not in (
             "non_soumis",
             "non_disponible",
         )
