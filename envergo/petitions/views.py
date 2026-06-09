@@ -650,9 +650,9 @@ class PetitionProjectCreate(FormView):
                 <br/>
                 Identifiant de l’erreur : {self.request.alerts.user_error_reference.upper()}
                 <br/>
-                Merci de <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                contacter l'équipe du guichet unique de la haie
-                </a> en nous transmettant cet identifiant
+                Vous pouvez <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                nous contacter
+                </a> en nous transmettant cet identifiant.
                 <br/>
                 Nous vous accompagnerons pour vous permettre de déposer votre demande sans encombres.""",
             },
@@ -1130,7 +1130,7 @@ class PetitionProjectInstructorDossierDSView(
                 f"""Impossible de récupérer les informations du dossier Démarche Numérique.
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                            contacter l'équipe du guichet unique de la haie
+                            contacter l'équipe de ce portail numérique 
                         </a> en indiquant l'identifiant du dossier.""",
             )
 
