@@ -862,6 +862,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         #   natura2000_haie map is displayed with custom message : "Map import processing"
         #   protection_captages map is displayed with custom message : "Data not publicly available"
         MAPS_REGULATION_LIST = [
+            "natura2000_haie",
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
