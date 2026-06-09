@@ -126,11 +126,12 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script>
+    window.REDIRECT_AFTER_PROJECT_CREATION = {{ moulinette.is_multi_category|yesno:'false,true' }};
     window.SUCCESSFUL_COPY_MESSAGE = "Lien copié !";
     window.COPY_DISABLED_MESSAGE = "Impossible de copier le lien";
   </script>
+  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
   <script defer src="{% static 'js/libs/shorten_url_for_copy.js' %}"></script>
 {% endblock %}
