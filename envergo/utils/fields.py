@@ -1,3 +1,4 @@
+from django.db.models import TextChoices
 from django.forms import ClearableFileInput, EmailField, FileField
 from django.forms.widgets import RadioSelect, Select
 
@@ -71,3 +72,17 @@ class ProjectStageField(Select):
         context["STAGES"] = STAGES
         context["widget"]["errors"] = getattr(self, "errors", [])
         return context
+
+
+class LabelChoices(TextChoices):
+    """TextChoices whose members carry a `label` and `short_label` attribute.
+
+    Declare members as 3-tuples: (value, short_label, label).
+    ChoicesMeta pops the last string as the standard Django label.
+    """
+
+    def __new__(cls, value, short_label=""):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        member.short_label = short_label
+        return member

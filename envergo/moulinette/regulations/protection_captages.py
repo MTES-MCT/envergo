@@ -1,6 +1,6 @@
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
 )
@@ -27,7 +27,7 @@ class ProtectionCaptagesHaieHru(HaieCriterionEvaluator):
     choice_label = "Protection de captages > Protection de captages"
     base_slug = "protection_captages"
     plantation_conditions = []
-    category = HaieCriterionCategory.hru
+    category = HedgeCategory.hru
 
     RESULT_MATRIX = {
         "a_verifier": RESULTS.a_verifier,
@@ -49,8 +49,8 @@ class ProtectionCaptagesHaieHru(HaieCriterionEvaluator):
 
 
 class ProtectionCaptagesHaieRu(ProtectionCaptagesHaieHru):
-    category = HaieCriterionCategory.ru
+    category = HedgeCategory.ru
 
 
 class ProtectionCaptagesHaieL3503(ProtectionCaptagesHaieHru):
-    category = HaieCriterionCategory.l350_3
+    category = HedgeCategory.l350_3

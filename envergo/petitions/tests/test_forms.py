@@ -1,4 +1,4 @@
-from envergo.moulinette.regulations import HaieCriterionCategory
+from envergo.moulinette.regulations import HedgeCategory
 from envergo.petitions.forms import PetitionProjectForm
 
 
@@ -12,7 +12,7 @@ class TestPetitionProjectFormCleanCategory:
             }
         )
         form.is_valid()
-        assert form.cleaned_data["category"] == HaieCriterionCategory.ru
+        assert form.cleaned_data["category"] == HedgeCategory.ru
 
     def test_valid_category_hru(self):
         form = PetitionProjectForm(
@@ -22,7 +22,7 @@ class TestPetitionProjectFormCleanCategory:
             }
         )
         form.is_valid()
-        assert form.cleaned_data["category"] == HaieCriterionCategory.hru
+        assert form.cleaned_data["category"] == HedgeCategory.hru
 
     def test_valid_category_l350_3(self):
         form = PetitionProjectForm(
@@ -32,7 +32,7 @@ class TestPetitionProjectFormCleanCategory:
             }
         )
         form.is_valid()
-        assert form.cleaned_data["category"] == HaieCriterionCategory.l350_3
+        assert form.cleaned_data["category"] == HedgeCategory.l350_3
 
     def test_invalid_category_raises_error(self):
         form = PetitionProjectForm(

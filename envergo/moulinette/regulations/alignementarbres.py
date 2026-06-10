@@ -1,9 +1,9 @@
 import logging
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
 from envergo.moulinette.regulations import (
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
 )
@@ -24,7 +24,7 @@ class AlignementArbresRegulation(HaieRegulationEvaluator):
 class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Alignements d'arbres > L350-3"
     base_slug = "alignement_arbres"
-    category = HaieCriterionCategory.l350_3
+    category = HedgeCategory.l350_3
     plantation_conditions = [TreeAlignmentsCondition]
 
     RESULT_MATRIX = {
@@ -81,7 +81,7 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
 
 
 class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
-    category = HaieCriterionCategory.hru
+    category = HedgeCategory.hru
     base_slug = "alignement_arbres_calvados_before_ru"
     slug = base_slug
     choice_label = "Alignements d'arbres > L350-3 (Calvados avant régime unique)"

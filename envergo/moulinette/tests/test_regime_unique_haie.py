@@ -5,9 +5,9 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
-from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
 )
@@ -668,9 +668,9 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.soumis
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.hru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.ru] == RESULTS.soumis
+        assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_by_category_dc_mode(self):
         """In DC mode, all categories are non_active."""
@@ -681,9 +681,9 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_disponible
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.hru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.ru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_non_activated(self):
         """A non-activated regulation returns non_active for all categories."""
@@ -694,7 +694,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        for category in HaieCriterionCategory:
+        for category in HedgeCategory:
             assert rbc[category] == RESULTS.non_active
 
     def test_moulinette_results_by_category_aggregation(self):
@@ -706,7 +706,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.results_by_category
-        assert rbc[HaieCriterionCategory.ru] == "declaration"
+        assert rbc[HedgeCategory.ru] == "declaration"
 
 
 # ---------------------------------------------------------------------------
@@ -769,7 +769,7 @@ class TestDebugContext:
         moulinette = MoulinetteHaie(data)
         ctx = moulinette.get_debug_context()
         htc = ctx["hedges_and_category_by_type"]
-        hru_remove = [h for h, c in htc["TO_REMOVE"] if c == HaieCriterionCategory.hru]
+        hru_remove = [h for h, c in htc["TO_REMOVE"] if c == HedgeCategory.hru]
         assert len(hru_remove) == 1
 
     def test_empty_hedges_returns_empty_categories(self):
@@ -805,7 +805,7 @@ class TestCityHallSubmission:
             reimplantation="replantation",
         )
         moulinette = MoulinetteHaie(data)
-        assert HaieCriterionCategory.ru in moulinette.results_by_category
+        assert HedgeCategory.ru in moulinette.results_by_category
         assert moulinette.city_hall_submission == CityHallSubmission.NONE
 
     def test_hru_only_returns_complete(self):
@@ -817,7 +817,7 @@ class TestCityHallSubmission:
             reimplantation="replantation",
         )
         moulinette = MoulinetteHaie(data)
-        assert HaieCriterionCategory.ru not in moulinette.results_by_category
+        assert HedgeCategory.ru not in moulinette.results_by_category
         assert moulinette.city_hall_submission == CityHallSubmission.COMPLETE
 
     def test_ru_and_hru_returns_partial(self):
@@ -830,6 +830,6 @@ class TestCityHallSubmission:
             reimplantation="replantation",
         )
         moulinette = MoulinetteHaie(data)
-        assert HaieCriterionCategory.ru in moulinette.results_by_category
+        assert HedgeCategory.ru in moulinette.results_by_category
         assert len(moulinette.results_by_category) > 1
         assert moulinette.city_hall_submission == CityHallSubmission.PARTIAL
