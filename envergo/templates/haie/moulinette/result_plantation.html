@@ -50,6 +50,28 @@
   </p>
 {% endblock %}
 
+{% block after_result_header %}
+  {% if urgence == "oui" and config.single_procedure %}
+    <div class="fr-alert fr-alert--warning fr-mb-3w">
+      <h3 class="fr-alert__title">Travaux réalisés en urgence</h3>
+      <p>
+        Le projet contient des haies soumises au régime unique.
+        En cas de travaux d'urgence,
+        <a href="{{ HAIE_FAQ_URLS.EMERGENCY_PROCEDURE }}"
+           target="_blank"
+           rel="noopener">la procédure à suivre est particulière</a> :
+      </p>
+      <ul>
+        <li>
+          Le préfet doit être prévenu sans délai de l'exécution des travaux.
+          <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}{{ contact_dossier_anchor }}">Voir le contact dans mon département</a>
+        </li>
+        <li>Le dossier à déposer sur ce portail permet de régulariser la situation.</li>
+      </ul>
+    </div>
+  {% endif %}
+{% endblock %}
+
 {% block liability_info %}
   {% show_haie_plantation_liability_info plantation_evaluation %}
 {% endblock %}
