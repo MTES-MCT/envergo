@@ -62,6 +62,7 @@
     {% include 'haie/moulinette/_sensitive_areas.html' %}
   {% endblock %}
   {% block result_header %}{% endblock %}
+  {% block after_result_header %}{% endblock %}
 
   {% for result, regulations in moulinette.get_regulations_by_group.items %}
     {% if result.name == "BlockingRegulations" %}

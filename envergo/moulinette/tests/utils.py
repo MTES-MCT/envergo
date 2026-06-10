@@ -130,6 +130,7 @@ def make_moulinette_haie_data(
     element="haie",
     department="44",
     contexte="non",
+    urgence="non",
     **extra,
 ):
     """Build a MoulinetteHaie-compatible data dict.
@@ -162,6 +163,7 @@ def make_moulinette_haie_data(
         "haies": hedges,
         "department": department,
         "contexte": contexte,
+        "urgence": urgence,
         **extra,
     }
     return {"initial": data, "data": data}

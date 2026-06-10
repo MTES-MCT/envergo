@@ -520,9 +520,7 @@ class TestLSETemplateWithICPEActive:
     def test_action_requise_with_icpe_declaration_creation(self, client):
         """ICPE declaration/creation → has_icpe is True for action_requise too."""
         res = client.get(
-            _get_lse_url(
-                surface=800, icpe_projet="creation", icpe_regime="declaration"
-            )
+            _get_lse_url(surface=800, icpe_projet="creation", icpe_regime="declaration")
         )
         assert res.status_code == 200
         assertTemplateUsed(
