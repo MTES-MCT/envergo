@@ -896,7 +896,7 @@ class Criterion(models.Model):
                 "Criterion must be evaluated before accessing the form class."
             )
 
-        return self._evaluator.form_class
+        return self._evaluator.get_form_class()
 
     def get_form(self):
         if not hasattr(self, "_evaluator"):
