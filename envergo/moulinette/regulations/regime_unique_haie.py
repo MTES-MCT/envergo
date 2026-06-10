@@ -4,6 +4,8 @@ Determines whether a hedge project falls under the régime unique
 (single procedure) and whether it is soumis or non concerné.
 """
 
+from django import forms
+
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
@@ -22,6 +24,37 @@ from envergo.moulinette.regulations.regime_unique import (
     get_ru_per_hedge_coefficients,
     get_ru_zone_data,
 )
+
+URGENCE_MOTIFS = ("securite", "chemin_acces", "autre")
+
+
+class RegimeUniqueHaieForm(forms.Form):
+    """Complementary question about emergency works.
+
+    Shown only when the motif suggests a possible emergency situation
+    and the department is under the régime unique.
+    """
+
+    urgence = forms.ChoiceField(
+        label="Les travaux sont-ils réalisés en urgence ?",
+        widget=forms.RadioSelect,
+        choices=(
+            ("non", "Non, les travaux ne sont pas réalisés en urgence."),
+            (
+                "oui",
+                "Oui, les travaux sont réalisés en urgence et ont déjà été "
+                "exécutés, ou le seront dans les prochains jours.",
+            ),
+        ),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
+        motif = data.get("motif")
+        if motif not in URGENCE_MOTIFS:
+            self.fields = {}
 
 
 class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
@@ -45,6 +78,7 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
 
     choice_label = "Régime unique haie > Régime unique haie"
     slug = "regime_unique_haie"
+    form_class = RegimeUniqueHaieForm
     plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
 
     RESULT_MATRIX = {
@@ -60,6 +94,18 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         ("droit_constant", "aa_only"): "non_concerne",
         ("droit_constant", "has_hedges"): "non_concerne",
     }
+
+    def get_form_class(self):
+        """Only expose the emergency form when single_procedure is active."""
+        if not self.moulinette.config.single_procedure:
+            return None
+        return self.form_class
+
+    def get_form(self):
+        """Gate form instantiation on single_procedure."""
+        if not self.moulinette.config.single_procedure:
+            return None
+        return super().get_form()
 
     def get_result_code(self, result_data):
         """Override to detect missing zone config before the CODE_MATRIX lookup."""
