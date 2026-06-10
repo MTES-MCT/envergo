@@ -359,17 +359,17 @@ def test_multiple_hedges_combine_their_species():
 
 def test_hedge_to_plant_pac_depends_on_plantation_mode(calvados_hedge_data):
     # mode_plantation is "plantation", hedges is taken into account for pac min length
-    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    hedges = calvados_hedge_data.hedges().to_plant().pac()
     assert len(hedges) == 1
 
     # hedges with other plantation modes are excluded
     calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
-    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    hedges = calvados_hedge_data.hedges().to_plant().pac()
     assert len(hedges) == 0
 
     # We ignore the property altogether if it's not set
     del calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"]
-    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    hedges = calvados_hedge_data.hedges().to_plant().pac()
     assert len(hedges) == 1
 
 

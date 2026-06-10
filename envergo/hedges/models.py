@@ -190,7 +190,7 @@ class Hedge:
 
     @property
     def category(self):
-        """Return the category of the hedge (régime unique, L350-3 or hores régime unique)."""
+        """Return the category of the hedge (régime unique, L350-3 or hors régime unique)."""
         from envergo.moulinette.regulations import HaieCriterionCategory
 
         if (
@@ -305,7 +305,12 @@ class HedgeList(list[Hedge]):
             [
                 h
                 for h in self
-                if h.is_on_pac and h.hedge_type != HedgeTypeBase.ALIGNEMENT
+                if h.is_on_pac
+                and h.hedge_type != HedgeTypeBase.ALIGNEMENT
+                and (
+                    not h.has_property("mode_plantation")
+                    or h.prop("mode_plantation") == "plantation"
+                )
             ]
         )
 
@@ -519,25 +524,6 @@ class HedgeData(models.Model):
         if self._length_to_remove is None:
             self._length_to_remove = self.hedges().to_remove().length
         return self._length_to_remove
-
-    def hedges_to_remove_pac(self):
-        return self.hedges().to_remove().pac()
-
-    def hedges_to_plant_pac(self):
-        def pac_selection(h):
-            """Check if hedge must be taken into account for pac plantation."""
-            res = h.is_on_pac and h.hedge_type != "alignement"
-            if h.has_property("mode_plantation"):
-                res = res and h.prop("mode_plantation") == "plantation"
-            return res
-
-        return HedgeList([h for h in self.hedges_to_plant() if pac_selection(h)])
-
-    def length_to_plant_pac(self):
-        return self.hedges_to_plant_pac().length
-
-    def lineaire_detruit_pac(self):
-        return self.hedges_to_remove_pac().length
 
     def lineaire_detruit_pac_including_alignement(self):
         return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)

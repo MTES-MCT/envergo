@@ -24,9 +24,10 @@ def ep_normandie_get_instructor_view_context(
         evaluator, petition_project, moulinette
     )
     R = evaluator.get_replantation_coefficient()
-    hedge_data = moulinette.catalog.get("haies")
     context["quality_condition"] = (
-        NormandieQualityCondition(hedge_data, R, evaluator, catalog=moulinette.catalog)
+        NormandieQualityCondition(
+            evaluator.hedges, R, evaluator, catalog=moulinette.catalog
+        )
         .evaluate()
         .context
     )

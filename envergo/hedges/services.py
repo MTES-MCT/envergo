@@ -343,7 +343,7 @@ class PlantationEvaluator:
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
                         criterion._evaluator.plantation_evaluate(
-                            self.hedge_data, R, self.moulinette.catalog
+                            R, self.moulinette.catalog
                         )
                     )
 
@@ -356,7 +356,7 @@ class PlantationEvaluator:
                 break
         if not has_min_length_condition:
             conditions.append(
-                MinLengthCondition(self.hedge_data, R, None, None).evaluate()
+                MinLengthCondition(self.hedge_data.hedges(), R, None, None).evaluate()
             )
 
         conditions = filter(lambda c: c.result is not None, conditions)
