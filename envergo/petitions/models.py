@@ -127,6 +127,12 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         db_index=True,
     )
 
+    original_multi_category_moulinette_url = models.URLField(
+        "Url de la moulinette multi catégorie d'où a été extrait ce projet le cas échéant (vide sinon)",
+        max_length=1024,
+        blank=True,
+    )
+
     demarches_simplifiees_dossier_number = models.IntegerField(
         help_text=_("Dossier number on demarches-simplifiees.fr"),
         blank=True,

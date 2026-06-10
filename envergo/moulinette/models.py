@@ -1455,6 +1455,15 @@ class ConfigHaie(ConfigBase):
                 "plantation_adequate",
                 "Les conditions d’acceptabilité de la plantation sont toutes respectées (booléen)",
             ),
+            ("category", "Catégorie du projet (ru, hru ou l350_3)"),
+            (
+                "from_multi_category",
+                "Le projet provient-il d'une simulation comportant plusieurs catégories",
+            ),
+            (
+                "original_multi_category_moulinette_url",
+                "Url de la simulation initiale comportant plusieurs catégories le cas échéant",
+            ),
             ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
             ("proximite_mare", "Proximité d'une mare (booléen)"),
             (
