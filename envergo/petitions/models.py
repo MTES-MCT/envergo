@@ -336,6 +336,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 self.moulinette_url, {"date": date_depot.isoformat()}
             )
 
+            # Change status if dossier state is "en_instruction"
+            if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
+                StatusLog.objects.create(
+                    petition_project=self,
+                    type=LOG_TYPES.status_change,
+                    stage="instruction_d",
+                    update_comment="Dépôt du dossier : passage automatique en instruction.",
+                )
+
             usager_email = (
                 dossier["usager"]["email"]
                 if "usager" in dossier and "email" in dossier["usager"]
@@ -410,6 +419,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self.demarches_simplifiees_dossier_id = dossier["id"]
         self.demarches_simplifiees_state = dossier["state"]
+
         if "dateDepot" in dossier and dossier["dateDepot"]:
             self.demarches_simplifiees_date_depot = parser.isoparse(
                 dossier["dateDepot"]
