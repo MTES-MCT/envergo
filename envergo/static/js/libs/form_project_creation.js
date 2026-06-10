@@ -12,11 +12,15 @@
 
   DemarchesSimplifieesModal.prototype.init = function () {
     this.categoryInput = this.formElt.querySelector('#demarche-simplifiee-category');
+    this.categoriesList = this.modalElt.querySelectorAll('.hedges-category-header');
     document.querySelectorAll('[aria-controls="demarches-simplifiees-modal"][data-category]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (this.categoryInput) {
           this.categoryInput.value = btn.dataset.category;
         }
+       this.categoriesList.forEach( span =>{
+         span.hidden = !span.classList.contains(btn.dataset.category);
+       });
       });
     });
     this.formElt.addEventListener('submit', this.deactivate.bind(this));
@@ -81,7 +85,7 @@
     })
       .then(response => response.json())
       .then(data => {
-        if (data.demarche_simplifiee_url) {
+        if (data.demarche_simplifiee_url && data.read_only_url) {
           // open démarche simplifiée in a new tab and close the modal
           if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
             // if the new tab was blocked by the browser, display the link in the current tab
@@ -90,6 +94,9 @@
               "info");
           } else {
             newTab.location = data.demarche_simplifiee_url;
+            if(window.REDIRECT_AFTER_PROJECT_CREATION){
+              window.location.href = data.read_only_url;
+            }
           }
         } else {
           throw data;

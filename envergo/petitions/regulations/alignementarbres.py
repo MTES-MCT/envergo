@@ -66,7 +66,9 @@ def alignement_arbres_get_instructor_view_context(
         context["aa_bord_voie_plantation_detail"] = hedges_to_plant_aa_bord_voie
 
     evaluator_context = (
-        TreeAlignmentsCondition(hedge_data, R, evaluator, catalog=moulinette.catalog)
+        TreeAlignmentsCondition(
+            evaluator.hedges, R, evaluator, catalog=moulinette.catalog
+        )
         .evaluate()
         .context
     )

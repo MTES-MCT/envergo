@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeTypeBase, HedgeTypeFactory
+from envergo.hedges.models import HedgeTypeBase, HedgeTypeFactory
 
 
 class PlantationCondition(ABC):
@@ -24,8 +24,8 @@ class PlantationCondition(ABC):
     # prevent the template engine to instanciate the class
     do_not_call_in_templates = True
 
-    def __init__(self, hedge_data, R, criterion_evaluator, catalog=None):
-        self.hedge_data = hedge_data
+    def __init__(self, hedges, R, criterion_evaluator, catalog=None):
+        self.hedges = hedges
         self.R = R
         self.catalog = catalog or {}
         self.criterion_evaluator = criterion_evaluator
@@ -66,8 +66,8 @@ class MinLengthCondition(PlantationCondition):
     """
 
     def evaluate(self):
-        length_to_plant = self.hedge_data.length_to_plant()
-        length_to_remove = self.hedge_data.length_to_remove()
+        length_to_plant = self.hedges.to_plant().length
+        length_to_remove = self.hedges.to_remove().length
 
         # Depending on the cases, we want to use the "classic" minimum length to
         # plant, or the "reduced" version (for Normandie rules)
@@ -111,8 +111,9 @@ class MinLengthPacCondition(PlantationCondition):
     def evaluate(self):
         # For pac regulations, R is ignored unless it is zero
         R = 1 if self.R > 0 else 0
-        length_to_plant = self.hedge_data.length_to_plant_pac()
-        minimum_length_to_plant = self.hedge_data.lineaire_detruit_pac() * R
+
+        length_to_plant = self.hedges.to_plant().pac().length
+        minimum_length_to_plant = self.hedges.to_remove().pac().length * R
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
@@ -202,13 +203,13 @@ class QualityCondition(PlantationCondition):
 
     def get_minimum_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)
-        for to_remove in self.hedge_data.hedges_to_remove():
+        for to_remove in self.hedges.to_remove():
             lengths_by_type[to_remove.hedge_type] += to_remove.length
         return {key: self.R * lengths_by_type[key] for key, _ in self.HedgeType.choices}
 
     def get_lengths_to_plant(self):
         lengths_by_type = defaultdict(int)
-        for to_plant in self.hedge_data.hedges_to_plant():
+        for to_plant in self.hedges.to_plant():
             lengths_by_type[to_plant.hedge_type] += to_plant.length
 
         return {
@@ -305,7 +306,7 @@ class NormandieQualityCondition(PlantationCondition):
         LPm = LC.copy()
 
         # Les haies à planter
-        for hedge in self.hedge_data.hedges_to_plant():
+        for hedge in self.hedges.to_plant():
             LP[hedge.hedge_type] += hedge.length
 
         LP_origin = LP.copy()
@@ -420,7 +421,7 @@ class SafetyCondition(PlantationCondition):
     def evaluate(self):
         unsafe_hedges = [
             h
-            for h in self.hedge_data.hedges_to_plant()
+            for h in self.hedges.to_plant()
             if h.hedge_type in ["alignement", "mixte"] and h.sous_ligne_electrique
         ]
         self.result = not unsafe_hedges
@@ -451,9 +452,10 @@ class StrenghteningCondition(PlantationCondition):
 
     def evaluate(self):
         lpm = self.catalog["lpm"]
-        length_to_plant = self.hedge_data.length_to_plant()
+        hedges_to_plant = self.hedges.to_plant()
+        length_to_plant = hedges_to_plant.length
         length_to_plant_by_mode = defaultdict(int)
-        for hedge in self.hedge_data.hedges_to_plant():
+        for hedge in hedges_to_plant:
             length_to_plant_by_mode[hedge.prop("mode_plantation")] += hedge.length
 
         if self.R == 0.0:
@@ -508,10 +510,10 @@ class LineaireInterchamp(PlantationCondition):
         def interchamp_filter(h):
             return bool(h.prop("interchamp"))
 
-        hedges_to_remove = filter(interchamp_filter, self.hedge_data.hedges_to_remove())
+        hedges_to_remove = filter(interchamp_filter, self.hedges.to_remove())
         length_to_remove = sum(h.length for h in hedges_to_remove)
 
-        hedges_to_plant = filter(interchamp_filter, self.hedge_data.hedges_to_plant())
+        hedges_to_plant = filter(interchamp_filter, self.hedges.to_plant())
         length_to_plant = sum(h.length for h in hedges_to_plant)
 
         delta = length_to_remove - length_to_plant
@@ -539,10 +541,10 @@ class LineaireSurTalusCondition(PlantationCondition):
         def talus_filter(h):
             return h.prop("sur_talus")
 
-        hedges_to_remove = filter(talus_filter, self.hedge_data.hedges_to_remove())
+        hedges_to_remove = filter(talus_filter, self.hedges.to_remove())
         length_to_remove = sum(h.length for h in hedges_to_remove)
 
-        hedges_to_plant = filter(talus_filter, self.hedge_data.hedges_to_plant())
+        hedges_to_plant = filter(talus_filter, self.hedges.to_plant())
         length_to_plant = sum(h.length for h in hedges_to_plant)
 
         delta = length_to_remove - length_to_plant
@@ -570,7 +572,7 @@ class EssencesBocageresCondition(PlantationCondition):
         def non_bocageres_filter(h):
             return h.prop("essences_non_bocageres")
 
-        non_bocageres = filter(non_bocageres_filter, self.hedge_data.hedges_to_plant())
+        non_bocageres = filter(non_bocageres_filter, self.hedges.to_plant())
         self.result = len(list(non_bocageres)) == 0
         self.context = {}
         return self
@@ -590,9 +592,9 @@ class PlantationConditionMixin:
             f"Implement the `{type(self).__name__}.get_replantation_coefficient` method."
         )
 
-    def plantation_evaluate(self, hedge_data, R, catalog=None):
+    def plantation_evaluate(self, R, catalog=None):
         results = [
-            condition(hedge_data, R, self, catalog or {}).evaluate()
+            condition(self.hedges, R, self, catalog or {}).evaluate()
             for condition in self.plantation_conditions
         ]
         return results
@@ -613,18 +615,8 @@ class TreeAlignmentsCondition(PlantationCondition):
         return self.criterion_evaluator.result_code != RESULTS.non_soumis
 
     def evaluate(self):
-        hedges_to_remove_aa_bord_voie = self.hedge_data.hedges_filter(
-            TO_REMOVE, "alignement", "bord_voie"
-        )
-        hedges_to_plant_aa_bord_voie = self.hedge_data.hedges_filter(
-            TO_PLANT, "alignement", "bord_voie"
-        )
-        length_to_remove_aa_bord_voie = sum(
-            h.length for h in hedges_to_remove_aa_bord_voie
-        )
-        length_to_plant_aa_bord_voie = sum(
-            h.length for h in hedges_to_plant_aa_bord_voie
-        )
+        length_to_remove_aa_bord_voie = self.hedges.to_remove().l350_3().length
+        length_to_plant_aa_bord_voie = self.hedges.to_plant().l350_3().length
 
         from envergo.moulinette.regulations.alignementarbres import (
             AlignementsArbresL3503,
