@@ -582,12 +582,20 @@ class CriterionEvaluator(ABC):
         """Returns a `Map` object."""
         return None
 
+    def get_form_class(self):
+        """Return the form class for additional user data, or None.
+
+        Override in subclasses to gate the form on runtime state (e.g.
+        single_procedure).  The default returns the class attribute.
+        """
+        return self.form_class
+
     def get_form(self):
         """Get the form to ask the user for additional data."""
 
-        form_class = getattr(self, "form_class", None)
+        form_class = self.get_form_class()
         if form_class:
-            form = self.form_class(**self.moulinette.form_kwargs)
+            form = form_class(**self.moulinette.form_kwargs)
         else:
             form = None
         return form
