@@ -171,6 +171,10 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         "Mention libre de l'instructeur", blank=True
     )
 
+    instructor_private_mention = models.TextField(
+        "Notes privées de l'instructeur", blank=True
+    )
+
     followed_by = models.ManyToManyField(
         "users.User",
         related_name="followed_petition_projects",
