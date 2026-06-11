@@ -8,48 +8,48 @@ class TestPetitionProjectFormCleanCategory:
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "category": "ru",
+                "_category": "Régime unique",
             }
         )
         form.is_valid()
-        assert form.cleaned_data["category"] == HedgeCategory.ru
+        assert form.cleaned_data["_category"] == HedgeCategory.ru
 
     def test_valid_category_hru(self):
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "category": "hru",
+                "_category": "Hors régime unique",
             }
         )
         form.is_valid()
-        assert form.cleaned_data["category"] == HedgeCategory.hru
+        assert form.cleaned_data["_category"] == HedgeCategory.hru
 
     def test_valid_category_l350_3(self):
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "category": "l350_3",
+                "_category": "L350-3",
             }
         )
         form.is_valid()
-        assert form.cleaned_data["category"] == HedgeCategory.l350_3
+        assert form.cleaned_data["_category"] == HedgeCategory.l350_3
 
     def test_invalid_category_raises_error(self):
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "category": "invalid_value",
+                "_category": "invalid_value",
             }
         )
         assert not form.is_valid()
-        assert "category" in form.errors
+        assert "_category" in form.errors
 
     def test_empty_category_raises_error(self):
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "category": "",
+                "_category": "",
             }
         )
         assert not form.is_valid()
-        assert "category" in form.errors
+        assert "_category" in form.errors

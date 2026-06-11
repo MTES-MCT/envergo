@@ -26,6 +26,7 @@ class PetitionProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["moulinette_url"].required = True
+        self.fields["_category"].required = True
 
     def clean_moulinette_url(self):
         """Remove the date parameter from the moulinette url if there is one
