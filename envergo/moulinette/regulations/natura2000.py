@@ -233,12 +233,12 @@ class EvalEnv(SelfDeclarationMixin, CriterionEvaluator):
 
     def evaluate(self):
         try:
-            evalenv = self.moulinette.eval_env.result
-            if evalenv == RESULTS.cas_par_cas:
+            evalenv = self.moulinette.eval_env
+            if evalenv.is_cas_par_cas:
                 result = ("soumis_cas_par_cas", RESULTS.soumis)
-            elif evalenv == RESULTS.systematique:
+            elif evalenv.result == RESULTS.systematique:
                 result = ("soumis_systematique", RESULTS.soumis)
-            elif evalenv == RESULTS.non_soumis:
+            elif evalenv.result == RESULTS.non_soumis:
                 result = (RESULTS.non_soumis, RESULTS.non_soumis)
             else:
                 result = (RESULTS.non_disponible, RESULTS.non_disponible)

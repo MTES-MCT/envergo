@@ -665,6 +665,16 @@ class CriterionEvaluator(ABC):
         result_code = self.get_result_code(result_data)
         result = self.get_result(result_code)
         self._result_code, self._result = result_code, result
+        self.moulinette.catalog.update(self.get_post_evaluate_data())
+
+    def get_post_evaluate_data(self):
+        """Data to inject into the catalog after the result is known.
+
+        Symmetric with get_catalog_data(). Override in subclasses that
+        compute catalog entries depending on the result code (e.g.
+        adjusted per-hedge coefficients).
+        """
+        return {}
 
     @property
     def result_code(self):
@@ -837,6 +847,7 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.action_requise: True,
     RESULTS.non_disponible: False,
     RESULTS.cas_par_cas: True,
+    RESULTS.cas_par_cas_icpe: True,
     RESULTS.systematique: True,
     RESULTS.non_applicable: False,
     RESULTS.non_concerne: False,

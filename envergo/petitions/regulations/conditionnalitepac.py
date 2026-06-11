@@ -5,8 +5,10 @@ from envergo.petitions.regulations import evaluator_instructor_view_context_gett
 
 
 @evaluator_instructor_view_context_getter(Bcae8)
-def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -> dict:
-    """Build context for BCAE8 instructor page view"""
+def bcae8_get_instructor_view_context(
+    evaluator, petition_project, moulinette, plantation_evaluation=None
+) -> dict:
+    """Build context for BCAE8 instructor page view."""
 
     hedge_data = petition_project.hedge_data
     to_plant_pac = hedge_data.hedges().to_plant().pac()

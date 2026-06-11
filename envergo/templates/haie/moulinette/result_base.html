@@ -51,7 +51,7 @@
     <div class="fr-alert fr-alert--warning fr-mb-4w">
       <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
       <p>
-        Au moins un des linéaires saisi est situé hors du département choisi pour cette simulation – {{ config.department }}.
+        Au moins un des linéaires saisi est situé hors du département choisi pour cette simulation – {{ moulinette.department }}.
       </p>
       <p>
         Vous pouvez poursuivre la simulation si le projet est en majorité situé dans ce département, mais la décision de l'administration pourra différer du résultat du simulateur. <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}{{ contact_dossier_anchor }}">Contactez-nous</a> pour toute question.

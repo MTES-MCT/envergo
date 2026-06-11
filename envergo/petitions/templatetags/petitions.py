@@ -49,21 +49,33 @@ def instructor_view_part(
     moulinette,
     criterion=None,
 ):
-    """Render a specific part of the instructor view for a criterion."""
+    """Render a specific part of the instructor view for a criterion.
+
+    Extracts ``plantation_evaluation`` from the parent template context and
+    forwards it to registry functions so they can look up pre-computed
+    plantation conditions instead of re-evaluating them.
+    """
 
     context_dict = context.flatten()
+    plantation_evaluation = context.get("plantation_evaluation")
+
     if criterion is None:
         template_path = f"haie/petitions/{regulation.slug}/{part_name}.html"
         for regulation_criterion in regulation.criteria.all():
             context_dict.update(
                 get_instructor_view_context(
-                    regulation_criterion.get_evaluator(), project, moulinette
+                    regulation_criterion.get_evaluator(),
+                    project,
+                    moulinette,
+                    plantation_evaluation,
                 )
             )
         regulation_evaluator = regulation.get_evaluator()
         if regulation_evaluator:
             context_dict.update(
-                get_instructor_view_context(regulation_evaluator, project, moulinette)
+                get_instructor_view_context(
+                    regulation_evaluator, project, moulinette, plantation_evaluation
+                )
             )
     else:
         if issubclass(criterion.evaluator, HaieCriterionEvaluator):
@@ -76,7 +88,12 @@ def instructor_view_part(
                 f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
             )
         context_dict.update(
-            get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
+            get_instructor_view_context(
+                criterion.get_evaluator(),
+                project,
+                moulinette,
+                plantation_evaluation,
+            )
         )
 
     try:
@@ -90,15 +107,15 @@ def instructor_view_part(
 
 @register.simple_tag
 def regulation_plantation_conditions(plantation_evaluation, regulation):
-    """Render the subset of plantation conditions related to a given regulation."""
+    """Uses ``all_conditions`` (not the deduplicated ``conditions``) so each
+    regulation's view shows its own evaluator's conditions, even when a
+    stricter duplicate hides them from the global list.
+    """
 
     condition_to_display = []
-    for condition in plantation_evaluation.conditions:
+    for condition in plantation_evaluation.all_conditions:
         for criterion in regulation.criteria.all():
-            if (
-                condition.criterion_evaluator == criterion.get_evaluator()
-                and condition.must_display()
-            ):
+            if condition.criterion_evaluator == criterion.get_evaluator():
                 condition_to_display.append(condition)
 
     template = "hedges/_plantation_conditions.html"
@@ -112,13 +129,10 @@ def regulation_plantation_conditions(plantation_evaluation, regulation):
 
 @register.simple_tag
 def regulation_has_condition_to_display(plantation_evaluation, regulation):
-    """Check if there are any plantation conditions to display for a given regulation."""
-    for condition in plantation_evaluation.conditions:
+    """Uses ``all_conditions`` — see ``regulation_plantation_conditions``."""
+    for condition in plantation_evaluation.all_conditions:
         for criterion in regulation.criteria.all():
-            if (
-                condition.criterion_evaluator == criterion.get_evaluator()
-                and condition.must_display()
-            ):
+            if condition.criterion_evaluator == criterion.get_evaluator():
                 return True
     return False
 

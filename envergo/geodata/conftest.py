@@ -79,7 +79,7 @@ def herault_map():
 def aisne_map():
     map = MapFactory(
         name="Aisne",
-        map_type="",
+        map_type="species_legacy",
         zones__geometry=MultiPolygon([aisne_polygon]),
     )
     return map
@@ -89,7 +89,7 @@ def aisne_map():
 def calvados_map():
     map = MapFactory(
         name="Calvados",
-        map_type="",
+        map_type="species_legacy",
         zones__geometry=MultiPolygon([calvados_polygon]),
     )
     return map
