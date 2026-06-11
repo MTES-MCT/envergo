@@ -195,6 +195,7 @@ class Command(BaseCommand):
         # cartes avec une espace normale.
         self.stdout.write("=== Correction des espaces fines insécables (U+202F) ===")
         self.fix_map_name_spaces()
+        self.fix_perimeter_name_spaces()
 
         # Étape 0 : vérifier que toutes les données requises sont en base
         self.stdout.write("\n=== Vérification des prérequis ===")
@@ -243,6 +244,24 @@ class Command(BaseCommand):
             new_name = old_name.replace(narrow_nbsp, " ")
             map_obj.name = new_name
             map_obj.save(update_fields=["name"])
+            self.stdout.write(f"  Renamed '{old_name}' → '{new_name}'")
+
+    def fix_perimeter_name_spaces(self):
+        """Corrige les backend_name de périmètres commençant par "N2000" suivi
+        d'une espace fine insécable (U+202F), comme fix_map_name_spaces pour
+        les cartes.
+
+        Idempotent : ne fait rien si aucun périmètre n'est concerné.
+        """
+        narrow_nbsp = "\u202f"  # espace fine insécable
+        perimeters = Perimeter.objects.filter(
+            backend_name__startswith=f"N2000{narrow_nbsp}"
+        )
+        for perimeter in perimeters:
+            old_name = perimeter.backend_name
+            new_name = old_name.replace(narrow_nbsp, " ")
+            perimeter.backend_name = new_name
+            perimeter.save(update_fields=["backend_name"])
             self.stdout.write(f"  Renamed '{old_name}' → '{new_name}'")
 
     def check_prerequisites(self):
