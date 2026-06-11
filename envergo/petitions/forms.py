@@ -26,6 +26,7 @@ class PetitionProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["moulinette_url"].required = True
+        self.fields["_category"].required = True
 
     def clean_moulinette_url(self):
         """Remove the date parameter from the moulinette url if there is one
@@ -231,7 +232,7 @@ def request_for_info_message():
 class RequestAdditionalInfoForm(forms.Form):
     """Let an instructor pause the instruction and request for more information."""
 
-    due_date = forms.DateField(
+    info_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
         required=True,
         initial=three_months_from_now,

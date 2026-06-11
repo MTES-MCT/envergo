@@ -13,16 +13,33 @@
                     aria-controls="demarches-simplifiees-modal">Fermer</button>
           </div>
           <div class="fr-modal__content">
-            <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmez le verrouillage de votre simulation</h3>
-            <p>Vous souhaitez déposer votre dossier.</p>
-            <p>
-              <strong>Si vous continuez, votre simulation ne sera plus modifiable.</strong> Vous pourrez toujours la consulter.
-            </p>
-            <p>
-              Vous allez accéder au formulaire de demande pour vous identifier,
-              répondre à des questions plus détaillées sur le projet, et joindre des pièces justificatives.
-
-            </p>
+            {% if moulinette.is_multi_category %}
+              <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmation</h3>
+              <p>
+                Vous allez démarrer le dépôt de dossier portant sur la destruction des
+                {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.ru lowercase=True inline=True %}
+                {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.l350_3 lowercase=True inline=True %}
+                {% include "haie/moulinette/_category_hedges.html" with category=HaieCriterionCategory.hru lowercase=True inline=True %}
+              </p>
+              <p>
+                Vous allez accéder au formulaire de demande pour vous identifier,
+                répondre à des questions plus détaillées sur le projet, et joindre des pièces justificatives.
+              </p>
+              <p>
+                Cette page restera ouverte. Pour déposer un dossier portant sur les autres linéaires, revenez sur cette
+                page et suivez les instructions correspondantes.
+              </p>
+            {% else %}
+              <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmez le verrouillage de votre simulation</h3>
+              <p>Vous souhaitez déposer votre dossier.</p>
+              <p>
+                <strong>Si vous continuez, votre simulation ne sera plus modifiable.</strong> Vous pourrez toujours la consulter.
+              </p>
+              <p>
+                Vous allez accéder au formulaire de demande pour vous identifier,
+                répondre à des questions plus détaillées sur le projet, et joindre des pièces justificatives.
+              </p>
+            {% endif %}
             <p>Souhaitez-vous continuer ?</p>
             <form id="demarche-simplifiee-form"
                   action="{% url 'petition_project_create' %}"

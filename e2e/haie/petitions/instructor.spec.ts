@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('Instructor can instruct a project', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Administration' }).click();
+    await page.getByRole('link', { name: 'Espace instruction' }).click();
     await page.getByRole('textbox', { name: 'Email address' }).fill('user@test.fr');
     await page.getByRole('textbox', { name: 'Password' }).fill('Sésame');
     await page.getByRole('textbox', { name: 'Password' }).press('Enter');

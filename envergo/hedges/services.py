@@ -1,6 +1,8 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import Enum
+from functools import cmp_to_key
 from itertools import product
 from operator import attrgetter
 from types import SimpleNamespace
@@ -286,10 +288,23 @@ class PlantationEvaluator:
 
     @property
     def conditions(self):
+        """Deduplicated subset — when several evaluators produce the same condition
+        class, only the strictest is kept. See ``all_conditions`` for the full list.
+        """
         if not hasattr(self, "_conditions"):
             self.evaluate()
 
         return self._conditions
+
+    @property
+    def all_conditions(self):
+        """Full list before deduplication, used when the caller needs to
+        disambiguate by evaluator. See ``conditions`` for the deduplicated subset.
+        """
+        if not hasattr(self, "_all_conditions"):
+            self.evaluate()
+
+        return self._all_conditions
 
     @property
     def global_result(self):
@@ -325,7 +340,7 @@ class PlantationEvaluator:
         return f"{self.moulinette.result}_{self.result}"
 
     def evaluate(self):
-        """Returns if the plantation is compliant with the regulation"""
+        """Populate ``_all_conditions``, ``_conditions`` (deduplicated), and ``_result``."""
 
         R = self.replantation_coefficient
         conditions = []
@@ -343,7 +358,7 @@ class PlantationEvaluator:
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
                         criterion._evaluator.plantation_evaluate(
-                            self.hedge_data, R, self.moulinette.catalog
+                            R, self.moulinette.catalog
                         )
                     )
 
@@ -356,16 +371,51 @@ class PlantationEvaluator:
                 break
         if not has_min_length_condition:
             conditions.append(
-                MinLengthCondition(self.hedge_data, R, None, None).evaluate()
+                MinLengthCondition(self.hedge_data.hedges(), R, None, None).evaluate()
             )
 
-        conditions = filter(lambda c: c.result is not None, conditions)
-        self._conditions = sorted(conditions, key=attrgetter("order"))
+        all_displayable = sorted(
+            [c for c in conditions if c.result is not None and c.must_display()],
+            key=attrgetter("order"),
+        )
+        self._all_conditions = all_displayable
+        self._conditions = self.deduplicate_conditions(all_displayable)
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
+
+    @staticmethod
+    def deduplicate_conditions(conditions):
+        """When all conditions in a group tie (no compare_strictness override),
+        the first one in evaluator iteration order wins.
+        """
+        groups = defaultdict(list)
+        for condition in conditions:
+            groups[type(condition)].append(condition)
+
+        def strictness_cmp(a, b):
+            if a.is_stricter_than(b):
+                return 1
+            if b.is_stricter_than(a):
+                return -1
+            return 0
+
+        return [max(group, key=cmp_to_key(strictness_cmp)) for group in groups.values()]
+
+    def find_condition(self, condition_cls, evaluator=None):
+        """Searches ``all_conditions`` so per-regulation views can locate a
+        specific evaluator's condition even after deduplication. Evaluator
+        filtering uses identity (``is``), so caller and condition must share
+        the same moulinette instance.
+        """
+        for condition in self.all_conditions:
+            if not isinstance(condition, condition_cls):
+                continue
+            if evaluator is None or condition.criterion_evaluator is evaluator:
+                return condition
+        return None
 
     def get_context(self):
         context = {}
@@ -391,6 +441,5 @@ class PlantationEvaluator:
                 "context": condition.context,
             }
             for condition in self.conditions
-            if condition.must_display()
         ]
         return data

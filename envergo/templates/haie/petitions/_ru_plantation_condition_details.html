@@ -1,0 +1,84 @@
+{% load utils %}
+
+<h5 class="fr-mt-3w">Calcul de la compensation attendue</h5>
+
+<ul class="instructor-view-list">
+  {% include 'haie/petitions/_item.html' with label="Densité bocagère des haies à détruire (rayon 400 m) :" value=density_400|floatformat:"1g" unit="ml/ha" %}
+  {% if show_ep_majorations %}
+    {% if ep_ru_procedure_bonus %}
+      {% if ep_ru_procedure_bonus == 0.5 %}
+        {% include 'haie/petitions/_item.html' with label="Majoration liée au niveau de procédure" value="0,5 car dérogation standard" %}
+      {% else %}
+        {% include 'haie/petitions/_item.html' with label="Majoration liée au niveau de procédure" value="0,25 car dérogation allégée" %}
+      {% endif %}
+    {% else %}
+      {% include 'haie/petitions/_item.html' with label="Majoration liée au niveau de procédure" value="pas de majoration" %}
+    {% endif %}
+
+    {% if ep_ru_species_bonus %}
+      {% include 'haie/petitions/_item.html' with label="Majoration espèces" value="0,25 car présence d’espèces à enjeu majeur observées localement" %}
+    {% else %}
+      {% include 'haie/petitions/_item.html' with label="Majoration espèces" value="pas de majoration" %}
+    {% endif %}
+  {% endif %}
+</ul>
+
+{% if hedge_detail_rows %}
+  {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_detail_rows show_coeff_majore=show_ep_majorations %}
+{% endif %}
+
+{% if ru_zone_configs %}
+  <section class="fr-accordion fr-mb-3w">
+    <h3 class="fr-accordion__title">
+      <button type="button"
+              class="fr-accordion__btn"
+              aria-expanded="false"
+              aria-controls="accordion-coeff-matrix-{{ regulation_slug }}">
+        Afficher le détail des matrices de coefficients du régime unique
+      </button>
+    </h3>
+    <div id="accordion-coeff-matrix-{{ regulation_slug }}" class="fr-collapse">
+      {% include 'haie/_ru_coefficient_matrix.html' %}
+    </div>
+  </section>
+{% endif %}
+
+<h5>Plantation proposée</h5>
+<div class="fr-table">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Type</th>
+              <th scope="col">Minimum attendu</th>
+              <th scope="col">Plantation proposée</th>
+              <th scope="col">Manque</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for choice in ordered_hedge_types %}
+              {% if choice.value != "alignement" %}
+                <tr>
+                  <th scope="row">{{ choice.label }}</th>
+                  <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
+                  <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
+                  <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">Total</th>
+              <td>{{ quality_condition.lpm|floatformat:"0g" }} m</td>
+              <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
+              <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

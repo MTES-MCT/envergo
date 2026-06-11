@@ -1,0 +1,26 @@
+{% load static %}
+
+<p>Le projet est soumis à examen au cas par cas, parce qu'il crée ou modifie une ICPE soumise à enregistrement.</p>
+
+<h3>Marche à suivre</h3>
+
+<ul>
+  <li>
+    <p>
+      Aucun dossier supplémentaire n'a à être déposé, car le dossier ICPE fait office de demande d'examen au cas par cas.
+    </p>
+    <p>
+      <em>→ Délai de réponse : 35 jours</em>
+    </p>
+  </li>
+</ul>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-icpe-only" %}
+
+<div class="more fr-collapse" id="read-more-evalenv-icpe-only">
+
+  {% include 'moulinette/eval_env/_cas_par_cas_details.html' with icpe_only=True %}
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-icpe-only" %}
+
+</div>

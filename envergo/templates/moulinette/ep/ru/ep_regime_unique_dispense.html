@@ -5,9 +5,5 @@
 {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 
 <div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
-  <p>
-    <strong>Cortège-type d'espèces protégées présentes dans les haies à détruire :</strong>
-  </p>
-  <p class="fr-mb-1w">Cette liste est indicative et non exhaustive.</p>
-  {% include 'hedges/_species_table.html' with species=protected_species %}
+  {% include 'moulinette/ep/_species_cortege_ru.html' %}
 </div>

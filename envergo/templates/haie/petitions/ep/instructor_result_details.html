@@ -8,7 +8,7 @@
   </ul>
 
   <a class="fr-btn fr-btn--secondary fr-btn--sm"
-     href="{% url 'demo_density_project' %}?haies={{ hedge_data_id }}">Voir le calcul de densité</a>
+     href="{% url 'demo_density_project' %}?haies={{ petition_project.hedge_data.id }}">Voir le calcul de densité</a>
 
 {% endif %}
 
@@ -25,34 +25,8 @@
     {% include 'haie/petitions/_item.html' with label="Densité bocagère" value=density_400|floatformat:"1g" unit="ml/ha" %}
   </ul>
 
-  {% if ep_ru_hedge_rows %}
-    <div class="fr-table fr-table--no-caption">
-      <div class="fr-table__wrapper">
-        <div class="fr-table__container">
-          <div class="fr-table__content">
-            <table>
-              <caption>Caractéristiques des haies à détruire</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Haie</th>
-                  <th scope="col">Type</th>
-                  <th scope="col">En zone sensible</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for row in ep_ru_hedge_rows %}
-                  <tr>
-                    <td>{{ row.id }}</td>
-                    <td>{{ row.hedge_type }}</td>
-                    <td>{{ row.in_zone_sensible|yesno:"Oui,Non" }}</td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+  {% if hedge_detail_rows %}
+    {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_detail_rows show_coeff_majore=True %}
   {% endif %}
 {% endif %}
 
@@ -72,8 +46,20 @@
   </div>
 </form>
 
+{% if has_sensitive_species and moulinette.config.single_procedure %}
+  <div class="fr-alert fr-alert--warning fr-mb-3w">
+    <p>
+      Le cortège-type contient des espèces à enjeu majeur avec des données d'observation proches du projet. Ces données sensibles n'ont pas été communiquées au demandeur : vous pouvez le faire <a href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">via la messagerie</a>.
+    </p>
+  </div>
+{% endif %}
+
 {% if moulinette.catalog.protected_species %}
-  {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+  {% if moulinette.config.single_procedure %}
+    {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species %}
+  {% else %}
+    {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+  {% endif %}
 {% else %}
-  <p>Pas de liste d’espèces associée à cette simulation</p>
+  <p>Pas de liste d'espèces associée à cette simulation</p>
 {% endif %}
