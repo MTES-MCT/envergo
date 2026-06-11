@@ -9,9 +9,17 @@
 
           <form method="dialog">
             <div class="fr-modal__content fr-pt-4w">
-              <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
-                Description de la haie <span class="hedge-data-dialog-hedge-name"></span>
-              </h1>
+              <div class="hedge-data-dialog-header">
+                <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
+                  Description de la haie <span class="hedge-data-dialog-hedge-name"></span>
+                </h1>
+                <div class="fr-mb-1w">
+                  <span class="hedge-data-dialog-hedge-badges hedge-badge-hru fr-badge fr-badge--sm"
+                        style="display: none">Hors procédure unique</span>
+                  <span class="hedge-data-dialog-hedge-badges hedge-badge-l350-3 fr-badge fr-badge--green-tilleul-verveine fr-badge--sm"
+                        style="display: none">Alignement bord de voie</span>
+                </div>
+              </div>
               <p class="fr-tag fr-mb-3w">
                 Longueur : <span class="hedge-data-dialog-hedge-length"></span> m
               </p>
