@@ -2,9 +2,9 @@ import json
 
 from django import forms
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -15,8 +15,8 @@ from envergo.petitions.models import (
     ResultSnapshot,
     Simulation,
 )
-from envergo.utils.validators import validate_mime
 from envergo.users.models import User
+from envergo.utils.validators import validate_mime
 from envergo.utils.widgets import JSONWidget
 
 
@@ -67,7 +67,6 @@ def validate_dn_file_size(value):
         )
 
 
-
 class PetitionProjectAdminForm(forms.ModelForm):
     followed_by = UserMultipleChoiceField(
         label="Instructeurs suivant le projet",
@@ -82,7 +81,8 @@ class PetitionProjectAdminForm(forms.ModelForm):
         help_text="""Format autorisé: zip.<br>
         Taille maximale autorisée : 20 Mo.
         """,
-        validators=[validate_zip, validate_dn_file_size])
+        validators=[validate_zip, validate_dn_file_size],
+    )
 
     class Meta:
         model = PetitionProject

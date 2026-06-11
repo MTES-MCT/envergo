@@ -78,7 +78,9 @@ class TestDetectMime:
         """Zip detection is the reason detect_mime uses from_file instead of
         from_buffer — libmagic's buffer path cannot detect zip because its
         central directory is at the end of the file."""
-        uploaded = make_uploaded_file(make_zip_bytes(), "archive.zip", "application/zip")
+        uploaded = make_uploaded_file(
+            make_zip_bytes(), "archive.zip", "application/zip"
+        )
         assert detect_mime(uploaded) == "application/zip"
 
     def test_detect_plain_text(self):
@@ -100,11 +102,15 @@ class TestValidateMime:
             validate_mime(uploaded, ["application/pdf"])
 
     def test_zip_passes_when_allowed(self):
-        uploaded = make_uploaded_file(make_zip_bytes(), "archive.zip", "application/zip")
+        uploaded = make_uploaded_file(
+            make_zip_bytes(), "archive.zip", "application/zip"
+        )
         validate_mime(uploaded, ["application/zip"])
 
     def test_zip_rejected_when_not_allowed(self):
-        uploaded = make_uploaded_file(make_zip_bytes(), "archive.zip", "application/zip")
+        uploaded = make_uploaded_file(
+            make_zip_bytes(), "archive.zip", "application/zip"
+        )
         with pytest.raises(ValidationError):
             validate_mime(uploaded, ["image/png"])
 

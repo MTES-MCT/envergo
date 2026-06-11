@@ -1,7 +1,7 @@
 import logging
-from os.path import splitext
 import secrets
 from datetime import timedelta
+from os.path import splitext
 from urllib.parse import urlparse
 
 from dateutil import parser
@@ -173,7 +173,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         "Archive Démarches numériques",
         null=True,
         blank=True,
-        upload_to=dn_archive_file_format)
+        upload_to=dn_archive_file_format,
+    )
 
     onagre_number = models.CharField(
         "Référence ONAGRE du dossier", max_length=64, blank=True
