@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django import forms
 from django.utils.html import mark_safe
 
@@ -27,6 +29,12 @@ ZONE_U_THRESHOLD = 40000
 
 class EvalEnvRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
     choice_label = "Aménagement > Eval Env"
+
+    @property
+    def is_cas_par_cas(self):
+        """Whether the eval env result is any variant of cas par cas."""
+
+        return self.result is not None and self.result.startswith("cas_par_cas")
 
     ACTIONS_TO_TAKE_MATRIX = {
         "systematique": {
@@ -221,6 +229,8 @@ class TerrainAssiette(SelfDeclarationMixin, CriterionEvaluator):
 
 
 class OptionalFormMixin:
+    is_staff_only = False
+
     @property
     def prefixed_cleaned_data(self):
         """Return cleaned data but use prefixed keys.
@@ -731,6 +741,242 @@ class PremierBoisement(SelfDeclarationMixin, CriterionEvaluator):
         form.is_valid()
         premier_boisement = form.cleaned_data.get("premier_boisement")
         return premier_boisement
+
+
+ICPE_PROJET_CREATION = "creation"
+ICPE_PROJET_MODIF_AVEC_PAC = "modif_avec_pac"
+ICPE_PROJET_MODIF_SANS_PAC = "modif_sans_pac"
+ICPE_PROJET_AUCUN = "aucun"
+
+ICPE_PROJET_CHOICES = (
+    (ICPE_PROJET_CREATION, "Oui, il crée une nouvelle ICPE"),
+    (
+        ICPE_PROJET_MODIF_AVEC_PAC,
+        "Oui, il modifie une ICPE existante, avec dépôt d'un dossier de porter à connaissance",
+    ),
+    (
+        ICPE_PROJET_MODIF_SANS_PAC,
+        "Oui, il modifie une ICPE existante, sans nécessité d'un dossier",
+    ),
+    (ICPE_PROJET_AUCUN, "Non, aucune ICPE"),
+)
+
+ICPE_REGIME_ENREGISTREMENT = "enregistrement"
+ICPE_REGIME_DECLARATION = "declaration"
+ICPE_REGIME_INCONNU = "inconnu"
+ICPE_REGIME_AUCUN = "aucun"
+
+ICPE_REGIME_CHOICES = (
+    (ICPE_REGIME_ENREGISTREMENT, "ICPE-E : soumise à enregistrement"),
+    (ICPE_REGIME_DECLARATION, "ICPE-D : soumise à déclaration"),
+    (
+        ICPE_REGIME_INCONNU,
+        "Il s'agit d'une ICPE mais je ne connais pas son régime de classement",
+    ),
+    (ICPE_REGIME_AUCUN, "Aucune ICPE"),
+)
+
+ICPE_REGIME_HELP_TEXT = (
+    "Les ICPE soumises à autorisation (A) ne sont pas traitées par le simulateur, "
+    "car elles correspondent à des projets complexes et de grande envergure, au traitement "
+    "administratif souvent spécifique.<br><br>"
+    "Si le projet modifie le régime de classement ICPE de l'installation, "
+    "choisir celui qu'aurait l'installation une fois le projet réalisé"
+)
+
+
+class ICPEForm(OptionalFormMixin, forms.Form):
+    is_staff_only = True
+    prefix = "evalenv_icpe"
+
+    activate = forms.BooleanField(
+        label="Installation classée (ICPE)",
+        help_text="À noter : ce simulateur détermine les procédures à suivre <b>en fonction</b> "
+        "du statut ICPE du projet. Il ne permet pas encore de déterminer <b>si</b> le projet "
+        "est soumis à ICPE.",
+        required=True,
+        widget=forms.CheckboxInput,
+    )
+    icpe_projet = DisplayChoiceField(
+        label="Le projet porte-t-il sur une installation classée pour la protection "
+        "de l'environnement (ICPE) ?",
+        required=True,
+        widget=forms.RadioSelect,
+        choices=ICPE_PROJET_CHOICES,
+    )
+    icpe_regime = DisplayChoiceField(
+        label="Quel est le régime de classement de l'ICPE ?",
+        help_text=ICPE_REGIME_HELP_TEXT,
+        required=True,
+        widget=forms.RadioSelect,
+        choices=ICPE_REGIME_CHOICES,
+        get_display_value=lambda value: (
+            "Inconnu"
+            if value == ICPE_REGIME_INCONNU
+            else dict(ICPE_REGIME_CHOICES).get(value)
+        ),
+        display_help_text="À l'issue du projet",
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        icpe_projet = cleaned_data.get("icpe_projet")
+        icpe_regime = cleaned_data.get("icpe_regime")
+
+        if (
+            icpe_projet == ICPE_PROJET_AUCUN
+            and icpe_regime
+            and icpe_regime != ICPE_REGIME_AUCUN
+        ):
+            self.add_error(
+                "icpe_projet",
+                "Le choix « Non, aucune ICPE » est incompatible avec la réponse "
+                "plus bas qui indique qu'il s'agit d'une ICPE. "
+                "Modifier l'une ou l'autre des réponses.",
+            )
+
+        if (
+            icpe_projet
+            and icpe_projet != ICPE_PROJET_AUCUN
+            and icpe_regime == ICPE_REGIME_AUCUN
+        ):
+            self.add_error(
+                "icpe_regime",
+                "Le choix « Aucune ICPE » est incompatible avec la réponse "
+                "plus haut qui indique qu'il s'agit d'une ICPE. "
+                "Modifier l'une ou l'autre des réponses.",
+            )
+
+        return cleaned_data
+
+
+ICPE_CAS_PAR_CAS_ACTIONS = {
+    TO_ADD: {
+        "mention_arrete_icpe_e",
+        "suspension_delai_icpe",
+        "depot_dossier_icpe",
+        "pc_icpe_e",
+        "non_depot_lse",
+    },
+    TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
+}
+
+ICPE_NON_SOUMIS_ACTIONS = {
+    TO_ADD: {"pc_icpe_d", "depot_dossier_icpe"},
+}
+ICPE_NON_SOUMIS_DECLARATION_ACTIONS = {
+    TO_ADD: {"pc_icpe_d", "depot_dossier_icpe", "non_depot_lse"},
+    TO_SUBTRACT: {"depot_pac_lse", "depot_dossier_lse", "mention_arrete_lse"},
+}
+
+ICPE_A_VERIFIER_ACTIONS = {
+    TO_ADD: {
+        "mention_arrete_icpe_e",
+        "suspension_delai_icpe",
+        "depot_dossier_icpe",
+        "pc_icpe_inconnu",
+        "non_depot_lse",
+    },
+    TO_SUBTRACT: {"depot_dossier_lse", "mention_arrete_lse", "depot_pac_lse"},
+}
+
+
+class ICPE(ActionsToTakeMixin, SelfDeclarationMixin, CriterionEvaluator):
+    choice_label = "Éval Env > ICPE"
+    slug = "icpe"
+    form_class = ICPEForm
+
+    CODES = ["cas_par_cas_icpe", "non_soumis", "a_verifier"]
+
+    CODE_MATRIX = {
+        (ICPE_PROJET_CREATION, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas",
+        (
+            ICPE_PROJET_CREATION,
+            ICPE_REGIME_DECLARATION,
+        ): "non_soumis_declaration_creation",
+        (ICPE_PROJET_CREATION, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_ENREGISTREMENT): "cas_par_cas_modif",
+        (
+            ICPE_PROJET_MODIF_AVEC_PAC,
+            ICPE_REGIME_DECLARATION,
+        ): "non_soumis_declaration_modif",
+        (ICPE_PROJET_MODIF_AVEC_PAC, ICPE_REGIME_INCONNU): "a_verifier_modif",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_ENREGISTREMENT): "non_soumis",
+        (
+            ICPE_PROJET_MODIF_SANS_PAC,
+            ICPE_REGIME_DECLARATION,
+        ): "non_soumis",
+        (ICPE_PROJET_MODIF_SANS_PAC, ICPE_REGIME_INCONNU): "a_verifier",
+        (ICPE_PROJET_AUCUN, ICPE_REGIME_AUCUN): "non_soumis",
+    }
+    RESULT_MATRIX = {
+        "cas_par_cas": "cas_par_cas_icpe",
+        "cas_par_cas_modif": "cas_par_cas_icpe",
+        "non_soumis_declaration_creation": "non_soumis",
+        "non_soumis_declaration_modif": "non_soumis",
+        "a_verifier_modif": "a_verifier",
+    }
+
+    CODE_TO_ACTIONS_TO_TAKE_MATRIX = {
+        "cas_par_cas": ICPE_CAS_PAR_CAS_ACTIONS,
+        "cas_par_cas_modif": {
+            **ICPE_CAS_PAR_CAS_ACTIONS,
+            TO_SUBTRACT: ICPE_CAS_PAR_CAS_ACTIONS[TO_SUBTRACT] | {"pc_ein"},
+        },
+        "non_soumis_declaration_creation": ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
+        "non_soumis_declaration_modif": {
+            **ICPE_NON_SOUMIS_DECLARATION_ACTIONS,
+            TO_SUBTRACT: ICPE_NON_SOUMIS_DECLARATION_ACTIONS[TO_SUBTRACT] | {"pc_ein"},
+        },
+        "a_verifier": ICPE_A_VERIFIER_ACTIONS,
+        "a_verifier_modif": {
+            **ICPE_A_VERIFIER_ACTIONS,
+            TO_SUBTRACT: ICPE_A_VERIFIER_ACTIONS[TO_SUBTRACT] | {"pc_ein"},
+        },
+    }
+
+    def get_actions_to_take(self) -> dict[str, set[str]]:
+        return self.CODE_TO_ACTIONS_TO_TAKE_MATRIX.get(self._result_code, {})
+
+    @cached_property
+    def _form_data(self):
+        form = self.get_form()
+        if form and form.is_valid():
+            return form.cleaned_data
+        return {}
+
+    @property
+    def icpe_projet(self):
+        return self._form_data.get("icpe_projet")
+
+    @property
+    def icpe_regime(self):
+        return self._form_data.get("icpe_regime")
+
+    @property
+    def is_a_verifier_creation(self):
+        return (
+            self.result_code == "a_verifier"
+            and self.icpe_projet == ICPE_PROJET_CREATION
+        )
+
+    @property
+    def is_a_verifier_modif(self):
+        return self.result_code == "a_verifier_modif" or (
+            self.icpe_projet == ICPE_PROJET_MODIF_SANS_PAC
+            and self.icpe_regime == ICPE_REGIME_INCONNU
+        )
+
+    def get_catalog_data(self):
+        data = super().get_catalog_data()
+        if self.icpe_regime is not None:
+            data["icpe_regime"] = self.icpe_regime
+        if self.icpe_projet is not None:
+            data["icpe_projet"] = self.icpe_projet
+        return data
+
+    def get_result_data(self):
+        return self.icpe_projet, self.icpe_regime
 
 
 class OtherCriteria(SelfDeclarationMixin, CriterionEvaluator):

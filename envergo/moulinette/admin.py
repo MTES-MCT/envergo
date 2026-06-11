@@ -213,7 +213,7 @@ class CriterionAdmin(admin.ModelAdmin):
         "activation_map__name",
     ]
     list_editable = ["weight"]
-    list_filter = ["regulation", MapDepartmentsListFilter, "evaluator"]
+    list_filter = ["regulation", MapDepartmentsListFilter, "evaluator", "is_staff_only"]
     sortable_by = ["backend_title", "activation_map", "activation_distance"]
     inlines = [MoulinetteTemplateInline]
 

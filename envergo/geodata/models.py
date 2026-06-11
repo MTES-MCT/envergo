@@ -23,6 +23,7 @@ MAP_TYPES = Choices(
     ("zone_humide", _("Zone humide")),
     ("zone_inondable", _("Zone inondable")),
     ("species", _("Espèces protégées")),
+    ("species_legacy", _("Espèces protégées (historique)")),
     ("haies", "Haies"),
     ("terres_emergees", "Délimitation terres + France"),
     ("zonage", "Identifiant zonage"),

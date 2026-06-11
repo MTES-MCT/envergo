@@ -726,6 +726,7 @@ class PetitionProjectDetail(DetailView):
                 "We should implement static simulation/project to avoid this case.",
                 extra={"reference": self.object.reference},
             )
+
             raise NotImplementedError("We do not handle uncompleted project")
 
         context["petition_project"] = self.object
@@ -808,6 +809,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_action = None
     context_object_name = "petition_project"
 
+    def get_object(self, queryset=None):
+        """Return the cached object, fetching it only once per request."""
+        if hasattr(self, "object") and self.object is not None:
+            return self.object
+        return super().get_object(queryset)
+
     def has_view_permission(self, request, object):
         """Check if request has view permission on object"""
         return object.has_view_permission(request.user)
@@ -830,6 +837,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         queryset = (
             PetitionProject.objects.all()
+            .select_related("department")
+            .defer("department__geometry")
             .prefetch_related(
                 Prefetch(
                     "status_history",
@@ -1095,6 +1104,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context = super().get_context_data(**kwargs)
         moulinette = self.object.get_moulinette()
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
 
         hedge_data = context["petition_project"].hedge_data
         context["ign_url"] = get_ign_centered_url(hedge_data)
@@ -1701,7 +1711,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 StatusLog.objects.create(
                     petition_project=project,
                     type=LOG_TYPES.suspension,
-                    due_date=form.cleaned_data["due_date"],
+                    due_date=form.cleaned_data["info_due_date"],
                     original_due_date=project.due_date,
                     created_by=self.request.user,
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",

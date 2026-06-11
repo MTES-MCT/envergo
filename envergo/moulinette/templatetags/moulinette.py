@@ -165,7 +165,9 @@ def field_summary(field):
     """
     value_help_text = None
     if hasattr(field.field, "get_display_value"):
-        value = field.field.get_display_value(field.value())
+        cleaned = getattr(field.form, "cleaned_data", {}).get(field.name)
+        display_input = cleaned if cleaned is not None else field.value()
+        value = field.field.get_display_value(display_input)
     elif hasattr(field.field, "choices"):
         value = dict(field.field.choices).get(field.value(), field.value())
         if isinstance(value, dict):
@@ -216,7 +218,10 @@ def field_summary(field):
         else value
     )
     html = f"<strong>{label}</strong> {value}"
-    if hasattr(field.field, "display_help_text"):
+    if hasattr(field.field, "get_display_help_text"):
+        display_help_text = field.field.get_display_help_text(field.value())
+        html += f' <br /><span class="fr-hint-text">{display_help_text}</span>'
+    elif hasattr(field.field, "display_help_text"):
         if field.field.display_help_text:
             html += f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
     elif field.help_text:
