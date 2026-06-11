@@ -6,7 +6,7 @@ from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.tests.factories import HedgeFactory
-from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
 from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
@@ -355,7 +355,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.8]
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         assert all(info["high_density"] is True for info in zone_info.values())
@@ -369,7 +369,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="mixte")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [2.0]
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         assert all(info["high_density"] is False for info in zone_info.values())
@@ -383,7 +383,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.5]
 
     def test_non_arboree_low_density(self):
@@ -395,7 +395,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie="arbustive")],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.7]
 
     def test_density_at_threshold_is_high(self):
@@ -409,7 +409,7 @@ class TestPerHedgeCoefficients:
         )
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         assert all(info["high_density"] is True for info in zone_info.values())
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [1.8]
 
     @pytest.mark.parametrize("type_haie", ["buissonnante", "arbustive"])
@@ -422,7 +422,7 @@ class TestPerHedgeCoefficients:
             hedges=[make_hedge_factory(length=100, type_haie=type_haie)],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         assert list(coefficients.values()) == [
             1.5
         ], f"{type_haie} should use R1_non_arboree_HD"
@@ -573,7 +573,7 @@ class TestMultiZoneHedges:
             hedges=[hedge_south, hedge_north],
             reimplantation="replantation",
         )
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
         # Each hedge should be in its own zone
         assert zone_info[hedge_south.id]["zone_id"] == "zone_A"
@@ -599,7 +599,7 @@ class TestMultiZoneHedges:
             reimplantation="replantation",
         )
         zone_info = moulinette.catalog["ru_per_hedge_zone_info"]
-        coefficients = moulinette.catalog["ru_per_hedge_coefficients"]
+        coefficients = moulinette.catalog["per_hedge_coefficients"]
         # Zone A: density 60 >= X_densite 50 → HD → R1_non_arboree_HD=1.0
         assert zone_info[hedge_south.id]["high_density"] is True
         assert coefficients[hedge_south.id] == 1.0
@@ -784,3 +784,52 @@ class TestDebugContext:
         ctx = moulinette.get_debug_context()
         htc = ctx["hedges_and_category_by_type"]
         assert htc == {}
+
+
+class TestCityHallSubmission:
+
+    def test_projet_urba_returns_autorisation_urba(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            contexte="projet-urba",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert moulinette.city_hall_submission == CityHallSubmission.AUTORISATION_URBA
+
+    def test_ru_only_returns_none(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HaieCriterionCategory.ru in moulinette.results_by_category
+        assert moulinette.city_hall_submission == CityHallSubmission.NONE
+
+    def test_hru_only_returns_complete(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(type_haie="alignement", bord_voie=False),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HaieCriterionCategory.ru not in moulinette.results_by_category
+        assert moulinette.city_hall_submission == CityHallSubmission.COMPLETE
+
+    def test_ru_and_hru_returns_partial(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(hedge_id="D1", type_haie="mixte"),
+                make_hedge(hedge_id="D2", type_haie="alignement", bord_voie=False),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HaieCriterionCategory.ru in moulinette.results_by_category
+        assert len(moulinette.results_by_category) > 1
+        assert moulinette.city_hall_submission == CityHallSubmission.PARTIAL

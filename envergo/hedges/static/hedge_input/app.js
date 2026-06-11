@@ -469,6 +469,7 @@ createApp({
 
     // Reactive properties for acceptability conditions
     const conditions = reactive({ status: 'loading', conditions: [] });
+    let conditionsAbortController = null;
 
     // Computed property to track changes in the hedges array
     const hedgesToPlantSnapshot = computed(() => JSON.stringify(hedges[TO_PLANT].hedges.map(hedge => ({
@@ -671,6 +672,11 @@ createApp({
       // drawn, it's way too costly anyway
       if (hedgeBeingDrawn.value) return;
 
+      if (conditionsAbortController){
+        conditionsAbortController.abort();
+      }
+      conditionsAbortController = new AbortController();
+
       conditions.status = "loading";
 
       // Prepare the hedge data to be sent in the request body
@@ -685,6 +691,7 @@ createApp({
           'X-CSRFToken': CSRF_TOKEN
         },
         body: JSON.stringify(hedgeData),
+        signal: conditionsAbortController.signal,
       })
           .then(async response => {
             if (!response.ok) {
@@ -703,6 +710,9 @@ createApp({
           conditions.result = conditions.conditions.every(element => element.result);
         })
         .catch(error => {
+          if (error.name === 'AbortError'){
+            return;
+          }
           console.error('Error:', error);
           conditions.status = "error";
         });

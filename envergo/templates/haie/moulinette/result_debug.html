@@ -25,13 +25,13 @@
       <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
       {% if moulinette.config %}
         <li>
-          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+          Département : <a href="{% url 'admin:moulinette_confighaie_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
         </li>
         <li>Régime unique : {{ moulinette.config.single_procedure|yesno }}</li>
       {% else %}
         <li>Département : {{ moulinette.department }}</li>
       {% endif %}
-
+      <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
       <li>
         Lien admin vers l'objet haies :
         <a href="{% url 'admin:hedges_hedgedata_change' haies.id %}">{{ haies.id }}</a>
@@ -132,7 +132,7 @@
 
     <h3>Conditions d'acceptabilité</h3>
     <ul class="fr-mb-2w">
-      {% for condition in plantation_evaluation.conditions %}
+      {% for condition in plantation_evaluation.all_conditions %}
         <li>
           {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
           {% if condition.context %}

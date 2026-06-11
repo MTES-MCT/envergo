@@ -1,10 +1,12 @@
 import json
 import secrets
 from collections import OrderedDict
+from enum import EnumType
 from typing import Literal
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.db.models.enums import ChoicesMeta
 
 
 def get_base_url(site_domain):
@@ -50,3 +52,11 @@ def insert_before(ordered_dict, new_key, new_value, before_key):
             new_dict[new_key] = new_value
         new_dict[key] = value
     return new_dict
+
+
+class _DjangoSafeEnumMeta(EnumType):
+    do_not_call_in_templates = True
+
+
+class _DjangoSafeChoicesMeta(ChoicesMeta):
+    do_not_call_in_templates = True

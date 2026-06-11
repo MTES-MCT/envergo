@@ -2,13 +2,14 @@ import json
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
-from enum import Enum, EnumType, StrEnum
+from enum import Enum, StrEnum
 from types import SimpleNamespace
 
 from django.contrib.gis.geos import GEOSGeometry
 
 from envergo.evaluations.models import RESULT_CASCADE, RESULTS, TAG_STYLES_BY_RESULT
 from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
+from envergo.utils.tools import _DjangoSafeEnumMeta
 
 
 class Stake(Enum):
@@ -664,6 +665,16 @@ class CriterionEvaluator(ABC):
         result_code = self.get_result_code(result_data)
         result = self.get_result(result_code)
         self._result_code, self._result = result_code, result
+        self.moulinette.catalog.update(self.get_post_evaluate_data())
+
+    def get_post_evaluate_data(self):
+        """Data to inject into the catalog after the result is known.
+
+        Symmetric with get_catalog_data(). Override in subclasses that
+        compute catalog entries depending on the result code (e.g.
+        adjusted per-hedge coefficients).
+        """
+        return {}
 
     @property
     def result_code(self):
@@ -738,10 +749,6 @@ class CriterionEvaluator(ABC):
         rendering debug_template.
         """
         return {}
-
-
-class _DjangoSafeEnumMeta(EnumType):
-    do_not_call_in_templates = True
 
 
 class LabelEnum(StrEnum, metaclass=_DjangoSafeEnumMeta):
@@ -840,6 +847,7 @@ SELF_DECLARATION_ELIGIBILITY_MATRIX = {
     RESULTS.action_requise: True,
     RESULTS.non_disponible: False,
     RESULTS.cas_par_cas: True,
+    RESULTS.cas_par_cas_icpe: True,
     RESULTS.systematique: True,
     RESULTS.non_applicable: False,
     RESULTS.non_concerne: False,

@@ -101,7 +101,7 @@ def test_moulinette_droit_constant():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.result == "soumis"
 
@@ -147,7 +147,7 @@ def test_moulinette_result_alignement():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.result == "hors_regime_unique"
 
@@ -178,7 +178,7 @@ def test_moulinette_result_non_alignement():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.alignement_arbres.result == "non_disponible"
     assert moulinette.result == "declaration"
@@ -212,7 +212,7 @@ def test_moulinette_result_interdit():
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.result == "interdit"
 
@@ -263,7 +263,7 @@ def test_moulinette_result_autorisation(france_map):
     }
     moulinette_data = {"initial": data, "data": data}
     moulinette = MoulinetteHaie(moulinette_data)
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
     assert moulinette.ep.ru__ep_regime_unique.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

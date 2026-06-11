@@ -1,0 +1,27 @@
+<h6>
+  📃 <strong>Le projet est interdit</strong>, au titre d’une ou plusieurs réglementations.
+</h6>
+
+<p>Pour rendre le projet autorisable, des options sont proposées dans le détail des réglementations ci-dessous.</p>
+
+<p>
+  Nous vous invitons à <a href="{{ edit_url }}">modifier votre projet</a>.
+</p>
+
+<p>
+  <a href="{{ edit_url }}"
+     class="fr-btn fr-btn--icon-left fr-icon-arrow-left-line spinner-link fr-mt-0">Modifier le projet</a>
+</p>
+
+{% if not is_alternative %}
+  <p>
+    Vous pouvez tout de même choisir de
+    <span role="button"
+          tabindex="0"
+          class="inline-button"
+          aria-controls="demarches-simplifiees-modal"
+          data-fr-opened="false"
+          data-category="{{ category.name }}">déposer un dossier.</span>
+    Il sera examiné, mais il est probable qu’un refus soit prononcé.
+  </p>
+{% endif %}
