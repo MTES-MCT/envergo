@@ -15,7 +15,6 @@ from envergo.petitions.models import (
     ResultSnapshot,
     Simulation,
 )
-from envergo.petitions.forms import validate_file_size
 from envergo.utils.validators import validate_mime
 from envergo.users.models import User
 from envergo.utils.widgets import JSONWidget
@@ -64,7 +63,7 @@ def validate_dn_file_size(value):
     size_limit = settings.DEMARCHES_SIMPLIFIEES["ARCHIVE_MAX_SIZE"]
     if value.size > size_limit:
         raise ValidationError(
-            "Le message n'a pas pu être envoyé car la pièce jointe dépasse la taille maximale autorisée de 20 Mo."
+            "Le fichier excède la taille maximale autorisée de 20 Mo."
         )
 
 
