@@ -101,7 +101,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_arracher.svg' %}" alt="">
               Haies à détruire
-              <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_REMOVE.totalLength) ]] m</span>
+              <span class="fr-tag fr-tag--sm">Total : [[ Math.round(hedges.TO_REMOVE.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_REMOVE.hasCompletedHedge">
               <table>
@@ -129,7 +129,7 @@
                               @click.stop="hedge.remove()"
                               :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
-                    <td>[[ Math.ceil(hedge.length) ]] m</td>
+                    <td>[[ Math.round(hedge.length) ]] m</td>
                   </tr>
                 </tbody>
               </table>
@@ -144,7 +144,7 @@
             <h3>
               <img class="img-icon" src="{% static 'icons/à_planter.svg' %}" alt="">
               Haies à planter
-              <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_PLANT.totalLength) ]] m</span>
+              <span class="fr-tag fr-tag--sm">Total : [[ Math.round(hedges.TO_PLANT.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_PLANT.hasCompletedHedge">
               <table>
@@ -173,7 +173,7 @@
                               @click.stop="hedge.remove()"
                               :disabled="hedgeBeingDrawn">Supprimer</button>
                     </td>
-                    <td>[[ Math.ceil(hedge.length) ]] m</td>
+                    <td>[[ Math.round(hedge.length) ]] m</td>
                   </tr>
                 </tbody>
               </table>
