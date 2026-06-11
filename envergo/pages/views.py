@@ -25,7 +25,7 @@ from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 from envergo.utils.context_processors import multi_sites_context, settings_context
-from envergo.utils.tools import get_site_literal
+from envergo.utils.tools import get_department_settings_form_url, get_site_literal
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +91,7 @@ class DepartmentSearchMixin:
                 "contacts_info": d.contacts_info,
                 "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
+                "settings_form_url": get_department_settings_form_url(d),
             }
             for d in self.get_queryset_with_contacts()
         ]

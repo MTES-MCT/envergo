@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "</div>" +
         '<div class="fr-py-2w"><p>' +
         "Vous représentez la DDT(M) du département et souhaitez compléter ou modifier les informations affichées ici ? " +
-        '<a href="https://tally.so/r/w4Agpb" target="_blank" rel="noopener">Cliquez ici</a>.' +
+        '<a href="' + dept.settings_form_url + '" target="_blank" rel="noopener">Cliquez ici</a>.' +
         "</p></div>";
     } else {
       html +=
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         '<div class="fr-py-2w"><p>' +
         "Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture, " +
         "des ressources à présenter aux usagers ? " +
-        '<a href="https://tally.so/r/w4Agpb" target="_blank" rel="noopener">Cliquez ici</a>.' +
+        '<a href="' + dept.settings_form_url + '" target="_blank" rel="noopener">Cliquez ici</a>.' +
         "</p></div>";
     }
 

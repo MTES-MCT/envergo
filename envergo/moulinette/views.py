@@ -30,6 +30,7 @@ from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
 
@@ -906,10 +907,8 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         }
         context["regulation_list"] = regulation_list
         context["grouped_criteria"] = grouped_criteria_by_regulation
-        department_param = {"departement": str(self.department)}
-        department_query_string = urlencode(department_param)
-        context["department_settings_form"] = (
-            f"https://tally.so/r/Pd9b9e?{department_query_string}"
+        context["department_settings_form"] = get_department_settings_form_url(
+            self.department
         )
 
         # Compute the hedge density reference map list

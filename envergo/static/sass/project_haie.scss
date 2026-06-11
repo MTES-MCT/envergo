@@ -38,6 +38,11 @@ main.home {
         }
       }
 
+      #btn-start-simulation {
+        width: 100%;
+        justify-content: center;
+      }
+
       @media (width >= 48em) {
         flex-direction: row;
         align-items: flex-start;
@@ -46,6 +51,10 @@ main.home {
         #department-combobox {
           flex: 1;
           max-width: 24rem;
+        }
+
+        #btn-start-simulation {
+          width: fit-content;
         }
       }
     }
