@@ -184,7 +184,7 @@ def test_calvados_quality_condition(hedge_data):
     }
     evaluator = Mock()
     R = 0.0  # Ignored for calvados
-    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    condition = NormandieQualityCondition(hedge_data.hedges(), R, evaluator, catalog)
     condition.evaluate()
     LC = condition.context["LC"]
 
@@ -218,13 +218,13 @@ def test_calvados_quality_condition_l350(hedge_data):
     }
     evaluator = Mock(result_code="dispense_L350")
     R = 0.0  # Ignored for calvados
-    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    condition = NormandieQualityCondition(hedge_data.hedges(), R, evaluator, catalog)
     condition.evaluate()
 
     assert condition.result
 
     evaluator = Mock(result_code="a_verifier_L350")
-    condition = NormandieQualityCondition(hedge_data, R, evaluator, catalog)
+    condition = NormandieQualityCondition(hedge_data.hedges(), R, evaluator, catalog)
     condition.evaluate()
 
     assert condition.result

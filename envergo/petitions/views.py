@@ -719,6 +719,7 @@ class PetitionProjectDetail(DetailView):
                 "We should implement static simulation/project to avoid this case.",
                 extra={"reference": self.object.reference},
             )
+
             raise NotImplementedError("We do not handle uncompleted project")
 
         context["petition_project"] = self.object
