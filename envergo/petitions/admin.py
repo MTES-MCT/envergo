@@ -1,6 +1,8 @@
 import json
 
 from django import forms
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.html import format_html
@@ -13,6 +15,8 @@ from envergo.petitions.models import (
     ResultSnapshot,
     Simulation,
 )
+from envergo.petitions.forms import validate_file_size
+from envergo.utils.validators import validate_mime
 from envergo.users.models import User
 from envergo.utils.widgets import JSONWidget
 
@@ -52,6 +56,19 @@ class UserMultipleChoiceField(forms.ModelMultipleChoiceField):
         return obj.email
 
 
+def validate_zip(value):
+    validate_mime(value, ["application/zip"])
+
+
+def validate_dn_file_size(value):
+    size_limit = settings.DEMARCHES_SIMPLIFIEES["ARCHIVE_MAX_SIZE"]
+    if value.size > size_limit:
+        raise ValidationError(
+            "Le message n'a pas pu être envoyé car la pièce jointe dépasse la taille maximale autorisée de 20 Mo."
+        )
+
+
+
 class PetitionProjectAdminForm(forms.ModelForm):
     followed_by = UserMultipleChoiceField(
         label="Instructeurs suivant le projet",
@@ -59,6 +76,14 @@ class PetitionProjectAdminForm(forms.ModelForm):
         widget=FilteredSelectMultiple(_("Users"), is_stacked=False),
         required=False,
     )
+
+    dn_archive = forms.FileField(
+        label="Archive Démarche Numérique",
+        required=False,
+        help_text="""Format autorisé: zip.<br>
+        Taille maximale autorisée : 20 Mo.
+        """,
+        validators=[validate_zip, validate_dn_file_size])
 
     class Meta:
         model = PetitionProject
