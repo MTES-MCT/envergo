@@ -10,7 +10,7 @@ from django.core.validators import RegexValidator
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import PACAGE_RE, HedgeTypeFactory, Pacage
+from envergo.hedges.models import PACAGE_RE, HedgeCategory, HedgeTypeFactory, Pacage
 from envergo.hedges.regulations import (
     AisneQualityCondition,
     EssencesBocageresCondition,
@@ -25,7 +25,6 @@ from envergo.hedges.regulations import (
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import (
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
@@ -735,7 +734,7 @@ class EspecesProtegeesRegimeUnique(
     plantation_skip_results = frozenset({"dispense", "non_concerne", "non_disponible"})
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
-    category = HaieCriterionCategory.ru
+    category = HedgeCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,

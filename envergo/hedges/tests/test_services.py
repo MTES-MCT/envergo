@@ -4,6 +4,7 @@ import pytest
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.conftest import bizous_town_center, france_map  # noqa: F401
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     MinLengthCondition,
     RUMinLengthCondition,
@@ -13,7 +14,6 @@ from envergo.hedges.regulations import (
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.regulations.ep import EspecesProtegeesRegimeUnique
 from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.moulinette.tests.factories import (
@@ -330,7 +330,7 @@ class TestGlobalResultsByCategory:
         # category_result="declaration" + plantation_result="inadequate" (no plantation hedges)
         # -> PLANTATION_RESULT_MATRIX maps to "inadequate"
         results = evaluator.global_results_by_category
-        assert results[HaieCriterionCategory.ru] == PlantationResults.Inadequate.value
+        assert results[HedgeCategory.ru] == PlantationResults.Inadequate.value
 
 
 class TestDisplayForAlternatives:
@@ -350,9 +350,9 @@ class TestDisplayForAlternatives:
             type(evaluator),
             "global_results_by_category",
             new_callable=PropertyMock,
-            return_value={HaieCriterionCategory.ru: RESULTS.interdit},
+            return_value={HedgeCategory.ru: RESULTS.interdit},
         ):
-            assert evaluator.display_for_alternatives(HaieCriterionCategory.ru) is True
+            assert evaluator.display_for_alternatives(HedgeCategory.ru) is True
 
     def test_non_soumis_does_not_display_for_alternatives(
         self, regime_unique_haie_criteria
@@ -371,6 +371,6 @@ class TestDisplayForAlternatives:
             type(evaluator),
             "global_results_by_category",
             new_callable=PropertyMock,
-            return_value={HaieCriterionCategory.ru: RESULTS.non_soumis},
+            return_value={HedgeCategory.ru: RESULTS.non_soumis},
         ):
-            assert evaluator.display_for_alternatives(HaieCriterionCategory.ru) is False
+            assert evaluator.display_for_alternatives(HedgeCategory.ru) is False

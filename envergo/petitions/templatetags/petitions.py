@@ -219,7 +219,7 @@ def decision_badge(decision, is_light=False):
             """
             )
             if css_class
-            else "-"
+            else ""
         )
     else:
         return mark_safe(

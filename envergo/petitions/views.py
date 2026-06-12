@@ -303,7 +303,7 @@ class PetitionProjectCreate(FormView):
 
     def form_valid(self, form):
         moulinette_url = form.cleaned_data["moulinette_url"]
-        category = form.cleaned_data["category"]
+        category = form.cleaned_data["_category"]
 
         department_nb = extract_param_from_url(moulinette_url, "department")
         date_str = extract_param_from_url(moulinette_url, "date")
@@ -333,6 +333,7 @@ class PetitionProjectCreate(FormView):
                 },
             )
             form.instance.moulinette_url = updated_url
+            form.instance.original_multi_category_moulinette_url = moulinette_url
             form.instance.hedge_data = new_hedge_data
 
         with transaction.atomic():
@@ -520,6 +521,12 @@ class PetitionProjectCreate(FormView):
                 if haies
                 else False
             )
+        elif source == "category":
+            value = petition_project.category
+        elif source == "from_multi_category":
+            value = bool(petition_project.original_multi_category_moulinette_url)
+        elif source == "original_multi_category_moulinette_url":
+            value = petition_project.original_multi_category_moulinette_url
         elif source == "vieil_arbre":
             haies = moulinette.catalog.get("haies")
             if haies:
