@@ -112,7 +112,7 @@ if _missing_results:
 # This method is outside the PlantationEvaluator class because it makes it
 # easier to patch it in tests.
 def get_replantation_coefficient(moulinette):
-    """Compute the global replantation coefficient R, weighted by hedge length per category."""
+    """Compute the global replantation coefficient R, weighted by hedge to remove length per category."""
     R_by_category = defaultdict(lambda: (D("0")))
     for regulation in moulinette.regulations:
         if regulation.is_activated():
@@ -127,9 +127,13 @@ def get_replantation_coefficient(moulinette):
     hedges = moulinette.catalog["haies"].get_hedges_by_category(
         moulinette.config.single_procedure
     )
-    total_length = moulinette.catalog["haies"].hedges().length
+    total_length = moulinette.catalog["haies"].hedges().to_remove().length
     for category in R_by_category.keys():
-        R += R_by_category[category] * D(hedges[category].length) / D(total_length)
+        R += (
+            R_by_category[category]
+            * D(hedges[category].to_remove().length)
+            / D(total_length)
+        )
     return float(R)
 
 
