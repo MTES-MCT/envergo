@@ -23,6 +23,17 @@ from envergo.utils.validators import validate_mime
 class PetitionProjectForm(forms.ModelForm):
     """Form for creating a petition project."""
 
+    category = forms.CharField(required=True)
+
+    def clean_category(self):
+        from envergo.moulinette.regulations import HaieCriterionCategory
+
+        value = self.cleaned_data["category"]
+        try:
+            return HaieCriterionCategory[value]
+        except KeyError:
+            raise forms.ValidationError(f"Catégorie invalide : {value}")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["moulinette_url"].required = True
@@ -230,7 +241,7 @@ def request_for_info_message():
 class RequestAdditionalInfoForm(forms.Form):
     """Let an instructor pause the instruction and request for more information."""
 
-    due_date = forms.DateField(
+    info_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
         required=True,
         initial=three_months_from_now,

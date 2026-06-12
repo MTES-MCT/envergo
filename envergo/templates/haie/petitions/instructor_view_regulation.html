@@ -81,7 +81,7 @@
           </section>
         {% endif %}
 
-        {% if regulation.has_plantation_condition_details_template and regulation.result != "non_soumis" %}
+        {% if has_condition_to_display and regulation.has_plantation_condition_details_template %}
           <section class="fr-mb-5w">
             <h4>Précisions sur le calcul d'acceptabilité de la plantation</h4>
             {% for criterion in regulation.criteria.all %}

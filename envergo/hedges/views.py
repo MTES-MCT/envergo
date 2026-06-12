@@ -210,10 +210,14 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         Even though the request is a POST, the moulinette arguments are passed
         in the GET parameters. That's why we had to override this method.
         """
+        data = self.request.GET.dict()
+        if self.request.body:
+            body = json.loads(self.request.body)
+            data["haies"] = HedgeData(data=body)
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.request.GET,
+            "data": data,
         }
         return kwargs
 
@@ -225,9 +229,9 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
             return JsonResponse({"error": "Moulinette is not valid"}, status=400)
 
         try:
-            data = json.loads(request.body)
-            hedge_data = HedgeData(data=data)
-            evaluator = PlantationEvaluator(self.moulinette, hedge_data)
+            evaluator = PlantationEvaluator(
+                self.moulinette, self.moulinette.catalog["haies"]
+            )
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
         except json.JSONDecodeError:
