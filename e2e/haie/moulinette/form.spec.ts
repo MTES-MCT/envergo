@@ -73,10 +73,8 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.locator('#hedge-input-iframe').contentFrame().locator('footer').getByRole('button', { name: 'Enregistrer', exact: true }).click();
 
 
-    await expect(page.getByText('La demande d’autorisation est prête à être complétée')).toBeVisible();
+    await expect(page.getByText('Le dossier est prêt à être complété')).toBeVisible();
     await expect(page.getByText('La plantation envisagée est adéquate')).toBeVisible();
-    const buttons = page.getByText("Déposer une demande d'autorisation");
-    await expect(buttons.nth(0)).toBeVisible();
-    await expect(buttons.nth(1)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Compléter le dossier' })).toBeVisible();
 
 });
