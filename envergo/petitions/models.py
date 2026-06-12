@@ -1,7 +1,7 @@
 import logging
-from os.path import splitext
 import secrets
 from datetime import timedelta
+from os.path import splitext
 from urllib.parse import urlparse
 
 from dateutil import parser
@@ -89,7 +89,8 @@ SESSION_KEY = "untracked_dossier_submission"
 
 def dn_archive_file_format(instance, filename):
     _, extension = splitext(filename)
-    return f"dn_archives/{instance.reference}{extension}"
+    secret = secrets.token_urlsafe(16)
+    return f"dn_archives/{instance.reference}_{secret}{extension}"
 
 
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
@@ -173,7 +174,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         "Archive Démarches numériques",
         null=True,
         blank=True,
-        upload_to=dn_archive_file_format)
+        upload_to=dn_archive_file_format,
+    )
 
     onagre_number = models.CharField(
         "Référence ONAGRE du dossier", max_length=64, blank=True
