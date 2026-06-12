@@ -1,4 +1,5 @@
 from django.db.models import TextChoices
+from django.db.models.enums import ChoicesMeta
 from django.forms import ClearableFileInput, EmailField, FileField
 from django.forms.widgets import RadioSelect, Select
 
@@ -74,15 +75,25 @@ class ProjectStageField(Select):
         return context
 
 
-class LabelChoices(TextChoices):
-    """TextChoices whose members carry a `label` and `short_label` attribute.
+class LabelChoicesMeta(ChoicesMeta):
+    def __new__(metacls, classname, bases, classdict, **kwds):
+        for key in classdict._member_names:
+            value = classdict[key]
+            if isinstance(value, (list, tuple)):
+                dict.__setitem__(classdict, key, (key,) + tuple(value))
+        return super().__new__(metacls, classname, bases, classdict, **kwds)
 
-    Declare members as 3-tuples: (value, short_label, label).
-    ChoicesMeta pops the last string as the standard Django label.
+
+class LabelChoices(TextChoices, metaclass=LabelChoicesMeta):
+    """TextChoices with extra labels.
+
+    Declare members as 3-tuples: (display_value, short_label, label).
+    The name (key) is used as the DB stored value.
     """
 
-    def __new__(cls, value, short_label=""):
+    def __new__(cls, value, display_value="", short_label=""):
         member = str.__new__(cls, value)
         member._value_ = value
+        member.display_value = display_value
         member.short_label = short_label
         return member

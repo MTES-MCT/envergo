@@ -786,7 +786,9 @@ class HaieCriterionEvaluator(CriterionEvaluator, ABC):
         if ("category" in cls.__dict__ or "choice_label" in cls.__dict__) and hasattr(
             cls, "_base_choice_label"
         ):
-            cls.choice_label = f"{cls._base_choice_label} - {cls.category.value}"
+            cls.choice_label = (
+                f"{cls._base_choice_label} - {cls.category.display_value}"
+            )
 
     def __init__(self, criterion, moulinette, distance, settings):
         """Get the hedges relevant to this evaluator depending on its category."""
