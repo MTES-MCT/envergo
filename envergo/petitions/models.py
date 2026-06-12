@@ -89,7 +89,8 @@ SESSION_KEY = "untracked_dossier_submission"
 
 def dn_archive_file_format(instance, filename):
     _, extension = splitext(filename)
-    return f"dn_archives/{instance.reference}{extension}"
+    secret = secrets.token_urlsafe(16)
+    return f"dn_archives/{instance.reference}_{secret}{extension}"
 
 
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
