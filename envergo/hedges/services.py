@@ -112,17 +112,24 @@ if _missing_results:
 # This method is outside the PlantationEvaluator class because it makes it
 # easier to patch it in tests.
 def get_replantation_coefficient(moulinette):
-    """Get the "R" value.
-
-    It depends on the activated criteria.
-    """
-    R = D("0")
+    """Compute the global replantation coefficient R, weighted by hedge length per category."""
+    R_by_category = defaultdict(lambda: (D("0")))
     for regulation in moulinette.regulations:
         if regulation.is_activated():
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "get_replantation_coefficient"):
-                    R = max(R, criterion._evaluator.get_replantation_coefficient())
+                    R_by_category[criterion._evaluator.category] = max(
+                        R_by_category[criterion._evaluator.category],
+                        D(criterion._evaluator.get_replantation_coefficient()),
+                    )
 
+    R = D("0")
+    hedges = moulinette.catalog["haies"].get_hedges_by_category(
+        moulinette.config.single_procedure
+    )
+    total_length = moulinette.catalog["haies"].hedges().length
+    for category in R_by_category.keys():
+        R += R_by_category[category] * D(hedges[category].length) / D(total_length)
     return float(R)
 
 
@@ -371,7 +378,9 @@ class PlantationEvaluator:
                 break
         if not has_min_length_condition:
             conditions.append(
-                MinLengthCondition(self.hedge_data.hedges(), R, None, None).evaluate()
+                MinLengthCondition(
+                    self.hedge_data.hedges(), R, None, {"haies": self.hedge_data}
+                ).evaluate()
             )
 
         all_displayable = sorted(
