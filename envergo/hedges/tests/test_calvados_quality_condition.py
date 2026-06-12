@@ -189,7 +189,7 @@ def test_calvados_quality_condition(hedge_data):
     catalog = {"aggregated_r": 2.0}
     evaluator = Mock(effective_coefficients=per_hedge_coefficients)
     evaluator.moulinette.config.single_procedure = False
-    condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
+    condition = NormandieQualityCondition(hedge_data.hedges(), 0, evaluator, catalog)
     condition.evaluate()
     LC = condition.context["LC"]
 
@@ -216,7 +216,7 @@ def test_calvados_quality_condition_l350(hedge_data):
         result_code="dispense_L350", effective_coefficients=per_hedge_coefficients
     )
     evaluator.moulinette.config.single_procedure = False
-    condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
+    condition = NormandieQualityCondition(hedge_data.hedges(), 0, evaluator, catalog)
     condition.evaluate()
     assert condition.result
 
@@ -224,7 +224,7 @@ def test_calvados_quality_condition_l350(hedge_data):
         result_code="a_verifier_L350", effective_coefficients=per_hedge_coefficients
     )
     evaluator.moulinette.config.single_procedure = False
-    condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
+    condition = NormandieQualityCondition(hedge_data.hedges(), 0, evaluator, catalog)
     condition.evaluate()
     assert condition.result
 
@@ -269,7 +269,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -294,7 +294,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -316,7 +316,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -338,7 +338,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -360,7 +360,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -386,7 +386,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -413,7 +413,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             2.0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -438,7 +438,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             1.0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -459,7 +459,7 @@ class TestNormandieQualityConditionCompensation:
         )
         hedge_data = HedgeDataFactory(hedges=to_remove)
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -486,7 +486,7 @@ class TestNormandieQualityConditionCompensation:
             ]
         )
         condition = NormandieQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
             catalog,
@@ -504,7 +504,9 @@ class TestNormandieQualityConditionCompensation:
         evaluator = make_mock_evaluator(
             result_code="dispense_L350", effective_coefficients=coefficients
         )
-        condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
+        condition = NormandieQualityCondition(
+            hedge_data.hedges(), 0, evaluator, catalog
+        )
         condition.evaluate()
         assert condition.result
 
@@ -517,6 +519,8 @@ class TestNormandieQualityConditionCompensation:
         evaluator = make_mock_evaluator(
             result_code="a_verifier_L350", effective_coefficients=coefficients
         )
-        condition = NormandieQualityCondition(hedge_data, 0, evaluator, catalog)
+        condition = NormandieQualityCondition(
+            hedge_data.hedges(), 0, evaluator, catalog
+        )
         condition.evaluate()
         assert condition.result

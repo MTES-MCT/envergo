@@ -5,8 +5,11 @@ from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    HaieRegulationFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import setup_ep_regime_unique
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +23,14 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -48,7 +58,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
 
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(
+    regulation = HaieRegulationFactory(
         regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
     )
     criteria = [
@@ -143,20 +153,7 @@ def test_moulinette_result_alignement():
 
 
 def test_moulinette_result_non_alignement():
-    DCConfigHaieFactory(
-        single_procedure=True,
-        single_procedure_settings={
-            "coeff_compensation": {
-                "default": {
-                    "X_densite": 60,
-                    "R1_non_arboree_HD": 1.5,
-                    "R2_non_arboree_LD": 1.5,
-                    "R3_arboree_HD": 1.5,
-                    "R4_arboree_LD": 1.5,
-                }
-            }
-        },
-    )
+    RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -183,8 +180,7 @@ def test_moulinette_result_non_alignement():
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
 
-    assert moulinette.conditionnalite_pac.result == "non_soumis"
-    assert moulinette.alignement_arbres.result == "non_soumis"
+    assert moulinette.alignement_arbres.result == "non_disponible"
     assert moulinette.result == "declaration"
 
 
@@ -236,21 +232,9 @@ def test_moulinette_result_interdit():
     assert moulinette.result == "interdit"
 
 
-def test_moulinette_result_autorisation(ep_criteria):
-    DCConfigHaieFactory(
-        single_procedure=True,
-        single_procedure_settings={
-            "coeff_compensation": {
-                "default": {
-                    "X_densite": 60,
-                    "R1_non_arboree_HD": 1.5,
-                    "R2_non_arboree_LD": 1.5,
-                    "R3_arboree_HD": 1.5,
-                    "R4_arboree_LD": 1.5,
-                }
-            }
-        },
-    )
+def test_moulinette_result_autorisation(france_map):
+    setup_ep_regime_unique(france_map)
+    RUConfigHaieFactory()
     hedges = HedgeDataFactory(
         hedges=[
             HedgeFactory(
@@ -258,8 +242,9 @@ def test_moulinette_result_autorisation(ep_criteria):
                     "type_haie": "mixte",
                     "sur_parcelle_pac": False,
                     "mode_destruction": "coupe_a_blanc",
+                    "place_publique": False,
                 },
-            )
+            ),
         ]
     )
     data = {
@@ -280,5 +265,5 @@ def test_moulinette_result_autorisation(ep_criteria):
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
 
-    assert moulinette.ep.ep_aisne.result == "derogation_simplifiee"
+    assert moulinette.ep.ru__ep_regime_unique.result == "derogation_simplifiee"
     assert moulinette.result == "autorisation"

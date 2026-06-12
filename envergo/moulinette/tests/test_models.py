@@ -2,6 +2,7 @@ from datetime import date
 from unittest.mock import MagicMock
 
 import pytest
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
@@ -127,7 +128,7 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     assert moulinette.get_form_template() == "amenagement/moulinette/form.html"
     assert moulinette.get_result_template() == "amenagement/moulinette/result.html"
 
-    MoulinetteClass = get_moulinette_class_from_url("envergo.beta.gouv.fr")
+    MoulinetteClass = get_moulinette_class_from_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
     assert MoulinetteClass is MoulinetteAmenagement
 
 
@@ -280,11 +281,11 @@ def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
     )
     expected_results_criteria = {
         (
-            "sites_proteges_haie.mh_haie.result_code",
+            "sites_proteges_haie.hru__mh_haie.result_code",
             "Code de résultat du critère MH Haies > bizou2 de la réglementation sites_proteges_haie",
         ),
         (
-            "sites_proteges_haie.spr_haie.result_code",
+            "sites_proteges_haie.hru__spr_haie.result_code",
             "Code de résultat du critère SPR Haies > bizou de la réglementation sites_proteges_haie",
         ),
     }

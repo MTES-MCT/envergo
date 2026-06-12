@@ -6,7 +6,11 @@ creating regulation/criterion combos, and building hedge scenarios.
 
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.tests.factories import CriterionFactory, RegulationFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    HaieRegulationFactory,
+    RegulationFactory,
+)
 
 # ---------------------------------------------------------------------------
 # Coordinate presets
@@ -105,6 +109,29 @@ def make_hedge(
     }
 
 
+def make_ru_hedge(id, type="TO_REMOVE"):
+    """A hedge that qualifies as RU (non-alignement, no exclusion props)."""
+    return HedgeFactory(**make_hedge(hedge_id=id, hedge_type=type, type_haie="mixte"))
+
+
+def make_l350_3_hedge(id, type="TO_REMOVE"):
+    """A hedge that qualifies as L350-3 (alignement + bord_voie)."""
+    return HedgeFactory(
+        **make_hedge(
+            hedge_id=id, hedge_type=type, type_haie="alignement", bord_voie=True
+        )
+    )
+
+
+def make_hru_hedge(id, type="TO_REMOVE"):
+    """A hedge that qualifies as HRU (alignement without bord_voie)."""
+    return HedgeFactory(
+        **make_hedge(
+            hedge_id=id, hedge_type=type, type_haie="alignement", bord_voie=False
+        )
+    )
+
+
 def make_hedge_factory(length, type_haie="buissonnante", **extra):
     """Create a HedgeFactory with sur_parcelle_pac=False.
 
@@ -124,7 +151,7 @@ def make_moulinette_haie_data(
     hedges=None,
     hedge_data=None,
     motif="chemin_acces",
-    reimplantation="remplacement",
+    reimplantation="replantation",
     localisation_pac="non",
     travaux="destruction",
     element="haie",
@@ -361,7 +388,9 @@ def setup_ep_regime_unique(activation_map, evaluator_settings=None):
     """
     if evaluator_settings is None:
         evaluator_settings = EP_RU_DEFAULT_SETTINGS
-    regulation = RegulationFactory(regulation="ep")
+    regulation = HaieRegulationFactory(
+        regulation="ep", evaluator="envergo.moulinette.regulations.ep.EPRegulation"
+    )
     criteria = [
         CriterionFactory(
             title="EP Régime Unique",
@@ -382,7 +411,7 @@ def setup_regime_unique_haie(activation_map):
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaie",
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),

@@ -40,7 +40,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 2.0, "h2": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -59,7 +59,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -84,7 +84,7 @@ class TestRUQualityConditionCompensation:
             ]
         )
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients={"h1": 2.5}),
         )
@@ -107,7 +107,7 @@ class TestRUQualityConditionCompensation:
             ]
         )
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients={"h1": 2.5}),
         )
@@ -129,7 +129,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 1.5}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -150,7 +150,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 1.5}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -171,7 +171,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -190,7 +190,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -214,7 +214,7 @@ class TestRUQualityConditionCompensation:
         # Only h2 has a coefficient — aa1 is excluded
         coefficients = {"h2": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -236,7 +236,7 @@ class TestRUQualityConditionCompensation:
         # h1 has R=1.5, h2 has R=2.0 → need ~150 + ~200 = ~350m
         coefficients = {"h1": 1.5, "h2": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -256,7 +256,7 @@ class TestRUQualityConditionCompensation:
         )
         coefficients = {"h1": 1.5, "h2": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -280,7 +280,7 @@ class TestRUQualityConditionText:
         )
         coefficients = {"h1": 1.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -296,7 +296,7 @@ class TestRUQualityConditionText:
         )
         coefficients = {"h1": 2.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -314,7 +314,7 @@ class TestRUQualityConditionText:
         )
         coefficients = {"h1": 1.5}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -332,7 +332,7 @@ class TestRUQualityConditionText:
         )
         coefficients = {"h1": 1.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -352,7 +352,7 @@ class TestRUQualityConditionText:
         )
         coefficients = {"h1": 1.0, "h2": 1.0, "h3": 1.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -375,7 +375,7 @@ class TestRUQualityConditionMustDisplay:
         )
         coefficients = {"h1": 1.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(effective_coefficients=coefficients),
         )
@@ -384,7 +384,7 @@ class TestRUQualityConditionMustDisplay:
     def test_no_display_when_nothing_to_compensate(self):
         """Hidden when no hedges need compensation."""
         hedge_data = HedgeDataFactory(hedges=[])
-        condition = RUQualityCondition(hedge_data, 0, make_mock_evaluator())
+        condition = RUQualityCondition(hedge_data.hedges(), 0, make_mock_evaluator())
         assert not condition.must_display()
 
     def test_no_display_when_all_coefficients_zero(self):
@@ -396,7 +396,7 @@ class TestRUQualityConditionMustDisplay:
         )
         coefficients = {"h1": 0.0}
         condition = RUQualityCondition(
-            hedge_data,
+            hedge_data.hedges(),
             0,
             make_mock_evaluator(ep_bonus=0.0, effective_coefficients=coefficients),
         )

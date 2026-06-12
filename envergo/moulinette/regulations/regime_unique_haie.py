@@ -5,6 +5,7 @@ Determines whether a hedge project falls under the régime unique
 """
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     RUMinLengthCondition,
@@ -12,7 +13,7 @@ from envergo.hedges.regulations import (
     SafetyCondition,
 )
 from envergo.moulinette.regulations import (
-    CriterionEvaluator,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -35,7 +36,9 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEvaluator):
+class RegimeUniqueHaieRu(
+    PlantationConditionMixin, HedgeDensityMixin, HaieCriterionEvaluator
+):
     """Criterion evaluator for the régime unique haie procedure.
 
     Determines whether a hedge project falls under the régime unique
@@ -44,30 +47,35 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
     """
 
     choice_label = "Régime unique haie > Régime unique haie"
-    slug = "regime_unique_haie"
+    base_slug = "regime_unique_haie"
     plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
+    category = HedgeCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,
         "non_concerne": RESULTS.non_concerne,
-        "non_concerne_aa": RESULTS.non_concerne,
         "soumis": RESULTS.soumis,
     }
 
     CODE_MATRIX = {
-        ("regime_unique", "aa_only"): "non_concerne_aa",
-        ("regime_unique", "has_hedges"): "soumis",
-        ("droit_constant", "aa_only"): "non_concerne",
-        ("droit_constant", "has_hedges"): "non_concerne",
+        ("regime_unique", "ru_all_zones_resolved"): "soumis",
+        ("regime_unique", "unresolved"): "non_disponible",
+        ("droit_constant", "ru_all_zones_resolved"): "non_active",
+        ("droit_constant", "unresolved"): "non_active",
     }
 
-    def get_result_code(self, result_data):
-        """Override to detect missing zone config before the CODE_MATRIX lookup."""
-        if self.moulinette.config.single_procedure and not self.catalog.get(
-            "ru_all_zones_resolved", False
-        ):
-            return "non_disponible"
-        return super().get_result_code(result_data)
+    def get_result_data(self):
+        regime_unique = self.moulinette.config.single_procedure
+
+        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
+
+        zones_resolved = (
+            "ru_all_zones_resolved"
+            if self.catalog.get("ru_all_zones_resolved", False)
+            else "unresolved"
+        )
+
+        return procedure_mode, zones_resolved
 
     def get_catalog_data(self):
         """Inject density and zone-based coefficient data when in régime unique."""
@@ -82,16 +90,6 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
                     get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
                 )
         return catalog
-
-    def get_result_data(self):
-        """Return a (procedure_mode, hedge_presence) tuple for CODE_MATRIX lookup."""
-        hedges = self.catalog["haies"].hedges_to_remove()
-        has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
-        regime_unique = self.moulinette.config.single_procedure
-
-        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
-        hedge_presence = "has_hedges" if has_hedges else "aa_only"
-        return procedure_mode, hedge_presence
 
     def get_debug_context(self):
         """Return density and per-hedge zone data for the debug template."""

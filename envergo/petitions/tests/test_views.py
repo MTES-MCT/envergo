@@ -21,7 +21,7 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
-    RegulationFactory,
+    HaieRegulationFactory,
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
@@ -72,7 +72,7 @@ def fake_haie_settings(settings):
 
 @pytest.fixture()
 def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
-    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    regulation = HaieRegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
@@ -87,7 +87,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="ep")
+    regulation = HaieRegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
             title="Espèces protégées",
@@ -114,6 +114,7 @@ def test_petition_projet_create_view_dispatch(client, site, haie_user):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(ENVERGO_HAIE_DOMAIN="haie.local")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
@@ -174,6 +175,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(ENVERGO_HAIE_DOMAIN="haie.local")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
@@ -223,6 +225,7 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(ENVERGO_HAIE_DOMAIN="haie.local")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
@@ -254,7 +257,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 
 
 @patch("requests.post")
-def test_petition_project_detail(mock_post, client, site):
+def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_criteria):
     """Test consultation view"""
     mock_response = Mock()
     mock_response.status_code = 200

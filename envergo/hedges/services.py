@@ -55,7 +55,6 @@ PLANTATION_RESULT_MATRIX = {
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
     ("declaration", PlantationResults.Adequate.value): "declaration",
-    # not used for now:
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,
@@ -113,17 +112,28 @@ if _missing_results:
 # This method is outside the PlantationEvaluator class because it makes it
 # easier to patch it in tests.
 def get_replantation_coefficient(moulinette):
-    """Get the "R" value.
-
-    It depends on the activated criteria.
-    """
-    R = D("0")
+    """Compute the global replantation coefficient R, weighted by hedge to remove length per category."""
+    R_by_category = defaultdict(lambda: (D("0")))
     for regulation in moulinette.regulations:
         if regulation.is_activated():
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "get_replantation_coefficient"):
-                    R = max(R, criterion._evaluator.get_replantation_coefficient())
+                    R_by_category[criterion._evaluator.category] = max(
+                        R_by_category[criterion._evaluator.category],
+                        D(criterion._evaluator.get_replantation_coefficient()),
+                    )
 
+    R = D("0")
+    hedges = moulinette.catalog["haies"].get_hedges_by_category(
+        moulinette.config.single_procedure
+    )
+    total_length = moulinette.catalog["haies"].hedges().to_remove().length
+    for category in R_by_category.keys():
+        R += (
+            R_by_category[category]
+            * D(hedges[category].to_remove().length)
+            / D(total_length)
+        )
     return float(R)
 
 
@@ -179,7 +189,7 @@ def create_density_map(
                 for hedge in hedges_to_remove
             ],
             "red",
-            "Haies à détruire",
+            "Linéaires à détruire",
             class_name="hedge to-remove",
         ),
     ]
@@ -241,7 +251,7 @@ def create_line_buffer_density_map(
                 for hedge in hedges_to_remove
             ],
             "red",
-            "Haies à détruire",
+            "Linéaires à détruire",
             class_name="hedge to-remove",
         ),
     ]
@@ -318,9 +328,19 @@ class PlantationEvaluator:
         )
 
     @property
-    def display_for_alternatives(self):
+    def global_results_by_category(self):
+        return {
+            category: PLANTATION_RESULT_MATRIX.get(
+                (category_result, self.result), RESULTS.interdit
+            )
+            for category, category_result in self.moulinette.results_by_category.items()
+        }
+
+    def display_for_alternatives(self, category):
         """Should this evaluation global result be displayed for project alternatives?"""
-        return DISPLAY_FOR_ALTERNATIVES_MATRIX[self.global_result]
+        return DISPLAY_FOR_ALTERNATIVES_MATRIX[
+            self.global_results_by_category[category]
+        ]
 
     @property
     def result_code(self):
@@ -349,7 +369,7 @@ class PlantationEvaluator:
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions.extend(
                         criterion._evaluator.plantation_evaluate(
-                            self.hedge_data, R, self.moulinette.catalog
+                            R, self.moulinette.catalog
                         )
                     )
 
@@ -362,7 +382,9 @@ class PlantationEvaluator:
                 break
         if not has_min_length_condition:
             conditions.append(
-                MinLengthCondition(self.hedge_data, R, None, None).evaluate()
+                MinLengthCondition(
+                    self.hedge_data.hedges(), R, None, {"haies": self.hedge_data}
+                ).evaluate()
             )
 
         all_displayable = sorted(

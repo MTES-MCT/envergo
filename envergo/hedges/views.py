@@ -84,18 +84,26 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     def get_conditions_url(self, mode="plantation"):
         """Return conditions url to display plantation conditions"""
         conditions_url = ""
-        if mode == "removal" or mode == "plantation":
+        if mode == "removal":
+            conditions_url = ""
+
+        elif mode == "plantation":
             conditions_url = (
                 f'{reverse("hedge_conditions")}?{self.request.GET.urlencode()}'
             )
 
-        if mode == "read_only":
+        elif mode == "read_only":
             # params are in petition project
             if self.object:
                 petition_project = self.object.petitionproject_set.first()
-                query_string = urlparse(petition_project.moulinette_url)
-                query = QueryDict(query_string.query)
-                conditions_url = reverse("hedge_conditions") + "?" + query.urlencode()
+                if petition_project:
+                    query_string = urlparse(petition_project.moulinette_url)
+                    query = QueryDict(query_string.query)
+                    conditions_url = (
+                        reverse("hedge_conditions") + "?" + query.urlencode()
+                    )
+                else:
+                    conditions_url = ""
         return conditions_url
 
     def get_matomo_custom_url(self, mode="removal"):
@@ -210,10 +218,14 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         Even though the request is a POST, the moulinette arguments are passed
         in the GET parameters. That's why we had to override this method.
         """
+        data = self.request.GET.dict()
+        if self.request.body:
+            body = json.loads(self.request.body)
+            data["haies"] = HedgeData(data=body)
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.request.GET,
+            "data": data,
         }
         return kwargs
 
@@ -225,9 +237,9 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
             return JsonResponse({"error": "Moulinette is not valid"}, status=400)
 
         try:
-            data = json.loads(request.body)
-            hedge_data = HedgeData(data=data)
-            evaluator = PlantationEvaluator(self.moulinette, hedge_data)
+            evaluator = PlantationEvaluator(
+                self.moulinette, self.moulinette.catalog["haies"]
+            )
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
         except json.JSONDecodeError:
