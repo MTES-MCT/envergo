@@ -8,7 +8,7 @@ class TestPetitionProjectFormCleanCategory:
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "_category": "Régime unique",
+                "_category": "ru",
             }
         )
         form.is_valid()
@@ -18,7 +18,7 @@ class TestPetitionProjectFormCleanCategory:
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "_category": "Hors régime unique",
+                "_category": "hru",
             }
         )
         form.is_valid()
@@ -28,7 +28,7 @@ class TestPetitionProjectFormCleanCategory:
         form = PetitionProjectForm(
             data={
                 "moulinette_url": "http://haie.local/simulateur/resultat/?department=44",
-                "_category": "L350-3",
+                "_category": "l350_3",
             }
         )
         form.is_valid()

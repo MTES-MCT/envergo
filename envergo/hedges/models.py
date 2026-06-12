@@ -106,18 +106,18 @@ EPSG_LAMB93 = 2154
 class HedgeCategory(LabelChoices):
     ru = (
         "Régime unique",
-        "Haies bénéficiant d'une procédure unique",
         "Haies (procédure unique)",
+        "Haies bénéficiant d'une procédure unique",
     )
     l350_3 = (
         "L350-3",
-        "Alignements d'arbres en bord de voie",
         "Alignements d'arbres bord de voie",
+        "Alignements d'arbres en bord de voie",
     )
     hru = (
         "Hors régime unique",
-        "Autres haies et alignements, hors procédure unique",
         "Linéaires hors procédure unique",
+        "Autres haies et alignements, hors procédure unique",
     )
 
 
