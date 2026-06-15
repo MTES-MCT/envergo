@@ -185,6 +185,12 @@ CLOSING_FIELD_ERRORS = {
 }
 
 
+class SimulationCheckWidget(forms.CheckboxInput):
+    """Checkbox rendered inside a richer "verify the simulation" block."""
+
+    field_template_name = "haie/petitions/forms/fields/simulation_check.html"
+
+
 class ProcedureForm(forms.ModelForm):
     """Form for updating petition project's stage.
 
@@ -198,13 +204,16 @@ class ProcedureForm(forms.ModelForm):
     """
 
     simulation_check = forms.BooleanField(
-        label="Je confirme que la simulation active est cohérente avec l'arrêté préfectoral",
+        label="J'ai vérifié que la simulation active dans le dossier correspond bien "
+        "au contenu de l'arrêté.",
         required=False,
+        widget=SimulationCheckWidget(),
     )
     prefectural_order = forms.FileField(
         label="Arrêté préfectoral",
         required=False,
-        help_text="""Formats autorisés : images (png, jpg), pdf, zip.<br>
+        help_text="""Un seul fichier est autorisé.<br />
+            Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
         validators=[validate_file_size, validate_extension, validate_mime_type],
@@ -212,7 +221,10 @@ class ProcedureForm(forms.ModelForm):
     applicant_message = forms.CharField(
         label="Message au demandeur",
         required=False,
-        help_text="Ce message sera envoyé au demandeur via la messagerie du dossier.",
+        help_text="""
+        Précisez les motifs de la décision et les éléments du dossier sur lesquels elle s'appuie.<br />
+        Ce message sera transmis au demandeur avec la notification de clôture et l’arrêté.
+        """,
         widget=forms.Textarea(attrs={"rows": 8}),
     )
 
