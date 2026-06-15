@@ -325,6 +325,12 @@ def get_field_template_name(field):
     """
     widget = field.field.widget
 
+    # A widget may declare its own wrapper template, for fields that need more
+    # than the generic label + input + errors layout.
+    custom_template = getattr(widget, "field_template_name", None)
+    if custom_template:
+        return custom_template
+
     # The hedge choice field is an hedge case, because it's a radio select
     # but we must use the normal field template for rendering. All the specific
     # radio code is in the widget template.
