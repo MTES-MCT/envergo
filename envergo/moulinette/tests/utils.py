@@ -286,7 +286,7 @@ def setup_conditionnalite_pac(activation_map):
         CriterionFactory(
             title="BCAE 8",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),

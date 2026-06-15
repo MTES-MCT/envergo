@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import Enum
-from functools import cmp_to_key
+from functools import cmp_to_key, reduce
 from itertools import product
 from operator import attrgetter
 from types import SimpleNamespace
@@ -13,12 +13,12 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.regulations import MinLengthCondition
+from envergo.hedges.models import HedgeCategory, HedgeData
+from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 from envergo.moulinette.regulations import Map, MapPolygon
 
 if TYPE_CHECKING:
-    from envergo.hedges.models import HedgeData
     from envergo.moulinette.models import MoulinetteHaie
 
 
@@ -354,7 +354,7 @@ class PlantationEvaluator:
         """Populate ``_all_conditions``, ``_conditions`` (deduplicated), and ``_result``."""
 
         R = self.replantation_coefficient
-        conditions = []
+        conditions_by_category = defaultdict(list)
         for regulation in self.moulinette.regulations:
             if not regulation.is_activated():
                 continue
@@ -367,7 +367,7 @@ class PlantationEvaluator:
 
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
-                    conditions.extend(
+                    conditions_by_category[criterion._evaluator.category].extend(
                         criterion._evaluator.plantation_evaluate(
                             R, self.moulinette.catalog
                         )
@@ -375,29 +375,58 @@ class PlantationEvaluator:
 
         # We make sure the "min length condition" exists if it was not explicitely
         # added by an evaluator.
-        has_min_length_condition = False
-        for condition in conditions:
-            if isinstance(condition, MinLengthCondition):
-                has_min_length_condition = True
-                break
-        if not has_min_length_condition:
-            conditions.append(
-                MinLengthCondition(
-                    self.hedge_data.hedges(), R, None, {"haies": self.hedge_data}
-                ).evaluate()
-            )
+
+        for category in HedgeCategory:
+            has_min_length_condition = False
+            for condition in conditions_by_category[category]:
+                if isinstance(condition, MinLengthCondition):
+                    has_min_length_condition = True
+                    break
+
+            if not has_min_length_condition:
+                hedges = self.hedge_data.hedges().evaluator_category(
+                    self.moulinette.config.single_procedure, category
+                )
+                conditions_by_category[category].append(
+                    MinLengthCondition(hedges, R, None, {}).evaluate()
+                )
+
+        displayable_conditions = []
+        deduplicated_conditions = []
+        for conditions in conditions_by_category.values():
+            candidates = [
+                c for c in conditions if c.result is not None and c.must_display()
+            ]
+            displayable_conditions.extend(candidates)
+            deduplicated_conditions.extend(self.deduplicate_conditions(candidates))
 
         all_displayable = sorted(
-            [c for c in conditions if c.result is not None and c.must_display()],
+            displayable_conditions,
             key=attrgetter("order"),
         )
         self._all_conditions = all_displayable
-        self._conditions = self.deduplicate_conditions(all_displayable)
+        self._conditions = sorted(
+            self.combine_conditions(deduplicated_conditions),
+            key=attrgetter("order"),
+        )
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
+
+    @staticmethod
+    def combine_conditions(conditions):
+        groups = defaultdict(list)
+        other_conditions = []
+        for condition in conditions:
+            if isinstance(condition, AdditiveConditionMixin):
+                groups[condition.additive_key].append(condition)
+            else:
+                other_conditions.append(condition)
+
+        combined = [reduce(lambda a, b: a + b, group) for group in groups.values()]
+        return other_conditions + combined
 
     @staticmethod
     def deduplicate_conditions(conditions):
