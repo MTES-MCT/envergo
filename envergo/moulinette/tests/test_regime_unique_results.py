@@ -48,7 +48,7 @@ def conditionnalite_pac_criteria(france_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Ru",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
