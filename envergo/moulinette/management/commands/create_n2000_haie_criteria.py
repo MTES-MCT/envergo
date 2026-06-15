@@ -80,7 +80,6 @@ CASE_1 = [
     ("68", "soumis", "non"),
     ("69", "soumis", "non"),
     ("73", "non_soumis", "non"),
-    ("75", "non_soumis", "non"),
     ("76", "soumis", "non"),
     ("78", "soumis", "non"),
     ("79", "soumis", "non"),
@@ -93,15 +92,8 @@ CASE_1 = [
     ("86", "soumis", "non"),
     ("87", "non_soumis", "non"),
     ("91", "non_soumis", "non"),
-    ("92", "non_soumis", "non"),
     ("93", "non_soumis", "non"),
-    ("94", "non_soumis", "non"),
     ("95", "soumis", "non"),
-    ("971", "non_soumis", "non"),
-    ("972", "non_soumis", "non"),
-    ("973", "non_soumis", "non"),
-    ("974", "non_soumis", "non"),
-    ("976", "non_soumis", "non"),
 ]
 
 # Cas 2 : départements hétérogènes (2 cartes, 2 critères)
