@@ -1,0 +1,35 @@
+{% load utils %}
+
+{% comment %}
+Rich wrapper for the "verify the active simulation" checkbox. The block id
+matches the other form groups so procedure_modal.js can toggle it.
+{% endcomment %}
+
+<div id="form-group-{{ field.html_name }}"
+     class="alt simulation-check-block fr-mb-3w fr-p-3w fr-checkbox-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-checkbox-group--error fr-input-group--error{% endif %}">
+
+  <p class="fr-text--bold simulation-check-block__intro">
+    Avant de poursuivre, vérifiez que les caractéristiques du dossier correspondent
+    au contenu de l'arrêté :
+  </p>
+
+  <ul class="fr-mb-2w">
+    <li>localisation des haies détruites et plantées ;</li>
+    <li>typologie et caractéristiques des haies.</li>
+  </ul>
+
+  <p>
+    <a href="{% url 'petition_project_instructor_alternative_view' petition_project.reference %}"
+       target="_blank"
+       rel="noopener">Ouvrir la page des simulations</a>
+  </p>
+
+  {{ field }}
+
+  <label class="fr-label" for="{{ field.id_for_label }}">
+    <span class="label-content">{{ field.label }}</span>
+    {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
+  </label>
+
+  {% if field.errors %}<p class="fr-error-text">{{ field.errors.0 }}</p>{% endif %}
+</div>
