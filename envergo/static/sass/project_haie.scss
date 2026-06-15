@@ -894,6 +894,19 @@ div#instructor-view-side-menu {
   }
 }
 
+// "Verify the active simulation" block shown when closing a dossier.
+.simulation-check-block {
+  border-radius: 0.5rem;
+
+  &__intro {
+    margin-bottom: 0.5rem;
+  }
+
+  &.fr-input-group--error {
+    border-left: 4px solid var(--border-plain-error);
+  }
+}
+
 #form-group-instructor_free_mention .label-content,
 #form-group-instructor_private_mention .label-content,
 .notes-label .label-content {
