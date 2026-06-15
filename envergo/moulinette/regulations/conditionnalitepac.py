@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import PacParcelCondition, PlantationConditionMixin
 from envergo.moulinette.forms.fields import DisplayIntegerField, UnitInput
 from envergo.moulinette.regulations import (
@@ -181,7 +182,8 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
+class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
+    category: HedgeCategory = HedgeCategory.hru
     choice_label = "Conditionnalité PAC > BCAE8"
     base_slug = "bcae8"
     form_class = Bcae8Form
@@ -423,3 +425,7 @@ class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
         if haies.length_to_remove() > 0:
             R = minimum_length_to_plant / D(haies.length_to_remove())
         return round(R, 2)
+
+
+class Bcae8Ru(Bcae8Hru):
+    category: HedgeCategory = HedgeCategory.ru

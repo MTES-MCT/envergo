@@ -36,7 +36,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
             activation_map=loire_atlantique_map,
             activation_mode="department_centroid",
         ),

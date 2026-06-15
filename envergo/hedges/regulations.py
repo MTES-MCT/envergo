@@ -7,7 +7,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeTypeBase, HedgeTypeFactory
+from envergo.hedges.models import HedgeList, HedgeTypeBase, HedgeTypeFactory
 
 
 def compute_lengths_per_type(hedges, coefficients):
@@ -118,7 +118,19 @@ class PlantationCondition(ABC):
         return mark_safe(self.hint_text % self.context)
 
 
-class MinLengthCondition(PlantationCondition):
+class AdditiveConditionMixin(ABC):
+    @property
+    def additive_key(self):
+        return type(self)
+
+    @abstractmethod
+    def __add__(self, other):
+        raise NotImplementedError(
+            f"Implement the `{type(self).__name__}.evaluate` method."
+        )
+
+
+class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
     label = "Longueur de la haie plantée"
@@ -154,6 +166,25 @@ class MinLengthCondition(PlantationCondition):
 
     def must_display(self):
         return self.context["length_to_check"] > 0
+
+    @property
+    def additive_key(self):
+        return "MinLengthCondition"
+
+    def __add__(self, other):
+        self_to_remove = self.hedges.to_remove().length
+        other_to_remove = other.hedges.to_remove().length
+        total_to_remove = self_to_remove + other_to_remove
+        R = (
+            self.R * self_to_remove / total_to_remove
+            + other.R * other_to_remove / total_to_remove
+        )
+
+        addition = MinLengthCondition(
+            HedgeList(self.hedges + other.hedges), R, None, None
+        )
+        addition.evaluate()
+        return addition
 
 
 class RUMinLengthCondition(MinLengthCondition):
@@ -226,7 +257,7 @@ class NormandieMinLengthCondition(MinLengthCondition):
         return self
 
 
-class PacParcelCondition(PlantationCondition):
+class PacParcelCondition(AdditiveConditionMixin, PlantationCondition):
     """Checks that enough hedges are planted on PAC parcels."""
 
     label = "Maintien des haies PAC"
@@ -239,16 +270,12 @@ class PacParcelCondition(PlantationCondition):
     """
 
     def evaluate(self):
-        # Uses all hedges rather than the category-scoped subset because pac condition applies globally
-        hedges = (
-            self.catalog["haies"].hedges() if "haies" in self.catalog else self.hedges
-        )
 
         # For pac regulations, R is ignored unless it is zero
         R = 1 if self.R > 0 else 0
 
-        length_to_plant = hedges.to_plant().pac().length
-        minimum_length_to_plant = hedges.to_remove().pac().length * R
+        length_to_plant = self.hedges.to_plant().pac().length
+        minimum_length_to_plant = self.hedges.to_remove().pac().length * R
         self.result = length_to_plant >= minimum_length_to_plant
 
         left_to_plant = max(0, minimum_length_to_plant - length_to_plant)
@@ -260,6 +287,21 @@ class PacParcelCondition(PlantationCondition):
 
     def must_display(self):
         return self.context["minimum_length_to_plant_pac"] > 0
+
+    def __add__(self, other):
+        self_to_remove = self.hedges.to_remove().length
+        other_to_remove = other.hedges.to_remove().length
+        total_to_remove = self_to_remove + other_to_remove
+        R = (
+            self.R * self_to_remove / total_to_remove
+            + other.R * other_to_remove / total_to_remove
+        )
+
+        addition = PacParcelCondition(
+            HedgeList(self.hedges + other.hedges), R, None, None
+        )
+        addition.evaluate()
+        return addition
 
 
 class BaseQualityCondition(PlantationCondition):
