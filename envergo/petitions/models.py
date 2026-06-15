@@ -360,7 +360,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     petition_project=self,
                     type=LOG_TYPES.status_change,
                     stage="instruction_d",
-                    update_comment="Synchronisation dossier avec Démarche Numérique.",
+                    update_comment="Dépôt du dossier : passage automatique en instruction.",
                 )
 
             usager_email = (
