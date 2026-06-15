@@ -10,6 +10,7 @@ from django.utils.formats import date_format
 
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
+    DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
     PetitionProject,
     Simulation,
@@ -133,8 +134,81 @@ class PetitionProjectInstructorMessageForm(forms.Form):
         fields = ["message_body", "additional_file"]
 
 
+# Closing requirements matrix: for each final decision, the set of closing
+# fields the instructor must provide. See ProcedureForm docstring for the
+# rationale behind each requirement. Decisions absent from this mapping
+# (i.e. "unset") cannot close a dossier.
+CLOSING_FIELD_REQUIREMENTS = {
+    DECISIONS.tacit_agreement: {"simulation_check", "applicant_message"},
+    DECISIONS.express_agreement: {
+        "simulation_check",
+        "prefectural_order",
+        "applicant_message",
+    },
+    DECISIONS.opposition: {"simulation_check", "prefectural_order", "applicant_message"},
+    DECISIONS.dropped: {"applicant_message"},
+}
+
+# Error (code, message) raised when a required closing field is missing.
+CLOSING_FIELD_ERRORS = {
+    "simulation_check": (
+        "simulation_not_checked",
+        "Pour garantir la qualité des données transmises à l'observatoire de la haie, "
+        "la cohérence entre le dossier et l'arrêté doit être vérifiée.",
+    ),
+    "prefectural_order": (
+        "missing_prefectural_order",
+        "Pour clore le dossier avec cette décision, l'arrêté préfectoral "
+        "doit être joint au dossier.",
+    ),
+    "applicant_message": (
+        "missing_applicant_message",
+        "Pour clore le dossier, un message doit être envoyé au demandeur.",
+    ),
+}
+
+
 class ProcedureForm(forms.ModelForm):
-    """Form for updating petition project's stage."""
+    """Form for updating petition project's stage.
+
+    When the dossier is being closed (stage = "closed"), three additional
+    fields become relevant, depending on the decision:
+    - simulation_check: mandatory except for "dropped" (not persisted, it is
+      only a procedural confirmation by the instructor);
+    - prefectural_order: mandatory for "express_agreement" and "opposition";
+    - applicant_message: mandatory for every decision, sent to the applicant
+      through the Démarches Simplifiées messagerie.
+    """
+
+    simulation_check = forms.BooleanField(
+        label="Je confirme que la simulation active est cohérente avec l'arrêté préfectoral",
+        required=False,
+    )
+    prefectural_order = forms.FileField(
+        label="Arrêté préfectoral",
+        required=False,
+        help_text="""Formats autorisés : images (png, jpg), pdf, zip.<br>
+            Taille maximale autorisée : 20 Mo.
+        """,
+        validators=[validate_file_size, validate_extension, validate_mime_type],
+    )
+    applicant_message = forms.CharField(
+        label="Message au demandeur",
+        required=False,
+        help_text="Ce message sera envoyé au demandeur via la messagerie du dossier.",
+        widget=forms.Textarea(attrs={"rows": 8}),
+    )
+
+    field_order = [
+        "stage",
+        "due_date",
+        "decision",
+        "status_date",
+        "update_comment",
+        "simulation_check",
+        "prefectural_order",
+        "applicant_message",
+    ]
 
     class Meta:
         model = StatusLog
@@ -144,6 +218,7 @@ class ProcedureForm(forms.ModelForm):
             "decision",
             "status_date",
             "update_comment",
+            "prefectural_order",
         ]
         help_texts = {
             "update_comment": "Ce commentaire ne sera visible que par les services instructeurs dans l'historique du dossier.",  # noqa: E501
@@ -192,7 +267,52 @@ class ProcedureForm(forms.ModelForm):
                 ),
             )
 
+        if stage == "closed":
+            self.clean_closing_fields(cleaned_data)
+        else:
+            # The closing fields are not displayed for other stages, ignore
+            # any stray submitted value.
+            cleaned_data["simulation_check"] = False
+            cleaned_data["prefectural_order"] = None
+            cleaned_data["applicant_message"] = ""
+
         return cleaned_data
+
+    def reset_hidden_closing_fields(self, cleaned_data):
+        """Force the fields hidden by the closing UI to their closing value.
+
+        Closing is always effective immediately, without internal comment nor
+        next due date. Errors on those fields are popped from `self._errors`
+        directly, as the Form API offers no way to clear a single field error
+        once its value is overridden server-side.
+        """
+        for field in ("update_comment", "due_date", "status_date"):
+            self._errors.pop(field, None)
+        cleaned_data["update_comment"] = ""
+        cleaned_data["due_date"] = None
+        cleaned_data["status_date"] = timezone.localdate()
+
+    def clean_closing_fields(self, cleaned_data):
+        """Enforce the closing requirements, depending on the decision.
+
+        See the class docstring and CLOSING_FIELD_REQUIREMENTS for the
+        requirements matrix.
+        """
+        self.reset_hidden_closing_fields(cleaned_data)
+
+        decision = cleaned_data.get("decision")
+        required_fields = CLOSING_FIELD_REQUIREMENTS.get(decision)
+        if required_fields is None:
+            # Closing without a final decision: the parent clean() already
+            # reports the error, the closing fields are not enforced.
+            return
+
+        for field, (code, message) in CLOSING_FIELD_ERRORS.items():
+            if field in required_fields and not cleaned_data.get(field):
+                self.add_error(field, ValidationError(message, code=code))
+
+        if "prefectural_order" not in required_fields:
+            cleaned_data["prefectural_order"] = None
 
 
 def three_months_from_now():
