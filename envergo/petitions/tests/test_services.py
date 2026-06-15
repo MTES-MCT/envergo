@@ -40,8 +40,8 @@ from envergo.petitions.services import (
 )
 from envergo.petitions.tests.factories import (
     CREATEUPLOAD_FAKE_RESPONSE,
-    DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHE_NUMERIQUE_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
@@ -54,7 +54,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
@@ -133,7 +133,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
     caplog, haie_user
 ):
@@ -176,7 +176,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify.assert_called_once()
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarches_simplifiees.client.notify")
 @patch("gql.client.Client.execute")
 def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
@@ -203,7 +203,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     mock_notify.assert_called_once()
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarches_simplifiees.client.notify")
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
@@ -853,7 +853,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("gql.Client.execute")
 def test_get_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
@@ -882,7 +882,7 @@ def test_get_message_project_via_demarches_simplifiees(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("gql.Client.execute")
 def test_send_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
@@ -921,7 +921,7 @@ def test_send_message_project_via_demarches_simplifiees(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.sessions.Session.request")
 @patch("gql.Client.execute")
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
@@ -970,7 +970,7 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
     }
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 def test_update_demarches_simplifiees_state():
     # GIVEN a petition project in "en construction" state
     petition_project = PetitionProjectFactory(

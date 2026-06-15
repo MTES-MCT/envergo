@@ -89,7 +89,7 @@ from envergo.petitions.models import (
     StatusLog,
 )
 from envergo.petitions.services import (
-    DEMARCHES_SIMPLIFIEES_STATUS_MAPPING,
+    DEMARCHE_NUMERIQUE_STATUS_MAPPING,
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
@@ -429,7 +429,7 @@ class PetitionProjectCreate(FormView):
             )
             return None, None
 
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
+        api_url = f"{settings.DEMARCHE_NUMERIQUE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
@@ -456,7 +456,7 @@ class PetitionProjectCreate(FormView):
                 config,
             )
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"« Démarche numérique » is not enabled. Doing nothing."
                 f"\nrequest.url: {api_url}"
@@ -941,7 +941,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
 
         # Send message if info from « Démarche numérique » is not in project details
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             messages.info(
                 self.request,
                 """L'accès à l'API « Démarche numérique » n'est pas activée.
@@ -1270,7 +1270,7 @@ class PetitionProjectInstructorMessagerieView(
         context["ds_sender_emails_categories"] = {
             "petitioner": ds_petitioner_email,
             "instructor": ds_instructeurs_emails,
-            "automatic": settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"],
+            "automatic": settings.DEMARCHE_NUMERIQUE["AUTOMATIC_SENDER_EMAIL"],
         }
 
         # Send message if info from « Démarche numérique » is not in project details
@@ -1686,7 +1686,7 @@ class PetitionProjectInstructorProcedureView(
         for (
             stage,
             decision,
-        ), ds_status in DEMARCHES_SIMPLIFIEES_STATUS_MAPPING.items():
+        ), ds_status in DEMARCHE_NUMERIQUE_STATUS_MAPPING.items():
             ds_status_mapping.setdefault(stage, {})[decision] = ds_status
         ds_status_labels = {key: str(label) for key, label in DOSSIER_STATES}
         forbidden_transitions = [list(k) for k in FORBIDDEN_STAGE_TRANSITIONS.keys()]
@@ -1756,7 +1756,7 @@ class PetitionProjectInstructorProcedureView(
         previous_decision = self.object.decision
 
         previous_ds_status = self.object.demarches_simplifiees_state
-        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
+        new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
         if previous_ds_status != new_ds_status:
             try:
                 update_demarches_simplifiees_status(self.object, new_ds_status)
@@ -1846,7 +1846,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 ds_response = send_message_dossier_ds(self.object, message)
 
                 if ds_response is None or ds_response.get("errors") is not None:
-                    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+                    if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                         messages.info(
                             self.request,
                             """L'accès à l'API « Démarche numérique » n'est pas activée.

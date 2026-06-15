@@ -31,7 +31,7 @@ from envergo.utils.tools import display_form_details
 logger = logging.getLogger(__name__)
 
 
-DEMARCHES_SIMPLIFIEES_STATUS_MAPPING = {
+DEMARCHE_NUMERIQUE_STATUS_MAPPING = {
     ("to_be_processed", "unset"): "en_construction",
     ("to_be_processed", "express_agreement"): "en_construction",
     ("to_be_processed", "tacit_agreement"): "en_construction",

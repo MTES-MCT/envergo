@@ -10,15 +10,15 @@ from django.test import override_settings
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.demarches_simplifiees.models import DossierState
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHE_NUMERIQUE_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE_DISABLED,
     PetitionProjectFactory,
 )
 
 pytestmark = pytest.mark.django_db
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
     PetitionProjectFactory()
     DCConfigHaieFactory()
@@ -36,7 +36,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch(
@@ -141,7 +141,7 @@ def test_dossier_submission_admin_alert(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch(
@@ -167,7 +167,7 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
 @patch(

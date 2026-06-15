@@ -38,7 +38,7 @@ from envergo.utils.mattermost import notify
 logger = logging.getLogger(__name__)
 
 
-DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
+DEMARCHE_NUMERIQUE_FAKE_DATA_PATH = Path(
     settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
 )
 
@@ -48,9 +48,9 @@ DS_DISABLED_BASE_MESSAGE = "« Démarche numérique » is not enabled. Doing not
 class DemarchesSimplifieesClient:
     def __init__(self):
         self.transport = RequestsHTTPTransport(
-            url=settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"],
+            url=settings.DEMARCHE_NUMERIQUE["GRAPHQL_API_URL"],
             headers={
-                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}"
+                "Authorization": f"Bearer {settings.DEMARCHE_NUMERIQUE['GRAPHQL_API_BEARER_TOKEN']}"
             },
             # gql's transport only accepts a single scalar timeout (not the
             # (connect, read) tuple requests supports), so we pass the read
@@ -64,14 +64,14 @@ class DemarchesSimplifieesClient:
     def _fake_execute(self, fake_dossier_filename):
         """Mock response when Démarche numérique is not enabled"""
         with open(
-            DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
+            DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / fake_dossier_filename,
             "r",
         ) as file:
             response = json.load(file)
             return copy.deepcopy(response["data"])
 
     def execute(self, query_str: str, variables: dict = None):
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             raise NotImplementedError("« Démarche numérique » is not enabled")
 
         query = gql(query_str)
@@ -113,7 +113,7 @@ class DemarchesSimplifieesClient:
 
         variables = {"dossierNumber": dossier_number}
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
@@ -262,7 +262,7 @@ class DemarchesSimplifieesClient:
 
         query = DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
@@ -366,7 +366,7 @@ class DemarchesSimplifieesClient:
     ) -> dict:
         """Dossier send message query"""
 
-        instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+        instructeur_id = settings.DEMARCHE_NUMERIQUE["INSTRUCTEUR_ID"]
         if not instructeur_id:
             logger.warning("Missing instructeur id.")
             return None
@@ -403,7 +403,7 @@ class DemarchesSimplifieesClient:
         # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
@@ -508,7 +508,7 @@ class DemarchesSimplifieesClient:
         if motivation:
             variables["input"]["motivation"] = motivation
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"« Démarche numérique » is not enabled. Doing nothing."
                 f"Use fake dossier if dossier is not draft."
@@ -516,7 +516,7 @@ class DemarchesSimplifieesClient:
                 f"\nvariables: {variables}"
             )
             with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json",
+                DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier.json",
                 "r",
             ) as file:
                 response = json.load(file)
@@ -528,7 +528,7 @@ class DemarchesSimplifieesClient:
                 )
                 data = {result_key: data, "errors": []}
         else:
-            instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+            instructeur_id = settings.DEMARCHE_NUMERIQUE["INSTRUCTEUR_ID"]
             if not instructeur_id:
                 raise DemarchesSimplifieesError(
                     query,

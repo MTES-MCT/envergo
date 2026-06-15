@@ -7,7 +7,7 @@ from django.test import override_settings
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES, ResultSnapshot
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE,
     PetitionProjectFactory,
     SimulationFactory,
 )
@@ -169,7 +169,7 @@ class TestResultSnapshot:
 
     @pytest.mark.urls("config.urls_haie")
     @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-    @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+    @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
     @patch("envergo.petitions.models.notify")
     @patch("envergo.petitions.models.log_event_raw")
     def test_snapshot_created_on_dossier_submission(self, mock_log_event, mock_notify):

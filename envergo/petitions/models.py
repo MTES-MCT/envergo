@@ -536,7 +536,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """
         if self.demarches_simplifiees_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/dossiers/"
+                f"{settings.DEMARCHE_NUMERIQUE["DOSSIER_BASE_URL"]}/dossiers/"
                 f"{self.demarches_simplifiees_dossier_number}/"
             )
         return None
@@ -547,7 +547,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """
         if self.demarches_simplifiees_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/dossiers/"
+                f"{settings.DEMARCHE_NUMERIQUE["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/dossiers/"
                 f"{self.demarches_simplifiees_dossier_number}/"
             )
         return None

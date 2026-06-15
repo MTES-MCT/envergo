@@ -15,7 +15,7 @@ from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
 
-DOMAIN_BLACK_LIST = settings.DEMARCHES_SIMPLIFIEES["DOSSIER_DOMAIN_BLACK_LIST"]
+DOMAIN_BLACK_LIST = settings.DEMARCHE_NUMERIQUE["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
@@ -26,7 +26,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """get all the dossier updated in the last hour"""
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning("« Démarche numérique » is not enabled. Doing nothing.")
             return None
         set_urlconf("config.urls_haie")
@@ -111,7 +111,7 @@ class Command(BaseCommand):
         demarche_name = demarche.title if demarche is not None else "Nom inconnu"
         demarche_number = demarche.number if demarche is not None else "Numéro inconnu"
         ds_url = (
-            f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/"
+            f"{settings.DEMARCHE_NUMERIQUE["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/"
             f"dossiers/{dossier.number}/"
         )
 

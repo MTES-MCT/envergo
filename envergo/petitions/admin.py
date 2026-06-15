@@ -60,7 +60,7 @@ def validate_zip(value):
 
 
 def validate_dn_file_size(value):
-    size_limit = settings.DEMARCHES_SIMPLIFIEES["ARCHIVE_MAX_SIZE"]
+    size_limit = settings.DEMARCHE_NUMERIQUE["ARCHIVE_MAX_SIZE"]
     if value.size > size_limit:
         raise ValidationError(
             "Le fichier excède la taille maximale autorisée de 20 Mo."

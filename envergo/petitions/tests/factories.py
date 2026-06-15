@@ -8,7 +8,7 @@ from factory.django import DjangoModelFactory
 from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.petitions.demarches_simplifiees.client import (
-    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH,
+    DEMARCHE_NUMERIQUE_FAKE_DATA_PATH,
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -20,7 +20,7 @@ from envergo.petitions.models import (
 )
 from envergo.users.tests.factories import UserFactory
 
-DEMARCHES_SIMPLIFIEES_FAKE = {
+DEMARCHE_NUMERIQUE_FAKE = {
     "ENABLED": True,
     "DOSSIER_BASE_URL": "https://www.demarche-numerique.example.com/",
     "PRE_FILL_API_URL": "https://www.demarche-numerique.example.com/api/public/v1/",
@@ -31,52 +31,51 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
     "AUTOMATIC_SENDER_EMAIL": "contact@test.gouv.fr",
 }
 
-DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
-DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
+DEMARCHE_NUMERIQUE_FAKE_DISABLED = copy(DEMARCHE_NUMERIQUE_FAKE)
+DEMARCHE_NUMERIQUE_FAKE_DISABLED["ENABLED"] = False
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier.json"),
     "r",
 ) as file:
     GET_DOSSIER_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_0_messages.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_0_messages.json"),
     "r",
 ) as file:
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_send_message.json"),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_error.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_error.json"),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_createupload_response.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_createupload_response.json"),
     "r",
 ) as file:
     CREATEUPLOAD_FAKE_RESPONSE = json.load(file)
 
 with open(
     Path(
-        DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH
-        / "fake_dossier_send_message_attachment.json"
+        DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_send_message_attachment.json"
     ),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE = json.load(file)
 
-FILE_TEST_PATH = Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
+FILE_TEST_PATH = Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
 
 FILE_TEST_NOK_PATH = Path(
-    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fichier_non_autorise.odt"
+    DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fichier_non_autorise.odt"
 )
 
 
