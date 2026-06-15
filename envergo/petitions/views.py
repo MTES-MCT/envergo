@@ -1717,6 +1717,114 @@ class PetitionProjectInstructorProcedureView(
         return context
 
     def form_valid(self, form):
+        if self.object.is_additional_information_requested:
+            form.add_error(
+                None,
+                ValidationError(
+                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
+                    code="modification_while_paused",
+                ),
+            )
+            return self.form_invalid(form)
+
+        log = form.save(commit=False)
+        log.petition_project = self.object
+        log.created_by = self.request.user
+        previous_stage = self.object.stage
+        previous_decision = self.object.decision
+        is_closing = log.stage == STAGES.closed
+
+        if not self.update_ds_status(log, form):
+            return self.form_invalid(form)
+        if not self.save_log_and_message(log, form, is_closing):
+            return self.form_invalid(form)
+
+        if is_closing:
+            self.notify_closing_succeeded(form)
+
+        self.schedule_postcommit_telemetry(log, previous_stage, previous_decision)
+        return HttpResponseRedirect(self.get_success_url())
+
+    def update_ds_status(self, log, form):
+        """Update the Démarches Simplifiées status to match the new log.
+
+        Done before (and outside) the local transaction: the call is skipped
+        when the status is already up to date, so if the closing message later
+        fails and the local log is rolled back, a retry only replays the log
+        creation and the message. Returns False on failure (form is annotated).
+        """
+        previous_ds_status = self.object.demarches_simplifiees_state
+        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
+        if previous_ds_status == new_ds_status:
+            return True
+
+        try:
+            update_demarches_simplifiees_status(self.object, new_ds_status)
+        except DemarchesSimplifieesError as e:
+            logger.error(e)
+            form.add_error(
+                None,
+                mark_safe(
+                    f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
+                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                        contacter l'équipe du guichet unique de la haie
+                    </a> en indiquant l'identifiant du dossier."""
+                ),
+            )
+            return False
+        return True
+
+    def save_log_and_message(self, log, form, is_closing):
+        """Persist the status log and, when closing, notify the applicant.
+
+        Both happen in one transaction so a failed message leaves the dossier
+        open. Returns False on failure (form is annotated).
+        """
+        try:
+            with transaction.atomic():
+                # The message is sent before the log is saved, because saving
+                # the log to a file system storage can move the uploaded file
+                # and make it unreadable for the DS client. Saving the log
+                # afterwards is safe: the file is re-read from the start.
+                if is_closing:
+                    self.send_closing_message(form)
+                log.save()
+        except DemarchesSimplifieesError as e:
+            logger.error(e)
+            form.add_error(
+                None,
+                mark_safe(
+                    f"""Le message n'a pas pu être envoyé au demandeur, le dossier n'a donc pas été clos.
+                    Merci de ré-essayer dans quelques minutes. Si le problème persiste,
+                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                        contacter l'équipe du guichet unique de la haie
+                    </a> en indiquant l'identifiant du dossier."""
+                ),
+            )
+            return False
+        return True
+
+    def notify_closing_succeeded(self, form):
+        """Flash a success message pointing the instructor to the sent message."""
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[self.object.reference],
+        )
+        attachment_phrase = (
+            ", accompagné de l'arrêté préfectoral,"
+            if form.cleaned_data["prefectural_order"]
+            else ""
+        )
+        messages.success(
+            self.request,
+            f"""
+            Le dossier a été clos. Le message au demandeur{attachment_phrase} a bien été envoyé.
+            <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
+            """,
+        )
+
+    def schedule_postcommit_telemetry(self, log, previous_stage, previous_decision):
+        """Queue the analytics event and Mattermost notification for commit."""
 
         def notify_admin():
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1739,44 +1847,6 @@ class PetitionProjectInstructorProcedureView(
             )
             notify(message, "haie")
 
-        if self.object.is_additional_information_requested:
-            form.add_error(
-                None,
-                ValidationError(
-                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
-                    code="modification_while_paused",
-                ),
-            )
-            return self.form_invalid(form)
-
-        log = form.save(commit=False)
-        log.petition_project = self.object
-        log.created_by = self.request.user
-        previous_stage = self.object.stage
-        previous_decision = self.object.decision
-
-        previous_ds_status = self.object.demarches_simplifiees_state
-        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
-        if previous_ds_status != new_ds_status:
-            try:
-                update_demarches_simplifiees_status(self.object, new_ds_status)
-            except DemarchesSimplifieesError as e:
-                logger.error(e)
-                form.add_error(
-                    None,
-                    mark_safe(
-                        f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
-                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                            contacter l'équipe du guichet unique de la haie
-                        </a> en indiquant l'identifiant du dossier."""
-                    ),
-                )
-                return self.form_invalid(form)
-
-        log.save()
-
-        res = HttpResponseRedirect(self.get_success_url())
-
         transaction.on_commit(
             lambda: log_event(
                 "dossier",
@@ -1793,7 +1863,32 @@ class PetitionProjectInstructorProcedureView(
         )
         transaction.on_commit(notify_admin)
 
-        return res
+    def send_closing_message(self, form):
+        """Send the closing message to the applicant via the DS messagerie.
+
+        The prefectural order, when there is one, is attached to the message.
+        Raises DemarchesSimplifieesError if the message could not be sent, so
+        that the enclosing transaction is rolled back and the dossier stays
+        open.
+        """
+        attachment = form.cleaned_data["prefectural_order"]
+        if attachment:
+            # The file validators may leave the stream in an arbitrary
+            # position; the DS client reads it from the current position.
+            attachment.seek(0)
+
+        ds_response = send_message_dossier_ds(
+            self.object, form.cleaned_data["applicant_message"], attachment
+        )
+        if ds_response is None or ds_response.get("errors") is not None:
+            if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+                messages.info(
+                    self.request,
+                    """L'accès à l'API Démarche Numérique n'est pas activée.
+                    Le message n'est pas envoyé""",
+                )
+            else:
+                raise DemarchesSimplifieesError(message="DS message not sent")
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
