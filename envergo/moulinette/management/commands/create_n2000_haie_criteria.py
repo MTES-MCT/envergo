@@ -28,7 +28,12 @@ from envergo.moulinette.models import Criterion, Perimeter, Regulation
 EVALUATOR = "envergo.moulinette.regulations.natura2000_haie.Natura2000Haie"
 
 # Départements dont les critères ont déjà été créés manuellement
-ALREADY_CREATED = {"02", "14", "22", "29", "35", "56"}
+ALREADY_CREATED = {"02", "14"}
+
+# Départements bretons : leurs critères existent déjà, mais via un périmètre
+# régional unique "N2000 Bretagne" (et non un périmètre départemental "N2000 XX").
+# On ne les vérifie donc pas comme les autres.
+BRETAGNE = {"22", "29", "35", "56"}
 
 # Cas 1 : départements homogènes (1 carte, 1 critère)
 # Le résultat est le même sur tout le département.
@@ -306,8 +311,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("  Tous les prérequis sont validés"))
 
     def check_existing_criteria(self, regulation):
-        """Vérifie que les départements déjà créés (02, 14, 22, 29, 35, 56)
+        """Vérifie que les départements déjà créés
         ont bien au moins un critère N2000 Haie en base."""
+        self.stdout.write(
+            f"  Bretagne ({', '.join(sorted(BRETAGNE))}) non vérifiée : critères "
+            f"déjà créés via le périmètre régional 'N2000 Bretagne'"
+        )
         for dept in sorted(ALREADY_CREATED):
             exists = Criterion.objects.filter(
                 evaluator=EVALUATOR,
