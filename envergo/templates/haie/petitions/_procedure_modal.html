@@ -18,10 +18,22 @@
             <form method="post"
                   action=""
                   novalidate
+                  enctype="multipart/form-data"
                   class="fr-mb-3w"
                   data-current-ds-status="{{ petition_project.demarche_numerique_state }}">
               {% csrf_token %}
               {% include '_form_snippet.html' with form=form %}
+              {% if petition_project.prefectural_order_log %}
+                {# Relocated under the file input by procedure-modal js (form fields render via _form_snippet) #}
+                <div id="prefectural-order-supersede-notice"
+                     class="fr-alert fr-alert--info fr-mb-2w"
+                     style="display: none">
+                  <p>
+                    Ce dossier contient déjà un arrêté préfectoral. Le nouveau fichier remplacera
+                    l'arrêté actuellement en vigueur.
+                  </p>
+                </div>
+              {% endif %}
               <div id="procedure-state-change-message"
                    class="fr-alert fr-alert--info fr-mb-2w"
                    style="display: none">
@@ -32,6 +44,14 @@
               </div>
               <button type="submit" class="fr-btn">Enregistrer</button>
             </form>
+            {% for decision in DECISIONS %}
+              {% if decision.0 != "unset" %}
+                {# The template content is trimmed by js before filling the textarea #}
+                <script type="text/template" id="closing-message--{{ decision.0 }}">
+                  {% include "haie/petitions/closing_messages/"|add:decision.0|add:".txt" %}
+                </script>
+              {% endif %}
+            {% endfor %}
           </div>
         </div>
       </div>
