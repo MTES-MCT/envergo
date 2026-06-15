@@ -432,7 +432,7 @@ class PetitionProjectCreate(FormView):
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"« Démarche numérique » is not enabled. Doing nothing."
                 f"\nrequest.url: {api_url}"
                 f"\nrequest.body: {body}"
             )
@@ -890,7 +890,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             messages.info(
                 self.request,
-                """L'accès à l'API démarches simplifiées n'est pas activée.
+                """L'accès à l'API « Démarche numérique » n'est pas activée.
                 Les données proviennent d'un dossier factice.""",
             )
 
@@ -1109,7 +1109,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 class PetitionProjectInstructorDossierDSView(
     BasePetitionProjectInstructorView, DetailView
 ):
-    """View for petition project page with demarches simplifiées data"""
+    """View for petition project page with « Démarche numérique » data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
 
@@ -1127,7 +1127,7 @@ class PetitionProjectInstructorDossierDSView(
         if not context["project_details"]:
             messages.warning(
                 self.request,
-                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                f"""Impossible de récupérer les informations du dossier « Démarche numérique ».
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
@@ -1202,7 +1202,7 @@ class PetitionProjectInstructorMessagerieView(
         if context["ds_messages"] is None:
             messages.warning(
                 self.request,
-                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                f"""Impossible de récupérer les informations du dossier « Démarche numérique ».
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
@@ -1695,7 +1695,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
                         messages.info(
                             self.request,
-                            """L'accès à l'API démarches simplifiées n'est pas activée.
+                            """L'accès à l'API « Démarche numérique » n'est pas activée.
                             Le message n'est pas envoyé""",
                         )
                     else:

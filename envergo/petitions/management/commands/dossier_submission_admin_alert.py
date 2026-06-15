@@ -25,7 +25,7 @@ class Command(BaseCommand):
         """get all the dossier updated in the last hour"""
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            logger.warning("Demarches Simplifiees is not enabled. Doing nothing.")
+            logger.warning("« Démarche numérique » is not enabled. Doing nothing.")
             return None
         set_urlconf("config.urls_haie")
 
@@ -114,7 +114,7 @@ class Command(BaseCommand):
         if any(domain in project_url for domain in DOMAIN_BLACK_LIST):
             # project url is from a blacklisted domain, it should have been created in another environment
             logger.warning(
-                "A demarches simplifiees dossier has no corresponding project, it was probably "
+                "A « Démarche numérique » dossier has no corresponding project, it was probably "
                 "created on another environment",
                 extra={
                     "dossier_number": dossier.number,
@@ -126,7 +126,7 @@ class Command(BaseCommand):
             # Either this dossier has been created in this environment but do not match an existing project,
             # or it has been created in a heterodox way.
             logger.warning(
-                "A demarches simplifiees dossier has no corresponding project, it may have been "
+                "A « Démarche numérique » dossier has no corresponding project, it may have been "
                 "created without the guh",
                 extra={
                     "dossier_number": dossier.number,
