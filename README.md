@@ -566,7 +566,8 @@ Le workflow de collaboration git en vigueur est le suivant :
 
 ### Déploiement en production
 
-Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement, il suffit de pousser de nouveaux commits sur la branche `prod`.
+Le déploiement se fait sur la plateforme Scalingo. Pour lancer un déploiement,
+il suffit de pousser de nouveaux commits sur la branche `prod`.
 
 Le déploiement se lancera automatiquement si les actions github sont au vert.
 
