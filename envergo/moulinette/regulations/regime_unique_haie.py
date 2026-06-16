@@ -83,11 +83,13 @@ class RegimeUniqueHaieRu(
         if self.moulinette.config.single_procedure:
             catalog.update(self.get_density_catalog_data())
             if "per_hedge_coefficients" not in self.catalog:
-                zone_data = get_ru_zone_data(self.moulinette)
+                zone_data = get_ru_zone_data(self.moulinette, self.hedges)
                 catalog.update(zone_data)
                 zone_configs = zone_data["ru_per_hedge_zone_configs"]
                 catalog.update(
-                    get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
+                    get_ru_per_hedge_coefficients(
+                        self.moulinette, self.hedges, zone_configs
+                    )
                 )
         return catalog
 
@@ -104,4 +106,4 @@ class RegimeUniqueHaieRu(
 
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
-        return compute_ru_compensation_ratio(self.moulinette)
+        return compute_ru_compensation_ratio(self.moulinette, self.hedges)
