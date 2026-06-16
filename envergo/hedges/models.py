@@ -444,6 +444,14 @@ class HedgeList(list[Hedge]):
 
         raise ValueError(f"Category not recognized : {category}")
 
+    def get_all_species_hru(self):
+        """Return the local list of protected species (legacy HRU logic)."""
+        return Species.hru.for_hedges(self.to_remove())
+
+    def get_all_species(self):
+        """Return the RU list of protected species."""
+        return Species.ru.for_hedges(self.to_remove())
+
 
 class HedgeData(models.Model):
     """Hedge data model.
@@ -581,14 +589,6 @@ class HedgeData(models.Model):
     def is_removing_old_tree(self):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
-
-    def get_all_species_hru(self):
-        """Return the local list of protected species (legacy HRU logic)."""
-        return Species.hru.for_hedges(self.hedges_to_remove())
-
-    def get_all_species(self):
-        """Return the RU list of protected species."""
-        return Species.ru.for_hedges(self.hedges_to_remove())
 
     def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
