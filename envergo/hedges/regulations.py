@@ -142,13 +142,8 @@ class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
     """
 
     def evaluate(self):
-        # Uses all hedges rather than the category-scoped subset because min length applies globally
-        hedges = (
-            self.catalog["haies"].hedges() if "haies" in self.catalog else self.hedges
-        )
-
-        length_to_plant = hedges.to_plant().length
-        length_to_remove = hedges.to_remove().length
+        length_to_plant = self.hedges.to_plant().length
+        length_to_remove = self.hedges.to_remove().length
 
         minimum_length_to_plant = length_to_remove * self.R
         self.result = length_to_plant >= minimum_length_to_plant
@@ -270,6 +265,7 @@ class PacParcelCondition(AdditiveConditionMixin, PlantationCondition):
     """
 
     def evaluate(self):
+
         # For pac regulations, R is ignored unless it is zero
         R = 1 if self.R > 0 else 0
 
