@@ -113,7 +113,7 @@ if _missing_results:
 # easier to patch it in tests.
 def get_replantation_coefficient_by_category(moulinette):
     """Compute the replantation coefficient R, for each category."""
-    R_by_category = defaultdict(lambda: (D("0")))
+    R_by_category = {category: D("0") for category in HaieCriterionCategory}
     for regulation in moulinette.regulations:
         if regulation.is_activated():
             for criterion in regulation.criteria.all():
