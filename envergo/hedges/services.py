@@ -13,10 +13,10 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HedgeCategory, HedgeData
+from envergo.hedges.models import HedgeData
 from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
-from envergo.moulinette.regulations import Map, MapPolygon
+from envergo.moulinette.regulations import HaieCriterionCategory, Map, MapPolygon
 
 if TYPE_CHECKING:
     from envergo.moulinette.models import MoulinetteHaie
@@ -396,7 +396,7 @@ class PlantationEvaluator:
         # We make sure the "min length condition" exists if it was not explicitely
         # added by an evaluator.
 
-        for category in HedgeCategory:
+        for category in HaieCriterionCategory:
             has_min_length_condition = False
             for condition in conditions_by_category[category]:
                 if isinstance(condition, MinLengthCondition):
