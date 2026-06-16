@@ -1,6 +1,7 @@
 import logging
 
 import requests
+from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.serializers import serialize
 from django.http import JsonResponse
@@ -38,10 +39,16 @@ class ParcelsExport(View):
         """Fetch parcel geometry from IGN api."""
 
         url = f"https://geocodage.ign.fr/look4/parcel/search?q={parcelId}&returnTrueGeometry=true"
-        res = requests.get(url)
-        json = res.json()
+        try:
+            res = requests.get(url, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+        except requests.exceptions.RequestException as e:
+            logger.warning(
+                "Error while requesting the IGN parcel geometry api",
+                extra={"parcel": parcelId, "exception": e},
+            )
+            return None
 
-        return json if res.status_code == 200 else None
+        return res.json() if res.status_code == 200 else None
 
     def extract_shape(self, json):
         return shape(json["features"][0]["properties"]["trueGeometry"])

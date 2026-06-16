@@ -24,6 +24,14 @@ L'API de Démarches Simplifiées a retourné une erreur lors de la création du 
 ```
 {{ problem.extra.response.text|safe }}
 ```
+{% elif problem.key == "ds_api_connection_error" %}
+L'API de Démarches Simplifiées n'a pas pu être contactée lors de la création du dossier (délai dépassé ou erreur réseau).
+** Requête:**
+* url : {{ problem.extra.api_url }}
+* body :
+```
+{{ problem.extra.request_body|safe }}
+```
 {% elif problem.key == "missing_source_regulation" %}
 La configuration demande de pré-remplir un champ avec la valeur de **{{ problem.extra.source }}** mais la moulinette n'a pas de résultat pour la réglementation **{{ problem.extra.regulation_slug }}**.
 {% elif problem.key == "missing_source_criterion" %}
