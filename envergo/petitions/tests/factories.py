@@ -95,11 +95,9 @@ class PetitionProjectFactory(DjangoModelFactory):
     )
     department = factory.SubFactory(DepartmentFactory)
     hedge_data = factory.SubFactory(HedgeDataFactory)
-    demarches_simplifiees_dossier_number = 21059675
-    demarches_simplifiees_prefill_url = (
-        "https://exemple.com/commencer/21059675/token?1234"
-    )
-    demarches_simplifiees_state = DOSSIER_STATES.draft
+    demarche_numerique_dossier_number = 21059675
+    demarche_numerique_prefill_url = "https://exemple.com/commencer/21059675/token?1234"
+    demarche_numerique_state = DOSSIER_STATES.draft
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
         factory_related_name="petition_project",
@@ -124,8 +122,8 @@ class PetitionProject34Factory(DjangoModelFactory):
         "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=34&travaux=destruction&element=haie"
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)
-    demarches_simplifiees_dossier_number = 21059676
-    demarches_simplifiees_state = DOSSIER_STATES.draft
+    demarche_numerique_dossier_number = 21059676
+    demarche_numerique_state = DOSSIER_STATES.draft
     underscore_category = "ru"
 
 

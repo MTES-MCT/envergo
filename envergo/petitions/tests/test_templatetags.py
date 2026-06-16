@@ -179,7 +179,7 @@ def test_display_ds_field_unavailable_dossier(mock_post):
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is not available
-    petition_project.demarches_simplifiees_raw_dossier = None
+    petition_project.demarche_numerique_raw_dossier = None
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
 
     # When I want to display this « Démarche numérique » field in a template

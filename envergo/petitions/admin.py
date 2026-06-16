@@ -88,7 +88,7 @@ class PetitionProjectAdminForm(forms.ModelForm):
         model = PetitionProject
         fields = "__all__"
         widgets = {
-            "demarches_simplifiees_raw_dossier": JSONWidget(
+            "demarche_numerique_raw_dossier": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
         }
@@ -105,14 +105,14 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         "reference",
         "created_at",
         "department",
-        "demarches_simplifiees_state",
+        "demarche_numerique_state",
         "length_to_remove",
         "length_to_plant",
     )
     inlines = [InvitationTokenInline]
     ordering = ("-created_at",)
     list_filter = [
-        "demarches_simplifiees_state",
+        "demarche_numerique_state",
         DepartmentFilter,
     ]
     readonly_fields = ["last_result_snapshot"]

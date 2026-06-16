@@ -199,7 +199,7 @@ def get_context_from_ds(petition_project) -> dict:
         representative = dossier.representative_name or ""
 
     context = {
-        "demarches_simplifiees_dossier_number": petition_project.demarches_simplifiees_dossier_number,
+        "demarches_simplifiees_dossier_number": petition_project.demarche_numerique_dossier_number,
         "demarche_simplifiee_number": config.demarche_simplifiee_number,
         "ds_info": {
             "usager": usager,
@@ -288,7 +288,7 @@ def get_messages_and_senders_from_ds(
     """
 
     # Get messages only from « Démarche numérique »
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
+    dossier_number = petition_project.demarche_numerique_dossier_number
     dossier_with_messages = get_demarches_simplifiees_dossier(
         petition_project, force_update=True
     )
@@ -313,8 +313,8 @@ def send_message_dossier_ds(petition_project, message_body, attachment_file=None
     """Send message via « Démarche numérique » API for a given dossier"""
 
     # Get dossier ID
-    dossier_number = petition_project.demarches_simplifiees_dossier_number
-    dossier_id = petition_project.demarches_simplifiees_dossier_id
+    dossier_number = petition_project.demarche_numerique_dossier_number
+    dossier_id = petition_project.demarche_numerique_dossier_id
     if not dossier_id or not dossier_number:
         return None
 
@@ -401,12 +401,12 @@ def get_demarches_simplifiees_dossier(
     one_hour_ago_utc = now_utc - datetime.timedelta(hours=1)
     if (
         force_update
-        or not petition_project.demarches_simplifiees_raw_dossier
-        or petition_project.demarches_simplifiees_last_sync is not None
-        and petition_project.demarches_simplifiees_last_sync < one_hour_ago_utc
+        or not petition_project.demarche_numerique_raw_dossier
+        or petition_project.demarche_numerique_last_sync is not None
+        and petition_project.demarche_numerique_last_sync < one_hour_ago_utc
     ):
         # If the last sync is older than one hour, we fetch the dossier from « Démarche numérique »
-        dossier_number = petition_project.demarches_simplifiees_dossier_number
+        dossier_number = petition_project.demarche_numerique_dossier_number
         ds_client = DemarchesSimplifieesClient()
         dossier_as_dict = ds_client.get_dossier_with_messages(dossier_number)
 
@@ -416,7 +416,7 @@ def get_demarches_simplifiees_dossier(
             petition_project.synchronize_with_demarches_simplifiees(dossier_as_dict)
     else:
         # If the last sync is recent, we can use the cached dossier from the petition project
-        dossier_as_dict = petition_project.demarches_simplifiees_raw_dossier
+        dossier_as_dict = petition_project.demarche_numerique_raw_dossier
 
     dossier = Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
     return dossier
@@ -425,11 +425,11 @@ def get_demarches_simplifiees_dossier(
 def update_demarches_simplifiees_status(petition_project, new_status):
     client = DemarchesSimplifieesClient()
 
-    if petition_project.demarches_simplifiees_dossier_id is None:
+    if petition_project.demarche_numerique_dossier_id is None:
         # Ensure that we have the dossier first because we need its id
         get_demarches_simplifiees_dossier(petition_project, force_update=True)
 
-        if petition_project.demarches_simplifiees_dossier_id is None:
+        if petition_project.demarche_numerique_dossier_id is None:
             # This dossier cannot be fetched on « Démarche numérique », maybe it is in draft.
             # We cannot update its status.
             raise ValueError(
@@ -439,38 +439,38 @@ def update_demarches_simplifiees_status(petition_project, new_status):
     if new_status == DossierState.en_construction.value:
         response = client.pass_back_dossier_under_construction(
             petition_project.reference,
-            petition_project.demarches_simplifiees_dossier_id,
+            petition_project.demarche_numerique_dossier_id,
         )
     elif new_status == DossierState.en_instruction.value:
-        if petition_project.demarches_simplifiees_state in [
+        if petition_project.demarche_numerique_state in [
             DossierState.accepte.value,
             DossierState.refuse.value,
             DossierState.sans_suite.value,
         ]:
             response = client.pass_back_dossier_to_instruction(
                 petition_project.reference,
-                petition_project.demarches_simplifiees_dossier_id,
+                petition_project.demarche_numerique_dossier_id,
             )
         else:
             response = client.pass_dossier_to_instruction(
                 petition_project.reference,
-                petition_project.demarches_simplifiees_dossier_id,
+                petition_project.demarche_numerique_dossier_id,
             )
     elif new_status == DossierState.accepte.value:
         response = client.accept_dossier(
             petition_project.reference,
-            petition_project.demarches_simplifiees_dossier_id,
+            petition_project.demarche_numerique_dossier_id,
         )
     elif new_status == DossierState.refuse.value:
         response = client.refuse_dossier(
             petition_project.reference,
-            petition_project.demarches_simplifiees_dossier_id,
+            petition_project.demarche_numerique_dossier_id,
             "La demande a été refusée. Consulter la messagerie pour plus de précisions.",
         )
     elif new_status == DossierState.sans_suite.value:
         response = client.close_dossier(
             petition_project.reference,
-            petition_project.demarches_simplifiees_dossier_id,
+            petition_project.demarche_numerique_dossier_id,
             "La demande a été classée sans suite. Consulter la messagerie pour plus de précisions.",
         )
     else:
@@ -478,7 +478,7 @@ def update_demarches_simplifiees_status(petition_project, new_status):
 
     if response:
         # the status change was successful, we update the petition project
-        petition_project.demarches_simplifiees_state = response["dossier"]["state"]
+        petition_project.demarche_numerique_state = response["dossier"]["state"]
         petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
     else:
         # update failed, notification should have been sent by the « Démarche numérique » client
@@ -570,7 +570,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                 args=[self._petition_project.id],
             )
             projet_url = self.request.build_absolute_uri(projet_relative_url)
-            dossier_url = self._petition_project.demarches_simplifiees_petitioner_url
+            dossier_url = self._petition_project.demarche_numerique_petitioner_url
             if self.config:
                 dossier_url = (
                     self._petition_project.get_demarches_simplifiees_instructor_url(
@@ -585,7 +585,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                     "config": self.config,
                     "config_url": config_url,
                     "dossier_url": dossier_url,
-                    "demarches_simplifiees_dossier_number": self._petition_project.demarches_simplifiees_dossier_number,
+                    "demarches_simplifiees_dossier_number": self._petition_project.demarche_numerique_dossier_number,
                 },
             )
         else:

@@ -74,7 +74,7 @@ class Command(BaseCommand):
                 dossier = Dossier.from_dict(dossier_as_dict)
                 dossier_number = dossier.number
                 project = PetitionProject.objects.filter(
-                    demarches_simplifiees_dossier_number=dossier_number
+                    demarche_numerique_dossier_number=dossier_number
                 ).first()
                 if project is None:
                     self.handle_unlinked_dossier(

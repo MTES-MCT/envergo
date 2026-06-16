@@ -314,7 +314,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     )
 
     # THEN I should see prefill url
-    assert project.demarches_simplifiees_prefill_url in response.content.decode()
+    assert project.demarche_numerique_prefill_url in response.content.decode()
 
     # THEN I should not see instructor info for simulations
     assert "Vous souhaitez modifier votre simulation ?" in response.content.decode()
@@ -919,7 +919,7 @@ def _setup_messagerie(haie_instructor_44, client):
     """Helper to setup messagerie test context."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        demarches_simplifiees_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
+        demarche_numerique_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
     )
     url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -1092,12 +1092,12 @@ def test_petition_project_list(
     now = timezone.now()
     last_month = now - timedelta(days=30)
     project_34 = PetitionProject34Factory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=last_month,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=last_month,
     )
 
     # WHEN visitor acesses to project list
@@ -1170,26 +1170,26 @@ def test_petition_project_list_filters(
     # GIVEN projects non draft followed by users and instructors
     now = timezone.now()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
     project_44_followed_by_instructor2 = PetitionProjectFactory(
         reference="ACB132",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
     project_44_followed_by_invited = PetitionProjectFactory(
         reference="XYZ123",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_invited.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2 = PetitionProjectFactory(
         reference="XYZ456",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2.followed_by.add(
@@ -1197,14 +1197,14 @@ def test_petition_project_list_filters(
     )
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ789",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
 
     # AS haie user with no project
@@ -1298,7 +1298,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
     response = client.get(geopkg_url)
     response.get("Content-Disposition")
     assert (
-        f'filename="haies_dossier_{project.demarches_simplifiees_dossier_number}.gpkg"'
+        f'filename="haies_dossier_{project.demarche_numerique_dossier_number}.gpkg"'
         in response.get("Content-Disposition")
     )
     # TODO: check the features
@@ -1870,8 +1870,8 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     last_week = now - timedelta(days=7)
     last_month = now - timedelta(days=30)
     project = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=last_month,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=last_month,
         latest_petitioner_msg=None,
     )
     client.force_login(haie_instructor_44)
@@ -3437,7 +3437,7 @@ class TestGetProjectConfig:
     def test_returns_config_without_validity_range(self):
         config = DCConfigHaieFactory(validity_range=None)
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
         )
         view = self._make_view([project])
 
@@ -3455,7 +3455,7 @@ class TestGetProjectConfig:
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
             created_at=timezone.make_aware(datetime(2025, 6, 15)),
         )
         view = self._make_view([project])
@@ -3474,7 +3474,7 @@ class TestGetProjectConfig:
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
             created_at=timezone.make_aware(datetime(2024, 6, 15)),
         )
         view = self._make_view([project])
@@ -3489,7 +3489,7 @@ class TestGetProjectConfig:
             validity_range=DateRange(date(2026, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
             created_at=timezone.make_aware(datetime(2025, 6, 15)),
         )
         view = self._make_view([project])
@@ -3502,10 +3502,10 @@ class TestGetProjectConfig:
 
         DCConfigHaieFactory(validity_range=None)
         project1 = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
         )
         project2 = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
         )
         view = self._make_view([project1, project2])
 

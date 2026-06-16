@@ -132,10 +132,10 @@ def test_dossier_submission_admin_alert(
     assert mock_notify_command.call_count == 2
     assert mock_notify_model.call_count == 1
     project.refresh_from_db()
-    assert project.demarches_simplifiees_date_depot == datetime.datetime(
+    assert project.demarche_numerique_date_depot == datetime.datetime(
         2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
     )
-    assert project.demarches_simplifiees_last_sync is not None
+    assert project.demarche_numerique_last_sync is not None
     assert mock_post.call_count == 2
     assert "date=2025-01-29" in project.moulinette_url
 

@@ -138,7 +138,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
         queryset = (
             PetitionProject.objects.exclude(
-                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+                demarche_numerique_state__exact=DOSSIER_STATES.draft
             )
             .select_related("hedge_data", "department")
             .defer("department__geometry")
@@ -161,7 +161,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                     )
                 )
             )
-            .order_by("-demarches_simplifiees_date_depot", "-created_at")
+            .order_by("-demarche_numerique_date_depot", "-created_at")
         )
         # Filter on current user status
         if current_user.is_superuser:
@@ -354,8 +354,8 @@ class PetitionProjectCreate(FormView):
                 # Rollback the transaction to avoid saving the petition project
                 transaction.set_rollback(True)
             else:
-                petition_project.demarches_simplifiees_dossier_number = dossier_number
-                petition_project.demarches_simplifiees_prefill_url = (
+                petition_project.demarche_numerique_dossier_number = dossier_number
+                petition_project.demarche_numerique_prefill_url = (
                     demarche_simplifiee_url
                 )
                 petition_project.save()
@@ -761,14 +761,14 @@ class PetitionProjectDetail(DetailView):
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
-        context["demarches_simplifiees_state"] = self.object.demarches_simplifiees_state
+        context["demarches_simplifiees_state"] = self.object.demarche_numerique_state
 
         context["demarches_simplifiees_dossier_number"] = (
-            self.object.demarches_simplifiees_dossier_number
+            self.object.demarche_numerique_dossier_number
         )
         context["created_at"] = self.object.created_at
         context["demarches_simplifiees_date_depot"] = (
-            self.object.demarches_simplifiees_date_depot
+            self.object.demarche_numerique_date_depot
         )
         plantation_url = reverse(
             "input_hedges",
@@ -797,9 +797,9 @@ class PetitionProjectDetail(DetailView):
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
 
-        if self.object.demarches_simplifiees_state == "draft":
+        if self.object.demarche_numerique_state == "draft":
             context["demarches_simplifiees_prefill_url"] = (
-                self.object.demarches_simplifiees_prefill_url or ""
+                self.object.demarche_numerique_prefill_url or ""
             )
         context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
@@ -1755,7 +1755,7 @@ class PetitionProjectInstructorProcedureView(
         previous_stage = self.object.stage
         previous_decision = self.object.decision
 
-        previous_ds_status = self.object.demarches_simplifiees_state
+        previous_ds_status = self.object.demarche_numerique_state
         new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
         if previous_ds_status != new_ds_status:
             try:
@@ -2030,8 +2030,8 @@ class PetitionProjectHedgeDataExport(DetailView):
 
             # Create a response with the GeoPackage file
             export_filename = "haies_dossier.gpkg"
-            if self.object.demarches_simplifiees_dossier_number:
-                export_filename = f"haies_dossier_{self.object.demarches_simplifiees_dossier_number}.gpkg"
+            if self.object.demarche_numerique_dossier_number:
+                export_filename = f"haies_dossier_{self.object.demarche_numerique_dossier_number}.gpkg"
 
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")

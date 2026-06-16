@@ -19,7 +19,7 @@
                   action=""
                   novalidate
                   class="fr-mb-3w"
-                  data-current-ds-status="{{ petition_project.demarches_simplifiees_state }}">
+                  data-current-ds-status="{{ petition_project.demarche_numerique_state }}">
               {% csrf_token %}
               {% include '_form_snippet.html' with form=form %}
               <div id="procedure-state-change-message"

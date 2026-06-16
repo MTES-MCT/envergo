@@ -180,9 +180,7 @@ class TestResultSnapshot:
 
         DCConfigHaieFactory()
         # Create project in draft state (not yet submitted)
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
         # Count snapshots after project creation
         initial_count = ResultSnapshot.objects.filter(project=project).count()

@@ -91,10 +91,10 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert project_details["ds_info"]["representative"] == "HOPPER Grace"
 
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
+    assert petition_project.demarche_numerique_date_depot == datetime.datetime(
         2025, 3, 21, 10, 8, 34, tzinfo=datetime.timezone.utc
     )
-    assert petition_project.demarches_simplifiees_last_sync is not None
+    assert petition_project.demarche_numerique_last_sync is not None
 
     # WHEN I fetch it again less than one hour later
     dossier = get_demarches_simplifiees_dossier(petition_project)
@@ -103,7 +103,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     mock_post.assert_called_once()
 
     # WHEN I fetch it again more than one hour later
-    petition_project.demarches_simplifiees_last_sync = datetime.datetime.now(
+    petition_project.demarche_numerique_last_sync = datetime.datetime.now(
         datetime.timezone.utc
     ) - datetime.timedelta(hours=2)
     petition_project.save()
@@ -974,7 +974,7 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
 def test_update_demarches_simplifiees_state():
     # GIVEN a petition project in "en construction" state
     petition_project = PetitionProjectFactory(
-        demarches_simplifiees_state="en_construction"
+        demarche_numerique_state="en_construction"
     )
 
     # WHEN I update its status to "en instruction"
@@ -985,8 +985,7 @@ def test_update_demarches_simplifiees_state():
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert (
-        petition_project.demarches_simplifiees_state
-        == DossierState.en_instruction.value
+        petition_project.demarche_numerique_state == DossierState.en_instruction.value
     )
     assert petition_project.prefetched_dossier.state == DossierState.en_instruction
 
@@ -995,7 +994,7 @@ def test_update_demarches_simplifiees_state():
 
     # THEN the status is updated
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_state == DossierState.accepte.value
+    assert petition_project.demarche_numerique_state == DossierState.accepte.value
     assert petition_project.prefetched_dossier.state == DossierState.accepte
 
     # WHEN I update its status to "Refusé"
@@ -1003,7 +1002,7 @@ def test_update_demarches_simplifiees_state():
 
     # THEN the status is updated
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_state == DossierState.refuse.value
+    assert petition_project.demarche_numerique_state == DossierState.refuse.value
     assert petition_project.prefetched_dossier.state == DossierState.refuse
 
     # WHEN I update its status to "Classé sans suite"
@@ -1011,5 +1010,5 @@ def test_update_demarches_simplifiees_state():
 
     # THEN the status is updated
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_state == DossierState.sans_suite.value
+    assert petition_project.demarche_numerique_state == DossierState.sans_suite.value
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
