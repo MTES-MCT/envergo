@@ -4,6 +4,7 @@ from queue import Queue
 
 import numpy as np
 import requests
+from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand
 from pyproj import Transformer
@@ -57,7 +58,7 @@ class RgeAltiClient:
 
         # Time for the api query, yeah!
         url = f"https://wxs.ign.fr/essentiels/alti/rest/elevation.json?lon={longitude_str}&lat={latitude_str}&zonly=true"  # noqa
-        res = requests.get(url)
+        res = requests.get(url, timeout=settings.DEFAULT_HTTP_TIMEOUT)
         data = res.json()
         altis = data["elevations"]
         return altis

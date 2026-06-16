@@ -296,7 +296,7 @@ class Outlinks(TemplateView):
             f"{last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth="
             f"{analytics_config["SECURITY_TOKEN"]}&filter_limit=100",
         )
-        data = requests.get(data_url).json()
+        data = requests.get(data_url, timeout=settings.DEFAULT_HTTP_TIMEOUT).json()
 
         links = []
         errors = []
@@ -304,6 +304,9 @@ class Outlinks(TemplateView):
             url = datum["url"]
             label = datum["label"]
             try:
+                # Short, deliberately aggressive timeout: this probes many
+                # third-party links in a loop, so we don't want a single slow
+                # host to stall the whole page.
                 req = requests.head(url, timeout=5)
                 links.append({"label": label, "url": url, "status": req.status_code})
             except Exception as e:

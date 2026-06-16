@@ -6,6 +6,7 @@ import zipfile
 from tempfile import TemporaryDirectory
 
 import requests
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -33,7 +34,9 @@ class Command(BaseCommand):
                 file_content = io.BytesIO(f.read())
         else:
             self.stdout.write("Downloading Taxref file")
-            r = requests.get(taxref_url, stream=True)
+            r = requests.get(
+                taxref_url, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
+            )
             file_content = io.BytesIO(r.content)
 
         with TemporaryDirectory() as tmpdir:

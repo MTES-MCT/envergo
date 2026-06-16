@@ -438,9 +438,30 @@ class PetitionProjectCreate(FormView):
             )
             return None, None
 
-        response = requests.post(
-            api_url, json=body, headers={"Content-Type": "application/json"}
-        )
+        try:
+            response = requests.post(
+                api_url,
+                json=body,
+                headers={"Content-Type": "application/json"},
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "Could not reach demarches-simplifiees.fr to pre-fill a dossier",
+                extra={"api_url": api_url, "request_body": body, "exception": e},
+            )
+            self.request.alerts.append(
+                PetitionProjectCreationProblem(
+                    "ds_api_connection_error",
+                    {
+                        "api_url": api_url,
+                        "request_body": body,
+                    },
+                    is_fatal=True,
+                )
+            )
+            return None, None
+
         redirect_url, dossier_number = None, None
         if 200 <= response.status_code < 400:
             data = response.json()

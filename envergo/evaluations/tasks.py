@@ -182,6 +182,12 @@ def post_evaluation_to_automation(evaluation_uid):
 
 
 def post_a_model_to_automation(model, webhook_url, **extra_data):
+    """Serialize a model and POST it to a make.com webhook.
+
+    Errors (timeout, connection error, non-2xx status) are raised, not
+    swallowed, so the calling task retries instead of silently dropping the
+    payload (see BaseTaskWithRetry).
+    """
     serialized = BetterJsonSerializer().serialize([model])
     json_data = json.loads(serialized)[0]
     payload = json_data["fields"]
@@ -192,8 +198,12 @@ def post_a_model_to_automation(model, webhook_url, **extra_data):
     logger.info(payload)
 
     if webhook_url:
-        res = post(webhook_url, json=payload)
-        if res.status_code != 200:
+        res = post(webhook_url, json=payload, timeout=settings.DEFAULT_HTTP_TIMEOUT)
+        if not res.ok:
             logger.error(f"Error while posting data to make.com: {res.text}")
+        # Both failures propagate so the task retries instead of dropping the
+        # payload: a timeout/connection error raises at the post() call above,
+        # and an error HTTP status raises here.
+        res.raise_for_status()
     else:
         logger.warning("No make.com webhook configured. Doing nothing.")
