@@ -111,8 +111,8 @@ if _missing_results:
 
 # This method is outside the PlantationEvaluator class because it makes it
 # easier to patch it in tests.
-def get_replantation_coefficient(moulinette):
-    """Compute the global replantation coefficient R, weighted by hedge to remove length per category."""
+def get_replantation_coefficient_by_category(moulinette):
+    """Compute the replantation coefficient R, for each category."""
     R_by_category = defaultdict(lambda: (D("0")))
     for regulation in moulinette.regulations:
         if regulation.is_activated():
@@ -123,6 +123,11 @@ def get_replantation_coefficient(moulinette):
                         D(criterion._evaluator.get_replantation_coefficient()),
                     )
 
+    return R_by_category
+
+
+def get_global_replantation_coefficient(R_by_category, moulinette):
+    """Compute the global replantation coefficient R, weighted by hedge to remove length per category."""
     R = D("0")
     hedges = moulinette.catalog["haies"].get_hedges_by_category(
         moulinette.config.single_procedure
@@ -284,7 +289,13 @@ class PlantationEvaluator:
     def __init__(self, moulinette: "MoulinetteHaie", hedge_data: "HedgeData"):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
-        self.replantation_coefficient = get_replantation_coefficient(moulinette)
+        R_by_category = get_replantation_coefficient_by_category(moulinette)
+        self.replantation_coefficient_by_category = {
+            category: float(R) for category, R in R_by_category.items()
+        }
+        self.replantation_coefficient = get_global_replantation_coefficient(
+            R_by_category, moulinette
+        )
 
     @property
     def result(self):
@@ -316,6 +327,14 @@ class PlantationEvaluator:
             self.evaluate()
 
         return self._all_conditions
+
+    @property
+    def all_conditions_by_category(self):
+        """Full list before deduplication,grouped by category."""
+        if not hasattr(self, "_all_conditions_by_category"):
+            self.evaluate()
+
+        return self._all_conditions_by_category
 
     @property
     def global_result(self):
@@ -353,7 +372,7 @@ class PlantationEvaluator:
     def evaluate(self):
         """Populate ``_all_conditions``, ``_conditions`` (deduplicated), and ``_result``."""
 
-        R = self.replantation_coefficient
+        R_by_category = self.replantation_coefficient_by_category
         conditions_by_category = defaultdict(list)
         for regulation in self.moulinette.regulations:
             if not regulation.is_activated():
@@ -369,7 +388,8 @@ class PlantationEvaluator:
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
                     conditions_by_category[criterion._evaluator.category].extend(
                         criterion._evaluator.plantation_evaluate(
-                            R, self.moulinette.catalog
+                            R_by_category[criterion._evaluator.category],
+                            self.moulinette.catalog,
                         )
                     )
 
@@ -387,9 +407,12 @@ class PlantationEvaluator:
                 hedges = self.hedge_data.hedges().evaluator_category(
                     self.moulinette.config.single_procedure, category
                 )
-                conditions_by_category[category].append(
-                    MinLengthCondition(hedges, R, None, {}).evaluate()
-                )
+                if hedges:
+                    conditions_by_category[category].append(
+                        MinLengthCondition(
+                            hedges, R_by_category[category], None, {}
+                        ).evaluate()
+                    )
 
         displayable_conditions = []
         deduplicated_conditions = []
@@ -405,6 +428,7 @@ class PlantationEvaluator:
             key=attrgetter("order"),
         )
         self._all_conditions = all_displayable
+        self._all_conditions_by_category = dict(conditions_by_category)
         self._conditions = sorted(
             self.combine_conditions(deduplicated_conditions),
             key=attrgetter("order"),
