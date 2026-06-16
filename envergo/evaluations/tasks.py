@@ -1,8 +1,6 @@
 import json
 import logging
 from collections import defaultdict
-from smtplib import SMTPException
-from urllib.error import HTTPError
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
@@ -27,7 +25,7 @@ from envergo.utils.tools import get_base_url
 logger = logging.getLogger(__name__)
 
 
-@app.task(autoretry_for=(Exception,))
+@app.task
 def confirm_request_to_admin(request_id, host):
     """Send a Mattermost notification to confirm the evaluation request."""
 
@@ -45,13 +43,7 @@ def confirm_request_to_admin(request_id, host):
     notify(message_body, "amenagement")
 
 
-@app.task(
-    autoretry_for=(
-        HTTPError,
-        SMTPException,
-    ),
-    retry_backoff=True,
-)
+@app.task
 def confirm_request_to_requester(request_id, host):
     """Send a confirmation email to the requester."""
 
@@ -104,10 +96,7 @@ class BetterJsonSerializer(JSONSerializer):
             super().handle_field(obj, field)
 
 
-@app.task(
-    autoretry_for=(HTTPError,),
-    retry_backoff=True,
-)
+@app.task
 def post_evalreq_to_automation(request_id, host):
     """Send request data to Make.com."""
     webhook_url = settings.MAKE_COM_WEBHOOK
