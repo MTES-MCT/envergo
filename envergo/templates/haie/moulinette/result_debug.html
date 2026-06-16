@@ -132,15 +132,18 @@
 
     <h3>Conditions d'acceptabilité</h3>
     <ul class="fr-mb-2w">
-      {% for condition in plantation_evaluation.all_conditions %}
-        <li>
-          {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
-          {% if condition.context %}
+      {% for category, conditions in plantation_evaluation.all_conditions_by_category.items %}
+        {% for condition in conditions %}
+          <li>
+            {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
             <ul>
-              {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+              <li>Catégorie = {{ category }}</li>
+              {% if condition.context %}
+                {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+              {% endif %}
             </ul>
-          {% endif %}
-        </li>
+          </li>
+        {% endfor %}
       {% endfor %}
     </ul>
 

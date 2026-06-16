@@ -230,6 +230,8 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
             "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST"
         ]
         is_lte_2percent_pac = False
+        # TODO : catalog variables should be categorized,
+        #  and the subset `self.hedges` might be a better choice than `catalog[“hedges”]`
         haies = self.catalog.get("haies")
         if haies:
             lineaire_detruit_pac = haies.hedges().to_remove().pac().length
@@ -246,11 +248,9 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
         return catalog
 
     def get_result_data(self):
-
-        haies = self.catalog["haies"]
         lineaire_detruit_pac = self.catalog["lineaire_detruit_pac"]
         lte_10m_sections_only = all(
-            section.length <= 10 for section in haies.hedges().to_remove().pac()
+            section.length <= 10 for section in self.hedges.to_remove().pac()
         )
 
         return (
@@ -419,11 +419,11 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
 
     def get_replantation_coefficient(self):
         R = self.R_MATRIX.get(self._result_code, D("1"))
-        haies = self.catalog["haies"]
         lineaire_detruit_pac = self.catalog["lineaire_detruit_pac"]
         minimum_length_to_plant = D(lineaire_detruit_pac) * R
-        if haies.length_to_remove() > 0:
-            R = minimum_length_to_plant / D(haies.length_to_remove())
+        length_to_remove = self.hedges.to_remove().length
+        if length_to_remove > 0:
+            R = minimum_length_to_plant / D(length_to_remove)
         return round(R, 2)
 
 

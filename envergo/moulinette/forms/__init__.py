@@ -248,6 +248,11 @@ class HedgeDataChoiceField(forms.ModelChoiceField):
         kwargs["queryset"] = HedgeData.objects.all()
         super().__init__(*args, **kwargs)
 
+    def to_python(self, value):
+        if isinstance(value, HedgeData):
+            return value
+        return super().to_python(value)
+
     def get_display_value(self, value):
         """Format hedge data for display in field summaries.
 
