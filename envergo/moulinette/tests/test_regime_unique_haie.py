@@ -5,6 +5,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.models import HedgeList
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
 from envergo.moulinette.regulations import HaieCriterionCategory
@@ -432,12 +433,13 @@ class TestPerHedgeCoefficients:
         compensation ratio is 0.0 (alignements are excluded from RU)."""
         settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
+        hedges = HedgeList([make_hedge_factory(length=100, type_haie="alignement")])
         moulinette = make_moulinette_haie_with_density(
             density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="alignement")],
+            hedges=hedges,
             reimplantation="replantation",
         )
-        assert compute_ru_compensation_ratio(moulinette) == 0.0
+        assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
 
 class TestCompensationRatio:
@@ -476,22 +478,25 @@ class TestCompensationRatio:
         """When all hedges are alignements, ratio is 0.0."""
         settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
+
+        hedges = HedgeList([make_hedge_factory(length=100, type_haie="alignement")])
         moulinette = make_moulinette_haie_with_density(
             density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="alignement")],
+            hedges=hedges,
             reimplantation="replantation",
         )
-        assert compute_ru_compensation_ratio(moulinette) == 0.0
+        assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
     def test_droit_constant_returns_zero(self):
         """When not in régime unique, compensation ratio is 0.0."""
         DCConfigHaieFactory()
+        hedges = HedgeList([make_hedge_factory(length=100, type_haie="mixte")])
         moulinette = make_moulinette_haie_with_density(
             density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="mixte")],
+            hedges=hedges,
             reimplantation="replantation",
         )
-        assert compute_ru_compensation_ratio(moulinette) == 0.0
+        assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
     def test_zone_specific_config_used_for_ratio(self):
         """When a zonage matches, its coefficients drive the ratio, not the default."""

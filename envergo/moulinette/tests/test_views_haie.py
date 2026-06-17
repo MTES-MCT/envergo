@@ -1,3 +1,4 @@
+import decimal
 from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
@@ -9,6 +10,7 @@ from django.urls import reverse
 from envergo.analytics.models import Event
 from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
+from envergo.moulinette.regulations import HaieCriterionCategory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -191,7 +193,7 @@ def test_debug_result(client):
     # assertTemplateUsed(res, "haie/moulinette/result_debug.html")
 
 
-@patch("envergo.hedges.services.get_replantation_coefficient")
+@patch("envergo.hedges.services.get_replantation_coefficient_by_category")
 def test_result_d_view_with_R_gt_0(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
@@ -210,7 +212,7 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
     }
     url = reverse("moulinette_result")
     query = urlencode(data)
-    mock_R.return_value = 1.0
+    mock_R.return_value = {HaieCriterionCategory.hru: decimal.Decimal(1.0)}
     res = client.get(f"{url}?{query}")
 
     assert "Déposer une demande sans plantation" not in res.content.decode()
@@ -219,7 +221,7 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
     )
 
 
-@patch("envergo.hedges.services.get_replantation_coefficient")
+@patch("envergo.hedges.services.get_replantation_coefficient_by_category")
 def test_result_d_view_with_R_eq_0(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
@@ -238,7 +240,7 @@ def test_result_d_view_with_R_eq_0(mock_R, client):
     }
     url = reverse("moulinette_result")
     query = urlencode(data)
-    mock_R.return_value = 0.0
+    mock_R.return_value = {HaieCriterionCategory.hru: decimal.Decimal(0.0)}
     res = client.get(f"{url}?{query}")
 
     # R should be 0
@@ -274,7 +276,7 @@ def test_result_d_view_non_soumis_with_r_gt_0(client):
     assert "Déposer une demande sans plantation" not in res.content.decode()
 
 
-@patch("envergo.hedges.services.get_replantation_coefficient")
+@patch("envergo.hedges.services.get_replantation_coefficient_by_category")
 def test_result_p_view(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
@@ -293,7 +295,7 @@ def test_result_p_view(mock_R, client):
     }
     url = reverse("moulinette_result_plantation")
     query = urlencode(data)
-    mock_R.return_value = 0.0
+    mock_R.return_value = {HaieCriterionCategory.hru: decimal.Decimal(0.0)}
     client.get(f"{url}?{query}")
 
     assert Event.objects.get(
