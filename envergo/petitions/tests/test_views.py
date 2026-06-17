@@ -25,9 +25,11 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
+from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
     DOSSIER_STATES,
     LOG_TYPES,
+    STAGES,
     InvitationToken,
     LatestMessagerieAccess,
 )
@@ -51,6 +53,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorView,
     PetitionProjectList,
 )
+from envergo.urlmappings.models import UrlMapping
 from envergo.users.tests.factories import UserFactory
 
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
@@ -2118,6 +2121,198 @@ def test_alternative_delete(client, haie_instructor_44):
     response = client.post(delete_url)
     assert response.status_code == 302
     assert project.simulations.all().count() == 2
+
+
+# Alternative simulation creation tests.
+
+
+def test_simulation_form_rejects_invalid_moulinette_url():
+    """clean_moulinette_url rejects a url that does not build a valid moulinette.
+
+    Here the host is right but the simulation parameters are missing.
+    """
+    DCConfigHaieFactory()
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.local:3000/simulateur/resultat/",
+            "source": "instructor",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert not form.is_valid()
+    assert form.errors["moulinette_url"] == [
+        "Il semble que l'url ne corresponde pas à une page de simulation valide."
+    ]
+
+
+def test_simulation_form_unfolds_short_moulinette_url():
+    """A short url is unfolded to its full form by clean_moulinette_url.
+
+    Downstream code relies on the cleaned value being the full simulation url.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    UrlMapping.objects.create(key="abcdef", url=project.moulinette_url)
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.local:3000/abcdef/",
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["moulinette_url"] == project.moulinette_url
+
+
+def test_alternative_create_requires_change_permission(client, haie_user_44):
+    """Creating an alternative requires change permission, not mere view access.
+
+    haie_user_44 can view the project but is not an instructor.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Ne doit pas être créée",
+        },
+    )
+
+    assert response.status_code == 403
+    assert project.simulations.count() == 1
+
+
+def test_alternative_create_happy_path(client, haie_instructor_44):
+    """An instructor posting a valid url creates an inert alternative."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Nouvelle alternative",
+        },
+        follow=True,
+    )
+
+    assert response.status_code == 200
+    assert response.redirect_chain[-1][0] == create_url
+
+    assert project.simulations.count() == 2
+    created = project.simulations.get(is_initial=False)
+    assert created.source == "instructor"
+    assert created.comment == "Nouvelle alternative"
+    assert not created.is_active
+    assert not created.is_initial
+
+    flashes = [str(m) for m in response.context["messages"]]
+    assert "La simulation alternative a été ajoutée." in flashes
+
+
+def test_alternative_create_keeps_existing_active_and_initial(
+    client, haie_instructor_44
+):
+    """Creating an alternative leaves the current active/initial simulation untouched."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    original = project.simulations.get()
+    assert original.is_initial
+    assert original.is_active
+
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Nouvelle alternative",
+        },
+    )
+
+    assert project.simulations.filter(is_active=True).count() == 1
+    assert project.simulations.filter(is_initial=True).count() == 1
+    original.refresh_from_db()
+    assert original.is_active
+    assert original.is_initial
+
+
+def test_alternative_create_allows_multiple_inert(client, haie_instructor_44):
+    """Several inert alternatives coexist without tripping the partial-unique constraints."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    for comment in ["Alternative 1", "Alternative 2"]:
+        response = client.post(
+            create_url,
+            {
+                "moulinette_url": project.moulinette_url,
+                "source": "instructor",
+                "comment": comment,
+            },
+        )
+        assert response.status_code == 302
+
+    assert project.simulations.count() == 3
+    assert project.simulations.filter(is_active=False).count() == 2
+
+
+def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor_44):
+    """A closed dossier blocks activation.
+
+    can_be_activated() is False, so the activate action is forbidden and the
+    active simulation is left unchanged.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative = SimulationFactory(project=project, comment="Alternative")
+
+    project.stage = STAGES.closed
+    project.save()
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url)
+
+    assert response.status_code == 403
+    alternative.refresh_from_db()
+    assert not alternative.is_active
+    assert project.simulations.get(is_initial=True).is_active
 
 
 # =============================================================================
