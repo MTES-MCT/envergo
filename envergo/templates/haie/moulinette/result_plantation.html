@@ -43,16 +43,11 @@
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
 
   {% show_plantation_result plantation_evaluation %}
-
-  <p class="fr-hint-text fr-mb-3w">
-    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
-    <a href="#liability-info" class="hide-print">En savoir plus.</a>
-  </p>
 {% endblock %}
 
 {% block after_result_header %}
   {% if urgence == "oui" and config.single_procedure %}
-    <div class="fr-alert fr-alert--info fr-mb-3w">
+    <div class="fr-alert fr-alert--info fr-mb-2w">
       <h3 class="fr-alert__title">Travaux réalisés en urgence</h3>
       <p>
         Le projet contient des haies soumises au régime unique.
@@ -61,7 +56,7 @@
            target="_blank"
            rel="noopener">la procédure à suivre est particulière</a> :
       </p>
-      <ul>
+      <ol>
         <li>
           Le préfet doit être prévenu sans délai de l'exécution des travaux.
           <a targe="_blank"
@@ -69,9 +64,14 @@
              href="{% url 'contact_us' %}?department={{ department.department }}{{ contact_dossier_anchor }}">Voir le contact dans mon département.</a>
         </li>
         <li>Le dossier à déposer sur ce portail permet de régulariser la situation.</li>
-      </ul>
+      </ol>
     </div>
   {% endif %}
+
+  <p class="fr-hint-text fr-mb-3w">
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+    <a href="#liability-info" class="hide-print">En savoir plus.</a>
+  </p>
 {% endblock %}
 
 {% block liability_info %}
