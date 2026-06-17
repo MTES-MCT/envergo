@@ -150,19 +150,36 @@
 
       {% with order_log=petition_project.prefectural_order_log %}
         {% if order_log %}
-          <h4>Arrêté préfectoral</h4>
-          <div class="fr-download">
-            <p>
-              <a class="fr-download__link"
-                 href="{{ order_log.prefectural_order.url }}"
-                 download>
-                Télécharger l'arrêté préfectoral
-                <span class="fr-download__detail">
+
+          <div class="fr-tile fr-tile--download fr-enlarge-link fr-mb-3w">
+            <div class="fr-tile__body">
+              <div class="fr-tile__content">
+                <h3 class="fr-tile__title">
+                  <a download href="{{ order_log.prefectural_order.url }}">Télécharger l'arrêté préfectoral</a>
+                </h3>
+                <p class="fr-tile__detail">
                   {{ DECISIONS|get_choice_label:order_log.decision }} du {{ order_log.status_date|date:"SHORT_DATE_FORMAT" }}
-                </span>
-              </a>
-            </p>
+                </p>
+              </div>
+            </div>
+            <div class="fr-tile__header">
+              <div class="fr-tile__pictogram">
+                <svg aria-hidden="true"
+                     class="fr-artwork"
+                     viewBox="0 0 80 80"
+                     width="80px"
+                     height="80px">
+                  <use class="fr-artwork-decorative" href="{% static '@gouvfr/dsfr/dist/artwork/pictograms/document/document-signature.svg' %}#artwork-decorative"></use>
+                  <use class="fr-artwork-minor" href="{% static '@gouvfr/dsfr/dist/artwork/pictograms/document/document-signature.svg' %}#artwork-minor"></use>
+                  <use class="fr-artwork-major" href="{% static '@gouvfr/dsfr/dist/artwork/pictograms/document/document-signature.svg' %}#artwork-major"></use>
+                </svg>
+              </div>
+            </div>
           </div>
+
+          <p class="color-text-light">
+            Le remplacement de l'arrêté se fait depuis la fenêtre Modification de l'état du dossier, à l'étape d'ajout du fichier.
+          </p>
         {% endif %}
       {% endwith %}
     </section>
