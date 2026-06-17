@@ -197,7 +197,7 @@ class ProcedureForm(forms.ModelForm):
         widget=SimulationCheckWidget(),
     )
     prefectural_order = forms.FileField(
-        label="Arrêté préfectoral",
+        label="Arrêté préfectoral de décision",
         required=False,
         help_text="""Un seul fichier est autorisé.<br />
             Formats autorisés : images (png, jpg), pdf, zip.<br>
