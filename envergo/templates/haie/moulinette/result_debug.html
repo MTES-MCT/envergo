@@ -100,15 +100,16 @@
       {% endwith %}
     {% endfor %}
 
-    <h2>Catalogue de données</h2>
-
-    <dd>
-      {% for key, value in moulinette.catalog.items %}
-        <dt>{{ key }}</dt>
-        <dd>
-          {{ value|truncatechars:150 }}
-        </dd>
-      {% endfor %}
-    </dd>
+    {% if request.user.is_superuser %}
+      <h2>Catalogue de données</h2>
+      <dd>
+        {% for key, value in moulinette.catalog.items %}
+          <dt>{{ key }}</dt>
+          <dd>
+            {{ value|truncatechars:150 }}
+          </dd>
+        {% endfor %}
+      </dd>
+    {% endif %}
   </section>
 {% endblock %}
