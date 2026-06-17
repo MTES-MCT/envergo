@@ -416,6 +416,9 @@ class PlantationEvaluator:
 
         displayable_conditions = []
         deduplicated_conditions = []
+
+        # Processus d'addition/déduplication en trois étapes
+        # Etape 1 : dédupliquer les conditions par catégorie en ne conservant que la plus restrictive
         for conditions in conditions_by_category.values():
             candidates = [
                 c for c in conditions if c.result is not None and c.must_display()
@@ -423,16 +426,21 @@ class PlantationEvaluator:
             displayable_conditions.extend(candidates)
             deduplicated_conditions.extend(self.deduplicate_conditions(candidates))
 
+        # Etape 2 : combiner les conditions additives
+        combined_conditions = self.combine_conditions(deduplicated_conditions)
+
+        # Etape 3 : dédupliquer de nouveau l'ensemble pour éviter les doublons dans les conditions non additives
+        self._conditions = sorted(
+            self.deduplicate_conditions(combined_conditions),
+            key=attrgetter("order"),
+        )
+
         all_displayable = sorted(
             displayable_conditions,
             key=attrgetter("order"),
         )
         self._all_conditions = all_displayable
         self._all_conditions_by_category = dict(conditions_by_category)
-        self._conditions = sorted(
-            self.combine_conditions(deduplicated_conditions),
-            key=attrgetter("order"),
-        )
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
