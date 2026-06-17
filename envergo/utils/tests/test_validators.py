@@ -87,6 +87,13 @@ class TestDetectMime:
         uploaded = make_uploaded_file(b"just some text", "note.txt", "text/plain")
         assert detect_mime(uploaded) == "text/plain"
 
+    def test_detect_ignores_declared_content_type(self):
+        """Detection must rely on file content, not the browser-declared
+        Content-Type. Here PNG bytes are deliberately mislabeled as a PDF;
+        detect_mime must still return the real type sniffed from the bytes."""
+        uploaded = make_uploaded_file(make_png_bytes(), "img.png", "application/pdf")
+        assert detect_mime(uploaded) == "image/png"
+
 
 class TestValidateMime:
     """validate_mime must accept files whose detected MIME type is in the
@@ -111,6 +118,15 @@ class TestValidateMime:
         uploaded = make_uploaded_file(
             make_zip_bytes(), "archive.zip", "application/zip"
         )
+        with pytest.raises(ValidationError):
+            validate_mime(uploaded, ["image/png"])
+
+    def test_spoofed_content_type_is_rejected(self):
+        """A file whose declared Content-Type is allowed but whose actual
+        content is not must still be rejected. This is the spoofing case the
+        validator exists to defend against: here a zip archive is declared as
+        image/png, the only allowed type."""
+        uploaded = make_uploaded_file(make_zip_bytes(), "archive.zip", "image/png")
         with pytest.raises(ValidationError):
             validate_mime(uploaded, ["image/png"])
 
