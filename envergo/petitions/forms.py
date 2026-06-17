@@ -145,7 +145,11 @@ CLOSING_FIELD_REQUIREMENTS = {
         "prefectural_order",
         "applicant_message",
     },
-    DECISIONS.opposition: {"simulation_check", "prefectural_order", "applicant_message"},
+    DECISIONS.opposition: {
+        "simulation_check",
+        "prefectural_order",
+        "applicant_message",
+    },
     DECISIONS.dropped: {"applicant_message"},
 }
 

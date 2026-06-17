@@ -1475,7 +1475,9 @@ def test_petition_project_close_with_missing_fields(
     assert res.status_code == 200
     content = res.content.decode()
     # Apostrophes are html-escaped in the rendered page
-    assert "la cohérence entre le dossier et l&#x27;arrêté doit être vérifiée" in content
+    assert (
+        "la cohérence entre le dossier et l&#x27;arrêté doit être vérifiée" in content
+    )
 
     project.refresh_from_db()
     assert project.stage == "preparing_decision"
@@ -1556,7 +1558,9 @@ def test_petition_project_close_status_change_failure(
 
     assert res.status_code == 200
     content = res.content.decode()
-    assert "Impossible de mettre à jour le dossier dans Démarches Simplifiées" in content
+    assert (
+        "Impossible de mettre à jour le dossier dans Démarches Simplifiées" in content
+    )
 
     project.refresh_from_db()
     assert project.stage == "preparing_decision"
@@ -1580,9 +1584,7 @@ def test_petition_project_close_with_ds_disabled(
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
 
-    res = client.post(
-        procedure_url(project), closing_form_data("dropped"), follow=True
-    )
+    res = client.post(procedure_url(project), closing_form_data("dropped"), follow=True)
 
     assert res.status_code == 200
     assert "n'est pas activée" in res.content.decode()
