@@ -1749,6 +1749,53 @@ def test_petition_project_close_with_ds_disabled(
     assert project.stage == "closed"
 
 
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+@pytest.mark.django_db(transaction=True)
+def test_closing_actually_calls_ds_messagerie(
+    mock_execute, mock_update_ds, mock_notify, client, haie_instructor_44, site
+):
+    """Closing a dossier reaches the real DS "dossierEnvoyerMessage" mutation.
+
+    Only the lowest layer (the GraphQL client.execute) is mocked, so the full
+    view -> send_message_dossier_ds -> client.dossier_send_message send path is
+    exercised. The DS state change is mocked out to isolate the message send.
+    """
+    client.force_login(haie_instructor_44)
+    mock_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    DCConfigHaieFactory()
+    # The dossier id is what gates the message send; a real dossier has it.
+    project = PetitionProjectFactory(
+        status__stage="preparing_decision",
+        demarches_simplifiees_state="en_instruction",
+        demarches_simplifiees_dossier_id="RG9zc2llci0xMjM=",
+    )
+
+    message = "Votre dossier a été classé sans suite. Motif : doublon."
+    data = closing_form_data("dropped", simulation_check="", applicant_message=message)
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "closed"
+
+    # The messagerie mutation was issued exactly once, with our message body.
+    message_calls = [
+        call
+        for call in mock_execute.call_args_list
+        if "dossierEnvoyerMessage" in call.args[0]
+    ]
+    assert len(message_calls) == 1
+    sent_variables = message_calls[0].args[1]
+    assert sent_variables["input"]["body"] == message
+    assert sent_variables["input"]["dossierId"] == "RG9zc2llci0xMjM="
+
+
 def test_petition_project_prefectural_order_download_block(
     client, haie_instructor_44, site
 ):
