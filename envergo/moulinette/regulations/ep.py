@@ -152,7 +152,7 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEval
         return has_reimplantation, has_sensitive_species
 
     def get_replantation_coefficient(self):
-        return D("1.5")
+        return 1.5
 
 
 def get_hedge_compensation_details(hedge, r):
@@ -602,7 +602,7 @@ class EspecesProtegeesNormandie(
             # If the result is "dispense_L350" or "a_verifier_L350", the replantation coefficient is 1.0
             return 1.0
 
-        return self.catalog.get("aggregated_r")
+        return float(self.catalog.get("aggregated_r"))
 
     def get_debug_context(self):
         """Return centroid-based density data for debug display."""
