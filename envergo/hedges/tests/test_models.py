@@ -296,7 +296,7 @@ def test_hedges_has_centroid_and_department():
         geometry=herault_multipolygon,
     )
     hedge = HedgeDataFactory()
-    centroid_to_remove = hedge.get_centroid_to_remove()
+    centroid_to_remove = hedge.hedges_to_remove().centroid
     centroid_computed = centroid(hedge.hedges_to_remove()[0].geometry)
 
     assert centroid_to_remove == centroid_computed

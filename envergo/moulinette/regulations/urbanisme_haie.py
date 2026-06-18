@@ -24,9 +24,7 @@ class UrbanismeHaieHru(HaieCriterionEvaluator):
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
-        data["geoportail_url"] = get_geoportail_urbanisme_centered_url(
-            self.catalog.get("haies")
-        )
+        data["geoportail_url"] = get_geoportail_urbanisme_centered_url(self.hedges)
         return data
 
 
