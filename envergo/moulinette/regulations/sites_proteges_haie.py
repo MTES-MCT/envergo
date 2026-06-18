@@ -20,9 +20,7 @@ class SitesPatrimoniauxRemarquablesHaie(HaieCriterionEvaluator):
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
-        data["aa_only"] = all(
-            h.hedge_type == "alignement" for h in self.catalog["haies"].hedges()
-        )
+        data["aa_only"] = all(h.hedge_type == "alignement" for h in self.hedges)
         return data
 
     def evaluate(self):
@@ -36,9 +34,7 @@ class MonumentsHistoriquesHaie(HaieCriterionEvaluator):
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
-        data["aa_only"] = all(
-            h.hedge_type == "alignement" for h in self.catalog["haies"].hedges()
-        )
+        data["aa_only"] = all(h.hedge_type == "alignement" for h in self.hedges)
         return data
 
     def evaluate(self):

@@ -1099,9 +1099,9 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context["moulinette"] = moulinette
         context.update(moulinette.catalog)
 
-        hedge_data = context["petition_project"].hedge_data
-        context["ign_url"] = get_ign_centered_url(hedge_data)
-        context["google_maps_url"] = get_google_maps_centered_url(hedge_data)
+        hedges = context["petition_project"].hedge_data.hedges()
+        context["ign_url"] = get_ign_centered_url(hedges)
+        context["google_maps_url"] = get_google_maps_centered_url(hedges)
 
         regulation_slug = self.kwargs.get("regulation")
         regulation = context["moulinette"].get_regulation(regulation_slug)

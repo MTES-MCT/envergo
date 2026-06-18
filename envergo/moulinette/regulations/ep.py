@@ -105,7 +105,11 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEval
 
     choice_label = "EP > EP Aisne"
     base_slug = "ep_aisne"
-    plantation_conditions = [SafetyCondition, AisneQualityCondition]
+    plantation_conditions = [
+        RUMinLengthCondition,
+        SafetyCondition,
+        AisneQualityCondition,
+    ]
 
     CODE_MATRIX = {
         (False, True): "interdit",
@@ -455,7 +459,7 @@ class EspecesProtegeesNormandie(
         else:
             density_ratio = 1.0
 
-        centroid_shapely = haies.get_centroid_to_remove()
+        centroid_shapely = self.hedges.to_remove().centroid
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
 
         # Normandie is divided into natural areas with a certain homogeneity of biodiversity.
@@ -491,7 +495,7 @@ class EspecesProtegeesNormandie(
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
         per_hedge_coefficients = {}
 
-        for hedge in haies.hedges_to_remove():
+        for hedge in self.hedges.to_remove():
             if hedge.mode_destruction != "coupe_a_blanc":
                 coupe_a_blanc_every_hedge = False
             if hedge.hedge_type != "alignement" or not hedge.prop("bord_voie"):
@@ -632,7 +636,7 @@ class EspecesProtegeesNormandie(
 
         context["density_map"] = create_density_map(
             centroid_geos,
-            haies.hedges_to_remove(),
+            self.hedges.to_remove(),
             truncated_circle_200,
             truncated_circle_5000,
         )
