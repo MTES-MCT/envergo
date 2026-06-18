@@ -55,6 +55,7 @@ from envergo.petitions.views import (
 )
 from envergo.urlmappings.models import UrlMapping
 from envergo.users.tests.factories import UserFactory
+from envergo.utils.urls import remove_from_qs, update_qs
 
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
 
@@ -1935,15 +1936,16 @@ def test_alternative_delete(client, haie_instructor_44):
 # Alternative simulation creation tests.
 
 
-def test_simulation_form_rejects_invalid_moulinette_url():
-    """clean_moulinette_url rejects a url that does not build a valid moulinette.
+def test_simulation_form_rejects_unrecognized_url():
+    """A url that cannot be turned into a moulinette gets the generic message.
 
-    Here the host is right but the simulation parameters are missing.
+    When the domain is unknown, no moulinette can be built and there are no
+    underlying errors to surface, so the fallback message is used.
     """
     DCConfigHaieFactory()
     form = SimulationForm(
         data={
-            "moulinette_url": "http://haie.local:3000/simulateur/resultat/",
+            "moulinette_url": "https://example.com/simulation/",
             "source": "instructor",
             "comment": "Commentaire",
         }
@@ -1953,6 +1955,92 @@ def test_simulation_form_rejects_invalid_moulinette_url():
     assert form.errors["moulinette_url"] == [
         "Il semble que l'url ne corresponde pas à une page de simulation valide."
     ]
+    assert form.moulinette_errors == []
+
+
+def test_simulation_form_surfaces_moulinette_errors():
+    """An invalid simulation is rejected with the headline and detailed errors.
+
+    The form reports the generic « url invalide » headline, and exposes every
+    underlying moulinette error through ``moulinette_errors``, prefixed by its
+    field display name, for the template to list.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    # "chemin_acces" is incompatible with replanting hedges at the same place,
+    # and dropping "localisation_pac" leaves a required field empty: two errors.
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+    invalid_url = remove_from_qs(invalid_url, "localisation_pac")
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": invalid_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert not form.is_valid()
+
+    # The field carries the single headline message.
+    assert form.errors["moulinette_url"] == [
+        "Il semble que l'url ne corresponde pas à une page de simulation valide."
+    ]
+
+    # Both underlying errors are exposed for listing, each prefixed by its label.
+    assert any(
+        error.startswith("Est-il prévu de planter une nouvelle haie")
+        and "création d’un accès" in error
+        for error in form.moulinette_errors
+    )
+    assert any(
+        error.startswith("Les haies à détruire sont-elles situées")
+        and "Ce champ est obligatoire." in error
+        for error in form.moulinette_errors
+    )
+
+
+def test_alternative_create_invalid_url_lists_errors_on_page(
+    client, haie_instructor_44
+):
+    """Submitting an invalid simulation url re-renders the page with, in one
+    place, the headline message and every underlying error prefixed by its field
+    label, as a DSFR messages group below the url field."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+    invalid_url = remove_from_qs(invalid_url, "localisation_pac")
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {"moulinette_url": invalid_url, "source": "instructor", "comment": "x"},
+    )
+
+    assert response.status_code == 200
+    assert project.simulations.count() == 1
+    content = response.content.decode()
+
+    # The headline is shown exactly once (single place, no duplication).
+    assert content.count("ne corresponde pas à une page de simulation valide") == 1
+
+    # Errors are listed in a DSFR messages group, each prefixed by its field label.
+    assert 'class="fr-messages-group"' in content
+    assert content.count('class="fr-message fr-message--error"') == 3
+    assert "Est-il prévu de planter une nouvelle haie" in content
+    assert "création d’un accès" in content
+    assert "Les haies à détruire sont-elles situées" in content
+    assert "Ce champ est obligatoire." in content
 
 
 def test_simulation_form_unfolds_short_moulinette_url():
@@ -2122,6 +2210,71 @@ def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor
     alternative.refresh_from_db()
     assert not alternative.is_active
     assert project.simulations.get(is_initial=True).is_active
+
+
+def test_alternative_create_error_logs_analytics_event(client, haie_instructor_44):
+    """A failed creation records an "erreur"/"simualt_add" analytics event."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": invalid_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 200
+    assert project.simulations.count() == 1
+
+    event = Event.objects.get(category="erreur", event="simualt_add")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert any(
+        "création d’un accès" in error
+        for error in event.metadata["moulinette_errors"]
+    )
+
+
+def test_alternative_activate_error_logs_analytics_event(client, haie_instructor_44):
+    """A failed activation records an "erreur"/"simualt_activate" analytics event."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative = SimulationFactory(project=project, comment="Alternative")
+
+    project.stage = STAGES.closed
+    project.save()
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url)
+
+    assert response.status_code == 403
+
+    event = Event.objects.get(category="erreur", event="simualt_activate")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["moulinette_url"] == alternative.moulinette_url
+    assert event.metadata["message"]
 
 
 # =============================================================================
