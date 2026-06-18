@@ -1,0 +1,27 @@
+{% comment %}
+Field wrapper for the alternative simulation url.
+
+Same layout as the default field template, but when the url is an invalid
+simulation it lists, below the field, the headline error and every underlying
+moulinette error (exposed as `moulinette_errors`). The stock template only shows
+the first error, hence this dedicated wrapper. Several messages use DSFR's
+messages group (`.fr-message--error` paragraphs), not a single `.fr-error-text`.
+{% endcomment %}
+<div id="form-group-{{ field.html_name }}"
+     class="fr-input-group{% if field.field.required %} required{% endif %}{% if field.errors %} fr-input-group--error{% endif %}">
+
+  {% include 'django/forms/fields/label.html' %}
+
+  {{ field }}
+
+  {% if field.errors %}
+    <div class="fr-messages-group" aria-live="assertive">
+      {% for error in field.errors %}
+        <p class="fr-message fr-message--error">{{ error }}</p>
+      {% endfor %}
+      {% for error in moulinette_errors %}
+        <p class="fr-message fr-message--error">{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
