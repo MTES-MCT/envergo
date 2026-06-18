@@ -105,6 +105,15 @@
                        title="Dossier dans Démarches Simplifiées"
                        href="{% url 'petition_project_hedge_data_export' petition_project.reference %}">Télécharger les haies (SIG)</a>
                   </li>
+
+                  {% if petition_project.dn_archive %}
+                    <li>
+                      <a class="fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-download-line"
+                         title="Archive Démarche Numérique"
+                         href="{{ petition_project.dn_archive.url }}"
+                         download="Archive_DN_{{ petition_project.reference }}.zip">Télécharger l'archive Démarche Numérique</a>
+                    </li>
+                  {% endif %}
                 </ul>
               </div>
             </div>

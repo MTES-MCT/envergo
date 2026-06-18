@@ -148,8 +148,7 @@ def resolve_per_hedge_zone_configs(moulinette, hedges):
     ``coeff_compensation`` config. Returns ``{hedge_id: (zone_id, zone_config)}``.
     """
     config = moulinette.config
-    settings = config.single_procedure_settings
-    coeff_compensation = settings.get("coeff_compensation", {})
+    coeff_compensation = config.zone_configs
 
     if not config.has_ru_zonage:
         matched_zones = {h.id: "default" for h in hedges}
