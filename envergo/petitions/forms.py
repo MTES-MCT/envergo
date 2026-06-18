@@ -286,6 +286,20 @@ USER_TYPE = (
 )
 
 
+def list_moulinette_errors(moulinette):
+    """Return an invalid moulinette's errors as field-prefixed messages."""
+    fields = moulinette.get_prefixed_fields()
+    messages = []
+    for field_name, field_errors in moulinette.form_errors.items():
+        field = fields.get(field_name)
+        for message in field_errors:
+            if field:
+                message = f"{field.label} : {message}"
+            messages.append(message)
+
+    return messages
+
+
 class SimulationForm(forms.ModelForm):
     moulinette_url = forms.URLField(
         label="Lien vers la simulation",
@@ -308,12 +322,25 @@ class SimulationForm(forms.ModelForm):
         model = Simulation
         fields = ["moulinette_url", "source", "comment"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Store the underlying moulinette form errors
+        self.moulinette_errors = []
+
     def clean_moulinette_url(self):
         url = self.cleaned_data["moulinette_url"]
         moulinette_url = MoulinetteUrl(url)
-        if not moulinette_url.is_valid():
+        moulinette = moulinette_url.get_moulinette()
+
+        # Reject a url that is not a valid simulation: an unknown domain (no
+        # moulinette at all) or a built-but-invalid one. In the latter case we
+        # also expose the underlying errors for the template to list below it.
+        if moulinette is None or not moulinette.is_valid():
+            if moulinette is not None:
+                self.moulinette_errors = list_moulinette_errors(moulinette)
             raise ValidationError(
                 "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
             )
+
         return moulinette_url.url
