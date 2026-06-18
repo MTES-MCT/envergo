@@ -1,6 +1,7 @@
 import logging
 import secrets
 from datetime import timedelta
+from os.path import splitext
 from urllib.parse import urlparse
 
 from dateutil import parser
@@ -84,6 +85,12 @@ LOG_TYPES = Choices(
 
 # This session key is used when we are not able to find the real user session key.
 SESSION_KEY = "untracked_dossier_submission"
+
+
+def dn_archive_file_format(instance, filename):
+    _, extension = splitext(filename)
+    secret = secrets.token_urlsafe(16)
+    return f"dn_archives/{instance.reference}_{secret}{extension}"
 
 
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
@@ -174,6 +181,13 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         "Date de la dernière synchronisation avec Démarches Simplifiées",
         null=True,
         blank=True,
+    )
+
+    dn_archive = models.FileField(
+        "Archive Démarches numériques",
+        null=True,
+        blank=True,
+        upload_to=dn_archive_file_format,
     )
 
     onagre_number = models.CharField(

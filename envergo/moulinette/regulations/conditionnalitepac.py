@@ -7,7 +7,11 @@ from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
-from envergo.hedges.regulations import PacParcelCondition, PlantationConditionMixin
+from envergo.hedges.regulations import (
+    PacParcelCondition,
+    PlantationConditionMixin,
+    RUMinLengthCondition,
+)
 from envergo.moulinette.forms.fields import DisplayIntegerField, UnitInput
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
@@ -187,7 +191,7 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
     base_slug = "bcae8"
     form_class = Bcae8Form
-    plantation_conditions = [PacParcelCondition]
+    plantation_conditions = [RUMinLengthCondition, PacParcelCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
@@ -424,7 +428,7 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
         length_to_remove = self.hedges.to_remove().length
         if length_to_remove > 0:
             R = minimum_length_to_plant / D(length_to_remove)
-        return round(R, 2)
+        return round(float(R), 2)
 
 
 class Bcae8Ru(Bcae8Hru):

@@ -922,4 +922,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["department_settings_form"] = (
             f"https://tally.so/r/Pd9b9e?{department_query_string}"
         )
+
+        context["ru_zone_configs"] = self.object.zone_configs
+
         return context

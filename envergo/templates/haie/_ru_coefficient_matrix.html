@@ -7,11 +7,11 @@
           <tbody>
             {% for zone_id, config in ru_zone_configs.items %}
               <tr>
+                <th scope="col">Zone {{ zone_id }}</th>
+                <th scope="col">Densité ≥ {{ config.X_densite }} ml/ha</th>
                 <th scope="col">
-                  Zone {{ zone_id }} <span class="fr-text--light">(X_densité : {{ config.X_densite }} ml/ha)</span>
+                  Densité < {{ config.X_densite }} ml/ha
                 </th>
-                <th scope="col">Haute densité</th>
-                <th scope="col">Basse densité</th>
               </tr>
               <tr>
                 <th scope="row">Non arborée</th>

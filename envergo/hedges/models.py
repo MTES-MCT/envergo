@@ -292,6 +292,13 @@ class HedgeList(list[Hedge]):
     def length(self):
         return sum(h.length for h in self)
 
+    @property
+    def centroid(self):
+        """Returns centroid"""
+        geometries = [h.geometry for h in self]
+        hedges_centroid = centroid(union_all(geometries))
+        return hedges_centroid
+
     def to_plant(self) -> Self:
         return HedgeList([h for h in self if h.type == TO_PLANT])
 
@@ -544,7 +551,7 @@ class HedgeData(models.Model):
     @cached_property
     def department_code(self):
         """Resolve the department code from the centroid of hedges to remove."""
-        hedges_centroid = self.get_centroid_to_remove()
+        hedges_centroid = self.hedges_to_remove().centroid
         return get_department_from_coords(hedges_centroid.x, hedges_centroid.y)
 
     def get_department(self):
@@ -593,7 +600,7 @@ class HedgeData(models.Model):
     def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
-        centroid_shapely = self.get_centroid_to_remove()
+        centroid_shapely = self.hedges_to_remove().centroid
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
         bundle = compute_hedge_densities_around_point(centroid_geos, radii=[200, 5000])
 
@@ -669,7 +676,7 @@ class HedgeData(models.Model):
         return False
 
     def get_statistics(self):
-        hedge_centroid_coords = self.get_centroid_to_remove()
+        hedge_centroid_coords = self.hedges_to_remove().centroid
         ru_to_plant = self.hedges_to_plant().ru()
         l350_3_to_plant = self.hedges_to_plant().l350_3()
         hru_to_plant = self.hedges_to_plant().hru()
