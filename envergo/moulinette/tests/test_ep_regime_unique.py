@@ -1,10 +1,11 @@
 """Tests for the EspecesProtegeesRegimeUnique evaluator."""
 
 import pytest
-from django.contrib.gis.geos import MultiPolygon
+from django.contrib.gis.geos import MultiPolygon, Polygon
 
 from envergo.geodata.models import MAP_TYPES
-from envergo.geodata.tests.factories import MapFactory, france_polygon
+from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
+from envergo.hedges.tests.factories import SpeciesFactory, SpeciesHabitatFactory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
 from envergo.moulinette.tests.utils import (
     EP_RU_DEFAULT_SETTINGS,
@@ -241,7 +242,7 @@ def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
 @pytest.mark.parametrize(
     "length, density, expected_code, expected_coeff",
     [
-        (8, 60, "dispense", 1.5),  # R_ru=1.5 + bonus=0.0
+        (8, 60, "dispense", 0.0),  # dispense → no compensation
         (50, 60, "derogation_simplifiee", 1.75),  # R_ru=1.5 + bonus=0.25
         (120, 40, "derogation_inventaire", 2.0),  # R_ru=1.5 + bonus=0.5
     ],
@@ -264,6 +265,65 @@ def test_ep_ru_replantation_coefficient(
     criterion = moulinette.ep.ru__ep_regime_unique
     assert criterion.result_code == expected_code
     assert criterion.get_evaluator().get_replantation_coefficient() == expected_coeff
+
+
+# ---------------------------------------------------------------------------
+# Sensitive species bonus
+# ---------------------------------------------------------------------------
+
+
+def test_ep_ru_sensitive_species_bonus_on_derogation_simplifiee(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """Sensitive species add +0.25 to the coefficient for derogation_simplifiee."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == "derogation_simplifiee"
+
+    evaluator = criterion.get_evaluator()
+    assert evaluator.get_replantation_coefficient() == 1.75
+
+    evaluator.catalog["has_sensitive_species"] = True
+    evaluator.evaluate()
+    assert evaluator.get_replantation_coefficient() == 2.0
+
+
+@pytest.mark.parametrize(
+    "length, density, expected_code",
+    [
+        (8, 60, "dispense"),
+        (120, 40, "derogation_inventaire"),
+    ],
+)
+def test_ep_ru_sensitive_species_no_bonus_other_results(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+    length,
+    density,
+    expected_code,
+):
+    """Sensitive species do NOT add a bonus for dispense or derogation_inventaire."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=density,
+        hedges=[make_hedge_factory(length=length)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == expected_code
+
+    evaluator = criterion.get_evaluator()
+    coeff_before = evaluator.get_replantation_coefficient()
+
+    evaluator.catalog["has_sensitive_species"] = True
+    evaluator.evaluate()
+    assert evaluator.get_replantation_coefficient() == coeff_before
 
 
 # ---------------------------------------------------------------------------
@@ -301,3 +361,174 @@ def test_ep_ru_settings_override_thresholds(france_map):
     )
     assert moulinette.catalog["ep_ru_total_length"] > 30
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_inventaire"
+
+
+# ---------------------------------------------------------------------------
+# Species cortege — public vs. sensitive split
+# ---------------------------------------------------------------------------
+
+# Default HedgeFactory places hedges near (lng=3.584, lat=43.687).
+# This polygon covers that area so RU zone queries find it within 400m.
+HEDGE_AREA_POLYGON = Polygon(
+    [
+        (3.580, 43.685),
+        (3.590, 43.685),
+        (3.590, 43.690),
+        (3.580, 43.690),
+        (3.580, 43.685),
+    ]
+)
+
+
+def setup_species_near_hedges(levels):
+    """Create species with SpeciesHabitats on a map whose zone overlaps the default hedge area.
+
+    `levels` is a list of (cd_ref, level_of_concern) tuples. Returns the
+    created species list.
+    """
+    map_obj = MapFactory(map_type="species", zones=None)
+    cd_refs = [cd_ref for cd_ref, _ in levels]
+    ZoneFactory(
+        map=map_obj,
+        geometry=MultiPolygon([HEDGE_AREA_POLYGON]),
+        species_taxrefs=cd_refs,
+    )
+    species_list = []
+    for cd_ref, level in levels:
+        sp = SpeciesFactory(cd_ref=cd_ref)
+        SpeciesHabitatFactory(
+            species=sp,
+            map=map_obj,
+            hedge_types=["degradee", "buissonnante", "arbustive", "mixte"],
+            level_of_concern=level,
+        )
+        species_list.append(sp)
+    return species_list
+
+
+def test_ep_ru_catalog_no_sensitive_species(ep_ru_criterion):
+    """When no species have level 'majeur', has_sensitive_species is False
+    and the public list equals the full list."""
+    RUConfigHaieFactory()
+    setup_species_near_hedges(
+        [
+            (9001, "fort"),
+            (9002, "moyen"),
+        ]
+    )
+
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    catalog = moulinette.catalog
+
+    assert catalog["has_sensitive_species"] is False
+    full = catalog["protected_species"]
+    public = catalog["protected_species_public"]
+    assert len(full) == len(public)
+    assert {s.cd_ref for s in full} == {s.cd_ref for s in public}
+
+
+def test_ep_ru_catalog_with_sensitive_species(ep_ru_criterion):
+    """When some species have level 'majeur', they are excluded from the public list."""
+    RUConfigHaieFactory()
+    setup_species_near_hedges(
+        [
+            (9003, "fort"),
+            (9004, "majeur"),
+        ]
+    )
+
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    catalog = moulinette.catalog
+
+    assert catalog["has_sensitive_species"] is True
+
+    full_refs = {s.cd_ref for s in catalog["protected_species"]}
+    public_refs = {s.cd_ref for s in catalog["protected_species_public"]}
+    assert 9003 in full_refs
+    assert 9004 in full_refs
+    assert 9003 in public_refs
+    assert 9004 not in public_refs
+
+
+# Effective coefficients (post-evaluate hook)
+# ---------------------------------------------------------------------------
+
+
+def test_ep_ru_effective_coefficients_include_bonus(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """The effective_coefficients property returns raw + EP bonus."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    evaluator = criterion.get_evaluator()
+    assert criterion.result_code == "derogation_simplifiee"
+
+    effective = evaluator.effective_coefficients
+    raw = moulinette.catalog["per_hedge_coefficients"]
+    bonus = evaluator.get_ep_ru_bonus()
+    assert bonus > 0
+
+    for hedge_id, raw_coeff in raw.items():
+        assert effective[hedge_id] == raw_coeff + bonus
+
+
+def test_ep_ru_effective_coefficients_diverge_from_ru(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """EPRU effective coefficients include the EP bonus; RU's do not.
+
+    Both evaluators share the same raw per_hedge_coefficients. After
+    evaluate(), EPRU's effective_coefficients property adds the bonus
+    while RU's returns the raw values unchanged.
+    """
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+    raw = moulinette.catalog["per_hedge_coefficients"]
+
+    ep_evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
+    ep_effective = ep_evaluator.effective_coefficients
+
+    ru_evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
+    ru_effective = ru_evaluator.effective_coefficients
+
+    for hedge_id in raw:
+        assert ep_effective[hedge_id] > raw[hedge_id]
+        assert ru_effective[hedge_id] == raw[hedge_id]
+
+
+def test_ep_ru_dispense_effective_empty(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """Dispense result → effective coefficients are empty and R is 0."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=8)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == "dispense"
+
+    evaluator = criterion.get_evaluator()
+    assert evaluator.effective_coefficients == {}
+    assert evaluator.get_replantation_coefficient() == 0.0

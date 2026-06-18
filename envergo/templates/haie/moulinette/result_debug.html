@@ -132,7 +132,7 @@
 
     <h3>Conditions d'acceptabilité</h3>
     <ul class="fr-mb-2w">
-      {% for condition in plantation_evaluation.conditions %}
+      {% for condition in plantation_evaluation.all_conditions %}
         <li>
           {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
           {% if condition.context %}
@@ -144,16 +144,17 @@
       {% endfor %}
     </ul>
 
-    <h2>Catalogue de données</h2>
-
-    <dl>
-      {% for key, value in moulinette.catalog.items %}
-        <dt>{{ key }}</dt>
-        <dd>
-          {{ value|truncatechars:150 }}
-        </dd>
-      {% endfor %}
-    </dl>
+    {% if request.user.is_superuser %}
+      <h2>Catalogue de données</h2>
+      <dl>
+        {% for key, value in moulinette.catalog.items %}
+          <dt>{{ key }}</dt>
+          <dd>
+            {{ value|truncatechars:150 }}
+          </dd>
+        {% endfor %}
+      </dl>
+    {% endif %}
   </section>
 {% endblock %}
 

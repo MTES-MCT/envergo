@@ -97,6 +97,9 @@ class MoulinetteMixin:
         context["moulinette"] = self.moulinette
         context.update(self.moulinette.catalog)
 
+        user = self.request.user
+        is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
+
         if self.moulinette.is_evaluated():
 
             context["has_errors"] = (
@@ -156,7 +159,10 @@ class MoulinetteMixin:
             self.request.user.is_staff
             and self.request.user.groups.filter(name="Staff ops").exists()
         )
-        context["optional_forms"] = self.moulinette.optional_forms
+        optional_forms = self.moulinette.optional_forms
+        if not is_staff:
+            optional_forms = [f for f in optional_forms if not f.is_staff_only]
+        context["optional_forms"] = optional_forms
         context["triage_form"] = self.moulinette.triage_form
 
         context = {**context, **self.moulinette.get_extra_context(self.request)}
@@ -280,7 +286,6 @@ class MoulinetteMixin:
                 if moulinette.is_triage_valid()
                 else "soumission_autre"
             )
-
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
 
@@ -334,17 +339,22 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         context = self.get_context_data(form=form)
 
         form_errors = defaultdict(list)
-        for field, errors in self.moulinette.form_errors().items():
+        for field, errors in self.moulinette.form_errors.items():
             for error in errors.as_data():
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}
                 )
+        metadata = {
+            "data": form.data,
+            "errors": form_errors,
+        }
+        mtm_keys = get_matomo_tags(self.request)
+        metadata.update(mtm_keys)
         log_event(
             "erreur",
             "formulaire-simu",
             self.request,
-            data=form.data,
-            errors=form_errors,
+            **metadata,
             user_type=get_user_type(self.request.user),
         )
         return self.render_to_response(context)
@@ -904,4 +914,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["department_settings_form"] = (
             f"https://tally.so/r/Pd9b9e?{department_query_string}"
         )
+
+        context["ru_zone_configs"] = self.object.zone_configs
+
         return context

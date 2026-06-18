@@ -59,7 +59,7 @@
                 <tr>
                   <th scope="row">{{ choice.label }}</th>
                   <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
-                  <td>{{ moulinette.catalog.LPm_r|get_item:choice.value|floatformat:"0g" }} m</td>
+                  <td>{{ quality_condition.LPm_r|get_item:choice.value|floatformat:"0g" }} m</td>
                   <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
                   <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
                 </tr>
@@ -67,7 +67,7 @@
                 <tr>
                   <th scope="row">{{ choice.label }}</th>
                   <td>{{ quality_condition.LPm|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
-                  <td>{{ moulinette.catalog.LPm_r|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                  <td>{{ quality_condition.LPm_r|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
                   <td>{{ quality_condition.LP|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
                   <td>{{ quality_condition.LC|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
                 </tr>
@@ -77,8 +77,8 @@
           <tfoot>
             <tr>
               <th scope="row">Total</th>
-              <td>{{ moulinette.catalog.lpm|floatformat:"0g" }} m</td>
-              <td>{{ moulinette.catalog.reduced_lpm|floatformat:"0g" }} m</td>
+              <td>{{ quality_condition.lpm|floatformat:"0g" }} m</td>
+              <td>{{ quality_condition.reduced_lpm|floatformat:"0g" }} m</td>
               <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
               <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
             </tr>

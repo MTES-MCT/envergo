@@ -1,4 +1,5 @@
 import logging
+import tempfile
 
 import magic
 from django.core.exceptions import ValidationError
@@ -34,9 +35,27 @@ class NoIdnEmailValidator(EmailValidator):
             raise ValidationError(self.message, code=self.code, params={"value": value})
 
 
-def validate_mime(file, allowed_mime_types):
-    detected = magic.from_buffer(file.read(2048), mime=True)
+def detect_mime(file):
+    """Detect the MIME type of an uploaded file via libmagic.
+
+    Uses from_file rather than from_buffer because libmagic's buffer-based
+    detection cannot identify formats like zip whose metadata is at the
+    end of the file.
+    """
+    if hasattr(file, "temporary_file_path"):
+        return magic.from_file(file.temporary_file_path(), mime=True)
+
+    with tempfile.NamedTemporaryFile() as tmp:
+        for chunk in file.chunks():
+            tmp.write(chunk)
+        tmp.flush()
+        detected = magic.from_file(tmp.name, mime=True)
     file.seek(0)
+    return detected
+
+
+def validate_mime(file, allowed_mime_types):
+    detected = detect_mime(file)
     if detected not in allowed_mime_types:
         logger.warning(
             f"Le fichier téléchargé a un type MIME détecté de {detected}, qui n'est pas dans la liste des types "

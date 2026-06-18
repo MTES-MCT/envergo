@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.regulations import MinLengthPacCondition, PlantationConditionMixin
+from envergo.hedges.regulations import PacParcelCondition, PlantationConditionMixin
 from envergo.moulinette.forms.fields import DisplayIntegerField, UnitInput
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
@@ -185,7 +185,7 @@ class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Conditionnalité PAC > BCAE8"
     base_slug = "bcae8"
     form_class = Bcae8Form
-    plantation_conditions = [MinLengthPacCondition]
+    plantation_conditions = [PacParcelCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,

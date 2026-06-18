@@ -80,11 +80,11 @@ def test_density_around_point_pinned_values(hedge_density_fixture):
 
 
 def test_bundle_display_geojson(hedge_density_fixture):
-    """Display geometry is a MultiLineString when tolerance is set."""
+    """Display geometry is a MultiLineString."""
     bundle = compute_hedge_densities_around_point(
         hedge_density_fixture,
         radii=[200, 400, 5000],
-        display_simplify_tolerance=0.00005,
+        include_display_geojson=True,
     )
     display = bundle["display_geojson"]
     assert display is not None
@@ -99,7 +99,7 @@ def test_bundle_off_land():
     bundle = compute_hedge_densities_around_point(
         p,
         radii=[200, 400, 5000],
-        display_simplify_tolerance=0.00005,
+        include_display_geojson=True,
     )
 
     for r in [200, 400, 5000]:

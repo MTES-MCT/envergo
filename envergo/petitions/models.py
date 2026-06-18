@@ -1,6 +1,7 @@
 import logging
 import secrets
 from datetime import timedelta
+from os.path import splitext
 from urllib.parse import urlparse
 
 from dateutil import parser
@@ -86,6 +87,12 @@ LOG_TYPES = Choices(
 SESSION_KEY = "untracked_dossier_submission"
 
 
+def dn_archive_file_format(instance, filename):
+    _, extension = splitext(filename)
+    secret = secrets.token_urlsafe(16)
+    return f"dn_archives/{instance.reference}_{secret}{extension}"
+
+
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
@@ -161,6 +168,13 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         "Date de la dernière synchronisation avec Démarches Simplifiées",
         null=True,
         blank=True,
+    )
+
+    dn_archive = models.FileField(
+        "Archive Démarches numériques",
+        null=True,
+        blank=True,
+        upload_to=dn_archive_file_format,
     )
 
     onagre_number = models.CharField(
