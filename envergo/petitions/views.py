@@ -1405,6 +1405,23 @@ class PetitionProjectInstructorAlternativeView(
 
         return HttpResponseRedirect(self.get_success_url())
 
+    def form_invalid(self, form):
+        # A failed creation is most often a bad moulinette url. Record the
+        # detailed errors so we can monitor which kinds of mistakes instructors
+        # run into (invalid url, missing parameter, inconsistent answers…).
+        log_event(
+            "erreur",
+            "simualt_add",
+            self.request,
+            user_type=get_user_type(self.request.user),
+            reference=self.object.reference,
+            errors=form.errors.get_json_data(),
+            moulinette_errors=form.moulinette_errors,
+            **get_matomo_tags(self.request),
+        )
+
+        return super().form_invalid(form)
+
     def get_success_url(self):
         url = reverse(
             "petition_project_instructor_alternative_view", args=[self.object.reference]
@@ -1482,7 +1499,22 @@ class PetitionProjectInstructorAlternativeEdit(
             )
 
         else:
-            # This should not happen unless someone manually forges an invalid URL
+            # An activation that lands here was refused by can_be_activated(),
+            # which currently only happens on a closed dossier. Record it so we
+            # can monitor how often instructors hit this case.
+            if action == "activate":
+                log_event(
+                    "erreur",
+                    "simualt_activate",
+                    self.request,
+                    user_type=get_user_type(self.request.user),
+                    reference=self.object.reference,
+                    moulinette_url=simulation.moulinette_url,
+                    message="Le dossier est clos, la simulation ne peut pas être activée.",
+                    **get_matomo_tags(self.request),
+                )
+
+            # Any other case should not happen unless someone forges an invalid URL.
             return HttpResponseForbidden("Action non disponible")
 
         return HttpResponseRedirect(self.get_success_url())
