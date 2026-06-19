@@ -2182,10 +2182,10 @@ def test_alternative_create_allows_multiple_inert(client, haie_instructor_44):
 
 
 def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor_44):
-    """A closed dossier blocks activation.
+    """A closed dossier blocks activation, with a page-wide error message.
 
-    can_be_activated() is False, so the activate action is forbidden and the
-    active simulation is left unchanged.
+    The active simulation is left unchanged and the instructor is redirected
+    back to the alternatives page with an explanatory message.
     """
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
@@ -2204,12 +2204,15 @@ def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor
     )
 
     client.force_login(haie_instructor_44)
-    response = client.post(activate_url)
+    response = client.post(activate_url, follow=True)
 
-    assert response.status_code == 403
+    assert response.status_code == 200
     alternative.refresh_from_db()
     assert not alternative.is_active
     assert project.simulations.get(is_initial=True).is_active
+
+    page_messages = [str(message) for message in response.context["messages"]]
+    assert any("clos" in message for message in page_messages)
 
 
 def test_alternative_create_error_logs_analytics_event(client, haie_instructor_44):
@@ -2248,7 +2251,7 @@ def test_alternative_create_error_logs_analytics_event(client, haie_instructor_4
 
 
 def test_alternative_activate_error_logs_analytics_event(client, haie_instructor_44):
-    """A failed activation records an "erreur"/"simualt_activate" analytics event."""
+    """A closed-dossier activation records an "erreur"/"simualt_activate" event."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     alternative = SimulationFactory(project=project, comment="Alternative")
@@ -2268,13 +2271,76 @@ def test_alternative_activate_error_logs_analytics_event(client, haie_instructor
     client.force_login(haie_instructor_44)
     response = client.post(activate_url)
 
-    assert response.status_code == 403
+    assert response.status_code == 302
 
     event = Event.objects.get(category="erreur", event="simualt_activate")
     assert event.metadata["reference"] == project.reference
     assert event.metadata["user_type"] == "instructor"
     assert event.metadata["moulinette_url"] == alternative.moulinette_url
     assert event.metadata["message"]
+    # A closed dossier is not a moulinette problem, so there is no detail list.
+    assert event.metadata["moulinette_errors"] == []
+
+
+def test_alternative_activate_rejected_when_simulation_invalid(
+    client, haie_instructor_44
+):
+    """Activating a simulation whose url is no longer a valid moulinette is
+    rejected: it is not activated, the page shows a headline message and, below
+    the table, the same detailed error list as an invalid creation, and an
+    analytics event carries those errors."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    # A stored simulation that has become invalid over time (e.g. config change).
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+    invalid_url = remove_from_qs(invalid_url, "localisation_pac")
+    alternative = SimulationFactory(
+        project=project, comment="Stale", moulinette_url=invalid_url
+    )
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url, follow=True)
+
+    assert response.status_code == 200
+
+    # The simulation is not activated; the initial one stays active.
+    alternative.refresh_from_db()
+    assert not alternative.is_active
+    assert project.simulations.get(is_initial=True).is_active
+
+    content = response.content.decode()
+
+    # A single headline message is shown immediately.
+    page_messages = [str(message) for message in response.context["messages"]]
+    assert any("n'est plus valide" in message for message in page_messages)
+
+    # The detailed errors are listed as a DSFR messages group, each prefixed by
+    # its field label — the same list as an invalid creation.
+    assert 'class="fr-messages-group"' in content
+    assert "Est-il prévu de planter une nouvelle haie" in content
+    assert "création d’un accès" in content
+    assert "Les haies à détruire sont-elles situées" in content
+    assert "Ce champ est obligatoire." in content
+
+    event = Event.objects.get(category="erreur", event="simualt_activate")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert any(
+        "création d’un accès" in error
+        for error in event.metadata["moulinette_errors"]
+    )
 
 
 # =============================================================================
