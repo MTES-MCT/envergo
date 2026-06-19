@@ -1457,6 +1457,7 @@ class PetitionProjectInstructorAlternativeView(
             "erreur",
             "simualt_add",
             self.request,
+            data=form.data,
             user_type=get_user_type(self.request.user),
             reference=self.object.reference,
             errors=form.errors.get_json_data(),
