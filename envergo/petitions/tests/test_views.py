@@ -2436,8 +2436,7 @@ def test_alternative_create_error_logs_analytics_event(client, haie_instructor_4
     assert event.metadata["reference"] == project.reference
     assert event.metadata["user_type"] == "instructor"
     assert any(
-        "création d’un accès" in error
-        for error in event.metadata["moulinette_errors"]
+        "création d’un accès" in error for error in event.metadata["moulinette_errors"]
     )
 
 
@@ -2529,8 +2528,7 @@ def test_alternative_activate_rejected_when_simulation_invalid(
     assert event.metadata["reference"] == project.reference
     assert event.metadata["user_type"] == "instructor"
     assert any(
-        "création d’un accès" in error
-        for error in event.metadata["moulinette_errors"]
+        "création d’un accès" in error for error in event.metadata["moulinette_errors"]
     )
 
 
