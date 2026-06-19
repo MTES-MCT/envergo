@@ -224,17 +224,17 @@ class TestConfigHaieAaL3503FormValidation:
     def build_form_data(self, instance, **overrides):
         """Build valid form data from a factory instance, then apply overrides.
 
-        Clears `demarche_simplifiee_pre_fill_config` to avoid unrelated validation
+        Clears `demarche_numerique_pre_fill_config` to avoid unrelated validation
         failures (the factory's pre-fill references form fields that require
         regulation fixtures).
-        Add mandatories keys in `demarches_simplifiees_display_fields` to avoid
+        Add mandatories keys in `demarche_numerique_display_fields` to avoid
         unrelated validation failures.
         """
         data = instance_to_form_data(instance)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data["demarche_numerique_pre_fill_config"] = "[]"
         data = update_data_jsonfield_with_new_entry(
             data,
-            "demarches_simplifiees_display_fields",
+            "demarche_numerique_display_fields",
             {"city": "XYZ123", "organization": "XYZ456", "pacage": "XYZ789"},
         )
         data.update(overrides)
@@ -311,9 +311,9 @@ class TestConfigHaieAaL3503FormValidation:
 
 
 class TestConfigHaieDNDisplayFieldValidation:
-    """Tests for the admin form validation on `demarches_simplifiees_display_fields`.
+    """Tests for the admin form validation on `demarche_numerique_display_fields`.
 
-    When `demarche_simplifiee_number` is set, `demarches_simplifiees_display_fields` should have
+    When `demarche_numerique_number` is set, `demarche_numerique_display_fields` should have
     keys "organization", "city", "pacage" set with value.
     """
 
@@ -321,57 +321,57 @@ class TestConfigHaieDNDisplayFieldValidation:
         """Form is not valid when city or organization or pacage are not set."""
         config = DCConfigHaieFactory()
         data = instance_to_form_data(config)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data["demarche_numerique_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         assert not form.is_valid()
-        assert "demarches_simplifiees_display_fields" in form.errors
+        assert "demarche_numerique_display_fields" in form.errors
 
     def test_admin_form_invalid_when_pacage_missing(self):
         config = DCConfigHaieFactory(
-            demarches_simplifiees_display_fields={
+            demarche_numerique_display_fields={
                 "project_url": "ABC123",
                 "city": "XYZ123",
                 "organization": "XYZ456",
             }
         )
         data = instance_to_form_data(config)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data["demarche_numerique_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         assert not form.is_valid()
-        assert "demarches_simplifiees_display_fields" in form.errors
+        assert "demarche_numerique_display_fields" in form.errors
 
     def test_admin_form_invalid_when_city_missing(self):
         config = DCConfigHaieFactory(
-            demarches_simplifiees_display_fields={
+            demarche_numerique_display_fields={
                 "project_url": "ABC123",
                 "pacage": "XYZ789",
                 "organization": "XYZ456",
             }
         )
         data = instance_to_form_data(config)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data["demarche_numerique_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         # THEN form is not valid
         assert not form.is_valid()
-        assert "demarches_simplifiees_display_fields" in form.errors
+        assert "demarche_numerique_display_fields" in form.errors
 
     def test_admin_form_invalid_when_organization_missing(self):
         config = DCConfigHaieFactory(
-            demarches_simplifiees_display_fields={
+            demarche_numerique_display_fields={
                 "project_url": "ABC123",
                 "pacage": "XYZ789",
                 "city": "XYZ123",
             }
         )
         data = instance_to_form_data(config)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data["demarche_numerique_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         assert not form.is_valid()
-        assert "demarches_simplifiees_display_fields" in form.errors
+        assert "demarche_numerique_display_fields" in form.errors
 
     def test_admin_form_valid_when_all_are_filled(self):
         config = DCConfigHaieFactory(
-            demarches_simplifiees_display_fields={
+            demarche_numerique_display_fields={
                 "project_url": "ABC123",
                 "pacage": "XYZ789",
                 "city": "XYZ123",
@@ -379,6 +379,6 @@ class TestConfigHaieDNDisplayFieldValidation:
             }
         )
         data = instance_to_form_data(config)
-        data["demarche_simplifiee_pre_fill_config"] = "[]"
+        data["demarche_numerique_pre_fill_config"] = "[]"
         form = ConfigHaieTestForm(data=data, instance=config)
         assert form.is_valid(), form.errors

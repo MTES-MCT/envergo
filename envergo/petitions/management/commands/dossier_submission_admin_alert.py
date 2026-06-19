@@ -45,15 +45,15 @@ class Command(BaseCommand):
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
         configs_with_ds = ConfigHaie.objects.filter(
-            demarche_simplifiee_number__isnull=False
+            demarche_numerique_number__isnull=False
         ).valid_at(timezone.now().date())
         for config in configs_with_ds:
-            demarche_number = config.demarche_simplifiee_number
-            project_url_id = config.demarches_simplifiees_display_fields.get(
+            demarche_number = config.demarche_numerique_number
+            project_url_id = config.demarche_numerique_display_fields.get(
                 "project_url", None
             )
             if not project_url_id:
-                # A config should always have "project_url" in demarches_simplifiees_display_fields
+                # A config should always have "project_url" in demarche_numerique_display_fields
                 continue
 
             logging.info(f"Handling demarche {demarche_number} ({config})")

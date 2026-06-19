@@ -64,7 +64,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
+        demarche_numerique_display_fields={
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
             "organization": "Q2hhbXAtNDcyOTE3MQ==",

@@ -133,13 +133,13 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     }
 
     config = DCConfigHaieFactory()
-    config.demarche_simplifiee_pre_fill_config.append(
+    config.demarche_numerique_pre_fill_config.append(
         {"id": "abc", "value": "plantation_adequate"}
     )
-    config.demarche_simplifiee_pre_fill_config.append(
+    config.demarche_numerique_pre_fill_config.append(
         {"id": "def", "value": "sur_talus_d"}
     )
-    config.demarche_simplifiee_pre_fill_config.append(
+    config.demarche_numerique_pre_fill_config.append(
         {"id": "ghi", "value": "sur_talus_p"}
     )
     config.save()
@@ -196,12 +196,12 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     today = date.today()
     # Expired config
     DCConfigHaieFactory(
-        demarche_simplifiee_number=111111,
+        demarche_numerique_number=111111,
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
     DCConfigHaieFactory(
-        demarche_simplifiee_number=222222,
+        demarche_numerique_number=222222,
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
 
@@ -3094,7 +3094,7 @@ def test_instructor_view_token_matomo_invitation(
 def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):
     """Test that instructor view returns 403 when user use an invalid token"""
     DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
+        demarche_numerique_display_fields={
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
         }

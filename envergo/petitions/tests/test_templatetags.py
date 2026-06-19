@@ -60,7 +60,7 @@ def test_display_ds_field(mock_post):
 
     # Given a config haie with a « Démarche numérique » display field
     config = DCConfigHaieFactory()
-    config.demarches_simplifiees_display_fields.update(
+    config.demarche_numerique_display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
@@ -104,7 +104,7 @@ def test_display_empty_ds_fields(mock_post):
 
     # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
+        demarche_numerique_display_fields={
             "project_url": "ABC123",
         }
     )
@@ -135,9 +135,9 @@ def test_display_empty_ds_fields(mock_post):
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
     config = DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={"project_url": "ABC123"}
+        demarche_numerique_display_fields={"project_url": "ABC123"}
     )
-    config.demarches_simplifiees_display_fields.update(
+    config.demarche_numerique_display_fields.update(
         {
             "motivation": "Q3IMAGINARYBOYS",
         }
@@ -170,7 +170,7 @@ def test_display_ds_field_invalid_field_id(mock_post):
 def test_display_ds_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
     config = DCConfigHaieFactory()
-    config.demarches_simplifiees_display_fields.update(
+    config.demarche_numerique_display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }

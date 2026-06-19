@@ -148,7 +148,7 @@ def test_moulinette_haie_has_specific_behavior():
 def test_config_haie_activated_has_missing_demarche_simplifiee_number(
     loire_atlantique_department,  # noqa
 ):
-    """Check `demarche_simplifiee_number_required_if_activated` constraint"""
+    """Check `demarche_numerique_number_required_if_activated` constraint"""
     config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
@@ -159,7 +159,7 @@ def test_config_haie_with_demarche_simplifiee_number_has_missing_project_url_id(
 ):
     """Check `project_url_id_required_if_demarche_number` constraint"""
     config_haie = ConfigHaie(
-        department=loire_atlantique_department, demarche_simplifiee_number="123456789"
+        department=loire_atlantique_department, demarche_numerique_number="123456789"
     )
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
@@ -172,8 +172,8 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         config_haie = ConfigHaie(
             department=loire_atlantique_department,
             is_activated=True,
-            demarche_simplifiee_number="123456789",
-            demarche_simplifiee_pre_fill_config={"foo": "bar"},
+            demarche_numerique_number="123456789",
+            demarche_numerique_pre_fill_config={"foo": "bar"},
         )
         config_haie.clean()
     assert exc_info.value.messages == [
@@ -184,8 +184,8 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         config_haie = ConfigHaie(
             department=loire_atlantique_department,
             is_activated=True,
-            demarche_simplifiee_number="123456789",
-            demarche_simplifiee_pre_fill_config=[{"foo": "bar"}],
+            demarche_numerique_number="123456789",
+            demarche_numerique_pre_fill_config=[{"foo": "bar"}],
         )
         config_haie.clean()
     assert exc_info.value.messages == [
@@ -197,8 +197,8 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         config_haie = ConfigHaie(
             department=loire_atlantique_department,
             is_activated=True,
-            demarche_simplifiee_number="123456789",
-            demarche_simplifiee_pre_fill_config=[{"id": "123456789", "value": "bar"}],
+            demarche_numerique_number="123456789",
+            demarche_numerique_pre_fill_config=[{"id": "123456789", "value": "bar"}],
         )
         config_haie.clean()
     assert exc_info.value.messages == [
@@ -212,8 +212,8 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         config_haie = ConfigHaie(
             department=loire_atlantique_department,
             is_activated=True,
-            demarche_simplifiee_number="123456789",
-            demarche_simplifiee_pre_fill_config=[
+            demarche_numerique_number="123456789",
+            demarche_numerique_pre_fill_config=[
                 {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
             ],
         )
@@ -222,8 +222,8 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
     config_haie = ConfigHaie(
         department=loire_atlantique_department,
         is_activated=True,
-        demarche_simplifiee_number="123456789",
-        demarche_simplifiee_pre_fill_config=[
+        demarche_numerique_number="123456789",
+        demarche_numerique_pre_fill_config=[
             {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
         ],
     )

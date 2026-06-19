@@ -290,7 +290,7 @@ def get_ds_field(context, field_name):
     """Get field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
-    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    `field_name` must be set in config.demarche_numerique_display_fields.
     """
     petition_project = context.get("petition_project", None)
     if petition_project is None:
@@ -308,7 +308,7 @@ def display_ds_field(context, field_name, inline=False):
     """Includes template to display a field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
-    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    `field_name` must be set in config.demarche_numerique_display_fields.
 
     Uses _item_ds.html template, also included in full « Démarche numérique » view template.
     """

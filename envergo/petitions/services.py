@@ -159,7 +159,7 @@ def get_context_from_ds(petition_project) -> dict:
     applicant_email = ""
     representative = ""
 
-    display_dn_fields = config.demarches_simplifiees_display_fields
+    display_dn_fields = config.demarche_numerique_display_fields
     if (
         not display_dn_fields.get("city", None)
         or not display_dn_fields.get("organization", None)
@@ -200,7 +200,7 @@ def get_context_from_ds(petition_project) -> dict:
 
     context = {
         "demarches_simplifiees_dossier_number": petition_project.demarche_numerique_dossier_number,
-        "demarche_simplifiee_number": config.demarche_simplifiee_number,
+        "demarche_numerique_number": config.demarche_numerique_number,
         "ds_info": {
             "usager": usager,
             "city": city_item.value if city_item else "",
@@ -219,9 +219,9 @@ def get_field_data_from_dn_dossier(field_name, config, dossier):
     """Get field value from dossier DN related to a given config and a DN dossier
     from a petition project.
 
-    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    `field_name` must be set in config.demarche_numerique_display_fields.
     """
-    dn_field_id = config.demarches_simplifiees_display_fields.get(field_name, None)
+    dn_field_id = config.demarche_numerique_display_fields.get(field_name, None)
     if not dn_field_id:
         return None
     champs = dossier.champs
@@ -574,7 +574,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
             if self.config:
                 dossier_url = (
                     self._petition_project.get_demarches_simplifiees_instructor_url(
-                        self.config.demarche_simplifiee_number
+                        self.config.demarche_numerique_number
                     )
                 )
 
