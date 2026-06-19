@@ -285,6 +285,24 @@ def list_moulinette_errors(moulinette):
     return messages
 
 
+def validate_simulation_url(url):
+    """Tell whether a url is a valid simulation, and detail why if it is not.
+
+    Returns ``(is_valid, errors)`` where ``errors`` is the field-prefixed list
+    from the moulinette (empty when the url builds no moulinette at all). Shared
+    by the creation form and the activation view so both apply the same rule.
+    """
+    is_valid, errors = True, []
+
+    moulinette = MoulinetteUrl(url).get_moulinette()
+    if moulinette is None:
+        is_valid, errors = False, []
+    elif not moulinette.is_valid():
+        is_valid, errors = False, list_moulinette_errors(moulinette)
+
+    return is_valid, errors
+
+
 class SimulationForm(forms.ModelForm):
     moulinette_url = forms.URLField(
         label="Lien vers la simulation",
@@ -314,18 +332,15 @@ class SimulationForm(forms.ModelForm):
 
     def clean_moulinette_url(self):
         url = self.cleaned_data["moulinette_url"]
-        moulinette_url = MoulinetteUrl(url)
-        moulinette = moulinette_url.get_moulinette()
 
-        # Reject a url that is not a valid simulation: an unknown domain (no
-        # moulinette at all) or a built-but-invalid one. In the latter case we
-        # also expose the underlying errors for the template to list below it.
-        if moulinette is None or not moulinette.is_valid():
-            if moulinette is not None:
-                self.moulinette_errors = list_moulinette_errors(moulinette)
+        # Reject a url that is not a valid simulation. The underlying errors are
+        # exposed so the template can list them below the field.
+        is_valid, errors = validate_simulation_url(url)
+        if not is_valid:
+            self.moulinette_errors = errors
             raise ValidationError(
                 "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
             )
 
-        return moulinette_url.url
+        return MoulinetteUrl(url).url
