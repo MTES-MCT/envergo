@@ -1,12 +1,22 @@
 from django.contrib import admin
+from django import forms
 
 from envergo.analytics.models import CSPReport, Event
+from envergo.utils.widgets import JSONWidget
+
+
+class EventAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            "metadata": JSONWidget(attrs={"rows": 20, "cols": 80}),
+        }
 
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     list_display = ["category", "event", "session_key", "date_created", "site"]
     search_fields = ["category", "event", "session_key"]
+    form = EventAdminForm
 
 
 @admin.register(CSPReport)

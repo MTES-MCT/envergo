@@ -16,12 +16,8 @@ messages group (`.fr-message--error` paragraphs), not a single `.fr-error-text`.
 
   {% if field.errors %}
     <div class="fr-messages-group" aria-live="assertive">
-      {% for error in field.errors %}
-        <p class="fr-message fr-message--error">{{ error }}</p>
-      {% endfor %}
-      {% for error in moulinette_errors %}
-        <p class="fr-message fr-message--error">{{ error }}</p>
-      {% endfor %}
+      {% for error in field.errors %}<p class="fr-message fr-message--error">{{ error }}</p>{% endfor %}
+      {% for error in moulinette_errors %}<p class="fr-message fr-message--error">{{ error }}</p>{% endfor %}
     </div>
   {% endif %}
 </div>
