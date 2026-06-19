@@ -120,14 +120,14 @@
                       {% endif %}
                     </td>
                     <td>
-                      <div>
+                      <div class="truncate">
                         {% if project.organization %}
                           {{ project.organization }}
                         {% else %}
                           {{ project.prefetched_dossier.applicant_name }}
                         {% endif %}
                       </div>
-                      <div>{{ project.city }}</div>
+                      <div class="truncate">{{ project.city }}</div>
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>{% decision_badge project.decision True %}</td>

@@ -961,6 +961,12 @@ div.title-with-link-container {
     button {
       font-size: 0.875rem;
     }
+
+    .truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   tbody tr {
