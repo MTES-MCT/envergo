@@ -69,7 +69,7 @@ class EPMixin:
     def get_protected_species(self, hedges: HedgeList):
         """Return the protected species queryset for the catalog.
 
-        Input is a HedgeData instance; output is an annotated Species
+        Input is a HedgeList instance; output is an annotated Species
         queryset. Defaults to the RU pipeline. HRU evaluators override
         this to call hedges.get_all_species_hru().
         """
@@ -536,8 +536,9 @@ class EspecesProtegeesNormandie(
         catalog["per_hedge_coefficients"] = per_hedge_coefficients
 
         # Aggregate the R of each hedge to compute the global replantation coefficient.
-        if haies.length_to_remove() > 0:
-            aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
+        length_to_remove = self.hedges.to_remove().length
+        if length_to_remove > 0:
+            aggregated_r = minimum_length_to_plant / D(length_to_remove)
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max

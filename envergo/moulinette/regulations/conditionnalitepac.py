@@ -423,7 +423,7 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
 
     def get_replantation_coefficient(self):
         R = self.R_MATRIX.get(self._result_code, D("1"))
-        lineaire_detruit_pac = self.catalog["lineaire_detruit_pac"]
+        lineaire_detruit_pac = self.hedges.to_remove().pac().length
         minimum_length_to_plant = D(lineaire_detruit_pac) * R
         length_to_remove = self.hedges.to_remove().length
         if length_to_remove > 0:
