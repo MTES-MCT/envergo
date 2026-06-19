@@ -591,7 +591,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "lpm": 39,
             "reduced_lpm": 31,
         },
-        "replantation_coefficient": Decimal("1.40"),
+        "replantation_coefficient": 1.40,
     }
     assert info == expected_result
 
