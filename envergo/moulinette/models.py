@@ -3,7 +3,7 @@ import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from datetime import date
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, nonmember
 from functools import reduce
 from itertools import groupby
 from operator import attrgetter
@@ -2609,7 +2609,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class CityHallSubmission(Enum):
-    do_not_call_in_templates = True
+    do_not_call_in_templates = nonmember(True)
 
     NONE = 0  # nothing to submit
     AUTORISATION_URBA = 1  # PA, PC, DP ou permis de démolir must be submitted

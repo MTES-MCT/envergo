@@ -305,22 +305,28 @@ class PetitionProjectCreate(FormView):
         moulinette_url = form.cleaned_data["moulinette_url"]
         category = form.cleaned_data["category"]
 
-        department_nb = extract_param_from_url(moulinette_url, "department")
-        date_str = extract_param_from_url(moulinette_url, "date")
-        config_date = datetime.date.fromisoformat(date_str) if date_str else None
-        department = Department.objects.defer("geometry").get(department=department_nb)
-        config = ConfigHaie.objects.get_valid_config(department, config_date)
+        moulinette_data = MoulinetteUrl(moulinette_url).params
+        department = Department.objects.defer("geometry").get(
+            department=moulinette_data["department"]
+        )
+        config = ConfigHaie.objects.get_valid_config(
+            department, moulinette_data.get("date")
+        )
         single_procedure = config.single_procedure
 
-        hedge_data_id = extract_param_from_url(moulinette_url, "haies")
-        original_hedge_data = HedgeData.objects.get(pk=hedge_data_id)
+        # PetitionProjects are mono category. Let check if there is some hedges of another category than the asked one
+        original_hedge_data = HedgeData.objects.get(pk=moulinette_data["haies"])
         filtered_hedges = original_hedge_data.hedges().evaluator_category(
             single_procedure, category
         )
 
         if len(filtered_hedges) == len(original_hedge_data.data):
+            # there is only hedges of the wanted category in the moulinette, no need to split
             form.instance.hedge_data = original_hedge_data
         else:
+            # there is multiple category in the moulinette, we will split the HedgeData object to keep only the
+            # wanted category's hedges in the project.
+            # This may also have an impact on the localisation_pac param
             new_hedge_data = HedgeData.objects.create(
                 data=[h.toDict() for h in filtered_hedges]
             )
