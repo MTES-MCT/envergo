@@ -41,6 +41,17 @@
   </section>
 
   <section class="fr-mt-3w fr-mb-5w">
+    {% if activation_errors %}
+      <div class="fr-alert fr-alert--error fr-mb-3w">
+        <p class="fr-alert__title">La simulation n'a pas pu être activée car elle comporte les erreurs suivantes :</p>
+        <div class="fr-messages-group">
+          {% for error in activation_errors %}
+            <p class="fr-message fr-message--error">{{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
     {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
     {% if has_change_permission %}

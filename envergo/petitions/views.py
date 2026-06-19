@@ -73,6 +73,7 @@ from envergo.petitions.forms import (
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
     SimulationForm,
+    validate_simulation_url,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1429,6 +1430,12 @@ class PetitionProjectInstructorAlternativeView(
 
         context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
 
+        # Detailed errors of an activation that just failed (set by the edit
+        # view across the redirect). Popped so they show only once.
+        context["activation_errors"] = self.request.session.pop(
+            "activation_errors", None
+        )
+
         return context
 
     def form_valid(self, form):
@@ -1488,6 +1495,19 @@ class PetitionProjectInstructorAlternativeEdit(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
+        simulation = self.get_simulation(kwargs["simulation_id"])
+
+        action = kwargs["action"]
+        if action == "activate":
+            return self.activate_simulation(request, simulation)
+        if action == "delete" and simulation.can_be_deleted():
+            return self.delete_simulation(request, simulation)
+
+        # Should not happen unless someone forges an invalid URL.
+        return HttpResponseForbidden("Action non disponible")
+
+    def get_simulation(self, simulation_id):
+        """Return the targeted simulation (with its project) or raise 404."""
         simulation_qs = (
             Simulation.objects.filter(project=self.object)
             .select_related("project")
@@ -1498,69 +1518,96 @@ class PetitionProjectInstructorAlternativeEdit(
                 )
             )
         )
-
         try:
-            simulation = simulation_qs.get(pk=kwargs["simulation_id"])
+            return simulation_qs.get(pk=simulation_id)
         except Simulation.DoesNotExist:
             raise Http404()
 
-        action = kwargs["action"]
-        if action == "activate" and simulation.can_be_activated():
-            with transaction.atomic():
-                simulation_qs.update(is_active=False)
-                simulation.is_active = True
-                simulation.save()
+    def activate_simulation(self, request, simulation):
+        """Make the simulation the project's active one, or reject it.
 
-                project = simulation.project
-                project.moulinette_url = simulation.moulinette_url
-                url = MoulinetteUrl(project.moulinette_url)
-                project.hedge_data_id = url["haies"]
-                project.save()
-
-                messages.success(request, "La simulation alternative a été activée.")
-
-                log_event(
-                    "dossier",
-                    "simulation_alt",
-                    self.request,
-                    action="activate",
-                    **self.object.get_log_event_data(),
-                    **get_matomo_tags(self.request),
-                )
-
-        # The main active simulation cannot be deleted
-        elif action == "delete" and simulation.can_be_deleted():
-            simulation.delete()
-
-            messages.success(request, "La simulation alternative a été supprimée.")
-
-            log_event(
-                "dossier",
-                "simulation_alt",
-                self.request,
-                action="delete",
-                **self.object.get_log_event_data(),
-                **get_matomo_tags(self.request),
+        Activation is refused with an explanatory message when the dossier is
+        closed or when the simulation url is no longer a valid moulinette.
+        """
+        if not simulation.can_be_activated():
+            return self.reject_activation(
+                request,
+                simulation,
+                "Le dossier est clos, la simulation ne peut pas être activée.",
+                [],
             )
 
-        else:
-            # An activation that lands here was refused by can_be_activated(),
-            # which currently only happens on a closed dossier. Record it so we
-            # can monitor how often instructors hit this case.
-            if action == "activate":
-                log_event(
-                    "erreur",
-                    "simualt_activate",
-                    self.request,
-                    user_type=get_user_type(self.request.user),
-                    reference=self.object.reference,
-                    moulinette_url=simulation.moulinette_url,
-                    message="Le dossier est clos, la simulation ne peut pas être activée.",
-                    **get_matomo_tags(self.request),
-                )
+        is_valid, errors = validate_simulation_url(simulation.moulinette_url)
+        if not is_valid:
+            return self.reject_activation(
+                request,
+                simulation,
+                "La simulation n'a pas pu être activée car elle n'est plus valide.",
+                errors,
+            )
 
-            # Any other case should not happen unless someone forges an invalid URL.
-            return HttpResponseForbidden("Action non disponible")
+        with transaction.atomic():
+            Simulation.objects.filter(project=self.object).update(is_active=False)
+            simulation.is_active = True
+            simulation.save()
+
+            project = simulation.project
+            project.moulinette_url = simulation.moulinette_url
+            url = MoulinetteUrl(project.moulinette_url)
+            project.hedge_data_id = url["haies"]
+            project.save()
+
+        messages.success(request, "La simulation alternative a été activée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="activate",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def delete_simulation(self, request, simulation):
+        """Delete the simulation (callers ensure it is not active or initial)."""
+
+        simulation.delete()
+
+        messages.success(request, "La simulation alternative a été supprimée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="delete",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def reject_activation(self, request, simulation, message, errors):
+        """Refuse an activation cannot be done."""
+
+        messages.error(request, message)
+        if errors:
+            # We display the detail of the whole moulinette form in structured html
+            # The top message gets embedded in a <p>, so we cannot print everything there
+            request.session["activation_errors"] = errors
+
+        log_event(
+            "erreur",
+            "simualt_activate",
+            self.request,
+            user_type=get_user_type(self.request.user),
+            reference=self.object.reference,
+            moulinette_url=simulation.moulinette_url,
+            message=message,
+            moulinette_errors=errors,
+            **get_matomo_tags(self.request),
+        )
 
         return HttpResponseRedirect(self.get_success_url())
 
