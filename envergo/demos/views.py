@@ -232,6 +232,7 @@ class CatchmentArea(LatLngDemoMixin, FormView):
 
     def get_result_data(self, lng, lat):
         context = {}
+        # Reproject to the catchment raster's CRS (Lambert 93, mainland only).
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
         lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
 

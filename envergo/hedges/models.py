@@ -4,7 +4,6 @@ from functools import cached_property, reduce
 from textwrap import dedent
 from typing import Self
 
-import shapely
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
 from django.contrib.gis.measure import D
@@ -24,7 +23,7 @@ from django.db.models import (
 )
 from django.utils import timezone
 from model_utils import Choices
-from pyproj import Geod, Transformer
+from pyproj import Geod
 from shapely import LineString, centroid, union_all
 
 from envergo.geodata.models import MAP_TYPES, Department, Zone
@@ -127,16 +126,6 @@ class Hedge:
     def geos_centroid(self):
         """Centroid of the hedge line as a GEOSGeometry point (WGS84)."""
         return self.geos_geometry.centroid
-
-    @property
-    def geometry_lamb93(self):
-        """Return a shapely geometry with a Lambert 93 projection."""
-
-        transformer = Transformer.from_crs(EPSG_WGS84, EPSG_LAMB93, always_xy=True)
-        lamb93 = shapely.transform(
-            self.geometry, transformer.transform, interleaved=False
-        )
-        return lamb93
 
     @property
     def length(self):

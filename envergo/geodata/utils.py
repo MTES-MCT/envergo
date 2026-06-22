@@ -510,6 +510,7 @@ def get_catchment_area(lng, lat):
     if not pixels:
         return None
 
+    # Pixel coords are in the raster's CRS (Lambert 93), so interpolate there.
     lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
     lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
 
