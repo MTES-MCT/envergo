@@ -125,7 +125,7 @@
                           @click.stop="hedge.remove()"
                           :disabled="hedgeBeingDrawn">Supprimer</button>
                 </div>
-                <div class="hedge-badges">
+                <div class="hedge-badges fr-mt-n1v">
                   <span v-if="!hedge.isValid()"
                         class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                   <span v-if="hedge.category()==='hru'" class="fr-badge  fr-badge--sm">Hors procédure unique</span>
@@ -175,7 +175,7 @@
                           @click.stop="hedge.remove()"
                           :disabled="hedgeBeingDrawn">Supprimer</button>
                 </div>
-                <div class="hedge-badges">
+                <div class="hedge-badges fr-mt-n1v">
                   <span v-if="!hedge.isValid()"
                         class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
                   <span v-if="hedge.category()==='hru'" class="fr-badge  fr-badge--sm">Hors procédure unique</span>
