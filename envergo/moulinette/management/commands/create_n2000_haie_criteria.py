@@ -15,11 +15,11 @@ Contexte :
 3. Crée 64 critères cas 2 (2 par département, cartes "N2000 Haie XX – soumis/non soumis")
 
 Local:   docker compose run --rm django python manage.py create_n2000_haie_criteria
-Staging: scalingo --app envergo-haie-staging run python manage.py create_n2000_haie_criteria
-Prod:    scalingo --app envergo-haie run python manage.py create_n2000_haie_criteria
+Staging: scalingo --app envergo-staging run python manage.py create_n2000_haie_criteria
+Prod:    scalingo --app envergo run python manage.py create_n2000_haie_criteria
 """
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from envergo.geodata.models import Map
@@ -28,7 +28,12 @@ from envergo.moulinette.models import Criterion, Perimeter, Regulation
 EVALUATOR = "envergo.moulinette.regulations.natura2000_haie.Natura2000Haie"
 
 # Départements dont les critères ont déjà été créés manuellement
-ALREADY_CREATED = {"02", "14", "22", "29", "35", "56"}
+ALREADY_CREATED = {"02", "14"}
+
+# Départements bretons : leurs critères existent déjà, mais via un périmètre
+# régional unique "N2000 Bretagne" (et non un périmètre départemental "N2000 XX").
+# On ne les vérifie donc pas comme les autres.
+BRETAGNE = {"22", "29", "35", "56"}
 
 # Cas 1 : départements homogènes (1 carte, 1 critère)
 # Le résultat est le même sur tout le département.
@@ -75,7 +80,6 @@ CASE_1 = [
     ("68", "soumis", "non"),
     ("69", "soumis", "non"),
     ("73", "non_soumis", "non"),
-    ("75", "non_soumis", "non"),
     ("76", "soumis", "non"),
     ("78", "soumis", "non"),
     ("79", "soumis", "non"),
@@ -88,15 +92,8 @@ CASE_1 = [
     ("86", "soumis", "non"),
     ("87", "non_soumis", "non"),
     ("91", "non_soumis", "non"),
-    ("92", "non_soumis", "non"),
     ("93", "non_soumis", "non"),
-    ("94", "non_soumis", "non"),
     ("95", "soumis", "non"),
-    ("971", "non_soumis", "non"),
-    ("972", "non_soumis", "non"),
-    ("973", "non_soumis", "non"),
-    ("974", "non_soumis", "non"),
-    ("976", "non_soumis", "non"),
 ]
 
 # Cas 2 : départements hétérogènes (2 cartes, 2 critères)
@@ -170,37 +167,166 @@ CASE_2 = [
     ("90", "soumis", "non"),
 ]
 
-# Liste unique des départements cas 2 (pour le renommage des cartes)
-CASE_2_DEPARTMENTS = sorted({dept for dept, _, _ in CASE_2})
+CASE_1_DEPARTMENTS = {dept for dept, _, _ in CASE_1}
+CASE_2_DEPARTMENTS = {dept for dept, _, _ in CASE_2}
+ALL_DEPARTMENTS = sorted(ALREADY_CREATED | CASE_1_DEPARTMENTS | CASE_2_DEPARTMENTS)
 
 
 class Command(BaseCommand):
     help = "Crée les critères Natura 2000 Haie pour tous les départements"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Vérifie les prérequis sans modifier la base de données",
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
-        regulation = Regulation.objects.get(regulation="natura2000_haie")
+        self.dry_run = options["dry_run"]
 
-        # Étape 0 : vérifier que les critères déjà créés existent bien
-        self.stdout.write("=== Vérification des critères existants ===")
-        self.check_existing_criteria(regulation)
+        try:
+            # Étape préliminaire : corriger les noms de cartes importés avec une
+            # espace fine insécable (U+202F) au lieu d'une espace normale.
+            # Doit passer avant la vérification des prérequis, qui cherche les
+            # cartes avec une espace normale.
+            self.stdout.write(
+                "=== Correction des espaces fines insécables (U+202F) ==="
+            )
+            self.fix_map_name_spaces()
+            self.fix_perimeter_name_spaces()
 
-        # Étape 1 : renommer les cartes des départements cas 2
-        # avant de créer les critères qui les référencent
-        self.stdout.write("\n=== Renommage des cartes cas 2 ===")
-        self.rename_case2_maps()
+            # Étape 0 : vérifier que toutes les données requises sont en base
+            self.stdout.write("\n=== Vérification des prérequis ===")
+            self.check_prerequisites()
 
-        # Étape 2 : créer les critères cas 1 (1 critère par département)
-        self.stdout.write("\n=== Création des critères cas 1 ===")
-        self.create_case1_criteria(regulation)
+            regulation = Regulation.objects.get(regulation="natura2000_haie")
 
-        # Étape 3 : créer les critères cas 2 (2 critères par département)
-        self.stdout.write("\n=== Création des critères cas 2 ===")
-        self.create_case2_criteria(regulation)
+            # Étape 1 : vérifier que les critères déjà créés existent bien
+            self.stdout.write("\n=== Vérification des critères existants ===")
+            self.check_existing_criteria(regulation)
+
+            # Étape 2 : renommer les cartes des départements cas 2
+            # avant de créer les critères qui les référencent
+            self.stdout.write("\n=== Renommage des cartes cas 2 ===")
+            self.rename_case2_maps()
+
+            # Étape 3 : créer les critères cas 1 (1 critère par département)
+            self.stdout.write("\n=== Création des critères cas 1 ===")
+            self.create_case1_criteria(regulation)
+
+            # Étape 4 : créer les critères cas 2 (2 critères par département)
+            self.stdout.write("\n=== Création des critères cas 2 ===")
+            self.create_case2_criteria(regulation)
+        except Exception as e:
+            self.stderr.write(
+                self.style.ERROR(
+                    f"\n=== Échec de la transaction, toutes les modifications "
+                    f"ont été annulées : {e} ==="
+                )
+            )
+            raise
+
+        if self.dry_run:
+            transaction.set_rollback(True)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "\n=== Dry run terminé, toutes les modifications ont été annulées ==="
+                )
+            )
+
+    def fix_map_name_spaces(self):
+        """Corrige les noms de cartes commençant par "N2000" suivi d'une espace
+        fine insécable (U+202F), en remplaçant le U+202F par une espace normale.
+
+        Certaines cartes ont été importées avec une espace fine insécable, ce
+        qui empêche les étapes suivantes de les retrouver par leur nom.
+
+        Idempotent : ne fait rien si aucune carte n'est concernée.
+        """
+        narrow_nbsp = "\u202f"  # espace fine insécable
+        maps = Map.objects.filter(name__startswith=f"N2000{narrow_nbsp}")
+        for map_obj in maps:
+            old_name = map_obj.name
+            new_name = old_name.replace(narrow_nbsp, " ")
+            map_obj.name = new_name
+            map_obj.save(update_fields=["name"])
+            self.stdout.write(f"  Renamed '{old_name}' → '{new_name}'")
+
+    def fix_perimeter_name_spaces(self):
+        """Corrige les backend_name de périmètres commençant par "N2000" suivi
+        d'une espace fine insécable (U+202F), comme fix_map_name_spaces pour
+        les cartes.
+
+        Idempotent : ne fait rien si aucun périmètre n'est concerné.
+        """
+        narrow_nbsp = "\u202f"  # espace fine insécable
+        perimeters = Perimeter.objects.filter(
+            backend_name__startswith=f"N2000{narrow_nbsp}"
+        )
+        for perimeter in perimeters:
+            old_name = perimeter.backend_name
+            new_name = old_name.replace(narrow_nbsp, " ")
+            perimeter.backend_name = new_name
+            perimeter.save(update_fields=["backend_name"])
+            self.stdout.write(f"  Renamed '{old_name}' → '{new_name}'")
+
+    def check_prerequisites(self):
+        """Vérifie que toutes les données requises sont en base avant toute
+        modification : la réglementation 'natura2000_haie', les périmètres
+        'N2000 XX' de chaque département, les cartes cas 1 ('N2000 XX') et les
+        cartes cas 2 (anciens noms, avant renommage).
+
+        Lève une CommandError listant les prérequis manquants le cas échéant.
+        """
+        errors = []
+
+        # Réglementation
+        if not Regulation.objects.filter(regulation="natura2000_haie").exists():
+            errors.append("Réglementation 'natura2000_haie' introuvable")
+
+        # Périmètres : N2000 XX pour chaque département
+        existing_perimeters = set(
+            Perimeter.objects.filter(
+                backend_name__in=[f"N2000 {d}" for d in ALL_DEPARTMENTS]
+            ).values_list("backend_name", flat=True)
+        )
+        for dept in ALL_DEPARTMENTS:
+            if f"N2000 {dept}" not in existing_perimeters:
+                errors.append(f"Périmètre 'N2000 {dept}' introuvable")
+
+        # Cartes cas 1 : N2000 XX
+        case1_map_names = [f"N2000 {dept}" for dept, _, _ in CASE_1]
+        existing_maps = set(
+            Map.objects.filter(name__in=case1_map_names).values_list("name", flat=True)
+        )
+        for dept, _, _ in CASE_1:
+            map_name = f"N2000 {dept}"
+            if map_name not in existing_maps:
+                errors.append(f"Carte cas 1 '{map_name}' introuvable")
+
+        # Cartes cas 2 : anciens noms (avant renommage)
+        for dept in CASE_2_DEPARTMENTS:
+            for map_name in [f"N2000 Haie {dept}", f"N2000 Haie {dept} – NC"]:
+                if not Map.objects.filter(name=map_name).exists():
+                    errors.append(f"Carte cas 2 '{map_name}' introuvable")
+
+        if errors:
+            self.stderr.write(self.style.ERROR("Prérequis manquants :"))
+            for error in errors:
+                self.stderr.write(self.style.ERROR(f"  - {error}"))
+            raise CommandError(f"{len(errors)} prérequis manquant(s), abandon.")
+        else:
+            self.stdout.write(self.style.SUCCESS("  Tous les prérequis sont validés"))
 
     def check_existing_criteria(self, regulation):
-        """Vérifie que les départements déjà créés (02, 14, 22, 29, 35, 56)
+        """Vérifie que les départements déjà créés
         ont bien au moins un critère N2000 Haie en base."""
+        self.stdout.write(
+            f"  Bretagne ({', '.join(sorted(BRETAGNE))}) non vérifiée : critères "
+            f"déjà créés via le périmètre régional 'N2000 Bretagne'"
+        )
         for dept in sorted(ALREADY_CREATED):
             exists = Criterion.objects.filter(
                 evaluator=EVALUATOR,
@@ -246,7 +372,25 @@ class Command(BaseCommand):
         Chaque département a un périmètre nommé "N2000 XX" qui regroupe
         tous les sites Natura 2000 du département.
         """
-        return Perimeter.objects.get(name=f"N2000 {dept}")
+        perimeter_name = f"N2000 {dept}"
+        try:
+            return Perimeter.objects.get(backend_name=perimeter_name)
+        except Perimeter.DoesNotExist:
+            raise Perimeter.DoesNotExist(f"Périmètre '{perimeter_name}' introuvable")
+
+    def get_case1_activation_map(self, dept):
+        map_name = f"N2000 {dept}"
+        try:
+            return Map.objects.get(name=map_name)
+        except Map.DoesNotExist:
+            raise Map.DoesNotExist(f"Carte '{map_name}' introuvable")
+
+    def get_case2_activation_map(self, dept, suffix):
+        map_name = f"N2000 Haie {dept} – {suffix}"
+        try:
+            return Map.objects.get(name=map_name)
+        except Map.DoesNotExist:
+            raise Map.DoesNotExist(f"Carte '{map_name}' introuvable")
 
     def create_case1_criteria(self, regulation):
         """Crée 1 critère par département cas 1.
@@ -254,7 +398,7 @@ class Command(BaseCommand):
         Cas 1 = résultat homogène sur tout le département.
         """
         for dept, result, concerne_aa in CASE_1:
-            activation_map = Map.objects.get(name=f"N2000 {dept}")
+            activation_map = self.get_case1_activation_map(dept)
             perimeter = self.get_perimeter(dept)
 
             criterion, created = Criterion.objects.get_or_create(
@@ -266,6 +410,7 @@ class Command(BaseCommand):
                     "title": "Natura 2000",
                     "perimeter": perimeter,
                     "activation_distance": 0,
+                    "activation_mode": "hedges_intersection",
                     "evaluator_settings": {
                         "result": result,
                         "concerne_aa": concerne_aa,
@@ -294,7 +439,7 @@ class Command(BaseCommand):
             # "soumis" dans evaluator_settings mais "non soumis" (sans underscore)
             # dans les noms de cartes et backend_title
             suffix = "soumis" if result == "soumis" else "non soumis"
-            activation_map = Map.objects.get(name=f"N2000 Haie {dept} – {suffix}")
+            activation_map = self.get_case2_activation_map(dept, suffix)
             perimeter = self.get_perimeter(dept)
 
             criterion, created = Criterion.objects.get_or_create(
@@ -306,6 +451,7 @@ class Command(BaseCommand):
                     "title": "Natura 2000",
                     "perimeter": perimeter,
                     "activation_distance": 0,
+                    "activation_mode": "hedges_intersection",
                     "evaluator_settings": {
                         "result": result,
                         "concerne_aa": concerne_aa,
