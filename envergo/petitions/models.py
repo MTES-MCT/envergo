@@ -336,7 +336,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 self.moulinette_url, {"date": date_depot.isoformat()}
             )
 
-            # Change status if dossier state is "en_instruction"
+            # For some ConfigHaie, « Démarche numérique » si configurated to set dossier "en_instruction" on creation.
+            # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
             if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
                 StatusLog.objects.create(
                     petition_project=self,
