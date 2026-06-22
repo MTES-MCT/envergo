@@ -4,6 +4,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import (
     TO_ADD,
+    TO_SUBTRACT,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -27,8 +28,15 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
 
     ACTIONS_TO_TAKE_MATRIX = {
         "soumis_ou_pac": {TO_ADD: {"depot_pac_lse", "mention_arrete_lse"}},
-        "soumis": {TO_ADD: {"depot_dossier_lse", "mention_arrete_lse", "pc_ein"}},
-        "action_requise": {TO_ADD: {"mention_arrete_lse"}},
+        "soumis": {
+            TO_ADD: {"depot_dossier_lse", "mention_arrete_lse", "pc_ein"},
+        },
+        "action_requise": {
+            TO_ADD: {"mention_arrete_lse"},
+            TO_SUBTRACT: {"non_depot_lse"},
+        },
+        "non_soumis": {TO_SUBTRACT: {"non_depot_lse"}},
+        "non_disponible": {TO_SUBTRACT: {"non_depot_lse"}},
     }
 
     @property
