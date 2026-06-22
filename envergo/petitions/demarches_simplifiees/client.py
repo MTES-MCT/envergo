@@ -704,7 +704,7 @@ class DemarchesSimplifieesClient:
 
 
 class DemarchesSimplifieesError(Exception):
-    """Démarches Simplifiées client Exception"""
+    """Démarche numérique client Exception"""
 
     def __init__(self, query: str = None, variables: dict = None, message: str = None):
         super().__init__(message)

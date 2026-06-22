@@ -123,7 +123,7 @@ def test_dossier_submission_admin_alert(
 
     args, kwargs = mock_notify_command.call_args_list[0]
     assert (
-        "Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH."
+        "Un dossier a été déposé sur « Démarche numérique », qui ne correspond à aucun projet dans la base du GUH."
         in args[0]
     )
     assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]

@@ -19,7 +19,9 @@ DOMAIN_BLACK_LIST = settings.DEMARCHES_SIMPLIFIEES["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
-    help = "Fetch freshly submitted dossier on Démarches Simplifiées and notify admins."
+    help = (
+        "Fetch freshly submitted dossier on « Démarche numérique » and notify admins."
+    )
 
     def handle(self, *args, **options):
         """get all the dossier updated in the last hour"""

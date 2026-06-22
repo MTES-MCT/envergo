@@ -295,7 +295,7 @@ def get_messages_and_senders_from_ds(
 
     if not dossier_with_messages:
         logger.error(
-            f"Cannot get messages from Démarches Simplifiées for dossier number {dossier_number}"
+            f"Cannot get messages from « Démarche numérique » for dossier number {dossier_number}"
         )
         return None, None, None
 
@@ -480,7 +480,7 @@ def update_demarches_simplifiees_status(petition_project, new_status):
     else:
         # update failed, notification should have been sent by the DS client
         raise DemarchesSimplifieesError(
-            "", {}, "Unable to update status on Démarches Simplifiées"
+            "", {}, "Unable to update status on « Démarche numérique »"
         )
 
 

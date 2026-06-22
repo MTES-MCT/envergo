@@ -373,7 +373,7 @@ class PetitionProjectCreate(FormView):
         if not department:
             logger.error(
                 "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
+                "start a « Démarche numérique »",
                 extra={"moulinette_url": moulinette_url},
             )
             return None, None
@@ -546,7 +546,7 @@ class PetitionProjectCreate(FormView):
             regulation_result = getattr(moulinette, regulation_slug, None)
             if regulation_result is None:
                 logger.warning(
-                    "Unable to get the regulation result to pre-fill a démarche simplifiée",
+                    "Unable to get the regulation result to pre-fill a « Démarche numérique »",
                     extra={
                         "regulation_slug": regulation_slug,
                         "moulinette_url": petition_project.moulinette_url,
@@ -574,7 +574,7 @@ class PetitionProjectCreate(FormView):
             criteria = getattr(regulation, criteria_slug, None)
             if criteria is None:
                 logger.warning(
-                    "Unable to get the criteria result code to pre-fill a démarche simplifiée",
+                    "Unable to get the criteria result code to pre-fill a « Démarche numérique »",
                     extra={
                         "source": source,
                         "moulinette_url": petition_project.moulinette_url,
@@ -599,7 +599,7 @@ class PetitionProjectCreate(FormView):
                 value = moulinette.catalog[source]
             else:
                 logger.warning(
-                    "Unable to get the moulinette value to pre-fill a démarche simplifiée",
+                    "Unable to get the moulinette value to pre-fill a « Démarche numérique »",
                     extra={
                         "source": source,
                         "moulinette_url": petition_project.moulinette_url,
@@ -1131,7 +1131,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 class PetitionProjectInstructorDossierDSView(
     BasePetitionProjectInstructorView, DetailView
 ):
-    """View for petition project page with « Démarche numérique » data"""
+    """View for petition project page with Démarche numérique data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
 
@@ -1185,7 +1185,7 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
 class PetitionProjectInstructorMessagerieView(
     BasePetitionProjectInstructorView, FormView
 ):
-    """View for petition project instructor page with demarche simplifiées messagerie"""
+    """View for petition project instructor page with Démarche numérique messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
@@ -1326,7 +1326,7 @@ class PetitionProjectInstructorMessagerieView(
 class PetitionProjectInstructorMessagerieMarkUnreadView(
     BasePetitionProjectInstructorView, View
 ):
-    """View for petition project instructor page with demarche simplifiées messagerie"""
+    """View for petition project instructor page with Démarche numérique messagerie"""
 
     event_category = "message"
     event_action = "marquage_non_lu"
@@ -1712,7 +1712,7 @@ class PetitionProjectInstructorProcedureView(
             form.add_error(
                 None,
                 mark_safe(
-                    f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
+                    f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
                     <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                         contacter l'équipe du guichet unique de la haie
                     </a> en indiquant l'identifiant du dossier."""
@@ -1897,7 +1897,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     else:
                         # We raise an exception to make sure the data model transaction
                         # is aborted
-                        raise DemarchesSimplifieesError(message="DS message not sent")
+                        raise DemarchesSimplifieesError(message="DN message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)

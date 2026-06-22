@@ -6,12 +6,12 @@
 {% endif %}
 
 {% if problem.key == "missing_demarche_simplifiee_number" %}
-Un département activé doit toujours avoir un numéro de démarche sur Démarches Simplifiées
+Un département activé doit toujours avoir un numéro de démarche sur « Démarche numérique »
 {% elif problem.key == "invalid_prefill_field" %}
 Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une valeur. Le mapping est optionnel.
 * Champ : {{ problem.extra.field }}
 {% elif problem.key == "ds_api_http_error" %}
-L'API de Démarches Simplifiées a retourné une erreur lors de la création du dossier.
+L'API de « Démarche numérique » a retourné une erreur lors de la création du dossier.
 ** Requête:**
 * url : {{ problem.extra.api_url }}
 * body :

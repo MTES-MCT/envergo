@@ -1,5 +1,5 @@
-#### Mapping avec Démarches-simplifiées : :warning: anomalie
-Un dossier a été créé sur démarches-simplifiées :
+#### Mapping avec Démarche numérique : :warning: anomalie
+Un dossier a été créé sur « Démarche numérique » :
 * [projet dans l’admin]({{ projet_url }})
 
 {% if config %}
