@@ -430,7 +430,7 @@ class TestLSEActionsWithICPE:
     """When ICPE result is not non_soumis, tests actions to take according to LSE."""
 
     def test_lse_soumis_icpe_moulinette_returns_non_depot_lse(self):
-        """When LSE result is soumis then non_depot_lse action is not substracted
+        """When LSE result is soumis then non_depot_lse action is not subtracted
         and etude_zh is not in actions_to_take."""
         moulinette = MoulinetteAmenagement(
             make_amenagement_data(
@@ -453,7 +453,7 @@ class TestLSEActionsWithICPE:
         }
 
     def test_lse_action_requise_icpe_moulinette_not_returns_non_depot_lse(self):
-        """When LSE result is action_requise then non_depot_lse action is substracted
+        """When LSE result is action_requise then non_depot_lse action is subtracted
         and etude_zh is in actions_to_take."""
         moulinette = MoulinetteAmenagement(
             make_amenagement_data(
@@ -480,7 +480,7 @@ class TestLSEActionsWithICPE:
         }
 
     def test_lse_non_soumis_icpe_moulinette_not_returns_non_depot_lse(self):
-        """When LSE result is action_requise then non_depot_lse action is substracted
+        """When LSE result is action_requise then non_depot_lse action is subtracted
         and etude_zh is in actions_to_take."""
         moulinette = MoulinetteAmenagement(
             make_amenagement_data(
