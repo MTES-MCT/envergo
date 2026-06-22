@@ -47,6 +47,7 @@ from envergo.evaluations.models import (
     USER_TYPES,
     TagStyleEnum,
 )
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
@@ -72,11 +73,6 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
-
-# WGS84, geodetic coordinates, units in degrees
-# Good for storing data and working wordwide
-EPSG_WGS84 = 4326
-
 
 logger = logging.getLogger(__name__)
 

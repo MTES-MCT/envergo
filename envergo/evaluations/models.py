@@ -31,10 +31,6 @@ from envergo.utils.urls import remove_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
 
-# WGS84, geodetic coordinates, units in degrees
-# Good for storing data and working wordwide
-EPSG_WGS84 = 4326
-
 
 # XXX rename petitioner to project owner
 USER_TYPES = Choices(

@@ -26,6 +26,7 @@ from model_utils import Choices
 from pyproj import Geod
 from shapely import LineString, centroid, union_all
 
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Zone
 from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
@@ -86,12 +87,6 @@ HEDGE_PROPERTIES = (
 )
 
 R = 1.5  # Coefficient de replantation exigée
-
-# WGS84, geodetic coordinates, units in degrees
-# Good for storing data and working wordwide
-EPSG_WGS84 = 4326
-
-EPSG_LAMB93 = 2154
 
 
 class Hedge:

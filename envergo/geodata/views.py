@@ -12,13 +12,10 @@ from django.views.generic import TemplateView, View
 from shapely.geometry import mapping, shape
 from shapely.ops import unary_union
 
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import Zone
 
 logger = logging.getLogger(__name__)
-
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 class ParcelsExport(View):

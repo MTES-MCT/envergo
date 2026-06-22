@@ -14,7 +14,7 @@ from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.decorators.csp import csp_override, csp_report_only_override
-from envergo.geodata.utils import EPSG_WGS84
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
