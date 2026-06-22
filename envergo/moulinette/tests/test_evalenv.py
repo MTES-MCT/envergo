@@ -9,7 +9,11 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import COORDS_BIZOU, make_amenagement_data
+from envergo.moulinette.tests.utils import (
+    COORDS_BIZOU,
+    flatten_actions_to_take,
+    make_amenagement_data,
+)
 
 
 def _bizou_data(created_surface, **extra):
@@ -372,10 +376,7 @@ def test_evalenv_subtractive_actions_to_take():
         "to_add": {"depot_etude_impact", "pc_etude_impact"},
         "to_subtract": {"pc_ein"},
     }
-    actions_to_take_flatten = {
-        target: [action.slug for action in actions_list]
-        for target, actions_list in moulinette.actions_to_take.items()
-    }
+    actions_to_take_flatten = flatten_actions_to_take(moulinette)
     assert actions_to_take_flatten == {
         "petitioner": ["depot_etude_impact"]
     }  # there is no pc_etude_impact in DB
