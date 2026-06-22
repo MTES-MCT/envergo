@@ -77,11 +77,6 @@ from envergo.utils.tools import insert_before
 # Good for storing data and working wordwide
 EPSG_WGS84 = 4326
 
-# Projected coordinates
-# Used for displaying tiles in web map systems (OSM, GoogleMaps)
-# Good for working in meters
-EPSG_MERCATOR = 3857
-
 
 logger = logging.getLogger(__name__)
 
@@ -2405,10 +2400,6 @@ class MoulinetteAmenagement(Moulinette):
             lng = catalog["lng"]
             lat = catalog["lat"]
             catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
-            catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
-            catalog["circle_12"] = catalog["coords"].buffer(12)
-            catalog["circle_25"] = catalog["coords"].buffer(25)
-            catalog["circle_100"] = catalog["coords"].buffer(100)
 
             fetching_radius = int(self.data.get("radius", "200"))
             zones = self.get_zones(catalog["lng_lat"], fetching_radius)
