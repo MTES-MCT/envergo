@@ -224,6 +224,17 @@ class TestCasParCasIcpeActions:
         regulation_actions = moulinette.eval_env.actions_to_take
         assert regulation_actions.get("to_add", set()) == set()
 
+    def test_lse_non_soumis_icpe_no_non_depot_lse(self):
+        """a_verifier -> no regulation-level actions added."""
+        ActionToTakeFactory(slug="depot_cas_par_cas", target="petitioner")
+
+        data = mouais_data_with_icpe(500, "creation", "inconnu")
+        moulinette = MoulinetteAmenagement(data)
+
+        assert moulinette.eval_env.result == "a_verifier"
+        regulation_actions = moulinette.eval_env.actions_to_take
+        assert regulation_actions.get("to_add", set()) == set()
+
 
 # ---------------------------------------------------------------------------
 # View-level: pink box templates
