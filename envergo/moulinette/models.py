@@ -2296,7 +2296,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         }
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Point to center the Leaflet map on. Must be WGS84 (EPSG:4326)."""
         raise NotImplementedError
 
     @cached_property
@@ -2556,7 +2556,7 @@ class MoulinetteAmenagement(Moulinette):
         return set()
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Project location. WGS84 (4326)."""
         return self.catalog["lng_lat"]
 
 
@@ -2920,8 +2920,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return grouped
 
     def get_map_center(self):
-        """Returns at what coordinates is the perimeter."""
-
+        """Department centroid. WGS84 (4326), from the 4326 geometry column."""
         return self.department.centroid
 
     @cached_property

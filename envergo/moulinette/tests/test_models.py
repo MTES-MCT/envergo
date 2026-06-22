@@ -1,4 +1,6 @@
+import json
 from datetime import date
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -700,3 +702,30 @@ class TestConfigQueryWithMultipleValidityPeriods:
         )
         results = list(ConfigAmenagement.objects.valid_at(date(2025, 6, 15)))
         assert results == [config_current]
+
+
+def test_map_to_json_truncates_polygons_around_center():
+    """Guards against the regression where the clip buffer was applied in
+    WGS84 degrees (clipping nothing) instead of metric meters."""
+    from django.contrib.gis.geos import GEOSGeometry, Point, Polygon
+
+    from envergo.moulinette.regulations import Map, MapPolygon
+
+    center = Point(-1.0, 47.0, srid=4326)
+    # A ~1° x 1° square (~110 km wide) — far larger than the 1 km clip disc.
+    big_polygon = Polygon.from_bbox((-1.5, 46.5, -0.5, 47.5))
+    big_polygon.srid = 4326
+    perimeter = SimpleNamespace(geometry=big_polygon)
+    entry = MapPolygon(perimeters=[perimeter], color="red", label="test")
+
+    truncated = json.loads(
+        Map(center=center, entries=[entry], truncate=True).to_json()
+    )
+    full = json.loads(Map(center=center, entries=[entry], truncate=False).to_json())
+
+    truncated_geom = GEOSGeometry(json.dumps(truncated["polygons"][0]["polygon"]))
+    full_geom = GEOSGeometry(json.dumps(full["polygons"][0]["polygon"]))
+
+    # The clipped polygon must be a strict, non-empty subset of the source.
+    assert not truncated_geom.empty
+    assert truncated_geom.area < full_geom.area
