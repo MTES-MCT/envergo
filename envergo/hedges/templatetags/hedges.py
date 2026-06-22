@@ -26,3 +26,13 @@ def hedges_category(hedge_data, category):
     else:
         # category == HaieCriterionCategory.l350_3:
         return to_remove.l350_3()
+
+
+@register.inclusion_tag("haie/moulinette/_category_hedges.html", takes_context=True)
+def category_hedges(context, category, lowercase=False, inline=False):
+    return {
+        "category": category,
+        "lowercase": lowercase,
+        "inline": inline,
+        "hedge_data": context.get("hedge_data"),
+    }
