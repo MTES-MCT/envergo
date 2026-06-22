@@ -460,7 +460,7 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["demarche_numerique_pre_fill_config"].help_text = (
-            self.get_demarche_simplifiee_pre_fill_config_help_text()
+            self.get_demarche_numerique_pre_fill_config_help_text()
         )
 
         # Let's not fetch the department geometries when displaying the
@@ -511,9 +511,9 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             )
         return cleaned_data
 
-    def get_demarche_simplifiee_pre_fill_config_help_text(self):
+    def get_demarche_numerique_pre_fill_config_help_text(self):
         context = {
-            "sources": ConfigHaie.get_demarche_simplifiee_value_sources(),
+            "sources": ConfigHaie.get_demarche_numerique_value_sources(),
         }
         return render_to_string(
             "admin/moulinette/confighaie/demarche_simplifiee_pre_fill_config_help_text.html",

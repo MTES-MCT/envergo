@@ -145,7 +145,7 @@ def test_moulinette_haie_has_specific_behavior():
     assert MoulinetteClass is MoulinetteHaie
 
 
-def test_config_haie_activated_has_missing_demarche_simplifiee_number(
+def test_config_haie_activated_has_missing_demarche_numerique_number(
     loire_atlantique_department,  # noqa
 ):
     """Check `demarche_numerique_number_required_if_activated` constraint"""
@@ -230,8 +230,8 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
     config_haie.clean()
 
 
-def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
-    """Test get_demarche_simplifiee_value_sources method"""
+def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
+    """Test get_demarche_numerique_value_sources method"""
     config_haie = DCConfigHaieFactory()
     other_map = MapFactory()
     sites_proteges_regulation = RegulationFactory(
@@ -292,7 +292,7 @@ def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
         ),
     }
 
-    results = config_haie.get_demarche_simplifiee_value_sources()
+    results = config_haie.get_demarche_numerique_value_sources()
     assert results["Résultats des critères"] == expected_results_criteria
 
 

@@ -84,7 +84,7 @@ class Command(BaseCommand):
                     )
                     continue
 
-                project.synchronize_with_demarches_simplifiees(dossier_as_dict)
+                project.synchronize_with_demarche_numerique(dossier_as_dict)
 
             handled_demarches.append(demarche_number)
 

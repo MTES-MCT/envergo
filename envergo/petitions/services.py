@@ -90,7 +90,7 @@ class Item:
 
 
 @dataclass
-class DemarchesSimplifieesDetails:
+class DemarcheNumeriqueDetails:
     header_sections: list | None
     champs: list | None
 
@@ -145,11 +145,11 @@ def get_project_context(petition_project, moulinette) -> dict:
     return context
 
 
-def get_context_from_ds(petition_project) -> dict:
+def get_context_from_dn(petition_project) -> dict:
     """Get parts of context for instructor pages from Démarche numérique"""
     # Get ds details
     config = petition_project.config
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
 
     city_item = ""
     pacage_item = ""
@@ -242,10 +242,10 @@ def get_field_data_from_dn_dossier(field_name, config, dossier):
 
 def compute_instructor_informations_ds(
     petition_project,
-) -> DemarchesSimplifieesDetails | None:
+) -> DemarcheNumeriqueDetails | None:
     """Compute ProjectDetails with instructor informations"""
     # Get ds details
-    dossier = get_demarches_simplifiees_dossier(petition_project, force_update=True)
+    dossier = get_demarche_numerique_dossier(petition_project, force_update=True)
 
     if not dossier:
         return None
@@ -269,7 +269,7 @@ def compute_instructor_informations_ds(
         if c.id not in explication_champs_ids
     ]
 
-    ds_details = DemarchesSimplifieesDetails(
+    ds_details = DemarcheNumeriqueDetails(
         header_sections,
         champs_display,
     )
@@ -289,7 +289,7 @@ def get_messages_and_senders_from_ds(
 
     # Get messages only from « Démarche numérique »
     dossier_number = petition_project.demarche_numerique_dossier_number
-    dossier_with_messages = get_demarches_simplifiees_dossier(
+    dossier_with_messages = get_demarche_numerique_dossier(
         petition_project, force_update=True
     )
 
@@ -384,7 +384,7 @@ def get_header_explanation_from_ds_demarche(demarche):
     return header_sections, explication_champs
 
 
-def get_demarches_simplifiees_dossier(
+def get_demarche_numerique_dossier(
     petition_project,
     force_update: bool = False,
 ) -> Dossier | None:
@@ -413,7 +413,7 @@ def get_demarches_simplifiees_dossier(
         if dossier_as_dict is not None:
             # we have got a dossier from « Démarche numérique » for this petition project,
             # let's synchronize project
-            petition_project.synchronize_with_demarches_simplifiees(dossier_as_dict)
+            petition_project.synchronize_with_demarche_numerique(dossier_as_dict)
     else:
         # If the last sync is recent, we can use the cached dossier from the petition project
         dossier_as_dict = petition_project.demarche_numerique_raw_dossier
@@ -422,12 +422,12 @@ def get_demarches_simplifiees_dossier(
     return dossier
 
 
-def update_demarches_simplifiees_status(petition_project, new_status):
+def update_demarche_numerique_status(petition_project, new_status):
     client = DemarchesSimplifieesClient()
 
     if petition_project.demarche_numerique_dossier_id is None:
         # Ensure that we have the dossier first because we need its id
-        get_demarches_simplifiees_dossier(petition_project, force_update=True)
+        get_demarche_numerique_dossier(petition_project, force_update=True)
 
         if petition_project.demarche_numerique_dossier_id is None:
             # This dossier cannot be fetched on « Démarche numérique », maybe it is in draft.
@@ -479,7 +479,7 @@ def update_demarches_simplifiees_status(petition_project, new_status):
     if response:
         # the status change was successful, we update the petition project
         petition_project.demarche_numerique_state = response["dossier"]["state"]
-        petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
+        petition_project.synchronize_with_demarche_numerique(response["dossier"])
     else:
         # update failed, notification should have been sent by the « Démarche numérique » client
         raise DemarchesSimplifieesError(
@@ -573,7 +573,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
             dossier_url = self._petition_project.demarche_numerique_petitioner_url
             if self.config:
                 dossier_url = (
-                    self._petition_project.get_demarches_simplifiees_instructor_url(
+                    self._petition_project.get_demarche_numerique_instructor_url(
                         self.config.demarche_numerique_number
                     )
                 )

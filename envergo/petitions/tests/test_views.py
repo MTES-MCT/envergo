@@ -155,7 +155,7 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
 
@@ -216,7 +216,7 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
 
@@ -240,7 +240,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     request.alerts = PetitionProjectCreationAlert(request)
 
     petition_project = PetitionProjectFactory()
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
     assert (

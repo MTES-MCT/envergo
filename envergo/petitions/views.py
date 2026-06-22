@@ -93,12 +93,12 @@ from envergo.petitions.services import (
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
-    get_context_from_ds,
+    get_context_from_dn,
     get_field_data_from_dn_dossier,
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
-    update_demarches_simplifiees_status,
+    update_demarche_numerique_status,
 )
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
@@ -345,19 +345,17 @@ class PetitionProjectCreate(FormView):
                 kwargs={"reference": petition_project.reference},
             )
 
-            demarche_simplifiee_url, dossier_number = self.pre_fill_demarche_simplifiee(
+            demarche_numerique_url, dossier_number = self.pre_fill_demarche_numerique(
                 petition_project
             )
 
-            if not demarche_simplifiee_url:
+            if not demarche_numerique_url:
                 res = self.form_invalid(form)
                 # Rollback the transaction to avoid saving the petition project
                 transaction.set_rollback(True)
             else:
                 petition_project.demarche_numerique_dossier_number = dossier_number
-                petition_project.demarche_numerique_prefill_url = (
-                    demarche_simplifiee_url
-                )
+                petition_project.demarche_numerique_prefill_url = demarche_numerique_url
                 petition_project.save()
 
                 StatusLog.objects.create(
@@ -386,14 +384,14 @@ class PetitionProjectCreate(FormView):
 
                 res = JsonResponse(
                     {
-                        "demarche_simplifiee_url": demarche_simplifiee_url,
+                        "demarche_simplifiee_url": demarche_numerique_url,
                         "read_only_url": read_only_url,
                     }
                 )
 
         return res
 
-    def pre_fill_demarche_simplifiee(self, project):
+    def pre_fill_demarche_numerique(self, project):
         """Send a http request to pre-fill a dossier on Démarche numérique based on moulinette data.
 
         Return the url of the created dossier and its number if successful, None otherwise
@@ -422,7 +420,7 @@ class PetitionProjectCreate(FormView):
 
             self.request.alerts.append(
                 PetitionProjectCreationProblem(
-                    "missing_demarche_simplifiee_number", is_fatal=True
+                    "missing_demarche_numerique_number", is_fatal=True
                 )
             )
             return None, None
@@ -519,7 +517,7 @@ class PetitionProjectCreate(FormView):
     ):
         """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
-        Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
+        Available sources are listed by this method : ConfigHaie.get_demarche_numerique_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
         Then it will map the value if a mapping is provided.
         """
@@ -799,7 +797,7 @@ class PetitionProjectDetail(DetailView):
             context["demarches_simplifiees_prefill_url"] = (
                 self.object.demarche_numerique_prefill_url or ""
             )
-        context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
+        context["ds_url"] = self.object.demarche_numerique_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
@@ -892,7 +890,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             single_procedure=self.object.config.single_procedure
         )
 
-        context.update(get_context_from_ds(self.object))
+        context.update(get_context_from_dn(self.object))
 
         context.update(self.object.moulinette_data)
         if "haies" in context:
@@ -934,7 +932,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["matomo_custom_url"] = update_url_with_matomo_params(
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
-        context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
+        context["ds_url"] = self.object.get_demarche_numerique_instructor_url(
             self.object.config.demarche_numerique_number
         )
 
@@ -974,7 +972,7 @@ class BasePetitionProjectInstructorView(
         """Returns new link url"""
         ask_new_link_url_base = f"https://tally.so/r/{settings.ASK_NEW_LINK_FORM_ID}"
         user = self.request.user
-        city = get_context_from_ds(self.object)["ds_info"]["city"]
+        city = get_context_from_dn(self.object)["ds_info"]["city"]
         petition_project_consultation_url = self.request.build_absolute_uri(
             reverse(
                 "petition_project_instructor_consultations_view",
@@ -1158,7 +1156,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         )
 
 
-class PetitionProjectInstructorDossierDSView(
+class PetitionProjectInstructorDossierDNView(
     BasePetitionProjectInstructorView, DetailView
 ):
     """View for petition project page with Démarche numérique data"""
@@ -1757,7 +1755,7 @@ class PetitionProjectInstructorProcedureView(
         new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
         if previous_ds_status != new_ds_status:
             try:
-                update_demarches_simplifiees_status(self.object, new_ds_status)
+                update_demarche_numerique_status(self.object, new_ds_status)
             except DemarchesSimplifieesError as e:
                 logger.error(e)
                 form.add_error(

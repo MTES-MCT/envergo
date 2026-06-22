@@ -5,7 +5,7 @@
 #### :warning: Description de l’anomalie #{{ index }}
 {% endif %}
 
-{% if problem.key == "missing_demarche_simplifiee_number" %}
+{% if problem.key == "missing_demarche_numerique_number" %}
 Un département activé doit toujours avoir un numéro de démarche sur « Démarche numérique »
 {% elif problem.key == "invalid_prefill_field" %}
 Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une valeur. Le mapping est optionnel.

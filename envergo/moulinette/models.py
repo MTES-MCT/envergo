@@ -1410,7 +1410,7 @@ class ConfigHaie(ConfigBase):
 
             availables_sources = {
                 tup[0]
-                for value in self.get_demarche_simplifiee_value_sources().values()
+                for value in self.get_demarche_numerique_value_sources().values()
                 for tup in value
             }
             for field in self.demarche_numerique_pre_fill_config:
@@ -1442,7 +1442,7 @@ class ConfigHaie(ConfigBase):
                     )
 
     @classmethod
-    def get_demarche_simplifiee_value_sources(cls):
+    def get_demarche_numerique_value_sources(cls):
         """Populate a list of available sources for the pre-fill configuration of the Démarche numérique
 
         This method aggregates :

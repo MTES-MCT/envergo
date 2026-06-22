@@ -153,7 +153,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     demarche_numerique_prefill_url = models.URLField(
         help_text=_(
-            "Prefill dossier url on demarches-simplifiees.fr, used only when dossier is draft"
+            "Prefill dossier url on « Démarche numérique », used only when dossier is draft"
         ),
         blank=True,
         null=True,
@@ -318,7 +318,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             and self.demarche_numerique_state != DOSSIER_STATES.prefilled
         )
 
-    def synchronize_with_demarches_simplifiees(self, dossier: dict):
+    def synchronize_with_demarche_numerique(self, dossier: dict):
         """Update the petition project with the latest data from Démarche numérique
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
@@ -342,7 +342,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 else "Numéro inconnu"
             )
 
-            return self.get_demarches_simplifiees_instructor_url(demarche_number)
+            return self.get_demarche_numerique_instructor_url(demarche_number)
 
         def get_latest_petitioner_msg():
             parsed_dossier = Dossier.from_dict(dossier)
@@ -531,7 +531,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     @property
-    def demarches_simplifiees_petitioner_url(self) -> str | None:
+    def demarche_numerique_petitioner_url(self) -> str | None:
         """
         Returns the URL of the dossier for the petitioner.
         """
@@ -542,7 +542,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
         return None
 
-    def get_demarches_simplifiees_instructor_url(self, demarche_number) -> str | None:
+    def get_demarche_numerique_instructor_url(self, demarche_number) -> str | None:
         """
         Returns the URL of the dossier for the instructor.
         """

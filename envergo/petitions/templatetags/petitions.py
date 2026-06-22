@@ -13,7 +13,7 @@ from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
 from envergo.petitions.services import (
-    get_demarches_simplifiees_dossier,
+    get_demarche_numerique_dossier,
     get_field_data_from_dn_dossier,
 )
 
@@ -295,7 +295,7 @@ def get_ds_field(context, field_name):
     petition_project = context.get("petition_project", None)
     if petition_project is None:
         return None
-    ds_dossier = get_demarches_simplifiees_dossier(petition_project)
+    ds_dossier = get_demarche_numerique_dossier(petition_project)
     if ds_dossier is None:
         return None
     config = context.get("moulinette").config
