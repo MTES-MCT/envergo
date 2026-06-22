@@ -948,6 +948,11 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
         petition_project, message_body, attachment_file=attachment
     )
 
+    # The client must not close the borrowed attachment: the closing flow
+    # reuses it afterwards (saved to storage), and closing it here breaks that
+    # save on object-storage backends ("read of closed file").
+    assert not attachment.closed
+
     # THEN messages has this new message
     assert result == {
         "clientMutationId": "1234",
