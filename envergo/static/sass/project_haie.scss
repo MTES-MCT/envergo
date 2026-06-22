@@ -972,6 +972,13 @@ div.title-with-link-container {
       .fr-btn--secondary:not(:hover) {
         background-color: var(--background-default-grey);
       }
+
+      &.ellipsis {
+        div {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
     }
   }
 
