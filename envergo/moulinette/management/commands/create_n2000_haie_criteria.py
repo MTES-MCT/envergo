@@ -186,36 +186,47 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.dry_run = options["dry_run"]
 
-        # Étape préliminaire : corriger les noms de cartes importés avec une
-        # espace fine insécable (U+202F) au lieu d'une espace normale.
-        # Doit passer avant la vérification des prérequis, qui cherche les
-        # cartes avec une espace normale.
-        self.stdout.write("=== Correction des espaces fines insécables (U+202F) ===")
-        self.fix_map_name_spaces()
-        self.fix_perimeter_name_spaces()
+        try:
+            # Étape préliminaire : corriger les noms de cartes importés avec une
+            # espace fine insécable (U+202F) au lieu d'une espace normale.
+            # Doit passer avant la vérification des prérequis, qui cherche les
+            # cartes avec une espace normale.
+            self.stdout.write(
+                "=== Correction des espaces fines insécables (U+202F) ==="
+            )
+            self.fix_map_name_spaces()
+            self.fix_perimeter_name_spaces()
 
-        # Étape 0 : vérifier que toutes les données requises sont en base
-        self.stdout.write("\n=== Vérification des prérequis ===")
-        self.check_prerequisites()
+            # Étape 0 : vérifier que toutes les données requises sont en base
+            self.stdout.write("\n=== Vérification des prérequis ===")
+            self.check_prerequisites()
 
-        regulation = Regulation.objects.get(regulation="natura2000_haie")
+            regulation = Regulation.objects.get(regulation="natura2000_haie")
 
-        # Étape 1 : vérifier que les critères déjà créés existent bien
-        self.stdout.write("\n=== Vérification des critères existants ===")
-        self.check_existing_criteria(regulation)
+            # Étape 1 : vérifier que les critères déjà créés existent bien
+            self.stdout.write("\n=== Vérification des critères existants ===")
+            self.check_existing_criteria(regulation)
 
-        # Étape 2 : renommer les cartes des départements cas 2
-        # avant de créer les critères qui les référencent
-        self.stdout.write("\n=== Renommage des cartes cas 2 ===")
-        self.rename_case2_maps()
+            # Étape 2 : renommer les cartes des départements cas 2
+            # avant de créer les critères qui les référencent
+            self.stdout.write("\n=== Renommage des cartes cas 2 ===")
+            self.rename_case2_maps()
 
-        # Étape 3 : créer les critères cas 1 (1 critère par département)
-        self.stdout.write("\n=== Création des critères cas 1 ===")
-        self.create_case1_criteria(regulation)
+            # Étape 3 : créer les critères cas 1 (1 critère par département)
+            self.stdout.write("\n=== Création des critères cas 1 ===")
+            self.create_case1_criteria(regulation)
 
-        # Étape 4 : créer les critères cas 2 (2 critères par département)
-        self.stdout.write("\n=== Création des critères cas 2 ===")
-        self.create_case2_criteria(regulation)
+            # Étape 4 : créer les critères cas 2 (2 critères par département)
+            self.stdout.write("\n=== Création des critères cas 2 ===")
+            self.create_case2_criteria(regulation)
+        except Exception as e:
+            self.stderr.write(
+                self.style.ERROR(
+                    f"\n=== Échec de la transaction, toutes les modifications "
+                    f"ont été annulées : {e} ==="
+                )
+            )
+            raise
 
         if self.dry_run:
             transaction.set_rollback(True)
@@ -262,6 +273,13 @@ class Command(BaseCommand):
             self.stdout.write(f"  Renamed '{old_name}' → '{new_name}'")
 
     def check_prerequisites(self):
+        """Vérifie que toutes les données requises sont en base avant toute
+        modification : la réglementation 'natura2000_haie', les périmètres
+        'N2000 XX' de chaque département, les cartes cas 1 ('N2000 XX') et les
+        cartes cas 2 (anciens noms, avant renommage).
+
+        Lève une CommandError listant les prérequis manquants le cas échéant.
+        """
         errors = []
 
         # Réglementation
@@ -392,6 +410,7 @@ class Command(BaseCommand):
                     "title": "Natura 2000",
                     "perimeter": perimeter,
                     "activation_distance": 0,
+                    "activation_mode": "hedges_intersection",
                     "evaluator_settings": {
                         "result": result,
                         "concerne_aa": concerne_aa,
@@ -432,6 +451,7 @@ class Command(BaseCommand):
                     "title": "Natura 2000",
                     "perimeter": perimeter,
                     "activation_distance": 0,
+                    "activation_mode": "hedges_intersection",
                     "evaluator_settings": {
                         "result": result,
                         "concerne_aa": concerne_aa,
