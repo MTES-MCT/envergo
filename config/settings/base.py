@@ -388,6 +388,9 @@ TRANSFER_EVAL_EMAIL_FORM_ID = "mDzXgX"
 # Tally form used by a DDT(M) to fill in / update a department's contact info
 DEPARTMENT_CONTACT_FORM_ID = "Pd9b9e"
 
+# Tally form used by an invited instructor to ask for a new invitation link
+ASK_NEW_LINK_FORM_ID = "Gxol8e"
+
 ADMIN_OTP_REQUIRED = False
 
 GEOMETRICIAN_WEBINAR_FORM_URL = env(
