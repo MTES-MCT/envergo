@@ -107,13 +107,14 @@
 
         {{ departments_data|json_script:"departments-data" }}
 
-        <div class="simulateur-search">
+        <form id="simulation-form"
+              class="simulateur-search"
+              method="get"
+              action="{% url 'triage' %}">
           <div id="department-combobox"></div>
-          <button id="btn-start-simulation"
-                  class="fr-btn"
-                  data-href="{% url 'triage' %}"
-                  disabled>Commencer la simulation</button>
-        </div>
+          <input type="hidden" name="department" id="department-code">
+          <button id="btn-start-simulation" type="submit" class="fr-btn" disabled>Commencer la simulation</button>
+        </form>
       </div>
       <div id="department-info" class="fr-mt-4w" style="display: none;"></div>
     </div>
