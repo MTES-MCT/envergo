@@ -1,10 +1,19 @@
 <span class="fr-badge {% if category.name == 'l350_3' %}fr-badge--green-tilleul-verveine{% endif %} fr-badge--sm">
-  {% if category.name == 'l350_3' %}
-    AA L350-3
-  {% elif category.name == 'ru' %}
-    R. U.
+  {% if is_light %}
+    {% if category.name == 'l350_3' %}
+      AA L350-3
+    {% elif category.name == 'ru' %}
+      R. U.
+    {% else %}
+      Hors R. U.
+    {% endif %}
   {% else %}
-    Hors R. U.
+    {% if category.name == 'l350_3' %}
+      Alignements arbres L350-3
+    {% elif category.name == 'ru' %}
+      Haies régime unique
+    {% else %}
+      Linéaires hors r. unique
+    {% endif %}
   {% endif %}
-
 </span>
