@@ -92,11 +92,6 @@ R = 1.5  # Coefficient de replantation exigée
 # Good for storing data and working wordwide
 EPSG_WGS84 = 4326
 
-# Projected coordinates
-# Used for displaying tiles in web map systems (OSM, GoogleMaps)
-# Good for working in meters
-EPSG_MERCATOR = 3857
-
 EPSG_LAMB93 = 2154
 
 
