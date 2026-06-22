@@ -21,6 +21,7 @@ from envergo.geodata.tests.factories import (
 from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
+    get_best_epsg_for_location,
     query_hedge_length,
     query_hedges_display_geojson,
 )
@@ -244,3 +245,18 @@ def test_query_hedges_display_geojson_handles_non_noded_difference(
 
     # Returns without raising; result may be None when nothing intersects.
     query_hedges_display_geojson(truncated, circle)
+@pytest.mark.parametrize(
+    "lng,lat,expected_epsg",
+    [
+        (3.58, 43.6, 32631),  # Montpellier — UTM 31N
+        (-61.5, 16.2, 32620),  # Guadeloupe — UTM 20N
+        (55.5, -21.1, 32740),  # Réunion — UTM 40S (southern hemisphere → 327xx)
+    ],
+)
+def test_get_best_epsg_for_location(lng, lat, expected_epsg):
+    """Pick the correct UTM zone for any location.
+
+    Every metric computation (area, density, buffers) projects into this zone,
+    so the selection must be right mainland and overseas alike.
+    """
+    assert get_best_epsg_for_location(lng, lat) == expected_epsg
