@@ -1722,7 +1722,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     else:
                         # We raise an exception to make sure the data model transaction
                         # is aborted
-                        raise DemarchesSimplifieesError(message="DS message not sent")
+                        raise DemarchesSimplifieesError(message="DN message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
