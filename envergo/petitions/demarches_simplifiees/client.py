@@ -302,12 +302,17 @@ class DemarchesSimplifieesClient:
                 credentials_headers = json.loads(credentials["headers"])
 
                 try:
-                    with attachment_file.open("rb") as payload:
-                        response = requests.put(
-                            credentials["url"],
-                            data=payload,
-                            headers=credentials_headers,
-                        )
+                    # Rewind without taking ownership of the file: the
+                    # checksum read above leaves it at EOF, and the caller
+                    # reuses the attachment afterwards (the closing flow saves
+                    # it to storage). Closing it here would break that save on
+                    # object-storage backends ("read of closed file").
+                    attachment_file.seek(0)
+                    response = requests.put(
+                        credentials["url"],
+                        data=attachment_file,
+                        headers=credentials_headers,
+                    )
                 except Exception as e:
                     logger.error(
                         f"Error when sending attachment file Demarches Simplifiees direct upload : {e}",
