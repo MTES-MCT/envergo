@@ -7,7 +7,7 @@ from envergo.moulinette.regulations.alignementarbres import (
     AlignementsArbresCalvadosBeforeRu,
     AlignementsArbresL3503,
 )
-from envergo.moulinette.regulations.conditionnalitepac import Bcae8
+from envergo.moulinette.regulations.conditionnalitepac import Bcae8Hru
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
     EspecesProtegeesNormandie,
@@ -60,7 +60,12 @@ def test_choice_label_auto_appends_category_suffix(evaluator_cls, expected_suffi
 
 @pytest.mark.parametrize(
     "evaluator_cls",
-    [EspecesProtegeesSimple, EspecesProtegeesAisne, EspecesProtegeesNormandie, Bcae8],
+    [
+        EspecesProtegeesSimple,
+        EspecesProtegeesAisne,
+        EspecesProtegeesNormandie,
+        Bcae8Hru,
+    ],
 )
 def test_default_category_is_hru(evaluator_cls):
     assert evaluator_cls.category == HaieCriterionCategory.hru

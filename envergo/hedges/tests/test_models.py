@@ -220,19 +220,19 @@ def test_zone_filters_are_not_mixed():  # noqa
             },
         ]
     )
-    species = acy_limé_hedges.get_all_species_hru()
+    species = acy_limé_hedges.hedges().get_all_species_hru()
     assert set(species) == set([huppe, hypolais])
 
     # The second hedge in Acy should not return the Hypolaïs Ictérine anymore
     acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "degradee"
     acy_limé_hedges.save()
-    species = acy_limé_hedges.get_all_species_hru()
+    species = acy_limé_hedges.hedges().get_all_species_hru()
     assert set(species) == set([huppe])
 
     acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "mixte"
     acy_limé_hedges.data[0]["additionalData"]["type_haie"] = "degradee"
     acy_limé_hedges.save()
-    species = acy_limé_hedges.get_all_species_hru()
+    species = acy_limé_hedges.hedges().get_all_species_hru()
     assert set(species) == set([hypolais])
 
 
@@ -245,14 +245,16 @@ def test_hedge_data_species_are_filtered_by_geography(
     calvados_species = SpeciesHabitatFactory(map=calvados_map).species
     calvados_map.zones.update(species_taxrefs=calvados_species.cd_noms)
 
-    assert set(aisne_hedge_data.get_all_species_hru()) == set([aisne_species])
-    assert set(calvados_hedge_data.get_all_species_hru()) == set([calvados_species])
+    assert set(aisne_hedge_data.hedges().get_all_species_hru()) == set([aisne_species])
+    assert set(calvados_hedge_data.hedges().get_all_species_hru()) == set(
+        [calvados_species]
+    )
 
     aisne_map.zones.all().update(species_taxrefs=[])
     calvados_map.zones.all().update(species_taxrefs=[])
 
-    assert set(aisne_hedge_data.get_all_species_hru()) == set()
-    assert set(calvados_hedge_data.get_all_species_hru()) == set()
+    assert set(aisne_hedge_data.hedges().get_all_species_hru()) == set()
+    assert set(calvados_hedge_data.hedges().get_all_species_hru()) == set()
 
 
 def test_species_are_filtered_by_hedge_type():
@@ -262,7 +264,7 @@ def test_species_are_filtered_by_hedge_type():
     hedge = HedgeFactory(additionalData__type_haie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species_hru()
+    hedges_species = hedges.hedges().get_all_species_hru()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
@@ -271,7 +273,7 @@ def test_species_are_filtered_by_hedge_type():
         additionalData__type_haie="arbustive", additionalData__recemment_plantee=False
     )
     hedges = HedgeDataFactory(hedges=[hedge])
-    hedges_species = hedges.get_all_species_hru()
+    hedges_species = hedges.hedges().get_all_species_hru()
     assert s1 not in hedges_species
     assert s2 not in hedges_species
     assert s3 in hedges_species
@@ -282,7 +284,7 @@ def test_species_are_filtered_by_hedge_type():
     )
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species_hru()
+    hedges_species = hedges.hedges().get_all_species_hru()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
@@ -295,7 +297,7 @@ def test_hedges_has_centroid_and_department():
         geometry=herault_multipolygon,
     )
     hedge = HedgeDataFactory()
-    centroid_to_remove = hedge.get_centroid_to_remove()
+    centroid_to_remove = hedge.hedges_to_remove().centroid
     centroid_computed = centroid(hedge.hedges_to_remove()[0].geometry)
 
     assert centroid_to_remove == centroid_computed
@@ -358,7 +360,7 @@ def test_multiple_hedges_combine_their_species():
     assert set(hedge_species) == set([s3, s4])
 
     hedges = HedgeDataFactory(hedges=[hedge1, hedge2])
-    all_species = hedges.get_all_species_hru()
+    all_species = hedges.hedges().get_all_species_hru()
     assert set(all_species) == set([s2, s3, s4])
 
 
@@ -1565,7 +1567,7 @@ class TestRuSpeciesQuerying:
 
         hedge = self._make_hedge_in_aisne()
         hedges = HedgeDataFactory(hedges=[hedge])
-        result = list(hedges.get_all_species())
+        result = list(hedges.hedges().get_all_species())
 
         levels = [s.local_level_of_concern for s in result]
         assert levels == ["majeur", "fort", "faible"]

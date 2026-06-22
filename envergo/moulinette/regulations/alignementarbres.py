@@ -1,7 +1,11 @@
 import logging
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.regulations import PlantationConditionMixin, TreeAlignmentsCondition
+from envergo.hedges.regulations import (
+    PlantationConditionMixin,
+    RUMinLengthCondition,
+    TreeAlignmentsCondition,
+)
 from envergo.moulinette.regulations import (
     HaieCriterionCategory,
     HaieCriterionEvaluator,
@@ -25,7 +29,7 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
     choice_label = "Alignements d'arbres > L350-3"
     base_slug = "alignement_arbres"
     category = HaieCriterionCategory.l350_3
-    plantation_conditions = [TreeAlignmentsCondition]
+    plantation_conditions = [RUMinLengthCondition, TreeAlignmentsCondition]
 
     RESULT_MATRIX = {
         "soumis_securite": RESULTS.soumis_declaration,
@@ -59,23 +63,22 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
         return r_aa
 
     def get_replantation_coefficient(self):
-        haies = self.catalog.get("haies")
         minimum_length_to_plant = 0.0
         aggregated_r = 0.0
 
         r_aa = self.get_result_based_replantation_coefficient(self.result_code)
 
-        if haies:
-            for hedge in haies.hedges_to_remove():
-                if hedge.hedge_type == "alignement" and hedge.prop("bord_voie"):
-                    r = r_aa
-                else:
-                    r = 0.0
+        for hedge in self.hedges.to_remove():
+            if hedge.hedge_type == "alignement" and hedge.prop("bord_voie"):
+                r = r_aa
+            else:
+                r = 0.0
 
-                minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
+            minimum_length_to_plant = minimum_length_to_plant + hedge.length * r
 
-            if haies.length_to_remove() > 0:
-                aggregated_r = minimum_length_to_plant / haies.length_to_remove()
+        length_to_remove = self.hedges.to_remove().length
+        if length_to_remove > 0:
+            aggregated_r = minimum_length_to_plant / length_to_remove
 
         return aggregated_r
 
@@ -85,7 +88,6 @@ class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
     base_slug = "alignement_arbres_calvados_before_ru"
     slug = base_slug
     choice_label = "Alignements d'arbres > L350-3 (Calvados avant régime unique)"
-    plantation_conditions = [TreeAlignmentsCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
@@ -113,13 +115,5 @@ class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
 
     def get_result_data(self):
         motif = self.catalog.get("motif")
-        haies = self.catalog.get("haies")
-        has_alignement_bord_voie = False
-        if haies:
-            has_alignement_bord_voie = any(
-                hedge
-                for hedge in haies.hedges_to_remove()
-                if hedge.hedge_type == "alignement" and hedge.prop("bord_voie")
-            )
-
+        has_alignement_bord_voie = bool(self.hedges.to_remove().l350_3())
         return has_alignement_bord_voie, motif

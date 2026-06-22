@@ -3,7 +3,7 @@ import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from datetime import date
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, nonmember
 from functools import reduce
 from itertools import groupby
 from operator import attrgetter
@@ -1599,6 +1599,25 @@ class ConfigHaie(ConfigBase):
             ),
         ]
 
+    @property
+    def zone_configs(self):
+        """Return the matrix of zone -> compensation coeffs.
+
+        There are two cases:
+         - first case, there are multiple specific zones (has_ru_zonage=True)
+         - second case, there is no zonage, a single key exists (default)
+
+        But we suppose the coefficient json is simply correctly filled, hence we just
+        return the full json.
+
+        """
+
+        if not self.single_procedure:
+            return {}
+
+        coeffs = self.single_procedure_settings.get("coeff_compensation")
+        return coeffs
+
 
 TEMPLATE_KEYS = [
     "autorisation_urba_pa",
@@ -2590,7 +2609,7 @@ class MoulinetteAmenagement(Moulinette):
 
 
 class CityHallSubmission(Enum):
-    do_not_call_in_templates = True
+    do_not_call_in_templates = nonmember(True)
 
     NONE = 0  # nothing to submit
     AUTORISATION_URBA = 1  # PA, PC, DP ou permis de démolir must be submitted

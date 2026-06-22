@@ -7,7 +7,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeTypeBase, HedgeTypeFactory
+from envergo.hedges.models import HedgeList, HedgeTypeBase, HedgeTypeFactory
 
 
 def compute_lengths_per_type(hedges, coefficients):
@@ -41,6 +41,28 @@ def apply_cross_type_reduction(compensation, destruction, hedge_types):
             amount *= 0.8
         reduced[hedge_type] = max(amount, destruction.get(hedge_type, 0.0))
     return reduced
+
+
+def combine_length_conditions(a, b, condition_cls):
+    """Merge two length-based plantation conditions into a single ``condition_cls``.
+
+    Concatenates the hedge lists and computes a length-weighted average of the
+    replantation coefficient ``R`` (each condition weighted by its length to
+    remove), then re-evaluates the merged condition.
+    """
+    a_to_remove = a.hedges.to_remove().length
+    b_to_remove = b.hedges.to_remove().length
+    total_to_remove = a_to_remove + b_to_remove
+    # No hedge removed means R is irrelevant (minimum length is 0 either way).
+    R = (
+        (a.R * a_to_remove + b.R * b_to_remove) / total_to_remove
+        if total_to_remove
+        else 0
+    )
+
+    addition = condition_cls(HedgeList(a.hedges + b.hedges), R, None, None)
+    addition.evaluate()
+    return addition
 
 
 class PlantationCondition(ABC):
@@ -118,7 +140,38 @@ class PlantationCondition(ABC):
         return mark_safe(self.hint_text % self.context)
 
 
-class MinLengthCondition(PlantationCondition):
+class AdditiveConditionMixin(ABC):
+    """Marks a condition that is merged across evaluators instead of deduplicated.
+
+    Most plantation conditions are deduplicated when the same condition appears in
+    several evaluators: only the strictest instance is kept (see ``compare_strictness``
+    and ``deduplicate_conditions``). Conditions using this mixin are handled
+    differently — ``combine_conditions`` (see ``services.py``) groups every instance by
+    its ``additive_key`` and collapses each group into a single condition with
+    ``functools.reduce(a + b)``.
+
+    Subclasses must implement ``__add__`` to return a new condition representing the
+    merge of ``self`` and ``other``.
+
+    ``additive_key`` controls how instances are grouped before being summed. It defaults
+    to the concrete class, so only instances of the exact same class merge together.
+    Override it to make a family of related subclasses merge into one group (e.g.
+    ``MinLengthCondition`` returns a fixed string so its RU/Normandie variants are
+    combined rather than kept separate).
+    """
+
+    @property
+    def additive_key(self):
+        return type(self)
+
+    @abstractmethod
+    def __add__(self, other):
+        raise NotImplementedError(
+            f"Implement the `{type(self).__name__}.__add__` method."
+        )
+
+
+class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
     label = "Longueur de la haie plantée"
@@ -149,6 +202,25 @@ class MinLengthCondition(PlantationCondition):
 
     def must_display(self):
         return self.context["length_to_check"] > 0
+
+    @property
+    def additive_key(self):
+        """Group all MinLengthCondition variants together when combining.
+
+        Returns a constant string shared by this class and its subclasses
+        (RUMinLengthCondition, NormandieMinLengthCondition, ...), so that
+        ``combine_conditions`` merges every variant into a single group instead
+        of one group per concrete class. This is legitimate because all these
+        conditions express the same requirement — a minimum total length to
+        plant — and only differ in how they compute the replantation coefficient
+        ``R``. Their ``__add__`` produces a length-weighted average of ``R``, so
+        merging variants across evaluators yields a single, coherent minimum
+        length for the whole project.
+        """
+        return "MinLengthCondition"
+
+    def __add__(self, other):
+        return combine_length_conditions(self, other, MinLengthCondition)
 
 
 class RUMinLengthCondition(MinLengthCondition):
@@ -221,7 +293,7 @@ class NormandieMinLengthCondition(MinLengthCondition):
         return self
 
 
-class PacParcelCondition(PlantationCondition):
+class PacParcelCondition(AdditiveConditionMixin, PlantationCondition):
     """Checks that enough hedges are planted on PAC parcels."""
 
     label = "Maintien des haies PAC"
@@ -234,6 +306,7 @@ class PacParcelCondition(PlantationCondition):
     """
 
     def evaluate(self):
+
         # For pac regulations, R is ignored unless it is zero
         R = 1 if self.R > 0 else 0
 
@@ -250,6 +323,9 @@ class PacParcelCondition(PlantationCondition):
 
     def must_display(self):
         return self.context["minimum_length_to_plant_pac"] > 0
+
+    def __add__(self, other):
+        return combine_length_conditions(self, other, PacParcelCondition)
 
 
 class BaseQualityCondition(PlantationCondition):
