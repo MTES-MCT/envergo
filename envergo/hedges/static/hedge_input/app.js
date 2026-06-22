@@ -684,21 +684,21 @@ createApp({
 
       if(conditionsUrl)
       {
-      fetch(conditionsUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': CSRF_TOKEN
-        },
-        body: JSON.stringify(hedgeData),
-        signal: conditionsAbortController.signal,
-      })
-          .then(async response => {
-            if (!response.ok) {
-              throw await response.json();
-            }
-            return response.json();
-          })
+        fetch(conditionsUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+          },
+          body: JSON.stringify(hedgeData),
+          signal: conditionsAbortController.signal,
+        })
+        .then(async response => {
+          if (!response.ok) {
+            throw await response.json();
+          }
+          return response.json();
+        })
         .then(data => {
           // Note : using Object.assign will not delete keys.
           // E.g if the initial evaluation data has a `length_to_plant_pac` key,
