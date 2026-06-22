@@ -16,6 +16,7 @@ from django.utils.safestring import SafeString, mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.moulinette.models import CityHallSubmission
 from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.moulinette.utils import get_moulinette_class_from_site
 
@@ -302,6 +303,19 @@ def show_plantation_result(context, plantation_evaluation, category, is_main=Tru
             )
             html = ""
     return mark_safe(html)
+
+
+@register.inclusion_tag(
+    "haie/moulinette/_city_hall_submission_callout.html", takes_context=True
+)
+def city_hall_submission_callout(context):
+    """Render the city-hall submission callout for the plantation result page."""
+    moulinette = context["moulinette"]
+    return {
+        "city_hall_submission": moulinette.city_hall_submission,
+        "CityHallSubmission": CityHallSubmission,
+        "hedge_data": context.get("hedge_data"),
+    }
 
 
 @register.simple_tag(takes_context=True)
