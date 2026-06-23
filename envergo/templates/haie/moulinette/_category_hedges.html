@@ -1,14 +1,16 @@
-{# djlint:off #}
-<{% if inline %}span{% else %}p{% endif %} class="hedges-category-header {{ category.name }}">
-  <strong>{% if lowercase %}{{ category.label|lower }}{% else %}{{ category.label }}{% endif %}</strong> {% if inline %}:{% else %}·{% endif %}
-{# djlint:on #}
-{% if category.name == "ru" %}
-  {{ hedge_data.hedges.to_remove.ru.names }}
-{% elif category.name == "l350_3" %}
-  {{ hedge_data.hedges.to_remove.l350_3.names }}
-{% elif category.name == "hru" %}
-  {{ hedge_data.hedges.to_remove.hru.names }}
-{% endif %}
-{# djlint:off #}
-</{% if inline %}span{% else %}p{% endif %}>
+{% load hedges %}
+
+{# djlint:off — the wrapper tag name is dynamic, djlint cannot pair open/close #}
+{% with tag=inline|yesno:"span,p" %}
+  <{{ tag }} class="hedges-category-header {{ category.name }}">
+  <strong>
+    {% if lowercase %}
+      {{ category.label|lower }}
+    {% else %}
+      {{ category.label }}
+    {% endif %}
+  </strong> {{ inline|yesno:":,·" }}
+  {% with hedge_data|hedges_category:category as hedges %}{{ hedges.names }}{% endwith %}
+  </{{ tag }}>
+{% endwith %}
 {# djlint:on #}
