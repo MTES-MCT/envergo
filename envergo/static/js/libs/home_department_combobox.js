@@ -38,28 +38,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = "";
     if (dept.contacts_and_links) {
-      html +=
-        '<div id="contacts_and_links" class="fr-p-2w">' +
-        dept.contacts_and_links +
-        "</div>" +
-        '<div class="fr-py-2w"><p>' +
-        "Vous représentez la DDT(M) du département et souhaitez compléter ou modifier les informations affichées ici ? " +
-        '<a href="' + dept.settings_form_url + '" target="_blank" rel="noopener">Cliquez ici</a>.' +
-        "</p></div>";
+      html = `
+        <div id="contacts_and_links" class="fr-p-2w">${dept.contacts_and_links}</div>
+        <div class="fr-py-2w"><p>
+          Vous représentez la DDT(M) du département et souhaitez compléter ou modifier les informations affichées ici ?
+          <a href="${dept.settings_form_url}" target="_blank" rel="noopener">Cliquez ici</a>.
+        </p></div>`;
     } else {
-      html +=
-        '<div class="fr-notice fr-notice--warning">' +
-        '<div class="fr-container"><div class="fr-notice__body"><p>' +
-        '<span class="fr-notice__title"></span>' +
-        '<span class="fr-notice__desc">' +
-        dept.label +
-        " : nous ne disposons pas encore d’information sur les contacts de l’administration en rapport avec la haie." +
-        "</span></p></div></div></div>" +
-        '<div class="fr-py-2w"><p>' +
-        "Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture, " +
-        "des ressources à présenter aux usagers ? " +
-        '<a href="' + dept.settings_form_url + '" target="_blank" rel="noopener">Cliquez ici</a>.' +
-        "</p></div>";
+      html = `
+        <div class="fr-notice fr-notice--warning">
+          <div class="fr-container"><div class="fr-notice__body"><p>
+            <span class="fr-notice__title"></span>
+            <span class="fr-notice__desc">
+              ${dept.label} : nous ne disposons pas encore d’information sur les contacts de l’administration en rapport avec la haie.
+            </span>
+          </p></div></div>
+        </div>
+        <div class="fr-py-2w"><p>
+          Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture,
+          des ressources à présenter aux usagers ?
+          <a href="${dept.settings_form_url}" target="_blank" rel="noopener">Cliquez ici</a>.
+        </p></div>`;
     }
 
     infoDiv.innerHTML = html;
