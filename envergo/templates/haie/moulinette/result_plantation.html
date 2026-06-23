@@ -59,63 +59,7 @@
   {% if HedgeCategory.hru in moulinette.other_categories %}
     {% show_plantation_result plantation_evaluation HedgeCategory.hru is_main=False %}
   {% endif %}
-  {% if moulinette.city_hall_submission == CityHallSubmission.AUTORISATION_URBA %}
-    <div class="fr-mb-3w fr-callout other-category-header">
-      <p>
-        D’après les informations saisies, la destruction de haies et/ou d’alignements est réalisée dans le cadre d’un
-        projet plus large, soumis à permis.
-      </p>
-      <p>
-        Si cela n’a pas encore été fait, <strong>un dossier d’autorisation d’urbanisme (PA, PC, DP ou permis de
-      démolir) doit être déposé.</strong>
-    </p>
-    <p>
-      Les services de la commune ou de l’intercommunalité instruisent la demande sur l’ensemble du projet, incluant
-      la destruction des linéaires. Ils coordonnent l’instruction au titre des réglementations suivantes : urbanisme,
-      sites inscrits, sites classés, sites protégés (abords de monuments historiques et sites patrimoniaux
-      remarquables), réserves naturelles.
-    </p>
-    <p>
-      Le guichet unique de la haie auprès de qui sont déposés les autres dossiers, instruit la demande de destruction
-      au titre des réglementations de la compétence de l’État : espèces protégées, Natura 2000, Loi sur l'eau,
-      protection des captages, L126-3 du code rural, et dispositions de la conditionnalité PAC.
-    </p>
-  </div>
-{% elif moulinette.city_hall_submission == CityHallSubmission.COMPLETE %}
-  <div class="fr-mb-3w fr-callout other-category-header">
-    <p>
-      <strong>La mairie doit être consultée pour savoir si un dossier doit être déposé au titre des règles locales d’urbanisme.</strong>
-    </p>
-    <p>
-      Les linéaires détruits ne bénéficient pas de la procédure d’instruction unique. Il est donc possible qu’une instruction par les services de la commune ou de l’intercommunalité soit nécessaire.
-    </p>
-  </div>
-{% elif moulinette.city_hall_submission == CityHallSubmission.PARTIAL %}
-  <div class="fr-mb-3w fr-callout other-category-header">
-    <p>
-      <strong>La mairie doit être consultée pour savoir si un dossier doit être déposé au titre des règles locales
-      d’urbanisme.</strong>
-    </p>
-    <p>Certains des linéaires détruits ne bénéficient pas de la procédure d’instruction unique :</p>
-    <ul>
-      {% with l350=hedge_data.hedges.to_remove.l350_3 %}
-        {% if l350 %}<li>alignements d’arbres en bord de voie : {{ l350.names }}</li>{% endif %}
-      {% endwith %}
-      {% with hru=hedge_data.hedges.to_remove.hru %}
-        {% if hru %}
-          <li>
-            autres alignements, et haies en bordure de bâtiment, de place publique, ou dans des parcs ou jardins attenants à une
-            habitation : {{ hru.names }}
-          </li>
-        {% endif %}
-      {% endwith %}
-    </ul>
-    <p>
-      Pour ces linéaires, il est possible qu’une instruction par les services de la commune ou de l’intercommunalité
-      soit nécessaire.
-    </p>
-  </div>
-{% endif %}
+  {% city_hall_submission_callout %}
 {% endblock %}
 
 {% block extra_body %}
