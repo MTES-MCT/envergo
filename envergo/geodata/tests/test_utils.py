@@ -5,7 +5,13 @@ Any drift beyond floating-point noise is a real regression.
 """
 
 import pytest
-from django.contrib.gis.geos import LineString, MultiLineString, Point, Polygon
+from django.contrib.gis.geos import (
+    GEOSGeometry,
+    LineString,
+    MultiLineString,
+    Point,
+    Polygon,
+)
 
 from envergo.geodata.tests.factories import (
     LineFactory,
@@ -16,6 +22,7 @@ from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
     compute_hedge_density_around_lines,
     query_hedge_length,
+    query_hedges_display_geojson,
 )
 
 pytestmark = [pytest.mark.django_db, pytest.mark.haie]
@@ -178,3 +185,62 @@ def test_query_hedge_length_excludes_forest_portion():
 
     actual_length = query_hedge_length(truncated, circle)
     assert actual_length == pytest.approx(expected_length, **APPROX)
+
+
+# Minimal real geometries from the production InternalError (5 km density
+# circle near Calvados ∩ terres émergées). The truncated ring is invalid: its
+# 4th and 7th vertices sit ~1e-8 apart — a near-zero-width spike — which GEOS
+# can't node, so ST_Difference raises a non-noded TopologyException.
+NON_NODED_CIRCLE = (
+    "SRID=4326;POLYGON ((-0.6237620203873582 49.06185742287851, "
+    "-0.6357821553197321 49.05794753296565, -0.648730704265775 49.05565240808752, "
+    "-0.662111262251907 49.055060042435514, -0.675410983724087 49.05619316123933, "
+    "-0.6881200843993746 49.059008353345156, -0.699751232308876 49.06339771918509, "
+    "-0.7098581129920114 49.06919297386438, -0.66 49.2, -0.62 49.2, "
+    "-0.6237620203873582 49.06185742287851))"
+)
+NON_NODED_TRUNCATED = (
+    "SRID=4326;POLYGON ((-0.672361806552348 49.0580111626572, "
+    "-0.682249967733818 49.057708064165034, -0.688120084399375 49.059008353345156, "
+    "-0.688303859490724 49.05907770644035, -0.68926166513242 49.0725405043094, "
+    "-0.689455522572321 49.075263660706895, -0.688303870234985 49.059077710495025, "
+    "-0.672361806552348 49.0580111626572))"
+)
+
+
+@pytest.fixture
+def non_noded_geometries():
+    """Return (truncated_buffer, untruncated_circle) that crash ST_Difference."""
+    circle = GEOSGeometry(NON_NODED_CIRCLE)
+    truncated = GEOSGeometry(NON_NODED_TRUNCATED)
+    return truncated, circle
+
+
+def test_query_hedge_length_handles_non_noded_difference(non_noded_geometries):
+    """Don't crash on an invalid truncated buffer.
+
+    Regression for the ST_Difference excluded-zone optimization (commit
+    750728481); fixed by wrapping both operands in ST_MakeValid.
+    """
+    truncated, circle = non_noded_geometries
+    # A hedge inside the circle so the query processes a real row.
+    LineFactory(
+        geometry=MultiLineString([LineString([(-0.66, 49.06), (-0.661, 49.06)])])
+    )
+
+    length = query_hedge_length(truncated, circle)
+
+    assert length >= 0.0
+
+
+def test_query_hedges_display_geojson_handles_non_noded_difference(
+    non_noded_geometries,
+):
+    """Same ST_Difference flaw, same fix, in the display query."""
+    truncated, circle = non_noded_geometries
+    LineFactory(
+        geometry=MultiLineString([LineString([(-0.66, 49.06), (-0.661, 49.06)])])
+    )
+
+    # Returns without raising; result may be None when nothing intersects.
+    query_hedges_display_geojson(truncated, circle)
