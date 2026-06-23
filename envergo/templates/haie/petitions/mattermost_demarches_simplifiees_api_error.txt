@@ -1,8 +1,8 @@
-### Récupération des statuts des dossiers depuis Démarches-simplifiées : :x: erreur
+### Récupération des statuts des dossiers depuis Démarche numérique : :x: erreur
 
-L'API de Démarches Simplifiées a retourné une erreur lors de la récupération des dossiers de la démarche n°{{demarche_number}}.
+L'API de « Démarche numérique » a retourné une erreur lors de la récupération des dossiers de la démarche n°{{demarche_number}}.
 
-Réponse de Démarches Simplifiées :
+Réponse de « Démarche numérique » :
 ```
 {{ error|safe }}
 ```
