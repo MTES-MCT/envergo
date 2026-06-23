@@ -79,7 +79,7 @@ def test_moulinette_evaluation_single_procedure(
         ("alignement", "non_concerne", "non_concerne"),
     ],
 )
-def test_moulinette_evaluation_droit_constant(
+def test_moulinette_evaluation_outside_RU(
     type_haie, expected_result, expected_result_code
 ):
     DCConfigHaieFactory()
@@ -458,7 +458,7 @@ class TestCompensationRatio:
         evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
         assert evaluator.get_replantation_coefficient() == 0.0
 
-    def test_droit_constant_returns_zero(self):
+    def test_outside_RU_returns_zero(self):
         """When not in régime unique, ratio is 0.0."""
         DCConfigHaieFactory()
         moulinette = make_moulinette_haie_with_density(
@@ -669,8 +669,8 @@ class TestEmergencyProcedureForm:
         moulinette = MoulinetteHaie(data)
         assert "urgence" not in moulinette.catalog
 
-    def test_urgence_field_absent_for_droit_constant(self):
-        """The urgence question does not appear in droit constant mode."""
+    def test_urgence_field_absent_outside_ru(self):
+        """The urgence question does not appear outside the RU mode."""
         DCConfigHaieFactory()
         data = make_moulinette_haie_data(
             hedge_data=[make_hedge(type_haie="mixte")],
@@ -693,7 +693,7 @@ class TestEmergencyProcedureForm:
         field_names = [f.name for form in moulinette.additional_forms for f in form]
         assert "urgence" in field_names
 
-    def test_urgence_not_in_additional_forms_droit_constant(self):
+    def test_urgence_not_in_additional_forms_outside_RU(self):
         """The urgence field does not appear in additional forms for droit constant."""
         DCConfigHaieFactory()
         data = make_moulinette_haie_data(
