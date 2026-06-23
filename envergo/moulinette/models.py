@@ -1351,7 +1351,7 @@ class ConfigHaie(ConfigBase):
                     raise ValidationError(
                         {
                             "demarche_simplifiee_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
-                            " au moins l'id côté Démarches Simplifiées et la "
+                            " au moins l'id côté « Démarche numérique » et la "
                             "source de la valeur côté guichet unique de la haie."
                         }
                     )
