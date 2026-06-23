@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import operator
 import uuid
 from functools import cached_property, reduce
@@ -33,6 +35,7 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_lines,
     get_department_from_coords,
 )
+from envergo.utils.fields import LabelChoices
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -98,6 +101,24 @@ EPSG_WGS84 = 4326
 EPSG_MERCATOR = 3857
 
 EPSG_LAMB93 = 2154
+
+
+class HedgeCategory(LabelChoices):
+    ru = (
+        "Régime unique",
+        "Haies (procédure unique)",
+        "Haies bénéficiant d'une procédure unique",
+    )
+    l350_3 = (
+        "L350-3",
+        "Alignements d'arbres bord de voie",
+        "Alignements d'arbres en bord de voie",
+    )
+    hru = (
+        "Hors régime unique",
+        "Linéaires hors procédure unique",
+        "Autres haies et alignements, hors procédure unique",
+    )
 
 
 class Hedge:
@@ -196,6 +217,29 @@ class Hedge:
         return self.additionalData.get("sous_ligne_electrique", None)
 
     @property
+    def category(self):
+        """Return the category of the hedge (régime unique, L350-3 or hors régime unique)."""
+        if (
+            self.hedge_type != HedgeTypeBase.ALIGNEMENT
+            and (
+                not self.prop("bord_batiment") or not self.has_property("bord_batiment")
+            )
+            and (not self.prop("parc_jardin") or not self.has_property("parc_jardin"))
+            and (
+                not self.prop("place_publique")
+                or not self.has_property("place_publique")
+            )
+        ):
+            return HedgeCategory.ru
+
+        if self.hedge_type == HedgeTypeBase.ALIGNEMENT and (
+            self.prop("bord_voie") or not self.has_property("bord_voie")
+        ):
+            return HedgeCategory.l350_3
+
+        return HedgeCategory.hru
+
+    @property
     def effective_hedge_type(self):
         """Return the hedge type to use for species filtering.
 
@@ -243,6 +287,13 @@ class HedgeList(list[Hedge]):
     def length(self):
         return sum(h.length for h in self)
 
+    @property
+    def centroid(self):
+        """Returns centroid"""
+        geometries = [h.geometry for h in self]
+        hedges_centroid = centroid(union_all(geometries))
+        return hedges_centroid
+
     def to_plant(self) -> Self:
         return HedgeList([h for h in self if h.type == TO_PLANT])
 
@@ -254,7 +305,12 @@ class HedgeList(list[Hedge]):
             [
                 h
                 for h in self
-                if h.is_on_pac and h.hedge_type != HedgeTypeBase.ALIGNEMENT
+                if h.is_on_pac
+                and h.hedge_type != HedgeTypeBase.ALIGNEMENT
+                and (
+                    not h.has_property("mode_plantation")
+                    or h.prop("mode_plantation") == "plantation"
+                )
             ]
         )
 
@@ -284,22 +340,15 @@ class HedgeList(list[Hedge]):
 
     def ru(self) -> Self:
         """Select all hedges that are covered by the single procedure (régime unique, RU)."""
-        return (
-            self.n_alignement()
-            .prop("!bord_batiment")
-            .prop("!parc_jardin")
-            .prop("!place_publique")
-        )
+        return HedgeList([h for h in self if h.category == HedgeCategory.ru])
 
     def l350_3(self) -> Self:
         """Select all tree alignment that are covered the L350-3 regulation."""
-        return self.alignement().prop("bord_voie")
+        return HedgeList([h for h in self if h.category == HedgeCategory.l350_3])
 
     def hru(self) -> Self:
         """Select all hedges are not covered by either the single procedure or L350-3"""
-        ru = self.ru()
-        l350_3 = self.l350_3()
-        return HedgeList([h for h in self if h not in ru and h not in l350_3])
+        return HedgeList([h for h in self if h.category == HedgeCategory.hru])
 
     def to_multilinestring(self):
         """Return a MultiLineString combining all hedges in this list."""
@@ -336,6 +385,74 @@ class HedgeList(list[Hedge]):
         else:
             hedges = HedgeList([h for h in self if h.prop(p) or not h.has_property(p)])
         return hedges
+
+    def evaluator_category(self, single_procedure, category) -> Self:
+        """Return the subset of hedges an evaluator should assess for `category`.
+
+        Without single_procedure: all hedges go to HRU, other categories are empty.
+
+        With single_procedure: hedges to remove are split by Hedge.category.
+        Hedges to plant whose category has no removal counterpart are orphans —
+        they get absorbed by an active category (priority: HRU > RU > L350-3).
+        L350-3 never absorbs orphans from other categories.
+        """
+        if not single_procedure:
+            if category == HedgeCategory.hru:
+                return HedgeList(self)
+            else:
+                return HedgeList()
+
+        hru = self.hru()
+        ru = self.ru()
+        l350_3 = self.l350_3()
+
+        has_hru = bool(hru.to_remove())
+        has_ru = bool(ru.to_remove())
+        has_l350_3 = bool(l350_3.to_remove())
+
+        if category == HedgeCategory.hru:
+            if not has_hru:
+                return HedgeList()
+            if has_ru and has_l350_3:
+                # All categories present: return only HRU
+                return hru
+            if not has_ru and not has_l350_3:
+                # Only one category (HRU): all hedges to plant are categorized as HRU
+                return HedgeList(self)
+            if not has_ru:
+                # Two categories (HRU and L350-3): RU to plant are categorized as HRU
+                return HedgeList(hru + ru)
+            # Two categories (HRU and RU): L350-3 to plant are categorized as HRU
+            return HedgeList(hru + l350_3)
+        elif category == HedgeCategory.ru:
+            if not has_ru:
+                return HedgeList()
+            if has_hru:
+                # HRU present (absorbs orphans): return only RU
+                return ru
+            if has_l350_3:
+                # Two categories (RU and L350-3): HRU to plant are categorized as RU
+                return HedgeList(hru + ru)
+            # Only one category (RU): all hedges to plant are categorized as RU
+            return HedgeList(self)
+        elif category == HedgeCategory.l350_3:
+            if not has_l350_3:
+                return HedgeList()
+            if not has_hru and not has_ru:
+                # Only one category (L350-3): all hedges to plant are categorized as L350-3
+                return HedgeList(self)
+            # L350-3 never absorbs from other categories
+            return l350_3
+
+        raise ValueError(f"Category not recognized : {category}")
+
+    def get_all_species_hru(self):
+        """Return the local list of protected species (legacy HRU logic)."""
+        return Species.hru.for_hedges(self.to_remove())
+
+    def get_all_species(self):
+        """Return the RU list of protected species."""
+        return Species.ru.for_hedges(self.to_remove())
 
 
 class HedgeData(models.Model):
@@ -410,25 +527,6 @@ class HedgeData(models.Model):
             self._length_to_remove = self.hedges().to_remove().length
         return self._length_to_remove
 
-    def hedges_to_remove_pac(self):
-        return self.hedges().to_remove().pac()
-
-    def hedges_to_plant_pac(self):
-        def pac_selection(h):
-            """Check if hedge must be taken into account for pac plantation."""
-            res = h.is_on_pac and h.hedge_type != "alignement"
-            if h.has_property("mode_plantation"):
-                res = res and h.prop("mode_plantation") == "plantation"
-            return res
-
-        return HedgeList([h for h in self.hedges_to_plant() if pac_selection(h)])
-
-    def length_to_plant_pac(self):
-        return self.hedges_to_plant_pac().length
-
-    def lineaire_detruit_pac(self):
-        return self.hedges_to_remove_pac().length
-
     def lineaire_detruit_pac_including_alignement(self):
         return sum(h.length for h in self.hedges_to_remove() if h.is_on_pac)
 
@@ -448,7 +546,7 @@ class HedgeData(models.Model):
     @cached_property
     def department_code(self):
         """Resolve the department code from the centroid of hedges to remove."""
-        hedges_centroid = self.get_centroid_to_remove()
+        hedges_centroid = self.hedges_to_remove().centroid
         return get_department_from_coords(hedges_centroid.x, hedges_centroid.y)
 
     def get_department(self):
@@ -494,18 +592,10 @@ class HedgeData(models.Model):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
-    def get_all_species_hru(self):
-        """Return the local list of protected species (legacy HRU logic)."""
-        return Species.hru.for_hedges(self.hedges_to_remove())
-
-    def get_all_species(self):
-        """Return the RU list of protected species."""
-        return Species.ru.for_hedges(self.hedges_to_remove())
-
     def compute_density_around_points_with_artifacts(self):
         """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
 
-        centroid_shapely = self.get_centroid_to_remove()
+        centroid_shapely = self.hedges_to_remove().centroid
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
         bundle = compute_hedge_densities_around_point(centroid_geos, radii=[200, 5000])
 
@@ -581,7 +671,7 @@ class HedgeData(models.Model):
         return False
 
     def get_statistics(self):
-        hedge_centroid_coords = self.get_centroid_to_remove()
+        hedge_centroid_coords = self.hedges_to_remove().centroid
         ru_to_plant = self.hedges_to_plant().ru()
         l350_3_to_plant = self.hedges_to_plant().l350_3()
         hru_to_plant = self.hedges_to_plant().hru()
@@ -616,6 +706,17 @@ class HedgeData(models.Model):
             ),
             "dept_haie_detruite": self.get_department(),
         }
+
+    def get_hedges_by_category(
+        self, single_procedure
+    ) -> dict[HedgeCategory, HedgeList]:
+        """Get the hedges list for each category."""
+        hedges_by_category = {
+            category: self.hedges().evaluator_category(single_procedure, category)
+            for category in HedgeCategory
+        }
+
+        return hedges_by_category
 
 
 KINGDOMS = Choices(

@@ -210,10 +210,18 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         Even though the request is a POST, the moulinette arguments are passed
         in the GET parameters. That's why we had to override this method.
         """
+        data = self.request.GET.dict()
+        self.invalid_json = False
+        if self.request.body:
+            try:
+                body = json.loads(self.request.body)
+                data["haies"] = HedgeData(data=body)
+            except json.JSONDecodeError:
+                self.invalid_json = True
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.request.GET,
+            "data": data,
         }
         return kwargs
 
@@ -221,17 +229,18 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     def post(self, request, *args, **kwargs):
+        if self.invalid_json:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
         if not self.moulinette.is_valid():
             return JsonResponse({"error": "Moulinette is not valid"}, status=400)
 
         try:
-            data = json.loads(request.body)
-            hedge_data = HedgeData(data=data)
-            evaluator = PlantationEvaluator(self.moulinette, hedge_data)
+            evaluator = PlantationEvaluator(
+                self.moulinette, self.moulinette.catalog["haies"]
+            )
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
             logger.exception(e)
             return JsonResponse({"error": "An internal error has occurred"}, status=500)

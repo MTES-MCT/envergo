@@ -907,7 +907,6 @@ div#instructor-view-side-menu {
   }
 }
 
-#form-group-instructor_free_mention .label-content,
 #form-group-instructor_private_mention .label-content,
 #form-group-instructor_free_mention .label-content {
   font-weight: bold;
@@ -1140,6 +1139,13 @@ div.title-with-link-container {
       .fr-btn--secondary:not(:hover) {
         background-color: var(--background-default-grey);
       }
+
+      &.ellipsis {
+        div {
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
     }
   }
 
@@ -1339,6 +1345,45 @@ button.hide-expanded[aria-expanded="true"] {
   }
 }
 
+.other-category-header {
+  background-image: none;
+  padding: 2rem;
+
+  --text-spacing: 0 0 1.5rem;
+}
+
+.hedges-category-header {
+  color: var(--text-mention-grey);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+#regulation-segmented-container {
+  #regulation-segmented-container__label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mention-grey);
+    margin-bottom: 0.5rem;
+  }
+
+  background: var(--background-alt-grey);
+  border-radius: 4px;
+  padding: 1rem 1.25rem 0.75rem;
+  margin-bottom: 2rem;
+
+  .fr-segmented__elements {
+    flex-wrap: nowrap;
+  }
+
+  .fr-segmented__element {
+    flex-grow: 1;
+  }
+
+  .fr-segmented input + label {
+    white-space: normal;
+  }
+}
+
 /* Parametrage page: consistent section spacing */
 .parametrage {
   h2 {
@@ -1361,4 +1406,8 @@ button.hide-expanded[aria-expanded="true"] {
     --ul-type: none;
     --ul-start: 0;
   }
+}
+
+#multi-categories-callout.fr-callout[class*=" fr-icon-"]::before {
+  background-color: var(--blue-france-sun-113-625);
 }

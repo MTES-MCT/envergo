@@ -162,7 +162,7 @@ def resolve_per_hedge_zone_configs(moulinette, hedges):
     }
 
 
-def get_ru_zone_data(moulinette):
+def get_ru_zone_data(moulinette, hedges):
     """Resolve each hedge to its zonage zone and return zone metadata.
 
     Returns a dict with two keys:
@@ -171,8 +171,7 @@ def get_ru_zone_data(moulinette):
     - ``ru_all_zones_resolved``: False if any hedge could not be matched to a
       zone config. Both evaluators use this to short-circuit to non_disponible.
     """
-    haies = moulinette.catalog["haies"]
-    hedges = haies.hedges_to_remove().n_alignement()
+    hedges = hedges.to_remove().n_alignement()
     per_hedge_zone_configs = resolve_per_hedge_zone_configs(moulinette, hedges)
 
     all_resolved = all(
@@ -185,7 +184,7 @@ def get_ru_zone_data(moulinette):
     }
 
 
-def get_ru_per_hedge_coefficients(moulinette, per_hedge_zone_configs):
+def get_ru_per_hedge_coefficients(moulinette, hedges, per_hedge_zone_configs):
     """Compute per-hedge compensation coefficients from zone configs and density.
 
     Because X_densite thresholds differ per zone, the same project-wide
@@ -198,7 +197,8 @@ def get_ru_per_hedge_coefficients(moulinette, per_hedge_zone_configs):
     - ``ru_per_hedge_zone_info``: hedge_id → zone metadata for debug display.
     """
     haies = moulinette.catalog["haies"]
-    hedges = haies.hedges_to_remove().n_alignement()
+    hedges = hedges.to_remove().n_alignement()
+    # TODO : this density should be computed only on hedges of the evaluator category.
     density_400 = haies.density_around_lines.get("density_400") or 0.0
 
     coefficients, per_hedge_zone_info, _ = compute_per_hedge_coefficients(
@@ -261,7 +261,7 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
     return rows
 
 
-def compute_ru_compensation_ratio(moulinette, coefficients=None):
+def compute_ru_compensation_ratio(moulinette, hedges, coefficients=None):
     """Compute the régime unique compensation ratio.
 
     Returns the weighted average of per-hedge compensation coefficients,
@@ -275,19 +275,18 @@ def compute_ru_compensation_ratio(moulinette, coefficients=None):
     if not moulinette.config.single_procedure:
         return 0.0
 
-    haies = moulinette.catalog["haies"]
-    hedges = haies.hedges_to_remove().n_alignement()
+    hedges = hedges.to_remove().n_alignement()
     total_length = hedges.length
     if not total_length:
         return 0.0
 
     if coefficients is None:
         if "ru_per_hedge_zone_configs" not in moulinette.catalog:
-            moulinette.catalog.update(get_ru_zone_data(moulinette))
+            moulinette.catalog.update(get_ru_zone_data(moulinette, hedges))
         if "per_hedge_coefficients" not in moulinette.catalog:
             zone_configs = moulinette.catalog["ru_per_hedge_zone_configs"]
             moulinette.catalog.update(
-                get_ru_per_hedge_coefficients(moulinette, zone_configs)
+                get_ru_per_hedge_coefficients(moulinette, hedges, zone_configs)
             )
         coefficients = moulinette.catalog["per_hedge_coefficients"]
 

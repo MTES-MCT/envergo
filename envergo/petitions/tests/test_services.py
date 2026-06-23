@@ -349,7 +349,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     info = ep_aisne_get_instructor_view_context(
-        moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
+        moulinette.ep.hru__ep_aisne._evaluator, petition_project, moulinette
     )
 
     expected_result = {
@@ -481,7 +481,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     info = ep_normandie_get_instructor_view_context(
-        moulinette.ep.ep_normandie._evaluator,
+        moulinette.ep.hru__ep_normandie._evaluator,
         petition_project,
         moulinette,
         plantation_eval,
@@ -590,7 +590,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "lpm": 39,
             "reduced_lpm": 31,
         },
-        "replantation_coefficient": Decimal("1.40"),
+        "replantation_coefficient": 1.40,
     }
     assert info == expected_result
 
@@ -655,7 +655,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Bonnes conditions agricoles et environnementales - Fiche VIII",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -665,7 +665,9 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
+        moulinette.conditionnalite_pac.hru__bcae8._evaluator,
+        petition_project,
+        moulinette,
     )
     # noqa: E501
     expected_result = {
@@ -793,7 +795,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Alignements arbres L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -804,7 +806,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     context = alignement_arbres_get_instructor_view_context(
-        moulinette.alignement_arbres.alignement_arbres._evaluator,
+        moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
         petition_project,
         moulinette,
         plantation_eval,
