@@ -26,7 +26,7 @@ TEST_LAT = 49.32252
 
 @pytest.fixture
 def hedge_density_fixture():
-    """One `terres_emergees` zone + one `haies` map with the default line."""
+    """One `density_reference` zone + one `haies` map with the default line."""
     LineFactory()
     TerresEmergeesZoneFactory()
     return Point(TEST_LNG, TEST_LAT, srid=4326)
