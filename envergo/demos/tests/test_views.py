@@ -38,12 +38,12 @@ def test_hedges_density_around_point_demo(client):
 
 
 def test_hedges_density_around_point_demo_on_land(client):
-    """Density demo with a point inside a `terres_emergees` zone.
+    """Density demo with a point inside a `density_reference` zone.
 
-    The default `LineFactory` setup creates no `terres_emergees` zones, so
+    The default `LineFactory` setup creates no `density_reference` zones, so
     the on-land check returns False and the view silently exercises the
     off-land sentinel branch (density=1.0). This test seeds a real
-    terres_emergees zone covering France so the on-land branch is actually
+    density_reference zone covering France so the on-land branch is actually
     hit, and asserts the resulting context contains real (non-sentinel)
     density values and a non-null truncated 5 km circle.
     """
@@ -68,9 +68,9 @@ def test_hedges_density_around_point_demo_on_land(client):
 
 
 def test_hedges_density_around_point_demo_off_land(client):
-    """Density demo with a point outside any `terres_emergees` zone.
+    """Density demo with a point outside any `density_reference` zone.
 
-    Sets up a real terres_emergees zone (Hérault, in southern France) plus
+    Sets up a real density_reference zone (Hérault, in southern France) plus
     haies in northern France, then queries with a point in the north — the
     point is well outside the only land zone, so the on-land check returns
     False and the off-land sentinel branch runs. This locks in two
@@ -85,7 +85,7 @@ def test_hedges_density_around_point_demo_off_land(client):
     TerresEmergeesZoneFactory(geometry=herault_multipolygon)
     url = reverse("demo_density")
     # WHEN I get the demo page with a point in northern France (lines area),
-    # which is far from the only terres_emergees zone (Hérault, in the south)
+    # which is far from the only density_reference zone (Hérault, in the south)
     params = "lng=3.58123&lat=49.32252"
     full_url = f"{url}?{params}"
     response = client.get(full_url)

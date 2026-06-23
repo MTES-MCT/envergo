@@ -25,7 +25,7 @@ MAP_TYPES = Choices(
     ("species", _("Espèces protégées")),
     ("species_legacy", _("Espèces protégées (historique)")),
     ("haies", "Haies"),
-    ("terres_emergees", "Délimitation terres + France"),
+    ("density_reference", "Surface de référence du calcul de densité bocagère"),
     ("zonage", "Identifiant zonage"),
     ("zone_sensible_ep", "Zone sensible EP"),
 )

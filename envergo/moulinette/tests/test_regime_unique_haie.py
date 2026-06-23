@@ -6,6 +6,7 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_poly
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.regime_unique_haie import URGENCE_MOTIFS
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -78,7 +79,7 @@ def test_moulinette_evaluation_single_procedure(
         ("alignement", "non_concerne", "non_concerne"),
     ],
 )
-def test_moulinette_evaluation_droit_constant(
+def test_moulinette_evaluation_outside_RU(
     type_haie, expected_result, expected_result_code
 ):
     DCConfigHaieFactory()
@@ -457,7 +458,7 @@ class TestCompensationRatio:
         evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
         assert evaluator.get_replantation_coefficient() == 0.0
 
-    def test_droit_constant_returns_zero(self):
+    def test_outside_RU_returns_zero(self):
         """When not in régime unique, ratio is 0.0."""
         DCConfigHaieFactory()
         moulinette = make_moulinette_haie_with_density(
@@ -624,3 +625,94 @@ class TestMultiZoneHedges:
         evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
         # (100 * 2.0 + 100 * 4.0) / 200 = 3.0
         assert evaluator.get_replantation_coefficient() == 3.0
+
+
+# ---------------------------------------------------------------------------
+# Emergency procedure tests
+# ---------------------------------------------------------------------------
+
+
+class TestEmergencyProcedureForm:
+    """Test the urgence complementary question visibility."""
+
+    @pytest.mark.parametrize("motif", URGENCE_MOTIFS)
+    def test_urgence_field_visible_for_trigger_motifs(self, motif):
+        """The urgence question appears for each trigger motif in régime unique."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            motif=motif,
+            urgence="oui",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert moulinette.catalog.get("urgence") == "oui"
+
+    @pytest.mark.parametrize(
+        "motif",
+        [
+            "amelioration_culture",
+            "amenagement",
+            "amelioration_ecologique",
+            "embellissement",
+        ],
+    )
+    def test_urgence_field_absent_for_non_trigger_motifs(self, motif):
+        """The urgence question does not appear for motifs outside the trigger list."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            motif=motif,
+            urgence="oui",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert "urgence" not in moulinette.catalog
+
+    def test_urgence_field_absent_outside_ru(self):
+        """The urgence question does not appear outside the RU mode."""
+        DCConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            motif="securite",
+            urgence="oui",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert "urgence" not in moulinette.catalog
+
+    def test_urgence_in_additional_forms(self):
+        """The urgence field appears in the additional forms for the user."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            motif="securite",
+        )
+        moulinette = MoulinetteHaie(data)
+        field_names = [f.name for form in moulinette.additional_forms for f in form]
+        assert "urgence" in field_names
+
+    def test_urgence_not_in_additional_forms_outside_RU(self):
+        """The urgence field does not appear in additional forms for droit constant."""
+        DCConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            motif="securite",
+        )
+        moulinette = MoulinetteHaie(data)
+        field_names = [f.name for form in moulinette.additional_forms for f in form]
+        assert "urgence" not in field_names
+
+    def test_urgence_not_in_additional_forms_wrong_motif(self):
+        """The urgence field does not appear in additional forms for non-trigger motifs."""
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            motif="amenagement",
+        )
+        moulinette = MoulinetteHaie(data)
+        field_names = [f.name for form in moulinette.additional_forms for f in form]
+        assert "urgence" not in field_names

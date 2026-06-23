@@ -23,6 +23,7 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
+from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
@@ -862,6 +863,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         #   natura2000_haie map is displayed with custom message : "Map import processing"
         #   protection_captages map is displayed with custom message : "Data not publicly available"
         MAPS_REGULATION_LIST = [
+            "natura2000_haie",
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
@@ -900,8 +902,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         )
 
         grouped_criteria_by_regulation = {
-            k: list(v)
-            for k, v in groupby(criteria_list, key=attrgetter("regulation.regulation"))
+            k: list(v) for k, v in groupby(criteria_list, key=attrgetter("regulation"))
         }
         context["regulation_list"] = regulation_list
         context["grouped_criteria"] = grouped_criteria_by_regulation
@@ -910,4 +911,15 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["department_settings_form"] = (
             f"https://tally.so/r/Pd9b9e?{department_query_string}"
         )
+
+        context["ru_zone_configs"] = self.object.zone_configs
+
+        # Compute the hedge density reference map list
+        density_maps = (
+            Map.objects.filter(map_type=MAP_TYPES.density_reference)
+            .filter(departments__contains=[department.department])
+            .defer("geometry")
+        )
+        context["density_maps"] = density_maps
+
         return context

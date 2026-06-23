@@ -896,7 +896,7 @@ class Criterion(models.Model):
                 "Criterion must be evaluated before accessing the form class."
             )
 
-        return self._evaluator.form_class
+        return self._evaluator.get_form_class()
 
     def get_form(self):
         if not hasattr(self, "_evaluator"):
@@ -1550,6 +1550,25 @@ class ConfigHaie(ConfigBase):
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
         ]
+
+    @property
+    def zone_configs(self):
+        """Return the matrix of zone -> compensation coeffs.
+
+        There are two cases:
+         - first case, there are multiple specific zones (has_ru_zonage=True)
+         - second case, there is no zonage, a single key exists (default)
+
+        But we suppose the coefficient json is simply correctly filled, hence we just
+        return the full json.
+
+        """
+
+        if not self.single_procedure:
+            return {}
+
+        coeffs = self.single_procedure_settings.get("coeff_compensation")
+        return coeffs
 
 
 TEMPLATE_KEYS = [

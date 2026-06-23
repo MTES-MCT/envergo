@@ -645,7 +645,7 @@ def trim_land(geom):
             SELECT ST_AsText(ST_Intersection(u.merged, i.geom))
             FROM unioned u, input_poly i;
         """,
-            [geom.ewkt, geom.ewkt, MAP_TYPES.terres_emergees],
+            [geom.ewkt, geom.ewkt, MAP_TYPES.density_reference],
         )
         wkt = cursor.fetchone()[0]
         if wkt:
@@ -670,6 +670,10 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
       - trunc: the truncated buffer (complex, used for clipping)
       - circ: the raw circle (simple, used for fast containment checks)
       - excluded: ST_Difference(circ, trunc) — sea / forest zones
+
+    ST_MakeValid guards both ST_Difference operands: the unioned truncated
+    buffer can carry near-zero-width spikes that GEOS can't node, otherwise
+    raising a non-noded TopologyException.
 
     The WHERE clause pre-filters hedges against the simple circle (efficient
     spatial index lookup). Then for each hedge, a CASE chooses between:
@@ -700,8 +704,8 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                 ST_GeomFromEWKT(%(truncated)s) AS trunc,
                 ST_GeomFromEWKT(%(circle)s) AS circ,
                 ST_Difference(
-                    ST_GeomFromEWKT(%(circle)s),
-                    ST_GeomFromEWKT(%(truncated)s)
+                    ST_MakeValid(ST_GeomFromEWKT(%(circle)s)),
+                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s))
                 ) AS excluded
         )
         SELECT COALESCE(SUM(CASE
@@ -752,8 +756,8 @@ def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
                 ST_GeomFromEWKT(%(circle)s) AS circ,
                 ST_GeomFromEWKT(%(truncated)s) AS trunc,
                 ST_Difference(
-                    ST_GeomFromEWKT(%(circle)s),
-                    ST_GeomFromEWKT(%(truncated)s)
+                    ST_MakeValid(ST_GeomFromEWKT(%(circle)s)),
+                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s))
                 ) AS excluded
         )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(

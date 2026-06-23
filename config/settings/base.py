@@ -434,6 +434,7 @@ DEMARCHES_SIMPLIFIEES = {
     ),
     "INSTRUCTEUR_ID": env("DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID", default=None),
     "AUTOMATIC_SENDER_EMAIL": "contact@demarche.numerique.gouv.fr",
+    "ARCHIVE_MAX_SIZE": 20 * 1024 * 1024,
 }
 
 OPS_MATTERMOST_HANDLERS = env.list("DJANGO_OPS_MATTERMOST_HANDLERS", default=[])
@@ -485,6 +486,7 @@ HAIE_FAQ_URLS = {
     "IDENTIFY_NATURAL_AREA_MANAGER": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-une-reserve-naturelle-et-son-gestionnaire",  # noqa: E501
     "GUIDE_FORM_HEDGE_DESTRUCTION": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/formulaire-de-declaration-prealable-pour-une-destruction-de-haie-ou-alignement-darbres",  # noqa: E501
     "IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-les-protections-sur-les-haies-dans-le-geoportail-de-lurbanisme#methode-preferentielle",  # noqa: E501
+    "EMERGENCY_PROCEDURE": "https://aide.haie.beta.gouv.fr/",
 }
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload

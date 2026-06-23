@@ -1184,4 +1184,13 @@ button.hide-expanded[aria-expanded="true"] {
   h3 {
     margin-top: 1.5rem;
   }
+
+  .fr-table caption {
+    display: none;
+  }
+
+  ul.config {
+    --ul-type: none;
+    --ul-start: 0;
+  }
 }

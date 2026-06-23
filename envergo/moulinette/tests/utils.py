@@ -130,6 +130,7 @@ def make_moulinette_haie_data(
     element="haie",
     department="44",
     contexte="non",
+    urgence="non",
     **extra,
 ):
     """Build a MoulinetteHaie-compatible data dict.
@@ -162,6 +163,7 @@ def make_moulinette_haie_data(
         "haies": hedges,
         "department": department,
         "contexte": contexte,
+        "urgence": urgence,
         **extra,
     }
     return {"initial": data, "data": data}
@@ -388,3 +390,17 @@ def setup_regime_unique_haie(activation_map):
         ),
     ]
     return regulation, criteria
+
+
+# ---------------------------------------------------------------------------
+# Other helpers
+# ---------------------------------------------------------------------------
+
+
+def flatten_actions_to_take(moulinette):
+    """Flatten actions_to_take into a set of slugs."""
+    actions_to_take_flattened = {
+        target: [action.slug for action in actions_list]
+        for target, actions_list in moulinette.actions_to_take.items()
+    }
+    return actions_to_take_flattened
