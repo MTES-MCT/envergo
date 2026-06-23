@@ -101,12 +101,6 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
             return None
         return self.form_class
 
-    def get_form(self):
-        """Gate form instantiation on single_procedure."""
-        if not self.moulinette.config.single_procedure:
-            return None
-        return super().get_form()
-
     def get_result_code(self, result_data):
         """Override to detect missing zone config before the CODE_MATRIX lookup."""
         if self.moulinette.config.single_procedure and not self.catalog.get(
