@@ -718,9 +718,7 @@ def test_map_to_json_truncates_polygons_around_center():
     perimeter = SimpleNamespace(geometry=big_polygon)
     entry = MapPolygon(perimeters=[perimeter], color="red", label="test")
 
-    truncated = json.loads(
-        Map(center=center, entries=[entry], truncate=True).to_json()
-    )
+    truncated = json.loads(Map(center=center, entries=[entry], truncate=True).to_json())
     full = json.loads(Map(center=center, entries=[entry], truncate=False).to_json())
 
     truncated_geom = GEOSGeometry(json.dumps(truncated["polygons"][0]["polygon"]))

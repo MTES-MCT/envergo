@@ -1339,9 +1339,7 @@ def test_hedge_length_is_geodesic_meters():
     value guards against drift; the kilometer magnitude guards against the
     classic regression of measuring the WGS84 line in degrees (~0.07).
     """
-    hedge = HedgeFactory(
-        latLngs=[{"lat": 43.6, "lng": 3.0}, {"lat": 43.6, "lng": 3.1}]
-    )
+    hedge = HedgeFactory(latLngs=[{"lat": 43.6, "lng": 3.0}, {"lat": 43.6, "lng": 3.1}])
 
     assert hedge.length == pytest.approx(8074.307052980297, rel=1e-9)
     assert hedge.length > 1000
