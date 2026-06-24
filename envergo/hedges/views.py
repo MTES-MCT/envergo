@@ -19,7 +19,7 @@ from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
@@ -180,6 +180,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         )
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
         context["is_alternative"] = bool(self.request.GET.get("alternative", False))
+        context["HedgeCategory"] = HedgeCategory
 
         return context
 
