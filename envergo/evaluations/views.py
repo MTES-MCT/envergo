@@ -517,6 +517,7 @@ class RequestEvalWizardStep3(WizardStep3Mixin, WizardStepMixin, UpdateView):
             updated = Request.objects.filter(id=request.id, submitted=False).update(
                 submitted=True
             )
+            request.submitted = True
             if updated:
                 transaction.on_commit(send_notifications)
                 mtm_keys = {
