@@ -111,7 +111,7 @@ def test_moulinette_evaluation_single_procedure(
         ("alignement", "non_disponible"),
     ],
 )
-def test_moulinette_evaluation_droit_constant(type_haie, expected_result):
+def test_moulinette_evaluation_outside_RU(type_haie, expected_result):
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
@@ -487,7 +487,7 @@ class TestCompensationRatio:
         )
         assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
-    def test_droit_constant_returns_zero(self):
+    def test_outside_RU_returns_zero(self):
         """When not in régime unique, compensation ratio is 0.0."""
         DCConfigHaieFactory()
         hedges = HedgeList([make_hedge_factory(length=100, type_haie="mixte")])

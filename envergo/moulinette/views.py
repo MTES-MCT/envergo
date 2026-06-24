@@ -932,4 +932,12 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["density_maps"] = density_maps
         context["ru_zone_configs"] = self.object.zone_configs
 
+        # Compute the hedge density reference map list
+        density_maps = (
+            Map.objects.filter(map_type=MAP_TYPES.density_reference)
+            .filter(departments__contains=[department.department])
+            .defer("geometry")
+        )
+        context["density_maps"] = density_maps
+
         return context
