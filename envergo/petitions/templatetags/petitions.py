@@ -281,7 +281,7 @@ def display_pause(due_date):
         f"""<span class="due-date fr-text--sm">
                 <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
                 Attente de compléments
-              </span><br/>"""
+              </span>"""
     )
 
 
