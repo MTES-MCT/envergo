@@ -533,7 +533,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """
         if self.demarches_simplifiees_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/dossiers/"
+                f"{settings.DEMARCHES_SIMPLIFIEES['DOSSIER_BASE_URL']}/dossiers/"
                 f"{self.demarches_simplifiees_dossier_number}/"
             )
         return None
@@ -544,7 +544,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """
         if self.demarches_simplifiees_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/dossiers/"
+                f"{settings.DEMARCHES_SIMPLIFIEES['DOSSIER_BASE_URL']}/procedures/{demarche_number}/dossiers/"
                 f"{self.demarches_simplifiees_dossier_number}/"
             )
         return None
@@ -790,7 +790,7 @@ class StatusLog(models.Model):
         default=timezone.now,
     )
     prefectural_order = models.FileField(
-        "Arrêté préfectoral",
+        "Document de décision",
         upload_to=prefectural_order_file_format,
         blank=True,
     )

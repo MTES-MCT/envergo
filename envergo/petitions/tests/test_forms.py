@@ -76,7 +76,7 @@ def test_closing_simulation_check_error_message():
     assert not form.is_valid()
     assert form.errors["simulation_check"] == [
         "Pour garantir la qualité des données transmises à l'observatoire de la haie, "
-        "la cohérence entre le dossier et l'arrêté doit être vérifiée."
+        "la cohérence entre le dossier et le document de décision doit être vérifiée."
     ]
 
 
