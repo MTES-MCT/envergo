@@ -13,10 +13,10 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
-from envergo.moulinette.regulations import HaieCriterionCategory, Map, MapPolygon
+from envergo.moulinette.regulations import Map, MapPolygon
 
 if TYPE_CHECKING:
     from envergo.moulinette.models import MoulinetteHaie
@@ -113,7 +113,7 @@ if _missing_results:
 # easier to patch it in tests.
 def get_replantation_coefficient_by_category(moulinette):
     """Compute the replantation coefficient R, for each category."""
-    R_by_category = {category: D("0") for category in HaieCriterionCategory}
+    R_by_category = {category: D("0") for category in HedgeCategory}
     for regulation in moulinette.regulations:
         if regulation.is_activated():
             for criterion in regulation.criteria.all():
@@ -396,7 +396,7 @@ class PlantationEvaluator:
         # We make sure the "min length condition" exists if it was not explicitely
         # added by an evaluator.
 
-        for category in HaieCriterionCategory:
+        for category in HedgeCategory:
             has_min_length_condition = False
             for condition in conditions_by_category[category]:
                 if isinstance(condition, MinLengthCondition):
@@ -420,18 +420,21 @@ class PlantationEvaluator:
         # Processus d'addition/déduplication en trois étapes
         # Etape 1 : dédupliquer les conditions par catégorie en ne conservant que la plus restrictive
         for conditions in conditions_by_category.values():
-            candidates = [
-                c for c in conditions if c.result is not None and c.must_display()
-            ]
-            displayable_conditions.extend(candidates)
-            deduplicated_conditions.extend(self.deduplicate_conditions(candidates))
+            deduplicated_conditions.extend(self.deduplicate_conditions(conditions))
+            displayable_conditions.extend(
+                [c for c in conditions if c.result is not None and c.must_display()]
+            )
 
         # Etape 2 : combiner les conditions additives
         combined_conditions = self.combine_conditions(deduplicated_conditions)
 
         # Etape 3 : dédupliquer de nouveau l'ensemble pour éviter les doublons dans les conditions non additives
         self._conditions = sorted(
-            self.deduplicate_conditions(combined_conditions),
+            [
+                c
+                for c in self.deduplicate_conditions(combined_conditions)
+                if c.result is not None and c.must_display()
+            ],
             key=attrgetter("order"),
         )
 

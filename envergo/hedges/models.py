@@ -4,10 +4,7 @@ import operator
 import uuid
 from functools import cached_property, reduce
 from textwrap import dedent
-from typing import TYPE_CHECKING, Self
-
-if TYPE_CHECKING:
-    from envergo.moulinette.regulations import HaieCriterionCategory
+from typing import Self
 
 import shapely
 from django.conf import settings
@@ -38,6 +35,7 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_lines,
     get_department_from_coords,
 )
+from envergo.utils.fields import EnrichedChoices
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -103,6 +101,33 @@ EPSG_WGS84 = 4326
 EPSG_MERCATOR = 3857
 
 EPSG_LAMB93 = 2154
+
+
+class HedgeCategory(EnrichedChoices):
+    ru = {
+        "display_value": "Régime unique",
+        "label": "Haies bénéficiant d'une procédure unique",
+        "short_label": "Haies (procédure unique)",
+        "instructor_short_label": "R. u.",
+        "instructor_label": "Haies régime unique",
+        "badge_modifier_class": "",
+    }
+    l350_3 = {
+        "display_value": "L350-3",
+        "label": "Alignements d'arbres en bord de voie",
+        "short_label": "Alignements d'arbres bord de voie",
+        "instructor_label": "Alignements arbres L350-3",
+        "instructor_short_label": "AA L350-3",
+        "badge_modifier_class": "fr-badge--green-tilleul-verveine",
+    }
+    hru = {
+        "display_value": "Hors régime unique",
+        "label": "Autres haies et alignements, hors procédure unique",
+        "short_label": "Linéaires hors procédure unique",
+        "instructor_label": "Linéaires hors r. unique",
+        "instructor_short_label": "Hors r. u.",
+        "badge_modifier_class": "",
+    }
 
 
 class Hedge:
@@ -207,7 +232,6 @@ class Hedge:
         This method logic is duplicate on front side (envergo/hedges/static/hedge_input/app.js)
         Any changes made here must be reflected there.
         """
-        from envergo.moulinette.regulations import HaieCriterionCategory
 
         if (
             self.hedge_type != HedgeTypeBase.ALIGNEMENT
@@ -220,14 +244,14 @@ class Hedge:
                 or not self.has_property("place_publique")
             )
         ):
-            return HaieCriterionCategory.ru
+            return HedgeCategory.ru
 
         if self.hedge_type == HedgeTypeBase.ALIGNEMENT and (
             self.prop("bord_voie") or not self.has_property("bord_voie")
         ):
-            return HaieCriterionCategory.l350_3
+            return HedgeCategory.l350_3
 
-        return HaieCriterionCategory.hru
+        return HedgeCategory.hru
 
     @property
     def effective_hedge_type(self):
@@ -330,23 +354,15 @@ class HedgeList(list[Hedge]):
 
     def ru(self) -> Self:
         """Select all hedges that are covered by the single procedure (régime unique, RU)."""
-        from envergo.moulinette.regulations import HaieCriterionCategory
-
-        return HedgeList([h for h in self if h.category == HaieCriterionCategory.ru])
+        return HedgeList([h for h in self if h.category == HedgeCategory.ru])
 
     def l350_3(self) -> Self:
         """Select all tree alignment that are covered the L350-3 regulation."""
-        from envergo.moulinette.regulations import HaieCriterionCategory
-
-        return HedgeList(
-            [h for h in self if h.category == HaieCriterionCategory.l350_3]
-        )
+        return HedgeList([h for h in self if h.category == HedgeCategory.l350_3])
 
     def hru(self) -> Self:
         """Select all hedges are not covered by either the single procedure or L350-3"""
-        from envergo.moulinette.regulations import HaieCriterionCategory
-
-        return HedgeList([h for h in self if h.category == HaieCriterionCategory.hru])
+        return HedgeList([h for h in self if h.category == HedgeCategory.hru])
 
     def to_multilinestring(self):
         """Return a MultiLineString combining all hedges in this list."""
@@ -394,10 +410,8 @@ class HedgeList(list[Hedge]):
         they get absorbed by an active category (priority: HRU > RU > L350-3).
         L350-3 never absorbs orphans from other categories.
         """
-        from envergo.moulinette.regulations import HaieCriterionCategory
-
         if not single_procedure:
-            if category == HaieCriterionCategory.hru:
+            if category == HedgeCategory.hru:
                 return HedgeList(self)
             else:
                 return HedgeList()
@@ -410,7 +424,7 @@ class HedgeList(list[Hedge]):
         has_ru = bool(ru.to_remove())
         has_l350_3 = bool(l350_3.to_remove())
 
-        if category == HaieCriterionCategory.hru:
+        if category == HedgeCategory.hru:
             if not has_hru:
                 return HedgeList()
             if has_ru and has_l350_3:
@@ -424,7 +438,7 @@ class HedgeList(list[Hedge]):
                 return HedgeList(hru + ru)
             # Two categories (HRU and RU): L350-3 to plant are categorized as HRU
             return HedgeList(hru + l350_3)
-        elif category == HaieCriterionCategory.ru:
+        elif category == HedgeCategory.ru:
             if not has_ru:
                 return HedgeList()
             if has_hru:
@@ -435,7 +449,7 @@ class HedgeList(list[Hedge]):
                 return HedgeList(hru + ru)
             # Only one category (RU): all hedges to plant are categorized as RU
             return HedgeList(self)
-        elif category == HaieCriterionCategory.l350_3:
+        elif category == HedgeCategory.l350_3:
             if not has_l350_3:
                 return HedgeList()
             if not has_hru and not has_ru:
@@ -709,13 +723,11 @@ class HedgeData(models.Model):
 
     def get_hedges_by_category(
         self, single_procedure
-    ) -> dict[HaieCriterionCategory, HedgeList]:
+    ) -> dict[HedgeCategory, HedgeList]:
         """Get the hedges list for each category."""
-        from envergo.moulinette.regulations import HaieCriterionCategory
-
         hedges_by_category = {
             category: self.hedges().evaluator_category(single_procedure, category)
-            for category in HaieCriterionCategory
+            for category in HedgeCategory
         }
 
         return hedges_by_category
