@@ -75,25 +75,29 @@ class ProjectStageField(Select):
         return context
 
 
-class LabelChoicesMeta(ChoicesMeta):
+class EnrichedChoicesMeta(ChoicesMeta):
     def __new__(metacls, classname, bases, classdict, **kwds):
         for key in classdict._member_names:
             value = classdict[key]
-            if isinstance(value, (list, tuple)):
-                dict.__setitem__(classdict, key, (key,) + tuple(value))
+            if isinstance(value, dict):
+                extra = dict(value)
+                label = extra.pop("label")
+                dict.__setitem__(classdict, key, (key, extra, label))
         return super().__new__(metacls, classname, bases, classdict, **kwds)
 
 
-class LabelChoices(TextChoices, metaclass=LabelChoicesMeta):
-    """TextChoices with extra labels.
+class EnrichedChoices(TextChoices, metaclass=EnrichedChoicesMeta):
+    """TextChoices with extra named attributes.
 
-    Declare members as 3-tuples: (display_value, short_label, label).
-    The name (key) is used as the DB stored value.
+    Declare members as a dict, e.g. {"display_value": ..., "label": ...}.
+    The name (key) is used as the DB stored value. `label` is required and
+    becomes the enum's standard `.label`; every other dict key becomes a
+    plain attribute on the member.
     """
 
-    def __new__(cls, value, display_value="", short_label=""):
+    def __new__(cls, value, extra=None):
         member = str.__new__(cls, value)
         member._value_ = value
-        member.display_value = display_value
-        member.short_label = short_label
+        for attr, attr_value in (extra or {}).items():
+            setattr(member, attr, attr_value)
         return member
