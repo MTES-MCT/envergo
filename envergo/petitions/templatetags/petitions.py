@@ -245,22 +245,22 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     date_part = f"""<span class="due-date fr-text--sm">
                 {icon_part}
                 {date_filter(due_date, "SHORT_DATE_FORMAT")}
-              </span><br/>"""
+              </span>"""
 
     if not display_days_left:
         days_left_part = ""
     elif days_left >= 2:
-        days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
+        days_left_part = (
+            f'<br/><span class="days-left">{days_left} jours restants</span>'
+        )
     elif days_left >= 0:
-        days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
+        days_left_part = f'<br/><span class="days-left">{days_left} jour restant</span>'
     elif days_left >= -1:
         days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
+            f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
         )
     elif days_left:
-        days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
-        )
+        days_left_part = f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
     else:
         days_left_part = ""
 
