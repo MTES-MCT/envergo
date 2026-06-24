@@ -573,7 +573,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Démarches numérique",
+            "Démarche numérique",
             {
                 "fields": [
                     "demarche_simplifiee_number",
