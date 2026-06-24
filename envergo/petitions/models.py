@@ -322,7 +322,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
             return dates[0] if len(dates) else None
 
-        logger.info(f"Synchronizing file {self.reference} with DS")
+        logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
@@ -393,7 +393,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
         ):
-            # DS state have been changed outside of GUH. We are trying to prevent this. Notify admin
+            # « Démarche numérique » state have been changed outside of GUH. We are trying to prevent this. Notify admin
             department = extract_param_from_url(self.moulinette_url, "department")
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
 

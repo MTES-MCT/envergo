@@ -21,6 +21,6 @@ Ce client est appelé pour les méthodes
 - `envergo.petitions.services.get_messages_and_senders_from_ds`
 - `envergo.petitions.management.commands.dossier_submission_admin_alert`
 
-Une requête vers DS peut être aussi exécutées hors du client :
+Une requête vers « Démarche numérique » peut être aussi exécutées hors du client :
 
 - `envergo.petitions.views.pre_fill_demarche_simplifiee`

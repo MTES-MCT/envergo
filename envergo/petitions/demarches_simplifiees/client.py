@@ -58,7 +58,7 @@ class DemarchesSimplifieesClient:
         )
 
     def _fake_execute(self, fake_dossier_filename):
-        """Mock response when « Démarche numérique » is not enabled"""
+        """Mock response when Démarche numérique is not enabled"""
         with open(
             DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
             "r",
@@ -105,7 +105,7 @@ class DemarchesSimplifieesClient:
         query,
         fake_dossier_filename,
     ) -> dict | None:
-        """Fetch dossier from DS, using specific query and fake dossier filename"""
+        """Fetch dossier from Démarche numérique, using specific query and fake dossier filename"""
 
         variables = {"dossierNumber": dossier_number}
 

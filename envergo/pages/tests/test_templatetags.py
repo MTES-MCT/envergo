@@ -213,9 +213,9 @@ def test_urlize_html_xss():
 
 
 def test_urlize_html_strips_html_content():
-    """Test that HTML content from DS is stripped while preserving paragraph structure.
+    """Test that HTML content from « Démarche numérique » is stripped while preserving paragraph structure.
 
-    DS may send messages as HTML. Block-level boundaries (<p>, <br>, <div>…) are
+    « Démarche numérique » may send messages as HTML. Block-level boundaries (<p>, <br>, <div>…) are
     converted to newlines so that the downstream |linebreaks filter recreates the
     visual paragraph structure. All other tags are stripped.
     """
@@ -272,7 +272,7 @@ def test_urlize_html_strips_html_content():
     assert "\n" in result
 
     # HTML entities in URLs must be unescaped to avoid double-escaping.
-    # DS sends &amp; for & in HTML-encoded URLs.
+    # « Démarche numérique » sends &amp; for & in HTML-encoded URLs.
     message = (
         "<div>Votre simulation :<br>"
         "http://haie.local:8000/simulateur/?department=14"
@@ -306,7 +306,7 @@ def test_urlize_html_known_limitations():
     HTML markup, or to email addresses that contain single quotes, things
     won't work as expected. Apply this filter only to plain text."
 
-    urlize_html receives plain text from DS messages, so these edge cases
+    urlize_html receives plain text from « Démarche numérique » messages, so these edge cases
     should be rare in practice. We document them here so regressions or
     future improvements are visible.
     """

@@ -3,7 +3,7 @@ Un dossier a été créé sur « Démarche numérique » :
 * [projet dans l’admin]({{ projet_url }})
 
 {% if config %}
-Dossier DS n°{{ demarches_simplifiees_dossier_number }} : ({{ dossier_url }}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier par le pétitionnaire)
+Dossier « Démarche numérique » n°{{ demarches_simplifiees_dossier_number }} : ({{ dossier_url }}) (:icon-info:  le lien ne sera fonctionnel qu’après le dépôt du dossier par le pétitionnaire)
 Une ou plusieurs anomalies ont été détectées dans la [configuration du département {{ config.department }}]({{ config_url }})
 {% endif %}
 

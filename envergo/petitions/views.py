@@ -886,7 +886,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.object.config.demarche_simplifiee_number
         )
 
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             messages.info(
                 self.request,
@@ -1121,9 +1121,9 @@ class PetitionProjectInstructorDossierDSView(
 
         project_details = compute_instructor_informations_ds(
             self.object
-        )  # compute DS details first as it will force update the dossier cache
+        )  # compute « Démarche numérique » details first as it will force update the dossier cache
         context["project_details"] = project_details
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if not context["project_details"]:
             messages.warning(
                 self.request,
@@ -1197,7 +1197,7 @@ class PetitionProjectInstructorMessagerieView(
             "automatic": settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"],
         }
 
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if context["ds_messages"] is None:
             messages.warning(
                 self.request,
@@ -1686,7 +1686,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
                 )
 
-                # Send DS Message
+                # Send « Démarche numérique » message
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 

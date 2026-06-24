@@ -301,7 +301,7 @@ def display_ds_field(context, field_name, inline=False):
 
     `field_name` must be set in config.demarches_simplifiees_display_fields.
 
-    Uses _item_ds.html template, also included in full DS view template.
+    Uses _item_ds.html template, also included in full « Démarche numérique » view template.
     """
     item = get_ds_field(context, field_name)
     if not item:
