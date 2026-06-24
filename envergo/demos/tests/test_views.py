@@ -27,7 +27,7 @@ def test_hedges_density_around_point_demo(client):
     # AND mtm is in context
     assert "mtm_campaign=share-demo-densite-haie" in response.context["share_btn_url"]
     # AND haies inside circle is in context
-    haies_polygon = json.loads(response.context["polygons"])[0]
+    haies_polygon = json.loads(response.context["polygons"])[-1]
     # The display geometry must be a MultiLineString. Without an explicit
     # ST_Multi wrap, ST_Collect over MultiLineString rows can yield a
     # GeometryCollection, which has `geometries` instead of `coordinates`
@@ -62,7 +62,7 @@ def test_hedges_density_around_point_demo_on_land(client):
     assert response.context["area_5000_ha"] > 0
     assert response.context["density_5000"] != 1.0
     # AND the display geometry is a stable MultiLineString
-    haies_polygon = json.loads(response.context["polygons"])[0]
+    haies_polygon = json.loads(response.context["polygons"])[-1]
     assert haies_polygon["polygon"]["type"] == "MultiLineString"
     assert len(haies_polygon["polygon"]["coordinates"]) > 0
 
@@ -99,7 +99,7 @@ def test_hedges_density_around_point_demo_off_land(client):
     assert response.context["area_400_ha"] == 0.0
     assert response.context["area_5000_ha"] == 0.0
     # AND the display geometry is still populated despite the off-land branch
-    haies_polygon = json.loads(response.context["polygons"])[0]
+    haies_polygon = json.loads(response.context["polygons"])[-1]
     assert haies_polygon["polygon"]["type"] == "MultiLineString"
     assert len(haies_polygon["polygon"]["coordinates"]) > 0
 
