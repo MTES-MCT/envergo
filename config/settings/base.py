@@ -385,6 +385,12 @@ SELF_DECLARATION_FORM_ID = "mDzXgX"
 
 TRANSFER_EVAL_EMAIL_FORM_ID = "mDzXgX"
 
+# Tally form used by a DDT(M) to fill in / update a department's contact info
+DEPARTMENT_CONTACT_FORM_ID = "Pd9b9e"
+
+# Tally form used by an invited instructor to ask for a new invitation link
+ASK_NEW_LINK_FORM_ID = "Gxol8e"
+
 ADMIN_OTP_REQUIRED = False
 
 GEOMETRICIAN_WEBINAR_FORM_URL = env(
@@ -414,6 +420,8 @@ CONTACT_DOSSIER_ANCHOR = "#contact-accordion-3-dossier"
 MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
     "MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH", default=10000
 )  # meters
+
+HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :

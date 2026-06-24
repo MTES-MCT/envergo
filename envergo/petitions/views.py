@@ -920,7 +920,7 @@ class BasePetitionProjectInstructorView(
 
     def get_new_link_url(self, reference: str) -> dict:
         """Returns new link url"""
-        ask_new_link_url_base = "https://tally.so/r/Gxol8e"
+        ask_new_link_url_base = f"https://tally.so/r/{settings.ASK_NEW_LINK_FORM_ID}"
         user = self.request.user
         city = get_context_from_ds(self.object)["ds_info"]["city"]
         petition_project_consultation_url = self.request.build_absolute_uri(
