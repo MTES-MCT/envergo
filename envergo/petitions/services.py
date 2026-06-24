@@ -146,7 +146,7 @@ def get_project_context(petition_project, moulinette) -> dict:
 
 
 def get_context_from_ds(petition_project) -> dict:
-    """Get parts of context for instructor pages from « Démarche numérique »"""
+    """Get parts of context for instructor pages from Démarche numérique"""
     # Get ds details
     config = petition_project.config
     dossier = get_demarches_simplifiees_dossier(petition_project)
@@ -280,14 +280,14 @@ def compute_instructor_informations_ds(
 def get_messages_and_senders_from_ds(
     petition_project,
 ) -> (List | None, List | None, str | None):
-    """Get messages and sender emails from DS
+    """Get messages and sender emails from Démarche numérique
 
     :param petition_project: PetitionProject object
 
     :return: tuple (messages list, instructor emails list, petitioner email)
     """
 
-    # Get messages only from DS
+    # Get messages only from « Démarche numérique »
     dossier_number = petition_project.demarches_simplifiees_dossier_number
     dossier_with_messages = get_demarches_simplifiees_dossier(
         petition_project, force_update=True
@@ -310,7 +310,7 @@ def get_messages_and_senders_from_ds(
 
 
 def send_message_dossier_ds(petition_project, message_body, attachment_file=None):
-    """Send message via DS API for a given dossier"""
+    """Send message via « Démarche numérique » API for a given dossier"""
 
     # Get dossier ID
     dossier_number = petition_project.demarches_simplifiees_dossier_number
@@ -411,7 +411,7 @@ def get_demarches_simplifiees_dossier(
         dossier_as_dict = ds_client.get_dossier_with_messages(dossier_number)
 
         if dossier_as_dict is not None:
-            # we have got a dossier from DS for this petition project,
+            # we have got a dossier from « Démarche numérique » for this petition project,
             # let's synchronize project
             petition_project.synchronize_with_demarches_simplifiees(dossier_as_dict)
     else:
@@ -426,12 +426,15 @@ def update_demarches_simplifiees_status(petition_project, new_status):
     client = DemarchesSimplifieesClient()
 
     if petition_project.demarches_simplifiees_dossier_id is None:
-        # ensure that we have the dossier first because we need its id
+        # Ensure that we have the dossier first because we need its id
         get_demarches_simplifiees_dossier(petition_project, force_update=True)
 
         if petition_project.demarches_simplifiees_dossier_id is None:
-            # this dossier cannot be fetched on DS, maybe it is in draft. We cannot update its status.
-            raise ValueError("Cannot update status of a dossier without DS id")
+            # This dossier cannot be fetched on « Démarche numérique », maybe it is in draft.
+            # We cannot update its status.
+            raise ValueError(
+                "Cannot update status of a dossier without « Démarche numérique » id"
+            )
 
     if new_status == DossierState.en_construction.value:
         response = client.pass_back_dossier_under_construction(
@@ -478,7 +481,7 @@ def update_demarches_simplifiees_status(petition_project, new_status):
         petition_project.demarches_simplifiees_state = response["dossier"]["state"]
         petition_project.synchronize_with_demarches_simplifiees(response["dossier"])
     else:
-        # update failed, notification should have been sent by the DS client
+        # update failed, notification should have been sent by the « Démarche numérique » client
         raise DemarchesSimplifieesError(
             "", {}, "Unable to update status on « Démarche numérique »"
         )

@@ -162,7 +162,7 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
     PetitionProjectFactory()
     call_command("dossier_submission_admin_alert")
 
-    # The DS API should never be called since no valid config exists
+    # The « Démarche numérique » API should never be called since no valid config exists
     mock_post.assert_not_called()
 
 

@@ -3,15 +3,15 @@
 Un dossier a été déposé sur « Démarche numérique », qui ne correspond à aucun projet dans la base du GUH.
 
 Il peut s'agir :
- * d'un dossier dupliqué sur DS par l’utilisateur, à partir du dossier pré-rempli
- * d'un dossier créé manuellement dans DS
+ * d'un dossier dupliqué sur « Démarche numérique » par l’utilisateur, à partir du dossier pré-rempli
+ * d'un dossier créé manuellement dans « Démarche numérique »
 
 Démarche : {{ demarche_name|safe }}
 
-[Dossier DS n°{{ dossier_number }}]({{ ds_url }})
+[Dossier « Démarche numérique » n°{{ dossier_number }}]({{ ds_url }})
 
 Actions nécessaires :
-* aller voir le dossier dans DS et identifier le projet auquel ce dossier pourrait être rattaché (ou s’il n’y a aucun projet)
+* aller voir le dossier dans « Démarche numérique » et identifier le projet auquel ce dossier pourrait être rattaché (ou s’il n’y a aucun projet)
 * contacter l’utilisateur et/ou les instructeurs
 
 
