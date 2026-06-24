@@ -1139,6 +1139,10 @@ div.title-with-link-container {
         background-color: var(--background-default-grey);
       }
 
+      &.procedure {
+        text-wrap: auto;
+      }
+
       &.ellipsis {
         div {
           overflow: hidden;

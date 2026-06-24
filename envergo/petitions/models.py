@@ -621,7 +621,10 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @category.setter
     def category(self, value):
-        self._category = value.value if isinstance(value, HedgeCategory) else value
+        if not isinstance(value, HedgeCategory):
+            raise ValueError("Category must be an instance of HedgeCategory")
+
+        self._category = value.value
 
 
 USER_TYPE = Choices(

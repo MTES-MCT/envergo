@@ -35,7 +35,7 @@ from envergo.geodata.utils import (
     compute_hedge_density_around_lines,
     get_department_from_coords,
 )
-from envergo.utils.fields import LabelChoices
+from envergo.utils.fields import EnrichedChoices
 
 TO_PLANT = "TO_PLANT"
 TO_REMOVE = "TO_REMOVE"
@@ -103,22 +103,33 @@ EPSG_MERCATOR = 3857
 EPSG_LAMB93 = 2154
 
 
-class HedgeCategory(LabelChoices):
-    ru = (
-        "Régime unique",
-        "Haies (procédure unique)",
-        "Haies bénéficiant d'une procédure unique",
-    )
-    l350_3 = (
-        "L350-3",
-        "Alignements d'arbres bord de voie",
-        "Alignements d'arbres en bord de voie",
-    )
-    hru = (
-        "Hors régime unique",
-        "Linéaires hors procédure unique",
-        "Autres haies et alignements, hors procédure unique",
-    )
+class HedgeCategory(EnrichedChoices):
+    ru = {
+        "display_value": "Régime unique",
+        "label": "Haies bénéficiant d'une procédure unique",
+        "short_label": "Haies (procédure unique)",
+        "instructor_short_label": "R. u.",
+        "instructor_label": "Haies régime unique",
+        "badge_modifier_class": "",
+    }
+    l350_3 = {
+        "display_value": "L350-3",
+        "label": "Alignements d'arbres en bord de voie",
+        "short_label": "Alignements d'arbres bord de voie",
+        "badge_label": "Alignement bord de voie",
+        "instructor_label": "Alignements arbres L350-3",
+        "instructor_short_label": "AA L350-3",
+        "badge_modifier_class": "fr-badge--green-tilleul-verveine",
+    }
+    hru = {
+        "display_value": "Hors régime unique",
+        "label": "Autres haies et alignements, hors procédure unique",
+        "short_label": "Linéaires hors procédure unique",
+        "badge_label": "Hors procédure unique",
+        "instructor_label": "Linéaires hors r. unique",
+        "instructor_short_label": "Hors r. u.",
+        "badge_modifier_class": "",
+    }
 
 
 class Hedge:

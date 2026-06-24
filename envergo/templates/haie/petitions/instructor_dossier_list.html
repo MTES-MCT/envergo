@@ -107,7 +107,7 @@
                       </div>
                       <div>{{ project.prefetched_dossier.dateDepot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
-                    <td>
+                    <td class="procedure">
                       <div>{% stage_badge project.stage %}</div>
                       <div>
                         {% if project.stage != "closed" %}

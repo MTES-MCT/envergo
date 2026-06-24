@@ -128,9 +128,10 @@
                 <div class="hedge-badges fr-mt-n1v">
                   <span v-if="!hedge.isValid()"
                         class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
-                  <span v-if="hedge.category()==='hru'" class="fr-badge  fr-badge--sm">Hors procédure unique</span>
+                  <span v-if="hedge.category()==='hru'"
+                        class="fr-badge  {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.hru.badge_label }}</span>
                   <span v-if="hedge.category()==='l350_3'"
-                        class="fr-badge fr-badge--green-tilleul-verveine fr-badge--sm">Alignement bord de voie</span>
+                        class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.l350_3.badge_label }}</span>
                 </div>
               </div>
               <p v-if="mode === 'removal' && hedges.TO_REMOVE.completelyDrawn().some(h => h.category() !== 'ru')"
@@ -178,9 +179,10 @@
                 <div class="hedge-badges fr-mt-n1v">
                   <span v-if="!hedge.isValid()"
                         class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
-                  <span v-if="hedge.category()==='hru'" class="fr-badge  fr-badge--sm">Hors procédure unique</span>
+                  <span v-if="hedge.category()==='hru'"
+                        class="fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.hru.badge_label }}</span>
                   <span v-if="hedge.category()==='l350_3'"
-                        class="fr-badge fr-badge--green-tilleul-verveine fr-badge--sm">Alignement bord de voie</span>
+                        class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.l350_3.badge_label }}</span>
                 </div>
               </div>
             </template>
