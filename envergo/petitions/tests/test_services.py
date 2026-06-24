@@ -59,7 +59,7 @@ pytestmark = pytest.mark.django_db
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
-    """Test fetch project details from « Démarche numérique »"""
+    """Test fetch project details from Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
@@ -73,7 +73,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
     petition_project = PetitionProjectFactory()
 
-    # WHEN I fetch it from DS for the first time
+    # WHEN I fetch it from « Démarche numérique » for the first time
     dossier = get_demarches_simplifiees_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
@@ -98,7 +98,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
     # WHEN I fetch it again less than one hour later
     dossier = get_demarches_simplifiees_dossier(petition_project)
-    # THEN the same dossier is returned from cache, and the DS Api is not called again
+    # THEN the same dossier is returned from cache, and the « Démarche numérique » Api is not called again
     assert dossier is not None
     mock_post.assert_called_once()
 
@@ -108,7 +108,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     ) - datetime.timedelta(hours=2)
     petition_project.save()
     dossier = get_demarches_simplifiees_dossier(petition_project)
-    # THEN the cache is not used, and the DS Api called
+    # THEN the cache is not used, and the « Démarche numérique » Api called
     assert dossier is not None
     assert mock_post.call_count == 2
 
@@ -122,7 +122,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
         site_id=site.id,
     )
 
-    # WHEN I synchronize it with DS for the first time
+    # WHEN I synchronize it with « Démarche numérique » for the first time
     get_demarches_simplifiees_dossier(petition_project)
 
     # THEN an event is created with the same session key as the creation event
@@ -231,7 +231,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 
 @patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
 def test_compute_instructor_information(mock_get_dossier):
-    """Test compute instructor information from « Démarche numérique » dossier data"""
+    """Test compute instructor information from Démarche numérique dossier data"""
     mock_get_dossier.return_value = Dossier.from_dict(
         GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
     )
@@ -856,7 +856,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 def test_get_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via « Démarche numérique »"""
+    """Test send message for project via Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
@@ -864,7 +864,7 @@ def test_get_message_project_via_demarches_simplifiees(
 
     petition_project = PetitionProjectFactory()
 
-    # Fetch project from DS to create it
+    # Fetch project from « Démarche numérique » to create it
     dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
@@ -885,13 +885,13 @@ def test_get_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via « Démarche numérique »"""
+    """Test send message for project via Démarche numérique"""
 
     DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
-    # Fetch project from DS to create it
+    # Fetch project from « Démarche numérique » to create it
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
@@ -925,13 +925,13 @@ def test_send_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
-    """Test send message for project via « Démarche numérique »"""
+    """Test send message for project via Démarche numérique"""
 
     DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
-    # Fetch project from DS to create it
+    # Fetch project from « Démarche numérique » to create it
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="

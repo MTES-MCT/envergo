@@ -124,7 +124,7 @@ def validate_mime_type(value):
 
 
 class PetitionProjectInstructorMessageForm(forms.Form):
-    """Form to send a message through « Démarche numérique » API."""
+    """Form to send a message through Démarche numérique API."""
 
     message_body = forms.CharField(
         label="Message",

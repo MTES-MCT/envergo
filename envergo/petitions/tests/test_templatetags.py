@@ -56,9 +56,9 @@ def test_display_choice():
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_display_ds_field(mock_post):
-    """Test display DS field template tag"""
+    """Test display Démarche numérique field template tag"""
 
-    # Given a config haie with a DS display field
+    # Given a config haie with a « Démarche numérique » display field
     config = DCConfigHaieFactory()
     config.demarches_simplifiees_display_fields.update(
         {
@@ -68,14 +68,14 @@ def test_display_ds_field(mock_post):
     config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
-    # Given DS dossier is available
+    # Given « Démarche numérique » dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
     }
-    # WHEN I want to get motivation DS field item
+    # WHEN I want to get motivation « Démarche numérique » field item
     motivation_item = get_ds_field(context_data, "motivation")
     assert (
         motivation_item.label
@@ -83,10 +83,10 @@ def test_display_ds_field(mock_post):
     )
     assert motivation_item.value == "La motivation"
 
-    # WHEN I want to display this DS field in a template
+    # WHEN I want to display this « Démarche numérique » field in a template
     template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
     content = Template(template_html).render(Context(context_data))
-    # Then this DS field label and value are present in rendered page
+    # Then this « Démarche numérique » field label and value are present in rendered page
     assert (
         "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres ?"
         in content
@@ -100,9 +100,9 @@ def test_display_ds_field(mock_post):
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_display_empty_ds_fields(mock_post):
-    """Test display DS field template tag"""
+    """Test display Démarche numérique field template tag"""
 
-    # Given a config haie with empty DS display fields
+    # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
         demarches_simplifiees_display_fields={
             "project_url": "ABC123",
@@ -110,16 +110,16 @@ def test_display_empty_ds_fields(mock_post):
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
-    # Given DS dossier is available
+    # Given « Démarche numérique » dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
-    # When I want to display this DS field in a template
+    # When I want to display this « Démarche numérique » field in a template
     template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
     }
     content = Template(template_html).render(Context(context_data))
-    # Then this DS field label and value are not present in rendered page
+    # Then this « Démarche numérique » field label and value are not present in rendered page
     assert (
         "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
         not in content
@@ -145,16 +145,16 @@ def test_display_ds_field_invalid_field_id(mock_post):
     config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
-    # Given DS dossier is available
+    # Given « Démarche numérique » dossier is available
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
-    # When I want to display this DS field in a template
+    # When I want to display this « Démarche numérique » field in a template
     template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
     }
     content = Template(template_html).render(Context(context_data))
-    # Then this DS field label and value are not present in rendered page
+    # Then this « Démarche numérique » field label and value are not present in rendered page
     assert (
         "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
         not in content
@@ -178,18 +178,18 @@ def test_display_ds_field_unavailable_dossier(mock_post):
     config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
-    # Given DS dossier is not available
+    # Given « Démarche numérique » dossier is not available
     petition_project.demarches_simplifiees_raw_dossier = None
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
 
-    # When I want to display this DS field in a template
+    # When I want to display this « Démarche numérique » field in a template
     template_html = '{% load petitions %}{% display_ds_field "motivation" %}'
     context_data = {
         "petition_project": petition_project,
         "moulinette": petition_project.get_moulinette(),
     }
     content = Template(template_html).render(Context(context_data))
-    # Then template is rendered without any error but no DS field is in rendered page
+    # Then template is rendered without any error but no « Démarche numérique » field is in rendered page
     assert (
         "Pour quelle raison avez-vous le projet de détruire ces haies ou alignements d’arbres"
         not in content
