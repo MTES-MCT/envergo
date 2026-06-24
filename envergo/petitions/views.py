@@ -918,7 +918,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         context["invitation_contact_url"] = update_qs(
             self.request.build_absolute_uri(
-                f"{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}"
+                f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
@@ -1807,7 +1807,7 @@ class PetitionProjectInstructorProcedureView(
             args=[self.object.reference],
         )
         attachment_phrase = (
-            ", accompagné de l'arrêté préfectoral,"
+            ", accompagné du document de décision,"
             if form.cleaned_data["prefectural_order"]
             else ""
         )
@@ -2172,7 +2172,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
         # Return rendered modal HTML instead of JSON
         invitation_contact_url = update_qs(
             self.request.build_absolute_uri(
-                f"{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}"
+                f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
