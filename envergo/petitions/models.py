@@ -121,26 +121,26 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     )
 
     demarches_simplifiees_dossier_number = models.IntegerField(
-        help_text=_("Dossier number on demarche.numerique.gouv.fr"),
+        help_text=_("Dossier number on demarches-simplifiees.fr"),
         blank=True,
         null=True,
         db_index=True,
     )
 
     demarches_simplifiees_dossier_id = models.CharField(
-        help_text=_("Dossier ID on demarche.numerique.gouv.fr"), blank=True, null=True
+        help_text=_("Dossier ID on demarches-simplifiees.fr"), blank=True, null=True
     )
 
     demarches_simplifiees_prefill_url = models.URLField(
         help_text=_(
-            "Prefill dossier url on demarche.numerique.gouv.fr, used only when dossier is draft"
+            "Prefill dossier url on demarches-simplifiees.fr, used only when dossier is draft"
         ),
         blank=True,
         null=True,
     )
 
     demarches_simplifiees_state = models.CharField(
-        _("State of the dossier on demarche.numerique.gouv.fr"),
+        _("State of the dossier on demarches-simplifiees.fr"),
         max_length=20,
         choices=DOSSIER_STATES,
         default=DOSSIER_STATES.draft,
