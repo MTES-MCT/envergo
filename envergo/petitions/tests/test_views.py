@@ -1565,7 +1565,7 @@ def test_petition_project_close_with_express_agreement(
     assert res.status_code == 200
     content = res.content.decode()
     assert "Le dossier a été clos" in content
-    assert "accompagné de l'arrêté préfectoral" in content
+    assert "accompagné du document de décision" in content
 
     project.refresh_from_db()
     assert project.stage == "closed"
@@ -1590,7 +1590,7 @@ def test_petition_project_close_with_express_agreement(
     assert args[2] is not None
 
     # The download block is now displayed on the procedure page
-    assert "Télécharger l'arrêté préfectoral" in content
+    assert "Télécharger le document de décision" in content
 
 
 @patch("envergo.petitions.views.notify")
@@ -1848,8 +1848,8 @@ def test_petition_project_prefectural_order_download_block(
     content = res.content.decode()
 
     # THEN neither the download block nor the supersede notice are displayed
-    assert "Télécharger l'arrêté préfectoral" not in content
-    assert "contient déjà un arrêté préfectoral" not in content
+    assert "Télécharger le document de décision" not in content
+    assert "contient déjà un document de décision" not in content
 
     # WHEN the dossier was closed with a prefectural order, then reopened
     StatusLogFactory(
@@ -1870,8 +1870,8 @@ def test_petition_project_prefectural_order_download_block(
     content = res.content.decode()
 
     # THEN the order remains downloadable and the modal warns about replacement
-    assert "Télécharger l'arrêté préfectoral" in content
-    assert "contient déjà un arrêté préfectoral" in content
+    assert "Télécharger le document de décision" in content
+    assert "contient déjà un document de décision" in content
 
 
 def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site):

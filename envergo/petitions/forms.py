@@ -175,11 +175,11 @@ CLOSING_FIELD_ERRORS = {
     "simulation_check": (
         "simulation_not_checked",
         "Pour garantir la qualité des données transmises à l'observatoire de la haie, "
-        "la cohérence entre le dossier et l'arrêté doit être vérifiée.",
+        "la cohérence entre le dossier et le document de décision doit être vérifiée.",
     ),
     "prefectural_order": (
         "missing_prefectural_order",
-        "Pour clore le dossier avec cette décision, l'arrêté préfectoral "
+        "Pour clore le dossier avec cette décision, un document de décision "
         "doit être joint au dossier.",
     ),
     "applicant_message": (
@@ -208,15 +208,16 @@ class ProcedureForm(forms.ModelForm):
     """
 
     simulation_check = forms.BooleanField(
-        label="J'ai vérifié que la simulation active dans le dossier correspond bien "
-        "au contenu de l'arrêté.",
+        label="J'ai vérifié que la simulation active correspond bien "
+        "à la version définitive.",
         required=False,
         widget=SimulationCheckWidget(),
     )
     prefectural_order = forms.FileField(
-        label="Arrêté préfectoral de décision",
+        label="Document de décision",
         required=False,
-        help_text="""Un seul fichier est autorisé.<br />
+        help_text="""Exemple : arrêté préfectoral, courrier, etc.<br />
+            Pour consigner plusieurs documents, utiliser une archive au format zip.<br />
             Formats autorisés : images (png, jpg), pdf, zip.<br>
             Taille maximale autorisée : 20 Mo.
         """,
@@ -227,7 +228,7 @@ class ProcedureForm(forms.ModelForm):
         required=False,
         help_text="""
         Précisez les motifs de la décision et les éléments du dossier sur lesquels elle s'appuie.<br />
-        Ce message sera transmis au demandeur avec la notification de clôture et l’arrêté.
+        Ce message sera transmis au demandeur avec le document de décision en pièce jointe.
         """,
         widget=forms.Textarea(attrs={"rows": 8}),
     )

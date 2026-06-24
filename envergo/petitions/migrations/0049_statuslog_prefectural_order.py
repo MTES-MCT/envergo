@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             field=models.FileField(
                 blank=True,
                 upload_to=envergo.petitions.models.prefectural_order_file_format,
-                verbose_name="Arrêté préfectoral",
+                verbose_name="Document de décision",
             ),
         ),
     ]
