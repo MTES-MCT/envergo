@@ -285,7 +285,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     def synchronize_with_demarches_simplifiees(self, dossier: dict):
-        """Update the petition project with the latest data from demarche.numerique.gouv.fr
+        """Update the petition project with the latest data from Démarche numérique
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
@@ -512,7 +512,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @cached_property
     def prefetched_dossier(self) -> Dossier | None:
-        """Returns the dossier from demarche.numerique.gouv.fr if it has been fetched before."""
+        """Returns the dossier from Démarche numérique if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 
