@@ -104,41 +104,47 @@
               <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_REMOVE.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_REMOVE.hasCompletedHedge">
-              <table>
-                <tbody>
-                  <tr v-for="(hedge, index) in hedges.TO_REMOVE.completelyDrawn()"
-                      :key="index"
-                      :class="{ hovered: hedge.isHovered }"
-                      @mouseover="hedge.handleMouseOver()"
-                      @mouseout="hedge.handleMouseOut()"
-                      @click="hedge.centerOnMap()">
-                    <th>
-                      [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()"
-                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
-                    </th>
-                    <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="showHedgeModal(hedge, hedge.type)"
-                              :disabled="hedgeBeingDrawn">
-                        [[ mode === 'removal' ? 'Description' : 'Voir la description' ]]
-                      </button>
-                    </td>
-                    <td v-if="mode === 'removal'">
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()"
-                              :disabled="hedgeBeingDrawn">Supprimer</button>
-                    </td>
-                    <td>[[ Math.ceil(hedge.length) ]] m</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div v-for="(hedge, index) in hedges.TO_REMOVE.completelyDrawn()"
+                   :key="index"
+                   :class="{ hovered: hedge.isHovered }"
+                   class="hedge-row fr-py-2v fr-pr-2w"
+                   @mouseover="hedge.handleMouseOver()"
+                   @mouseout="hedge.handleMouseOut()"
+                   @click="hedge.centerOnMap()">
+                <div class="hedge-id">[[ hedge.id ]]</div>
+                <div>
+                  <button class="fr-link fr-text--sm"
+                          @click.stop="showHedgeModal(hedge, hedge.type)"
+                          :disabled="hedgeBeingDrawn">
+                    [[ mode === 'removal' ? 'Description' : 'Voir la description' ]]
+                  </button>
+                </div>
+                <div>[[ Math.ceil(hedge.length) ]] m</div>
+                <div v-if="mode === 'removal'">
+                  <button class="fr-btn fr-btn--sm fr-btn--tertiary-no-outline fr-icon-delete-line"
+                          @click.stop="hedge.remove()"
+                          :disabled="hedgeBeingDrawn">Supprimer</button>
+                </div>
+                <div class="hedge-badges fr-mt-n1v">
+                  <span v-if="!hedge.isValid()"
+                        class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
+                  <span v-if="hedge.category()==='hru'" class="fr-badge  fr-badge--sm">Hors procédure unique</span>
+                  <span v-if="hedge.category()==='l350_3'"
+                        class="fr-badge fr-badge--green-tilleul-verveine fr-badge--sm">Alignement bord de voie</span>
+                </div>
+              </div>
+              <p v-if="mode === 'removal' && hedges.TO_REMOVE.completelyDrawn().some(h => h.category() !== 'ru')"
+                 class="fr-m-2w fr-text--light fr-text--sm">
+                <i>Les alignements d'arbres et les haies en bordure de bâtiment, de place publique ou dans un parc ou un
+                  jardin attenant à une habitation sont soumis à des procédures spécifiques.
+                  <br />
+                Ce simulateur en tient compte et indiquera la marche à suivre.</i>
+              </p>
             </template>
             <template v-else>
               <p class="fr-text--light">Aucune haie tracée</p>
             </template>
           </div>
-          <hr>
           <div v-if="mode !== 'removal' && (mode === 'plantation' || hedges.TO_PLANT.count > 0)"
                class="hedge-list to-plant">
             <h3>
@@ -147,36 +153,36 @@
               <span class="fr-tag fr-tag--sm">Total : [[ Math.ceil(hedges.TO_PLANT.totalLength) ]] m</span>
             </h3>
             <template v-if="hedges.TO_PLANT.hasCompletedHedge">
-              <table>
-                <tbody>
-                  <tr v-for="(hedge, index) in hedges.TO_PLANT.completelyDrawn()"
-                      :key="index"
-                      :class="{ hovered: hedge.isHovered }"
-                      @mouseover="hedge.handleMouseOver()"
-                      @mouseout="hedge.handleMouseOut()"
-                      @click="hedge.centerOnMap()">
-                    <th>
-                      [[ hedge.id ]]
-                      <span v-if="!hedge.isValid()"
-                            class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
-                    </th>
-                    <td>
-                      <button class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="showHedgeModal(hedge, hedge.type)"
-                              :disabled="hedgeBeingDrawn">
-                        [[ mode === 'plantation' ? 'Description' : 'Voir la description' ]]
-                      </button>
-                    </td>
-                    <td>
-                      <button v-if="mode === 'plantation'"
-                              class="fr-btn fr-btn--tertiary-no-outline"
-                              @click.stop="hedge.remove()"
-                              :disabled="hedgeBeingDrawn">Supprimer</button>
-                    </td>
-                    <td>[[ Math.ceil(hedge.length) ]] m</td>
-                  </tr>
-                </tbody>
-              </table>
+
+              <div v-for="(hedge, index) in hedges.TO_PLANT.completelyDrawn()"
+                   :key="index"
+                   :class="{ hovered: hedge.isHovered }"
+                   class="hedge-row fr-py-2v fr-pr-2w"
+                   @mouseover="hedge.handleMouseOver()"
+                   @mouseout="hedge.handleMouseOut()"
+                   @click="hedge.centerOnMap()">
+                <div class="hedge-id">[[ hedge.id ]]</div>
+                <div>
+                  <button class="fr-link fr-text--sm"
+                          @click.stop="showHedgeModal(hedge, hedge.type)"
+                          :disabled="hedgeBeingDrawn">
+                    [[ mode === 'plantation' ? 'Description' : 'Voir la description' ]]
+                  </button>
+                </div>
+                <div>[[ Math.ceil(hedge.length) ]] m</div>
+                <div v-if="mode === 'plantation'">
+                  <button class="fr-btn fr-btn--sm fr-btn--tertiary-no-outline fr-icon-delete-line"
+                          @click.stop="hedge.remove()"
+                          :disabled="hedgeBeingDrawn">Supprimer</button>
+                </div>
+                <div class="hedge-badges fr-mt-n1v">
+                  <span v-if="!hedge.isValid()"
+                        class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
+                  <span v-if="hedge.category()==='hru'" class="fr-badge  fr-badge--sm">Hors procédure unique</span>
+                  <span v-if="hedge.category()==='l350_3'"
+                        class="fr-badge fr-badge--green-tilleul-verveine fr-badge--sm">Alignement bord de voie</span>
+                </div>
+              </div>
             </template>
             <template v-else>
               <p class="fr-text--light">Aucune haie tracée</p>
@@ -207,6 +213,8 @@
                    class="fr-px-1w fr-pt-2w fr-pb-1w">Calcul en cours…</div>
               <div v-if="conditions.status === 'error'"
                    class="fr-px-1w fr-pt-2w fr-pb-1w">Erreur lors de la vérification de la plantation</div>
+              <div v-if="conditions.status === 'unavailable'"
+                   class="fr-px-1w fr-pt-2w fr-pb-1w">Vérification de la plantation indisponible</div>
             </div>
             <div id="conditions"
                  :class="conditions.status"

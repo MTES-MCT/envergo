@@ -218,7 +218,12 @@ class Hedge:
 
     @property
     def category(self):
-        """Return the category of the hedge (régime unique, L350-3 or hors régime unique)."""
+        """Return the category of the hedge (régime unique, L350-3 or hors régime unique).
+
+        This method logic is duplicate on front side (envergo/hedges/static/hedge_input/app.js)
+        Any changes made here must be reflected there.
+        """
+
         if (
             self.hedge_type != HedgeTypeBase.ALIGNEMENT
             and (
