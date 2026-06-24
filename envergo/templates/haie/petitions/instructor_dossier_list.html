@@ -83,7 +83,7 @@
                     <br />
                     à détruire
                   </th>
-                  <th scope="col">Étiquette</th>
+                  <th scope="col">Étiquettes</th>
                   <th scope="col">
                     <span title="Messagerie" class="fr-icon-mail-line fr-icon--sm"></span>
                   </th>
@@ -109,18 +109,19 @@
                     </td>
                     <td>
                       <div>{% stage_badge project.stage %}</div>
-                      {% if project.stage != "closed" %}
-                        <div>
+                      <div>
+                        {% if project.stage != "closed" %}
                           {% if project.is_additional_information_requested %}
                             {% display_pause project.due_date %}
                           {% else %}
                             {% display_due_date project.due_date False True %}
                           {% endif %}
-                        </div>
-                      {% endif %}
-                      {% if project.decision != "unset" %}
-                        <div>{% decision_badge project.decision True %}</div>
-                      {% endif %}
+                        {% endif %}
+                        {% if project.decision != "unset" %}
+                          {% decision_badge project.decision True %}
+                        {% endif %}
+                      </div>
+
                     </td>
                     {% firstof project.organization project.prefetched_dossier.applicant_name as applicant_display %}
                     {% multiline_title applicant_display project.city as applicant_tooltip %}
