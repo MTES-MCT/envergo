@@ -12,11 +12,11 @@ from django.utils.module_loading import import_string
 
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
-from envergo.petitions.demarches_simplifiees.client import (
+from envergo.petitions.demarche_numerique.client import (
     DemarchesSimplifieesClient,
     DemarchesSimplifieesError,
 )
-from envergo.petitions.demarches_simplifiees.models import (
+from envergo.petitions.demarche_numerique.models import (
     CheckboxChamp,
     Dossier,
     DossierState,

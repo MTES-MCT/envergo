@@ -8,7 +8,7 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.petitions.demarches_simplifiees.models import DossierState
+from envergo.petitions.demarche_numerique.models import DossierState
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
     DEMARCHE_NUMERIQUE_FAKE_DISABLED,
@@ -39,9 +39,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
 def test_dossier_submission_admin_alert(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -144,9 +142,7 @@ def test_dossier_submission_admin_alert(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
 def test_dossier_submission_admin_alert_ignores_expired_config(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -170,9 +166,7 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
 def test_dossier_submission_admin_alert_stage_instruction(
     mock_post, mock_notify_command, mock_notify_model
 ):

@@ -8,8 +8,8 @@ from django.urls import set_urlconf
 from django.utils import timezone
 
 from envergo.moulinette.models import ConfigHaie
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
-from envergo.petitions.demarches_simplifiees.models import Dossier
+from envergo.petitions.demarche_numerique.client import DemarchesSimplifieesClient
+from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
 

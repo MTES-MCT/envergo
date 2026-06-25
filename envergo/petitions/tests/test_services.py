@@ -18,7 +18,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.petitions.demarches_simplifiees.models import Dossier, DossierState
+from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
@@ -55,9 +55,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
 def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, site):
     """Test fetch project details from Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
@@ -175,7 +173,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarches_simplifiees.client.notify")
+@patch("envergo.petitions.demarche_numerique.client.notify")
 @patch("gql.client.Client.execute")
 def test_fetch_project_details_from_demarche_numerique_should_notify_API_error(
     mock_post, mock_notify, haie_user
@@ -202,10 +200,8 @@ def test_fetch_project_details_from_demarche_numerique_should_notify_API_error(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarches_simplifiees.client.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.notify")
+@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
 def test_fetch_project_details_from_demarche_numerique_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user
 ):

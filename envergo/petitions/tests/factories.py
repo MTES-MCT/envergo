@@ -7,7 +7,7 @@ from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory
-from envergo.petitions.demarches_simplifiees.client import (
+from envergo.petitions.demarche_numerique.client import (
     DEMARCHE_NUMERIQUE_FAKE_DATA_PATH,
 )
 from envergo.petitions.models import (

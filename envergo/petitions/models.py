@@ -26,7 +26,7 @@ from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
-from envergo.petitions.demarches_simplifiees.models import Dossier
+from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.models import ResultSnapshotBase

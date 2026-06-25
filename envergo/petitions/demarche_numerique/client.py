@@ -17,11 +17,11 @@ from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import (
+from envergo.petitions.demarche_numerique.models import (
     DemarcheWithRawDossiers,
     DossierState,
 )
-from envergo.petitions.demarches_simplifiees.queries import (
+from envergo.petitions.demarche_numerique.queries import (
     DOSSIER_ACCEPTER_MUTATION,
     DOSSIER_CLASSER_SANS_SUITE_MUTATION,
     DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION,
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 DEMARCHE_NUMERIQUE_FAKE_DATA_PATH = Path(
-    settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
+    settings.APPS_DIR / "petitions" / "demarche_numerique" / "data"
 )
 
 DS_DISABLED_BASE_MESSAGE = "« Démarche numérique » is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501

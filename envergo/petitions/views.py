@@ -64,7 +64,7 @@ from envergo.hedges.models import TO_PLANT, HedgeData, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
+from envergo.petitions.demarche_numerique.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
