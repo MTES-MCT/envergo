@@ -7,6 +7,7 @@ from textwrap import dedent
 from typing import Self
 
 from django.conf import settings
+from django.contrib.gis.db.models.functions import Intersection, Length
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, Polygon
 from django.contrib.gis.measure import D
 from django.contrib.postgres.fields import ArrayField
@@ -486,7 +487,6 @@ class HedgeData(models.Model):
     def save(self, *args, **kwargs):
         update_fields = kwargs.get("update_fields")
         if update_fields is None or "data" in update_fields:
-            # recompute cached value
             self._length_to_remove = None
             self._length_to_plant = None
             self._length_to_remove = self.length_to_remove()
@@ -655,23 +655,52 @@ class HedgeData(models.Model):
             "Use density_around_centroid or density_around_lines instead of density."
         )
 
-    def has_hedges_outside_department(self, department: Department):
-        """
-        Check if any hedge in the HedgeData instance is outside the given department geometry.
 
-        Args:
-            department: The department model with its geometry prefetched.
+    def departments_lengths(self):
+        """Return the list of departments intersected by the hedges.
 
-        Returns:
-            bool: True if there are hedges outside the department geometry, False otherwise.
+        Return an ordered list of (Department, length) tuples where:
+         - Department is the intersected geodata.models.Department object
+         - length is the total length of hedges intersecting the department.
+
+        Result is ordered by decreasing length.
         """
-        if not department:
-            return True
-        department_geom = GEOSGeometry(department.geometry.wkt)
-        for hedge in self.hedges():
-            if not department_geom.intersects(hedge.geos_geometry):
-                return True
-        return False
+        if hasattr(self, "_departments_lengths"):
+            return self._departments_lengths
+
+        hedges_to_remove = self.hedges_to_remove()
+        if not hedges_to_remove:
+            return []
+
+        to_remove_geom = hedges_to_remove.to_multilinestring()
+        qs = (
+            Department.objects.filter(geometry__intersects=to_remove_geom)
+            .annotate(
+                clipped=Intersection("geometry", to_remove_geom),
+                hedge_length=Length("clipped"),
+            )
+            .defer("geometry")
+            .order_by("-hedge_length")
+        )
+        self._departments_lengths = [(dept, dept.hedge_length.m) for dept in qs]
+        return self._departments_lengths
+
+    def is_multi_departments(self):
+        """Return True if hedges intersect more than one department."""
+
+        return len(self.departments_lengths()) > 1
+
+    def main_department(self):
+        """Return the Department that contains most of the hedges (in total length)."""
+
+        main_dept = self.departments_lengths()[0][0]
+        return main_dept
+
+    def is_outside_department(self, department):
+        """Return True if most hedges are outside the given department."""
+
+        return self.main_department() != department
+
 
     def get_statistics(self):
         hedge_centroid_coords = self.hedges_to_remove().centroid
