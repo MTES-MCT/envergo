@@ -37,7 +37,7 @@
 			// path, before any marker is added to a map.
 			// Caution: do not use this option with inline base64 image(s).
 			var imagePath = this.options.imagePath || L.Icon.Default.imagePath || '';
-			// Deprecated (IconDefault.imagePath), backwards-compatibility only
+			// Deprecated (IconDefault.imagePath), backwardn-compatibility only
 
 			if (this._needsInit) {
 				// Modifying imagePath option after _getIconUrl has been called

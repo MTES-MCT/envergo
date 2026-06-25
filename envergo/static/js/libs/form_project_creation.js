@@ -3,7 +3,7 @@
 
   const DemarcheNumeriqueModal = function (modalElt) {
     this.modalElt = modalElt;
-    this.formElt =  modalElt.querySelector("#demarche-simplifiee-form");
+    this.formElt =  modalElt.querySelector("#demarche-numerique-form");
     this.submitElt = modalElt.querySelector('button[type=submit]');
     this.buttonElts = modalElt.querySelectorAll('input[type="button"], input[type="submit"], button[type=submit]');
     this.closeElt = modalElt.querySelector('.fr-link--close');
@@ -11,9 +11,9 @@
   exports.DemarcheNumeriqueModal = DemarcheNumeriqueModal;
 
   DemarcheNumeriqueModal.prototype.init = function () {
-    this.categoryInput = this.formElt.querySelector('#demarche-simplifiee-category');
+    this.categoryInput = this.formElt.querySelector('#demarche-numerique-category');
     this.categoriesList = this.modalElt.querySelectorAll('.hedges-category-header');
-    document.querySelectorAll('[aria-controls="demarches-simplifiees-modal"][data-category]').forEach(btn => {
+    document.querySelectorAll('[aria-controls="demarche-numerique-modal"][data-category]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (this.categoryInput) {
           this.categoryInput.value = btn.dataset.category;
@@ -63,12 +63,12 @@
 
     let textElt = document.createElement('span');
     textElt.innerHTML = 'Création en cours…';
-    textElt.id = 'demarche-simplifiee-submit-hint';
+    textElt.id = 'demarche-numerique-submit-hint';
     textElt.classList.add("fr-hint-text");
     this.submitElt.insertAdjacentElement("afterend", textElt);
 
     // remove error message if exists
-    const errorDiv = document.getElementById('demarche_simplifiee_message');
+    const errorDiv = document.getElementById('demarche_numerique_message');
     if (errorDiv) {
       errorDiv.remove();
     }
@@ -115,7 +115,7 @@
       })
       .finally(() => {
         this.activate();
-        let textElt = document.getElementById('demarche-simplifiee-submit-hint');
+        let textElt = document.getElementById('demarche-numerique-submit-hint');
         if (textElt) {
           textElt.remove();
         }
@@ -147,7 +147,7 @@
 function displayMessage(title, message, type) {
   const projectResultTopBar = document.getElementById('project-result-top-bar');
   const notification = `
-                          <div id="demarche_simplifiee_message" class="messages fr-p-5w">
+                          <div id="demarche_numerique_message" class="messages fr-p-5w">
                             <div class="fr-alert fr-alert--${type} fr-alert--sm">
                               <h3 class="fr-alert__title">${title}</h3>
                               <p>${message}</p>
@@ -162,7 +162,7 @@ function displayMessage(title, message, type) {
 (function () {
 // a script to add actions on the moulinette result banner
   window.addEventListener('load', function () {
-    const modal = document.getElementById('demarches-simplifiees-modal');
+    const modal = document.getElementById('demarche-numerique-modal');
     const demarcheNumeriqueModal = new DemarcheNumeriqueModal(modal);
     demarcheNumeriqueModal.init();
   });
