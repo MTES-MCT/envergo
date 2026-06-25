@@ -173,7 +173,7 @@ class TestResultSnapshot:
     @patch("envergo.petitions.models.notify")
     @patch("envergo.petitions.models.log_event_raw")
     def test_snapshot_created_on_dossier_submission(self, mock_log_event, mock_notify):
-        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarches_simplifiees."""
+        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarche_numerique."""
         from django.contrib.sites.models import Site
 
         Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
@@ -194,7 +194,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (

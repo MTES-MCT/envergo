@@ -154,7 +154,7 @@ def test_config_haie_activated_has_missing_demarche_numerique_number(
         config_haie.validate_constraints()
 
 
-def test_config_haie_with_demarche_simplifiee_number_has_missing_project_url_id(
+def test_config_haie_with_demarche_numerique_number_has_missing_project_url_id(
     loire_atlantique_department,  # noqa
 ):
     """Check `project_url_id_required_if_demarche_number` constraint"""
@@ -165,7 +165,7 @@ def test_config_haie_with_demarche_simplifiee_number_has_missing_project_url_id(
         config_haie.validate_constraints()
 
 
-def test_config_haie_has_invalid_demarche_simplifiee_config(
+def test_config_haie_has_invalid_demarche_numerique_config(
     loire_atlantique_department,  # noqa
 ):
     with pytest.raises(ValidationError) as exc_info:

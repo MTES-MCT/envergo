@@ -120,12 +120,12 @@ def test_petition_projet_create_view_dispatch(client, site, haie_user):
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
-def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
+def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
 
     mock_post.return_value.status_code = 200
     mock_post.return_value.json.return_value = {
-        "dossier_url": "demarche_simplifiee_url",
+        "dossier_url": "demarche_numerique_url",
         "state": "prefilled",
         "dossier_id": "RG9zc2llci0yMTA3NTY2NQ==",
         "dossier_number": 21075665,
@@ -155,11 +155,11 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_numerique(
+    demarche_numerique_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
 
-    assert demarche_simplifiee_url == "demarche_simplifiee_url"
+    assert demarche_numerique_url == "demarche_numerique_url"
     assert dossier_number == 21075665
 
     # Assert the body of the requests.post call
@@ -181,12 +181,12 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
-    """pre_fill_demarche_simplifiee uses the currently valid config when multiple exist."""
+    """pre_fill_demarche_numerique uses the currently valid config when multiple exist."""
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
 
     mock_post.return_value.status_code = 200
     mock_post.return_value.json.return_value = {
-        "dossier_url": "demarche_simplifiee_url",
+        "dossier_url": "demarche_numerique_url",
         "state": "prefilled",
         "dossier_id": "RG9zc2llci0yMTA3NTY2NQ==",
         "dossier_number": 21075665,
@@ -216,11 +216,11 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_numerique(
+    demarche_numerique_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
 
-    assert demarche_simplifiee_url == "demarche_simplifiee_url"
+    assert demarche_numerique_url == "demarche_numerique_url"
     assert dossier_number == 21075665
     # Verify the correct demarche number was used (current config's 222222)
     assert "222222" in mock_post.call_args[0][0]
@@ -229,7 +229,7 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
-def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
+def test_pre_fill_demarche_numerique_not_enabled(mock_reverse, mock_post, caplog):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
     DCConfigHaieFactory()
 
@@ -240,7 +240,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     request.alerts = PetitionProjectCreationAlert(request)
 
     petition_project = PetitionProjectFactory()
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_numerique(
+    demarche_numerique_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
     assert (
@@ -253,7 +253,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
         )
         > 0
     )
-    assert demarche_simplifiee_url is None
+    assert demarche_numerique_url is None
     assert dossier_number is None
 
 

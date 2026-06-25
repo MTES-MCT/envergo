@@ -58,7 +58,7 @@ pytestmark = pytest.mark.django_db
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
-def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
+def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, site):
     """Test fetch project details from Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -134,9 +134,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
-def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
-    caplog, haie_user
-):
+def test_fetch_project_details_from_demarche_numerique_not_enabled(caplog, haie_user):
     petition_project = PetitionProjectFactory()
     DCConfigHaieFactory()
 
@@ -179,7 +177,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarches_simplifiees.client.notify")
 @patch("gql.client.Client.execute")
-def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
+def test_fetch_project_details_from_demarche_numerique_should_notify_API_error(
     mock_post, mock_notify, haie_user
 ):
     mock_post.side_effect = TransportQueryError(
@@ -208,7 +206,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 @patch(
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
-def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
+def test_fetch_project_details_from_demarche_numerique_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user
 ):
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
@@ -229,7 +227,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     mock_notify.assert_called_once()
 
 
-@patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
+@patch("envergo.petitions.services.get_demarche_numerique_dossier")
 def test_compute_instructor_information(mock_get_dossier):
     """Test compute instructor information from Démarche numérique dossier data"""
     mock_get_dossier.return_value = Dossier.from_dict(
@@ -855,9 +853,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("gql.Client.execute")
-def test_get_message_project_via_demarches_simplifiees(
-    mock_gql_execute, haie_user, site
-):
+def test_get_message_project_via_demarche_numerique(mock_gql_execute, haie_user, site):
     """Test send message for project via Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -884,9 +880,7 @@ def test_get_message_project_via_demarches_simplifiees(
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees(
-    mock_gql_execute, haie_user, site
-):
+def test_send_message_project_via_demarche_numerique(mock_gql_execute, haie_user, site):
     """Test send message for project via Démarche numérique"""
 
     DCConfigHaieFactory()
@@ -924,7 +918,7 @@ def test_send_message_project_via_demarches_simplifiees(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.sessions.Session.request")
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees_with_attachments(
+def test_send_message_project_via_demarches_numerique_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
     """Test send message for project via Démarche numérique"""
@@ -971,7 +965,7 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
-def test_update_demarches_simplifiees_state():
+def test_update_demarches_numerique_state():
     # GIVEN a petition project in "en construction" state
     petition_project = PetitionProjectFactory(
         demarche_numerique_state="en_construction"

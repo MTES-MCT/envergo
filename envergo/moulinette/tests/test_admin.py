@@ -317,7 +317,7 @@ class TestConfigHaieDNDisplayFieldValidation:
     keys "organization", "city", "pacage" set with value.
     """
 
-    def test_validation_when_demarche_simplifiee_number_is_set(self):
+    def test_validation_when_demarche_numerique_number_is_set(self):
         """Form is not valid when city or organization or pacage are not set."""
         config = DCConfigHaieFactory()
         data = instance_to_form_data(config)
