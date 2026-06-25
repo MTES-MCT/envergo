@@ -426,7 +426,7 @@ def test_petition_project_instructor_view_requires_authentication(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_notes_view(
     mock_post, haie_user_44, haie_instructor_44, client, site
 ):
@@ -473,7 +473,7 @@ def test_petition_project_instructor_notes_view(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
     mock_post, haie_instructor_44, client, site
 ):
@@ -514,7 +514,7 @@ def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_invited_sees_only_public_and_cannot_edit(
     mock_post, haie_user_44, client, site
 ):
@@ -560,7 +560,7 @@ def test_instructor_notes_invited_sees_only_public_and_cannot_edit(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_invited_empty_notes(mock_post, haie_user_44, client, site):
     """When public notes are empty, invited instructor sees 'Aucune note.'"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -583,7 +583,7 @@ def test_instructor_notes_invited_empty_notes(mock_post, haie_user_44, client, s
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_invited_links_are_clickable(
     mock_post, haie_user_44, client, site
 ):
@@ -605,7 +605,7 @@ def test_instructor_notes_invited_links_are_clickable(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_links_are_clickable(
     mock_post, haie_instructor_44, client, site
 ):
@@ -629,7 +629,7 @@ def test_instructor_notes_coordinator_links_are_clickable(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_empty_notes(
     mock_post, haie_instructor_44, client, site
 ):
@@ -652,7 +652,7 @@ def test_instructor_notes_coordinator_empty_notes(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_view_reglementation_pages(
     mock_post,
     haie_instructor_44,
@@ -740,7 +740,7 @@ def test_petition_project_instructor_view_reglementation_pages(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_regulation_view_includes_config_in_context(
     mock_post,
     haie_instructor_44,
@@ -775,7 +775,7 @@ def test_regulation_view_includes_config_in_context(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_display_dossier_ds_info(
     mock_post, haie_instructor_44, client, site
 ):
@@ -803,7 +803,7 @@ def test_petition_project_instructor_display_dossier_ds_info(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_messagerie_ds(
     mock_ds_query_execute, haie_user_44, haie_instructor_44, client, site
 ):
@@ -908,7 +908,7 @@ def _setup_messagerie(haie_instructor_44, client):
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_valid_message_without_file(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -922,7 +922,7 @@ def test_messagerie_valid_message_without_file(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_valid_message_with_file(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -939,7 +939,7 @@ def test_messagerie_valid_message_with_file(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_empty_message_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -955,7 +955,7 @@ def test_messagerie_empty_message_error(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_invalid_extension_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -978,7 +978,7 @@ def test_messagerie_invalid_extension_error(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_html_in_filename_is_escaped(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -994,7 +994,7 @@ def test_messagerie_html_in_filename_is_escaped(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_file_too_large_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1012,7 +1012,7 @@ def test_messagerie_file_too_large_error(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_opens_on_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1028,7 +1028,7 @@ def test_messagerie_modal_opens_on_error(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_not_opened_on_success(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1611,7 +1611,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_invited_instructor_cannot_send_message(
     mock_ds_query_execute, client, haie_instructor_44, haie_user
 ):

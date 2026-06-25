@@ -45,7 +45,7 @@ DEMARCHE_NUMERIQUE_FAKE_DATA_PATH = Path(
 DS_DISABLED_BASE_MESSAGE = "« Démarche numérique » is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
 
 
-class DemarchesSimplifieesClient:
+class DemarcheNumeriqueClient:
     def __init__(self):
         self.transport = RequestsHTTPTransport(
             url=settings.DEMARCHE_NUMERIQUE["GRAPHQL_API_URL"],
@@ -95,7 +95,7 @@ class DemarchesSimplifieesClient:
                     "variables": variables,
                 },
             )
-            raise DemarchesSimplifieesError(
+            raise DemarcheNumeriqueError(
                 query=query_str,
                 variables=variables,
                 message=str(e),
@@ -124,7 +124,7 @@ class DemarchesSimplifieesClient:
         else:
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 if any(
                     error.get("extensions", {}).get("code") == "not_found"
                     and any(path == "dossier" for path in error.get("path", []))
@@ -213,7 +213,7 @@ class DemarchesSimplifieesClient:
         }
         try:
             data = self.execute(GET_DOSSIERS_FOR_DEMARCHE_QUERY, variables)
-        except DemarchesSimplifieesError as e:
+        except DemarcheNumeriqueError as e:
             message_body = render_to_string(
                 "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
                 context={
@@ -275,7 +275,7 @@ class DemarchesSimplifieesClient:
             # Send query to create direct upload
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(
                     "Error when getting credentials to direct upload file to « Démarche numérique »",
                     extra={
@@ -415,7 +415,7 @@ class DemarchesSimplifieesClient:
         else:
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(
                     "Error when sending message to « Démarche numérique »",
                     extra={
@@ -530,7 +530,7 @@ class DemarchesSimplifieesClient:
         else:
             instructeur_id = settings.DEMARCHE_NUMERIQUE["INSTRUCTEUR_ID"]
             if not instructeur_id:
-                raise DemarchesSimplifieesError(
+                raise DemarcheNumeriqueError(
                     query,
                     {},
                     "INSTRUCTEUR_ID is not set, please check the configuration.",
@@ -540,7 +540,7 @@ class DemarchesSimplifieesClient:
 
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(
                     "Error when changing dossier state via « Démarche numérique » API",
                     extra={
@@ -703,7 +703,7 @@ class DemarchesSimplifieesClient:
         )
 
 
-class DemarchesSimplifieesError(Exception):
+class DemarcheNumeriqueError(Exception):
     """Démarche numérique client Exception"""
 
     def __init__(self, query: str = None, variables: dict = None, message: str = None):

@@ -55,7 +55,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, site):
     """Test fetch project details from Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
@@ -201,7 +201,7 @@ def test_fetch_project_details_from_demarche_numerique_should_notify_API_error(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.notify")
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_fetch_project_details_from_demarche_numerique_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user
 ):

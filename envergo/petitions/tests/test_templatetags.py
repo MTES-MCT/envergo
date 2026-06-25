@@ -52,7 +52,7 @@ def test_display_choice():
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_ds_field(mock_post):
     """Test display Démarche numérique field template tag"""
 
@@ -94,7 +94,7 @@ def test_display_ds_field(mock_post):
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_empty_ds_fields(mock_post):
     """Test display Démarche numérique field template tag"""
 
@@ -125,7 +125,7 @@ def test_display_empty_ds_fields(mock_post):
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
     config = DCConfigHaieFactory(
@@ -158,7 +158,7 @@ def test_display_ds_field_invalid_field_id(mock_post):
 
 @pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_ds_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
     config = DCConfigHaieFactory()

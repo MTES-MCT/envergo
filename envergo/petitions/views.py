@@ -64,7 +64,7 @@ from envergo.hedges.models import TO_PLANT, HedgeData, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
-from envergo.petitions.demarche_numerique.client import DemarchesSimplifieesError
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
@@ -1756,7 +1756,7 @@ class PetitionProjectInstructorProcedureView(
         if previous_ds_status != new_ds_status:
             try:
                 update_demarche_numerique_status(self.object, new_ds_status)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(e)
                 form.add_error(
                     None,
@@ -1851,7 +1851,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     else:
                         # We raise an exception to make sure the data model transaction
                         # is aborted
-                        raise DemarchesSimplifieesError(message="DN message not sent")
+                        raise DemarcheNumeriqueError(message="DN message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1897,7 +1897,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             res = HttpResponseRedirect(self.get_success_url())
             return res
 
-        except DemarchesSimplifieesError:
+        except DemarcheNumeriqueError:
             error_message = f"""Le message n'a pas pu être envoyé.
             Merci de ré-essayer dans quelques minutes.
             Si le problème persiste,

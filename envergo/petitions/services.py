@@ -13,8 +13,8 @@ from django.utils.module_loading import import_string
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
 from envergo.petitions.demarche_numerique.client import (
-    DemarchesSimplifieesClient,
-    DemarchesSimplifieesError,
+    DemarcheNumeriqueClient,
+    DemarcheNumeriqueError,
 )
 from envergo.petitions.demarche_numerique.models import (
     CheckboxChamp,
@@ -319,7 +319,7 @@ def send_message_dossier_ds(petition_project, message_body, attachment_file=None
         return None
 
     # Send message
-    ds_client = DemarchesSimplifieesClient()
+    ds_client = DemarcheNumeriqueClient()
     if attachment_file:
         response = ds_client.dossier_send_message(
             dossier_number, dossier_id, message_body, attachment_file
@@ -407,7 +407,7 @@ def get_demarche_numerique_dossier(
     ):
         # If the last sync is older than one hour, we fetch the dossier from « Démarche numérique »
         dossier_number = petition_project.demarche_numerique_dossier_number
-        ds_client = DemarchesSimplifieesClient()
+        ds_client = DemarcheNumeriqueClient()
         dossier_as_dict = ds_client.get_dossier_with_messages(dossier_number)
 
         if dossier_as_dict is not None:
@@ -423,7 +423,7 @@ def get_demarche_numerique_dossier(
 
 
 def update_demarche_numerique_status(petition_project, new_status):
-    client = DemarchesSimplifieesClient()
+    client = DemarcheNumeriqueClient()
 
     if petition_project.demarche_numerique_dossier_id is None:
         # Ensure that we have the dossier first because we need its id
@@ -482,7 +482,7 @@ def update_demarche_numerique_status(petition_project, new_status):
         petition_project.synchronize_with_demarche_numerique(response["dossier"])
     else:
         # update failed, notification should have been sent by the « Démarche numérique » client
-        raise DemarchesSimplifieesError(
+        raise DemarcheNumeriqueError(
             "", {}, "Unable to update status on « Démarche numérique »"
         )
 

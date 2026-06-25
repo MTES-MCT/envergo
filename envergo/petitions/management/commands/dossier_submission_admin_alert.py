@@ -8,7 +8,7 @@ from django.urls import set_urlconf
 from django.utils import timezone
 
 from envergo.moulinette.models import ConfigHaie
-from envergo.petitions.demarche_numerique.client import DemarchesSimplifieesClient
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueClient
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
@@ -61,7 +61,7 @@ class Command(BaseCommand):
             if demarche_number in handled_demarches:
                 continue
 
-            ds_client = DemarchesSimplifieesClient()
+            ds_client = DemarcheNumeriqueClient()
 
             demarche = ds_client.get_dossiers_for_demarche(
                 demarche_number, two_hours_ago_utc

@@ -39,7 +39,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -142,7 +142,7 @@ def test_dossier_submission_admin_alert(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_ignores_expired_config(
     mock_post, mock_notify_command, mock_notify_model
 ):
