@@ -197,6 +197,16 @@ class ProcedureForm(forms.ModelForm):
             )
 
         previous_stage = self.initial["stage"]
+
+        if stage == "to_be_processed" and previous_stage != "to_be_processed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "L'étape « À instruire » n’est plus disponible car l’instruction à déjà débuté. Utiliser "
+                    "plutôt la demande de compléments et la messagerie pour demander des ajustements au demandeur.",
+                    code="forbidden_transition",
+                ),
+            )
         transition = (previous_stage, stage)
         if transition in FORBIDDEN_STAGE_TRANSITIONS:
             self.add_error(
