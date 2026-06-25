@@ -143,7 +143,7 @@ class DemarcheNumeriqueClient:
                     )
                 else:
                     message = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                        "haie/petitions/mattermost_demarche_numerique_api_error_one_dossier.txt",
                         context={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,
@@ -165,7 +165,7 @@ class DemarcheNumeriqueClient:
             )
 
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_unexpected_format.txt",
                 context={
                     "response": data,
                     "query": query,
@@ -215,7 +215,7 @@ class DemarcheNumeriqueClient:
             data = self.execute(GET_DOSSIERS_FOR_DEMARCHE_QUERY, variables)
         except DemarcheNumeriqueError as e:
             message_body = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_error.txt",
                 context={
                     "demarche_number": demarche_number,
                     "error": e.__cause__ if e.__cause__ else e.message,
@@ -286,7 +286,7 @@ class DemarcheNumeriqueClient:
                     },
                 )
                 message = render_to_string(
-                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                     context={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -321,7 +321,7 @@ class DemarcheNumeriqueClient:
                         },
                     )
                     message = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                        "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                         context={
                             "dossier_number": dossier_number,
                         },
@@ -426,7 +426,7 @@ class DemarcheNumeriqueClient:
                     },
                 )
                 message = render_to_string(
-                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                     context={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -450,7 +450,7 @@ class DemarcheNumeriqueClient:
                 },
             )
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                 context={
                     "dossier_number": dossier_number,
                     "error": data,
@@ -551,7 +551,7 @@ class DemarcheNumeriqueClient:
                     },
                 )
                 message = render_to_string(
-                    "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                    "haie/petitions/mattermost_demarche_numerique_api_error_change_dossier_state.txt",
                     context={
                         "dossier_number": project_reference,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -577,7 +577,7 @@ class DemarcheNumeriqueClient:
                 },
             )
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_error_change_dossier_state.txt",
                 context={
                     "dossier_number": project_reference,
                     "error": data,

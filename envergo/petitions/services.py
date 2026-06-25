@@ -177,7 +177,7 @@ def get_context_from_dn(petition_project) -> dict:
         )
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         message = render_to_string(
-            "haie/petitions/mattermost_demarches_simplifiees_donnees_manquantes.txt",
+            "haie/petitions/mattermost_demarche_numerique_donnees_manquantes.txt",
             context={
                 "department": config.department.department,
                 "domain": current_site.domain,

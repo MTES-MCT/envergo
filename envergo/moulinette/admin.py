@@ -516,7 +516,7 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             "sources": ConfigHaie.get_demarche_numerique_value_sources(),
         }
         return render_to_string(
-            "admin/moulinette/confighaie/demarche_simplifiee_pre_fill_config_help_text.html",
+            "admin/moulinette/confighaie/demarche_numerique_pre_fill_config_help_text.html",
             context,
         )
 
