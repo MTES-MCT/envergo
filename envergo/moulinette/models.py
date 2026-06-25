@@ -2750,12 +2750,14 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch / compute data required for further computations."""
 
         data = super().get_catalog_data()
-        # TODO check if this goes in extra context
         if "haies" in data:
             hedges = data["haies"]
-            data["has_hedges_outside_department"] = (
-                hedges.has_hedges_outside_department(self.department)
-            )
+            data["main_department"] = hedges.main_department()
+            data["is_multi_departments"] = hedges.is_multi_departments()
+            data["is_outside_department"] = hedges.is_outside_department(self.department)
+
+            main_department_simulation_url = ""
+            data["main_department_simulation_url"] = main_department_simulation_url
 
         return data
 
