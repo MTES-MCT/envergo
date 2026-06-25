@@ -47,14 +47,18 @@
 
   {% include 'haie/moulinette/_department_doctrine_button.html' %}
 
-  {% if has_hedges_outside_department %}
+  {% if is_outside_department %}
     <div class="fr-alert fr-alert--warning fr-mb-4w">
       <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
       <p>
-        Au moins un des linéaires saisi est situé hors du département choisi pour cette simulation – {{ moulinette.department }}.
+        Une majorité du linéaire de haies saisi est situé hors du département choisi pour cette simulation – {{ moulinette.department }}.
       </p>
       <p>
-        Vous pouvez poursuivre la simulation si le projet est en majorité situé dans ce département, mais la décision de l'administration pourra différer du résultat du simulateur. <a href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}{{ contact_dossier_anchor }}">Contactez-nous</a> pour toute question.
+        Pour poursuivre la demande, il est vivement recommandé de relancer la simulation dans le bon département — {{ main_department }}.
+      </p>
+      <p>
+        <a href="{{ main_department_simulation_url }}"
+           class="fr-btn fr-btn--primary">Relancer la simulation</a>
       </p>
     </div>
   {% endif %}

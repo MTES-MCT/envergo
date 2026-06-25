@@ -6,6 +6,7 @@ from django.db import IntegrityError, transaction
 from shapely import centroid
 
 from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
+from envergo.geodata.models import Department
 from envergo.geodata.tests.factories import (
     DepartmentFactory,
     MapFactory,
@@ -1343,3 +1344,178 @@ def test_hedge_length_is_geodesic_meters():
 
     assert hedge.length == pytest.approx(8074.307052980297, rel=1e-9)
     assert hedge.length > 1000
+
+
+# Two adjacent rectangular departments sharing a border at lng=3.0.
+# dept_west covers lng [2.0, 3.0], dept_east covers lng [3.0, 4.0].
+# Both span lat [43.0, 44.0].
+dept_west_geom = MultiPolygon(
+    [Polygon([(2.0, 43.0), (3.0, 43.0), (3.0, 44.0), (2.0, 44.0), (2.0, 43.0)])]
+)
+dept_east_geom = MultiPolygon(
+    [Polygon([(3.0, 43.0), (4.0, 43.0), (4.0, 44.0), (3.0, 44.0), (3.0, 43.0)])]
+)
+
+
+def make_horizontal_hedge(lat, lng_start, lng_end):
+    """Create a TO_REMOVE hedge as a horizontal line at given latitude."""
+    return HedgeFactory(
+        latLngs=[
+            {"lat": lat, "lng": lng_start},
+            {"lat": lat, "lng": lng_end},
+        ],
+    )
+
+
+class TestDepartmentsLengths:
+    """Test multi-department hedge length allocation and derived helpers."""
+
+    def create_departments(self):
+        west = DepartmentFactory(department="44", geometry=dept_west_geom)
+        east = DepartmentFactory(department="34", geometry=dept_east_geom)
+        return west, east
+
+    def test_single_department(self):
+        """All hedges inside one department → single result."""
+        west, east = self.create_departments()
+        hedge = make_horizontal_hedge(43.5, 2.3, 2.7)
+        hd = HedgeDataFactory(hedges=[hedge])
+
+        result = hd.departments_lengths()
+
+        assert len(result) == 1
+        dept, length = result[0]
+        assert dept == west
+        assert length > 0
+
+    def test_two_departments_separate_hedges(self):
+        """Two hedges, each in a different department → two results."""
+        west, east = self.create_departments()
+        h_west = make_horizontal_hedge(43.5, 2.3, 2.7)
+        h_east = make_horizontal_hedge(43.5, 3.3, 3.7)
+        hd = HedgeDataFactory(hedges=[h_west, h_east])
+
+        result = hd.departments_lengths()
+
+        assert len(result) == 2
+        depts = {dept for dept, _ in result}
+        assert depts == {west, east}
+
+    def test_ordered_by_decreasing_length(self):
+        """Result is sorted by decreasing total length per department."""
+        west, east = self.create_departments()
+        h_w1 = make_horizontal_hedge(43.5, 2.3, 2.4)
+        h_w2 = make_horizontal_hedge(43.6, 2.3, 2.4)
+        h_east = make_horizontal_hedge(43.5, 3.1, 3.9)
+        hd = HedgeDataFactory(hedges=[h_w1, h_w2, h_east])
+
+        result = hd.departments_lengths()
+
+        assert len(result) == 2
+        assert result[0][0] == east, "East has the longest total and should come first"
+        assert result[0][1] > result[1][1]
+
+    def test_hedge_crossing_border_is_split(self):
+        """A hedge crossing the border is allocated proportionally to each side."""
+        west, east = self.create_departments()
+        hedge = make_horizontal_hedge(43.5, 2.5, 3.5)
+        hd = HedgeDataFactory(hedges=[hedge])
+
+        result = hd.departments_lengths()
+
+        assert len(result) == 2
+        lengths = {dept: length for dept, length in result}
+        assert west in lengths
+        assert east in lengths
+        total = lengths[west] + lengths[east]
+        assert abs(lengths[west] / total - 0.5) < 0.1
+        assert abs(lengths[east] / total - 0.5) < 0.1
+
+    def test_hedge_crossing_border_asymmetric(self):
+        """A hedge crossing the border unevenly allocates proportionally."""
+        west, east = self.create_departments()
+        # lng 2.0 → 3.5: 2/3 in west, 1/3 in east
+        hedge = make_horizontal_hedge(43.5, 2.0, 3.5)
+        hd = HedgeDataFactory(hedges=[hedge])
+
+        result = hd.departments_lengths()
+
+        lengths = {dept: length for dept, length in result}
+        ratio = lengths[west] / lengths[east]
+        assert 1.5 < ratio < 2.5
+
+    def test_departments_deduplicated(self):
+        """Multiple hedges in the same department produce a single entry."""
+        west, east = self.create_departments()
+        h1 = make_horizontal_hedge(43.5, 2.2, 2.4)
+        h2 = make_horizontal_hedge(43.6, 2.5, 2.8)
+        h3 = make_horizontal_hedge(43.7, 2.1, 2.3)
+        hd = HedgeDataFactory(hedges=[h1, h2, h3])
+
+        result = hd.departments_lengths()
+
+        assert len(result) == 1
+        assert result[0][0] == west
+
+    def test_only_hedges_to_remove_are_counted(self):
+        """Hedges marked TO_PLANT are excluded from the computation."""
+        west, east = self.create_departments()
+        h_remove = make_horizontal_hedge(43.5, 2.3, 2.7)
+        h_plant = HedgeFactory(
+            to_plant=True,
+            latLngs=[
+                {"lat": 43.5, "lng": 3.3},
+                {"lat": 43.5, "lng": 3.7},
+            ],
+        )
+        hd = HedgeDataFactory(hedges=[h_remove, h_plant])
+
+        result = hd.departments_lengths()
+
+        assert len(result) == 1
+        assert result[0][0] == west
+
+    def test_lengths_are_in_meters(self):
+        """Returned lengths should be in meters, not degrees."""
+        west, east = self.create_departments()
+        hedge = make_horizontal_hedge(43.5, 2.3, 2.7)
+        hd = HedgeDataFactory(hedges=[hedge])
+
+        result = hd.departments_lengths()
+
+        dept, length = result[0]
+        # 0.4° longitude at lat ~43.5 ≈ 32 km
+        assert length > 1000, "Length should be in meters, not degrees"
+        assert length < 100_000, "Length should be reasonable"
+
+    def test_is_multi_departments_false(self):
+        DepartmentFactory(department="44", geometry=dept_west_geom)
+        hedge = make_horizontal_hedge(43.5, 2.3, 2.7)
+        hd = HedgeDataFactory(hedges=[hedge])
+
+        assert not hd.is_multi_departments()
+
+    def test_is_multi_departments_true(self):
+        self.create_departments()
+        h1 = make_horizontal_hedge(43.5, 2.3, 2.7)
+        h2 = make_horizontal_hedge(43.5, 3.3, 3.7)
+        hd = HedgeDataFactory(hedges=[h1, h2])
+
+        assert hd.is_multi_departments()
+
+    def test_main_department(self):
+        west, east = self.create_departments()
+        h_short = make_horizontal_hedge(43.5, 2.4, 2.5)
+        h_long = make_horizontal_hedge(43.5, 3.1, 3.9)
+        hd = HedgeDataFactory(hedges=[h_short, h_long])
+
+        assert hd.main_department() == east
+
+    def test_is_outside_department(self):
+        west, east = self.create_departments()
+        h_short = make_horizontal_hedge(43.5, 2.4, 2.5)
+        h_long = make_horizontal_hedge(43.5, 3.1, 3.9)
+        hd = HedgeDataFactory(hedges=[h_short, h_long])
+
+        assert hd.is_outside_department(west)
+        assert not hd.is_outside_department(east)
