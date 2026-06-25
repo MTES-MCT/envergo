@@ -2874,9 +2874,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["is_multi_departments"] = hedges.is_multi_departments()
             data["is_outside_department"] = hedges.is_outside_department(self.department)
 
-            main_department_simulation_url = ""
-            data["main_department_simulation_url"] = main_department_simulation_url
-
             data["hedges_by_category"] = hedges.get_hedges_by_category(
                 self.config.single_procedure
             )
