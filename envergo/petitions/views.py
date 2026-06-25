@@ -384,7 +384,7 @@ class PetitionProjectCreate(FormView):
 
                 res = JsonResponse(
                     {
-                        "demarche_simplifiee_url": demarche_numerique_url,
+                        "demarche_numerique_url": demarche_numerique_url,
                         "read_only_url": read_only_url,
                     }
                 )
