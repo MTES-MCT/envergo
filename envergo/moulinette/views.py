@@ -610,6 +610,15 @@ class MoulinetteHaieResult(
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
+
+            # Compute url corresponding to the department with the most hedges inside
+            root_url = self.request.build_absolute_uri(reverse("moulinette_form"))
+            querystring = self.request.GET.urlencode()
+            moulinette_url = f'{root_url}?{querystring}'
+            dept_param = {"department": hedge_data.main_department().department}
+            main_department_simulation_url = update_qs(moulinette_url, dept_param)
+            context["main_department_simulation_url"] = main_department_simulation_url
+
         return context
 
 
