@@ -29,6 +29,14 @@ jobs:
         with:
           python-version: 3.12.8
 
+      # stylelint runs from node_modules (see .pre-commit-config.yaml)
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+      - name: Install js dependencies
+        run: npm ci
+
       # Run all pre-commit hooks on all the files.
       # Getting only staged files can be tricky in case a new PR is opened
       # since the action is run on a branch in detached head state
