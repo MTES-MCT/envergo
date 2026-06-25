@@ -171,10 +171,20 @@ class ProcedureForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, single_procedure=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+
+        # Single-procedure departments skip the "to_be_processed" stage entirely,
+        # so it shouldn't even be selectable.
+        if single_procedure:
+            self.fields["stage"].choices = [
+                choice
+                for choice in self.fields["stage"].choices
+                if choice[0] != "to_be_processed"
+            ]
+
         # Pass field errors to the widget after validation
         for name, field in self.fields.items():
             bound_field = self[name]
