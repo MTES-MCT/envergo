@@ -757,13 +757,13 @@ class PetitionProjectDetail(DetailView):
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
-        context["demarches_simplifiees_state"] = self.object.demarche_numerique_state
+        context["demarche_numerique_state"] = self.object.demarche_numerique_state
 
-        context["demarches_simplifiees_dossier_number"] = (
+        context["demarche_numerique_dossier_number"] = (
             self.object.demarche_numerique_dossier_number
         )
         context["created_at"] = self.object.created_at
-        context["demarches_simplifiees_date_depot"] = (
+        context["demarche_numerique_date_depot"] = (
             self.object.demarche_numerique_date_depot
         )
         plantation_url = reverse(
@@ -794,7 +794,7 @@ class PetitionProjectDetail(DetailView):
         context["edit_url"] = edit_url
 
         if self.object.demarche_numerique_state == "draft":
-            context["demarches_simplifiees_prefill_url"] = (
+            context["demarche_numerique_prefill_url"] = (
                 self.object.demarche_numerique_prefill_url or ""
             )
         context["ds_url"] = self.object.demarche_numerique_petitioner_url

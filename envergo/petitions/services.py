@@ -199,7 +199,7 @@ def get_context_from_dn(petition_project) -> dict:
         representative = dossier.representative_name or ""
 
     context = {
-        "demarches_simplifiees_dossier_number": petition_project.demarche_numerique_dossier_number,
+        "demarche_numerique_dossier_number": petition_project.demarche_numerique_dossier_number,
         "demarche_numerique_number": config.demarche_numerique_number,
         "ds_info": {
             "usager": usager,
@@ -585,7 +585,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
                     "config": self.config,
                     "config_url": config_url,
                     "dossier_url": dossier_url,
-                    "demarches_simplifiees_dossier_number": self._petition_project.demarche_numerique_dossier_number,
+                    "demarche_numerique_dossier_number": self._petition_project.demarche_numerique_dossier_number,
                 },
             )
         else:
