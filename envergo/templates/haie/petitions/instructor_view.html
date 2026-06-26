@@ -16,21 +16,24 @@
 
     {% include 'haie/moulinette/_department_doctrine_button.html' with config=moulinette.config %}
 
-    {% if is_outside_department %}
+    {% if is_multi_departments %}
       <div class="fr-alert fr-alert--warning fr-mb-4w">
-        <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
+        <h3 class="fr-alert__title">Le projet se situe sur plusieurs départements</h3>
+
+        <p>Les haies saisies sont situées dans les départements suivants :</p>
+
+        <ul>
+          {% for dept, length in departments_lengths %}
+            <li>
+              {{ dept }} — {{ length|floatformat:0 }} m
+            {% endfor %}
+          </li>
+        </ul>
+
+        <p>La décision relative au projet devra être prise conjointement par les préfets intéressés.</p>
+
         <p>
-          Au moins un des linéaires saisis est situé hors du département choisi pour la simulation réalisée par le
-          demandeur – {{ config.department }}.
-        </p>
-        <p>
-          Le simulateur n’est pas paramétré pour gérer les règles combinées de plusieurs départements.
-          L’instruction de la demande et l'élaboration de la décision unique peuvent nécessiter de se coordonner avec
-          les services des préfectures concernées.
-        </p>
-        <p>
-          Le demandeur a été averti en ce sens (voir <a href="{% url 'petition_project' petition_project.reference %}">le
-          résultat de la simulation</a>) avant qu'il dépose sa demande.
+          S’il s’avère qu’un transfert du dossier entre départements est nécessaire, <a href="{% url 'contact_us' %}">contactez l’équipe technique</a>.
         </p>
       </div>
     {% endif %}
