@@ -6,7 +6,6 @@ from django.db import IntegrityError, transaction
 from shapely import centroid
 
 from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
-from envergo.geodata.models import Department
 from envergo.geodata.tests.factories import (
     DepartmentFactory,
     MapFactory,
