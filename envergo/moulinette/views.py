@@ -501,7 +501,7 @@ class MoulinetteResultMixin:
         if moulinette:
             context["base_result"] = moulinette.get_result_template()
         else:
-            context["base_result"] = "moulinette/base_result.html"
+            context["base_result"] = "moulinette/result_layout.html"
 
         if moulinette and is_debug:
             debug_context_data = moulinette.get_debug_context()
@@ -611,13 +611,15 @@ class MoulinetteHaieResult(
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
 
-            # Compute url corresponding to the department with the most hedges inside
-            root_url = self.request.build_absolute_uri(reverse("moulinette_form"))
-            querystring = self.request.GET.urlencode()
-            moulinette_url = f'{root_url}?{querystring}'
-            dept_param = {"department": hedge_data.main_department().department}
-            main_department_simulation_url = update_qs(moulinette_url, dept_param)
-            context["main_department_simulation_url"] = main_department_simulation_url
+            main_dept = hedge_data.main_department()
+            if main_dept:
+                root_url = self.request.build_absolute_uri(reverse("moulinette_form"))
+                querystring = self.request.GET.urlencode()
+                moulinette_url = f"{root_url}?{querystring}"
+                dept_param = {"department": main_dept.department}
+                context["main_department_simulation_url"] = update_qs(
+                    moulinette_url, dept_param
+                )
 
         return context
 
