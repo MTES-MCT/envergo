@@ -2739,6 +2739,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         data = super().get_catalog_data()
         if "haies" in data:
             hedges = data["haies"]
+            data["departments_lengths"] = hedges.departments_lengths()
             data["main_department"] = hedges.main_department()
             data["is_multi_departments"] = hedges.is_multi_departments()
             data["is_outside_department"] = hedges.is_outside_department(self.department)
