@@ -257,7 +257,7 @@ def test_evalenv_non_soumis_no_optional_criteria(admin_client):
     res = admin_client.get(f"{url}?{params}")
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
     content = res.content.decode()
     assert (
         "Le projet n’est pas soumis à évaluation environnementale au titre des seuils "
@@ -296,7 +296,7 @@ def test_evalenv_non_soumis_optional_criteria(admin_client):
     res = admin_client.get(f"{url}?{params}")
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
     content = res.content.decode()
     assert (
         "Le projet n’est pas soumis à évaluation environnementale au titre des seuils "
@@ -321,7 +321,7 @@ def test_evalenv_rubrique44(admin_client):
     )
     res = admin_client.get(f"{url}?{params}")
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
     assert (
         "Le projet mène à l’existence d’un équipement sportif, de loisirs, ou lié à une activité culturelle, d’une "
         "capacité d’accueil de plus de 1000 personnes" in res.content.decode()
@@ -335,7 +335,7 @@ def test_evalenv_rubrique44(admin_client):
     )
     res = admin_client.get(f"{url}?{params}")
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
     assert (
         "Le projet porte sur un équipement sportif, de loisirs, ou lié à une activité culturelle, mais dont la capacité"
         " d’accueil est inférieure à 1000 personnes" in res.content.decode()
@@ -349,7 +349,7 @@ def test_evalenv_rubrique44(admin_client):
     )
     res = admin_client.get(f"{url}?{params}")
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
     assert (
         "Le projet ne concerne pas un équipement sportif, de loisirs, ou d’activités culturelles."
         in res.content.decode()
@@ -525,4 +525,4 @@ class TestICPEFormValidation:
         res = _get_icpe_result(staff_client, "creation", "enregistrement")
 
         assert res.status_code == 200
-        assertTemplateUsed(res, "moulinette/result.html")
+        assertTemplateUsed(res, "amenagement/moulinette/result.html")
