@@ -655,7 +655,6 @@ class HedgeData(models.Model):
             "Use density_around_centroid or density_around_lines instead of density."
         )
 
-
     def departments_lengths(self):
         """Return the list of departments intersected by the hedges.
 
@@ -707,7 +706,6 @@ class HedgeData(models.Model):
         if main is None:
             return False
         return main != department
-
 
     def get_statistics(self):
         hedge_centroid_coords = self.hedges_to_remove().centroid
