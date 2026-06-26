@@ -864,12 +864,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
 
         context.update(get_context_from_ds(self.object))
-
         context.update(self.object.moulinette_data)
-        if "haies" in context:
-            context["has_hedges_outside_department"] = context[
-                "haies"
-            ].has_hedges_outside_department(self.object.department)
+        context.update(self.object.get_moulinette().get_extra_context(self.request))
 
         plantation_url = reverse(
             "input_hedges",
