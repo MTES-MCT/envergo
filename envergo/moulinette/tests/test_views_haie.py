@@ -7,7 +7,9 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.analytics.models import Event
-from envergo.geodata.tests.factories import DepartmentFactory
+from django.contrib.gis.geos import MultiPolygon
+
+from envergo.geodata.tests.factories import DepartmentFactory, calvados_polygon
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -431,6 +433,9 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
 
     # GIVEN a moulinette with at least an hedge to remove outside the department
     DCConfigHaieFactory()
+    DepartmentFactory(
+        department="14", geometry=MultiPolygon([calvados_polygon])
+    )
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
@@ -458,7 +463,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     res = client.get(f"{url}?{query}")
 
     # THEN the result page is displayed with a warning
-    assert res.context["has_hedges_outside_department"]
+    assert res.context["is_outside_department"]
     assert "Le projet est hors du département sélectionné" in res.content.decode()
 
     # Given hedges in department 44 and accross the department border
@@ -482,7 +487,7 @@ def test_result_p_view_with_hedges_to_remove_outside_department(client):
     res = client.get(f"{url}?{query}")
 
     # THEN the result page is displayed without warning
-    assert not res.context["has_hedges_outside_department"]
+    assert not res.context["is_outside_department"]
     assert "Le projet est hors du département sélectionné" not in res.content.decode()
 
 

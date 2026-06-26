@@ -66,7 +66,7 @@ class TestICPEStaffOnlyVisibility:
         res = staff_client.get(url)
 
         assert res.status_code == 200
-        assertTemplateUsed(res, "moulinette/result.html")
+        assertTemplateUsed(res, "amenagement/moulinette/result.html")
         assert "installation classée (icpe)" in res.content.decode().lower()
 
     def test_staff_haie_only_can_see_icpe_form(self, client):
