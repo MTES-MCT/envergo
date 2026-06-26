@@ -376,3 +376,8 @@ def get_attr(obj, attr):
 @register.filter
 def min_numeric(values):
     return min(map(float, values))
+
+
+@register.filter
+def classname(value):
+    return type(value).__name__
