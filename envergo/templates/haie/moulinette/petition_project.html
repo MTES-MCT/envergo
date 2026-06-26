@@ -4,7 +4,7 @@
 
 {% load static %}
 
-{% block before-title-content %}
+{% block action_buttons %}
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
     {% if demarche_numerique_state != "draft" %}
@@ -50,8 +50,13 @@
   </p>
 {% endblock %}
 
-{% block moulinette_result %}
+{% block department_alert %}
+  {% include 'haie/moulinette/_department_alert.html' with department_display=config.department %}
+{% endblock %}
 
+{% block sensitive_areas %}{% endblock %}
+
+{% block result_summary %}
   {% if user.is_instructor %}
     <h3 class="fr-mt-4w">Vous souhaitez faire une simulation alternative ?</h3>
 
@@ -90,8 +95,6 @@
   <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
   {{ block.super }}
 {% endblock %}
-
-{% block sensitive_areas %}{% endblock %}
 
 {% block project_summary %}
   {{ block.super }}
