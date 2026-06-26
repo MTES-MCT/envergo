@@ -171,7 +171,7 @@ class AdditiveConditionMixin(ABC):
         )
 
 
-class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
+class MinLengthCondition(AdditiveConditionMixin, PlantationCondition, ABC):
     """Evaluate if there is enough hedges to plant in the project"""
 
     label = "Longueur de la haie plantée"
@@ -219,9 +219,6 @@ class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
         """
         return "MinLengthCondition"
 
-    def __add__(self, other):
-        return combine_length_conditions(self, other, MinLengthCondition)
-
 
 class RUMinLengthCondition(MinLengthCondition):
     """Evaluate if there is enough hedges to plant in the project.
@@ -239,6 +236,12 @@ class RUMinLengthCondition(MinLengthCondition):
     def compare_strictness(self, other):
         """The condition requiring the longer minimum length is stricter."""
         return self.context["length_to_check"] > other.context["length_to_check"]
+
+    def __add__(self, other):
+        if not isinstance(other, type(self)):
+            # NormandieMinLengthCondition should use its own __add__ method
+            return NotImplemented
+        return combine_length_conditions(self, other, RUMinLengthCondition)
 
 
 class NormandieMinLengthCondition(MinLengthCondition):
@@ -291,6 +294,48 @@ class NormandieMinLengthCondition(MinLengthCondition):
                 self.context["reduced_minimum_length_to_plant"] = ceil(length_to_check)
 
         return self
+
+    def __add__(self, other):
+        a_to_remove = self.hedges.to_remove().length
+        b_to_remove = other.hedges.to_remove().length
+        total_to_remove = a_to_remove + b_to_remove
+        # No hedge removed means R is irrelevant (minimum length is 0 either way).
+        R = (
+            (self.R * a_to_remove + other.R * b_to_remove) / total_to_remove
+            if total_to_remove
+            else 0
+        )
+
+        combined = NormandieMinLengthCondition(
+            HedgeList(self.hedges + other.hedges), R, None, None
+        )
+        # evaluate the base MinLengthCondition part
+        MinLengthCondition.evaluate(combined)
+
+        length_to_plant = (
+            self.context["length_to_plant"] + other.context["length_to_plant"]
+        )
+        length_to_check = (
+            self.context["length_to_check"] + other.context["length_to_check"]
+        )
+        minimum_length_to_plant = (
+            self.context["minimum_length_to_plant"]
+            + other.context["minimum_length_to_plant"]
+        )
+
+        combined.result = length_to_plant >= length_to_check
+        left_to_plant = max(0, length_to_check - length_to_plant)
+        combined.context["left_to_plant"] = ceil(left_to_plant)
+        combined.context["length_to_check"] = ceil(length_to_check)
+        combined.context["minimum_length_to_plant"] = ceil(minimum_length_to_plant)
+
+        if round(length_to_check) < round(minimum_length_to_plant):
+            combined.context["reduced_minimum_length_to_plant"] = ceil(length_to_check)
+
+        return combined
+
+    def __radd__(self, other):
+        return self.__add__(other)
 
 
 class PacParcelCondition(AdditiveConditionMixin, PlantationCondition):
