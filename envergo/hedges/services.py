@@ -443,7 +443,10 @@ class PlantationEvaluator:
             key=attrgetter("order"),
         )
         self._all_conditions = all_displayable
-        self._all_conditions_by_category = dict(conditions_by_category)
+        self._all_conditions_by_category = {
+            category: sorted(conditions, key=attrgetter("order"))
+            for category, conditions in conditions_by_category.items()
+        }
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0

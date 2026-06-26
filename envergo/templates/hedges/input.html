@@ -128,19 +128,24 @@
                 <div class="hedge-badges fr-mt-n1v">
                   <span v-if="!hedge.isValid()"
                         class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
-                  <span v-if="hedge.category()==='hru'"
-                        class="fr-badge  {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.hru.badge_label }}</span>
-                  <span v-if="hedge.category()==='l350_3'"
-                        class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.l350_3.badge_label }}</span>
+                  {% if config.single_procedure %}
+                    <span v-if="hedge.category()==='hru'"
+                          class="fr-badge  {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.hru.badge_label }}</span>
+                    <span v-if="hedge.category()==='l350_3'"
+                          class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.l350_3.badge_label }}</span>
+                  {% endif %}
                 </div>
               </div>
-              <p v-if="mode === 'removal' && hedges.TO_REMOVE.completelyDrawn().some(h => h.category() !== 'ru')"
-                 class="fr-m-2w fr-text--light fr-text--sm">
-                <i>Les alignements d'arbres et les haies en bordure de bâtiment, de place publique ou dans un parc ou un
-                  jardin attenant à une habitation sont soumis à des procédures spécifiques.
-                  <br />
-                Ce simulateur en tient compte et indiquera la marche à suivre.</i>
-              </p>
+              {% if config.single_procedure %}
+                <p v-if="mode === 'removal' && hedges.TO_REMOVE.completelyDrawn().some(h => h.category() !== 'ru')"
+                   class="fr-m-2w fr-text--light fr-text--sm">
+                  <i>Les alignements d'arbres et les haies en bordure de bâtiment, de place publique ou dans un parc ou
+                    un
+                    jardin attenant à une habitation sont soumis à des procédures spécifiques.
+                    <br />
+                  Ce simulateur en tient compte et indiquera la marche à suivre.</i>
+                </p>
+              {% endif %}
             </template>
             <template v-else>
               <p class="fr-text--light">Aucune haie tracée</p>
@@ -179,10 +184,12 @@
                 <div class="hedge-badges fr-mt-n1v">
                   <span v-if="!hedge.isValid()"
                         class="fr-badge fr-badge--warning fr-badge--sm">À compléter</span>
-                  <span v-if="hedge.category()==='hru'"
-                        class="fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.hru.badge_label }}</span>
-                  <span v-if="hedge.category()==='l350_3'"
-                        class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.l350_3.badge_label }}</span>
+                  {% if config.single_procedure %}
+                    <span v-if="hedge.category()==='hru'"
+                          class="fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.hru.badge_label }}</span>
+                    <span v-if="hedge.category()==='l350_3'"
+                          class="fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm">{{ HedgeCategory.l350_3.badge_label }}</span>
+                  {% endif %}
                 </div>
               </div>
             </template>

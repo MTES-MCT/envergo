@@ -138,6 +138,7 @@
             {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
             <ul>
               <li>Catégorie = {{ category }}</li>
+              <li>Évaluateur = {{ condition.criterion_evaluator|classname|default:"Non lié à un évaluateur" }}</li>
               {% if condition.context %}
                 {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
               {% endif %}

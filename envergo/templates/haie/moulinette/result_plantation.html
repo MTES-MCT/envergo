@@ -75,13 +75,15 @@
 {% endblock %}
 
 {% block other_categories_results %}
-  {% if HedgeCategory.l350_3 in moulinette.other_categories %}
-    {% show_plantation_result plantation_evaluation HedgeCategory.l350_3 is_main=False %}
+  {% if config.single_procedure %}
+    {% if HedgeCategory.l350_3 in moulinette.other_categories %}
+      {% show_plantation_result plantation_evaluation HedgeCategory.l350_3 is_main=False %}
+    {% endif %}
+    {% if HedgeCategory.hru in moulinette.other_categories %}
+      {% show_plantation_result plantation_evaluation HedgeCategory.hru is_main=False %}
+    {% endif %}
+    {% city_hall_submission_callout %}
   {% endif %}
-  {% if HedgeCategory.hru in moulinette.other_categories %}
-    {% show_plantation_result plantation_evaluation HedgeCategory.hru is_main=False %}
-  {% endif %}
-  {% city_hall_submission_callout %}
 {% endblock %}
 
 {% block extra_body %}

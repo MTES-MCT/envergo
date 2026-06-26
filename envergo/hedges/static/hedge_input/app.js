@@ -100,8 +100,12 @@ const showHedgeModal = (hedge, hedgeType) => {
   }
   hedgeName.textContent = hedge.id;
   hedgeLength.textContent = hedge.length.toFixed(0);
-  hedgeBadgeHru.style.display = hedge.category() === 'hru' ? '' : 'none';
-  hedgeBadgeL3503.style.display = hedge.category() === 'l350_3' ? '' : 'none';
+  if(hedgeBadgeHru){
+    hedgeBadgeHru.style.display = hedge.category() === 'hru' ? '' : 'none';
+  }
+  if(hedgeBadgeL3503){
+    hedgeBadgeL3503.style.display = hedge.category() === 'l350_3' ? '' : 'none';
+  }
 
   // Save form data to the hedge object
   // This is the form submit event handler
