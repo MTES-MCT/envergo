@@ -2742,7 +2742,9 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["departments_lengths"] = hedges.departments_lengths()
             data["main_department"] = hedges.main_department()
             data["is_multi_departments"] = hedges.is_multi_departments()
-            data["is_outside_department"] = hedges.is_outside_department(self.department)
+            data["is_outside_department"] = hedges.is_outside_department(
+                self.department
+            )
 
         return data
 

@@ -6,6 +6,7 @@ import pytest
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.gis.geos import MultiPolygon
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
@@ -15,8 +16,6 @@ from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
-from django.contrib.gis.geos import MultiPolygon
-
 from envergo.geodata.tests.factories import (
     Department34Factory,
     DepartmentFactory,
@@ -1385,9 +1384,7 @@ def test_instructor_view_multi_departments_alert(client, haie_instructor_44):
 
     client.force_login(haie_instructor_44)
     DCConfigHaieFactory()
-    DepartmentFactory(
-        department="14", geometry=MultiPolygon([calvados_polygon])
-    )
+    DepartmentFactory(department="14", geometry=MultiPolygon([calvados_polygon]))
 
     # GIVEN hedges in department 14 while the project is declared in department 44
     hedge_14 = HedgeFactory(
