@@ -1,0 +1,21 @@
+{% if is_outside_department %}
+  <div class="fr-alert fr-alert--warning fr-mb-4w">
+    <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
+    <p>
+      Une majorité du linéaire de haies saisi est situé hors du département choisi pour cette simulation – {{ department_display }}.
+    </p>
+    {% if relaunch_url %}
+      <p>
+        Pour poursuivre la demande, il est vivement recommandé de relancer la simulation dans le bon département — {{ main_department }}.
+      </p>
+      <p>
+        <a href="{{ relaunch_url }}" class="fr-btn fr-btn--primary">Relancer la simulation</a>
+      </p>
+    {% else %}
+      <p>La décision de l'administration pourra différer du résultat du simulateur.</p>
+      <p>
+        <a href="{% url 'contact_us' %}">Contactez nous pour toute question.</a>
+      </p>
+    {% endif %}
+  </div>
+{% endif %}
