@@ -892,7 +892,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
 
         context.update(get_context_from_dn(self.object))
         context.update(self.object.moulinette_data)
-        context.update(self.object.get_moulinette().get_extra_context(self.request))
 
         plantation_url = reverse(
             "input_hedges",
