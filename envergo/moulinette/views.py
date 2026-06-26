@@ -611,14 +611,12 @@ class MoulinetteHaieResult(
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
 
-            main_dept = hedge_data.main_department()
-            if main_dept:
-                root_url = self.request.build_absolute_uri(reverse("moulinette_form"))
-                querystring = self.request.GET.urlencode()
-                moulinette_url = f"{root_url}?{querystring}"
-                dept_param = {"department": main_dept.department}
+            main_department = hedge_data.main_department()
+            if main_department:
+                form_url = self.request.build_absolute_uri(reverse("moulinette_form"))
+                form_url = update_qs(form_url, self.request.GET)
                 context["main_department_simulation_url"] = update_qs(
-                    moulinette_url, dept_param
+                    form_url, {"department": main_department.department}
                 )
 
         return context
