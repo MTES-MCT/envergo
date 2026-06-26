@@ -1085,6 +1085,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
         context = super().get_context_data(**kwargs)
         moulinette = self.object.get_moulinette()
         context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
 
         context.update(get_project_context(self.object, context["moulinette"]))
 
