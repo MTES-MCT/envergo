@@ -14,7 +14,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HedgeCategory, HedgeData
-from envergo.hedges.regulations import AdditiveConditionMixin
+from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 from envergo.moulinette.regulations import Map, MapPolygon
 
@@ -391,6 +391,27 @@ class PlantationEvaluator:
                             R_by_category[criterion._evaluator.category],
                             self.moulinette.catalog,
                         )
+                    )
+
+        # We make sure the "min length condition" exists if it was not explicitely
+        # added by an evaluator.
+
+        for category in HedgeCategory:
+            has_min_length_condition = False
+            for condition in conditions_by_category[category]:
+                if isinstance(condition, MinLengthCondition):
+                    has_min_length_condition = True
+                    break
+
+            if not has_min_length_condition:
+                hedges = self.hedge_data.hedges().evaluator_category(
+                    self.moulinette.config.single_procedure, category
+                )
+                if hedges:
+                    conditions_by_category[category].append(
+                        MinLengthCondition(
+                            hedges, R_by_category[category], None, {}
+                        ).evaluate()
                     )
 
         displayable_conditions = []

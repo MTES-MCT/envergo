@@ -171,7 +171,7 @@ class AdditiveConditionMixin(ABC):
         )
 
 
-class MinLengthCondition(AdditiveConditionMixin, PlantationCondition, ABC):
+class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
 
     label = "Longueur de la haie plantée"
@@ -219,6 +219,12 @@ class MinLengthCondition(AdditiveConditionMixin, PlantationCondition, ABC):
         """
         return "MinLengthCondition"
 
+    def __add__(self, other):
+        if isinstance(other, NormandieMinLengthCondition):
+            # NormandieMinLengthCondition should use its own __add__/__radd__ methods
+            return NotImplemented
+        return combine_length_conditions(self, other, MinLengthCondition)
+
 
 class RUMinLengthCondition(MinLengthCondition):
     """Evaluate if there is enough hedges to plant in the project.
@@ -236,12 +242,6 @@ class RUMinLengthCondition(MinLengthCondition):
     def compare_strictness(self, other):
         """The condition requiring the longer minimum length is stricter."""
         return self.context["length_to_check"] > other.context["length_to_check"]
-
-    def __add__(self, other):
-        if not isinstance(other, type(self)):
-            # NormandieMinLengthCondition should use its own __add__ method
-            return NotImplemented
-        return combine_length_conditions(self, other, RUMinLengthCondition)
 
 
 class NormandieMinLengthCondition(MinLengthCondition):
