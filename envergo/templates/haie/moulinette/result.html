@@ -2,17 +2,7 @@
 
 {% load static moulinette %}
 
-{% block result_header %}
-  <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette plantation_evaluation %}</div>
-
-  <p class="fr-hint-text fr-mb-3w">
-    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
-    <a href="#liability-info" class="hide-print">En savoir plus.</a>
-  </p>
-{% endblock %}
-
-{% block before-title-content %}
-  {{ block.super }}
+{% block alternative_alert %}
   {% if is_alternative %}
     <div class="fr-alert fr-alert--info fr-mb-3w">
       <h3 class="fr-alert__title">Nouvelle simulation alternative pour ce dossier</h3>
@@ -28,6 +18,15 @@
       {% endif %}
     </div>
   {% endif %}
+{% endblock %}
+
+{% block result_summary %}
+  <div class="alt fr-p-3w fr-mb-3w">{% show_haie_moulinette_result moulinette plantation_evaluation %}</div>
+
+  <p class="fr-hint-text fr-mb-3w">
+    Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
+    <a href="#liability-info" class="hide-print">En savoir plus.</a>
+  </p>
 {% endblock %}
 
 {% block main_form_field %}
