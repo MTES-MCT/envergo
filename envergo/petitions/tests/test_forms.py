@@ -11,10 +11,26 @@ from envergo.petitions.tests.factories import FILE_TEST_NOK_PATH, FILE_TEST_PATH
 pytestmark = pytest.mark.django_db
 
 
-def make_procedure_form(data=None, files=None, previous_stage="preparing_decision"):
+def make_procedure_form(
+    files=None,
+    previous_stage="preparing_decision",
+    stage=None,
+    decision="dropped",
+    status_date="10/09/2025",
+    single_procedure=False,
+    **extra_data,
+):
     """Build a ProcedureForm the way the procedure view does."""
+    data = {
+        "stage": stage,
+        "decision": decision,
+        "status_date": status_date,
+        **extra_data,
+    }
     initial = {"stage": previous_stage, "decision": "unset"}
-    return ProcedureForm(data=data, files=files, initial=initial)
+    return ProcedureForm(
+        data=data, files=files, initial=initial, single_procedure=single_procedure
+    )
 
 
 def make_attachment():
@@ -34,30 +50,30 @@ def closing_data(decision, **overrides):
 
 def test_closing_dropped_requires_message_only():
     form = make_procedure_form(
-        closing_data("dropped", simulation_check="", applicant_message="")
+        **closing_data("dropped", simulation_check="", applicant_message="")
     )
     assert not form.is_valid()
     assert set(form.errors) == {"applicant_message"}
 
-    form = make_procedure_form(closing_data("dropped", simulation_check=""))
+    form = make_procedure_form(**closing_data("dropped", simulation_check=""))
     assert form.is_valid(), form.errors
 
 
 def test_closing_tacit_agreement_requires_simulation_check_and_message():
     form = make_procedure_form(
-        closing_data("tacit_agreement", simulation_check="", applicant_message="")
+        **closing_data("tacit_agreement", simulation_check="", applicant_message="")
     )
     assert not form.is_valid()
     assert set(form.errors) == {"simulation_check", "applicant_message"}
 
-    form = make_procedure_form(closing_data("tacit_agreement"))
+    form = make_procedure_form(**closing_data("tacit_agreement"))
     assert form.is_valid(), form.errors
 
 
 @pytest.mark.parametrize("decision", ["express_agreement", "opposition"])
 def test_closing_with_order_requires_all_fields(decision):
     form = make_procedure_form(
-        closing_data(decision, simulation_check="", applicant_message="")
+        **closing_data(decision, simulation_check="", applicant_message="")
     )
     assert not form.is_valid()
     assert set(form.errors) == {
@@ -67,13 +83,13 @@ def test_closing_with_order_requires_all_fields(decision):
     }
 
     form = make_procedure_form(
-        closing_data(decision), files={"prefectural_order": make_attachment()}
+        **closing_data(decision), files={"prefectural_order": make_attachment()}
     )
     assert form.is_valid(), form.errors
 
 
 def test_closing_simulation_check_error_message():
-    form = make_procedure_form(closing_data("tacit_agreement", simulation_check=""))
+    form = make_procedure_form(**closing_data("tacit_agreement", simulation_check=""))
     assert not form.is_valid()
     assert form.errors["simulation_check"] == [
         "Pour garantir la qualité des données transmises à l'observatoire de la haie, "
@@ -82,7 +98,7 @@ def test_closing_simulation_check_error_message():
 
 
 def test_closing_without_decision_is_invalid():
-    form = make_procedure_form(closing_data("unset"))
+    form = make_procedure_form(**closing_data("unset"))
     assert not form.is_valid()
     assert "decision" in form.errors
 
@@ -90,7 +106,7 @@ def test_closing_without_decision_is_invalid():
 def test_closing_forces_hidden_fields():
     """When closing, the comment and date fields are forced server-side."""
     form = make_procedure_form(
-        closing_data(
+        **closing_data(
             "tacit_agreement",
             update_comment="commentaire fantôme",
             due_date="2030-01-01",
@@ -106,7 +122,7 @@ def test_closing_forces_hidden_fields():
 def test_closing_drops_stray_order_upload():
     """A file upload is ignored for decisions that do not allow one."""
     form = make_procedure_form(
-        closing_data("tacit_agreement"),
+        **closing_data("tacit_agreement"),
         files={"prefectural_order": make_attachment()},
     )
     assert form.is_valid(), form.errors
@@ -115,13 +131,11 @@ def test_closing_drops_stray_order_upload():
 
 def test_closing_fields_are_ignored_when_not_closing():
     form = make_procedure_form(
-        {
-            "stage": "instruction_d",
-            "decision": "unset",
-            "status_date": date.today().isoformat(),
-            "applicant_message": "message fantôme",
-            "simulation_check": "on",
-        },
+        stage="instruction_d",
+        decision="unset",
+        status_date=date.today().isoformat(),
+        applicant_message="message fantôme",
+        simulation_check="on",
         files={"prefectural_order": make_attachment()},
     )
     assert form.is_valid(), form.errors
@@ -135,10 +149,96 @@ def test_closing_order_file_type_is_validated():
         FILE_TEST_NOK_PATH.name, FILE_TEST_NOK_PATH.read_bytes()
     )
     form = make_procedure_form(
-        closing_data("opposition"), files={"prefectural_order": attachment}
+        **closing_data("opposition"), files={"prefectural_order": attachment}
     )
     assert not form.is_valid()
     assert "prefectural_order" in form.errors
+
+
+def test_to_be_processed_is_not_reachable_from_another_stage():
+    """Once instruction has started, the "to_be_processed" stage cannot be selected again."""
+    form = make_procedure_form(previous_stage="instruction_d", stage="to_be_processed")
+
+    assert not form.is_valid()
+    assert "stage" in form.errors
+    assert form.errors["stage"][0].startswith(
+        "L'étape « À instruire » n’est plus disponible"
+    )
+
+
+def test_to_be_processed_self_transition_is_allowed():
+    """Staying on "to_be_processed" (no actual transition) must not trigger the rule."""
+    form = make_procedure_form(
+        previous_stage="to_be_processed", stage="to_be_processed", decision="unset"
+    )
+
+    assert form.is_valid(), form.errors
+
+
+def test_closed_to_to_be_processed_is_forbidden():
+    form = make_procedure_form(previous_stage="closed", stage="to_be_processed")
+
+    assert not form.is_valid()
+    assert "stage" in form.errors
+    assert form.errors["stage"][0].startswith(
+        "L'étape « À instruire » n’est plus disponible"
+    )
+
+
+def test_to_be_processed_to_closed_is_forbidden():
+    form = make_procedure_form(previous_stage="to_be_processed", stage="closed")
+
+    assert not form.is_valid()
+    assert "stage" in form.errors
+    assert form.errors["stage"][0] == (
+        "Pour clore le dossier, il faut passer par une étape intermédiaire "
+        "(autre que « À instruire »)."
+    )
+
+
+def test_closed_to_closed_is_forbidden():
+    form = make_procedure_form(previous_stage="closed", stage="closed")
+
+    assert not form.is_valid()
+    assert "stage" in form.errors
+    assert form.errors["stage"][0] == (
+        "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le "
+        "repasser à une étape d'instruction."
+    )
+
+
+def test_to_be_processed_choice_is_removed_for_single_procedure_projects():
+    form = make_procedure_form(
+        previous_stage="to_be_processed", stage="to_be_processed", single_procedure=True
+    )
+
+    assert not any(
+        choice[0] == "to_be_processed" for choice in form.fields["stage"].choices
+    )
+
+
+def test_to_be_processed_choice_is_kept_for_non_single_procedure_projects():
+    form = make_procedure_form(
+        previous_stage="to_be_processed",
+        stage="to_be_processed",
+        single_procedure=False,
+    )
+
+    assert any(
+        choice[0] == "to_be_processed" for choice in form.fields["stage"].choices
+    )
+
+
+def test_posting_to_be_processed_is_rejected_for_single_procedure_projects():
+    """Since the choice is removed entirely, the error comes from the field's
+    own choice validation rather than the custom "forbidden_transition" rule."""
+    form = make_procedure_form(
+        previous_stage="instruction_d", stage="to_be_processed", single_procedure=True
+    )
+
+    assert not form.is_valid()
+    assert "stage" in form.errors
+    assert "choix valide" in form.errors["stage"][0]
 
 
 class TestPetitionProjectFormCleanCategory:
