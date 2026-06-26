@@ -1,6 +1,9 @@
-{% extends 'moulinette/result.html' %}
+{% extends 'moulinette/result_layout.html' %}
 
 {% load static moulinette %}
+
+{% block top-bar %}{% endblock %}
+{% block messages %}{% endblock %}
 
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
@@ -29,44 +32,39 @@
 {% endblock %}
 
 {% block result %}
-  {% if config and not config.is_activated %}
-    <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
-      Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
-      cette page grâce à votre statut d'admin.
-    </div>
-  {% endif %}
+  {% block admin_alert %}
+    {% if config and not config.is_activated %}
+      <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
+        Le simulateur n'est pas activé dans ce département ({{ moulinette.department.department }}). Vous voyez
+        cette page grâce à votre statut d'admin.
+      </div>
+    {% endif %}
+  {% endblock %}
 
-  {% block before-title-content %}
+  {% block action_buttons %}
     {% if not is_alternative %}
       <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--right fr-mb-3w hide-print">
         <li>{% include '_share_url_btn.html' %}</li>
       </ul>
     {% endif %}
+    {% block alternative_alert %}{% endblock %}
   {% endblock %}
+
   {% block result_title %}<h1>Simulation réglementaire</h1>{% endblock %}
 
   {% include 'haie/moulinette/_department_doctrine_button.html' %}
 
-  {% if is_outside_department %}
-    <div class="fr-alert fr-alert--warning fr-mb-4w">
-      <h3 class="fr-alert__title">Le projet est hors du département sélectionné</h3>
-      <p>
-        Une majorité du linéaire de haies saisi est situé hors du département choisi pour cette simulation – {{ moulinette.department }}.
-      </p>
-      <p>
-        Pour poursuivre la demande, il est vivement recommandé de relancer la simulation dans le bon département — {{ main_department }}.
-      </p>
-      <p>
-        <a href="{{ main_department_simulation_url }}"
-           class="fr-btn fr-btn--primary">Relancer la simulation</a>
-      </p>
-    </div>
-  {% endif %}
   {% block sensitive_areas %}
     {% include 'haie/moulinette/_sensitive_areas.html' %}
   {% endblock %}
-  {% block result_header %}{% endblock %}
-  {% block after_result_header %}{% endblock %}
+
+  {% block department_alert %}
+    {% include 'haie/moulinette/_department_alert.html' with department_display=moulinette.department relaunch_url=main_department_simulation_url %}
+  {% endblock %}
+
+  {% block result_summary %}{% endblock %}
+
+  {% block result_disclaimer %}{% endblock %}
 
   {% for result, regulations in moulinette.get_regulations_by_group.items %}
     {% if result.name == "BlockingRegulations" %}

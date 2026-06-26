@@ -2,8 +2,7 @@
 
 {% load static moulinette %}
 
-{% block before-title-content %}
-  {{ block.super }}
+{% block alternative_alert %}
   {% if is_alternative %}
     <div class="fr-alert fr-alert--info fr-mb-3w">
 
@@ -39,13 +38,13 @@
   {% endif %}
 {% endblock %}
 
-{% block result_header %}
+{% block result_summary %}
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
 
   {% show_plantation_result plantation_evaluation %}
 {% endblock %}
 
-{% block after_result_header %}
+{% block result_disclaimer %}
   {% if urgence == "oui" and config.single_procedure %}
     <div class="fr-alert fr-alert--info fr-mb-2w">
       <h3 class="fr-alert__title">Travaux réalisés en urgence</h3>
