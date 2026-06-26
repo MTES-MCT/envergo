@@ -155,6 +155,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                     "lat": centroid.y,
                     "lng": centroid.x,
                 }
+                context["config"] = config
 
         context["hedge_to_plant_data_form"] = self.get_hedge_to_plant_data_form(config)
         context["hedge_to_remove_data_form"] = self.get_hedge_to_remove_data_form(

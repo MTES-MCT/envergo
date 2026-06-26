@@ -13,12 +13,14 @@
                 <h1 id="{{ dialog_id }}-title" class="fr-modal__title fr-mb-1w">
                   Description de la haie <span class="hedge-data-dialog-hedge-name"></span>
                 </h1>
-                <div class="fr-mb-1w">
-                  <span class="hedge-data-dialog-hedge-badges hedge-badge-hru fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm"
-                        style="display: none">{{ HedgeCategory.hru.badge_label }}</span>
-                  <span class="hedge-data-dialog-hedge-badges hedge-badge-l350-3 fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm"
-                        style="display: none">{{ HedgeCategory.l350_3.badge_label }}</span>
-                </div>
+                {% if config.single_procedure %}
+                  <div class="fr-mb-1w">
+                    <span class="hedge-data-dialog-hedge-badges hedge-badge-hru fr-badge {{ HedgeCategory.hru.badge_modifier_class }} fr-badge--sm"
+                          style="display: none">{{ HedgeCategory.hru.badge_label }}</span>
+                    <span class="hedge-data-dialog-hedge-badges hedge-badge-l350-3 fr-badge {{ HedgeCategory.l350_3.badge_modifier_class }} fr-badge--sm"
+                          style="display: none">{{ HedgeCategory.l350_3.badge_label }}</span>
+                  </div>
+                {% endif %}
               </div>
               <p class="fr-tag fr-mb-3w">
                 Longueur : <span class="hedge-data-dialog-hedge-length"></span> m
