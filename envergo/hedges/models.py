@@ -691,15 +691,22 @@ class HedgeData(models.Model):
         return len(self.departments_lengths()) > 1
 
     def main_department(self):
-        """Return the Department that contains most of the hedges (in total length)."""
+        """Return the Department that contains most of the hedges (in total length).
 
-        main_dept = self.departments_lengths()[0][0]
-        return main_dept
+        Returns None if no department intersects the hedges.
+        """
+        lengths = self.departments_lengths()
+        if not lengths:
+            return None
+        return lengths[0][0]
 
     def is_outside_department(self, department):
         """Return True if most hedges are outside the given department."""
 
-        return self.main_department() != department
+        main = self.main_department()
+        if main is None:
+            return False
+        return main != department
 
 
     def get_statistics(self):
