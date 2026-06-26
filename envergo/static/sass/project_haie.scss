@@ -906,8 +906,9 @@ div#instructor-view-side-menu {
   }
 }
 
+#form-group-instructor_free_mention .label-content,
 #form-group-instructor_private_mention .label-content,
-#form-group-instructor_free_mention .label-content {
+.notes-label .label-content {
   font-weight: bold;
   font-size: 1.5rem;
   line-height: 2rem;
@@ -1247,7 +1248,6 @@ button.hide-expanded[aria-expanded="true"] {
 
   .comment-col {
     white-space: normal;
-    word-break: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
   }

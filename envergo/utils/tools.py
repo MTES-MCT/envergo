@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 def get_department_settings_form_url(department: "Department") -> str:
     """Build the Tally form url to update a department's contact info."""
     query = urlencode({"departement": department.get_department_display()})
-    return f"https://tally.so/r/Pd9b9e?{query}"
+    return f"https://tally.so/r/{settings.DEPARTMENT_CONTACT_FORM_ID}?{query}"
 
 
 def get_base_url(site_domain):

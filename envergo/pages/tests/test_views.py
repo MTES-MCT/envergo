@@ -244,28 +244,12 @@ class TestHomeHaie:
         """Selecting a department with no config should render the page (no redirect)."""
         dept = DepartmentFactory()
 
-        response = client.post(
-            reverse("home"),
-            {"department": dept.id},
-        )
+        response = client.get(reverse("home"))
 
         assert response.status_code == 200
-        assert response.context["department"] == dept
-        assert response.context["config"] is None
-
-    def test_without_department(self, client):
-        """POST without selecting a department should render the page."""
-        response = client.post(reverse("home"), {})
-
-        assert response.status_code == 200
-
-    def test_malicious_department_id_does_not_500(self, client):
-        """SQL injection payloads in department field should not cause a 500."""
-        response = client.post(
-            reverse("home"),
-            {"department": "(select(0)from(select(sleep(15)))v)"},
-        )
-        assert response.status_code == 200
+        departments_data = response.context["departments_data"]
+        codes = [d["code"] for d in departments_data]
+        assert dept.department in codes
 
 
 @pytest.mark.haie

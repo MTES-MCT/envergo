@@ -979,7 +979,7 @@ class BasePetitionProjectInstructorView(
 
     def get_new_link_url(self, reference: str) -> dict:
         """Returns new link url"""
-        ask_new_link_url_base = "https://tally.so/r/Gxol8e"
+        ask_new_link_url_base = f"https://tally.so/r/{settings.ASK_NEW_LINK_FORM_ID}"
         user = self.request.user
         city = get_context_from_ds(self.object)["ds_info"]["city"]
         petition_project_consultation_url = self.request.build_absolute_uri(
@@ -1214,6 +1214,27 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
         )
         messages.success(self.request, "Les notes ont été enregistrées.")
         return res
+
+    def form_invalid(self, form):
+        """Notify the instructor that the notes could not be saved."""
+        if form.errors:
+            error_list = format_html_join(
+                "",
+                "<li>{} : {}</li>",
+                (
+                    (form.fields[field].label, error)
+                    for field, errors in form.errors.items()
+                    for error in errors
+                ),
+            )
+            messages.error(
+                self.request,
+                format_html(
+                    "Les notes n’ont pas pu être enregistrées :<ul>{}</ul>",
+                    error_list,
+                ),
+            )
+        return super().form_invalid(form)
 
     def get_success_url(self):
         return reverse("petition_project_instructor_notes_view", kwargs=self.kwargs)

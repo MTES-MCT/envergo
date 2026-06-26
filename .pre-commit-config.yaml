@@ -34,13 +34,15 @@ repos:
       - id: djlint-reformat-django
       - id: djlint-django
 
-  - repo: https://github.com/awebdeveloper/pre-commit-stylelint
-    rev: 0.0.2
+  # Use the project's own stylelint (locked by package-lock.json) so it can't
+  # drift from the gulp build. Requires `npm ci` beforehand.
+  - repo: local
     hooks:
       - id: stylelint
-        args: [--fix]
-        additional_dependencies:
-          ["stylelint@16.8.1", "stylelint-config-standard-scss@13.1.0"]
+        name: stylelint
+        entry: node_modules/.bin/stylelint --fix
+        language: system
+        files: '\.(css|scss)$'
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v4.0.0-alpha.8"

@@ -4,16 +4,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const departments = JSON.parse(raw.textContent);
   const container = document.getElementById("department-combobox");
+  const form = document.getElementById("simulation-form");
   const btn = document.getElementById("btn-start-simulation");
+  const departmentCode = document.getElementById("department-code");
   const infoDiv = document.getElementById("department-info");
-  if (!container || !btn) return;
+  if (!container || !btn || !form || !departmentCode) return;
 
   const triageUrl = btn.dataset.href;
   let selectedDept = null;
 
-  btn.addEventListener("click", () => {
-    if (!btn.disabled && btn.dataset.href) {
-      window.location.href = btn.dataset.href;
+  // Le formulaire est un GET natif vers le triage. On intercepte la
+  // soumission uniquement pour bloquer les départements non disponibles.
+  form.addEventListener("submit", (event) => {
+    if (!selectedDept || !selectedDept.is_config_valid) {
+      event.preventDefault();
     }
   });
 
@@ -35,28 +39,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let html = "";
     if (dept.contacts_and_links) {
-      html +=
-        '<div id="contacts_and_links" class="fr-p-2w">' +
-        dept.contacts_and_links +
-        "</div>" +
-        '<div class="fr-py-2w"><p>' +
-        "Vous représentez la DDT(M) du département et souhaitez compléter ou modifier les informations affichées ici ? " +
-        '<a href="' + dept.settings_form_url + '" target="_blank" rel="noopener">Cliquez ici</a>.' +
-        "</p></div>";
+      html = `
+        <div id="contacts_and_links" class="fr-p-2w">${dept.contacts_and_links}</div>
+        <div class="fr-py-2w"><p>
+          Vous représentez la DDT(M) du département et souhaitez compléter ou modifier les informations affichées ici ?
+          <a href="${dept.settings_form_url}" target="_blank" rel="noopener">Cliquez ici</a>.
+        </p></div>`;
     } else {
-      html +=
-        '<div class="fr-notice fr-notice--warning">' +
-        '<div class="fr-container"><div class="fr-notice__body"><p>' +
-        '<span class="fr-notice__title"></span>' +
-        '<span class="fr-notice__desc">' +
-        dept.label +
-        " : nous ne disposons pas encore d’information sur les contacts de l’administration en rapport avec la haie." +
-        "</span></p></div></div></div>" +
-        '<div class="fr-py-2w"><p>' +
-        "Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture, " +
-        "des ressources à présenter aux usagers ? " +
-        '<a href="' + dept.settings_form_url + '" target="_blank" rel="noopener">Cliquez ici</a>.' +
-        "</p></div>";
+      html = `
+        <div class="fr-notice fr-notice--warning">
+          <div class="fr-container"><div class="fr-notice__body"><p>
+            <span class="fr-notice__title"></span>
+            <span class="fr-notice__desc">
+              ${dept.label} : nous ne disposons pas encore d’information sur les contacts de l’administration en rapport avec la haie.
+            </span>
+          </p></div></div>
+        </div>
+        <div class="fr-py-2w"><p>
+          Vous représentez la DDT(M) du département et souhaitez faire apparaître ici des informations de contact, des liens vers le site de votre préfecture,
+          des ressources à présenter aux usagers ?
+          <a href="${dept.settings_form_url}" target="_blank" rel="noopener">Cliquez ici</a>.
+        </p></div>`;
     }
 
     infoDiv.innerHTML = html;
@@ -72,13 +75,18 @@ document.addEventListener("DOMContentLoaded", () => {
   accessibleAutocomplete({
     element: container,
     id: "department",
-    name: "department_label",
+    name: "",
     defaultValue: "",
     placeholder: "Rechercher ou choisir dans la liste",
     showAllValues: true,
     dropdownArrow: () => "",
     minLength: 0,
     source: (query, populateResults) => {
+      // Normalise une chaîne pour une recherche insensible à la casse et aux
+      // accents : passage en minuscules, puis décomposition Unicode NFD (qui
+      // sépare chaque caractère accentué en lettre de base + signe diacritique
+      // combinant), et enfin suppression de ces diacritiques combinants
+      // (plage Unicode U+0300–U+036F). Ex. : "Côte-d'Or" → "cote-d'or".
       const normalize = (s) =>
         s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
       const q = normalize(query);
@@ -92,13 +100,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!value) return;
       selectedDept = departments.find((d) => d.label === value);
       if (!selectedDept) return;
+
       clearBtn.style.display = "";
 
       if (selectedDept.is_config_valid) {
-        btn.dataset.href = triageUrl + "?department=" + encodeURIComponent(selectedDept.code);
+        departmentCode.value = selectedDept.code;
         btn.disabled = false;
       } else {
-        btn.dataset.href = triageUrl;
+        departmentCode.value = "";
         btn.disabled = true;
       }
 
@@ -111,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
   clearBtn.addEventListener("click", () => {
     document.getElementById("department").value = "";
     selectedDept = null;
-    btn.dataset.href = triageUrl;
+    departmentCode.value = "";
     btn.disabled = true;
     clearBtn.style.display = "none";
     hideDepartmentInfo();
