@@ -489,6 +489,8 @@ class HedgeData(models.Model):
         if update_fields is None or "data" in update_fields:
             self._length_to_remove = None
             self._length_to_plant = None
+            if hasattr(self, "_departments_lengths"):
+                del self._departments_lengths
             self._length_to_remove = self.length_to_remove()
             self._length_to_plant = self.length_to_plant()
 
@@ -669,43 +671,39 @@ class HedgeData(models.Model):
 
         hedges_to_remove = self.hedges_to_remove()
         if not hedges_to_remove:
-            return []
+            self._departments_lengths = []
+            return self._departments_lengths
 
         to_remove_geom = hedges_to_remove.to_multilinestring()
-        qs = (
+        intersecting_departments = (
             Department.objects.filter(geometry__intersects=to_remove_geom)
             .annotate(
-                clipped=Intersection("geometry", to_remove_geom),
-                hedge_length=Length("clipped"),
+                clipped_hedges=Intersection("geometry", to_remove_geom),
+                hedge_length=Length("clipped_hedges"),
             )
             .defer("geometry")
             .order_by("-hedge_length")
         )
-        self._departments_lengths = [(dept, dept.hedge_length.m) for dept in qs]
+        self._departments_lengths = [
+            (dept, dept.hedge_length.m) for dept in intersecting_departments
+        ]
         return self._departments_lengths
 
     def is_multi_departments(self):
         """Return True if hedges intersect more than one department."""
-
         return len(self.departments_lengths()) > 1
 
     def main_department(self):
-        """Return the Department that contains most of the hedges (in total length).
-
-        Returns None if no department intersects the hedges.
-        """
+        """Return the Department with the most hedge length, or None."""
         lengths = self.departments_lengths()
         if not lengths:
             return None
         return lengths[0][0]
 
     def is_outside_department(self, department):
-        """Return True if most hedges are outside the given department."""
-
+        """Return True if the main department differs from the given one."""
         main = self.main_department()
-        if main is None:
-            return False
-        return main != department
+        return main is not None and main != department
 
     def get_statistics(self):
         hedge_centroid_coords = self.hedges_to_remove().centroid
