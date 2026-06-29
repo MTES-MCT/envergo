@@ -49,7 +49,7 @@ def terres_emergees():
     )
     return MapFactory(
         name="Terres émergées",
-        map_type=MAP_TYPES.terres_emergees,
+        map_type=MAP_TYPES.density_reference,
         zones__geometry=MultiPolygon([zone_west, zone_east]),
     )
 
