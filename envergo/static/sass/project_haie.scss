@@ -912,6 +912,16 @@ div#instructor-view-side-menu {
       padding-left: 0.5rem;
     }
   }
+
+  // Hide "facultatif" labels
+  // Fields are dynamically hidden / shown depending on status value
+  // If they are displayed, they are mandatory
+  div#form-group-prefectural_order,
+  div#form-group-applicant_message {
+    label span.label-content i {
+      display: none;
+    }
+  }
 }
 
 #form-group-instructor_free_mention .label-content,
