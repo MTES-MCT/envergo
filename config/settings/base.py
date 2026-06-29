@@ -409,6 +409,20 @@ MAKE_COM_EVALUATION_EDITION_WEBHOOK = env(
 )
 
 
+# Default (connect, read) timeout in seconds for outbound HTTP requests.
+#
+# Every `requests` call must pass a timeout: without one, an unresponsive
+# remote endpoint blocks the calling worker indefinitely (this once froze the
+# whole Celery worker for days). `bin/start_celery_worker.sh` adds a worker
+# time-limit as a second line of defense.
+DEFAULT_HTTP_TIMEOUT = (5, 30)
+
+# (connect, read) timeout in seconds for outbound requests that stream a file
+# (up/downloads). The read budget is larger because transferring a multi-MB
+# body legitimately takes longer than a JSON API response.
+DEFAULT_HTTP_FILE_TIMEOUT = (5, 60)
+
+
 ENVERGO_AMENAGEMENT_DOMAIN = env(
     "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
 )

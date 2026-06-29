@@ -52,6 +52,10 @@ class DemarchesSimplifieesClient:
             headers={
                 "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}"
             },
+            # gql's transport only accepts a single scalar timeout (not the
+            # (connect, read) tuple requests supports), so we pass the read
+            # budget from the shared setting.
+            timeout=settings.DEFAULT_HTTP_TIMEOUT[1],
         )
         self.client = Client(
             transport=self.transport, fetch_schema_from_transport=False
@@ -307,6 +311,7 @@ class DemarchesSimplifieesClient:
                             credentials["url"],
                             data=payload,
                             headers=credentials_headers,
+                            timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT,
                         )
                 except Exception as e:
                     logger.error(
