@@ -7,6 +7,7 @@ from django.db import connection
 from django.views.generic import FormView
 from scipy.interpolate import griddata
 
+from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.forms import LatLngForm
 from envergo.geodata.utils import (
     compute_hedge_densities_around_point,
@@ -16,9 +17,6 @@ from envergo.geodata.utils import (
 )
 from envergo.hedges.forms import HedgeForm
 from envergo.utils.urls import remove_mtm_params, update_qs
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 class LatLngDemoMixin:
@@ -232,6 +230,7 @@ class CatchmentArea(LatLngDemoMixin, FormView):
 
     def get_result_data(self, lng, lat):
         context = {}
+        # Reproject to the catchment raster's CRS (Lambert 93, mainland only).
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
         lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
 

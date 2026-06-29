@@ -19,15 +19,13 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
+from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeData
 
 logger = logging.getLogger(__name__)
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 FRANCE_LAT = 46.76305599999998
@@ -510,6 +508,7 @@ def get_catchment_area(lng, lat):
     if not pixels:
         return None
 
+    # Pixel coords are in the raster's CRS (Lambert 93), so interpolate there.
     lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
     lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
 

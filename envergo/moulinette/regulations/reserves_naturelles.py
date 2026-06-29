@@ -8,6 +8,7 @@ from django.contrib.gis.geos import MultiLineString
 from django.db.models.functions import Cast
 from pyproj import Geod
 
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 
@@ -29,10 +30,6 @@ class ReservesNaturellesForm(forms.Form):
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
     )
-
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 class ReservesNaturelles(CriterionEvaluator):
