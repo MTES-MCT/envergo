@@ -24,12 +24,15 @@ matches the other form groups so procedure_modal.js can toggle it.
        rel="noopener">Ouvrir la page des simulations</a>
   </p>
 
-  {{ field }}
+  <div {% if field.errors %}class="field-container--error"{% endif %}>
 
-  <label class="fr-label" for="{{ field.id_for_label }}">
-    <span class="label-content">{{ field.label }}</span>
-    {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
-  </label>
+    {{ field }}
 
-  {% if field.errors %}<p class="fr-error-text">{{ field.errors.0 }}</p>{% endif %}
+    <label class="fr-label" for="{{ field.id_for_label }}">
+      <span class="label-content">{{ field.label }}</span>
+      {% if field.help_text %}<span class="fr-hint-text">{{ field.help_text|safe }}</span>{% endif %}
+    </label>
+
+    {% if field.errors %}<p class="fr-error-text">{{ field.errors.0 }}</p>{% endif %}
+  </div>
 </div>
