@@ -301,7 +301,7 @@ def list_moulinette_errors(moulinette):
 
 
 def validate_simulation_url(url):
-    """Tell whether a url is a valid simulation, and detail why if it is not.
+    """Tells whether an url is a valid simulation, and details why if it is not.
 
     Returns ``(is_valid, errors)`` where ``errors`` is the field-prefixed list
     from the moulinette (empty when the url builds no moulinette at all). Shared
