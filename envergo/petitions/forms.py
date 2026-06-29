@@ -287,7 +287,7 @@ USER_TYPE = (
 
 
 def list_moulinette_errors(moulinette):
-    """Return an invalid moulinette's errors as field-prefixed messages."""
+    """Returns an invalid moulinette's errors as field-prefixed messages."""
     fields = moulinette.get_prefixed_fields()
     messages = []
     for field_name, field_errors in moulinette.form_errors.items():
