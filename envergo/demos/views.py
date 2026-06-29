@@ -100,6 +100,18 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         polygons = [
             {
                 "polygon": to_geojson(
+                    density_5000["artifacts"]["truncated_circle"]
+                    or density_5000["artifacts"]["circle"]
+                ),
+                "color": "#7e03a8",
+                "fillColor": "#7e03a8",
+                "fillOpacity": 0.3,
+                "weight": 2,
+                "legend": "Aire de calcul, rayon 5 km",
+                "opacity": 1.0,
+            },
+            {
+                "polygon": to_geojson(
                     density_400["artifacts"]["truncated_circle"]
                     or density_400["artifacts"]["circle"]
                 ),
@@ -111,23 +123,11 @@ class HedgeDensity(LatLngDemoMixin, FormView):
                 "opacity": 1.0,
             },
             {
-                "polygon": to_geojson(
-                    density_5000["artifacts"]["truncated_circle"]
-                    or density_5000["artifacts"]["circle"]
-                ),
-                "color": "#7e03a8",
-                "fillColor": "#7e03a8",
-                "fillOpacity": 0.5,
-                "weight": 2,
-                "legend": "Aire de calcul, rayon 5 km",
-                "opacity": 1.0,
-            },
-            {
                 "polygon": bundle["display_geojson"],
                 "color": "#f0f921",
                 "fillColor": "transparent",
                 "fillOpacity": 0,
-                "weight": 5,
+                "weight": 3,
                 "legend": "Haies",
                 "opacity": 1.0,
             },
@@ -202,9 +202,9 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         polygons = [
             {
                 "polygon": to_geojson(buffered_400_polygon),
-                "color": "#457EAC",
-                "fillColor": "#457EAC",
-                "fillOpacity": 0.5,
+                "color": "#7e03a8",
+                "fillColor": "#7e03a8",
+                "fillOpacity": 0.3,
                 "weight": 2,
                 "legend": "Aire de calcul, rayon 400 m",
                 "opacity": 1.0,
@@ -214,7 +214,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "color": "#f0f921",
                 "fillColor": "transparent",
                 "fillOpacity": 0,
-                "weight": 5,
+                "weight": 3,
                 "legend": "Haies existantes",
                 "opacity": 1.0,
             },
@@ -223,7 +223,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "color": "red",
                 "fillColor": "transparent",
                 "fillOpacity": 0,
-                "weight": 5,
+                "weight": 3,
                 "className": "hedge to-remove",
                 "legend": "Haies à détruire",
                 "opacity": 1.0,
