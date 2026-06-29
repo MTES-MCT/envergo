@@ -245,6 +245,8 @@ def test_query_hedges_display_geojson_handles_non_noded_difference(
 
     # Returns without raising; result may be None when nothing intersects.
     query_hedges_display_geojson(truncated, circle)
+
+
 @pytest.mark.parametrize(
     "lng,lat,expected_epsg",
     [
