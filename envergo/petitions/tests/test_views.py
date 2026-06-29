@@ -1849,7 +1849,7 @@ def test_petition_project_prefectural_order_download_block(
 
     # THEN neither the download block nor the supersede notice are displayed
     assert "Télécharger le document de décision" not in content
-    assert "contient déjà un document de décision" not in content
+    assert "Le nouveau document de décision remplacera" not in content
 
     # WHEN the dossier was closed with a prefectural order, then reopened
     StatusLogFactory(
@@ -1871,7 +1871,7 @@ def test_petition_project_prefectural_order_download_block(
 
     # THEN the order remains downloadable and the modal warns about replacement
     assert "Télécharger le document de décision" in content
-    assert "contient déjà un document de décision" in content
+    assert "Le nouveau document de décision remplacera" in content
 
 
 def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site):
