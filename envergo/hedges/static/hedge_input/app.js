@@ -362,7 +362,7 @@ class HedgeList {
    * Return the total length of all hedges (in meters) in the list.
    */
   get totalLength() {
-    return this.hedges.reduce((total, hedge) => total + hedge.length, 0);
+    return this.hedges.reduce((total, hedge) => total + Math.round(hedge.length), 0);
   }
 
   /**
@@ -708,7 +708,7 @@ createApp({
         tooltip.style.left = e.originalEvent.clientX - 10 + 'px';
         tooltip.style.top = e.originalEvent.clientY + 20 + 'px';
         let length = latLngsLength(latLngs);
-        let totalLength = Math.ceil(length);
+        let totalLength = Math.round(length);
         tooltip.innerHTML = `${totalLength} m`;
       }
     }
