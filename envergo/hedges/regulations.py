@@ -170,6 +170,13 @@ class AdditiveConditionMixin(ABC):
             f"Implement the `{type(self).__name__}.__add__` method."
         )
 
+    def is_stricter_than(self, other):
+        """Comparison can be made between different additive classes"""
+
+        if hasattr(other, "additive_key") and self.additive_key == other.additive_key:
+            return self.compare_strictness(other)
+        return super().is_stricter_than(other)
+
 
 class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
     """Evaluate if there is enough hedges to plant in the project"""
@@ -225,6 +232,10 @@ class MinLengthCondition(AdditiveConditionMixin, PlantationCondition):
             return NotImplemented
         return combine_length_conditions(self, other, MinLengthCondition)
 
+    def compare_strictness(self, other):
+        """The condition requiring the longer minimum length is stricter."""
+        return self.context["length_to_check"] > other.context["length_to_check"]
+
 
 class RUMinLengthCondition(MinLengthCondition):
     """Evaluate if there is enough hedges to plant in the project.
@@ -238,10 +249,6 @@ class RUMinLengthCondition(MinLengthCondition):
         # Override R with the local evaluator value
         self.R = self.criterion_evaluator.get_replantation_coefficient()
         return super().evaluate()
-
-    def compare_strictness(self, other):
-        """The condition requiring the longer minimum length is stricter."""
-        return self.context["length_to_check"] > other.context["length_to_check"]
 
 
 class NormandieMinLengthCondition(MinLengthCondition):

@@ -7,12 +7,14 @@ from envergo.geodata.conftest import bizous_town_center, france_map  # noqa: F40
 from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     MinLengthCondition,
+    NormandieMinLengthCondition,
     RUMinLengthCondition,
     RUQualityCondition,
     SafetyCondition,
 )
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
-from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.hedges.tests.conftest import make_mock_evaluator
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesRegimeUnique
 from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
@@ -374,3 +376,60 @@ class TestDisplayForAlternatives:
             return_value={HedgeCategory.ru: RESULTS.non_soumis},
         ):
             assert evaluator.display_for_alternatives(HedgeCategory.ru) is False
+
+
+class TestDeduplicateConditionsCrossClass:
+    """deduplicate_conditions groups by additive_key, so RUMinLengthCondition and
+    NormandieMinLengthCondition (same key) are deduplicated together."""
+
+    def _make_conditions(self, r_ru, r_normandie):
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_ru = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        evaluator_ru.get_replantation_coefficient.return_value = r_ru
+        cond_ru = RUMinLengthCondition(hedge_data.hedges(), r_ru, evaluator_ru)
+        cond_ru.evaluate()
+        # aggregated_r != R ensures Normandie reduction is skipped; base logic applies.
+        evaluator_normandie = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        cond_normandie = NormandieMinLengthCondition(
+            hedge_data.hedges(),
+            r_normandie,
+            evaluator_normandie,
+            catalog={"aggregated_r": 999},
+        )
+        cond_normandie.evaluate()
+        return cond_ru, cond_normandie
+
+    def test_stricter_normandie_survives(self):
+        """When NormandieMinLengthCondition requires more length, it wins."""
+        cond_ru, cond_normandie = self._make_conditions(r_ru=1.0, r_normandie=1.5)
+
+        result = PlantationEvaluator.deduplicate_conditions([cond_ru, cond_normandie])
+
+        assert len(result) == 1
+        assert isinstance(result[0], NormandieMinLengthCondition)
+
+    def test_stricter_ru_survives(self):
+        """When RUMinLengthCondition requires more length, it wins."""
+        cond_ru, cond_normandie = self._make_conditions(r_ru=2.0, r_normandie=1.0)
+
+        result = PlantationEvaluator.deduplicate_conditions([cond_ru, cond_normandie])
+
+        assert len(result) == 1
+        assert isinstance(result[0], RUMinLengthCondition)
+
+    def test_equal_requirements_one_survives(self):
+        """When neither is strictly stricter, exactly one condition is kept."""
+        cond_ru, cond_normandie = self._make_conditions(r_ru=1.0, r_normandie=1.0)
+
+        result = PlantationEvaluator.deduplicate_conditions([cond_ru, cond_normandie])
+
+        assert len(result) == 1

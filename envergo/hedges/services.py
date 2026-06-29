@@ -473,7 +473,10 @@ class PlantationEvaluator:
         """
         groups = defaultdict(list)
         for condition in conditions:
-            groups[type(condition)].append(condition)
+            if hasattr(condition, "additive_key"):
+                groups[condition.additive_key].append(condition)
+            else:
+                groups[type(condition)].append(condition)
 
         def strictness_cmp(a, b):
             if a.is_stricter_than(b):

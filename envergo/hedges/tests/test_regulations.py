@@ -9,6 +9,7 @@ from envergo.hedges.regulations import (
     AisneQualityCondition,
     EssencesBocageresCondition,
     MinLengthCondition,
+    NormandieMinLengthCondition,
     PacParcelCondition,
     RUMinLengthCondition,
     RUQualityCondition,
@@ -856,3 +857,56 @@ class TestIsStricterThan:
 
         assert not cond_a.is_stricter_than(cond_b)
         assert not cond_b.is_stricter_than(cond_a)
+
+    def test_ru_and_normandie_cross_class_higher_requirement_is_stricter(self):
+        """RUMinLengthCondition and NormandieMinLengthCondition share additive_key,
+        so is_stricter_than must work across classes rather than raising TypeError."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_ru = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        evaluator_ru.get_replantation_coefficient.return_value = 1.0
+        cond_ru = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator_ru)
+        cond_ru.evaluate()
+        # aggregated_r != R so the Normandie reduction is skipped; base logic applies.
+        evaluator_nd = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        cond_normandie = NormandieMinLengthCondition(
+            hedge_data.hedges(), 1.5, evaluator_nd, catalog={"aggregated_r": 999}
+        )
+        cond_normandie.evaluate()
+
+        # cond_normandie requires 150 m; cond_ru requires 100 m → normandie is stricter
+        assert cond_normandie.is_stricter_than(cond_ru)
+        assert not cond_ru.is_stricter_than(cond_normandie)
+
+    def test_ru_and_normandie_cross_class_equal_requirement_neither_stricter(self):
+        """Equal length_to_check across classes — neither condition claims stricter."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_ru = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        evaluator_ru.get_replantation_coefficient.return_value = 1.0
+        cond_ru = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator_ru)
+        cond_ru.evaluate()
+        evaluator_nd = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        cond_normandie = NormandieMinLengthCondition(
+            hedge_data.hedges(), 1.0, evaluator_nd, catalog={"aggregated_r": 999}
+        )
+        cond_normandie.evaluate()
+
+        assert not cond_ru.is_stricter_than(cond_normandie)
+        assert not cond_normandie.is_stricter_than(cond_ru)
