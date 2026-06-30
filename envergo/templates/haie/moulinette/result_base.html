@@ -68,14 +68,6 @@
 
   {% block result_disclaimer %}{% endblock %}
 
-  {% block department_alert %}
-    {% include 'haie/moulinette/_department_alert.html' with department_display=moulinette.department relaunch_url=main_department_simulation_url %}
-  {% endblock %}
-
-  {% block result_summary %}{% endblock %}
-
-  {% block result_disclaimer %}{% endblock %}
-
   {% if moulinette.is_multi_category %}
     <section>
       <div id="multi-categories-callout"
