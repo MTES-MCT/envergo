@@ -212,7 +212,7 @@ class ProcedureForm(forms.ModelForm):
             self.add_error(
                 "stage",
                 ValidationError(
-                    "L'étape « À instruire » n’est plus disponible car l’instruction à déjà débuté. Utiliser "
+                    "L'étape « À instruire » n’est plus disponible car l’instruction a déjà débuté. Utiliser "
                     "plutôt la demande de compléments et la messagerie pour demander des ajustements au demandeur.",
                     code="forbidden_transition",
                 ),
