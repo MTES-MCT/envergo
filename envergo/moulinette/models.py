@@ -1329,8 +1329,8 @@ class ConfigHaie(ConfigBase):
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
-        '<a href="https://www.demarches-simplifiees.fr/admin/procedures" target="_blank" rel="noopener">'
-        "https://www.demarches-simplifiees.fr/admin/procedures</a>",
+        '<a href="https://demarche.numerique.gouv.fr/admin/procedures" target="_blank" rel="noopener">'
+        "https://demarche.numerique.gouv.fr/admin/procedures</a>",
     )
 
     demarche_simplifiee_pre_fill_config = models.JSONField(
@@ -1376,7 +1376,7 @@ class ConfigHaie(ConfigBase):
                     raise ValidationError(
                         {
                             "demarche_simplifiee_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
-                            " au moins l'id côté Démarches Simplifiées et la "
+                            " au moins l'id côté « Démarche numérique » et la "
                             "source de la valeur côté guichet unique de la haie."
                         }
                     )

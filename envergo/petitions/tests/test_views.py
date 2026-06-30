@@ -248,7 +248,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0

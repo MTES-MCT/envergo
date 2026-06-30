@@ -28,7 +28,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0
@@ -123,7 +123,7 @@ def test_dossier_submission_admin_alert(
 
     args, kwargs = mock_notify_command.call_args_list[0]
     assert (
-        "Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH."
+        "Un dossier a été déposé sur « Démarche numérique », qui ne correspond à aucun projet dans la base du GUH."
         in args[0]
     )
     assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
@@ -162,7 +162,7 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
     PetitionProjectFactory()
     call_command("dossier_submission_admin_alert")
 
-    # The DS API should never be called since no valid config exists
+    # The « Démarche numérique » API should never be called since no valid config exists
     mock_post.assert_not_called()
 
 

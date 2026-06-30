@@ -358,7 +358,7 @@ class PetitionProjectCreate(FormView):
         return res
 
     def pre_fill_demarche_simplifiee(self, project):
-        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
+        """Send a http request to pre-fill a dossier on Démarche numérique based on moulinette data.
 
         Return the url of the created dossier and its number if successful, None otherwise
         """
@@ -374,7 +374,7 @@ class PetitionProjectCreate(FormView):
         if not department:
             logger.error(
                 "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
+                "start a « Démarche numérique »",
                 extra={"moulinette_url": moulinette_url},
             )
             return None, None
@@ -410,7 +410,7 @@ class PetitionProjectCreate(FormView):
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
-                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
+                    "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
                     extra={"haie config": config.id, "field": field},
                 )
 
@@ -434,7 +434,7 @@ class PetitionProjectCreate(FormView):
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"« Démarche numérique » is not enabled. Doing nothing."
                 f"\nrequest.url: {api_url}"
                 f"\nrequest.body: {body}"
             )
@@ -471,7 +471,7 @@ class PetitionProjectCreate(FormView):
             dossier_number = data.get("dossier_number")
         else:
             logger.error(
-                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                "Error while pre-filling a dossier on « Démarche numérique »",
                 extra={
                     "api_url": response.request.url,
                     "request_body": response.request.body,
@@ -495,7 +495,7 @@ class PetitionProjectCreate(FormView):
     def get_value_from_source(
         self, petition_project, moulinette, source, mapping, config
     ):
-        """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
+        """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
         Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
@@ -547,7 +547,7 @@ class PetitionProjectCreate(FormView):
             regulation_result = getattr(moulinette, regulation_slug, None)
             if regulation_result is None:
                 logger.warning(
-                    "Unable to get the regulation result to pre-fill a démarche simplifiée",
+                    "Unable to get the regulation result to pre-fill a « Démarche numérique »",
                     extra={
                         "regulation_slug": regulation_slug,
                         "moulinette_url": petition_project.moulinette_url,
@@ -575,7 +575,7 @@ class PetitionProjectCreate(FormView):
             criteria = getattr(regulation, criteria_slug, None)
             if criteria is None:
                 logger.warning(
-                    "Unable to get the criteria result code to pre-fill a démarche simplifiée",
+                    "Unable to get the criteria result code to pre-fill a « Démarche numérique »",
                     extra={
                         "source": source,
                         "moulinette_url": petition_project.moulinette_url,
@@ -600,7 +600,7 @@ class PetitionProjectCreate(FormView):
                 value = moulinette.catalog[source]
             else:
                 logger.warning(
-                    "Unable to get the moulinette value to pre-fill a démarche simplifiée",
+                    "Unable to get the moulinette value to pre-fill a « Démarche numérique »",
                     extra={
                         "source": source,
                         "moulinette_url": petition_project.moulinette_url,
@@ -622,7 +622,7 @@ class PetitionProjectCreate(FormView):
             # if the mapping object is not empty but do not contain the value, log an info
             if value not in mapping:
                 logger.info(
-                    "The value to pre-fill a dossier on demarches-simplifiees.fr is not in the mapping",
+                    "The value to pre-fill a dossier on « Démarche numérique » is not in the mapping",
                     extra={
                         "source": source,
                         "mapping": mapping,
@@ -909,11 +909,11 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.object.config.demarche_simplifiee_number
         )
 
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             messages.info(
                 self.request,
-                """L'accès à l'API démarches simplifiées n'est pas activée.
+                """L'accès à l'API « Démarche numérique » n'est pas activée.
                 Les données proviennent d'un dossier factice.""",
             )
 
@@ -1132,7 +1132,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 class PetitionProjectInstructorDossierDSView(
     BasePetitionProjectInstructorView, DetailView
 ):
-    """View for petition project page with demarches simplifiées data"""
+    """View for petition project page with Démarche numérique data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
 
@@ -1144,13 +1144,13 @@ class PetitionProjectInstructorDossierDSView(
 
         project_details = compute_instructor_informations_ds(
             self.object
-        )  # compute DS details first as it will force update the dossier cache
+        )  # compute « Démarche numérique » details first as it will force update the dossier cache
         context["project_details"] = project_details
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if not context["project_details"]:
             messages.warning(
                 self.request,
-                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                f"""Impossible de récupérer les informations du dossier « Démarche numérique ».
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
@@ -1207,7 +1207,7 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
 class PetitionProjectInstructorMessagerieView(
     BasePetitionProjectInstructorView, FormView
 ):
-    """View for petition project instructor page with demarche simplifiées messagerie"""
+    """View for petition project instructor page with Démarche numérique messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
@@ -1242,11 +1242,11 @@ class PetitionProjectInstructorMessagerieView(
             "automatic": settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"],
         }
 
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if context["ds_messages"] is None:
             messages.warning(
                 self.request,
-                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                f"""Impossible de récupérer les informations du dossier « Démarche numérique ».
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
@@ -1348,7 +1348,7 @@ class PetitionProjectInstructorMessagerieView(
 class PetitionProjectInstructorMessagerieMarkUnreadView(
     BasePetitionProjectInstructorView, View
 ):
-    """View for petition project instructor page with demarche simplifiées messagerie"""
+    """View for petition project instructor page with Démarche numérique messagerie"""
 
     event_category = "message"
     event_action = "marquage_non_lu"
@@ -1734,7 +1734,7 @@ class PetitionProjectInstructorProcedureView(
                 form.add_error(
                     None,
                     mark_safe(
-                        f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
+                        f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier."""
@@ -1810,7 +1810,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
                 )
 
-                # Send DS Message
+                # Send « Démarche numérique » message
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 
@@ -1818,13 +1818,13 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
                         messages.info(
                             self.request,
-                            """L'accès à l'API démarches simplifiées n'est pas activée.
+                            """L'accès à l'API « Démarche numérique » n'est pas activée.
                             Le message n'est pas envoyé""",
                         )
                     else:
                         # We raise an exception to make sure the data model transaction
                         # is aborted
-                        raise DemarchesSimplifieesError(message="DS message not sent")
+                        raise DemarchesSimplifieesError(message="DN message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
