@@ -339,11 +339,5 @@ def created_by_display(log):
 
 @register.simple_tag
 def multiline_title(*parts):
-    """Join non-empty parts with newlines for a multi-line ``title`` tooltip.
-
-    Native ``title`` tooltips render plain text, so HTML line breaks (``<br>``)
-    don't work; a real newline does. Building the string here keeps a literal
-    newline out of the template source — which the djlint formatter collapses to
-    a space — and avoids the forbidden ``&#10;`` entity (H023).
-    """
+    """Join non-empty parts with newlines for a multi-line ``title`` tooltip."""
     return "\n".join(str(part) for part in parts if part)

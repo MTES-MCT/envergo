@@ -104,6 +104,14 @@ EPSG_LAMB93 = 2154
 
 
 class HedgeCategory(EnrichedChoices):
+    """Regulatory category of a hedge, determining which procedure applies.
+
+    - ru: hedges covered by the régime unique (single procedure)
+    - l350_3: roadside tree alignments governed by article L350-3
+    - hru: all other hedges and alignments outside the régime unique
+    Each category have several labels for petitioner and instructor of different length, and a badge css class
+    """
+
     ru = {
         "display_value": "Régime unique",
         "label": "Haies bénéficiant d'une procédure unique",

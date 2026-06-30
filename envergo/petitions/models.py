@@ -578,7 +578,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @property
     def category(self):
-        return HedgeCategory(self._category) if self._category else None
+        return HedgeCategory(self._category)
 
     @category.setter
     def category(self, value):
