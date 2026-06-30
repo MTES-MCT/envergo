@@ -14,7 +14,7 @@
     {% else %}
       <p>La décision de l'administration pourra différer du résultat du simulateur.</p>
       <p>
-        N'hésitez pas à <a href="{% url 'contact_us' %}">contacter le guichet unique</a> pour toute question.
+        N'hésitez pas à <a href="{% url 'contact_us' %}?department={{ department.department }}#contact-accordion-3-dossier">contacter le guichet unique</a> pour toute question.
       </p>
     {% endif %}
   </div>
