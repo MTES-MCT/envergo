@@ -1725,6 +1725,19 @@ class TestRuSpeciesQuerying:
         assert species in result
 
 
+def test_hedge_length_is_geodesic_meters():
+    """Hedge.length is the geodesic length in meters, not in degrees.
+
+    A 0.1° east-west span at lat 43.6° is ~8 km on the ground. The pinned
+    value guards against drift; the kilometer magnitude guards against the
+    classic regression of measuring the WGS84 line in degrees (~0.07).
+    """
+    hedge = HedgeFactory(latLngs=[{"lat": 43.6, "lng": 3.0}, {"lat": 43.6, "lng": 3.1}])
+
+    assert hedge.length == pytest.approx(8074.307052980297, rel=1e-9)
+    assert hedge.length > 1000
+
+
 # Two adjacent rectangular departments sharing a border at lng=3.0.
 # dept_west covers lng [2.0, 3.0], dept_east covers lng [3.0, 4.0].
 # Both span lat [43.0, 44.0].

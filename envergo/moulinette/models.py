@@ -49,6 +49,7 @@ from envergo.evaluations.models import (
     USER_TYPES,
     TagStyleEnum,
 )
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
@@ -82,16 +83,6 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
-
-# WGS84, geodetic coordinates, units in degrees
-# Good for storing data and working wordwide
-EPSG_WGS84 = 4326
-
-# Projected coordinates
-# Used for displaying tiles in web map systems (OSM, GoogleMaps)
-# Good for working in meters
-EPSG_MERCATOR = 3857
-
 
 logger = logging.getLogger(__name__)
 
@@ -2362,7 +2353,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         }
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Point to center the Leaflet map on. Must be WGS84 (EPSG:4326)."""
         raise NotImplementedError
 
     @cached_property
@@ -2471,10 +2462,6 @@ class MoulinetteAmenagement(Moulinette):
             lng = catalog["lng"]
             lat = catalog["lat"]
             catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
-            catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
-            catalog["circle_12"] = catalog["coords"].buffer(12)
-            catalog["circle_25"] = catalog["coords"].buffer(25)
-            catalog["circle_100"] = catalog["coords"].buffer(100)
 
             fetching_radius = int(self.data.get("radius", "200"))
             zones = self.get_zones(catalog["lng_lat"], fetching_radius)
@@ -2622,7 +2609,7 @@ class MoulinetteAmenagement(Moulinette):
         return set()
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Project location. WGS84 (4326)."""
         return self.catalog["lng_lat"]
 
 
@@ -3090,8 +3077,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return grouped_by_category
 
     def get_map_center(self):
-        """Returns at what coordinates is the perimeter."""
-
+        """Department centroid. WGS84 (4326), from the 4326 geometry column."""
         return self.department.centroid
 
     @cached_property

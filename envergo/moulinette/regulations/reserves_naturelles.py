@@ -12,6 +12,8 @@ from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
 )
+from envergo.geodata.constants import EPSG_WGS84
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 
 class ReservesNaturellesRegulation(HaieRegulationEvaluator):
@@ -32,10 +34,6 @@ class ReservesNaturellesForm(forms.Form):
         choices=(("oui", "Oui"), ("non", "Non")),
         required=True,
     )
-
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 class ReservesNaturelles(HaieCriterionEvaluator):

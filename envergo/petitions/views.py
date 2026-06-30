@@ -58,6 +58,7 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.geodata.models import Department
+from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
 from envergo.hedges.models import (
     EPSG_LAMB93,
@@ -66,6 +67,7 @@ from envergo.hedges.models import (
     HedgeData,
     HedgeTypeFactory,
 )
+from envergo.hedges.models import TO_PLANT, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl

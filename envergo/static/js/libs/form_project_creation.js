@@ -3,7 +3,7 @@
 
   const DemarchesSimplifieesModal = function (modalElt) {
     this.modalElt = modalElt;
-    this.formElt =  modalElt.querySelector("#demarche-simplifiee-form");
+    this.formElt = modalElt.querySelector("#demarche-simplifiee-form");
     this.submitElt = modalElt.querySelector('button[type=submit]');
     this.buttonElts = modalElt.querySelectorAll('input[type="button"], input[type="submit"], button[type=submit]');
     this.closeElt = modalElt.querySelector('.fr-link--close');
@@ -18,9 +18,9 @@
         if (this.categoryInput) {
           this.categoryInput.value = btn.dataset.category;
         }
-       this.categoriesList.forEach( span =>{
-         span.hidden = !span.classList.contains(btn.dataset.category);
-       });
+        this.categoriesList.forEach(span => {
+          span.hidden = !span.classList.contains(btn.dataset.category);
+        });
       });
     });
     this.formElt.addEventListener('submit', this.deactivate.bind(this));
@@ -94,7 +94,7 @@
               "info");
           } else {
             newTab.location = data.demarche_simplifiee_url;
-            if(window.REDIRECT_AFTER_PROJECT_CREATION){
+            if (window.REDIRECT_AFTER_PROJECT_CREATION) {
               window.location.href = data.read_only_url;
             }
           }
@@ -134,10 +134,10 @@
 
   DemarchesSimplifieesModal.prototype.preventClickOutside = function (event) {
     const body = this.modalElt.querySelector('.fr-modal__body');
-      if (!body.contains(event.target)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-      }
+    if (!body.contains(event.target)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
   }
 
 })(this);
@@ -155,11 +155,11 @@ function displayMessage(title, message, type) {
                         `;
   projectResultTopBar.insertAdjacentHTML('afterbegin', notification);
   // Scroll smoothly to the message
-  projectResultTopBar.scrollIntoView({behavior: 'smooth'});
+  projectResultTopBar.scrollIntoView({ behavior: 'smooth' });
 }
 
 (function () {
-// a script to add actions on the moulinette result banner
+  // a script to add actions on the moulinette result banner
   window.addEventListener('load', function () {
     const modal = document.getElementById('demarches-simplifiees-modal');
     const demarchesSimplifieesModal = new DemarchesSimplifieesModal(modal);

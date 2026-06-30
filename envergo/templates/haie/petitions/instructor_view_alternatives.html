@@ -74,7 +74,7 @@
           are not duplicated in a header alert.
           {% endcomment %}
           {{ form.media }}
-          {% include 'haie/petitions/_simulation_url_field.html' with field=form.moulinette_url moulinette_errors=form.moulinette_errors %}
+          {% include 'haie/forms/fields/simulation_url.html' with field=form.moulinette_url moulinette_errors=form.moulinette_errors %}
           {% render_field form.source %}
           {% render_field form.comment %}
           <button type="button"

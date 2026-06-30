@@ -13,6 +13,8 @@ from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
 )
+from envergo.geodata.constants import EPSG_WGS84
+from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 
 class Natura2000HaieRegulation(HaieRegulationEvaluator):
@@ -38,10 +40,6 @@ class Natura2000HaieSettings(forms.Form):
         required=True,
         choices=(("oui", "Oui"), ("non", "Non")),
     )
-
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 class Natura2000Haie(HaieCriterionEvaluator):

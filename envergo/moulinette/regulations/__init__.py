@@ -5,11 +5,17 @@ from dataclasses import dataclass
 from enum import Enum
 from types import SimpleNamespace
 
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, Point
 
 from envergo.evaluations.models import RESULT_CASCADE, RESULTS, TAG_STYLES_BY_RESULT
 from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
 from envergo.hedges.models import HedgeCategory
+from envergo.geodata.utils import (
+    EPSG_WGS84,
+    get_best_epsg_for_location,
+    merge_geometries,
+    to_geojson,
+)
 
 
 class Stake(Enum):
@@ -62,7 +68,7 @@ class MapPolygon:
 class Map:
     """Data for a map that will be displayed with Leaflet."""
 
-    center: tuple  # Coordinates to center the map
+    center: Point  # WGS84 (EPSG:4326) Point to center the map on
     entries: list  # List of `MapPolygon` objects
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
@@ -78,9 +84,12 @@ class Map:
     type: str = "criterion"  # Can be "criterion" or "regulation"
 
     def to_json(self):
-        # Don't display full polygons
-        EPSG_WGS84 = 4326
-        buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
+        # Clip displayed polygons to a 1 km disc around the center.
+        # center is WGS84, so buffer in the local UTM zone (meters), not in
+        # degrees — a degree-radius buffer would span the globe and clip nothing.
+        utm_srid = get_best_epsg_for_location(self.center.x, self.center.y)
+        center_utm = self.center.transform(utm_srid, clone=True)
+        buffer = center_utm.buffer(1000).transform(EPSG_WGS84, clone=True)
 
         data = json.dumps(
             {
