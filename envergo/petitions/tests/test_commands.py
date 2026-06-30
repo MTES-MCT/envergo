@@ -166,7 +166,7 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_stage_instruction(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -202,5 +202,5 @@ def test_dossier_submission_admin_alert_stage_instruction(
     call_command("dossier_submission_admin_alert")
 
     project.refresh_from_db()
-    assert project.demarches_simplifiees_state == DossierState.en_instruction.value
+    assert project.demarche_numerique_state == DossierState.en_instruction.value
     assert project.stage == "instruction_d"
