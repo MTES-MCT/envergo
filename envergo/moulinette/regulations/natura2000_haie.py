@@ -9,12 +9,11 @@ from django.db.models.functions import Cast
 from pyproj import Geod
 
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
 )
-from envergo.geodata.constants import EPSG_WGS84
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
 
 
 class Natura2000HaieRegulation(HaieRegulationEvaluator):

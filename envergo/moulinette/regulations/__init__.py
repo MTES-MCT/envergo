@@ -8,14 +8,13 @@ from types import SimpleNamespace
 from django.contrib.gis.geos import GEOSGeometry, Point
 
 from envergo.evaluations.models import RESULT_CASCADE, RESULTS, TAG_STYLES_BY_RESULT
-from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
-from envergo.hedges.models import HedgeCategory
 from envergo.geodata.utils import (
     EPSG_WGS84,
     get_best_epsg_for_location,
     merge_geometries,
     to_geojson,
 )
+from envergo.hedges.models import HedgeCategory
 
 
 class Stake(Enum):

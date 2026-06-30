@@ -5,7 +5,6 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
-from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HedgeCategory, HedgeList
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie

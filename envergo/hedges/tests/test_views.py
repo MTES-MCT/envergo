@@ -7,7 +7,6 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.contrib.sites.tests.factories import SiteFactory
-from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.hedges.models import HedgeData
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory

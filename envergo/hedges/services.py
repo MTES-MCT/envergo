@@ -13,10 +13,8 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Line
-from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
-from envergo.hedges.regulations import MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 from envergo.moulinette.regulations import Map, MapPolygon
 
