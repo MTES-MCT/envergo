@@ -23,13 +23,13 @@
         <p>Les haies saisies sont situées dans les départements suivants :</p>
 
         <ul>
-          {% for dept, length in departments_lengths %}<li>{{ dept }} — {{ length|floatformat:0 }} m</li>{% endfor %}
+          {% for dept, length in departments_lengths %}<li>{{ dept }} – {{ length|floatformat:0 }} m</li>{% endfor %}
         </ul>
 
         <p>La décision relative au projet devra être prise conjointement par les préfets intéressés.</p>
 
         <p>
-          S’il s’avère qu’un transfert du dossier entre départements est nécessaire, <a href="{% url 'contact_us' %}">contactez l’équipe technique</a>.
+          S’il s’avère qu’un transfert du dossier entre départements est nécessaire, <a href="{% url 'contact_us' %}#contact-accordion-2-equipe">contactez l’équipe technique</a>.
         </p>
       </div>
     {% endif %}
