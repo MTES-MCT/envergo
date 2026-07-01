@@ -6,12 +6,12 @@
 {% endif %}
 
 {% if problem.key == "missing_demarche_simplifiee_number" %}
-Un département activé doit toujours avoir un numéro de démarche sur Démarches Simplifiées
+Un département activé doit toujours avoir un numéro de démarche sur « Démarche numérique »
 {% elif problem.key == "invalid_prefill_field" %}
 Chaque entrée de la configuration de pré-remplissage doit obligatoirement avoir un id et une valeur. Le mapping est optionnel.
 * Champ : {{ problem.extra.field }}
 {% elif problem.key == "ds_api_http_error" %}
-L'API de Démarches Simplifiées a retourné une erreur lors de la création du dossier.
+L'API de « Démarche numérique » a retourné une erreur lors de la création du dossier.
 ** Requête:**
 * url : {{ problem.extra.api_url }}
 * body :
@@ -23,6 +23,14 @@ L'API de Démarches Simplifiées a retourné une erreur lors de la création du 
 * content:
 ```
 {{ problem.extra.response.text|safe }}
+```
+{% elif problem.key == "ds_api_connection_error" %}
+L'API de Démarches Simplifiées n'a pas pu être contactée lors de la création du dossier (délai dépassé ou erreur réseau).
+** Requête:**
+* url : {{ problem.extra.api_url }}
+* body :
+```
+{{ problem.extra.request_body|safe }}
 ```
 {% elif problem.key == "missing_source_regulation" %}
 La configuration demande de pré-remplir un champ avec la valeur de **{{ problem.extra.source }}** mais la moulinette n'a pas de résultat pour la réglementation **{{ problem.extra.regulation_slug }}**.

@@ -1,19 +1,32 @@
 {% extends 'moulinette/_result_regulation.html' %}
 
-{% load moulinette %}
+{% load moulinette utils %}
 
 {% block regulation_title %}
-  <h4>{% include 'moulinette/_result_regulation_title.html' with regulation=regulation %}</h4>
+  <h4>{% include 'haie/moulinette/_result_regulation_title.html' with regulation=regulation category=category %}</h4>
+{% endblock %}
+
+{% block map %}
+  {% with map=regulation.maps_by_category|get_item:category %}
+    {% if map %}
+      {% if regulation.display_perimeter %}
+        {% perimeter_detail regulation %}
+      {% endif %}
+      {% include '_map_snippet.html' with map=map map_id=regulation.slug|add:"-"|add:category.name %}
+    {% endif %}
+  {% endwith %}
 {% endblock %}
 
 {% block regulation_body %}
-  {% show_regulation_body regulation as body_content %}
+  {% show_regulation_body regulation category as body_content %}
   {% if body_content %}<div class="fr-mb-3w">{{ body_content }}</div>{% endif %}
 
   {% if regulation.show_criteria and regulation.criteria.all %}
     {% for criterion in regulation.criteria.all %}
       {% if criterion.should_be_displayed %}
-        {% show_criterion_body regulation criterion %}
+        {% if criterion.evaluator.category == category %}
+          {% show_criterion_body regulation criterion %}
+        {% endif %}
       {% endif %}
     {% endfor %}
   {% endif %}

@@ -191,16 +191,21 @@ class NewsletterOptIn(FormView):
             "templateId": int(settings.BREVO["NEWSLETTER_DOUBLE_OPT_IN_TEMPLATE_ID"]),
         }
 
-        response = requests.post(api_url, json=body, headers=headers)
-
-        if 200 <= response.status_code < 400:
-            res = JsonResponse({"status": "ok"})
-        else:
+        try:
+            response = requests.post(
+                api_url,
+                json=body,
+                headers=headers,
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
             logger.error(
                 "Error while creating/updating contact via Brevo API",
                 extra={
-                    "response.status_code": response.status_code,
-                    "response.text": response.text,
+                    "exception": e,
+                    "response.status_code": getattr(e.response, "status_code", None),
+                    "response.text": getattr(e.response, "text", None),
                     "request.url": api_url,
                     "request.body": body,
                 },
@@ -212,6 +217,8 @@ class NewsletterOptIn(FormView):
             )
 
             res = self.form_invalid(form)
+        else:
+            res = JsonResponse({"status": "ok"})
 
         return res
 

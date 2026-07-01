@@ -59,8 +59,8 @@ pytestmark = pytest.mark.django_db
     "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
 )
 def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
-    """Test fetch project details from démarches simplifiées"""
-    # GIVEN a project with a valid dossier in Démarches Simplifiées
+    """Test fetch project details from Démarche numérique"""
+    # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
@@ -73,7 +73,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
     petition_project = PetitionProjectFactory()
 
-    # WHEN I fetch it from DS for the first time
+    # WHEN I fetch it from « Démarche numérique » for the first time
     dossier = get_demarches_simplifiees_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
@@ -98,7 +98,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
     # WHEN I fetch it again less than one hour later
     dossier = get_demarches_simplifiees_dossier(petition_project)
-    # THEN the same dossier is returned from cache, and the DS Api is not called again
+    # THEN the same dossier is returned from cache, and the « Démarche numérique » Api is not called again
     assert dossier is not None
     mock_post.assert_called_once()
 
@@ -108,7 +108,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     ) - datetime.timedelta(hours=2)
     petition_project.save()
     dossier = get_demarches_simplifiees_dossier(petition_project)
-    # THEN the cache is not used, and the DS Api called
+    # THEN the cache is not used, and the « Démarche numérique » Api called
     assert dossier is not None
     assert mock_post.call_count == 2
 
@@ -122,7 +122,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
         site_id=site.id,
     )
 
-    # WHEN I synchronize it with DS for the first time
+    # WHEN I synchronize it with « Démarche numérique » for the first time
     get_demarches_simplifiees_dossier(petition_project)
 
     # THEN an event is created with the same session key as the creation event
@@ -147,7 +147,7 @@ def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0
@@ -195,7 +195,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
 
     args, kwargs = mock_notify.call_args
     assert (
-        "L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier"
+        "L'API de « Démarche numérique » a retourné une erreur lors de la récupération du dossier"
         in args[0]
     )
     assert "haie" in args[1]
@@ -221,7 +221,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 
     args, kwargs = mock_notify.call_args
     assert (
-        "La réponse de l'API de Démarches Simplifiées ne répond pas au format attendu."
+        "La réponse de l'API de « Démarche numérique » ne répond pas au format attendu."
         in args[0]
     )
     assert "haie" in args[1]
@@ -231,7 +231,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
 
 @patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
 def test_compute_instructor_information(mock_get_dossier):
-    """Test compute instructor information from démarche simplifiées dossier data"""
+    """Test compute instructor information from Démarche numérique dossier data"""
     mock_get_dossier.return_value = Dossier.from_dict(
         GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"]
     )
@@ -350,13 +350,13 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     info = ep_aisne_get_instructor_view_context(
-        moulinette.ep.ep_aisne._evaluator, petition_project, moulinette
+        moulinette.ep.hru__ep_aisne._evaluator, petition_project, moulinette
     )
 
     expected_result = {
         "hedges_properties": {
             "bord_batiment": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "En bordure de bâtiment",
             },
@@ -366,12 +366,12 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                 "label": "Connectée à un boisement ou à une autre haie",
             },
             "parc_jardin": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Dans le parc ou jardin d'une habitation",
             },
             "place_publique": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Sur une place publique",
             },
@@ -482,7 +482,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     info = ep_normandie_get_instructor_view_context(
-        moulinette.ep.ep_normandie._evaluator,
+        moulinette.ep.hru__ep_normandie._evaluator,
         petition_project,
         moulinette,
         plantation_eval,
@@ -491,7 +491,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     expected_result = {
         "hedges_properties": {
             "bord_batiment": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "En bordure de bâtiment",
             },
@@ -511,12 +511,12 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "label": "Haie inter-champ",
             },
             "parc_jardin": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Dans le parc ou jardin d'une " "habitation",
             },
             "place_publique": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Sur une place publique",
             },
@@ -591,7 +591,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "lpm": 39,
             "reduced_lpm": 31,
         },
-        "replantation_coefficient": Decimal("1.40"),
+        "replantation_coefficient": 1.40,
     }
     assert info == expected_result
 
@@ -656,7 +656,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Bonnes conditions agricoles et environnementales - Fiche VIII",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -666,7 +666,9 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.bcae8._evaluator, petition_project, moulinette
+        moulinette.conditionnalite_pac.hru__bcae8._evaluator,
+        petition_project,
+        moulinette,
     )
     # noqa: E501
     expected_result = {
@@ -794,7 +796,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Alignements arbres L350-3",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+        evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -805,7 +807,7 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
     context = alignement_arbres_get_instructor_view_context(
-        moulinette.alignement_arbres.alignement_arbres._evaluator,
+        moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
         petition_project,
         moulinette,
         plantation_eval,
@@ -856,15 +858,15 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 def test_get_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
-    # GIVEN a project with a valid dossier in Démarches Simplifiées
+    """Test send message for project via Démarche numérique"""
+    # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
-    # Fetch project from DS to create it
+    # Fetch project from « Démarche numérique » to create it
     dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
@@ -885,13 +887,13 @@ def test_get_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees(
     mock_gql_execute, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via Démarche numérique"""
 
     DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
-    # Fetch project from DS to create it
+    # Fetch project from « Démarche numérique » to create it
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
@@ -925,13 +927,13 @@ def test_send_message_project_via_demarches_simplifiees(
 def test_send_message_project_via_demarches_simplifiees_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
-    """Test send message for project via demarches simplifiées"""
+    """Test send message for project via Démarche numérique"""
 
     DCConfigHaieFactory()
 
     petition_project = PetitionProjectFactory()
 
-    # Fetch project from DS to create it
+    # Fetch project from « Démarche numérique » to create it
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
     dossier = get_demarches_simplifiees_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="

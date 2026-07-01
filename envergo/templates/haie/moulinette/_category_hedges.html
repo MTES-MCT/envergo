@@ -1,0 +1,16 @@
+{% load hedges %}
+
+{# djlint:off — the wrapper tag name is dynamic, djlint cannot pair open/close #}
+{% with tag=inline|yesno:"span,p" %}
+  <{{ tag }} class="hedges-category-header {{ category.name }}">
+  <strong>
+    {% if lowercase %}
+      {{ category.label|lower }}
+    {% else %}
+      {{ category.label }}
+    {% endif %}
+  </strong> {{ inline|yesno:":,·" }}
+  {% with hedge_data|hedges_category:category as hedges %}{{ hedges.names }}{% endwith %}
+  </{{ tag }}>
+{% endwith %}
+{# djlint:on #}

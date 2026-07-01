@@ -21,13 +21,15 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
-    RegulationFactory,
+    HaieRegulationFactory,
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
+from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
     DOSSIER_STATES,
     LOG_TYPES,
+    STAGES,
     InvitationToken,
     LatestMessagerieAccess,
 )
@@ -51,7 +53,9 @@ from envergo.petitions.views import (
     PetitionProjectInstructorView,
     PetitionProjectList,
 )
+from envergo.urlmappings.models import UrlMapping
 from envergo.users.tests.factories import UserFactory
+from envergo.utils.urls import remove_from_qs, update_qs
 
 pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
 
@@ -72,12 +76,12 @@ def fake_haie_settings(settings):
 
 @pytest.fixture()
 def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
-    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    regulation = HaieRegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
             activation_map=loire_atlantique_map,
             activation_mode="department_centroid",
         ),
@@ -87,7 +91,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
 
 @pytest.fixture
 def ep_criteria(france_map):  # noqa
-    regulation = RegulationFactory(regulation="ep")
+    regulation = HaieRegulationFactory(regulation="ep")
     criteria = [
         CriterionFactory(
             title="Espèces protégées",
@@ -244,7 +248,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0
@@ -254,7 +258,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
 
 
 @patch("requests.post")
-def test_petition_project_detail(mock_post, client, site):
+def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_criteria):
     """Test consultation view"""
     mock_response = Mock()
     mock_response.status_code = 200
@@ -468,6 +472,197 @@ def test_petition_project_instructor_notes_view(
     assert "Note mineure : Fa dièse" in project.instructor_free_mention
     # And a new SQL event is created
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
+    mock_post, haie_instructor_44, client, site
+):
+    """Coordinator (has_change_permission) sees both note fields and can edit them."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "instructor_free_mention" in content
+    assert "instructor_private_mention" in content
+    assert "Notes pour tous les services consultés" in content
+    assert "Notes internes au service coordonnateur" in content
+
+    # Coordinator can update both fields at once
+    response = client.post(
+        url,
+        {
+            "instructor_free_mention": "Note publique",
+            "instructor_private_mention": "Note privée",
+        },
+    )
+    assert response.status_code == 302
+    project.refresh_from_db()
+    assert project.instructor_free_mention == "Note publique"
+    assert project.instructor_private_mention == "Note privée"
+
+    # Success message is displayed after redirect
+    response = client.get(response.url)
+    assert "Les notes ont été enregistrées." in response.content.decode()
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_invited_sees_only_public_and_cannot_edit(
+    mock_post, haie_user_44, client, site
+):
+    """Invited instructor (has_view_permission only) sees public notes read-only."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="Contenu public",
+        instructor_private_mention="Contenu privé",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    # Public notes are visible as plain text
+    assert "Contenu public" in content
+    # Private notes are not visible at all
+    assert "Contenu privé" not in content
+    assert "Notes internes au service coordonnateur" not in content
+    # No edit form fields
+    assert 'name="instructor_free_mention"' not in content
+    assert 'name="instructor_private_mention"' not in content
+    # Hint text for read-only users
+    assert "Vous ne pouvez pas modifier ces notes" in content
+
+    # Invited user cannot POST
+    response = client.post(
+        url,
+        {
+            "instructor_free_mention": "Tentative",
+            "instructor_private_mention": "Hack",
+        },
+    )
+    assert response.status_code == 403
+    project.refresh_from_db()
+    assert project.instructor_free_mention == "Contenu public"
+    assert project.instructor_private_mention == "Contenu privé"
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_invited_empty_notes(mock_post, haie_user_44, client, site):
+    """When public notes are empty, invited instructor sees 'Aucune note.'"""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="",
+        instructor_private_mention="Secret",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.get(url)
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Aucune note." in content
+    assert "Secret" not in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_invited_links_are_clickable(
+    mock_post, haie_user_44, client, site
+):
+    """URLs in public notes are rendered as clickable links for invited instructors."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="Voir https://example.com/doc pour les détails",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.get(url)
+    content = response.content.decode()
+    assert 'href="https://example.com/doc"' in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_coordinator_links_are_clickable(
+    mock_post, haie_instructor_44, client, site
+):
+    """URLs in notes are rendered as clickable links in read mode for coordinators."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="Lien public https://example.com/pub",
+        instructor_private_mention="Lien privé https://example.com/priv",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(url)
+    content = response.content.decode()
+    assert 'href="https://example.com/pub"' in content
+    assert 'href="https://example.com/priv"' in content
+
+
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_instructor_notes_coordinator_empty_notes(
+    mock_post, haie_instructor_44, client, site
+):
+    """Coordinator sees 'Aucune note.' for each empty field."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        instructor_free_mention="",
+        instructor_private_mention="",
+    )
+    url = reverse(
+        "petition_project_instructor_notes_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.get(url)
+    content = response.content.decode()
+    assert content.count("Aucune note.") == 2
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
@@ -1927,6 +2122,414 @@ def test_alternative_delete(client, haie_instructor_44):
     response = client.post(delete_url)
     assert response.status_code == 302
     assert project.simulations.all().count() == 2
+
+
+# Alternative simulation creation tests.
+
+
+def test_simulation_form_rejects_unrecognized_url():
+    """A url that cannot be turned into a moulinette gets the generic message.
+
+    When the domain is unknown, no moulinette can be built and there are no
+    underlying errors to surface, so the fallback message is used.
+    """
+    DCConfigHaieFactory()
+    form = SimulationForm(
+        data={
+            "moulinette_url": "https://example.com/simulation/",
+            "source": "instructor",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert not form.is_valid()
+    assert form.errors["moulinette_url"] == [
+        "Il semble que l'url ne corresponde pas à une page de simulation valide."
+    ]
+    assert form.moulinette_errors == []
+
+
+def test_simulation_form_surfaces_moulinette_errors():
+    """An invalid simulation is rejected with the headline and detailed errors.
+
+    The form reports the generic « url invalide » headline, and exposes every
+    underlying moulinette error through ``moulinette_errors``, prefixed by its
+    field display name, for the template to list.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    # "chemin_acces" is incompatible with replanting hedges at the same place,
+    # and dropping "localisation_pac" leaves a required field empty: two errors.
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+    invalid_url = remove_from_qs(invalid_url, "localisation_pac")
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": invalid_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert not form.is_valid()
+
+    # The field carries the single headline message.
+    assert form.errors["moulinette_url"] == [
+        "Il semble que l'url ne corresponde pas à une page de simulation valide."
+    ]
+
+    # Both underlying errors are exposed for listing, each prefixed by its label.
+    assert any(
+        error.startswith("Est-il prévu de planter une nouvelle haie")
+        and "création d’un accès" in error
+        for error in form.moulinette_errors
+    )
+    assert any(
+        error.startswith("Les haies à détruire sont-elles situées")
+        and "Ce champ est obligatoire." in error
+        for error in form.moulinette_errors
+    )
+
+
+def test_alternative_create_invalid_url_lists_errors_on_page(
+    client, haie_instructor_44
+):
+    """Submitting an invalid simulation url re-renders the page with, in one
+    place, the headline message and every underlying error prefixed by its field
+    label, as a DSFR messages group below the url field."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+    invalid_url = remove_from_qs(invalid_url, "localisation_pac")
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {"moulinette_url": invalid_url, "source": "instructor", "comment": "x"},
+    )
+
+    assert response.status_code == 200
+    assert project.simulations.count() == 1
+    content = response.content.decode()
+
+    # The headline is shown exactly once (single place, no duplication).
+    assert content.count("ne corresponde pas à une page de simulation valide") == 1
+
+    # Errors are listed in a DSFR messages group, each prefixed by its field label.
+    assert 'class="fr-messages-group"' in content
+    assert content.count('class="fr-message fr-message--error"') == 3
+    assert "Est-il prévu de planter une nouvelle haie" in content
+    assert "création d’un accès" in content
+    assert "Les haies à détruire sont-elles situées" in content
+    assert "Ce champ est obligatoire." in content
+
+
+def test_simulation_form_unfolds_short_moulinette_url():
+    """A short url is unfolded to its full form by clean_moulinette_url.
+
+    Downstream code relies on the cleaned value being the full simulation url.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    UrlMapping.objects.create(key="abcdef", url=project.moulinette_url)
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.local:3000/abcdef/",
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["moulinette_url"] == project.moulinette_url
+
+
+def test_alternative_create_requires_change_permission(client, haie_user_44):
+    """Creating an alternative requires change permission, not mere view access.
+
+    haie_user_44 can view the project but is not an instructor.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_user_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Ne doit pas être créée",
+        },
+    )
+
+    assert response.status_code == 403
+    assert project.simulations.count() == 1
+
+
+def test_alternative_create_happy_path(client, haie_instructor_44):
+    """An instructor posting a valid url creates an inert alternative."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Nouvelle alternative",
+        },
+        follow=True,
+    )
+
+    assert response.status_code == 200
+    assert response.redirect_chain[-1][0] == create_url
+
+    assert project.simulations.count() == 2
+    created = project.simulations.get(is_initial=False)
+    assert created.source == "instructor"
+    assert created.comment == "Nouvelle alternative"
+    assert not created.is_active
+    assert not created.is_initial
+
+    flashes = [str(m) for m in response.context["messages"]]
+    assert "La simulation alternative a été ajoutée." in flashes
+
+
+def test_alternative_create_keeps_existing_active_and_initial(
+    client, haie_instructor_44
+):
+    """Creating an alternative leaves the current active/initial simulation untouched."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    original = project.simulations.get()
+    assert original.is_initial
+    assert original.is_active
+
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Nouvelle alternative",
+        },
+    )
+
+    assert project.simulations.filter(is_active=True).count() == 1
+    assert project.simulations.filter(is_initial=True).count() == 1
+    original.refresh_from_db()
+    assert original.is_active
+    assert original.is_initial
+
+
+def test_alternative_create_allows_multiple_inert(client, haie_instructor_44):
+    """Several inert alternatives coexist without tripping the partial-unique constraints."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    for comment in ["Alternative 1", "Alternative 2"]:
+        response = client.post(
+            create_url,
+            {
+                "moulinette_url": project.moulinette_url,
+                "source": "instructor",
+                "comment": comment,
+            },
+        )
+        assert response.status_code == 302
+
+    assert project.simulations.count() == 3
+    assert project.simulations.filter(is_active=False).count() == 2
+
+
+def test_alternative_activate_rejected_on_closed_dossier(client, haie_instructor_44):
+    """A closed dossier blocks activation, with a page-wide error message.
+
+    The active simulation is left unchanged and the instructor is redirected
+    back to the alternatives page with an explanatory message.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative = SimulationFactory(project=project, comment="Alternative")
+
+    project.stage = STAGES.closed
+    project.save()
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url, follow=True)
+
+    assert response.status_code == 200
+    alternative.refresh_from_db()
+    assert not alternative.is_active
+    assert project.simulations.get(is_initial=True).is_active
+
+    page_messages = [str(message) for message in response.context["messages"]]
+    assert any("clos" in message for message in page_messages)
+
+
+def test_alternative_create_error_logs_analytics_event(client, haie_instructor_44):
+    """A failed creation records an "erreur"/"simualt_add" analytics event."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": invalid_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 200
+    assert project.simulations.count() == 1
+
+    event = Event.objects.get(category="erreur", event="simualt_add")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert any(
+        "création d’un accès" in error for error in event.metadata["moulinette_errors"]
+    )
+
+
+def test_alternative_activate_error_logs_analytics_event(client, haie_instructor_44):
+    """A closed-dossier activation records an "erreur"/"simualt_activate" event."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    alternative = SimulationFactory(project=project, comment="Alternative")
+
+    project.stage = STAGES.closed
+    project.save()
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url)
+
+    assert response.status_code == 302
+
+    event = Event.objects.get(category="erreur", event="simualt_activate")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["moulinette_url"] == alternative.moulinette_url
+    assert event.metadata["message"]
+    # A closed dossier is not a moulinette problem, so there is no detail list.
+    assert event.metadata["moulinette_errors"] == []
+
+
+def test_alternative_activate_rejected_when_simulation_invalid(
+    client, haie_instructor_44
+):
+    """Activating a simulation whose url is no longer a valid moulinette is
+    rejected: it is not activated, the page shows a headline message and, below
+    the table, the same detailed error list as an invalid creation, and an
+    analytics event carries those errors."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    # A stored simulation that has become invalid over time (e.g. config change).
+    invalid_url = update_qs(
+        project.moulinette_url,
+        {"motif": "chemin_acces", "reimplantation": "remplacement"},
+    )
+    invalid_url = remove_from_qs(invalid_url, "localisation_pac")
+    alternative = SimulationFactory(
+        project=project, comment="Stale", moulinette_url=invalid_url
+    )
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url, follow=True)
+
+    assert response.status_code == 200
+
+    # The simulation is not activated; the initial one stays active.
+    alternative.refresh_from_db()
+    assert not alternative.is_active
+    assert project.simulations.get(is_initial=True).is_active
+
+    content = response.content.decode()
+
+    # A single headline message is shown immediately.
+    page_messages = [str(message) for message in response.context["messages"]]
+    assert any("n'est plus valide" in message for message in page_messages)
+
+    # The detailed errors are listed as a DSFR messages group, each prefixed by
+    # its field label — the same list as an invalid creation.
+    assert 'class="fr-messages-group"' in content
+    assert "Est-il prévu de planter une nouvelle haie" in content
+    assert "création d’un accès" in content
+    assert "Les haies à détruire sont-elles situées" in content
+    assert "Ce champ est obligatoire." in content
+
+    event = Event.objects.get(category="erreur", event="simualt_activate")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert any(
+        "création d’un accès" in error for error in event.metadata["moulinette_errors"]
+    )
 
 
 # =============================================================================

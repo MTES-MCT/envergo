@@ -22,7 +22,7 @@ from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
@@ -127,6 +127,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         on_delete=models.PROTECT,
     )
 
+    _category = models.CharField(
+        "Catégorie du dossier",
+        max_length=20,
+        choices=HedgeCategory.choices,
+        db_index=True,
+    )
+
+    original_multi_category_moulinette_url = models.URLField(
+        "Url de la moulinette multi catégorie d'où a été extrait ce projet le cas échéant (vide sinon)",
+        max_length=1024,
+        blank=True,
+    )
+
     demarches_simplifiees_dossier_number = models.IntegerField(
         help_text=_("Dossier number on demarches-simplifiees.fr"),
         blank=True,
@@ -183,6 +196,10 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     instructor_free_mention = models.TextField(
         "Mention libre de l'instructeur", blank=True
+    )
+
+    instructor_private_mention = models.TextField(
+        "Notes privées de l'instructeur", blank=True
     )
 
     followed_by = models.ManyToManyField(
@@ -299,7 +316,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     def synchronize_with_demarches_simplifiees(self, dossier: dict):
-        """Update the petition project with the latest data from demarches-simplifiees.fr
+        """Update the petition project with the latest data from Démarche numérique
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
@@ -336,7 +353,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
             return dates[0] if len(dates) else None
 
-        logger.info(f"Synchronizing file {self.reference} with DS")
+        logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
@@ -349,6 +366,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.moulinette_url = update_qs(
                 self.moulinette_url, {"date": date_depot.isoformat()}
             )
+
+            # For some ConfigHaie, « Démarche numérique » si configurated to set dossier "en_instruction" on creation.
+            # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
+            if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
+                StatusLog.objects.create(
+                    petition_project=self,
+                    type=LOG_TYPES.status_change,
+                    stage="instruction_d",
+                    update_comment="Dépôt du dossier : passage automatique en instruction.",
+                )
 
             usager_email = (
                 dossier["usager"]["email"]
@@ -407,7 +434,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
         ):
-            # DS state have been changed outside of GUH. We are trying to prevent this. Notify admin
+            # « Démarche numérique » state have been changed outside of GUH. We are trying to prevent this. Notify admin
             department = extract_param_from_url(self.moulinette_url, "department")
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
 
@@ -424,6 +451,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self.demarches_simplifiees_dossier_id = dossier["id"]
         self.demarches_simplifiees_state = dossier["state"]
+
         if "dateDepot" in dossier and dossier["dateDepot"]:
             self.demarches_simplifiees_date_depot = parser.isoparse(
                 dossier["dateDepot"]
@@ -526,7 +554,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @cached_property
     def prefetched_dossier(self) -> Dossier | None:
-        """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
+        """Returns the dossier from Démarche numérique if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 
@@ -562,6 +590,17 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return Regulation.objects.filter(
             regulation__in=self.config.regulations_available
         ).order_by("weight")
+
+    @property
+    def category(self):
+        return HedgeCategory(self._category)
+
+    @category.setter
+    def category(self, value):
+        if not isinstance(value, HedgeCategory):
+            raise ValueError("Category must be an instance of HedgeCategory")
+
+        self._category = value.value
 
 
 USER_TYPE = Choices(

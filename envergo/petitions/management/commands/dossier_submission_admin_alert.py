@@ -19,13 +19,15 @@ DOMAIN_BLACK_LIST = settings.DEMARCHES_SIMPLIFIEES["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
-    help = "Fetch freshly submitted dossier on Démarches Simplifiées and notify admins."
+    help = (
+        "Fetch freshly submitted dossier on « Démarche numérique » and notify admins."
+    )
 
     def handle(self, *args, **options):
         """get all the dossier updated in the last hour"""
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            logger.warning("Demarches Simplifiees is not enabled. Doing nothing.")
+            logger.warning("« Démarche numérique » is not enabled. Doing nothing.")
             return None
         set_urlconf("config.urls_haie")
 
@@ -36,7 +38,9 @@ class Command(BaseCommand):
         two_hours_ago_utc = now_utc - datetime.timedelta(hours=2)
         handled_demarches = []
 
-        logging.info(f"Get DS files updated since {two_hours_ago_utc}")
+        logging.info(
+            f"Get « Démarche numérique » files updated since {two_hours_ago_utc}"
+        )
 
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
@@ -114,7 +118,7 @@ class Command(BaseCommand):
         if any(domain in project_url for domain in DOMAIN_BLACK_LIST):
             # project url is from a blacklisted domain, it should have been created in another environment
             logger.warning(
-                "A demarches simplifiees dossier has no corresponding project, it was probably "
+                "A « Démarche numérique » dossier has no corresponding project, it was probably "
                 "created on another environment",
                 extra={
                     "dossier_number": dossier.number,
@@ -126,7 +130,7 @@ class Command(BaseCommand):
             # Either this dossier has been created in this environment but do not match an existing project,
             # or it has been created in a heterodox way.
             logger.warning(
-                "A demarches simplifiees dossier has no corresponding project, it may have been "
+                "A « Démarche numérique » dossier has no corresponding project, it may have been "
                 "created without the guh",
                 extra={
                     "dossier_number": dossier.number,

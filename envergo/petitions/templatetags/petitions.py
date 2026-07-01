@@ -9,6 +9,7 @@ from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
 from envergo.hedges.models import TO_PLANT, TO_REMOVE
+from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
 from envergo.petitions.services import (
@@ -59,7 +60,7 @@ def instructor_view_part(
     plantation_evaluation = context.get("plantation_evaluation")
 
     if criterion is None:
-        template = f"haie/petitions/{regulation.slug}/{part_name}.html"
+        template_path = f"haie/petitions/{regulation.slug}/{part_name}.html"
         for regulation_criterion in regulation.criteria.all():
             context_dict.update(
                 get_instructor_view_context(
@@ -77,7 +78,15 @@ def instructor_view_part(
                 )
             )
     else:
-        template = f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
+        if issubclass(criterion.evaluator, HaieCriterionEvaluator):
+            template_path = (
+                f"haie/petitions/{regulation.slug}/{criterion.evaluator.category.name}/"
+                f"{criterion.evaluator.base_slug}_{part_name}.html"
+            )
+        else:
+            template_path = (
+                f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
+            )
         context_dict.update(
             get_instructor_view_context(
                 criterion.get_evaluator(),
@@ -89,7 +98,7 @@ def instructor_view_part(
 
     try:
         return render_to_string(
-            template,
+            template_path,
             context=context_dict,
         )
     except TemplateDoesNotExist:
@@ -210,7 +219,7 @@ def decision_badge(decision, is_light=False):
             """
             )
             if css_class
-            else "-"
+            else ""
         )
     else:
         return mark_safe(
@@ -236,22 +245,22 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     date_part = f"""<span class="due-date fr-text--sm">
                 {icon_part}
                 {date_filter(due_date, "SHORT_DATE_FORMAT")}
-              </span><br/>"""
+              </span>"""
 
     if not display_days_left:
         days_left_part = ""
     elif days_left >= 2:
-        days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
+        days_left_part = (
+            f'<br/><span class="days-left">{days_left} jours restants</span>'
+        )
     elif days_left >= 0:
-        days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
+        days_left_part = f'<br/><span class="days-left">{days_left} jour restant</span>'
     elif days_left >= -1:
         days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
+            f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
         )
     elif days_left:
-        days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
-        )
+        days_left_part = f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
     else:
         days_left_part = ""
 
@@ -272,13 +281,13 @@ def display_pause(due_date):
         f"""<span class="due-date fr-text--sm">
                 <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
                 Attente de compléments
-              </span><br/>"""
+              </span>"""
     )
 
 
 @register.simple_tag(takes_context=True)
 def get_ds_field(context, field_name):
-    """Get field from démarche numérique as an Item object,
+    """Get field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
     `field_name` must be set in config.demarches_simplifiees_display_fields.
@@ -296,12 +305,12 @@ def get_ds_field(context, field_name):
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
 def display_ds_field(context, field_name, inline=False):
-    """Includes template to display a field from démarche numérique as an Item object,
+    """Includes template to display a field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
     `field_name` must be set in config.demarches_simplifiees_display_fields.
 
-    Uses _item_ds.html template, also included in full DS view template.
+    Uses _item_ds.html template, also included in full « Démarche numérique » view template.
     """
     item = get_ds_field(context, field_name)
     if not item:
@@ -326,3 +335,9 @@ def created_by_display(log):
         return "Administrateur"
 
     return getattr(user, "email", "")
+
+
+@register.simple_tag
+def multiline_title(*parts):
+    """Join non-empty parts with newlines for a multi-line ``title`` tooltip."""
+    return "\n".join(str(part) for part in parts if part)

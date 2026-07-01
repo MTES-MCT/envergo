@@ -1,4 +1,3 @@
-import json
 from datetime import date, timedelta
 
 import pytest
@@ -159,103 +158,16 @@ class TestHomeHaie:
         assert response.status_code == 200
         assert list(response.context["activated_configs"]) == []
 
-    def test_activated_department_redirects_to_triage(self, client):
-        """Selecting an activated department should redirect to the triage page."""
-        config = DCConfigHaieFactory(is_activated=True)
-
-        response = client.post(
-            reverse("home"),
-            {"department": config.department.id},
-        )
-
-        assert response.status_code == 302
-        assert reverse("triage") in response.url
-        assert f"department={config.department.department}" in response.url
-
-    def test_inactive_department_does_not_redirect(self, client):
-        """Selecting an inactive department should NOT redirect to triage."""
-        config = DCConfigHaieFactory(is_activated=False)
-
-        response = client.post(
-            reverse("home"),
-            {"department": config.department.id},
-        )
-
-        assert response.status_code == 200
-        assert response.context["department"] == config.department
-
-    def test_expired_config_does_not_redirect(self, client):
-        """An expired config should not trigger a redirect, even if activated."""
-        today = date.today()
-        one_year_ago = today - timedelta(days=365)
-
-        config = DCConfigHaieFactory(
-            is_activated=True,
-            validity_range=DateRange(one_year_ago, today, "[)"),
-        )
-
-        response = client.post(
-            reverse("home"),
-            {"department": config.department.id},
-        )
-
-        assert response.status_code == 200
-        assert response.context["department"] == config.department
-
-    def test_multiple_configs_uses_valid_one(self, client):
-        """When a department has multiple configs, POST uses the currently valid one."""
-        today = date.today()
-        one_year_ago = today - timedelta(days=365)
-        one_year_later = today + timedelta(days=365)
+    def test_departments_data_in_context(self, client):
+        """The departments_data list is available for the client-side combobox."""
         dept = DepartmentFactory()
 
-        # Expired config
-        DCConfigHaieFactory(
-            department=dept,
-            is_activated=True,
-            validity_range=DateRange(one_year_ago, today, "[)"),
-        )
-        # Current config
-        DCConfigHaieFactory(
-            department=dept,
-            is_activated=True,
-            validity_range=DateRange(today, one_year_later, "[)"),
-        )
-
-        response = client.post(
-            reverse("home"),
-            {"department": dept.id},
-        )
-
-        assert response.status_code == 302
-        assert reverse("triage") in response.url
-
-    def test_department_with_no_config(self, client):
-        """Selecting a department with no config should render the page (no redirect)."""
-        dept = DepartmentFactory()
-
-        response = client.post(
-            reverse("home"),
-            {"department": dept.id},
-        )
+        response = client.get(reverse("home"))
 
         assert response.status_code == 200
-        assert response.context["department"] == dept
-        assert response.context["config"] is None
-
-    def test_without_department(self, client):
-        """POST without selecting a department should render the page."""
-        response = client.post(reverse("home"), {})
-
-        assert response.status_code == 200
-
-    def test_malicious_department_id_does_not_500(self, client):
-        """SQL injection payloads in department field should not cause a 500."""
-        response = client.post(
-            reverse("home"),
-            {"department": "(select(0)from(select(sleep(15)))v)"},
-        )
-        assert response.status_code == 200
+        departments_data = response.context["departments_data"]
+        codes = [d["code"] for d in departments_data]
+        assert dept.department in codes
 
 
 @pytest.mark.haie
@@ -303,7 +215,7 @@ class TestContactHaie:
         assert response.status_code == 405
 
     def _get_department_data(self, response, dept):
-        departments = json.loads(response.context["departments_json"])
+        departments = response.context["departments_data"]
         return next(d for d in departments if d["id"] == dept.id)
 
     @pytest.mark.parametrize(

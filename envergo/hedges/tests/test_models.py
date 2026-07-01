@@ -14,12 +14,18 @@ from envergo.geodata.tests.factories import (
     herault_multipolygon,
     limé_polygon,
 )
-from envergo.hedges.models import HedgeList, Species
+from envergo.hedges.models import HedgeCategory, HedgeList, Species
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
     SpeciesFactory,
     SpeciesHabitatFactory,
+)
+from envergo.moulinette.tests.utils import (
+    make_hedge,
+    make_hru_hedge,
+    make_l350_3_hedge,
+    make_ru_hedge,
 )
 
 pytestmark = pytest.mark.django_db
@@ -213,19 +219,19 @@ def test_zone_filters_are_not_mixed():  # noqa
             },
         ]
     )
-    species = acy_limé_hedges.get_all_species_hru()
+    species = acy_limé_hedges.hedges().get_all_species_hru()
     assert set(species) == set([huppe, hypolais])
 
     # The second hedge in Acy should not return the Hypolaïs Ictérine anymore
     acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "degradee"
     acy_limé_hedges.save()
-    species = acy_limé_hedges.get_all_species_hru()
+    species = acy_limé_hedges.hedges().get_all_species_hru()
     assert set(species) == set([huppe])
 
     acy_limé_hedges.data[1]["additionalData"]["type_haie"] = "mixte"
     acy_limé_hedges.data[0]["additionalData"]["type_haie"] = "degradee"
     acy_limé_hedges.save()
-    species = acy_limé_hedges.get_all_species_hru()
+    species = acy_limé_hedges.hedges().get_all_species_hru()
     assert set(species) == set([hypolais])
 
 
@@ -238,14 +244,16 @@ def test_hedge_data_species_are_filtered_by_geography(
     calvados_species = SpeciesHabitatFactory(map=calvados_map).species
     calvados_map.zones.update(species_taxrefs=calvados_species.cd_noms)
 
-    assert set(aisne_hedge_data.get_all_species_hru()) == set([aisne_species])
-    assert set(calvados_hedge_data.get_all_species_hru()) == set([calvados_species])
+    assert set(aisne_hedge_data.hedges().get_all_species_hru()) == set([aisne_species])
+    assert set(calvados_hedge_data.hedges().get_all_species_hru()) == set(
+        [calvados_species]
+    )
 
     aisne_map.zones.all().update(species_taxrefs=[])
     calvados_map.zones.all().update(species_taxrefs=[])
 
-    assert set(aisne_hedge_data.get_all_species_hru()) == set()
-    assert set(calvados_hedge_data.get_all_species_hru()) == set()
+    assert set(aisne_hedge_data.hedges().get_all_species_hru()) == set()
+    assert set(calvados_hedge_data.hedges().get_all_species_hru()) == set()
 
 
 def test_species_are_filtered_by_hedge_type():
@@ -255,7 +263,7 @@ def test_species_are_filtered_by_hedge_type():
     hedge = HedgeFactory(additionalData__type_haie="degradee")
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species_hru()
+    hedges_species = hedges.hedges().get_all_species_hru()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
@@ -264,7 +272,7 @@ def test_species_are_filtered_by_hedge_type():
         additionalData__type_haie="arbustive", additionalData__recemment_plantee=False
     )
     hedges = HedgeDataFactory(hedges=[hedge])
-    hedges_species = hedges.get_all_species_hru()
+    hedges_species = hedges.hedges().get_all_species_hru()
     assert s1 not in hedges_species
     assert s2 not in hedges_species
     assert s3 in hedges_species
@@ -275,7 +283,7 @@ def test_species_are_filtered_by_hedge_type():
     )
     hedges = HedgeDataFactory(hedges=[hedge])
 
-    hedges_species = hedges.get_all_species_hru()
+    hedges_species = hedges.hedges().get_all_species_hru()
     assert s1 in hedges_species
     assert s2 in hedges_species
     assert s3 not in hedges_species
@@ -288,7 +296,7 @@ def test_hedges_has_centroid_and_department():
         geometry=herault_multipolygon,
     )
     hedge = HedgeDataFactory()
-    centroid_to_remove = hedge.get_centroid_to_remove()
+    centroid_to_remove = hedge.hedges_to_remove().centroid
     centroid_computed = centroid(hedge.hedges_to_remove()[0].geometry)
 
     assert centroid_to_remove == centroid_computed
@@ -351,7 +359,7 @@ def test_multiple_hedges_combine_their_species():
     assert set(hedge_species) == set([s3, s4])
 
     hedges = HedgeDataFactory(hedges=[hedge1, hedge2])
-    all_species = hedges.get_all_species_hru()
+    all_species = hedges.hedges().get_all_species_hru()
     assert set(all_species) == set([s2, s3, s4])
 
 
@@ -370,17 +378,17 @@ def test_hru_no_duplicates_from_multiple_habitats():
 
 def test_hedge_to_plant_pac_depends_on_plantation_mode(calvados_hedge_data):
     # mode_plantation is "plantation", hedges is taken into account for pac min length
-    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    hedges = calvados_hedge_data.hedges().to_plant().pac()
     assert len(hedges) == 1
 
     # hedges with other plantation modes are excluded
     calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
-    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    hedges = calvados_hedge_data.hedges().to_plant().pac()
     assert len(hedges) == 0
 
     # We ignore the property altogether if it's not set
     del calvados_hedge_data.data[-1]["additionalData"]["mode_plantation"]
-    hedges = calvados_hedge_data.hedges_to_plant_pac()
+    hedges = calvados_hedge_data.hedges().to_plant().pac()
     assert len(hedges) == 1
 
 
@@ -933,6 +941,391 @@ class TestDensityLazyComputation:
             hedge_data.density
 
 
+class TestHedgeCategory:
+    """Tests for Hedge.category property.
+
+    Classification rules:
+    - RU: non-alignement, exclusion props (bord_batiment, parc_jardin, place_publique) absent or False
+    - L350-3: alignement, bord_voie present and True OR bord_voie absent
+    - HRU: everything else
+    """
+
+    # --- RU ---
+
+    def test_non_alignement_no_exclusion_props_is_ru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte"))
+        assert hedge.category == HedgeCategory.ru
+
+    def test_non_alignement_exclusion_props_false_is_ru(self):
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="arbustive",
+                bord_batiment=False,
+                parc_jardin=False,
+                place_publique=False,
+            )
+        )
+        assert hedge.category == HedgeCategory.ru
+
+    @pytest.mark.parametrize(
+        "hedge_type", ["degradee", "buissonnante", "arbustive", "mixte"]
+    )
+    def test_all_non_alignement_types_are_ru(self, hedge_type):
+        hedge = HedgeFactory(**make_hedge(type_haie=hedge_type))
+        assert hedge.category == HedgeCategory.ru
+
+    # --- L350-3 ---
+
+    def test_alignement_with_bord_voie_is_l350_3(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement", bord_voie=True))
+        assert hedge.category == HedgeCategory.l350_3
+
+    def test_alignement_without_bord_voie_key_is_l350_3(self):
+        """When bord_voie is not in the data at all, alignement defaults to L350-3."""
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement"))
+        assert hedge.category == HedgeCategory.l350_3
+
+    # --- HRU ---
+
+    def test_alignement_bord_voie_false_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="alignement", bord_voie=False))
+        assert hedge.category == HedgeCategory.hru
+
+    def test_non_alignement_with_bord_batiment_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", bord_batiment=True))
+        assert hedge.category == HedgeCategory.hru
+
+    def test_non_alignement_with_parc_jardin_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", parc_jardin=True))
+        assert hedge.category == HedgeCategory.hru
+
+    def test_non_alignement_with_place_publique_is_hru(self):
+        hedge = HedgeFactory(**make_hedge(type_haie="mixte", place_publique=True))
+        assert hedge.category == HedgeCategory.hru
+
+    def test_non_alignement_with_multiple_exclusion_props_is_hru(self):
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="mixte",
+                bord_batiment=True,
+                parc_jardin=True,
+                place_publique=True,
+            )
+        )
+        assert hedge.category == HedgeCategory.hru
+
+    def test_non_alignement_with_one_true_exclusion_among_false_is_hru(self):
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="mixte",
+                bord_batiment=False,
+                parc_jardin=True,
+                place_publique=False,
+            )
+        )
+        assert hedge.category == HedgeCategory.hru
+
+    # --- Edge: mixed props ---
+
+    def test_alignement_with_bord_voie_and_exclusion_props_is_l350_3(self):
+        """Alignement + bord_voie wins over exclusion props."""
+        hedge = HedgeFactory(
+            **make_hedge(
+                type_haie="alignement",
+                bord_voie=True,
+                bord_batiment=True,
+            )
+        )
+        assert hedge.category == HedgeCategory.l350_3
+
+
+class TestHedgeListCategory:
+    """Tests for HedgeList.evaluator_category() method.
+
+    Category classification:
+    - RU: non-alignement hedges without bord_batiment/parc_jardin/place_publique
+    - L350-3: alignement hedges with bord_voie
+    - HRU: everything else (not RU and not L350-3)
+    """
+
+    # --- single_procedure=False ---
+
+    def test_not_single_procedure_hru_returns_all(self):
+        hedges = HedgeList([make_ru_hedge("R1"), make_hru_hedge("H1")])
+        result = hedges.evaluator_category(False, HedgeCategory.hru)
+        assert result == hedges
+
+    def test_not_single_procedure_ru_returns_empty(self):
+        hedges = HedgeList([make_ru_hedge("R1"), make_hru_hedge("H1")])
+        result = hedges.evaluator_category(False, HedgeCategory.ru)
+        assert len(result) == 0
+
+    def test_not_single_procedure_l350_3_returns_empty(self):
+        hedges = HedgeList([make_ru_hedge("R1"), make_hru_hedge("H1")])
+        result = hedges.evaluator_category(False, HedgeCategory.l350_3)
+        assert len(result) == 0
+
+    # --- HRU category ---
+
+    def test_hru_no_hru_to_remove_returns_empty(self):
+        hedges = HedgeList(
+            [
+                make_ru_hedge("R1"),
+                make_hru_hedge("H1", type="TO_PLANT"),
+            ]
+        )
+        result = hedges.evaluator_category(True, HedgeCategory.hru)
+        assert len(result) == 0
+
+    def test_hru_all_categories_present_returns_only_hru(self):
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        l350_3 = make_l350_3_hedge("L1")
+        plant = make_ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3, plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.hru)
+        assert hru in result
+        assert ru not in result
+        assert l350_3 not in result
+        assert plant not in result
+
+    def test_hru_only_category_returns_all(self):
+        hru = make_hru_hedge("H1")
+        plant = make_ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.hru)
+        assert result == hedges
+
+    def test_hru_with_l350_3_absorbs_ru_plantings(self):
+        hru = make_hru_hedge("H1")
+        l350_3 = make_l350_3_hedge("L1")
+        ru_plant = make_ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, l350_3, ru_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.hru)
+        assert hru in result
+        assert ru_plant in result
+        assert l350_3 not in result
+
+    def test_hru_with_ru_absorbs_l350_3_plantings(self):
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        l350_3_plant = make_l350_3_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.hru)
+        assert hru in result
+        assert l350_3_plant in result
+        assert ru not in result
+
+    # --- RU category ---
+
+    def test_ru_no_ru_to_remove_returns_empty(self):
+        hedges = HedgeList(
+            [
+                make_hru_hedge("H1"),
+                make_ru_hedge("R1", type="TO_PLANT"),
+            ]
+        )
+        result = hedges.evaluator_category(True, HedgeCategory.ru)
+        assert len(result) == 0
+
+    def test_ru_with_hru_present_returns_only_ru(self):
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        ru_plant = make_ru_hedge("P1", type="TO_PLANT")
+        plant = make_hru_hedge("P2", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, plant, ru_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.ru)
+        assert ru in result
+        assert hru not in result
+        assert plant not in result
+        assert ru_plant in result
+
+    def test_ru_all_categories_returns_only_ru(self):
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        l350_3 = make_l350_3_hedge("L1")
+        ru_plant = make_ru_hedge("P1", type="TO_PLANT")
+        hru_plant = make_hru_hedge("P2", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3, ru_plant, hru_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.ru)
+        assert ru in result
+        assert hru not in result
+        assert l350_3 not in result
+        assert ru_plant in result
+        assert hru_plant not in result
+
+    def test_ru_with_l350_3_no_hru_absorbs_hru_plantings(self):
+        ru = make_ru_hedge("R1")
+        l350_3 = make_l350_3_hedge("L1")
+        hru_plant = make_hru_hedge("P1", type="TO_PLANT")
+        l350_3_plant = make_l350_3_hedge("P2", type="TO_PLANT")
+        hedges = HedgeList([ru, l350_3, hru_plant, l350_3_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.ru)
+        assert ru in result
+        assert hru_plant in result
+        assert l350_3 not in result
+        assert l350_3_plant not in result
+
+    def test_ru_only_category_returns_all(self):
+        ru = make_ru_hedge("R1")
+        plant = make_hru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([ru, plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.ru)
+        assert result == hedges
+
+    # --- L350-3 category ---
+
+    def test_l350_3_no_l350_3_to_remove_returns_empty(self):
+        hedges = HedgeList(
+            [
+                make_hru_hedge("H1"),
+                make_l350_3_hedge("L1", type="TO_PLANT"),
+            ]
+        )
+        result = hedges.evaluator_category(True, HedgeCategory.l350_3)
+        assert len(result) == 0
+
+    def test_l350_3_only_category_returns_all(self):
+        l350_3 = make_l350_3_hedge("L1")
+        plant = make_ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([l350_3, plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.l350_3)
+        assert result == hedges
+
+    def test_l350_3_with_hru_returns_only_l350_3(self):
+        hru = make_hru_hedge("H1")
+        l350_3 = make_l350_3_hedge("L1")
+        plant = make_ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru, l350_3, plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.l350_3)
+        assert l350_3 in result
+        assert hru not in result
+        assert plant not in result
+
+    def test_l350_3_with_ru_returns_only_l350_3(self):
+        ru = make_ru_hedge("R1")
+        l350_3 = make_l350_3_hedge("L1")
+        hedges = HedgeList([ru, l350_3])
+
+        result = hedges.evaluator_category(True, HedgeCategory.l350_3)
+        assert l350_3 in result
+        assert ru not in result
+
+    def test_l350_3_all_categories_returns_only_l350_3(self):
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        l350_3 = make_l350_3_hedge("L1")
+        hedges = HedgeList([hru, ru, l350_3])
+
+        result = hedges.evaluator_category(True, HedgeCategory.l350_3)
+        assert l350_3 in result
+        assert hru not in result
+        assert ru not in result
+
+    # --- Own TO_PLANT hedges alongside absorbed orphans ---
+
+    def test_hru_own_plantings_included_with_absorbed_orphans(self):
+        """HRU TO_PLANT hedges are included together with absorbed RU TO_PLANT."""
+        hru_remove = make_hru_hedge("H1")
+        hru_plant = make_hru_hedge("H2", type="TO_PLANT")
+        l350_3 = make_l350_3_hedge("L1")
+        ru_plant = make_ru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([hru_remove, hru_plant, l350_3, ru_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.hru)
+        assert hru_remove in result
+        assert hru_plant in result
+        assert ru_plant in result
+        assert l350_3 not in result
+
+    def test_ru_own_plantings_included_with_absorbed_orphans(self):
+        """RU TO_PLANT hedges are included together with absorbed HRU TO_PLANT."""
+        ru_remove = make_ru_hedge("R1")
+        ru_plant = make_ru_hedge("R2", type="TO_PLANT")
+        l350_3 = make_l350_3_hedge("L1")
+        hru_plant = make_hru_hedge("P1", type="TO_PLANT")
+        hedges = HedgeList([ru_remove, ru_plant, l350_3, hru_plant])
+
+        result = hedges.evaluator_category(True, HedgeCategory.ru)
+        assert ru_remove in result
+        assert ru_plant in result
+        assert hru_plant in result
+        assert l350_3 not in result
+
+    # --- Partition invariant ---
+
+    def test_active_categories_partition_all_hedges(self):
+        """Every hedge appears in exactly one active category's result."""
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        l350_3 = make_l350_3_hedge("L1")
+        hru_plant = make_hru_hedge("H2", type="TO_PLANT")
+        ru_plant = make_ru_hedge("R2", type="TO_PLANT")
+        l350_3_plant = make_l350_3_hedge("L2", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3, hru_plant, ru_plant, l350_3_plant])
+
+        results = {cat: hedges.evaluator_category(True, cat) for cat in HedgeCategory}
+        all_assigned = []
+        for cat_hedges in results.values():
+            all_assigned.extend(cat_hedges)
+        assert len(all_assigned) == len(hedges)
+        assert set(id(h) for h in all_assigned) == set(id(h) for h in hedges)
+
+    def test_two_categories_partition_all_hedges(self):
+        """With only HRU + RU, HRU absorbs L350-3 plantings; all hedges accounted for."""
+        hru = make_hru_hedge("H1")
+        ru = make_ru_hedge("R1")
+        l350_3_plant = make_l350_3_hedge("L1", type="TO_PLANT")
+        hedges = HedgeList([hru, ru, l350_3_plant])
+
+        results = {cat: hedges.evaluator_category(True, cat) for cat in HedgeCategory}
+        active = {cat: h for cat, h in results.items() if len(h) > 0}
+        assert HedgeCategory.l350_3 not in active
+        all_assigned = []
+        for cat_hedges in active.values():
+            all_assigned.extend(cat_hedges)
+        assert len(all_assigned) == len(hedges)
+        assert set(id(h) for h in all_assigned) == set(id(h) for h in hedges)
+
+    # --- Edge cases ---
+
+    def test_empty_hedgelist(self):
+        """Empty list returns empty for all categories."""
+        hedges = HedgeList()
+        for cat in HedgeCategory:
+            assert len(hedges.evaluator_category(True, cat)) == 0
+            assert len(hedges.evaluator_category(False, cat)) == 0
+
+    def test_only_to_plant_hedges_returns_empty(self):
+        """When no category has TO_REMOVE hedges, all categories return empty."""
+        hedges = HedgeList(
+            [
+                make_hru_hedge("H1", type="TO_PLANT"),
+                make_ru_hedge("R1", type="TO_PLANT"),
+                make_l350_3_hedge("L1", type="TO_PLANT"),
+            ]
+        )
+        for cat in HedgeCategory:
+            assert len(hedges.evaluator_category(True, cat)) == 0
+
+    # --- Invalid category ---
+
+    def test_invalid_category_raises(self):
+        hedges = HedgeList([make_ru_hedge("R1")])
+        with pytest.raises(ValueError, match="Category not recognized"):
+            hedges.evaluator_category(True, "invalid")
+
+
 class TestSpeciesModelFields:
     """Phase 1: verify new fields on Species and SpeciesHabitat."""
 
@@ -1169,7 +1562,7 @@ class TestRuSpeciesQuerying:
 
         hedge = self._make_hedge_in_aisne()
         hedges = HedgeDataFactory(hedges=[hedge])
-        result = list(hedges.get_all_species())
+        result = list(hedges.hedges().get_all_species())
 
         levels = [s.local_level_of_concern for s in result]
         assert levels == ["majeur", "fort", "faible"]
@@ -1330,3 +1723,16 @@ class TestRuSpeciesQuerying:
         hedge_c = self._make_hedge_in_aisne(hedge_type="degradee")
         result = set(Species.ru.for_hedges([hedge_c]))
         assert species in result
+
+
+def test_hedge_length_is_geodesic_meters():
+    """Hedge.length is the geodesic length in meters, not in degrees.
+
+    A 0.1° east-west span at lat 43.6° is ~8 km on the ground. The pinned
+    value guards against drift; the kilometer magnitude guards against the
+    classic regression of measuring the WGS84 line in degrees (~0.07).
+    """
+    hedge = HedgeFactory(latLngs=[{"lat": 43.6, "lng": 3.0}, {"lat": 43.6, "lng": 3.1}])
+
+    assert hedge.length == pytest.approx(8074.307052980297, rel=1e-9)
+    assert hedge.length > 1000

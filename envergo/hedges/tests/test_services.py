@@ -1,30 +1,54 @@
+from unittest.mock import PropertyMock, patch
+
 import pytest
 
-from envergo.geodata.conftest import bizous_town_center, france_map  # noqa
+from envergo.evaluations.models import RESULTS
+from envergo.geodata.conftest import bizous_town_center, france_map  # noqa: F401
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     MinLengthCondition,
+    NormandieMinLengthCondition,
     RUMinLengthCondition,
     RUQualityCondition,
     SafetyCondition,
 )
-from envergo.hedges.services import PlantationEvaluator
-from envergo.hedges.tests.factories import HedgeDataFactory
+from envergo.hedges.services import PlantationEvaluator, PlantationResults
+from envergo.hedges.tests.conftest import make_mock_evaluator
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesRegimeUnique
-from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaie
+from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
-    DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.utils import (
+    make_hedge,
     make_hedge_factory,
+    make_moulinette_haie_data,
     make_moulinette_haie_with_density,
 )
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def regime_unique_haie_criteria(france_map):  # noqa: F811
+    regulation = RegulationFactory(
+        regulation="regime_unique_haie",
+        evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRegulation",
+    )
+    return [
+        CriterionFactory(
+            title="Regime unique haie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+    ]
 
 
 @pytest.fixture
@@ -35,7 +59,7 @@ def alignementarbres_criteria(france_map):  # noqa
         CriterionFactory(
             title="Alignement arbres > L350-3",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbres",
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -84,7 +108,7 @@ def test_plantation_evaluator_should_evaluate_only_activated_regulations(
     ep_criteria, alignementarbres_criteria, n2000_criteria
 ):
     # GIVEN two regulations, one activated, one not activated, and one without activated perimeter on a department
-    DCConfigHaieFactory(regulations_available=["alignement_arbres", "natura2000_haie"])
+    RUConfigHaieFactory(regulations_available=["alignement_arbres", "natura2000_haie"])
     hedges = HedgeDataFactory(
         data=[
             {
@@ -154,7 +178,7 @@ def test_ep_dispense_excludes_conditions_from_result(ep_ru_criterion, ru_criteri
     )
 
     # Sanity check: EP RU should be in dispense
-    assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+    assert moulinette.ep.ru__ep_regime_unique.result_code == "dispense"
 
     # WHEN the plantation evaluator runs
     evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
@@ -185,7 +209,7 @@ def test_ep_dispense_excludes_conditions_from_result(ep_ru_criterion, ru_criteri
         c
         for c in evaluator.conditions
         if isinstance(c, MinLengthCondition)
-        and isinstance(c.criterion_evaluator, RegimeUniqueHaie)
+        and isinstance(c.criterion_evaluator, RegimeUniqueHaieRu)
     ]
     assert len(ru_min_length) == 1
 
@@ -202,7 +226,7 @@ class TestConditionDeduplication:
             hedges=[make_hedge_factory(length=50)],
             reimplantation="replantation",
         )
-        assert moulinette.ep.ep_regime_unique.result_code != "dispense"
+        assert moulinette.ep.ru__ep_regime_unique.result_code != "dispense"
 
         evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
         evaluator.evaluate()
@@ -217,7 +241,7 @@ class TestConditionDeduplication:
             hedges=[make_hedge_factory(length=8)],
             reimplantation="replantation",
         )
-        assert moulinette.ep.ep_regime_unique.result_code == "dispense"
+        assert moulinette.ep.ru__ep_regime_unique.result_code == "dispense"
 
         evaluator = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
         evaluator.evaluate()
@@ -254,8 +278,10 @@ class TestConditionDeduplication:
         """find_condition can locate a specific evaluator's condition even after dedup."""
         moulinette, evaluator = evaluated
 
-        ru_evaluator = moulinette.regime_unique_haie.regime_unique_haie.get_evaluator()
-        ep_evaluator = moulinette.ep.ep_regime_unique.get_evaluator()
+        ru_evaluator = (
+            moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
+        )
+        ep_evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
 
         ru_cond = evaluator.find_condition(RUMinLengthCondition, ru_evaluator)
         ep_cond = evaluator.find_condition(RUMinLengthCondition, ep_evaluator)
@@ -263,7 +289,7 @@ class TestConditionDeduplication:
         assert ru_cond is not None
         assert ep_cond is not None
         assert ru_cond is not ep_cond
-        assert isinstance(ru_cond.criterion_evaluator, RegimeUniqueHaie)
+        assert isinstance(ru_cond.criterion_evaluator, RegimeUniqueHaieRu)
         assert isinstance(ep_cond.criterion_evaluator, EspecesProtegeesRegimeUnique)
 
     def test_ep_dispense_no_deduplication_needed(self, evaluated_dispense):
@@ -286,3 +312,124 @@ class TestConditionDeduplication:
         assert labels.count("Longueur de la haie plantée") == 1
         assert labels.count("Type de haie plantée") == 1
         assert labels.count("Sécurité") == 1
+
+
+class TestGlobalResultsByCategory:
+
+    def test_combines_category_result_with_plantation_result(
+        self, regime_unique_haie_criteria
+    ):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        hedges = moulinette.catalog["haies"]
+        evaluator = PlantationEvaluator(moulinette, hedges)
+        evaluator.evaluate()
+
+        # category_result="declaration" + plantation_result="inadequate" (no plantation hedges)
+        # -> PLANTATION_RESULT_MATRIX maps to "inadequate"
+        results = evaluator.global_results_by_category
+        assert results[HedgeCategory.ru] == PlantationResults.Inadequate.value
+
+
+class TestDisplayForAlternatives:
+
+    def test_interdit_displays_for_alternatives(self, regime_unique_haie_criteria):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        hedges = moulinette.catalog["haies"]
+        evaluator = PlantationEvaluator(moulinette, hedges)
+        evaluator.evaluate()
+
+        with patch.object(
+            type(evaluator),
+            "global_results_by_category",
+            new_callable=PropertyMock,
+            return_value={HedgeCategory.ru: RESULTS.interdit},
+        ):
+            assert evaluator.display_for_alternatives(HedgeCategory.ru) is True
+
+    def test_non_soumis_does_not_display_for_alternatives(
+        self, regime_unique_haie_criteria
+    ):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        hedges = moulinette.catalog["haies"]
+        evaluator = PlantationEvaluator(moulinette, hedges)
+        evaluator.evaluate()
+
+        with patch.object(
+            type(evaluator),
+            "global_results_by_category",
+            new_callable=PropertyMock,
+            return_value={HedgeCategory.ru: RESULTS.non_soumis},
+        ):
+            assert evaluator.display_for_alternatives(HedgeCategory.ru) is False
+
+
+class TestDeduplicateConditionsCrossClass:
+    """deduplicate_conditions groups by additive_key, so RUMinLengthCondition and
+    NormandieMinLengthCondition (same key) are deduplicated together."""
+
+    def _make_conditions(self, r_ru, r_normandie):
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_ru = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        evaluator_ru.get_replantation_coefficient.return_value = r_ru
+        cond_ru = RUMinLengthCondition(hedge_data.hedges(), r_ru, evaluator_ru)
+        cond_ru.evaluate()
+        # aggregated_r != R ensures Normandie reduction is skipped; base logic applies.
+        evaluator_normandie = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        cond_normandie = NormandieMinLengthCondition(
+            hedge_data.hedges(),
+            r_normandie,
+            evaluator_normandie,
+            catalog={"aggregated_r": 999},
+        )
+        cond_normandie.evaluate()
+        return cond_ru, cond_normandie
+
+    def test_stricter_normandie_survives(self):
+        """When NormandieMinLengthCondition requires more length, it wins."""
+        cond_ru, cond_normandie = self._make_conditions(r_ru=1.0, r_normandie=1.5)
+
+        result = PlantationEvaluator.deduplicate_conditions([cond_ru, cond_normandie])
+
+        assert len(result) == 1
+        assert isinstance(result[0], NormandieMinLengthCondition)
+
+    def test_stricter_ru_survives(self):
+        """When RUMinLengthCondition requires more length, it wins."""
+        cond_ru, cond_normandie = self._make_conditions(r_ru=2.0, r_normandie=1.0)
+
+        result = PlantationEvaluator.deduplicate_conditions([cond_ru, cond_normandie])
+
+        assert len(result) == 1
+        assert isinstance(result[0], RUMinLengthCondition)
+
+    def test_equal_requirements_one_survives(self):
+        """When neither is strictly stricter, exactly one condition is kept."""
+        cond_ru, cond_normandie = self._make_conditions(r_ru=1.0, r_normandie=1.0)
+
+        result = PlantationEvaluator.deduplicate_conditions([cond_ru, cond_normandie])
+
+        assert len(result) == 1

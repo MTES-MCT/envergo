@@ -42,7 +42,7 @@ DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
     settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
 )
 
-DS_DISABLED_BASE_MESSAGE = "Demarches Simplifiees is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
+DS_DISABLED_BASE_MESSAGE = "« Démarche numérique » is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
 
 
 class DemarchesSimplifieesClient:
@@ -52,13 +52,17 @@ class DemarchesSimplifieesClient:
             headers={
                 "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}"
             },
+            # gql's transport only accepts a single scalar timeout (not the
+            # (connect, read) tuple requests supports), so we pass the read
+            # budget from the shared setting.
+            timeout=settings.DEFAULT_HTTP_TIMEOUT[1],
         )
         self.client = Client(
             transport=self.transport, fetch_schema_from_transport=False
         )
 
     def _fake_execute(self, fake_dossier_filename):
-        """Mock response when Demarches Simplifiees is not enabled"""
+        """Mock response when Démarche numérique is not enabled"""
         with open(
             DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
             "r",
@@ -68,13 +72,13 @@ class DemarchesSimplifieesClient:
 
     def execute(self, query_str: str, variables: dict = None):
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
-            raise NotImplementedError("Démarches simplifiées is not enabled")
+            raise NotImplementedError("« Démarche numérique » is not enabled")
 
         query = gql(query_str)
         try:
             result = self.client.execute(query, variable_values=variables or {})
             logger.info(
-                "Demarches simplifiees API request succeed",
+                "« Démarche numérique » API request succeed",
                 extra={
                     "result": result,
                     "query": query_str,
@@ -84,7 +88,7 @@ class DemarchesSimplifieesClient:
 
         except (TransportError, GraphQLError, ConnectionError) as e:
             logger.error(
-                "Demarches simplifiees API request failed",
+                "« Démarche numérique » API request failed",
                 extra={
                     "error": e,
                     "query": query_str,
@@ -105,7 +109,7 @@ class DemarchesSimplifieesClient:
         query,
         fake_dossier_filename,
     ) -> dict | None:
-        """Fetch dossier from DS, using specific query and fake dossier filename"""
+        """Fetch dossier from Démarche numérique, using specific query and fake dossier filename"""
 
         variables = {"dossierNumber": dossier_number}
 
@@ -129,7 +133,7 @@ class DemarchesSimplifieesClient:
                     )
                 ):
                     logger.info(
-                        "A Demarches simplifiees dossier is not found, but the project is not marked as submitted yet",
+                        "A « Démarche numérique » dossier is not found, but the project is not marked as submitted yet",
                         extra={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,
@@ -152,7 +156,7 @@ class DemarchesSimplifieesClient:
 
         if "dossier" not in data or not data["dossier"]:
             logger.error(
-                "Demarches simplifiees API response is not well formated",
+                "« Démarche numérique » API response is not well formated",
                 extra={
                     "response": data,
                     "query": query,
@@ -273,7 +277,7 @@ class DemarchesSimplifieesClient:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
                 logger.error(
-                    "Error when getting credentials to direct upload file to Demarches Simplifiees",
+                    "Error when getting credentials to direct upload file to « Démarche numérique »",
                     extra={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -307,10 +311,11 @@ class DemarchesSimplifieesClient:
                             credentials["url"],
                             data=payload,
                             headers=credentials_headers,
+                            timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT,
                         )
                 except Exception as e:
                     logger.error(
-                        f"Error when sending attachment file Demarches Simplifiees direct upload : {e}",
+                        f"Error when sending attachment file « Démarche numérique » direct upload : {e}",
                         extra={
                             "dossier_number": dossier_number,
                         },
@@ -342,7 +347,7 @@ class DemarchesSimplifieesClient:
 
             else:
                 logger.error(
-                    "Error with credentials for direct upload to Demarches Simplifiees",
+                    "Error with credentials for direct upload to « Démarche numérique »",
                     extra={
                         "dossier_number": dossier_number,
                         "query": query,
@@ -412,7 +417,7 @@ class DemarchesSimplifieesClient:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
                 logger.error(
-                    "Error when sending message to Demarches Simplifiees",
+                    "Error when sending message to « Démarche numérique »",
                     extra={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -437,7 +442,7 @@ class DemarchesSimplifieesClient:
         # If message has not been sent because errors
         if query_name not in data or data[query_name]["errors"]:
             logger.error(
-                "Error when sending message to Demarches Simplifiees",
+                "Error when sending message to « Démarche numérique »",
                 extra={
                     "response": data,
                     "query": query,
@@ -505,7 +510,7 @@ class DemarchesSimplifieesClient:
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"« Démarche numérique » is not enabled. Doing nothing."
                 f"Use fake dossier if dossier is not draft."
                 f"\nquery: {query}"
                 f"\nvariables: {variables}"
@@ -537,7 +542,7 @@ class DemarchesSimplifieesClient:
                 data = self.execute(query, variables)
             except DemarchesSimplifieesError as e:
                 logger.error(
-                    "Error when changing dossier state via Demarches Simplifiees API",
+                    "Error when changing dossier state via « Démarche numérique » API",
                     extra={
                         "dossier_id": dossier_id,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -564,7 +569,7 @@ class DemarchesSimplifieesClient:
             or data[result_key].get("errors")
         ):
             logger.error(
-                "Error when changing dossier state via Demarches Simplifiees API",
+                "Error when changing dossier state via « Démarche numérique » API",
                 extra={
                     "response": data,
                     "query": query,
@@ -699,7 +704,7 @@ class DemarchesSimplifieesClient:
 
 
 class DemarchesSimplifieesError(Exception):
-    """Démarches Simplifiées client Exception"""
+    """Démarche numérique client Exception"""
 
     def __init__(self, query: str = None, variables: dict = None, message: str = None):
         super().__init__(message)

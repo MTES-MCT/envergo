@@ -107,9 +107,9 @@ class HedgeDataAdmin(admin.ModelAdmin):
         """Display list of protected species related to this hedge set."""
 
         if self.is_single_procedure(obj):
-            species = obj.get_all_species()
+            species = obj.hedges().get_all_species()
         else:
-            species = obj.get_all_species_hru()
+            species = obj.hedges().get_all_species_hru()
         content = render_to_string(
             "hedges/admin/_hedges_species.html",
             context={"species": species},
