@@ -1,8 +1,8 @@
-### Récupération des informations d'un dossier depuis Démarches-simplifiées : :x: erreur
+### Récupération des informations d'un dossier depuis Démarche numérique : :x: erreur
 
-L'API de Démarches Simplifiées a retourné une erreur lors de la récupération du dossier n°{{ dossier_number }}.
+L'API de « Démarche numérique » a retourné une erreur lors de la récupération du dossier n°{{ dossier_number }}.
 
-Réponse de Démarches Simplifiées :
+Réponse de « Démarche numérique » :
 ```
 {{ error|safe }}
 ```

@@ -8,8 +8,8 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from django.core.validators import RegexValidator
 
 from envergo.evaluations.models import RESULTS
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Zone
-from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.models import (
     PACAGE_RE,
     HedgeCategory,

@@ -148,9 +148,9 @@ _A_TAG_RE = re.compile(
 def urlize_html(value, blank=True):
     """Convert URLs in text into clickable links, stripping any HTML markup.
 
-    This filter is mainly used to parse and sanitize messages fetched from DS.
+    This filter is mainly used to parse and sanitize messages fetched from « Démarche numérique ».
 
-    DS sends messages in inconsistent formats. Sometimes html, sometimes
+    « Démarche numérique » sends messages in inconsistent formats. Sometimes html, sometimes
     markdown. We strip all tags while preserving paragraph boundaries as
     newlines (so the downstream |linebreaks filter recreates the visual
     structure), then linkify any bare URLs found in the resulting plain text.
@@ -193,7 +193,7 @@ def urlize_html(value, blank=True):
     text = strip_tags(text)
 
     # Unescape HTML entities (e.g. &amp; → &, &nbsp; → space) so they don't
-    # get double-escaped by urlize's autoescape. DS sends HTML where & in URLs
+    # get double-escaped by urlize's autoescape. « Démarche numérique » sends HTML where & in URLs
     # is encoded as &amp;.
     # This must happen AFTER strip_tags, because strip_tags uses HTMLParser
     # which normalizes bare & as entity references (e.g. &element → &element;).

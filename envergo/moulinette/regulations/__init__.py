@@ -5,10 +5,15 @@ from dataclasses import dataclass
 from enum import Enum
 from types import SimpleNamespace
 
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, Point
 
 from envergo.evaluations.models import RESULT_CASCADE, RESULTS, TAG_STYLES_BY_RESULT
-from envergo.geodata.utils import EPSG_WGS84, merge_geometries, to_geojson
+from envergo.geodata.utils import (
+    EPSG_WGS84,
+    get_best_epsg_for_location,
+    merge_geometries,
+    to_geojson,
+)
 from envergo.hedges.models import HedgeCategory
 
 
@@ -62,7 +67,7 @@ class MapPolygon:
 class Map:
     """Data for a map that will be displayed with Leaflet."""
 
-    center: tuple  # Coordinates to center the map
+    center: Point  # WGS84 (EPSG:4326) Point to center the map on
     entries: list  # List of `MapPolygon` objects
     caption: str = None  # Legend displayed below the map
     truncate: bool = True  # Should the displayed polygons be truncated?
@@ -78,9 +83,12 @@ class Map:
     type: str = "criterion"  # Can be "criterion" or "regulation"
 
     def to_json(self):
-        # Don't display full polygons
-        EPSG_WGS84 = 4326
-        buffer = self.center.buffer(1000).transform(EPSG_WGS84, clone=True)
+        # Clip displayed polygons to a 1 km disc around the center.
+        # center is WGS84, so buffer in the local UTM zone (meters), not in
+        # degrees — a degree-radius buffer would span the globe and clip nothing.
+        utm_srid = get_best_epsg_for_location(self.center.x, self.center.y)
+        center_utm = self.center.transform(utm_srid, clone=True)
+        buffer = center_utm.buffer(1000).transform(EPSG_WGS84, clone=True)
 
         data = json.dumps(
             {
@@ -712,12 +720,20 @@ class CriterionEvaluator(ABC):
         """Returns a `Map` object."""
         return None
 
+    def get_form_class(self):
+        """Return the form class for additional user data, or None.
+
+        Override in subclasses to gate the form on runtime state (e.g.
+        single_procedure).  The default returns the class attribute.
+        """
+        return self.form_class
+
     def get_form(self):
         """Get the form to ask the user for additional data."""
 
-        form_class = getattr(self, "form_class", None)
+        form_class = self.get_form_class()
         if form_class:
-            form = self.form_class(**self.moulinette.form_kwargs)
+            form = form_class(**self.moulinette.form_kwargs)
         else:
             form = None
         return form

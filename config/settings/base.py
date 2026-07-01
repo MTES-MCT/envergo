@@ -385,6 +385,12 @@ SELF_DECLARATION_FORM_ID = "mDzXgX"
 
 TRANSFER_EVAL_EMAIL_FORM_ID = "mDzXgX"
 
+# Tally form used by a DDT(M) to fill in / update a department's contact info
+DEPARTMENT_CONTACT_FORM_ID = "Pd9b9e"
+
+# Tally form used by an invited instructor to ask for a new invitation link
+ASK_NEW_LINK_FORM_ID = "Gxol8e"
+
 ADMIN_OTP_REQUIRED = False
 
 GEOMETRICIAN_WEBINAR_FORM_URL = env(
@@ -403,6 +409,20 @@ MAKE_COM_EVALUATION_EDITION_WEBHOOK = env(
 )
 
 
+# Default (connect, read) timeout in seconds for outbound HTTP requests.
+#
+# Every `requests` call must pass a timeout: without one, an unresponsive
+# remote endpoint blocks the calling worker indefinitely (this once froze the
+# whole Celery worker for days). `bin/start_celery_worker.sh` adds a worker
+# time-limit as a second line of defense.
+DEFAULT_HTTP_TIMEOUT = (5, 30)
+
+# (connect, read) timeout in seconds for outbound requests that stream a file
+# (up/downloads). The read budget is larger because transferring a multi-MB
+# body legitimately takes longer than a JSON API response.
+DEFAULT_HTTP_FILE_TIMEOUT = (5, 60)
+
+
 ENVERGO_AMENAGEMENT_DOMAIN = env(
     "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
 )
@@ -415,18 +435,20 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
     "MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH", default=10000
 )  # meters
 
+HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
+
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
-    # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
+    # https://doc.demarche.numerique.gouv.fr/pour-aller-plus-loin/api-de-preremplissage
     "ENABLED": env("DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED", default=False),
-    "DOSSIER_BASE_URL": "https://www.demarches-simplifiees.fr",
+    "DOSSIER_BASE_URL": "https://demarche.numerique.gouv.fr",
     "PRE_FILL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
-        default="https://www.demarches-simplifiees.fr/api/public/v1/",
+        default="https://demarche.numerique.gouv.fr/api/public/v1/",
     ),
     "GRAPHQL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_GRAPHQL_API_URL",
-        default="https://www.demarches-simplifiees.fr/api/v2/graphql",
+        default="https://demarche.numerique.gouv.fr/api/v2/graphql",
     ),
     "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
     "DOSSIER_DOMAIN_BLACK_LIST": env.list(
@@ -486,6 +508,7 @@ HAIE_FAQ_URLS = {
     "IDENTIFY_NATURAL_AREA_MANAGER": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-une-reserve-naturelle-et-son-gestionnaire",  # noqa: E501
     "GUIDE_FORM_HEDGE_DESTRUCTION": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/formulaire-de-declaration-prealable-pour-une-destruction-de-haie-ou-alignement-darbres",  # noqa: E501
     "IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-les-protections-sur-les-haies-dans-le-geoportail-de-lurbanisme#methode-preferentielle",  # noqa: E501
+    "EMERGENCY_PROCEDURE": "https://aide.haie.beta.gouv.fr/",
 }
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload

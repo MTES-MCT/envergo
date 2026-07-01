@@ -220,7 +220,7 @@
         attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
       }).addTo(map);
 
-        var coords = JSON.parse('{% to_geojson coords %}');
+        var coords = JSON.parse('{% to_geojson lng_lat %}');
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
         coordsGeoJSON.addTo(map);
 
@@ -261,7 +261,7 @@
         attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
       }).addTo(map);
 
-        var coords = JSON.parse('{% to_geojson coords %}');
+        var coords = JSON.parse('{% to_geojson lng_lat %}');
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
         coordsGeoJSON.addTo(map);
 
@@ -302,7 +302,7 @@
         attribution: '&copy; <a href="https://www.ign.fr/">IGN</a>'
       }).addTo(map);
 
-        var coords = JSON.parse('{% to_geojson coords %}');
+        var coords = JSON.parse('{% to_geojson lng_lat %}');
         var coordsGeoJSON = L.geoJSON(coords, {style: coordsStyles});
         coordsGeoJSON.addTo(map);
 

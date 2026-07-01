@@ -287,7 +287,7 @@ def display_pause(due_date):
 
 @register.simple_tag(takes_context=True)
 def get_ds_field(context, field_name):
-    """Get field from démarche numérique as an Item object,
+    """Get field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
     `field_name` must be set in config.demarches_simplifiees_display_fields.
@@ -305,12 +305,12 @@ def get_ds_field(context, field_name):
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
 def display_ds_field(context, field_name, inline=False):
-    """Includes template to display a field from démarche numérique as an Item object,
+    """Includes template to display a field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
     `field_name` must be set in config.demarches_simplifiees_display_fields.
 
-    Uses _item_ds.html template, also included in full DS view template.
+    Uses _item_ds.html template, also included in full « Démarche numérique » view template.
     """
     item = get_ds_field(context, field_name)
     if not item:

@@ -23,6 +23,7 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
+from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
 from envergo.hedges.models import HedgeCategory
 from envergo.hedges.services import PlantationEvaluator
@@ -36,6 +37,7 @@ from envergo.moulinette.models import (
 )
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
 
@@ -874,6 +876,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         #   natura2000_haie map is displayed with custom message : "Map import processing"
         #   protection_captages map is displayed with custom message : "Data not publicly available"
         MAPS_REGULATION_LIST = [
+            "natura2000_haie",
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
@@ -912,17 +915,22 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         )
 
         grouped_criteria_by_regulation = {
-            k: list(v)
-            for k, v in groupby(criteria_list, key=attrgetter("regulation.regulation"))
+            k: list(v) for k, v in groupby(criteria_list, key=attrgetter("regulation"))
         }
         context["regulation_list"] = regulation_list
         context["grouped_criteria"] = grouped_criteria_by_regulation
-        department_param = {"departement": str(self.department)}
-        department_query_string = urlencode(department_param)
-        context["department_settings_form"] = (
-            f"https://tally.so/r/Pd9b9e?{department_query_string}"
+        context["department_settings_form"] = get_department_settings_form_url(
+            self.department
         )
 
         context["ru_zone_configs"] = self.object.zone_configs
+
+        # Compute the hedge density reference map list
+        density_maps = (
+            Map.objects.filter(map_type=MAP_TYPES.density_reference)
+            .filter(departments__contains=[department.department])
+            .defer("geometry")
+        )
+        context["density_maps"] = density_maps
 
         return context

@@ -18,6 +18,107 @@ div#moulinette {
 main.home {
   section#simulateur {
     background-color: var(--blue-france-850-200);
+
+    .simulateur-label {
+      color: var(--blue-france-sun-113-625);
+      text-align: center;
+    }
+
+    .simulateur-search {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+
+      #department-combobox {
+        .autocomplete__menu {
+          position: absolute;
+          z-index: 100;
+          width: 100%;
+        }
+      }
+
+      #btn-start-simulation {
+        width: 100%;
+        justify-content: center;
+      }
+
+      @media (width >= 48em) {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+
+        #department-combobox {
+          flex: 1;
+          max-width: 24rem;
+        }
+
+        #btn-start-simulation {
+          width: fit-content;
+        }
+      }
+    }
+
+    .separator {
+      border-color: var(--blue-france-sun-113-625);
+    }
+
+    .simulateur-header {
+      text-align: center;
+    }
+
+    &.simulateur--many .simulateur-content {
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+  }
+
+  .etape-icon {
+    color: var(--error-425-625);
+    margin-bottom: 0.75rem;
+  }
+
+  #quand-demander {
+    text-align: center;
+
+    @media (width >= 36em) {
+      text-align: left;
+    }
+  }
+
+  #quand-demander .fr-grid-row--gutters {
+    @media (width <= 35.999em) {
+      display: inline-flex;
+      flex-direction: column;
+      text-align: left;
+    }
+  }
+
+  .travaux-nature {
+    margin-top: 1.5rem;
+
+    @media (width >= 36em) {
+      margin-top: 0;
+    }
+  }
+
+  .travaux-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .travaux-list .fr-badge {
+    aspect-ratio: 1;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &::before {
+      margin: 0;
+    }
   }
 }
 
@@ -758,6 +859,10 @@ div#instructor-view-side-menu {
 .project-inner-content {
   max-width: 42em;
 
+  &--full {
+    max-width: none;
+  }
+
   &.paused {
     #due-date-container {
       color: var(--text-mention-grey);
@@ -788,10 +893,60 @@ div#instructor-view-side-menu {
   }
 }
 
-#form-group-instructor_free_mention .label-content {
+#form-group-instructor_free_mention .label-content,
+#form-group-instructor_private_mention .label-content,
+.notes-label .label-content {
   font-weight: bold;
   font-size: 1.5rem;
   line-height: 2rem;
+}
+
+.notes-label .fr-hint-text {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-mention-grey);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+.notes-btn-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.notes-edit-grid {
+  textarea {
+    resize: vertical;
+  }
+
+  > div:first-child {
+    margin-bottom: 1.5rem;
+  }
+
+  @media (width >= 768px) {
+    > div:first-child {
+      margin-bottom: 0;
+    }
+
+    display: flex;
+    gap: 1.5rem;
+
+    > div {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    > div > .fr-input-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    > div > .fr-input-group textarea {
+      flex: 1;
+    }
+  }
 }
 
 #normandie_plantation_table {
@@ -1080,7 +1235,6 @@ button.hide-expanded[aria-expanded="true"] {
 
   .comment-col {
     white-space: normal;
-    word-break: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
   }

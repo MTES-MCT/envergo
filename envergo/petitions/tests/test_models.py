@@ -187,7 +187,7 @@ class TestResultSnapshot:
         # Count snapshots after project creation
         initial_count = ResultSnapshot.objects.filter(project=project).count()
 
-        # Simulate dossier submission from demarches-simplifiees
+        # Simulate dossier submission from « Démarche numérique »
         fake_dossier = {
             "id": "RG9zc2llci0yMzE3ODQ0Mw==",
             "state": "en_construction",

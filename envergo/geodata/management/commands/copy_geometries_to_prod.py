@@ -61,18 +61,18 @@ By default the command runs in dry-run mode: every safety check executes,
 the destination database and the planned action are printed, and then the
 command exits without writing anything.
 
-    python manage.py copy_geometries_to_prod --map-type terres_emergees
+    python manage.py copy_geometries_to_prod --map-type density_reference
 
 When you have verified the dry-run output, re-run with --apply to actually
 perform the destructive operation. You will still be asked to type a
 confirmation phrase before any DELETE or COPY happens.
 
-    python manage.py copy_geometries_to_prod --map-type terres_emergees --apply
+    python manage.py copy_geometries_to_prod --map-type density_reference --apply
 
 To resume after a failure, pass the last successfully transferred id (the
 script prints it on every chunk). --apply is still required:
 
-    python manage.py copy_geometries_to_prod --map-type terres_emergees --apply --after-id 1234567
+    python manage.py copy_geometries_to_prod --map-type density_reference --apply --after-id 1234567
 """
 
 import argparse

@@ -70,43 +70,33 @@
         </p>
       </div>
 
-      <h3 class="fr-h5">Natura 2000</h3>
+      {% if grouped_criteria or density_maps %}
 
-      <p>
-        <em>Carte en cours d'import dans le portail.</em>
-      </p>
+        {% for regulation, criteria in grouped_criteria.items %}
 
-      {% for regulation in regulation_list %}
-        <h3 class="fr-h5">{{ regulation.title }}</h3>
-        {% if regulation.regulation in grouped_criteria %}
+          <h3 class="fr-h5">{{ regulation.title }}</h3>
+
           <ul class="fr-mb-3w">
-            {% for criterion in grouped_criteria|get_item:regulation.regulation %}
-              {% with map=criterion.activation_map %}
-                <li class="fr-mb-2w">
-                  <p class="fr-mb-1w">
-                    <strong>{{ map.name }}</strong>
-                  </p>
-                  <p class="fr-text--sm fr-mb-1w">
-                    <strong>Description :</strong> {{ map.description|safe|urlize_html|linebreaksbr }}
-                  </p>
-                  {% if map.file %}
-                    <div class="fr-mb-1w">
-                      <a class="fr-link fr-icon-download-line fr-link--icon-right"
-                         target="_self"
-                         href="{{ map.file.url }}">{{ map.file }}</a>
-                    </div>
-                  {% endif %}
-                </li>
-              {% endwith %}
+            {% for criterion in criteria %}
+              {% include 'haie/moulinette/_map_li_snippet.html' with map=criterion.activation_map %}
             {% endfor %}
-
           </ul>
-        {% else %}
-          <p>
-            <em>Aucune carte paramétrée.</em>
-          </p>
+        {% endfor %}
+
+        {% if density_maps %}
+          <h3 class="fr-h5">Surface de référence du calcul de densité bocagère</h3>
+
+          <ul>
+            {% for density_map in density_maps %}
+              {% include 'haie/moulinette/_map_li_snippet.html' with map=density_map %}
+            {% endfor %}
+          </ul>
         {% endif %}
-      {% endfor %}
+      {% else %}
+        <p>
+          <em>Aucune carte paramétrée.</em>
+        </p>
+      {% endif %}
 
       <h3 class="fr-h5">Protection des captages</h3>
 

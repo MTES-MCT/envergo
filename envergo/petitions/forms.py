@@ -69,20 +69,35 @@ class PetitionProjectInstructorNotesForm(forms.ModelForm):
         model = PetitionProject
         fields = [
             "instructor_free_mention",
+            "instructor_private_mention",
         ]
         widgets = {
             "instructor_free_mention": forms.Textarea(
                 attrs={
-                    "rows": 10,
+                    "rows": 15,
                     "placeholder": "Ajoutez vos notes ici…",
                 },
             ),
+            "instructor_private_mention": forms.Textarea(
+                attrs={
+                    "rows": 15,
+                    "placeholder": "Ajoutez vos notes privées ici…",
+                },
+            ),
         }
-        labels = {"instructor_free_mention": ""}
+        labels = {
+            "instructor_free_mention": "Notes pour tous les services consultés",
+            "instructor_private_mention": "Notes internes au service coordonnateur",
+        }
         help_texts = {
-            "instructor_free_mention": "Partagez ici tout ce qui est utile à votre suivi de la demande, "
-            "ou à la collaboration entre services instructeurs. "
-            "Cliquer sur « Enregistrer » pour sauvegarder."
+            "instructor_free_mention": (
+                "Partagez ici tout ce qui est utile à la collaboration"
+                " entre services instructeurs."
+            ),
+            "instructor_private_mention": (
+                "Partagez ici tout ce qui est utile à votre suivi de la demande."
+                " Les services consultés n'ont pas accès à ces notes."
+            ),
         }
 
 
@@ -111,7 +126,7 @@ def validate_mime_type(value):
 
 
 class PetitionProjectInstructorMessageForm(forms.Form):
-    """Form to send a message through demarches simplifiées API."""
+    """Form to send a message through Démarche numérique API."""
 
     message_body = forms.CharField(
         label="Message",
@@ -273,6 +288,38 @@ USER_TYPE = (
 )
 
 
+def list_moulinette_errors(moulinette):
+    """Returns an invalid moulinette's errors as field-prefixed messages."""
+    fields = moulinette.get_prefixed_fields()
+    messages = []
+    for field_name, field_errors in moulinette.form_errors.items():
+        field = fields.get(field_name)
+        for message in field_errors:
+            if field:
+                message = f"{field.label} : {message}"
+            messages.append(message)
+
+    return messages
+
+
+def validate_simulation_url(url):
+    """Tells whether an url is a valid simulation, and details why if it is not.
+
+    Returns ``(is_valid, errors)`` where ``errors`` is the field-prefixed list
+    from the moulinette (empty when the url builds no moulinette at all). Shared
+    by the creation form and the activation view so both apply the same rule.
+    """
+    is_valid, errors = True, []
+
+    moulinette = MoulinetteUrl(url).get_moulinette()
+    if moulinette is None:
+        is_valid, errors = False, []
+    elif not moulinette.is_valid():
+        is_valid, errors = False, list_moulinette_errors(moulinette)
+
+    return is_valid, errors
+
+
 class SimulationForm(forms.ModelForm):
     moulinette_url = forms.URLField(
         label="Lien vers la simulation",
@@ -295,12 +342,22 @@ class SimulationForm(forms.ModelForm):
         model = Simulation
         fields = ["moulinette_url", "source", "comment"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Store the underlying moulinette form errors
+        self.moulinette_errors = []
+
     def clean_moulinette_url(self):
         url = self.cleaned_data["moulinette_url"]
-        moulinette_url = MoulinetteUrl(url)
-        if not moulinette_url.is_valid():
+
+        # Reject a url that is not a valid simulation. The underlying errors are
+        # exposed so the template can list them below the field.
+        is_valid, errors = validate_simulation_url(url)
+        if not is_valid:
+            self.moulinette_errors = errors
             raise ValidationError(
                 "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
             )
-        return moulinette_url.url
+
+        return MoulinetteUrl(url).url

@@ -4,15 +4,15 @@
   <div>
     <p>
       Ce champ doit comporter un tableau au format json comportant une entrée pour chaque champ ou annotation privée à
-      pré-remplir dans Démarches Simplifiées avec des données provenant du guichet unique de la haie.
+      pré-remplir dans « Démarche numérique » avec des données provenant du guichet unique de la haie.
       Chaque entrée comporte les clés suivantes :
     </p>
     <ul>
-      <li>id : l'id du champ ou de l'annotation privée côté Démarches Simplifiées</li>
+      <li>id : l'id du champ ou de l'annotation privée côté « Démarche numérique »</li>
       <li>value : la source de la valeur côté guichet unique de la haie</li>
       <li>
         mapping (facultatif) : un tableau de correspondance entre les valeurs côté guichet unique de la haie et les
-        valeurs côté Démarches Simplifiées
+        valeurs côté « Démarche numérique »
       </li>
     </ul>
 
@@ -52,12 +52,12 @@
         Trouver le slug (version url du nom) de votre démarche.
         <br />
         Il est affiché à la fin de l'url de commencement dans la carte de votre démarche dans la liste suivante
-        <a href="https://www.demarches-simplifiees.fr/admin/procedures"
+        <a href="https://demarche.numerique.gouv.fr/admin/procedures"
            target="_blank"
-           rel="noopener">https://www.demarches-simplifiees.fr/admin/procedures</a>
+           rel="noopener">https://www.demarche.numerique.gouv.fr/admin/procedures</a>
       </li>
       <li>
-        Compléter puis consulter l'url suivante : https://www.demarches-simplifiees.fr/preremplir/{slug de la démarche}/schema
+        Compléter puis consulter l'url suivante : https://demarche.numerique.gouv.fr/preremplir/{slug de la démarche}/schema
       </li>
       <li>Les ids des champs sont indiqués ici : revision > champDescriptors > index [0...n] > id</li>
       <li>Les ids des annotations sont indiqués ici : revision > annotationDescriptors > index [0...n] > id</li>
@@ -76,7 +76,7 @@
     <p>
       Ce mapping est nécessaire dans le cas des questions de type choix (simple ou multiple) ou les questions de type
       checkbox. Il faut que la valeur du pré-remplissage soit
-      rigoureusement la même que la valeur du label dans Démarches Simplifiées. Si ce n'est pas le cas, il faut utiliser
+      rigoureusement la même que la valeur du label dans « Démarche numérique ». Si ce n'est pas le cas, il faut utiliser
       le mapping pour faire correspondre les valeurs.
     </p>
   </div>

@@ -11,7 +11,11 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     RegulationFactory,
 )
-from envergo.moulinette.tests.utils import make_amenagement_data, setup_loi_sur_leau
+from envergo.moulinette.tests.utils import (
+    flatten_actions_to_take,
+    make_amenagement_data,
+    setup_loi_sur_leau,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -370,14 +374,14 @@ def test_moulinette_returns_actions_to_take():
     moulinette.catalog["wetlands_within_25m"] = True
     moulinette.evaluate()
     assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
-    assert moulinette.loi_sur_leau.actions_to_take == {"to_add": {"mention_arrete_lse"}}
+    assert moulinette.loi_sur_leau.actions_to_take == {
+        "to_add": {"mention_arrete_lse"},
+        "to_subtract": {"non_depot_lse"},
+    }
     assert moulinette.loi_sur_leau.zone_humide.actions_to_take == {
         "to_add": {"etude_zh"}
     }
-    actions_to_take_flatten = {
-        target: [action.slug for action in actions_list]
-        for target, actions_list in moulinette.actions_to_take.items()
-    }
+    actions_to_take_flatten = flatten_actions_to_take(moulinette)
     assert actions_to_take_flatten == {
         "instructor": ["mention_arrete_lse"],
         "petitioner": ["etude_zh"],
@@ -385,7 +389,7 @@ def test_moulinette_returns_actions_to_take():
 
 
 # ---------------------------------------------------------------------------
-# LSE template selection depending on ICPE
+# LSE tests depending on ICPE
 # ---------------------------------------------------------------------------
 
 LSE_BASE_PARAMS = (
@@ -411,6 +415,72 @@ def lse_icpe_setup(france_map, france_zh):
         activation_map=france_map,
         is_optional=True,
     )
+
+
+@pytest.fixture
+def lse_icpe_actions():
+    """Set up LSE + ICPE actions for actions level tests."""
+    ActionToTakeFactory(slug="non_depot_lse", target="petitioner")
+    ActionToTakeFactory(slug="mention_arrete_lse")
+    ActionToTakeFactory(slug="etude_zh", target="petitioner")
+
+
+@pytest.mark.usefixtures("lse_icpe_setup", "lse_icpe_actions")
+class TestLSEActionsWithICPE:
+    """When ICPE result is not non_soumis, tests actions to take according to LSE."""
+
+    def test_lse_action_requise_icpe_moulinette_not_returns_non_depot_lse(self):
+        """When LSE result is action_requise then non_depot_lse action is subtracted
+        and etude_zh is in actions_to_take."""
+        moulinette = MoulinetteAmenagement(
+            make_amenagement_data(
+                created_surface=700,
+                final_surface=700,
+                icpe_projet="creation",
+                icpe_regime="enregistrement",
+            )
+        )
+        moulinette.catalog["wetlands_within_25m"] = True
+        moulinette.evaluate()
+        assert moulinette.loi_sur_leau.zone_humide.result == "action_requise"
+        assert moulinette.loi_sur_leau.actions_to_take == {
+            "to_add": {"mention_arrete_lse"},
+            "to_subtract": {"non_depot_lse"},
+        }
+        assert moulinette.loi_sur_leau.zone_humide.actions_to_take == {
+            "to_add": {"etude_zh"}
+        }
+        actions_to_take_flatten = flatten_actions_to_take(moulinette)
+        assert actions_to_take_flatten == {
+            "instructor": ["mention_arrete_lse"],
+            "petitioner": ["etude_zh"],
+        }
+
+    def test_lse_non_soumis_icpe_moulinette_not_returns_non_depot_lse(self):
+        """When LSE result is action_requise then non_depot_lse action is subtracted
+        and etude_zh is in actions_to_take."""
+        moulinette = MoulinetteAmenagement(
+            make_amenagement_data(
+                created_surface=500,
+                final_surface=500,
+                icpe_projet="creation",
+                icpe_regime="enregistrement",
+            )
+        )
+        moulinette.catalog["wetlands_within_25m"] = True
+        moulinette.evaluate()
+        assert moulinette.loi_sur_leau.zone_humide.result == "non_soumis"
+        assert moulinette.loi_sur_leau.actions_to_take == {
+            "to_subtract": {"non_depot_lse"}
+        }
+        assert moulinette.loi_sur_leau.zone_humide.actions_to_take == {}
+        actions_to_take_flatten = flatten_actions_to_take(moulinette)
+        assert actions_to_take_flatten == {}
+
+
+# ---------------------------------------------------------------------------
+# LSE template selection depending on ICPE
+# ---------------------------------------------------------------------------
 
 
 def _get_lse_url(surface, icpe_projet=None, icpe_regime=None):

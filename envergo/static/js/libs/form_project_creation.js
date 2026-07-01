@@ -86,7 +86,8 @@
       .then(response => response.json())
       .then(data => {
         if (data.demarche_simplifiee_url && data.read_only_url) {
-          // open démarche simplifiée in a new tab and close the modal
+          // open Démarche numérique in a new tab and display the read only
+          // version of the simulation result (simply close the tab if there is multiple category)
           if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
             // if the new tab was blocked by the browser, display the link in the current tab
             displayMessage("Votre navigateur empêche l'ouverture d'un nouvel onglet.",
