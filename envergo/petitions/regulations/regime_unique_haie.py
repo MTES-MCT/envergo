@@ -3,11 +3,11 @@ from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
     get_ru_debug_context,
 )
-from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaie
+from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
-@evaluator_instructor_view_context_getter(RegimeUniqueHaie)
+@evaluator_instructor_view_context_getter(RegimeUniqueHaieRu)
 def regime_unique_haie_get_instructor_view_context(
     evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:

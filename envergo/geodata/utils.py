@@ -23,7 +23,7 @@ from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
 if TYPE_CHECKING:
-    from envergo.hedges.models import HedgeData
+    from envergo.hedges.models import HedgeList
 
 logger = logging.getLogger(__name__)
 
@@ -923,14 +923,14 @@ def compute_hedge_density_around_lines(
     return {"density": density, "artifacts": artifacts}
 
 
-def _get_centered_url(url, hedges: "HedgeData"):
+def _get_centered_url(url, hedges: "HedgeList"):
     lng = FRANCE_LNG
     lat = FRANCE_LAT
     zoom = FRANCE_ZOOM
 
     if hedges:
         # Generate urls centered on the project
-        centroid = hedges.get_centroid_to_remove()
+        centroid = hedges.to_remove().centroid
         lng = centroid.x
         lat = centroid.y
         zoom = 16
@@ -938,17 +938,17 @@ def _get_centered_url(url, hedges: "HedgeData"):
     return url.format(lng, lat, zoom)
 
 
-def get_google_maps_centered_url(hedges: "HedgeData"):
+def get_google_maps_centered_url(hedges: "HedgeList"):
     """Return the GoogleMaps URL centered on the hedges to remove."""
     return _get_centered_url(GOOGLE_MAPS_URL, hedges)
 
 
-def get_ign_centered_url(hedges: "HedgeData"):
+def get_ign_centered_url(hedges: "HedgeList"):
     """Return the IGN URL centered on the hedges to remove."""
     return _get_centered_url(IGN_URL, hedges)
 
 
-def get_geoportail_urbanisme_centered_url(hedges: "HedgeData"):
+def get_geoportail_urbanisme_centered_url(hedges: "HedgeList"):
     """Return the Geoportail de l'urbanisme url centered on the hedges to remove."""
     url = _get_centered_url(GEOPORTAIL_URL, hedges)
     if hedges:

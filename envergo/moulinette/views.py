@@ -25,9 +25,16 @@ from envergo.analytics.utils import (
 from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
+from envergo.moulinette.models import (
+    AaL3503Handling,
+    CityHallSubmission,
+    ConfigHaie,
+    Criterion,
+    Regulation,
+)
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.tools import get_department_settings_form_url
@@ -223,7 +230,7 @@ class MoulinetteMixin:
         # To build a valid moulinette result url, we need to take the existing url parameters
         # and update them with all the POST'ed moulinette form data.
 
-        # There is an hedge case though with checkbox inputs.
+        # There is a hedge case though with checkbox inputs.
         # When a checkbox is left empty, browsers don't send a "false" value, they
         # send no value at all, meaning an existing value in the url will NOT
         # be overriden.
@@ -244,7 +251,7 @@ class MoulinetteMixin:
         """Return the triage url while preserving existing parameters.
 
         This method MUST NOT be called when a "triage" url is not defined,
-        e.g for amenagement.
+        e.g. for amenagement.
         """
         data = self.get_results_params()
         params = urlencode(data)
@@ -317,7 +324,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return self.moulinette.get_home_template()
 
     def post(self, request, *args, **kwargs):
-        # If the moulinette is valid, i.e it can run the eveluation and provide
+        # If the moulinette is valid, i.e. it can run the eveluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid():
             return HttpResponseRedirect(self.get_result_url())
@@ -610,6 +617,11 @@ class MoulinetteHaieResult(
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
+
+            context["HedgeCategory"] = HedgeCategory
+            context["CityHallSubmission"] = CityHallSubmission
+            context["AaL3503Handling"] = AaL3503Handling
+
         return context
 
 

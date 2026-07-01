@@ -11,6 +11,18 @@
   exports.DemarchesSimplifieesModal = DemarchesSimplifieesModal;
 
   DemarchesSimplifieesModal.prototype.init = function () {
+    this.categoryInput = this.formElt.querySelector('#demarche-simplifiee-category');
+    this.categoriesList = this.modalElt.querySelectorAll('.hedges-category-header');
+    document.querySelectorAll('[aria-controls="demarches-simplifiees-modal"][data-category]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (this.categoryInput) {
+          this.categoryInput.value = btn.dataset.category;
+        }
+       this.categoriesList.forEach( span =>{
+         span.hidden = !span.classList.contains(btn.dataset.category);
+       });
+      });
+    });
     this.formElt.addEventListener('submit', this.deactivate.bind(this));
     this.formElt.addEventListener('submit', this.submit.bind(this));
   };
@@ -74,7 +86,8 @@
       .then(response => response.json())
       .then(data => {
         if (data.demarche_simplifiee_url && data.read_only_url) {
-          // open Démarche numérique in a new tab and display the read only version of the simulation result
+          // open Démarche numérique in a new tab and display the read only
+          // version of the simulation result (simply close the tab if there is multiple category)
           if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
             // if the new tab was blocked by the browser, display the link in the current tab
             displayMessage("Votre navigateur empêche l'ouverture d'un nouvel onglet.",
@@ -82,7 +95,9 @@
               "info");
           } else {
             newTab.location = data.demarche_simplifiee_url;
-            window.location.href = data.read_only_url;
+            if(window.REDIRECT_AFTER_PROJECT_CREATION){
+              window.location.href = data.read_only_url;
+            }
           }
         } else {
           throw data;

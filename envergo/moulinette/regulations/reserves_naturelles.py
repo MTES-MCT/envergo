@@ -9,7 +9,10 @@ from django.db.models.functions import Cast
 from pyproj import Geod
 
 from envergo.geodata.constants import EPSG_WGS84
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class ReservesNaturellesRegulation(HaieRegulationEvaluator):
@@ -32,9 +35,9 @@ class ReservesNaturellesForm(forms.Form):
     )
 
 
-class ReservesNaturelles(CriterionEvaluator):
+class ReservesNaturelles(HaieCriterionEvaluator):
     choice_label = "Réserves naturelles > Réserves naturelles"
-    slug = "reserves_naturelles"
+    base_slug = "reserves_naturelles"
     form_class = ReservesNaturellesForm
 
     CODE_MATRIX = {
@@ -46,7 +49,7 @@ class ReservesNaturelles(CriterionEvaluator):
         """Compute the length of hedges to remove in reserve naturelle"""
 
         catalog = super().get_catalog_data()
-        hedges_to_remove = self.catalog["haies"].hedges_to_remove()
+        hedges_to_remove = self.hedges.to_remove()
 
         # Make sure those variable always exist
         resnat = {}
@@ -59,7 +62,7 @@ class ReservesNaturelles(CriterionEvaluator):
 
             # Find all the Zones for the current Perimeter and that intersects any of the hedges
             qs = (
-                self.moulinette.reserves_naturelles.reserves_naturelles.activation_map.zones.all()
+                self.criterion.activation_map.zones.all()
                 .filter(geometry__intersects=hedges_geom)
                 .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
             )

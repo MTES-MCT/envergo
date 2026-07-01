@@ -97,6 +97,48 @@ def test_hedge_conditions_get_returns_405(client):
     assert res.status_code == 405
 
 
+def test_get_conditions_url_removal_mode_returns_empty(client):
+    url = reverse("input_hedges", args=["44", "removal"])
+    res = client.get(url)
+    assert res.status_code == 200
+    assert res.context["hedge_conditions_url"] == ""
+
+
+def test_get_conditions_url_plantation_mode_returns_url_with_params(client):
+    url = reverse("input_hedges", args=["44", "plantation"])
+    res = client.get(url, {"department": "44", "motif": "autre"})
+    assert res.status_code == 200
+    conditions_url = res.context["hedge_conditions_url"]
+    assert conditions_url.startswith(reverse("hedge_conditions") + "?")
+    assert "department=44" in conditions_url
+    assert "motif=autre" in conditions_url
+
+
+def test_get_conditions_url_read_only_with_petition_project(client):
+    project = PetitionProjectFactory()
+    url = reverse("input_hedges", args=["44", "read_only", project.hedge_data.id])
+    res = client.get(url)
+    assert res.status_code == 200
+    conditions_url = res.context["hedge_conditions_url"]
+    assert conditions_url.startswith(reverse("hedge_conditions") + "?")
+    assert "department=44" in conditions_url
+
+
+def test_get_conditions_url_read_only_without_petition_project(client):
+    hedge_data = HedgeDataFactory()
+    url = reverse("input_hedges", args=["44", "read_only", hedge_data.id])
+    res = client.get(url)
+    assert res.status_code == 200
+    assert res.context["hedge_conditions_url"] == ""
+
+
+def test_get_conditions_url_read_only_without_hedge_data(client):
+    url = reverse("input_hedges", args=["44", "read_only"])
+    res = client.get(url)
+    assert res.status_code == 200
+    assert res.context["hedge_conditions_url"] == ""
+
+
 def test_hedge_input_post_creates_a_new_snapshot(client):
     """Posting to the id-less url always creates a fresh HedgeData."""
     payload = [HedgeFactory().toDict()]
