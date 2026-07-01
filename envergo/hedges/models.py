@@ -361,6 +361,12 @@ class HedgeList(list[Hedge]):
         """Filter the hedge list using a specific filtering method."""
         return HedgeList([h for h in self if f(h)])
 
+    def find(self, hedge_id) -> Hedge:
+        """Find a specific hedge by id."""
+
+        search = next((hedge for hedge in self if hedge.id == hedge_id), None)
+        return search
+
     def type(self, t) -> Self:
         """Filter hedges by hedge type. Prefix with a "!" to negate the filter."""
 
