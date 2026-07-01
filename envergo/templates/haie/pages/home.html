@@ -120,38 +120,40 @@
     </div>
   </section>
 
-  <!-- <section id="etapes" class="fr-py-5w fr-mb-5w">
-    <div class="fr-container">
-      <h2 class="fr-h3 fr-mb-3w" style="text-align: center;">Une réponse unique en 3 étapes</h2>
-      <div class="fr-grid-row fr-grid-row--gutters">
-        <div class="fr-col-12 fr-col-md-4">
-          <div class="fr-card fr-card--no-arrow fr-p-3w">
-            <span class="fr-icon-settings-5-line etape-icon" aria-hidden="true"></span>
-            <h3 class="fr-card__title fr-h6">1. Simulation</h3>
-            <p class="fr-card__desc">
-              Identifiez en quelques minutes les règles applicables à votre projet et la replantation attendue.
-            </p>
+  {% if is_single_procedure_activated %}
+    <section id="etapes" class="fr-py-5w fr-mb-5w">
+      <div class="fr-container">
+        <h2 class="fr-h3 fr-mb-3w" style="text-align: center;">Une réponse unique en 3 étapes</h2>
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-12 fr-col-md-4">
+            <div class="fr-card fr-card--no-arrow fr-p-3w">
+              <span class="fr-icon-settings-5-line etape-icon" aria-hidden="true"></span>
+              <h3 class="fr-card__title fr-h6">1. Simulation</h3>
+              <p class="fr-card__desc">
+                Identifiez en quelques minutes les règles applicables à votre projet et la replantation attendue.
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="fr-col-12 fr-col-md-4">
-          <div class="fr-card fr-card--no-arrow fr-p-3w">
-            <span class="fr-icon-folder-2-line etape-icon" aria-hidden="true"></span>
-            <h3 class="fr-card__title fr-h6">2. Dépôt du dossier</h3>
-            <p class="fr-card__desc">
-              Complétez votre dossier et déposez-le simplement via le portail sur la base des informations de la simulation, sans ressaisie.
-            </p>
+          <div class="fr-col-12 fr-col-md-4">
+            <div class="fr-card fr-card--no-arrow fr-p-3w">
+              <span class="fr-icon-folder-2-line etape-icon" aria-hidden="true"></span>
+              <h3 class="fr-card__title fr-h6">2. Dépôt du dossier</h3>
+              <p class="fr-card__desc">
+                Complétez votre dossier et déposez-le simplement via le portail sur la base des informations de la simulation, sans ressaisie.
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="fr-col-12 fr-col-md-4">
-          <div class="fr-card fr-card--no-arrow fr-p-3w">
-            <span class="fr-icon-checkbox-circle-line etape-icon" aria-hidden="true"></span>
-            <h3 class="fr-card__title fr-h6">3. Réponse de l'administration</h3>
-            <p class="fr-card__desc">Pour les dossiers les plus simples, la durée d'instruction est de deux mois.</p>
+          <div class="fr-col-12 fr-col-md-4">
+            <div class="fr-card fr-card--no-arrow fr-p-3w">
+              <span class="fr-icon-checkbox-circle-line etape-icon" aria-hidden="true"></span>
+              <h3 class="fr-card__title fr-h6">3. Réponse de l'administration</h3>
+              <p class="fr-card__desc">Pour les dossiers les plus simples, la durée d'instruction est de deux mois.</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section> -->
+    </section>
+  {% endif %}
 
   <section id="quand-demander" class="fr-mb-5w">
     <div class="fr-container">
