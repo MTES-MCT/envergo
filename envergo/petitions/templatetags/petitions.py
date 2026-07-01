@@ -49,21 +49,33 @@ def instructor_view_part(
     moulinette,
     criterion=None,
 ):
-    """Render a specific part of the instructor view for a criterion."""
+    """Render a specific part of the instructor view for a criterion.
+
+    Extracts ``plantation_evaluation`` from the parent template context and
+    forwards it to registry functions so they can look up pre-computed
+    plantation conditions instead of re-evaluating them.
+    """
 
     context_dict = context.flatten()
+    plantation_evaluation = context.get("plantation_evaluation")
+
     if criterion is None:
         template_path = f"haie/petitions/{regulation.slug}/{part_name}.html"
         for regulation_criterion in regulation.criteria.all():
             context_dict.update(
                 get_instructor_view_context(
-                    regulation_criterion.get_evaluator(), project, moulinette
+                    regulation_criterion.get_evaluator(),
+                    project,
+                    moulinette,
+                    plantation_evaluation,
                 )
             )
         regulation_evaluator = regulation.get_evaluator()
         if regulation_evaluator:
             context_dict.update(
-                get_instructor_view_context(regulation_evaluator, project, moulinette)
+                get_instructor_view_context(
+                    regulation_evaluator, project, moulinette, plantation_evaluation
+                )
             )
     else:
         if issubclass(criterion.evaluator, HaieCriterionEvaluator):
@@ -76,7 +88,12 @@ def instructor_view_part(
                 f"haie/petitions/{regulation.slug}/{criterion.slug}_{part_name}.html"
             )
         context_dict.update(
-            get_instructor_view_context(criterion.get_evaluator(), project, moulinette)
+            get_instructor_view_context(
+                criterion.get_evaluator(),
+                project,
+                moulinette,
+                plantation_evaluation,
+            )
         )
 
     try:
@@ -90,15 +107,15 @@ def instructor_view_part(
 
 @register.simple_tag
 def regulation_plantation_conditions(plantation_evaluation, regulation):
-    """Render the subset of plantation conditions related to a given regulation."""
+    """Uses ``all_conditions`` (not the deduplicated ``conditions``) so each
+    regulation's view shows its own evaluator's conditions, even when a
+    stricter duplicate hides them from the global list.
+    """
 
     condition_to_display = []
-    for condition in plantation_evaluation.conditions:
+    for condition in plantation_evaluation.all_conditions:
         for criterion in regulation.criteria.all():
-            if (
-                condition.criterion_evaluator == criterion.get_evaluator()
-                and condition.must_display()
-            ):
+            if condition.criterion_evaluator == criterion.get_evaluator():
                 condition_to_display.append(condition)
 
     template = "hedges/_plantation_conditions.html"
@@ -112,13 +129,10 @@ def regulation_plantation_conditions(plantation_evaluation, regulation):
 
 @register.simple_tag
 def regulation_has_condition_to_display(plantation_evaluation, regulation):
-    """Check if there are any plantation conditions to display for a given regulation."""
-    for condition in plantation_evaluation.conditions:
+    """Uses ``all_conditions`` — see ``regulation_plantation_conditions``."""
+    for condition in plantation_evaluation.all_conditions:
         for criterion in regulation.criteria.all():
-            if (
-                condition.criterion_evaluator == criterion.get_evaluator()
-                and condition.must_display()
-            ):
+            if condition.criterion_evaluator == criterion.get_evaluator():
                 return True
     return False
 
@@ -205,7 +219,7 @@ def decision_badge(decision, is_light=False):
             """
             )
             if css_class
-            else "-"
+            else ""
         )
     else:
         return mark_safe(
@@ -231,22 +245,22 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     date_part = f"""<span class="due-date fr-text--sm">
                 {icon_part}
                 {date_filter(due_date, "SHORT_DATE_FORMAT")}
-              </span><br/>"""
+              </span>"""
 
     if not display_days_left:
         days_left_part = ""
     elif days_left >= 2:
-        days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
+        days_left_part = (
+            f'<br/><span class="days-left">{days_left} jours restants</span>'
+        )
     elif days_left >= 0:
-        days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
+        days_left_part = f'<br/><span class="days-left">{days_left} jour restant</span>'
     elif days_left >= -1:
         days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
+            f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
         )
     elif days_left:
-        days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
-        )
+        days_left_part = f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
     else:
         days_left_part = ""
 
@@ -267,7 +281,7 @@ def display_pause(due_date):
         f"""<span class="due-date fr-text--sm">
                 <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
                 Attente de compléments
-              </span><br/>"""
+              </span>"""
     )
 
 
@@ -321,3 +335,9 @@ def created_by_display(log):
         return "Administrateur"
 
     return getattr(user, "email", "")
+
+
+@register.simple_tag
+def multiline_title(*parts):
+    """Join non-empty parts with newlines for a multi-line ``title`` tooltip."""
+    return "\n".join(str(part) for part in parts if part)

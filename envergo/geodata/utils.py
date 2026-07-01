@@ -22,7 +22,7 @@ from scipy.interpolate import griddata
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
 if TYPE_CHECKING:
-    from envergo.hedges.models import HedgeData
+    from envergo.hedges.models import HedgeList
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +112,35 @@ class CustomMapping(LayerMapping):
         return attr
 
     def get_attribute_especes(self, feat):
+        """Parse the 'especes' field from a GeoPackage feature.
+
+        For legacy (HRU) maps, values are cd_nom (TaxRef CD_NOM).
+        For RU maps, values are cd_ref (TaxRef CD_REF).
+        Both are integers stored in Zone.species_taxrefs; the querying
+        pipeline determines which identifier type is used for matching.
+        """
+
+        # Value is comma separated integers, None when empty
         raw_especes = feat.get("especes")
-        especes = list(map(int, filter(None, raw_especes.split(","))))
+        if not raw_especes:
+            return []
+
+        especes = []
+        for val in raw_especes.split(","):
+            val = val.strip()
+            if not val:
+                continue
+
+            # We had problems with incorrect values because of missing commas
+            # creating integer overflow errors. We have to defend against that
+            parsed = int(val)
+            if parsed > 2**31 - 1:
+                logger.warning(
+                    "Skipping species taxref value %s (exceeds integer range)", val
+                )
+                continue
+
+            especes.append(parsed)
         return especes
 
 
@@ -705,42 +732,45 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
         return cursor.fetchone()[0]
 
 
-def query_hedges_display_geojson(
-    truncated_buffer, untruncated_circle, simplify_tolerance
-):
-    """Return simplified hedge geometries clipped to the truncated buffer.
+def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
+    """Return hedge geometries clipped to the truncated buffer for display.
 
-    Since this is for map display, the truncated buffer is simplified at 10×
-    the hedge tolerance before clipping. This reduces vertex count (e.g. 2077
-    → ~880 for a complex coastline) and makes ST_Intersection much cheaper,
-    with no visible difference at the display zoom level.
+    Uses the same CTE excluded-zone strategy as `query_hedge_length`:
 
-    The WHERE clause filters against the simple untruncated circle for
-    efficient spatial index lookups.
+      Fast path — hedge fully inside the truncated buffer (covered by the
+        simple circle and not touching the excluded zone): return as-is.
+
+      Slow path — hedge crosses a boundary (coast, forest, circle edge):
+        clip against the truncated buffer via ST_Intersection.
 
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """
 
     sql = """
-        WITH buf AS (
-            SELECT ST_SimplifyPreserveTopology(
-                ST_GeomFromEWKT(%(truncated)s)::geometry, %(buf_tol)s
-            ) AS geom
+        WITH zones AS (
+            SELECT
+                ST_GeomFromEWKT(%(circle)s) AS circ,
+                ST_GeomFromEWKT(%(truncated)s) AS trunc,
+                ST_Difference(
+                    ST_GeomFromEWKT(%(circle)s),
+                    ST_GeomFromEWKT(%(truncated)s)
+                ) AS excluded
         )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
-            ST_Intersection(
-                ST_SimplifyPreserveTopology(l.geometry::geometry, %(hedge_tol)s),
-                buf.geom)
+            CASE
+                WHEN ST_CoveredBy(l.geometry, zones.circ)
+                     AND NOT ST_Intersects(l.geometry, zones.excluded)
+                THEN l.geometry::geometry
+                ELSE ST_Intersection(l.geometry, zones.trunc)::geometry
+            END
         ), 2))
         FROM geodata_line l
         JOIN geodata_map m ON l.map_id = m.id
-        CROSS JOIN buf
+        CROSS JOIN zones
         WHERE m.map_type = %(map_type)s
-          AND ST_Intersects(l.geometry, ST_GeomFromEWKT(%(circle)s));
+          AND ST_Intersects(l.geometry, zones.circ);
     """
     params = {
-        "hedge_tol": simplify_tolerance,
-        "buf_tol": simplify_tolerance * 10,
         "map_type": MAP_TYPES.haies,
         "truncated": truncated_buffer.ewkt,
         "circle": untruncated_circle.ewkt,
@@ -803,7 +833,7 @@ def compute_hedge_densities_around_point(
     point_geos,
     radii,
     *,
-    display_simplify_tolerance=None,
+    include_display_geojson=False,
 ):
     """Compute hedge density at multiple concentric radii around a point.
 
@@ -844,23 +874,23 @@ def compute_hedge_densities_around_point(
             },
         }
 
-    if display_simplify_tolerance is not None:
+    if include_display_geojson:
         max_r = max(radii)
         display_truncated = truncated[max_r] or max_circle
         result["display_geojson"] = query_hedges_display_geojson(
-            display_truncated, max_circle, display_simplify_tolerance
+            display_truncated, max_circle
         )
 
     return result
 
 
 def compute_hedge_density_around_lines(
-    line_geos, radius, *, display_simplify_tolerance=None
+    line_geos, radius, *, include_display_geojson=False
 ):
     """Compute the density of hedges in buffer radius.
 
-    If `display_simplify_tolerance` is set, `artifacts` also contains a
-    `display_geojson` key with the simplified hedges inside the buffer.
+    If `include_display_geojson` is set, `artifacts` also contains a
+    `display_geojson` key with the hedges clipped to the buffer.
     """
 
     line_centroid = line_geos.centroid
@@ -881,23 +911,23 @@ def compute_hedge_density_around_lines(
         "area_ha": ha,
     }
 
-    if display_simplify_tolerance is not None:
+    if include_display_geojson:
         display_truncated = truncated or buffer_zone
         artifacts["display_geojson"] = query_hedges_display_geojson(
-            display_truncated, buffer_zone, display_simplify_tolerance
+            display_truncated, buffer_zone
         )
 
     return {"density": density, "artifacts": artifacts}
 
 
-def _get_centered_url(url, hedges: "HedgeData"):
+def _get_centered_url(url, hedges: "HedgeList"):
     lng = FRANCE_LNG
     lat = FRANCE_LAT
     zoom = FRANCE_ZOOM
 
     if hedges:
         # Generate urls centered on the project
-        centroid = hedges.get_centroid_to_remove()
+        centroid = hedges.to_remove().centroid
         lng = centroid.x
         lat = centroid.y
         zoom = 16
@@ -905,17 +935,17 @@ def _get_centered_url(url, hedges: "HedgeData"):
     return url.format(lng, lat, zoom)
 
 
-def get_google_maps_centered_url(hedges: "HedgeData"):
+def get_google_maps_centered_url(hedges: "HedgeList"):
     """Return the GoogleMaps URL centered on the hedges to remove."""
     return _get_centered_url(GOOGLE_MAPS_URL, hedges)
 
 
-def get_ign_centered_url(hedges: "HedgeData"):
+def get_ign_centered_url(hedges: "HedgeList"):
     """Return the IGN URL centered on the hedges to remove."""
     return _get_centered_url(IGN_URL, hedges)
 
 
-def get_geoportail_urbanisme_centered_url(hedges: "HedgeData"):
+def get_geoportail_urbanisme_centered_url(hedges: "HedgeList"):
     """Return the Geoportail de l'urbanisme url centered on the hedges to remove."""
     url = _get_centered_url(GEOPORTAIL_URL, hedges)
     if hedges:

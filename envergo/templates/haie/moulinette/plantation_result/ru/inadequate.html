@@ -1,0 +1,30 @@
+{% load moulinette %}
+
+<h6>📃 Le projet doit être modifié pour être autorisable.</h6>
+
+<p>Le projet de plantation proposé ne semble pas adapté au regard des linéaires détruits.</p>
+
+<p>
+  Nous vous invitons à <a class="hedge-input-open-btn"
+    href="#"
+    aria-controls="hedge-input-modal">modifier votre projet de plantation</a> pour que le projet puisse être autorisable.
+</p>
+
+<p>
+  <button class="hedge-input-open-btn fr-btn fr-btn--primary fr-btn--icon-left fr-icon-arrow-left-line fr-mt-0"
+          type="button"
+          data-fr-opened="false"
+          aria-controls="hedge-input-modal">Modifier les haies à planter</button>
+</p>
+{% if not is_alternative %}
+  <p>
+    Vous pouvez tout de même choisir de
+    <span role="button"
+          tabindex="0"
+          class="inline-button"
+          aria-controls="demarches-simplifiees-modal"
+          data-fr-opened="false"
+          data-category="{{ category.value }}">déposer un dossier.</span>
+    Il sera examiné, mais il est probable qu’un refus soit prononcé.
+  </p>
+{% endif %}

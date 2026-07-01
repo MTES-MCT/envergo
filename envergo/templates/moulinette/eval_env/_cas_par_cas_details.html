@@ -1,0 +1,56 @@
+<h4>Pourquoi un examen au cas par cas ?</h4>
+
+<p>
+  Lors de l'examen au cas par cas d'un projet, l'administration décide s'il est soumis ou non à une procédure complète d'évaluation environnementale.
+</p>
+
+<p>
+  Cette décision est prise en 35 jours. Le porteur de projet peut ainsi planifier en amont et relativement rapidement les étapes réglementaires de son projet et les études à mener :
+</p>
+<ul>
+  <li>
+    S'il est décidé que le projet est soumis à Évaluation environnementale,
+    une étude d'impact devra être réalisée (durée : 1 an), et l'instruction du permis de construire ou d'aménager sera rallongée (durée : 7 à 12 mois) car elle inclura une phase de consultation du public.
+  </li>
+  <li>
+    Dans le cas contraire, le projet sera libre d'obligations complémentaires au titre de l'évaluation environnementale.
+  </li>
+</ul>
+
+<h4>Comment déposer une demande d'examen au cas par cas ?</h4>
+
+{% if icpe_only %}
+  <p>
+    Le projet est soumis à examen au cas par cas uniquement à cause de son régime de classement ICPE. L'examen au cas par cas est donc réalisé lors de l'instruction du dossier ICPE.
+  </p>
+
+  <p>Aucun dossier supplémentaire n'a à être déposé.</p>
+{% elif icpe_only_conditional %}
+  <p>
+    Si le projet est soumis à examen au cas par cas, ce serait uniquement à cause de son régime de classement ICPE. L'examen au cas par cas serait donc réalisé lors de l'instruction du
+    dossier ICPE.
+  </p>
+
+  <p>Aucun dossier supplémentaire n'aurait dans ce cas à être déposé.</p>
+{% else %}
+  {{ config.evalenv_procedure_casparcas|safe }}
+{% endif %}
+
+<h4>Comment l'instruction d'une demande d'examen au cas par cas se déroule-t-elle ?</h4>
+
+{% if icpe_only or icpe_only_conditional %}
+  <p>L'instruction de la demande d'examen au cas par cas est intégrée à l'instruction ICPE.</p>
+{% else %}
+  <p>
+    Le délai d'instruction est fixé à 35 jours à compter de la date où la demande est considérée comme complète. Si le dossier est incomplet, une demande de compléments peut être adressée au porteur de projet sous 15 jours.
+  </p>
+
+  <p>
+    À la fin de cette instruction, il est notifié au porteur si son projet est soumis à Évaluation environnementale ou non.
+  </p>
+
+  <p>
+    L'absence de réponse à l'issue des 35 jours vaut décision implicite :
+    le projet est soumis à Évaluation environnementale et a l'obligation de réaliser une étude d'impact.
+  </p>
+{% endif %}

@@ -12,10 +12,11 @@ from django.template.defaultfilters import floatformat
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template, render_to_string
 from django.utils.formats import date_format
-from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeString, mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.moulinette.models import CityHallSubmission
 from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.moulinette.utils import get_moulinette_class_from_site
 
@@ -68,10 +69,14 @@ def render_from_moulinette_templates(context, template_name):
 
 
 @register.simple_tag(takes_context=True)
-def show_regulation_body(context, regulation):
+def show_regulation_body(context, regulation, category=None):
     """Render the main regulation content block."""
-
-    template_name = f"{regulation.slug}/result_{regulation.result}.html"
+    if category is None:
+        template_name = f"{regulation.slug}/result_{regulation.result}.html"
+    else:
+        template_name = (
+            f"{regulation.slug}/result_{regulation.results_by_category[category]}.html"
+        )
     content = render_from_moulinette_templates(context, template_name)
 
     return content
@@ -161,7 +166,9 @@ def field_summary(field):
     """
     value_help_text = None
     if hasattr(field.field, "get_display_value"):
-        value = field.field.get_display_value(field.value())
+        cleaned = getattr(field.form, "cleaned_data", {}).get(field.name)
+        display_input = cleaned if cleaned is not None else field.value()
+        value = field.field.get_display_value(display_input)
     elif hasattr(field.field, "choices"):
         value = dict(field.field.choices).get(field.value(), field.value())
         if isinstance(value, dict):
@@ -212,7 +219,10 @@ def field_summary(field):
         else value
     )
     html = f"<strong>{label}</strong> {value}"
-    if hasattr(field.field, "display_help_text"):
+    if hasattr(field.field, "get_display_help_text"):
+        display_help_text = field.field.get_display_help_text(field.value())
+        html += f' <br /><span class="fr-hint-text">{display_help_text}</span>'
+    elif hasattr(field.field, "display_help_text"):
         if field.field.display_help_text:
             html += f' <br /><span class="fr-hint-text">{field.field.display_help_text}</span>'
     elif field.help_text:
@@ -228,8 +238,8 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
     """Render the global moulinette result content."""
     context_data = context.flatten()
     context_data.update(plantation_evaluation.get_context())
-    regime = "regime_unique" if moulinette.config.single_procedure else "droit_constant"
-    template_name = f"haie/moulinette/result/{regime}/{moulinette.result}.html"
+    category = moulinette.main_category
+    template_name = f"haie/moulinette/result/{category.name}/{moulinette.results_by_category[category]}.html"
     try:
         content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
@@ -239,26 +249,50 @@ def show_haie_moulinette_result(context, moulinette, plantation_evaluation):
         )
         content = ""
 
+    if moulinette.is_multi_category:
+        header = get_multi_categories_header(category, context)
+        content = header + content
     return content
 
 
+def get_multi_categories_header(category, context) -> SafeString:
+    header = render_to_string(
+        "haie/moulinette/_category_hedges.html",
+        {"category": category, "hedge_data": context["hedge_data"]},
+    )
+    return mark_safe(header)
+
+
 @register.simple_tag(takes_context=True)
-def show_plantation_result(context, plantation_evaluation):
+def show_plantation_result(context, plantation_evaluation, category, is_main=True):
     """Render the global plantation result content."""
     context_data = context.flatten()
-    template_name = (
-        f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
-    )
-
-    if (
-        context.get("is_alternative", False)
-        and not plantation_evaluation.display_for_alternatives
-    ):
+    context_data["category"] = category
+    if context.get(
+        "is_alternative", False
+    ) and not plantation_evaluation.display_for_alternatives(category):
         html = ""
     else:
+        if context.get("is_read_only", False):
+            template_name = "haie/moulinette/plantation_result/read_only.html"
+        else:
+            template_name = (
+                f"haie/moulinette/plantation_result/{category.name}/"
+                f"{plantation_evaluation.global_results_by_category[category]}.html"
+            )
         try:
             content = render_to_string((template_name,), context_data)
-            html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
+            moulinette = context["moulinette"]
+            if moulinette.is_multi_category:
+                header = get_multi_categories_header(category, context)
+                content = header + content
+            if is_main:
+                html = f'<div id="result-{category.name}" class="alt fr-p-3w fr-mb-3w">{content}</div>'
+            else:
+                html = (
+                    f'<div id="result-{category.name}" '
+                    f'class="fr-mb-3w fr-callout other-category-header">{content}</div>'
+                )
         except TemplateDoesNotExist:
             logger.error(
                 "Template for GUH global plantation result is missing.",
@@ -271,37 +305,41 @@ def show_plantation_result(context, plantation_evaluation):
     return mark_safe(html)
 
 
-@register.simple_tag(takes_context=True)
-def show_haie_moulinette_liability_info(context, result):
-    """Render the liability_info content depending on the moulinette result."""
-
-    template_name = f"haie/moulinette/liability_info/{result}.html"
-    try:
-        content = render_to_string((template_name,), context.flatten())
-    except TemplateDoesNotExist:
-        logger.error(
-            f"Template for GUH liability info is missing. {result}",
-            extra={"result": result, "template_name": template_name},
-        )
-        content = ""
-
-    return content
+@register.inclusion_tag(
+    "haie/moulinette/_city_hall_submission_callout.html", takes_context=True
+)
+def city_hall_submission_callout(context):
+    """Render the city-hall submission callout for the plantation result page."""
+    moulinette = context["moulinette"]
+    return {
+        "city_hall_submission": moulinette.city_hall_submission,
+        "CityHallSubmission": CityHallSubmission,
+        "hedge_data": context.get("hedge_data"),
+    }
 
 
 @register.simple_tag(takes_context=True)
-def show_haie_plantation_liability_info(context, plantation_evaluation):
-    """Render the liability_info content depending on the result and plantation evaluation for the result p page."""
+def show_haie_liability_info(context, category):
+    """Render per-category liability info, dispatching between destruction and plantation paths."""
 
-    template_name = f"haie/moulinette/plantation_liability_info/{plantation_evaluation.result_code}.html"
+    moulinette = context["moulinette"]
+    result = moulinette.results_by_category[category]
+    context_data = context.flatten()
+    context_data["category"] = category
+
+    if context.get("is_result_plantation"):
+        plantation_evaluation = context["plantation_evaluation"]
+        result_code = f"{result}_{plantation_evaluation.result}"
+        template_name = f"haie/moulinette/plantation_liability_info/{result_code}.html"
+    else:
+        template_name = f"haie/moulinette/liability_info/{result}.html"
+
     try:
-        content = render_to_string((template_name,), context.flatten())
+        content = render_to_string((template_name,), context_data)
     except TemplateDoesNotExist:
         logger.error(
-            f"Template for GUH liability info is missing. {plantation_evaluation.result_code}",
-            extra={
-                "plantation_evaluation": plantation_evaluation.result_code,
-                "template_name": template_name,
-            },
+            "Template for GUH liability info is missing.",
+            extra={"template_name": template_name, "category": category.name},
         )
         content = ""
 

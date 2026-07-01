@@ -69,9 +69,9 @@ def get_moulinette_class_from_url(url):
     """Return the correct Moulinette class depending on the current site."""
     from envergo.moulinette.models import MoulinetteAmenagement, MoulinetteHaie
 
-    if "envergo" in url:
+    if settings.ENVERGO_AMENAGEMENT_DOMAIN in url:
         cls = MoulinetteAmenagement
-    elif "haie" in url:
+    elif settings.ENVERGO_HAIE_DOMAIN in url:
         cls = MoulinetteHaie
     else:
         raise RuntimeError("Cannot find the moulinette to use")

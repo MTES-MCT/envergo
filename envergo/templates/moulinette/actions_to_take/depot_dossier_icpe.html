@@ -1,0 +1,45 @@
+{% if moulinette.eval_env.icpe.result == "a_verifier" %}
+  <p>
+    La nature du dossier dépend du régime ICPE de l'installation, qu'il s'agisse d'une création
+    (<a href="https://entreprendre.service-public.gouv.fr/vosdroits/F33414"
+   target="_blank"
+   rel="noopener noreferrer">en savoir plus</a>) ou d'une modification
+    (<a href="https://entreprendre.service-public.gouv.fr/vosdroits/F39594"
+   target="_blank"
+   rel="noopener noreferrer">en savoir plus</a>).
+  </p>
+{% elif icpe_projet == "modif_avec_pac" or icpe_projet == "modif_sans_pac" %}
+  <p>
+    Un porter-à-connaissance ICPE pour informer le préfet de la modification de l'installation existante.
+    <a href="https://entreprendre.service-public.gouv.fr/vosdroits/F39594"
+       target="_blank"
+       rel="noopener noreferrer">En savoir plus</a>
+  </p>
+{% elif icpe_projet == "creation" and icpe_regime == "declaration" %}
+  <p>
+    Une déclaration ICPE.
+    <a href="https://entreprendre.service-public.gouv.fr/vosdroits/F33414"
+       target="_blank"
+       rel="noopener noreferrer">En savoir plus</a>
+  </p>
+{% elif icpe_projet == "creation" and icpe_regime == "enregistrement" %}
+  <p>
+    Une demande d'enregistrement ICPE.
+    <a href="https://entreprendre.service-public.gouv.fr/vosdroits/F33414"
+       target="_blank"
+       rel="noopener noreferrer">En savoir plus</a>
+  </p>
+{% endif %}
+
+{% if moulinette.eval_env.result == "cas_par_cas" %}
+  <p>
+    <em>Nota :</em> la demande d'examen au cas par cas doit être déposée antérieurement au dossier ICPE.
+    Celui-ci doit contenir la dispense d'étude d'impact, ou l'étude d'impact. Ceci est dû au fait que le projet
+    est soumis à examen au cas par cas pour une autre raison que son statut ICPE, et doit donc déposer une demande
+    d'examen au cas par cas instruite par la MRAe.
+    <br />
+    <a title="Voir le détail de la réglementation « Évaluation environnementale »"
+       href="#regulation_eval_env"
+       class="fr-link fr-text--sm action-learn-more-link">Voir le détail</a>
+  </p>
+{% endif %}

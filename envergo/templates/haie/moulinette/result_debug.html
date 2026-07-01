@@ -25,13 +25,13 @@
       <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
       {% if moulinette.config %}
         <li>
-          Département : <a href="{% url 'admin:moulinette_configamenagement_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
+          Département : <a href="{% url 'admin:moulinette_confighaie_change' moulinette.config.pk %}">{{ moulinette.department }}</a>
         </li>
         <li>Régime unique : {{ moulinette.config.single_procedure|yesno }}</li>
       {% else %}
         <li>Département : {{ moulinette.department }}</li>
       {% endif %}
-
+      <li>Date de la simulation : {{ moulinette.date|date:"DATE_FORMAT" }}</li>
       <li>
         Lien admin vers l'objet haies :
         <a href="{% url 'admin:hedges_hedgedata_change' haies.id %}">{{ haies.id }}</a>
@@ -41,7 +41,9 @@
         <ul>
           {% with hedges_and_category_by_type|get_item:"TO_REMOVE" as hedges_and_category %}
             {% for h, category in hedges_and_category %}
-              <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} · évaluateur {{ category.value }}</li>
+              <li>
+                {{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ h.category }} · évaluateur {{ category.value }}
+              </li>
             {% endfor %}
           {% endwith %}
         </ul>
@@ -52,7 +54,9 @@
           <ul>
             {% with hedges_and_category_by_type|get_item:"TO_PLANT" as hedges_and_category %}
               {% for h, category in hedges_and_category %}
-                <li>{{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ category.value }}</li>
+                <li>
+                  {{ h.id }} : {{ h.length|floatformat:"g" }} m ⋅ {{ h.hedge_type }} ⋅ {{ h.category }} ⋅ évaluateur {{ category.value }}
+                </li>
               {% endfor %}
             {% endwith %}
           </ul>
@@ -97,10 +101,9 @@
         {% if criteria %}
           {% for criterion in criteria %}
             <section class="fr-mb-2w category-{{ criterion.evaluator.category.name }}">
-              <h4>
-                {{ criterion.backend_title }} : {% result_tag criterion.result criterion.result_tag_style %}
-                <small>({{ criterion.result_code }})</small>
-              </h4>
+              <h5>{{ criterion.backend_title }} :</h5>
+              {% result_tag criterion.result criterion.result_tag_style %}
+              <small>({{ criterion.result_code }})</small>
               <p>
                 {% if criterion.get_evaluator.get_replantation_coefficient %}
                   R = {{ criterion.get_evaluator.get_replantation_coefficient|floatformat:"2g" }}
@@ -129,28 +132,33 @@
 
     <h3>Conditions d'acceptabilité</h3>
     <ul class="fr-mb-2w">
-      {% for condition in plantation_evaluation.conditions %}
-        <li>
-          {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
-          {% if condition.context %}
+      {% for category, conditions in plantation_evaluation.all_conditions_by_category.items %}
+        {% for condition in conditions %}
+          <li>
+            {{ condition.label }} : {{ condition.result|yesno:"Remplie,Non remplie" }}
             <ul>
-              {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+              <li>Catégorie = {{ category }}</li>
+              <li>Évaluateur = {{ condition.criterion_evaluator|classname|default:"Non lié à un évaluateur" }}</li>
+              {% if condition.context %}
+                {% for k, v in condition.context.items %}<li>{{ k }} = {{ v }}</li>{% endfor %}
+              {% endif %}
             </ul>
-          {% endif %}
-        </li>
+          </li>
+        {% endfor %}
       {% endfor %}
     </ul>
 
-    <h2>Catalogue de données</h2>
-
-    <dl>
-      {% for key, value in moulinette.catalog.items %}
-        <dt>{{ key }}</dt>
-        <dd>
-          {{ value|truncatechars:150 }}
-        </dd>
-      {% endfor %}
-    </dl>
+    {% if request.user.is_superuser %}
+      <h2>Catalogue de données</h2>
+      <dl>
+        {% for key, value in moulinette.catalog.items %}
+          <dt>{{ key }}</dt>
+          <dd>
+            {{ value|truncatechars:150 }}
+          </dd>
+        {% endfor %}
+      </dl>
+    {% endif %}
   </section>
 {% endblock %}
 

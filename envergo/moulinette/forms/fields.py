@@ -54,6 +54,7 @@ class DisplayFieldMixin:
         display_unit = kwargs.pop("display_unit", None)
         display_help_text = kwargs.pop("display_help_text", None)
         get_display_value = kwargs.pop("get_display_value", None)
+        get_display_help_text = kwargs.pop("get_display_help_text", None)
         if display_label is not None:
             self.display_label = display_label
         if display_unit is not None:
@@ -62,6 +63,8 @@ class DisplayFieldMixin:
             self.display_help_text = display_help_text
         if get_display_value is not None:
             self.get_display_value = get_display_value
+        if get_display_help_text is not None:
+            self.get_display_help_text = get_display_help_text
         super().__init__(*args, **kwargs)
 
 

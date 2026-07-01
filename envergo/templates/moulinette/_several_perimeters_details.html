@@ -12,10 +12,6 @@
     {% endif %}
      »{% if perimeter.distance > 10 %}
       (distance : {{ perimeter.distance }} m){% endif %}
-    {% if forloop.last %}
-      .
-    {% else %}
-       ;
-    {% endif %}
+    {% if forloop.last %}.{% else %} ;{% endif %}
   {% endfor %}
 </p>

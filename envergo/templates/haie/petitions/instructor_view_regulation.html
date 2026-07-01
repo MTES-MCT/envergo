@@ -57,7 +57,9 @@
             le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
           Voici la réponse du simulateur qui lui a été affichée pour la réglementation « {{ regulation.title }} » :</em>
         </p>
-        <div class="fr-ml-5w">{% include 'haie/moulinette/_result_regulation.html' with regulation=regulation %}</div>
+        <div class="fr-ml-5w">
+          {% include 'haie/moulinette/_result_regulation.html' with regulation=regulation category=moulinette.main_category %}
+        </div>
 
         {% if regulation.has_instructor_result_details_template %}
           <h3 class="fr-h4">Détails du résultat de la simulation</h3>
@@ -79,7 +81,7 @@
           </section>
         {% endif %}
 
-        {% if regulation.has_plantation_condition_details_template and regulation.result != "non_soumis" %}
+        {% if has_condition_to_display and regulation.has_plantation_condition_details_template %}
           <section class="fr-mb-5w">
             <h4>Précisions sur le calcul d'acceptabilité de la plantation</h4>
             {% for criterion in regulation.criteria.all %}

@@ -2,14 +2,12 @@
 
 import pytest
 
-from envergo.moulinette.regulations import HaieCriterionCategory
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations.alignementarbres import (
     AlignementsArbresCalvadosBeforeRu,
-    AlignementsArbresHru,
     AlignementsArbresL3503,
-    AlignementsArbresRu,
 )
-from envergo.moulinette.regulations.conditionnalitepac import Bcae8
+from envergo.moulinette.regulations.conditionnalitepac import Bcae8Hru
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
     EspecesProtegeesNormandie,
@@ -21,11 +19,7 @@ from envergo.moulinette.regulations.protection_captages import (
     ProtectionCaptagesHaieL3503,
     ProtectionCaptagesHaieRu,
 )
-from envergo.moulinette.regulations.regime_unique_haie import (
-    RegimeUniqueHaieHru,
-    RegimeUniqueHaieL3503,
-    RegimeUniqueHaieRu,
-)
+from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.moulinette.regulations.urbanisme_haie import (
     UrbanismeHaieHru,
     UrbanismeHaieL3503,
@@ -39,12 +33,8 @@ from envergo.moulinette.regulations.urbanisme_haie import (
         (UrbanismeHaieHru, "hru__urbanisme_haie"),
         (UrbanismeHaieRu, "ru__urbanisme_haie"),
         (UrbanismeHaieL3503, "l350_3__urbanisme_haie"),
-        (RegimeUniqueHaieHru, "hru__regime_unique_haie"),
         (RegimeUniqueHaieRu, "ru__regime_unique_haie"),
-        (RegimeUniqueHaieL3503, "l350_3__regime_unique_haie"),
         (AlignementsArbresL3503, "l350_3__alignement_arbres"),
-        (AlignementsArbresRu, "ru__alignement_arbres"),
-        (AlignementsArbresHru, "hru__alignement_arbres"),
         (ProtectionCaptagesHaieHru, "hru__protection_captages"),
         (ProtectionCaptagesHaieRu, "ru__protection_captages"),
         (ProtectionCaptagesHaieL3503, "l350_3__protection_captages"),
@@ -61,8 +51,7 @@ def test_slug_auto_generated_from_category_and_base_slug(evaluator_cls, expected
         (UrbanismeHaieRu, "Régime unique"),
         (UrbanismeHaieL3503, "L350-3"),
         (AlignementsArbresL3503, "L350-3"),
-        (AlignementsArbresRu, "Régime unique"),
-        (AlignementsArbresHru, "Hors régime unique"),
+        (AlignementsArbresCalvadosBeforeRu, "Hors régime unique"),
     ],
 )
 def test_choice_label_auto_appends_category_suffix(evaluator_cls, expected_suffix):
@@ -71,15 +60,20 @@ def test_choice_label_auto_appends_category_suffix(evaluator_cls, expected_suffi
 
 @pytest.mark.parametrize(
     "evaluator_cls",
-    [EspecesProtegeesSimple, EspecesProtegeesAisne, EspecesProtegeesNormandie, Bcae8],
+    [
+        EspecesProtegeesSimple,
+        EspecesProtegeesAisne,
+        EspecesProtegeesNormandie,
+        Bcae8Hru,
+    ],
 )
 def test_default_category_is_hru(evaluator_cls):
-    assert evaluator_cls.category == HaieCriterionCategory.hru
+    assert evaluator_cls.category == HedgeCategory.hru
     assert evaluator_cls.slug.startswith("hru__")
 
 
 def test_explicit_category_override():
-    assert EspecesProtegeesRegimeUnique.category == HaieCriterionCategory.ru
+    assert EspecesProtegeesRegimeUnique.category == HedgeCategory.ru
     assert EspecesProtegeesRegimeUnique.slug == "ru__ep_regime_unique"
 
 
@@ -87,7 +81,3 @@ def test_calvados_before_ru_preserves_explicit_slug():
     assert (
         AlignementsArbresCalvadosBeforeRu.slug == "alignement_arbres_calvados_before_ru"
     )
-
-
-def test_calvados_before_ru_slug_does_not_collide_with_hru():
-    assert AlignementsArbresCalvadosBeforeRu.slug != AlignementsArbresHru.slug

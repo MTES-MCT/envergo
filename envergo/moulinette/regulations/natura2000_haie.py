@@ -76,7 +76,7 @@ class Natura2000Haie(HaieCriterionEvaluator):
     def get_catalog_data(self):
         """Let's compute the length of hedges crossing the N2000 perimeter."""
 
-        hedges = self.catalog["haies"].hedges_to_remove()
+        hedges = self.hedges.to_remove()
         hors_alignement = [h for h in hedges if h.hedge_type != "alignement"]
         alignement = [h for h in hedges if h.hedge_type == "alignement"]
 

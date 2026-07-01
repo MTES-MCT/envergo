@@ -52,7 +52,7 @@ class ReservesNaturelles(HaieCriterionEvaluator):
         """Compute the length of hedges to remove in reserve naturelle"""
 
         catalog = super().get_catalog_data()
-        hedges_to_remove = self.catalog["haies"].hedges_to_remove()
+        hedges_to_remove = self.hedges.to_remove()
 
         # Make sure those variable always exist
         resnat = {}

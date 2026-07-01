@@ -368,7 +368,22 @@
       "regulation": 11,
       "activation_map": 36,
       "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8Ru",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings": {}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 106,
+    "fields": {
+      "backend_title": "Conditionnalité PAC > BCAE8",
+      "title": "Bonnes conditions agricoles et environnementales - Fiche VIII",
+      "regulation": 11,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
       "weight": 1,
       "activation_mode": "department_centroid",
       "evaluator_settings": {}
@@ -416,22 +431,7 @@
       "regulation": 14,
       "activation_map": 36,
       "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
-      "weight": 1,
-      "activation_mode": "department_centroid",
-      "evaluator_settings": {}
-    }
-  },
-  {
-    "model": "moulinette.criterion",
-    "pk": 104,
-    "fields": {
-      "backend_title": "Alignements d'arbres (L350-3)",
-      "title": "Alignements d'arbres (L350-3)",
-      "regulation": 14,
-      "activation_map": 36,
-      "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
+      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
       "weight": 1,
       "activation_mode": "department_centroid",
       "evaluator_settings": {}
@@ -447,21 +447,6 @@
       "activation_map": 36,
       "activation_distance": 0,
       "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
-      "weight": 1,
-      "activation_mode": "department_centroid",
-      "evaluator_settings": {}
-    }
-  },
-  {
-    "model": "moulinette.criterion",
-    "pk": 106,
-    "fields": {
-      "backend_title": "Alignements d'arbres (L350-3)",
-      "title": "Alignements d'arbres (L350-3)",
-      "regulation": 14,
-      "activation_map": 36,
-      "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.alignementarbres.AlignementsArbresCalvadosBeforeRu",
       "weight": 1,
       "activation_mode": "department_centroid",
       "evaluator_settings": {}
