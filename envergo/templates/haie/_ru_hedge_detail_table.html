@@ -14,6 +14,7 @@
               <th scope="col">Densité</th>
               {% if show_partial_result %}<th scope="col">Résultat partiel</th>{% endif %}
               <th scope="col">Coef RU</th>
+              {% if show_coeff_majore %}<th scope="col">Majoration EP</th>{% endif %}
               {% if show_coeff_majore %}<th scope="col">Coef majoré EP</th>{% endif %}
             </tr>
           </thead>
@@ -34,6 +35,7 @@
                 <td>{{ row.high_density|yesno:"Haute,Basse,-" }}</td>
                 {% if show_partial_result %}<td>{{ row.partial_result }}</td>{% endif %}
                 <td>{{ row.coeff_ru_brut }}</td>
+                {% if show_coeff_majore %}<td>{{ row.bonus_ep }}</td>{% endif %}
                 {% if show_coeff_majore %}<td>{{ row.coeff_ru_majore }}</td>{% endif %}
               </tr>
             {% endfor %}

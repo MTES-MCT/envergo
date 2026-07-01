@@ -12,21 +12,15 @@ from envergo.moulinette.tests.utils import (
 def make_mock_evaluator(
     single_procedure=False,
     result_code="soumis",
-    ep_bonus=None,
     effective_coefficients=None,
 ):
-    """Create a mock criterion evaluator.
-
-    Set ``ep_bonus`` to wire up ``get_ep_ru_bonus`` (needed for RU tests).
-    """
+    """Create a mock criterion evaluator."""
     ev = Mock()
     ev.moulinette.config.single_procedure = single_procedure
     ev.result_code = result_code
     ev.effective_coefficients = (
         effective_coefficients if effective_coefficients is not None else {}
     )
-    if ep_bonus is not None:
-        ev.get_ep_ru_bonus.return_value = ep_bonus
     return ev
 
 
