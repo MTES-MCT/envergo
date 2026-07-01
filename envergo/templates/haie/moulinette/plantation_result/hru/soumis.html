@@ -1,23 +1,59 @@
 {% load moulinette %}
 
-<h6>
-  ✅ <strong>Le dossier est prêt à être complété</strong>
-</h6>
+{% if config.single_procedure %}
+  <h6>
+    ✅ <strong>Le dossier est prêt à être complété</strong>
+  </h6>
 
-<p>
-  Ce portail vous permet de déposer en ligne un dossier portant sur la destruction de linéaires non soumis à déclaration unique, à savoir :
-</p>
-<ul>
-  <li>les haies en bordure de bâtiment, de place publique, ou dans des parcs ou jardins attenants à une habitation</li>
-  <li>les alignements d'arbres, qui n'entrent pas dans la définition d'une haie.</li>
-</ul>
+  <p>
+    Ce portail vous permet de déposer en ligne un dossier portant sur la destruction de linéaires non soumis à déclaration unique, à savoir :
+  </p>
+  <ul>
+    <li>les haies en bordure de bâtiment, de place publique, ou dans des parcs ou jardins attenants à une habitation</li>
+    <li>les alignements d'arbres, qui n'entrent pas dans la définition d'une haie.</li>
+  </ul>
 
-<p>
-  Ces linéaires sont protégés par plusieurs réglementations. Le guichet unique de la haie vous indiquera les éventuelles procédures à suivre.
-</p>
+  <p>
+    Ces linéaires sont protégés par plusieurs réglementations. Le guichet unique de la haie vous indiquera les éventuelles procédures à suivre.
+  </p>
 
-<button class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-0"
-        type="button"
-        data-fr-opened="false"
-        data-category="{{ category.name }}"
-        aria-controls="demarches-simplifiees-modal">Compléter le dossier</button>
+  <button class="fr-btn fr-btn--primary fr-btn--icon-right fr-icon-arrow-right-line fr-mt-0"
+          type="button"
+          data-fr-opened="false"
+          data-category="{{ category.value }}"
+          aria-controls="demarches-simplifiees-modal">Compléter le dossier</button>
+{% else %}
+
+  {% if not is_read_only %}
+    <h6>
+      ✅ <strong>La demande d’autorisation est prête à être complétée</strong>
+    </h6>
+
+    <p>
+      Le guichet unique permet de déposer sa demande à l'administration en un seul dossier.
+      Le dossier sera pré-rempli avec les résultats de cette simulation.
+    </p>
+
+    <p>
+      Une fois la demande déposée, les services instructeurs examineront le projet.
+      Ils pourront vous contacter pour obtenir des compléments d’information.
+    </p>
+
+    <p>
+      Prochaine étape :
+      <button class="fr-btn fr-btn--primary"
+              type="button"
+              data-fr-opened="false"
+              aria-controls="demarches-simplifiees-modal">Déposer une demande d'autorisation</button>
+    </p>
+  {% else %}
+    <h6>
+      ✅ <strong>La demande d’autorisation est en cours</strong>
+    </h6>
+
+    <p>
+      Une fois la demande déposée, les services instructeurs examineront le projet.
+      Ils pourront vous contacter pour obtenir des compléments d’information.
+    </p>
+  {% endif %}
+{% endif %}

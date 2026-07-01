@@ -23,20 +23,10 @@ from envergo.utils.validators import validate_mime
 class PetitionProjectForm(forms.ModelForm):
     """Form for creating a petition project."""
 
-    category = forms.CharField(required=True)
-
-    def clean_category(self):
-        from envergo.moulinette.regulations import HaieCriterionCategory
-
-        value = self.cleaned_data["category"]
-        try:
-            return HaieCriterionCategory[value]
-        except KeyError:
-            raise forms.ValidationError(f"Catégorie invalide : {value}")
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["moulinette_url"].required = True
+        self.fields["_category"].required = True
 
     def clean_moulinette_url(self):
         """Remove the date parameter from the moulinette url if there is one
@@ -53,6 +43,7 @@ class PetitionProjectForm(forms.ModelForm):
         model = PetitionProject
         fields = [
             "moulinette_url",
+            "_category",
         ]
 
 

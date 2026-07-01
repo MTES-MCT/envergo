@@ -2,8 +2,7 @@
 
 from django import template
 
-from envergo.hedges.models import LEVELS_OF_CONCERN
-from envergo.moulinette.regulations import HaieCriterionCategory
+from envergo.hedges.models import LEVELS_OF_CONCERN, HedgeCategory
 
 register = template.Library()
 
@@ -19,12 +18,12 @@ def level_of_concern_display(value):
 @register.filter
 def hedges_category(hedge_data, category):
     to_remove = hedge_data.hedges().to_remove()
-    if category == HaieCriterionCategory.hru:
+    if category == HedgeCategory.hru:
         return to_remove.hru()
-    elif category == HaieCriterionCategory.ru:
+    elif category == HedgeCategory.ru:
         return to_remove.ru()
     else:
-        # category == HaieCriterionCategory.l350_3:
+        # category == HedgeCategory.l350_3:
         return to_remove.l350_3()
 
 

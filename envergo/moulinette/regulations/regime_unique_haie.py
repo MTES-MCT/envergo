@@ -5,6 +5,7 @@ Determines whether a hedge project falls under the régime unique
 """
 
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     RUMinLengthCondition,
@@ -12,7 +13,6 @@ from envergo.hedges.regulations import (
     SafetyCondition,
 )
 from envergo.moulinette.regulations import (
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
@@ -49,7 +49,7 @@ class RegimeUniqueHaieRu(
     choice_label = "Régime unique haie > Régime unique haie"
     base_slug = "regime_unique_haie"
     plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
-    category = HaieCriterionCategory.ru
+    category = HedgeCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,

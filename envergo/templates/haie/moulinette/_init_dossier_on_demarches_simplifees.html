@@ -17,9 +17,9 @@
               <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmation</h3>
               <p>
                 Vous allez démarrer le dépôt de dossier portant sur la destruction des
-                {% category_hedges category=HaieCriterionCategory.ru lowercase=True inline=True %}
-                {% category_hedges category=HaieCriterionCategory.l350_3 lowercase=True inline=True %}
-                {% category_hedges category=HaieCriterionCategory.hru lowercase=True inline=True %}
+                {% category_hedges category=HedgeCategory.ru lowercase=True inline=True %}
+                {% category_hedges category=HedgeCategory.l350_3 lowercase=True inline=True %}
+                {% category_hedges category=HedgeCategory.hru lowercase=True inline=True %}
               </p>
               <p>
                 Vous allez accéder au formulaire de demande pour vous identifier,
@@ -47,7 +47,7 @@
               {% csrf_token %}
               <input type="hidden" name="moulinette_url" value="{{ moulinette_url }}" />
               <input type="hidden"
-                     name="category"
+                     name="_category"
                      id="demarche-simplifiee-category"
                      value="" />
               <div id="demarches-simplifiees-modal-btns">

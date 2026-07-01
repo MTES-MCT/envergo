@@ -54,7 +54,13 @@ from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList, HedgeTypeFactory
+from envergo.hedges.models import (
+    TO_PLANT,
+    TO_REMOVE,
+    HedgeCategory,
+    HedgeList,
+    HedgeTypeFactory,
+)
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
@@ -70,13 +76,12 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import (
     TO_ADD,
     TO_SUBTRACT,
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     MapFactory,
 )
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
-from envergo.utils.tools import _DjangoSafeChoicesMeta, insert_before
+from envergo.utils.tools import insert_before
 
 # WGS84, geodetic coordinates, units in degrees
 # Good for storing data and working wordwide
@@ -1294,7 +1299,7 @@ def get_hedge_properties_form(type: Literal[TO_PLANT, TO_REMOVE]):
     ]
 
 
-class AaL3503Handling(models.TextChoices, metaclass=_DjangoSafeChoicesMeta):
+class AaL3503Handling(models.TextChoices):
     """How tree alignment projects (article L350-3) are handled by a department."""
 
     PORTAL = "portal", "Dépôt sur le portail"
@@ -1483,6 +1488,15 @@ class ConfigHaie(ConfigBase):
             (
                 "plantation_adequate",
                 "Les conditions d’acceptabilité de la plantation sont toutes respectées (booléen)",
+            ),
+            ("category", "Catégorie du projet (ru, hru ou l350_3)"),
+            (
+                "from_multi_category",
+                "Le projet provient-il d'une simulation comportant plusieurs catégories",
+            ),
+            (
+                "original_multi_category_moulinette_url",
+                "Url de la simulation initiale comportant plusieurs catégories le cas échéant",
             ),
             ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
             ("proximite_mare", "Proximité d'une mare (booléen)"),
@@ -2729,20 +2743,20 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                     break
 
         # use the procedure result for régime unique category
-        if HaieCriterionCategory.ru in results_by_category:
+        if HedgeCategory.ru in results_by_category:
             procedures = [regulation.procedure_type for regulation in self.regulations]
             is_interdit = "interdit" in procedures
             is_autorisation = "autorisation" in procedures
 
             if is_interdit:
-                results_by_category[HaieCriterionCategory.ru] = RESULTS.interdit
+                results_by_category[HedgeCategory.ru] = RESULTS.interdit
             elif is_autorisation:
-                results_by_category[HaieCriterionCategory.ru] = "autorisation"
-            elif results_by_category[HaieCriterionCategory.ru] not in [
+                results_by_category[HedgeCategory.ru] = "autorisation"
+            elif results_by_category[HedgeCategory.ru] not in [
                 RESULTS.non_soumis,
                 RESULTS.non_disponible,
             ]:
-                results_by_category[HaieCriterionCategory.ru] = "declaration"
+                results_by_category[HedgeCategory.ru] = "declaration"
 
         # remove the category if there is no hedge concerned
         for category, hedges in self.catalog["hedges_by_category"].items():
@@ -2750,9 +2764,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 results_by_category.pop(category)
 
         return {
-            k: results_by_category[k]
-            for k in HaieCriterionCategory
-            if k in results_by_category
+            k: results_by_category[k] for k in HedgeCategory if k in results_by_category
         }
 
     @cached_property
@@ -2793,7 +2805,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 self.config.single_procedure
             )
         else:
-            hedges_by_category = {category: [] for category in HaieCriterionCategory}
+            hedges_by_category = {category: [] for category in HedgeCategory}
 
         hedges_and_category_by_type = defaultdict(list)
         for category, hedges in hedges_by_category.items():
@@ -2886,9 +2898,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 self.config.single_procedure
             )
         else:
-            data["hedges_by_category"] = {
-                category: [] for category in HaieCriterionCategory
-            }
+            data["hedges_by_category"] = {category: [] for category in HedgeCategory}
 
         return data
 
@@ -2957,7 +2967,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         hedges_by_category = self.catalog["hedges_by_category"]
 
         # Build category → evaluator classpaths mapping
-        evaluators_by_category = {category: [] for category in HaieCriterionCategory}
+        evaluators_by_category = {category: [] for category in HedgeCategory}
         for cls in get_subclasses(HaieCriterionEvaluator):
             evaluators_by_category[cls.category].append(classpath(cls))
 
@@ -3140,7 +3150,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return len(self.results_by_category.keys()) > 1
 
     @property
-    def main_category(self) -> HaieCriterionCategory | None:
+    def main_category(self) -> HedgeCategory | None:
         """Return the most relevant main category of the moulinette.
 
         RU if it is applicable, or depending on the cascade elsewhere.
@@ -3149,18 +3159,18 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         if not self.is_evaluated():
             return None
-        if HaieCriterionCategory.ru in self.results_by_category:
-            category = HaieCriterionCategory.ru
+        if HedgeCategory.ru in self.results_by_category:
+            category = HedgeCategory.ru
         else:
             category = None
-            hru_result = self.results_by_category.get(HaieCriterionCategory.hru)
-            l350_3_result = self.results_by_category.get(HaieCriterionCategory.l350_3)
+            hru_result = self.results_by_category.get(HedgeCategory.hru)
+            l350_3_result = self.results_by_category.get(HedgeCategory.l350_3)
             for result in RESULT_CASCADE:
                 if result == l350_3_result:
-                    category = HaieCriterionCategory.l350_3
+                    category = HedgeCategory.l350_3
                     break
                 elif result == hru_result:
-                    category = HaieCriterionCategory.hru
+                    category = HedgeCategory.hru
                     break
             if not category:
                 # There is no result from the Cascade for any category.
@@ -3172,7 +3182,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return category
 
     @property
-    def other_categories(self) -> list[HaieCriterionCategory] | None:
+    def other_categories(self) -> list[HedgeCategory] | None:
         """Return the existing categories of the moulinette that are not the most relevant (not the main category).
 
         return None if the moulinette is not evaluated
@@ -3190,9 +3200,9 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     def is_submittable_to_pguh(self):
         """Can this simulation be submitted to the PGUH?"""
         return (
-            HaieCriterionCategory.ru in self.results_by_category.keys()
-            or HaieCriterionCategory.hru in self.results_by_category.keys()
-            or HaieCriterionCategory.l350_3 in self.results_by_category.keys()
+            HedgeCategory.ru in self.results_by_category.keys()
+            or HedgeCategory.hru in self.results_by_category.keys()
+            or HedgeCategory.l350_3 in self.results_by_category.keys()
             and self.config.aa_l3503_handling == AaL3503Handling.PORTAL
         )
 
@@ -3203,7 +3213,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             return CityHallSubmission.AUTORISATION_URBA
 
         categories = self.results_by_category.keys()
-        if HaieCriterionCategory.ru in categories:
+        if HedgeCategory.ru in categories:
             if len(categories) == 1:
                 return CityHallSubmission.NONE
             else:

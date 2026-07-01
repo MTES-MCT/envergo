@@ -13,10 +13,10 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
-from envergo.moulinette.regulations import HaieCriterionCategory, Map, MapPolygon
+from envergo.moulinette.regulations import Map, MapPolygon
 
 if TYPE_CHECKING:
     from envergo.moulinette.models import MoulinetteHaie
@@ -113,7 +113,7 @@ if _missing_results:
 # easier to patch it in tests.
 def get_replantation_coefficient_by_category(moulinette):
     """Compute the replantation coefficient R, for each category."""
-    R_by_category = {category: D("0") for category in HaieCriterionCategory}
+    R_by_category = {category: D("0") for category in HedgeCategory}
     for regulation in moulinette.regulations:
         if regulation.is_activated():
             for criterion in regulation.criteria.all():
@@ -396,7 +396,7 @@ class PlantationEvaluator:
         # We make sure the "min length condition" exists if it was not explicitely
         # added by an evaluator.
 
-        for category in HaieCriterionCategory:
+        for category in HedgeCategory:
             has_min_length_condition = False
             for condition in conditions_by_category[category]:
                 if isinstance(condition, MinLengthCondition):
@@ -443,7 +443,10 @@ class PlantationEvaluator:
             key=attrgetter("order"),
         )
         self._all_conditions = all_displayable
-        self._all_conditions_by_category = dict(conditions_by_category)
+        self._all_conditions_by_category = {
+            category: sorted(conditions, key=attrgetter("order"))
+            for category, conditions in conditions_by_category.items()
+        }
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
@@ -470,7 +473,10 @@ class PlantationEvaluator:
         """
         groups = defaultdict(list)
         for condition in conditions:
-            groups[type(condition)].append(condition)
+            if hasattr(condition, "additive_key"):
+                groups[condition.additive_key].append(condition)
+            else:
+                groups[type(condition)].append(condition)
 
         def strictness_cmp(a, b):
             if a.is_stricter_than(b):
