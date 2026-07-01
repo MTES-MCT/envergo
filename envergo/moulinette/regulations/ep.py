@@ -717,14 +717,18 @@ EP_RU_RESULT_RANK = {
     "derogation_inventaire": 3,
 }
 
-# Replantation coefficient bonus per result level (added to R_ru).
-EP_RU_REPLANTATION_BONUS = {
-    "derogation_inventaire": 0.5,
-    "derogation_simplifiee": 0.25,
-    "dispense": 0.0,
+# Per-hedge EP bonus added to the raw RU coefficient, keyed by (hedge_type, density).
+# "mixte" (arborée) gets a higher bonus in low-density areas; all other types are flat.
+EP_RU_HEDGE_BONUS = {
+    ("buissonnante", "HD"): 0.2,
+    ("buissonnante", "LD"): 0.2,
+    ("arbustive", "HD"): 0.2,
+    ("arbustive", "LD"): 0.2,
+    ("mixte", "HD"): 0.2,
+    ("mixte", "LD"): 0.3,
+    ("degradee", "HD"): 0.2,
+    ("degradee", "LD"): 0.2,
 }
-
-EP_RU_SENSITIVE_SPECIES_BONUS = 0.25
 
 
 class EspecesProtegeesRegimeUnique(
@@ -983,27 +987,48 @@ class EspecesProtegeesRegimeUnique(
 
         return result
 
-    def get_ep_ru_bonus(self):
-        """Total EP bonus: base per result level, plus sensitive-species majoration."""
-        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
-        if self.result_code == "derogation_simplifiee" and self.catalog.get(
-            "has_sensitive_species", False
-        ):
-            bonus += EP_RU_SENSITIVE_SPECIES_BONUS
-        return bonus
+    @property
+    def per_hedge_bonuses(self):
+        """Per-hedge EP bonus based on hedge type and density zone.
+
+        Returns ``{hedge_id: bonus}`` for each hedge in
+        ``per_hedge_coefficients``. Returns an empty dict for dispense
+        (no compensation required).
+        """
+        if self.result_code == "dispense":
+            return {}
+
+        raw = self.catalog.get("per_hedge_coefficients", {})
+        hedges = self.catalog["haies"].hedges()
+        zones_data = self.catalog.get("ru_per_hedge_zone_info", {})
+
+        bonuses = {}
+        for hedge_id in raw:
+            hedge = hedges.find(hedge_id)
+            high_density = zones_data.get(hedge_id, {}).get("high_density")
+            if high_density is None:
+                bonuses[hedge_id] = 0.0
+            else:
+                density_key = "HD" if high_density else "LD"
+                bonuses[hedge_id] = EP_RU_HEDGE_BONUS.get(
+                    (hedge.hedge_type, density_key), 0.0
+                )
+
+        return bonuses
 
     @property
     def effective_coefficients(self):
-        """Raw per-hedge coefficients adjusted with the EP bonus.
+        """Raw per-hedge coefficients adjusted with a type/density EP bonus.
 
         Dispense means no compensation is required, so effective coefficients
         are empty.
         """
         if self.result_code == "dispense":
             return {}
-        bonus = self.get_ep_ru_bonus()
+
         raw = self.catalog.get("per_hedge_coefficients", {})
-        return {h: c + bonus for h, c in raw.items()}
+        bonuses = self.per_hedge_bonuses
+        return {h: c + bonuses.get(h, 0.0) for h, c in raw.items()}
 
     def get_replantation_coefficient(self):
         """Weighted average of the effective per-hedge coefficients."""
@@ -1043,8 +1068,10 @@ class EspecesProtegeesRegimeUnique(
 
         hedge_rows = build_ru_hedge_detail_rows(self.catalog, self)
         per_hedge_results = self.per_hedge_results
+        bonuses = self.per_hedge_bonuses
         for row in hedge_rows:
             row["partial_result"] = per_hedge_results.get(row["hedge_id"], "-")
+            row["bonus_ep"] = bonuses.get(row["hedge_id"], 0.0)
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
