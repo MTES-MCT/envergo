@@ -69,6 +69,10 @@ FORBIDDEN_STAGE_TRANSITIONS = {
     ): "Pour clore le dossier, il faut passer par une étape intermédiaire (autre que « À instruire »).",
     (
         "closed",
+        "to_be_processed",
+    ): "Pour repasser le dossier à l'étape « À instruire », il faut passer par une étape intermédiaire (autre que « Dossier clos »).",  # noqa: E501
+    (
+        "closed",
         "closed",
     ): "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le repasser à une étape d'instruction.",
 }
@@ -614,7 +618,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @property
     def category(self):
-        return HedgeCategory(self._category) if self._category else None
+        return HedgeCategory(self._category)
 
     @category.setter
     def category(self, value):

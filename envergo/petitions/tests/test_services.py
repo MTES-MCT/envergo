@@ -355,7 +355,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
     expected_result = {
         "hedges_properties": {
             "bord_batiment": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "En bordure de bâtiment",
             },
@@ -365,12 +365,12 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
                 "label": "Connectée à un boisement ou à une autre haie",
             },
             "parc_jardin": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Dans le parc ou jardin d'une habitation",
             },
             "place_publique": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Sur une place publique",
             },
@@ -490,7 +490,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     expected_result = {
         "hedges_properties": {
             "bord_batiment": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "En bordure de bâtiment",
             },
@@ -510,12 +510,12 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
                 "label": "Haie inter-champ",
             },
             "parc_jardin": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Dans le parc ou jardin d'une " "habitation",
             },
             "place_publique": {
-                "TO_PLANT": None,
+                "TO_PLANT": [],
                 "TO_REMOVE": [],
                 "label": "Sur une place publique",
             },

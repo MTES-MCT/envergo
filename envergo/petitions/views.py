@@ -1675,13 +1675,6 @@ class PetitionProjectInstructorProcedureView(
 
         return initial
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["single_procedure"] = bool(
-            self.object.config and self.object.config.single_procedure
-        )
-        return kwargs
-
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)

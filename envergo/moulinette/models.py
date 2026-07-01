@@ -628,29 +628,22 @@ class Regulation(models.Model):
         """Check if the regulation has a template for plantation condition details for at least one criterion."""
         for criterion in self.criteria.all():
             if issubclass(criterion.evaluator, HaieCriterionEvaluator):
-                try:
-                    template_path = (
-                        "haie/petitions/{}/{}/{}_plantation_condition_details.html"
-                    )
-                    get_template(
-                        template_path.format(
-                            self.slug,
-                            criterion.evaluator.category.name,
-                            criterion.evaluator.base_slug,
-                        )
-                    )
-                    return True
-                except TemplateDoesNotExist:
-                    pass
+                template_path = (
+                    "haie/petitions/{}/{}/{}_plantation_condition_details.html"
+                )
+                template_path = template_path.format(
+                    self.slug,
+                    criterion.evaluator.category.name,
+                    criterion.evaluator.base_slug,
+                )
             else:
-                try:
-                    template_path = (
-                        "haie/petitions/{}/{}_plantation_condition_details.html"
-                    )
-                    get_template(template_path.format(self.slug, criterion.slug))
-                    return True
-                except TemplateDoesNotExist:
-                    pass
+                template_path = "haie/petitions/{}/{}_plantation_condition_details.html"
+                template_path = template_path.format(self.slug, criterion.slug)
+            try:
+                get_template(template_path)
+                return True
+            except TemplateDoesNotExist:
+                pass
         return False
 
     def has_key_elements_template(self) -> bool:

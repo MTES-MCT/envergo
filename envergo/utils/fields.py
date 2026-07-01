@@ -76,6 +76,13 @@ class ProjectStageField(Select):
 
 
 class EnrichedChoicesMeta(ChoicesMeta):
+    """Metaclass that converts dict-style member declarations into TextChoices with extra attributes.
+
+    The name (key) is used as the DB stored value. `label` is required and
+    becomes the enum's standard `.label`; every other dict key becomes a
+    plain attribute on the member.
+    """
+
     def __new__(metacls, classname, bases, classdict, **kwds):
         for key in classdict._member_names:
             value = classdict[key]

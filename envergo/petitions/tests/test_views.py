@@ -125,7 +125,6 @@ def test_petition_projet_create_view_dispatch(client, site, haie_user):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@override_settings(ENVERGO_HAIE_DOMAIN="haie.local")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
@@ -186,7 +185,6 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@override_settings(ENVERGO_HAIE_DOMAIN="haie.local")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
@@ -236,7 +234,6 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-@override_settings(ENVERGO_HAIE_DOMAIN="haie.local")
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):

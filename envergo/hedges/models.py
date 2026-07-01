@@ -94,6 +94,14 @@ R = 1.5  # Coefficient de replantation exigée
 
 
 class HedgeCategory(EnrichedChoices):
+    """Regulatory category of a hedge, determining which procedure applies.
+
+    - ru: hedges covered by the régime unique (single procedure)
+    - l350_3: roadside tree alignments governed by article L350-3
+    - hru: all other hedges and alignments outside the régime unique
+    Each category have several labels for petitioner and instructor of different length, and a badge css class
+    """
+
     ru = {
         "display_value": "Régime unique",
         "label": "Haies bénéficiant d'une procédure unique",
@@ -390,7 +398,7 @@ class HedgeList(list[Hedge]):
         With single_procedure: hedges to remove are split by Hedge.category.
         Hedges to plant whose category has no removal counterpart are orphans —
         they get absorbed by an active category (priority: HRU > RU > L350-3).
-        L350-3 never absorbs orphans from other categories.
+        When HRU or RU is also active, L350-3 does not absorb their orphans.
         """
         if not single_procedure:
             if category == HedgeCategory.hru:
@@ -437,7 +445,7 @@ class HedgeList(list[Hedge]):
             if not has_hru and not has_ru:
                 # Only one category (L350-3): all hedges to plant are categorized as L350-3
                 return HedgeList(self)
-            # L350-3 never absorbs from other categories
+            # HRU or RU also present (absorbs orphans): return only L350-3
             return l350_3
 
         raise ValueError(f"Category not recognized : {category}")
