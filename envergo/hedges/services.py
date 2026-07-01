@@ -1,6 +1,8 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal as D
 from enum import Enum
+from functools import cmp_to_key, reduce
 from itertools import product
 from operator import attrgetter
 from types import SimpleNamespace
@@ -11,12 +13,12 @@ from django.contrib.gis.geos import GEOSGeometry, MultiLineString
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Line
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.regulations import MinLengthCondition
+from envergo.hedges.models import HedgeCategory, HedgeData
+from envergo.hedges.regulations import AdditiveConditionMixin, MinLengthCondition
 from envergo.moulinette.models import GLOBAL_RESULT_MATRIX
 from envergo.moulinette.regulations import Map, MapPolygon
 
 if TYPE_CHECKING:
-    from envergo.hedges.models import HedgeData
     from envergo.moulinette.models import MoulinetteHaie
 
 
@@ -53,7 +55,6 @@ PLANTATION_RESULT_MATRIX = {
         PlantationResults.Inadequate.value,
     ): PlantationResults.Inadequate.value,
     ("declaration", PlantationResults.Adequate.value): "declaration",
-    # not used for now:
     (
         RESULTS.non_disponible,
         PlantationResults.Inadequate.value,
@@ -110,18 +111,34 @@ if _missing_results:
 
 # This method is outside the PlantationEvaluator class because it makes it
 # easier to patch it in tests.
-def get_replantation_coefficient(moulinette):
-    """Get the "R" value.
-
-    It depends on the activated criteria.
-    """
-    R = D("0")
+def get_replantation_coefficient_by_category(moulinette):
+    """Compute the replantation coefficient R, for each category."""
+    R_by_category = {category: D("0") for category in HedgeCategory}
     for regulation in moulinette.regulations:
         if regulation.is_activated():
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "get_replantation_coefficient"):
-                    R = max(R, criterion._evaluator.get_replantation_coefficient())
+                    R_by_category[criterion._evaluator.category] = max(
+                        R_by_category[criterion._evaluator.category],
+                        D(criterion._evaluator.get_replantation_coefficient()),
+                    )
 
+    return R_by_category
+
+
+def get_global_replantation_coefficient(R_by_category, moulinette):
+    """Compute the global replantation coefficient R, weighted by hedge to remove length per category."""
+    R = D("0")
+    hedges = moulinette.catalog["haies"].get_hedges_by_category(
+        moulinette.config.single_procedure
+    )
+    total_length = moulinette.catalog["haies"].hedges().to_remove().length
+    for category in R_by_category.keys():
+        R += (
+            R_by_category[category]
+            * D(hedges[category].to_remove().length)
+            / D(total_length)
+        )
     return float(R)
 
 
@@ -177,7 +194,7 @@ def create_density_map(
                 for hedge in hedges_to_remove
             ],
             "red",
-            "Haies à détruire",
+            "Linéaires à détruire",
             class_name="hedge to-remove",
         ),
     ]
@@ -239,7 +256,7 @@ def create_line_buffer_density_map(
                 for hedge in hedges_to_remove
             ],
             "red",
-            "Haies à détruire",
+            "Linéaires à détruire",
             class_name="hedge to-remove",
         ),
     ]
@@ -272,7 +289,13 @@ class PlantationEvaluator:
     def __init__(self, moulinette: "MoulinetteHaie", hedge_data: "HedgeData"):
         self.moulinette = moulinette
         self.hedge_data = hedge_data
-        self.replantation_coefficient = get_replantation_coefficient(moulinette)
+        R_by_category = get_replantation_coefficient_by_category(moulinette)
+        self.replantation_coefficient_by_category = {
+            category: float(R) for category, R in R_by_category.items()
+        }
+        self.replantation_coefficient = get_global_replantation_coefficient(
+            R_by_category, moulinette
+        )
 
     @property
     def result(self):
@@ -287,10 +310,31 @@ class PlantationEvaluator:
 
     @property
     def conditions(self):
+        """Deduplicated subset — when several evaluators produce the same condition
+        class, only the strictest is kept. See ``all_conditions`` for the full list.
+        """
         if not hasattr(self, "_conditions"):
             self.evaluate()
 
         return self._conditions
+
+    @property
+    def all_conditions(self):
+        """Full list before deduplication, used when the caller needs to
+        disambiguate by evaluator. See ``conditions`` for the deduplicated subset.
+        """
+        if not hasattr(self, "_all_conditions"):
+            self.evaluate()
+
+        return self._all_conditions
+
+    @property
+    def all_conditions_by_category(self):
+        """Full list before deduplication,grouped by category."""
+        if not hasattr(self, "_all_conditions_by_category"):
+            self.evaluate()
+
+        return self._all_conditions_by_category
 
     @property
     def global_result(self):
@@ -303,9 +347,19 @@ class PlantationEvaluator:
         )
 
     @property
-    def display_for_alternatives(self):
+    def global_results_by_category(self):
+        return {
+            category: PLANTATION_RESULT_MATRIX.get(
+                (category_result, self.result), RESULTS.interdit
+            )
+            for category, category_result in self.moulinette.results_by_category.items()
+        }
+
+    def display_for_alternatives(self, category):
         """Should this evaluation global result be displayed for project alternatives?"""
-        return DISPLAY_FOR_ALTERNATIVES_MATRIX[self.global_result]
+        return DISPLAY_FOR_ALTERNATIVES_MATRIX[
+            self.global_results_by_category[category]
+        ]
 
     @property
     def result_code(self):
@@ -316,10 +370,10 @@ class PlantationEvaluator:
         return f"{self.moulinette.result}_{self.result}"
 
     def evaluate(self):
-        """Returns if the plantation is compliant with the regulation"""
+        """Populate ``_all_conditions``, ``_conditions`` (deduplicated), and ``_result``."""
 
-        R = self.replantation_coefficient
-        conditions = []
+        R_by_category = self.replantation_coefficient_by_category
+        conditions_by_category = defaultdict(list)
         for regulation in self.moulinette.regulations:
             if not regulation.is_activated():
                 continue
@@ -332,31 +386,119 @@ class PlantationEvaluator:
 
             for criterion in regulation.criteria.all():
                 if hasattr(criterion._evaluator, "plantation_evaluate"):
-                    conditions.extend(
+                    conditions_by_category[criterion._evaluator.category].extend(
                         criterion._evaluator.plantation_evaluate(
-                            self.hedge_data, R, self.moulinette.catalog
+                            R_by_category[criterion._evaluator.category],
+                            self.moulinette.catalog,
                         )
                     )
 
         # We make sure the "min length condition" exists if it was not explicitely
         # added by an evaluator.
-        has_min_length_condition = False
-        for condition in conditions:
-            if isinstance(condition, MinLengthCondition):
-                has_min_length_condition = True
-                break
-        if not has_min_length_condition:
-            conditions.append(
-                MinLengthCondition(self.hedge_data, R, None, None).evaluate()
+
+        for category in HedgeCategory:
+            has_min_length_condition = False
+            for condition in conditions_by_category[category]:
+                if isinstance(condition, MinLengthCondition):
+                    has_min_length_condition = True
+                    break
+
+            if not has_min_length_condition:
+                hedges = self.hedge_data.hedges().evaluator_category(
+                    self.moulinette.config.single_procedure, category
+                )
+                if hedges:
+                    conditions_by_category[category].append(
+                        MinLengthCondition(
+                            hedges, R_by_category[category], None, {}
+                        ).evaluate()
+                    )
+
+        displayable_conditions = []
+        deduplicated_conditions = []
+
+        # Processus d'addition/déduplication en trois étapes
+        # Etape 1 : dédupliquer les conditions par catégorie en ne conservant que la plus restrictive
+        for conditions in conditions_by_category.values():
+            deduplicated_conditions.extend(self.deduplicate_conditions(conditions))
+            displayable_conditions.extend(
+                [c for c in conditions if c.result is not None and c.must_display()]
             )
 
-        conditions = filter(lambda c: c.result is not None, conditions)
-        self._conditions = sorted(conditions, key=attrgetter("order"))
+        # Etape 2 : combiner les conditions additives
+        combined_conditions = self.combine_conditions(deduplicated_conditions)
+
+        # Etape 3 : dédupliquer de nouveau l'ensemble pour éviter les doublons dans les conditions non additives
+        self._conditions = sorted(
+            [
+                c
+                for c in self.deduplicate_conditions(combined_conditions)
+                if c.result is not None and c.must_display()
+            ],
+            key=attrgetter("order"),
+        )
+
+        all_displayable = sorted(
+            displayable_conditions,
+            key=attrgetter("order"),
+        )
+        self._all_conditions = all_displayable
+        self._all_conditions_by_category = {
+            category: sorted(conditions, key=attrgetter("order"))
+            for category, conditions in conditions_by_category.items()
+        }
         self._result = (
             PlantationResults.Adequate.value
             if len(self.invalid_conditions) == 0
             else PlantationResults.Inadequate.value
         )
+
+    @staticmethod
+    def combine_conditions(conditions):
+        groups = defaultdict(list)
+        other_conditions = []
+        for condition in conditions:
+            if isinstance(condition, AdditiveConditionMixin):
+                groups[condition.additive_key].append(condition)
+            else:
+                other_conditions.append(condition)
+
+        combined = [reduce(lambda a, b: a + b, group) for group in groups.values()]
+        return other_conditions + combined
+
+    @staticmethod
+    def deduplicate_conditions(conditions):
+        """When all conditions in a group tie (no compare_strictness override),
+        the first one in evaluator iteration order wins.
+        """
+        groups = defaultdict(list)
+        for condition in conditions:
+            if hasattr(condition, "additive_key"):
+                groups[condition.additive_key].append(condition)
+            else:
+                groups[type(condition)].append(condition)
+
+        def strictness_cmp(a, b):
+            if a.is_stricter_than(b):
+                return 1
+            if b.is_stricter_than(a):
+                return -1
+            return 0
+
+        return [max(group, key=cmp_to_key(strictness_cmp)) for group in groups.values()]
+
+    def find_condition(self, condition_cls, evaluator=None):
+        """Searches ``all_conditions`` so per-regulation views can locate a
+        specific evaluator's condition even after deduplication. Evaluator
+        filtering uses identity (``is``), so caller and condition must share
+        the same moulinette instance.
+        """
+        for condition in self.all_conditions:
+            if not isinstance(condition, condition_cls):
+                continue
+            if evaluator is None or condition.criterion_evaluator is evaluator:
+                return condition
+        return None
 
     def get_context(self):
         context = {}
@@ -382,6 +524,5 @@ class PlantationEvaluator:
                 "context": condition.context,
             }
             for condition in self.conditions
-            if condition.must_display()
         ]
         return data

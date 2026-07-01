@@ -20,7 +20,7 @@
     }
 
     this.btns.forEach(btn => {
-      btn.addEventListener("click", this.open.bind(this));
+      btn.addEventListener("click", (e) => { e.preventDefault(); this.open(); });
     });
 
     window.addEventListener("message", this.onMessage.bind(this));

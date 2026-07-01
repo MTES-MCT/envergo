@@ -24,9 +24,16 @@ from envergo.analytics.utils import (
 )
 from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.utils import get_address_from_coords
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
+from envergo.moulinette.models import (
+    AaL3503Handling,
+    CityHallSubmission,
+    ConfigHaie,
+    Criterion,
+    Regulation,
+)
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
@@ -96,6 +103,9 @@ class MoulinetteMixin:
         context["moulinette"] = self.moulinette
         context.update(self.moulinette.catalog)
 
+        user = self.request.user
+        is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
+
         if self.moulinette.is_evaluated():
 
             context["has_errors"] = (
@@ -155,7 +165,10 @@ class MoulinetteMixin:
             self.request.user.is_staff
             and self.request.user.groups.filter(name="Staff ops").exists()
         )
-        context["optional_forms"] = self.moulinette.optional_forms
+        optional_forms = self.moulinette.optional_forms
+        if not is_staff:
+            optional_forms = [f for f in optional_forms if not f.is_staff_only]
+        context["optional_forms"] = optional_forms
         context["triage_form"] = self.moulinette.triage_form
 
         context = {**context, **self.moulinette.get_extra_context(self.request)}
@@ -215,7 +228,7 @@ class MoulinetteMixin:
         # To build a valid moulinette result url, we need to take the existing url parameters
         # and update them with all the POST'ed moulinette form data.
 
-        # There is an hedge case though with checkbox inputs.
+        # There is a hedge case though with checkbox inputs.
         # When a checkbox is left empty, browsers don't send a "false" value, they
         # send no value at all, meaning an existing value in the url will NOT
         # be overriden.
@@ -236,7 +249,7 @@ class MoulinetteMixin:
         """Return the triage url while preserving existing parameters.
 
         This method MUST NOT be called when a "triage" url is not defined,
-        e.g for amenagement.
+        e.g. for amenagement.
         """
         data = self.get_results_params()
         params = urlencode(data)
@@ -279,7 +292,6 @@ class MoulinetteMixin:
                 if moulinette.is_triage_valid()
                 else "soumission_autre"
             )
-
         mtm_keys = get_matomo_tags(self.request)
         export.update(mtm_keys)
 
@@ -310,7 +322,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return self.moulinette.get_home_template()
 
     def post(self, request, *args, **kwargs):
-        # If the moulinette is valid, i.e it can run the eveluation and provide
+        # If the moulinette is valid, i.e. it can run the eveluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid():
             return HttpResponseRedirect(self.get_result_url())
@@ -333,17 +345,22 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         context = self.get_context_data(form=form)
 
         form_errors = defaultdict(list)
-        for field, errors in self.moulinette.form_errors().items():
+        for field, errors in self.moulinette.form_errors.items():
             for error in errors.as_data():
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}
                 )
+        metadata = {
+            "data": form.data,
+            "errors": form_errors,
+        }
+        mtm_keys = get_matomo_tags(self.request)
+        metadata.update(mtm_keys)
         log_event(
             "erreur",
             "formulaire-simu",
             self.request,
-            data=form.data,
-            errors=form_errors,
+            **metadata,
             user_type=get_user_type(self.request.user),
         )
         return self.render_to_response(context)
@@ -598,6 +615,11 @@ class MoulinetteHaieResult(
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
+
+            context["HedgeCategory"] = HedgeCategory
+            context["CityHallSubmission"] = CityHallSubmission
+            context["AaL3503Handling"] = AaL3503Handling
+
         return context
 
 
@@ -900,4 +922,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         context["department_settings_form"] = (
             f"https://tally.so/r/Pd9b9e?{department_query_string}"
         )
+
+        context["ru_zone_configs"] = self.object.zone_configs
+
         return context

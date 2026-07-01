@@ -1,0 +1,28 @@
+<p>
+  Le projet peut être soumis à examen au cas par cas, selon sa situation au regard de la
+  réglementation sur les installations classées pour la protection de l'environnement (ICPE).
+</p>
+
+{% if regulation.icpe.get_evaluator.is_a_verifier_creation %}
+  <p>
+    Le projet crée une nouvelle ICPE. Si celle-ci est soumise à enregistrement, le projet est
+    soumis à examen au cas par cas. Dans ce cas, le dossier d'enregistrement ICPE fait office
+    de demande d'examen au cas par cas.
+  </p>
+{% elif regulation.icpe.get_evaluator.is_a_verifier_modif %}
+  <p>
+    Le projet modifie une ICPE existante. Si un dossier de modification doit être déposé, et que
+    l'ICPE est soumise à enregistrement, le projet est soumis à examen au cas par cas. Dans ce cas,
+    le porter-à-connaissance ICPE fait office de demande d'examen au cas par cas.
+  </p>
+{% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-a-verifier" %}
+
+<div class="more fr-collapse" id="read-more-evalenv-a-verifier">
+
+  {% include 'moulinette/eval_env/_cas_par_cas_details.html' with icpe_only_conditional=regulation.no_other_cas_par_cas_than_icpe %}
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls="evalenv-a-verifier" %}
+
+</div>

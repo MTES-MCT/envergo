@@ -2,6 +2,7 @@ from datetime import date
 from unittest.mock import MagicMock
 
 import pytest
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
@@ -94,7 +95,7 @@ def test_moulinette_config(moulinette_data):
     ConfigAmenagementFactory(is_activated=False)
     moulinette = MoulinetteAmenagement(moulinette_data)
     assert moulinette.has_config()
-    assert moulinette.is_valid(), moulinette.form_errors()
+    assert moulinette.is_valid(), moulinette.form_errors
 
 
 @pytest.mark.parametrize("footprint", [50])
@@ -127,7 +128,7 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     assert moulinette.get_form_template() == "amenagement/moulinette/form.html"
     assert moulinette.get_result_template() == "amenagement/moulinette/result.html"
 
-    MoulinetteClass = get_moulinette_class_from_url("envergo.beta.gouv.fr")
+    MoulinetteClass = get_moulinette_class_from_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
     assert MoulinetteClass is MoulinetteAmenagement
 
 

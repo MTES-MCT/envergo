@@ -413,6 +413,14 @@ nav#evaluation-summary {
         font-weight: bold;
       }
 
+      .fr-input-group[id$="activate"] .fr-hint-text {
+        display: none;
+      }
+
+      &.active .fr-input-group[id$="activate"] .fr-hint-text {
+        display: block;
+      }
+
       & > .fr-fieldset {
         display: none;
         margin-left: 0;

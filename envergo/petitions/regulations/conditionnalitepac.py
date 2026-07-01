@@ -1,17 +1,21 @@
 from django.utils.module_loading import import_string
 
-from envergo.hedges.models import HedgeList
-from envergo.moulinette.regulations.conditionnalitepac import Bcae8
+from envergo.moulinette.regulations.conditionnalitepac import Bcae8Hru, Bcae8Ru
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
-@evaluator_instructor_view_context_getter(Bcae8)
-def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -> dict:
-    """Build context for BCAE8 instructor page view"""
+@evaluator_instructor_view_context_getter(Bcae8Ru)
+@evaluator_instructor_view_context_getter(Bcae8Hru)
+def bcae8_get_instructor_view_context(
+    evaluator, petition_project, moulinette, plantation_evaluation=None
+) -> dict:
+    """Build context for BCAE8 instructor page view."""
 
     hedge_data = petition_project.hedge_data
-    lineaire_detruit_pac = hedge_data.lineaire_detruit_pac()
-    lineaire_to_plant_pac = hedge_data.length_to_plant_pac()
+    to_plant_pac = hedge_data.hedges().to_plant().pac()
+    to_remove_pac = hedge_data.hedges().to_remove().pac()
+    lineaire_detruit_pac = to_remove_pac.length
+    lineaire_to_plant_pac = to_plant_pac.length
     lineaire_total = moulinette.catalog.get("lineaire_total", "")
 
     hedge_to_plant_properties_form = import_string(
@@ -28,13 +32,13 @@ def bcae8_get_instructor_view_context(evaluator, petition_project, moulinette) -
     }
 
     if lineaire_detruit_pac:
-        context["pac_destruction_detail"] = HedgeList(hedge_data.hedges_to_remove_pac())
+        context["pac_destruction_detail"] = to_remove_pac
         context["percentage_pac"] = (
             lineaire_detruit_pac / lineaire_total * 100 if lineaire_total else ""
         )
 
     if lineaire_to_plant_pac:
-        context["pac_plantation_detail"] = HedgeList(hedge_data.hedges_to_plant_pac())
+        context["pac_plantation_detail"] = to_plant_pac
         context["replanting_ratio"] = (
             lineaire_to_plant_pac / lineaire_detruit_pac
             if lineaire_detruit_pac > 0

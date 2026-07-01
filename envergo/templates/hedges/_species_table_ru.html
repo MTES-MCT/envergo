@@ -1,0 +1,39 @@
+{% load hedges %}
+
+<div class="fr-table fr-table--no-caption">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <caption>Liste des espèces protégées potentiellement présentes</caption>
+          <thead>
+            <tr>
+              <th scope="col">Groupe</th>
+              <th scope="col">Nom</th>
+              <th scope="col">Niveau d'enjeu</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in species %}
+              <tr {% if s.local_level_of_concern == "majeur" %}class="fr-text--bold"{% endif %}>
+                <td>{{ s.adhoc_group }}</td>
+                <td>
+                  {% if s.common_name %}
+                    {{ s.common_name }}
+                    <br />
+                  {% endif %}
+                  <i lang="la">{{ s.scientific_name }}</i>
+                </td>
+                <td>{{ s.local_level_of_concern|level_of_concern_display }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3">Aucune espèce spécifique disponible pour l'affichage</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

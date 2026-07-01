@@ -1,4 +1,3 @@
-from collections import defaultdict
 from decimal import Decimal as D
 from functools import cached_property
 from math import ceil
@@ -11,27 +10,36 @@ from django.core.validators import RegexValidator
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.geodata.utils import EPSG_WGS84
-from envergo.hedges.models import PACAGE_RE, HedgeTypeFactory, Pacage
+from envergo.hedges.models import (
+    PACAGE_RE,
+    HedgeCategory,
+    HedgeList,
+    HedgeTypeFactory,
+    Pacage,
+)
 from envergo.hedges.regulations import (
+    AisneQualityCondition,
     EssencesBocageresCondition,
     LineaireInterchamp,
     LineaireSurTalusCondition,
-    MinLengthCondition,
+    NormandieMinLengthCondition,
     NormandieQualityCondition,
     PlantationConditionMixin,
-    QualityCondition,
+    RUMinLengthCondition,
+    RUQualityCondition,
     SafetyCondition,
     StrenghteningCondition,
 )
 from envergo.moulinette.regulations import (
-    HaieCriterionCategory,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique_haie import (
+from envergo.moulinette.regulations.regime_unique import (
+    build_ru_hedge_detail_rows,
     compute_ru_compensation_ratio,
     get_ru_debug_context,
+    get_ru_per_hedge_coefficients,
     get_ru_zone_data,
 )
 from envergo.utils.fields import get_human_readable_value
@@ -52,13 +60,25 @@ class EPRegulation(HaieRegulationEvaluator):
 
 
 class EPMixin:
-    """Legacy criterion for protected species."""
+    """Mixin that populates the catalog with the protected species list.
+
+    Subclasses override get_protected_species() to select the pipeline
+    (HRU vs RU). Defaults to RU.
+    """
+
+    def get_protected_species(self, hedges: HedgeList):
+        """Return the protected species queryset for the catalog.
+
+        Input is a HedgeList instance; output is an annotated Species
+        queryset. Defaults to the RU pipeline. HRU evaluators override
+        this to call hedges.get_all_species_hru().
+        """
+        return hedges.get_all_species()
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies:
-            catalog["protected_species"] = haies.get_all_species()
+        if self.hedges:
+            catalog["protected_species"] = self.get_protected_species(self.hedges)
         return catalog
 
 
@@ -73,16 +93,28 @@ class EspecesProtegeesSimple(PlantationConditionMixin, EPMixin, HaieCriterionEva
         "soumis": "soumis",
     }
 
+    def get_protected_species(self, hedges):
+        """Use the HRU species pipeline."""
+        return hedges.get_all_species_hru()
+
     def get_result_data(self):
         return "soumis"
 
 
 class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEvaluator):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, hedges):
+        """Use the HRU species pipeline."""
+        return hedges.get_all_species_hru()
 
     choice_label = "EP > EP Aisne"
     base_slug = "ep_aisne"
-    plantation_conditions = [SafetyCondition, QualityCondition]
+    plantation_conditions = [
+        RUMinLengthCondition,
+        SafetyCondition,
+        AisneQualityCondition,
+    ]
 
     CODE_MATRIX = {
         (False, True): "interdit",
@@ -99,16 +131,13 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEval
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if haies:
-            species = haies.get_all_species()
-            catalog["protected_species"] = species
-            catalog["fauna_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "animalia"
-            ]
-            catalog["flora_sensitive_species"] = [
-                s for s in species if s.highly_sensitive and s.kingdom == "plantae"
-            ]
+        species = catalog.get("protected_species", [])
+        catalog["fauna_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "animalia"
+        ]
+        catalog["flora_sensitive_species"] = [
+            s for s in species if s.highly_sensitive and s.kingdom == "plantae"
+        ]
         return catalog
 
     def get_result_data(self):
@@ -123,7 +152,7 @@ class EspecesProtegeesAisne(PlantationConditionMixin, EPMixin, HaieCriterionEval
         return has_reimplantation, has_sensitive_species
 
     def get_replantation_coefficient(self):
-        return D("1.5")
+        return 1.5
 
 
 def get_hedge_compensation_details(hedge, r):
@@ -174,13 +203,17 @@ class EPNormandieForm(forms.Form):
 class EspecesProtegeesNormandie(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
 ):
-    """Check for protected species living in hedges."""
+    """Check for protected species living in hedges (HRU pipeline)."""
+
+    def get_protected_species(self, hedges):
+        """Use the HRU species pipeline."""
+        return hedges.get_all_species_hru()
 
     choice_label = "EP > EP Normandie"
     base_slug = "ep_normandie"
     debug_template = "haie/moulinette/debug/ep_normandie.html"
     plantation_conditions = [
-        MinLengthCondition,
+        NormandieMinLengthCondition,
         SafetyCondition,
         StrenghteningCondition,
         LineaireSurTalusCondition,
@@ -431,7 +464,7 @@ class EspecesProtegeesNormandie(
         else:
             density_ratio = 1.0
 
-        centroid_shapely = haies.get_centroid_to_remove()
+        centroid_shapely = self.hedges.to_remove().centroid
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
 
         # Normandie is divided into natural areas with a certain homogeneity of biodiversity.
@@ -465,11 +498,9 @@ class EspecesProtegeesNormandie(
             density_ratio_range = "lt_0.5"
 
         # Loop on the hedges to remove and calculate the replantation coefficient for each hedge.
-        LD = defaultdict(int)  # linéaire à détruire
-        LC = defaultdict(int)  # linéaire à compenser
-        LPm_r = defaultdict(int)  # linéaire minimum attendu réduit
+        per_hedge_coefficients = {}
 
-        for hedge in haies.hedges_to_remove():
+        for hedge in self.hedges.to_remove():
             if hedge.mode_destruction != "coupe_a_blanc":
                 coupe_a_blanc_every_hedge = False
             if hedge.hedge_type != "alignement" or not hedge.prop("bord_voie"):
@@ -499,41 +530,15 @@ class EspecesProtegeesNormandie(
             minimum_length_to_plant = D(minimum_length_to_plant) + D(hedge.length) * r
             hedges_details.append(get_hedge_compensation_details(hedge, r))
 
-            # Note: if r == 0.0, the hedge does not need to be compensated, so it's
-            # not added to the list of destroyed hedges
             if r > 0.0:
-                LD[hedge.hedge_type] += hedge.length
-                LC[hedge.hedge_type] += hedge.length * float(r)
+                per_hedge_coefficients[hedge.id] = float(r)
 
-        # Total compensation length before compensation reductions
-        lpm = sum(LC.values())
-
-        # Compensation can be reduced when planting a better type
-        # Compensation rate cannot go below 1:1 though
-        reduced_lpm = 0
-
-        HedgeType = HedgeTypeFactory.build_from_context(
-            single_procedure=False
-        )  # Cet évaluateur n'est utilisé qu'avant la mise en place du régime unique.
-        for hedge_type in HedgeType.values:
-            lc_type = LC[hedge_type]
-            lc_type *= 0.8 if hedge_type != "mixte" else 1.0
-            lc_type = max(lc_type, LD[hedge_type])
-            LPm_r[hedge_type] = lc_type
-            reduced_lpm += lc_type
-
-        catalog.update(
-            {
-                "LC": LC,
-                "lpm": lpm,
-                "reduced_lpm": reduced_lpm,
-                "LPm_r": LPm_r,
-            }
-        )
+        catalog["per_hedge_coefficients"] = per_hedge_coefficients
 
         # Aggregate the R of each hedge to compute the global replantation coefficient.
-        if haies.length_to_remove() > 0:
-            aggregated_r = minimum_length_to_plant / D(haies.length_to_remove())
+        length_to_remove = self.hedges.to_remove().length
+        if length_to_remove > 0:
+            aggregated_r = minimum_length_to_plant / D(length_to_remove)
 
         r_max = max(all_r) if all_r else max(self.COEFFICIENT_MATRIX.values())
         catalog["r_max"] = r_max
@@ -588,12 +593,17 @@ class EspecesProtegeesNormandie(
 
         return result
 
+    @property
+    def effective_coefficients(self):
+        """Normandie density-based per-hedge compensation coefficients."""
+        return self.catalog.get("per_hedge_coefficients", {})
+
     def get_replantation_coefficient(self):
         if self.result_code == "dispense_L350" or self.result_code == "a_verifier_L350":
             # If the result is "dispense_L350" or "a_verifier_L350", the replantation coefficient is 1.0
             return 1.0
 
-        return self.catalog.get("aggregated_r")
+        return float(self.catalog.get("aggregated_r"))
 
     def get_debug_context(self):
         """Return centroid-based density data for debug display."""
@@ -632,7 +642,7 @@ class EspecesProtegeesNormandie(
 
         context["density_map"] = create_density_map(
             centroid_geos,
-            haies.hedges_to_remove(),
+            self.hedges.to_remove(),
             truncated_circle_200,
             truncated_circle_5000,
         )
@@ -714,6 +724,8 @@ EP_RU_REPLANTATION_BONUS = {
     "dispense": 0.0,
 }
 
+EP_RU_SENSITIVE_SPECIES_BONUS = 0.25
+
 
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
@@ -728,10 +740,11 @@ class EspecesProtegeesRegimeUnique(
     choice_label = "EP > EP Régime unique"
     base_slug = "ep_regime_unique"
     debug_template = "haie/moulinette/debug/ep_regime_unique.html"
-    plantation_conditions = []
+    plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
+    plantation_skip_results = frozenset({"dispense", "non_concerne", "non_disponible"})
     form_class = None
     settings_form_class = EspecesProtegeesRegimeUniqueSettings
-    category = HaieCriterionCategory.ru
+    category = HedgeCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,
@@ -787,22 +800,45 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
-        """Populate the catalog with EP régime unique inputs."""
+        """Populate the catalog with EP régime unique inputs.
 
+        Species are populated by EPMixin using the default RU pipeline.
+        The public list excludes "majeur" species (sensitive data only
+        shown on the instruction page, not the public result page).
+        """
         catalog = super().get_catalog_data()
-        haies = self.catalog.get("haies")
-        if not haies:
+        if not self.hedges:
             return catalog
+
+        species = catalog.get("protected_species")
+        if species is not None:
+            species_list = list(species)
+            catalog["protected_species"] = species_list
+            catalog["protected_species_public"] = [
+                s for s in species_list if s.local_level_of_concern != "majeur"
+            ]
+            catalog["has_sensitive_species"] = any(
+                s.local_level_of_concern == "majeur" for s in species_list
+            )
 
         catalog.update(self.get_density_catalog_data())
 
-        if (
-            self.moulinette.config.single_procedure
-            and "ru_per_hedge_coefficients" not in self.catalog
-        ):
-            catalog.update(get_ru_zone_data(self.moulinette))
+        if self.moulinette.config.single_procedure:
+            zone_data = get_ru_zone_data(self.moulinette, self.hedges)
+            catalog.update(zone_data)
+            zone_configs = zone_data["ru_per_hedge_zone_configs"]
+            coeff_result = get_ru_per_hedge_coefficients(
+                self.moulinette, self.hedges, zone_configs
+            )
+            catalog["ru_per_hedge_zone_info"] = coeff_result["ru_per_hedge_zone_info"]
+            if "per_hedge_coefficients" not in self.catalog:
+                catalog["per_hedge_coefficients"] = coeff_result[
+                    "per_hedge_coefficients"
+                ]
 
-        hedges = haies.hedges_to_remove().n_alignement()
+        # TODO : hedges are now filtered by category, this specific variable should be handle
+        #  in the evaluators EspecesProtegeesRegimeUniqueHru and EspecesProtegeesRegimeUniqueL3503
+        hedges = self.hedges.to_remove().n_alignement()
 
         catalog["ep_ru_aa_only"] = not hedges
 
@@ -824,10 +860,9 @@ class EspecesProtegeesRegimeUnique(
     @cached_property
     def hedges_in_zone_sensible(self):
         """Lazily compute which hedges intersect a zone sensible EP map."""
-        haies = self.catalog.get("haies")
-        if not haies:
+        if not self.hedges:
             return set()
-        hedges = haies.hedges_to_remove().n_alignement()
+        hedges = self.hedges.to_remove().n_alignement()
         return self.get_hedges_in_zone_sensible(hedges)
 
     @cached_property
@@ -840,10 +875,9 @@ class EspecesProtegeesRegimeUnique(
         params = self.params
         if params is None:
             return {}
-        haies = self.catalog.get("haies")
-        if not haies:
+        if not self.hedges:
             return {}
-        hedges = haies.hedges_to_remove().n_alignement()
+        hedges = self.hedges.to_remove().n_alignement()
         return self.compute_per_hedge_results(
             hedges,
             self.catalog.get("ep_ru_total_length", 0),
@@ -949,11 +983,33 @@ class EspecesProtegeesRegimeUnique(
 
         return result
 
-    def get_replantation_coefficient(self):
-        """Base RU coefficient plus a bonus depending on the EP result level."""
-        r_ru = compute_ru_compensation_ratio(self.moulinette)
+    def get_ep_ru_bonus(self):
+        """Total EP bonus: base per result level, plus sensitive-species majoration."""
         bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
-        return round(r_ru + bonus, 2)
+        if self.result_code == "derogation_simplifiee" and self.catalog.get(
+            "has_sensitive_species", False
+        ):
+            bonus += EP_RU_SENSITIVE_SPECIES_BONUS
+        return bonus
+
+    @property
+    def effective_coefficients(self):
+        """Raw per-hedge coefficients adjusted with the EP bonus.
+
+        Dispense means no compensation is required, so effective coefficients
+        are empty.
+        """
+        if self.result_code == "dispense":
+            return {}
+        bonus = self.get_ep_ru_bonus()
+        raw = self.catalog.get("per_hedge_coefficients", {})
+        return {h: c + bonus for h, c in raw.items()}
+
+    def get_replantation_coefficient(self):
+        """Weighted average of the effective per-hedge coefficients."""
+        return compute_ru_compensation_ratio(
+            self.moulinette, self.hedges, coefficients=self.effective_coefficients
+        )
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.
@@ -961,12 +1017,11 @@ class EspecesProtegeesRegimeUnique(
         Returns a list of dicts with id, hedge_type (human-readable), and
         in_zone_sensible — used by both the debug page and the instructor view.
         """
-        haies = self.catalog.get("haies")
-        if not haies:
+        if not self.hedges:
             return []
 
         hedges_in_zone_sensible = self.hedges_in_zone_sensible
-        hedges = haies.hedges_to_remove().n_alignement()
+        hedges = self.hedges.to_remove().n_alignement()
         HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
 
         rows = []
@@ -986,22 +1041,18 @@ class EspecesProtegeesRegimeUnique(
         """Return density, EP-specific, and RU zone debug data."""
         context = super().get_debug_context()
 
+        hedge_rows = build_ru_hedge_detail_rows(self.catalog, self)
         per_hedge_results = self.per_hedge_results
-        per_hedge_coefficients = self.catalog.get("ru_per_hedge_coefficients", {})
-        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
-        hedge_rows = self.build_hedge_rows()
         for row in hedge_rows:
-            row["partial_result"] = per_hedge_results.get(row["id"], "-")
-            coeff_brut = per_hedge_coefficients.get(row["id"], 0.0)
-            row["coeff_ru_brut"] = coeff_brut
-            row["coeff_ru_majore"] = round(coeff_brut + bonus, 2)
+            row["partial_result"] = per_hedge_results.get(row["hedge_id"], "-")
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
+        context["has_sensitive_species"] = self.catalog.get(
+            "has_sensitive_species", False
+        )
         context["hedge_debug_rows"] = hedge_rows
-        # Surface the admin-configured thresholds so the debug page shows
-        # exactly which values drove the cascade. None when settings are
-        # missing/invalid — the template hides the table in that case.
         context["ep_ru_settings"] = self.params
-        context.update(get_ru_debug_context(self.catalog))
+        ru_debug = get_ru_debug_context(self.catalog)
+        context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
         return context

@@ -89,13 +89,10 @@ class HedgeDensity(LatLngDemoMixin, FormView):
         """Return context with data to display map"""
         lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
         # Get the density data for different circles around the point.
-        # For display purpose, we fetch hedges with a simplified geometry.
-        # Tolerance ~5 m at French latitudes is well below pixel resolution
-        # at the demo's 5 km zoom.
         bundle = compute_hedge_densities_around_point(
             lng_lat,
             radii=[400, 5000],
-            display_simplify_tolerance=0.00005,
+            include_display_geojson=True,
         )
         density_400 = bundle[400]
         density_5000 = bundle[5000]
@@ -167,7 +164,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
         context["result_available"] = False
         if form.is_bound and form.cleaned_data.get("haies"):
             hedges = form.cleaned_data["haies"]
-            centroid = hedges.get_centroid_to_remove()
+            centroid = hedges.hedges_to_remove().centroid
             context["display_marker"] = False
             context["center_map"] = [centroid.x, centroid.y]
             context["default_zoom"] = 17
@@ -182,10 +179,10 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
     def get_result_data(self, hedges):
         """Return context with data to display map"""
 
-        hedges_to_remove_mls_merged = hedges.get_multilinestring_to_remove()
+        hedges_to_remove_mls_merged = hedges.hedges_to_remove().to_multilinestring()
 
         density_400 = compute_hedge_density_around_lines(
-            hedges_to_remove_mls_merged, 400, display_simplify_tolerance=0.00005
+            hedges_to_remove_mls_merged, 400, include_display_geojson=True
         )
 
         buffered_400_polygon = (
@@ -204,7 +201,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
                 "className": "hedge to-remove",
-                "legend": "Haies à détruire",
+                "legend": "Linéaires à détruire",
                 "opacity": 1.0,
             },
             {
