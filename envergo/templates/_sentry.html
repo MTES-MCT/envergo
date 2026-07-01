@@ -7,23 +7,20 @@
         environment: "{{ ENV_NAME }}",
         // Noise from browser extensions (privacy/anti-fingerprinting tools)
         // calling stale postMessage RPC handles. Not actionable on our end.
-        // See sentry.incubateur.net/.../285185 (ENVERGO-1BE).
         ignoreErrors: [
           /Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+$/,
           // Cashback/coupon shopping browser extensions injecting their own
           // script (response.cashbackReminder), not our code.
-          // See sentry.incubateur.net/.../283316.
           /response\.cashbackReminder/,
         ],
         // Syntax errors thrown by the Crisp chat widget's own bundle, not by
-        // our code. See sentry.incubateur.net/.../272786 (ENVERGO-19F).
-        denyUrls: [/client\.crisp\.chat/],
+        // our code.
         beforeSend: function (event) {
           // Drop opaque "Script error."-style events: a single frame with no
           // line/col info, pointing at the page itself rather than a real
           // script. These come from cross-origin scripts (browser
           // extensions) the browser intentionally hides details for, not
-          // from our code. See sentry.incubateur.net/.../221261 (ENVERGO-VG).
+          // from our code.
           var frames =
             event.exception &&
             event.exception.values &&
@@ -37,6 +34,17 @@
             frames[0].colno == null
           ) {
             return null;
+          }
+          // Syntax errors from Crisp's own bundle (not our code) — kept at
+          // info level for visibility.
+          if (
+            frames &&
+            frames.some(function (f) {
+              return f.filename && /client\.crisp\.chat/.test(f.filename);
+            })
+          ) {
+            event.level = "info";
+            return event;
           }
           return event;
         },
