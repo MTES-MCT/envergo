@@ -441,6 +441,10 @@ MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
 
 HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
+HAIE_SINGLE_PROCEDURE_ACTIVATED = env.bool(
+    "DJANGO_HAIE_SINGLE_PROCEDURE_ACTIVATED", default=False
+)
+
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
     # https://doc.demarche.numerique.gouv.fr/pour-aller-plus-loin/api-de-preremplissage
