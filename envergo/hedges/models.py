@@ -124,6 +124,7 @@ class HedgeCategory(EnrichedChoices):
         "display_value": "L350-3",
         "label": "Alignements d'arbres en bord de voie",
         "short_label": "Alignements d'arbres bord de voie",
+        "badge_label": "Alignement bord de voie",
         "instructor_label": "Alignements arbres L350-3",
         "instructor_short_label": "AA L350-3",
         "badge_modifier_class": "fr-badge--green-tilleul-verveine",
@@ -132,6 +133,7 @@ class HedgeCategory(EnrichedChoices):
         "display_value": "Hors régime unique",
         "label": "Autres haies et alignements, hors procédure unique",
         "short_label": "Linéaires hors procédure unique",
+        "badge_label": "Hors procédure unique",
         "instructor_label": "Linéaires hors r. unique",
         "instructor_short_label": "Hors r. u.",
         "badge_modifier_class": "",
@@ -235,7 +237,12 @@ class Hedge:
 
     @property
     def category(self):
-        """Return the category of the hedge (régime unique, L350-3 or hors régime unique)."""
+        """Return the category of the hedge (régime unique, L350-3 or hors régime unique).
+
+        This method logic is duplicate on front side (envergo/hedges/static/hedge_input/app.js)
+        Any changes made here must be reflected there.
+        """
+
         if (
             self.hedge_type != HedgeTypeBase.ALIGNEMENT
             and (
