@@ -57,8 +57,9 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
+from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
-from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT, HedgeTypeFactory
+from envergo.hedges.models import TO_PLANT, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
 from envergo.moulinette.utils import MoulinetteUrl
@@ -72,6 +73,7 @@ from envergo.petitions.forms import (
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
     SimulationForm,
+    validate_simulation_url,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -356,7 +358,7 @@ class PetitionProjectCreate(FormView):
         return res
 
     def pre_fill_demarche_simplifiee(self, project):
-        """Send a http request to pre-fill a dossier on demarches-simplifiees.fr based on moulinette data.
+        """Send a http request to pre-fill a dossier on Démarche numérique based on moulinette data.
 
         Return the url of the created dossier and its number if successful, None otherwise
         """
@@ -372,7 +374,7 @@ class PetitionProjectCreate(FormView):
         if not department:
             logger.error(
                 "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
+                "start a « Démarche numérique »",
                 extra={"moulinette_url": moulinette_url},
             )
             return None, None
@@ -408,7 +410,7 @@ class PetitionProjectCreate(FormView):
         for field in config.demarche_simplifiee_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
-                    "Invalid pre-fill configuration for a dossier on demarches-simplifiees.fr",
+                    "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
                     extra={"haie config": config.id, "field": field},
                 )
 
@@ -432,15 +434,36 @@ class PetitionProjectCreate(FormView):
 
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             logger.warning(
-                f"Demarches Simplifiees is not enabled. Doing nothing."
+                f"« Démarche numérique » is not enabled. Doing nothing."
                 f"\nrequest.url: {api_url}"
                 f"\nrequest.body: {body}"
             )
             return None, None
 
-        response = requests.post(
-            api_url, json=body, headers={"Content-Type": "application/json"}
-        )
+        try:
+            response = requests.post(
+                api_url,
+                json=body,
+                headers={"Content-Type": "application/json"},
+                timeout=settings.DEFAULT_HTTP_TIMEOUT,
+            )
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "Could not reach demarches-simplifiees.fr to pre-fill a dossier",
+                extra={"api_url": api_url, "request_body": body, "exception": e},
+            )
+            self.request.alerts.append(
+                PetitionProjectCreationProblem(
+                    "ds_api_connection_error",
+                    {
+                        "api_url": api_url,
+                        "request_body": body,
+                    },
+                    is_fatal=True,
+                )
+            )
+            return None, None
+
         redirect_url, dossier_number = None, None
         if 200 <= response.status_code < 400:
             data = response.json()
@@ -448,7 +471,7 @@ class PetitionProjectCreate(FormView):
             dossier_number = data.get("dossier_number")
         else:
             logger.error(
-                "Error while pre-filling a dossier on demarches-simplifiees.fr",
+                "Error while pre-filling a dossier on « Démarche numérique »",
                 extra={
                     "api_url": response.request.url,
                     "request_body": response.request.body,
@@ -472,7 +495,7 @@ class PetitionProjectCreate(FormView):
     def get_value_from_source(
         self, petition_project, moulinette, source, mapping, config
     ):
-        """Get the value to pre-fill a dossier on demarches-simplifiees.fr from a source.
+        """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
         Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
@@ -524,7 +547,7 @@ class PetitionProjectCreate(FormView):
             regulation_result = getattr(moulinette, regulation_slug, None)
             if regulation_result is None:
                 logger.warning(
-                    "Unable to get the regulation result to pre-fill a démarche simplifiée",
+                    "Unable to get the regulation result to pre-fill a « Démarche numérique »",
                     extra={
                         "regulation_slug": regulation_slug,
                         "moulinette_url": petition_project.moulinette_url,
@@ -552,7 +575,7 @@ class PetitionProjectCreate(FormView):
             criteria = getattr(regulation, criteria_slug, None)
             if criteria is None:
                 logger.warning(
-                    "Unable to get the criteria result code to pre-fill a démarche simplifiée",
+                    "Unable to get the criteria result code to pre-fill a « Démarche numérique »",
                     extra={
                         "source": source,
                         "moulinette_url": petition_project.moulinette_url,
@@ -577,7 +600,7 @@ class PetitionProjectCreate(FormView):
                 value = moulinette.catalog[source]
             else:
                 logger.warning(
-                    "Unable to get the moulinette value to pre-fill a démarche simplifiée",
+                    "Unable to get the moulinette value to pre-fill a « Démarche numérique »",
                     extra={
                         "source": source,
                         "moulinette_url": petition_project.moulinette_url,
@@ -599,7 +622,7 @@ class PetitionProjectCreate(FormView):
             # if the mapping object is not empty but do not contain the value, log an info
             if value not in mapping:
                 logger.info(
-                    "The value to pre-fill a dossier on demarches-simplifiees.fr is not in the mapping",
+                    "The value to pre-fill a dossier on « Démarche numérique » is not in the mapping",
                     extra={
                         "source": source,
                         "mapping": mapping,
@@ -886,11 +909,11 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.object.config.demarche_simplifiee_number
         )
 
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
             messages.info(
                 self.request,
-                """L'accès à l'API démarches simplifiées n'est pas activée.
+                """L'accès à l'API « Démarche numérique » n'est pas activée.
                 Les données proviennent d'un dossier factice.""",
             )
 
@@ -1109,7 +1132,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
 class PetitionProjectInstructorDossierDSView(
     BasePetitionProjectInstructorView, DetailView
 ):
-    """View for petition project page with demarches simplifiées data"""
+    """View for petition project page with Démarche numérique data"""
 
     template_name = "haie/petitions/instructor_view_dossier_ds.html"
 
@@ -1121,13 +1144,13 @@ class PetitionProjectInstructorDossierDSView(
 
         project_details = compute_instructor_informations_ds(
             self.object
-        )  # compute DS details first as it will force update the dossier cache
+        )  # compute « Démarche numérique » details first as it will force update the dossier cache
         context["project_details"] = project_details
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if not context["project_details"]:
             messages.warning(
                 self.request,
-                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                f"""Impossible de récupérer les informations du dossier « Démarche numérique ».
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
@@ -1184,7 +1207,7 @@ class PetitionProjectInstructorNotesView(BasePetitionProjectInstructorUpdateView
 class PetitionProjectInstructorMessagerieView(
     BasePetitionProjectInstructorView, FormView
 ):
-    """View for petition project instructor page with demarche simplifiées messagerie"""
+    """View for petition project instructor page with Démarche numérique messagerie"""
 
     template_name = "haie/petitions/instructor_view_dossier_messagerie.html"
     event_category = "message"
@@ -1219,11 +1242,11 @@ class PetitionProjectInstructorMessagerieView(
             "automatic": settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"],
         }
 
-        # Send message if info from DS is not in project details
+        # Send message if info from « Démarche numérique » is not in project details
         if context["ds_messages"] is None:
             messages.warning(
                 self.request,
-                f"""Impossible de récupérer les informations du dossier Démarche Numérique.
+                f"""Impossible de récupérer les informations du dossier « Démarche numérique ».
                         Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
@@ -1325,7 +1348,7 @@ class PetitionProjectInstructorMessagerieView(
 class PetitionProjectInstructorMessagerieMarkUnreadView(
     BasePetitionProjectInstructorView, View
 ):
-    """View for petition project instructor page with demarche simplifiées messagerie"""
+    """View for petition project instructor page with Démarche numérique messagerie"""
 
     event_category = "message"
     event_action = "marquage_non_lu"
@@ -1407,6 +1430,12 @@ class PetitionProjectInstructorAlternativeView(
 
         context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
 
+        # Detailed errors of an activation that just failed (set by the edit
+        # view across the redirect). Popped so they show only once.
+        context["activation_errors"] = self.request.session.pop(
+            "activation_errors", None
+        )
+
         return context
 
     def form_valid(self, form):
@@ -1426,6 +1455,24 @@ class PetitionProjectInstructorAlternativeView(
         )
 
         return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        # A failed creation is most often a bad moulinette url. Record the
+        # detailed errors so we can monitor which kinds of mistakes instructors
+        # run into (invalid url, missing parameter, inconsistent answers…).
+        log_event(
+            "erreur",
+            "simualt_add",
+            self.request,
+            data=form.data,
+            user_type=get_user_type(self.request.user),
+            reference=self.object.reference,
+            errors=form.errors.get_json_data(),
+            moulinette_errors=form.moulinette_errors,
+            **get_matomo_tags(self.request),
+        )
+
+        return super().form_invalid(form)
 
     def get_success_url(self):
         url = reverse(
@@ -1448,6 +1495,19 @@ class PetitionProjectInstructorAlternativeEdit(
                 request=request, template="haie/petitions/403.html", status=403
             )
 
+        simulation = self.get_simulation(kwargs["simulation_id"])
+
+        action = kwargs["action"]
+        if action == "activate":
+            return self.activate_simulation(request, simulation)
+        if action == "delete" and simulation.can_be_deleted():
+            return self.delete_simulation(request, simulation)
+
+        # Should not happen unless someone forges an invalid URL.
+        return HttpResponseForbidden("Action non disponible")
+
+    def get_simulation(self, simulation_id):
+        """Return the targeted simulation (with its project) or raise 404."""
         simulation_qs = (
             Simulation.objects.filter(project=self.object)
             .select_related("project")
@@ -1458,54 +1518,96 @@ class PetitionProjectInstructorAlternativeEdit(
                 )
             )
         )
-
         try:
-            simulation = simulation_qs.get(pk=kwargs["simulation_id"])
+            return simulation_qs.get(pk=simulation_id)
         except Simulation.DoesNotExist:
             raise Http404()
 
-        action = kwargs["action"]
-        if action == "activate" and simulation.can_be_activated():
-            with transaction.atomic():
-                simulation_qs.update(is_active=False)
-                simulation.is_active = True
-                simulation.save()
+    def activate_simulation(self, request, simulation):
+        """Make the simulation the project's active one, or reject it.
 
-                project = simulation.project
-                project.moulinette_url = simulation.moulinette_url
-                url = MoulinetteUrl(project.moulinette_url)
-                project.hedge_data_id = url["haies"]
-                project.save()
-
-                messages.success(request, "La simulation alternative a été activée.")
-
-                log_event(
-                    "dossier",
-                    "simulation_alt",
-                    self.request,
-                    action="activate",
-                    **self.object.get_log_event_data(),
-                    **get_matomo_tags(self.request),
-                )
-
-        # The main active simulation cannot be deleted
-        elif action == "delete" and simulation.can_be_deleted():
-            simulation.delete()
-
-            messages.success(request, "La simulation alternative a été supprimée.")
-
-            log_event(
-                "dossier",
-                "simulation_alt",
-                self.request,
-                action="delete",
-                **self.object.get_log_event_data(),
-                **get_matomo_tags(self.request),
+        Activation is refused with an explanatory message when the dossier is
+        closed or when the simulation url is no longer a valid moulinette.
+        """
+        if not simulation.can_be_activated():
+            return self.reject_activation(
+                request,
+                simulation,
+                "Le dossier est clos, la simulation ne peut pas être activée.",
+                [],
             )
 
-        else:
-            # This should not happen unless someone manually forges an invalid URL
-            return HttpResponseForbidden("Action non disponible")
+        is_valid, errors = validate_simulation_url(simulation.moulinette_url)
+        if not is_valid:
+            return self.reject_activation(
+                request,
+                simulation,
+                "La simulation n'a pas pu être activée car elle n'est plus valide.",
+                errors,
+            )
+
+        with transaction.atomic():
+            Simulation.objects.filter(project=self.object).update(is_active=False)
+            simulation.is_active = True
+            simulation.save()
+
+            project = simulation.project
+            project.moulinette_url = simulation.moulinette_url
+            url = MoulinetteUrl(project.moulinette_url)
+            project.hedge_data_id = url["haies"]
+            project.save()
+
+        messages.success(request, "La simulation alternative a été activée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="activate",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def delete_simulation(self, request, simulation):
+        """Delete the simulation (callers ensure it is not active or initial)."""
+
+        simulation.delete()
+
+        messages.success(request, "La simulation alternative a été supprimée.")
+
+        log_event(
+            "dossier",
+            "simulation_alt",
+            self.request,
+            action="delete",
+            **self.object.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        return HttpResponseRedirect(self.get_success_url())
+
+    def reject_activation(self, request, simulation, message, errors):
+        """Refuse an activation cannot be done."""
+
+        messages.error(request, message)
+        if errors:
+            # We display the detail of the whole moulinette form in structured html
+            # The top message gets embedded in a <p>, so we cannot print everything there
+            request.session["activation_errors"] = errors
+
+        log_event(
+            "erreur",
+            "simualt_activate",
+            self.request,
+            user_type=get_user_type(self.request.user),
+            reference=self.object.reference,
+            moulinette_url=simulation.moulinette_url,
+            message=message,
+            moulinette_errors=errors,
+            **get_matomo_tags(self.request),
+        )
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -1545,13 +1647,6 @@ class PetitionProjectInstructorProcedureView(
         initial["decision"] = self.object.decision
 
         return initial
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["single_procedure"] = bool(
-            self.object.config and self.object.config.single_procedure
-        )
-        return kwargs
 
     def get_context_data(self, **kwargs):
 
@@ -1639,7 +1734,7 @@ class PetitionProjectInstructorProcedureView(
                 form.add_error(
                     None,
                     mark_safe(
-                        f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
+                        f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
                         <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                             contacter l'équipe du guichet unique de la haie
                         </a> en indiquant l'identifiant du dossier."""
@@ -1715,7 +1810,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
                 )
 
-                # Send DS Message
+                # Send « Démarche numérique » message
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 
@@ -1723,13 +1818,13 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
                         messages.info(
                             self.request,
-                            """L'accès à l'API démarches simplifiées n'est pas activée.
+                            """L'accès à l'API « Démarche numérique » n'est pas activée.
                             Le message n'est pas envoyé""",
                         )
                     else:
                         # We raise an exception to make sure the data model transaction
                         # is aborted
-                        raise DemarchesSimplifieesError(message="DS message not sent")
+                        raise DemarchesSimplifieesError(message="DN message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)

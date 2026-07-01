@@ -124,7 +124,7 @@ def validate_mime_type(value):
 
 
 class PetitionProjectInstructorMessageForm(forms.Form):
-    """Form to send a message through demarches simplifiées API."""
+    """Form to send a message through Démarche numérique API."""
 
     message_body = forms.CharField(
         label="Message",
@@ -171,20 +171,10 @@ class ProcedureForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, single_procedure=False, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
-
-        # Single-procedure departments skip the "to_be_processed" stage entirely,
-        # so it shouldn't even be selectable.
-        if single_procedure:
-            self.fields["stage"].choices = [
-                choice
-                for choice in self.fields["stage"].choices
-                if choice[0] != "to_be_processed"
-            ]
-
         # Pass field errors to the widget after validation
         for name, field in self.fields.items():
             bound_field = self[name]
@@ -306,6 +296,38 @@ USER_TYPE = (
 )
 
 
+def list_moulinette_errors(moulinette):
+    """Returns an invalid moulinette's errors as field-prefixed messages."""
+    fields = moulinette.get_prefixed_fields()
+    messages = []
+    for field_name, field_errors in moulinette.form_errors.items():
+        field = fields.get(field_name)
+        for message in field_errors:
+            if field:
+                message = f"{field.label} : {message}"
+            messages.append(message)
+
+    return messages
+
+
+def validate_simulation_url(url):
+    """Tells whether an url is a valid simulation, and details why if it is not.
+
+    Returns ``(is_valid, errors)`` where ``errors`` is the field-prefixed list
+    from the moulinette (empty when the url builds no moulinette at all). Shared
+    by the creation form and the activation view so both apply the same rule.
+    """
+    is_valid, errors = True, []
+
+    moulinette = MoulinetteUrl(url).get_moulinette()
+    if moulinette is None:
+        is_valid, errors = False, []
+    elif not moulinette.is_valid():
+        is_valid, errors = False, list_moulinette_errors(moulinette)
+
+    return is_valid, errors
+
+
 class SimulationForm(forms.ModelForm):
     moulinette_url = forms.URLField(
         label="Lien vers la simulation",
@@ -328,12 +350,22 @@ class SimulationForm(forms.ModelForm):
         model = Simulation
         fields = ["moulinette_url", "source", "comment"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Store the underlying moulinette form errors
+        self.moulinette_errors = []
+
     def clean_moulinette_url(self):
         url = self.cleaned_data["moulinette_url"]
-        moulinette_url = MoulinetteUrl(url)
-        if not moulinette_url.is_valid():
+
+        # Reject a url that is not a valid simulation. The underlying errors are
+        # exposed so the template can list them below the field.
+        is_valid, errors = validate_simulation_url(url)
+        if not is_valid:
+            self.moulinette_errors = errors
             raise ValidationError(
                 "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
             )
-        return moulinette_url.url
+
+        return MoulinetteUrl(url).url

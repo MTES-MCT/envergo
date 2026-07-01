@@ -2427,7 +2427,7 @@ main.demos {
     padding: initial;
     margin: initial;
     overflow: visible;
-    clip: auto;
+    clip: auto; /* stylelint-disable-line property-no-deprecated -- overrides DSFR's deprecated `clip: rect()` that hides this label */
     white-space: normal;
     border: initial;
     display: block;

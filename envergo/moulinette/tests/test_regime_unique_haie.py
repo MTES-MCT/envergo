@@ -1,9 +1,9 @@
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
 
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
-from envergo.geodata.utils import EPSG_WGS84
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.regime_unique_haie import URGENCE_MOTIFS

@@ -1,10 +1,10 @@
 # Services externes
 
-## Démarches simplifiées
+## Démarche numérique
 
-Un module démarches simplifiées est disponible dans le module petitions.
+Un module « Démarche numérique » est disponible dans le module petitions.
 
-Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans Démarches Simplifiées.
+Il est utilisé principalement dans le guichet unique de la haie, pour faire le lien avec les dossiers déposés dans « Démarche numérique ».
 
 Celui-ci permet d'envoyer des requêtes GraphQL pour :
 
@@ -21,6 +21,6 @@ Ce client est appelé pour les méthodes
 - `envergo.petitions.services.get_messages_and_senders_from_ds`
 - `envergo.petitions.management.commands.dossier_submission_admin_alert`
 
-Une requête vers DS peut être aussi exécutées hors du client :
+Une requête vers « Démarche numérique » peut être aussi exécutées hors du client :
 
 - `envergo.petitions.views.pre_fill_demarche_simplifiee`

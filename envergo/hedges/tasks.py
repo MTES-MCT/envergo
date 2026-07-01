@@ -4,6 +4,7 @@ import logging
 import os
 
 import requests
+from django.conf import settings
 from django.db import IntegrityError
 from django.utils import timezone
 
@@ -101,7 +102,9 @@ def extract_file(field_file):
     """Handle local and remote files."""
 
     if field_file.url.startswith("http"):
-        r = requests.get(field_file.url, stream=True)
+        r = requests.get(
+            field_file.url, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
+        )
         # utf-8-sig to remove the eventual bom
         content = io.StringIO(r.content.decode("utf-8-sig"))
         return content

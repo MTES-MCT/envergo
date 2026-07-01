@@ -8,6 +8,7 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.petitions.demarches_simplifiees.models import DossierState
 from envergo.petitions.tests.factories import (
     DEMARCHES_SIMPLIFIEES_FAKE,
     DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
@@ -27,7 +28,7 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
             [
                 rec.message
                 for rec in caplog.records
-                if "Demarches Simplifiees is not enabled" in rec.message
+                if "« Démarche numérique » is not enabled" in rec.message
             ]
         )
         > 0
@@ -122,7 +123,7 @@ def test_dossier_submission_admin_alert(
 
     args, kwargs = mock_notify_command.call_args_list[0]
     assert (
-        "Un dossier a été déposé sur démarches-simplifiées, qui ne correspond à aucun projet dans la base du GUH."
+        "Un dossier a été déposé sur « Démarche numérique », qui ne correspond à aucun projet dans la base du GUH."
         in args[0]
     )
     assert "(test) Guichet unique de la haie / Demande d'autorisation" in args[0]
@@ -161,5 +162,51 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
     PetitionProjectFactory()
     call_command("dossier_submission_admin_alert")
 
-    # The DS API should never be called since no valid config exists
+    # The « Démarche numérique » API should never be called since no valid config exists
     mock_post.assert_not_called()
+
+
+@pytest.mark.haie
+@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@patch("envergo.petitions.models.notify")
+@patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
+@patch(
+    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+)
+def test_dossier_submission_admin_alert_stage_instruction(
+    mock_post, mock_notify_command, mock_notify_model
+):
+    """Test if project is with stage instruction on creation when DS returns 'En instruction'"""
+    # Define the mock response
+    mock_response_1 = {
+        "demarche": {
+            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+            "number": 103363,
+            "dossiers": {
+                "pageInfo": {
+                    "hasNextPage": True,
+                    "endCursor": "MjAyNC0xMS0xOVQxMDoyMzowMy45NTc0NDAwMDBaOzIxMDU5Njc1",
+                },
+                "nodes": [
+                    {
+                        "number": 21059675,
+                        "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+                        "state": "en_instruction",
+                        "dateDepot": "2025-01-29T16:25:03+01:00",
+                        "demarche": {
+                            "title": "(test) Guichet unique de la haie / Demande d'autorisation",
+                            "number": 103363,
+                        },
+                    },
+                ],
+            },
+        }
+    }
+    mock_post.side_effect = [mock_response_1]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    call_command("dossier_submission_admin_alert")
+
+    project.refresh_from_db()
+    assert project.demarches_simplifiees_state == DossierState.en_instruction.value
+    assert project.stage == "instruction_d"

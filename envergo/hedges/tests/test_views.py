@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 
 import pytest
@@ -6,6 +7,8 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.urls import reverse
 
 from envergo.contrib.sites.tests.factories import SiteFactory
+from envergo.hedges.models import HedgeData
+from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.tests.factories import PetitionProjectFactory
 
@@ -92,3 +95,29 @@ def test_hedge_conditions_get_returns_405(client):
     url = reverse("hedge_conditions")
     res = client.get(url, {"department": "44"})
     assert res.status_code == 405
+
+
+def test_hedge_input_post_creates_a_new_snapshot(client):
+    """Posting to the id-less url always creates a fresh HedgeData."""
+    payload = [HedgeFactory().toDict()]
+    url = reverse("input_hedges", args=["44", "removal"])
+
+    res = client.post(url, data=json.dumps(payload), content_type="application/json")
+
+    assert res.status_code == 201
+    input_id = res.json()["input_id"]
+    assert HedgeData.objects.filter(id=input_id).exists()
+
+
+def test_hedge_input_post_to_existing_uuid_is_rejected(client):
+    """Updating an existing snapshot via its shareable uuid is forbidden."""
+    hedge_data = HedgeDataFactory()
+    original_data = hedge_data.data
+    tampered = [HedgeFactory(length=999).toDict()]
+    url = reverse("input_hedges", args=["44", "removal", hedge_data.id])
+
+    res = client.post(url, data=json.dumps(tampered), content_type="application/json")
+
+    assert res.status_code == 405
+    hedge_data.refresh_from_db()
+    assert hedge_data.data == original_data

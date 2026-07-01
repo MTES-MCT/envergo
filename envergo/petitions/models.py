@@ -69,6 +69,10 @@ FORBIDDEN_STAGE_TRANSITIONS = {
     ): "Pour clore le dossier, il faut passer par une étape intermédiaire (autre que « À instruire »).",
     (
         "closed",
+        "to_be_processed",
+    ): "Pour repasser le dossier à l'étape « À instruire », il faut passer par une étape intermédiaire (autre que « Dossier clos »).",  # noqa: E501
+    (
+        "closed",
         "closed",
     ): "Pour pouvoir changer la décision d'un dossier clos il faut d'abord le repasser à une étape d'instruction.",
 }
@@ -299,7 +303,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     def synchronize_with_demarches_simplifiees(self, dossier: dict):
-        """Update the petition project with the latest data from demarches-simplifiees.fr
+        """Update the petition project with the latest data from Démarche numérique
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
         """
@@ -336,7 +340,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
             return dates[0] if len(dates) else None
 
-        logger.info(f"Synchronizing file {self.reference} with DS")
+        logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
@@ -349,6 +353,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.moulinette_url = update_qs(
                 self.moulinette_url, {"date": date_depot.isoformat()}
             )
+
+            # For some ConfigHaie, « Démarche numérique » si configurated to set dossier "en_instruction" on creation.
+            # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
+            if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
+                StatusLog.objects.create(
+                    petition_project=self,
+                    type=LOG_TYPES.status_change,
+                    stage="instruction_d",
+                    update_comment="Dépôt du dossier : passage automatique en instruction.",
+                )
 
             usager_email = (
                 dossier["usager"]["email"]
@@ -407,7 +421,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             self.demarches_simplifiees_state
             and dossier["state"] != self.demarches_simplifiees_state
         ):
-            # DS state have been changed outside of GUH. We are trying to prevent this. Notify admin
+            # « Démarche numérique » state have been changed outside of GUH. We are trying to prevent this. Notify admin
             department = extract_param_from_url(self.moulinette_url, "department")
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
 
@@ -424,6 +438,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self.demarches_simplifiees_dossier_id = dossier["id"]
         self.demarches_simplifiees_state = dossier["state"]
+
         if "dateDepot" in dossier and dossier["dateDepot"]:
             self.demarches_simplifiees_date_depot = parser.isoparse(
                 dossier["dateDepot"]
@@ -526,7 +541,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
     @cached_property
     def prefetched_dossier(self) -> Dossier | None:
-        """Returns the dossier from demarches-simplifiees.fr if it has been fetched before."""
+        """Returns the dossier from Démarche numérique if it has been fetched before."""
         dossier_as_dict = self.demarches_simplifiees_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 

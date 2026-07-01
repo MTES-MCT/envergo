@@ -409,6 +409,20 @@ MAKE_COM_EVALUATION_EDITION_WEBHOOK = env(
 )
 
 
+# Default (connect, read) timeout in seconds for outbound HTTP requests.
+#
+# Every `requests` call must pass a timeout: without one, an unresponsive
+# remote endpoint blocks the calling worker indefinitely (this once froze the
+# whole Celery worker for days). `bin/start_celery_worker.sh` adds a worker
+# time-limit as a second line of defense.
+DEFAULT_HTTP_TIMEOUT = (5, 30)
+
+# (connect, read) timeout in seconds for outbound requests that stream a file
+# (up/downloads). The read budget is larger because transferring a multi-MB
+# body legitimately takes longer than a JSON API response.
+DEFAULT_HTTP_FILE_TIMEOUT = (5, 60)
+
+
 ENVERGO_AMENAGEMENT_DOMAIN = env(
     "DJANGO_ENVERGO_AMENAGEMENT_DOMAIN", default="envergo.beta.gouv.fr"
 )
@@ -425,16 +439,16 @@ HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
 DEMARCHES_SIMPLIFIEES = {
     # Documentation API de pré-remplissage :
-    # https://doc.demarches-simplifiees.fr/pour-aller-plus-loin/api-de-preremplissage
+    # https://doc.demarche.numerique.gouv.fr/pour-aller-plus-loin/api-de-preremplissage
     "ENABLED": env("DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED", default=False),
-    "DOSSIER_BASE_URL": "https://www.demarches-simplifiees.fr",
+    "DOSSIER_BASE_URL": "https://demarche.numerique.gouv.fr",
     "PRE_FILL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
-        default="https://www.demarches-simplifiees.fr/api/public/v1/",
+        default="https://demarche.numerique.gouv.fr/api/public/v1/",
     ),
     "GRAPHQL_API_URL": env(
         "DJANGO_DEMARCHE_SIMPLIFIE_GRAPHQL_API_URL",
-        default="https://www.demarches-simplifiees.fr/api/v2/graphql",
+        default="https://demarche.numerique.gouv.fr/api/v2/graphql",
     ),
     "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
     "DOSSIER_DOMAIN_BLACK_LIST": env.list(

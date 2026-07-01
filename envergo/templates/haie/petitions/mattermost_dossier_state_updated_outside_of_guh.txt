@@ -1,11 +1,11 @@
-### Un changement de statut a eu lieu depuis DS :warning: à vérifier
+### Un changement de statut a eu lieu depuis « Démarche numérique » :warning: à vérifier
 
 Les changements de statut doivent normalement avoir lieu depuis la page Procédure du guichet unique.
-Il faut vérifier pourquoi ce changement a eu lieu depuis DS.
+Il faut vérifier pourquoi ce changement a eu lieu depuis « Démarche numérique ».
 
 
 [Consulter le dossier]({{ instructor_url }}) ({{ department }})
 
 [Voir le dossier en admin]({{ admin_url }})
 
-[Voir le dossier sur DS]({{ ds_url }})
+[Voir le dossier sur « Démarche numérique »]({{ ds_url }})

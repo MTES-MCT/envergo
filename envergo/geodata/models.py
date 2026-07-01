@@ -298,6 +298,9 @@ class Department(models.Model):
         choices=DEPARTMENT_CHOICES,
         unique=True,
     )
+    # Plain geometry, NOT geography like Zone/Map/Line: only queried by
+    # __contains and Centroid (both unsupported on geography), never for metric
+    # distance/area. Geography would break these queries for no gain.
     geometry = gis_models.MultiPolygonField(null=True)
 
     class Meta:

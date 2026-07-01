@@ -14,7 +14,7 @@ from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.decorators.csp import csp_override, csp_report_only_override
-from envergo.geodata.utils import EPSG_WGS84
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
@@ -176,11 +176,14 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         return context
 
     def post(self, request, *args, **kwargs):
+        # Snapshots are immutable: the id-based url is display-only. A shared
+        # uuid must not let anyone overwrite hedges attached to a dossier.
+        if kwargs.get("id"):
+            return JsonResponse({"error": "Method not allowed"}, status=405)
+
         try:
             data = json.loads(request.body)
-            hedge_data, created = HedgeData.objects.update_or_create(
-                id=kwargs.get("id"), defaults={"data": data}
-            )
+            hedge_data = HedgeData.objects.create(data=data)
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
@@ -191,8 +194,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 "l350_3_to_remove": hedge_data.hedges_to_remove().l350_3().length,
                 "hru_to_remove": hedge_data.hedges_to_remove().hru().length,
             }
-            status_code = 201 if created else 200
-            return JsonResponse(response_data, status=status_code)
+            return JsonResponse(response_data, status=201)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
