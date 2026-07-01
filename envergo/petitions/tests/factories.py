@@ -90,6 +90,7 @@ class PetitionProjectFactory(DjangoModelFactory):
         lambda obj: (
             "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
             f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie&contexte=non"
+            f"&lineaire_total=5000&transfert_parcelles=non&motif_pac=aucun"
         )
     )
     department = factory.SubFactory(DepartmentFactory)

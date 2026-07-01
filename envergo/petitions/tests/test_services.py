@@ -591,7 +591,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "lpm": 39,
             "reduced_lpm": 31,
         },
-        "replantation_coefficient": Decimal("1.40"),
+        "replantation_coefficient": 1.40,
     }
     assert info == expected_result
 
@@ -656,7 +656,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Bonnes conditions agricoles et environnementales - Fiche VIII",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )

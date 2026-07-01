@@ -57,10 +57,17 @@ from envergo.analytics.utils import (
     log_event,
     update_url_with_matomo_params,
 )
+from envergo.geodata.models import Department
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
-from envergo.hedges.models import EPSG_LAMB93, EPSG_WGS84, TO_PLANT, HedgeTypeFactory
+from envergo.hedges.models import (
+    EPSG_LAMB93,
+    EPSG_WGS84,
+    TO_PLANT,
+    HedgeData,
+    HedgeTypeFactory,
+)
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
-from envergo.moulinette.models import ConfigHaie, MoulinetteHaie
+from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
 from envergo.petitions.forms import (
@@ -295,10 +302,45 @@ class PetitionProjectCreate(FormView):
         return res
 
     def form_valid(self, form):
+        moulinette_url = form.cleaned_data["moulinette_url"]
+        category = form.cleaned_data["_category"]
 
-        form.instance.hedge_data_id = extract_param_from_url(
-            form.cleaned_data["moulinette_url"], "haies"
+        moulinette_data = MoulinetteUrl(moulinette_url).params
+        department = Department.objects.defer("geometry").get(
+            department=moulinette_data["department"]
         )
+        config = ConfigHaie.objects.get_valid_config(
+            department, moulinette_data.get("date")
+        )
+        single_procedure = config.single_procedure
+
+        # PetitionProjects are mono category. Let check if there is some hedges of another category than the asked one
+        original_hedge_data = HedgeData.objects.get(pk=moulinette_data["haies"])
+        filtered_hedges = original_hedge_data.hedges().evaluator_category(
+            single_procedure, category
+        )
+
+        if len(filtered_hedges) == len(original_hedge_data.data):
+            # there is only hedges of the wanted category in the moulinette, no need to split
+            form.instance.hedge_data = original_hedge_data
+        else:
+            # there is multiple category in the moulinette, we will split the HedgeData object to keep only the
+            # wanted category's hedges in the project.
+            # This may also have an impact on the localisation_pac param
+            new_hedge_data = HedgeData.objects.create(
+                data=[h.toDict() for h in filtered_hedges]
+            )
+            has_pac = any(h.is_on_pac for h in filtered_hedges.to_remove())
+            updated_url = update_qs(
+                moulinette_url,
+                {
+                    "haies": str(new_hedge_data.id),
+                    "localisation_pac": "oui" if has_pac else "non",
+                },
+            )
+            form.instance.moulinette_url = updated_url
+            form.instance.original_multi_category_moulinette_url = moulinette_url
+            form.instance.hedge_data = new_hedge_data
 
         with transaction.atomic():
             petition_project = form.save()
@@ -362,38 +404,26 @@ class PetitionProjectCreate(FormView):
         """
 
         moulinette_url = project.moulinette_url
-        parsed_url = urlparse(moulinette_url)
-        moulinette_data = parse_qs(parsed_url.query)
-        # Flatten the dictionary
-        for key, value in moulinette_data.items():
-            if isinstance(value, list) and len(value) == 1:
-                moulinette_data[key] = value[0]
-        department = moulinette_data.get("department")  # department is mandatory
-        if not department:
-            logger.error(
-                "Moulinette URL for guichet unique de la haie should always contain a department to "
-                "start a demarche simplifiée",
-                extra={"moulinette_url": moulinette_url},
-            )
-            return None, None
-
-        moulinette_data["haies"] = project.hedge_data
-        form_data = {"initial": moulinette_data, "data": moulinette_data}
-        moulinette = MoulinetteHaie(form_data)
+        moulinette = MoulinetteUrl(moulinette_url).get_moulinette()
         config = moulinette.config
         if config is None:
+            department = extract_param_from_url(moulinette_url, "department")
+            date_str = extract_param_from_url(moulinette_url, "date")
             logger.error(
-                "No valid ConfigHaie found for department",
-                extra={"department": department},
+                "No valid ConfigHaie found for department and date",
+                extra={"department": department, "date": date_str},
             )
             return None, None
         self.request.alerts.config = config
         demarche_id = config.demarche_simplifiee_number
-
         if not demarche_id:
+            department = extract_param_from_url(moulinette_url, "department")
             logger.error(
                 "An activated department should always have a demarche_simplifiee_number",
-                extra={"haie config": config.id, "department": department},
+                extra={
+                    "haie config": config.id,
+                    "department": department,
+                },
             )
 
             self.request.alerts.append(
@@ -497,6 +527,12 @@ class PetitionProjectCreate(FormView):
                 if haies
                 else False
             )
+        elif source == "category":
+            value = petition_project.category
+        elif source == "from_multi_category":
+            value = bool(petition_project.original_multi_category_moulinette_url)
+        elif source == "original_multi_category_moulinette_url":
+            value = petition_project.original_multi_category_moulinette_url
         elif source == "vieil_arbre":
             haies = moulinette.catalog.get("haies")
             if haies:
@@ -696,6 +732,7 @@ class PetitionProjectDetail(DetailView):
                 "We should implement static simulation/project to avoid this case.",
                 extra={"reference": self.object.reference},
             )
+
             raise NotImplementedError("We do not handle uncompleted project")
 
         context["petition_project"] = self.object
@@ -1075,9 +1112,9 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         context["moulinette"] = moulinette
         context.update(moulinette.catalog)
 
-        hedge_data = context["petition_project"].hedge_data
-        context["ign_url"] = get_ign_centered_url(hedge_data)
-        context["google_maps_url"] = get_google_maps_centered_url(hedge_data)
+        hedges = context["petition_project"].hedge_data.hedges()
+        context["ign_url"] = get_ign_centered_url(hedges)
+        context["google_maps_url"] = get_google_maps_centered_url(hedges)
 
         regulation_slug = self.kwargs.get("regulation")
         regulation = context["moulinette"].get_regulation(regulation_slug)

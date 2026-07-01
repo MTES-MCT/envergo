@@ -5,9 +5,9 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
 from envergo.geodata.utils import EPSG_WGS84
+from envergo.hedges.models import HedgeCategory, HedgeList
 from envergo.hedges.tests.factories import HedgeFactory
-from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.regulations import HaieCriterionCategory
+from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
 from envergo.moulinette.regulations.regime_unique_haie import (
     compute_ru_compensation_ratio,
 )
@@ -432,12 +432,13 @@ class TestPerHedgeCoefficients:
         compensation ratio is 0.0 (alignements are excluded from RU)."""
         settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
+        hedges = HedgeList([make_hedge_factory(length=100, type_haie="alignement")])
         moulinette = make_moulinette_haie_with_density(
             density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="alignement")],
+            hedges=hedges,
             reimplantation="replantation",
         )
-        assert compute_ru_compensation_ratio(moulinette) == 0.0
+        assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
 
 class TestCompensationRatio:
@@ -476,22 +477,25 @@ class TestCompensationRatio:
         """When all hedges are alignements, ratio is 0.0."""
         settings = zone_settings(default=(60, 1.5, 1.7, 1.8, 2.1))
         RUConfigHaieFactory(single_procedure_settings=settings)
+
+        hedges = HedgeList([make_hedge_factory(length=100, type_haie="alignement")])
         moulinette = make_moulinette_haie_with_density(
             density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="alignement")],
+            hedges=hedges,
             reimplantation="replantation",
         )
-        assert compute_ru_compensation_ratio(moulinette) == 0.0
+        assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
     def test_droit_constant_returns_zero(self):
         """When not in régime unique, compensation ratio is 0.0."""
         DCConfigHaieFactory()
+        hedges = HedgeList([make_hedge_factory(length=100, type_haie="mixte")])
         moulinette = make_moulinette_haie_with_density(
             density=80,
-            hedges=[make_hedge_factory(length=100, type_haie="mixte")],
+            hedges=hedges,
             reimplantation="replantation",
         )
-        assert compute_ru_compensation_ratio(moulinette) == 0.0
+        assert compute_ru_compensation_ratio(moulinette, hedges) == 0.0
 
     def test_zone_specific_config_used_for_ratio(self):
         """When a zonage matches, its coefficients drive the ratio, not the default."""
@@ -668,9 +672,9 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.soumis
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.hru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.ru] == RESULTS.soumis
+        assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_by_category_dc_mode(self):
         """In DC mode, all categories are non_active."""
@@ -681,9 +685,9 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HaieCriterionCategory.hru] == RESULTS.non_disponible
-        assert rbc[HaieCriterionCategory.ru] == RESULTS.non_disponible
-        assert rbc[HaieCriterionCategory.l350_3] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.hru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.ru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_non_activated(self):
         """A non-activated regulation returns non_active for all categories."""
@@ -694,7 +698,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        for category in HaieCriterionCategory:
+        for category in HedgeCategory:
             assert rbc[category] == RESULTS.non_active
 
     def test_moulinette_results_by_category_aggregation(self):
@@ -706,7 +710,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.results_by_category
-        assert rbc[HaieCriterionCategory.ru] == "declaration"
+        assert rbc[HedgeCategory.ru] == "declaration"
 
 
 # ---------------------------------------------------------------------------
@@ -769,7 +773,7 @@ class TestDebugContext:
         moulinette = MoulinetteHaie(data)
         ctx = moulinette.get_debug_context()
         htc = ctx["hedges_and_category_by_type"]
-        hru_remove = [h for h, c in htc["TO_REMOVE"] if c == HaieCriterionCategory.hru]
+        hru_remove = [h for h, c in htc["TO_REMOVE"] if c == HedgeCategory.hru]
         assert len(hru_remove) == 1
 
     def test_empty_hedges_returns_empty_categories(self):
@@ -784,3 +788,52 @@ class TestDebugContext:
         ctx = moulinette.get_debug_context()
         htc = ctx["hedges_and_category_by_type"]
         assert htc == {}
+
+
+class TestCityHallSubmission:
+
+    def test_projet_urba_returns_autorisation_urba(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+            contexte="projet-urba",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert moulinette.city_hall_submission == CityHallSubmission.AUTORISATION_URBA
+
+    def test_ru_only_returns_none(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie="mixte")],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HedgeCategory.ru in moulinette.results_by_category
+        assert moulinette.city_hall_submission == CityHallSubmission.NONE
+
+    def test_hru_only_returns_complete(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(type_haie="alignement", bord_voie=False),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HedgeCategory.ru not in moulinette.results_by_category
+        assert moulinette.city_hall_submission == CityHallSubmission.COMPLETE
+
+    def test_ru_and_hru_returns_partial(self):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[
+                make_hedge(hedge_id="D1", type_haie="mixte"),
+                make_hedge(hedge_id="D2", type_haie="alignement", bord_voie=False),
+            ],
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        assert HedgeCategory.ru in moulinette.results_by_category
+        assert len(moulinette.results_by_category) > 1
+        assert moulinette.city_hall_submission == CityHallSubmission.PARTIAL

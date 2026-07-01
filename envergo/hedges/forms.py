@@ -42,6 +42,18 @@ class HedgePropertiesBaseForm(forms.Form):
         label="Mare à moins de 200 m",
         required=False,
     )
+    bord_batiment = forms.BooleanField(
+        label="En bordure de bâtiment",
+        required=False,
+    )
+    parc_jardin = forms.BooleanField(
+        label="Dans le parc ou jardin d'une habitation",
+        required=False,
+    )
+    place_publique = forms.BooleanField(
+        label="Sur une place publique",
+        required=False,
+    )
 
     def __init__(self, single_procedure, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -90,18 +102,6 @@ class HedgeToRemovePropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
         label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
         required=False,
     )
-    bord_batiment = forms.BooleanField(
-        label="En bordure de bâtiment",
-        required=False,
-    )
-    parc_jardin = forms.BooleanField(
-        label="Dans le parc ou jardin d'une habitation",
-        required=False,
-    )
-    place_publique = forms.BooleanField(
-        label="Sur une place publique",
-        required=False,
-    )
 
     fieldsets = {
         "Mode de destruction": ["mode_destruction"],
@@ -144,6 +144,9 @@ class HedgeToPlantPropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
             "sur_parcelle_pac",
             "bord_voie",
             "sous_ligne_electrique",
+            "bord_batiment",
+            "parc_jardin",
+            "place_publique",
         ],
     }
 

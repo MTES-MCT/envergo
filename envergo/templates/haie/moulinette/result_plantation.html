@@ -39,15 +39,29 @@
   {% endif %}
 {% endblock %}
 
-{% block result_header %}
+{% block result_foreword %}
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
+{% endblock %}
 
-  {% show_plantation_result plantation_evaluation %}
+{% block moulinette_result %}
+  {% show_plantation_result plantation_evaluation moulinette.main_category %}
 
   <p class="fr-hint-text fr-mb-3w">
     Cette simulation est établie à titre informatif. Elle ne vaut pas position de l'administration.
     <a href="#liability-info" class="hide-print">En savoir plus.</a>
   </p>
+{% endblock %}
+
+{% block other_categories_results %}
+  {% if config.single_procedure %}
+    {% if HedgeCategory.l350_3 in moulinette.other_categories %}
+      {% show_plantation_result plantation_evaluation HedgeCategory.l350_3 is_main=False %}
+    {% endif %}
+    {% if HedgeCategory.hru in moulinette.other_categories %}
+      {% show_plantation_result plantation_evaluation HedgeCategory.hru is_main=False %}
+    {% endif %}
+    {% city_hall_submission_callout %}
+  {% endif %}
 {% endblock %}
 
 {% block extra_body %}
@@ -58,11 +72,12 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script>
+    window.REDIRECT_AFTER_PROJECT_CREATION = {{ moulinette.is_multi_category|yesno:'false,true' }};
     window.SUCCESSFUL_COPY_MESSAGE = "Lien copié !";
     window.COPY_DISABLED_MESSAGE = "Impossible de copier le lien";
   </script>
+  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
   <script defer src="{% static 'js/libs/shorten_url_for_copy.js' %}"></script>
 {% endblock %}

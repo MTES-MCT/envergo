@@ -16,6 +16,7 @@ from django.utils.safestring import SafeString, mark_safe
 
 from envergo.geodata.utils import to_geojson as convert_to_geojson
 from envergo.moulinette.forms import MOTIF_CHOICES
+from envergo.moulinette.models import CityHallSubmission
 from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.moulinette.utils import get_moulinette_class_from_site
 
@@ -263,26 +264,35 @@ def get_multi_categories_header(category, context) -> SafeString:
 
 
 @register.simple_tag(takes_context=True)
-def show_plantation_result(context, plantation_evaluation):
+def show_plantation_result(context, plantation_evaluation, category, is_main=True):
     """Render the global plantation result content."""
     context_data = context.flatten()
-    template_name = (
-        f"haie/moulinette/plantation_result/{plantation_evaluation.global_result}.html"
-    )
-
-    if (
-        context.get("is_alternative", False)
-        and not plantation_evaluation.display_for_alternatives
-    ):
+    context_data["category"] = category
+    if context.get(
+        "is_alternative", False
+    ) and not plantation_evaluation.display_for_alternatives(category):
         html = ""
     else:
+        if context.get("is_read_only", False):
+            template_name = "haie/moulinette/plantation_result/read_only.html"
+        else:
+            template_name = (
+                f"haie/moulinette/plantation_result/{category.name}/"
+                f"{plantation_evaluation.global_results_by_category[category]}.html"
+            )
         try:
             content = render_to_string((template_name,), context_data)
             moulinette = context["moulinette"]
             if moulinette.is_multi_category:
-                header = get_multi_categories_header(moulinette.main_category, context)
+                header = get_multi_categories_header(category, context)
                 content = header + content
-            html = f'<div class="alt fr-p-3w fr-mb-3w">{content}</div>'
+            if is_main:
+                html = f'<div id="result-{category.name}" class="alt fr-p-3w fr-mb-3w">{content}</div>'
+            else:
+                html = (
+                    f'<div id="result-{category.name}" '
+                    f'class="fr-mb-3w fr-callout other-category-header">{content}</div>'
+                )
         except TemplateDoesNotExist:
             logger.error(
                 "Template for GUH global plantation result is missing.",
@@ -293,6 +303,19 @@ def show_plantation_result(context, plantation_evaluation):
             )
             html = ""
     return mark_safe(html)
+
+
+@register.inclusion_tag(
+    "haie/moulinette/_city_hall_submission_callout.html", takes_context=True
+)
+def city_hall_submission_callout(context):
+    """Render the city-hall submission callout for the plantation result page."""
+    moulinette = context["moulinette"]
+    return {
+        "city_hall_submission": moulinette.city_hall_submission,
+        "CityHallSubmission": CityHallSubmission,
+        "hedge_data": context.get("hedge_data"),
+    }
 
 
 @register.simple_tag(takes_context=True)

@@ -6,7 +6,12 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.regulations import PacParcelCondition, PlantationConditionMixin
+from envergo.hedges.models import HedgeCategory
+from envergo.hedges.regulations import (
+    PacParcelCondition,
+    PlantationConditionMixin,
+    RUMinLengthCondition,
+)
 from envergo.moulinette.forms.fields import DisplayIntegerField, UnitInput
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
@@ -181,11 +186,12 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
+class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
+    category: HedgeCategory = HedgeCategory.hru
     choice_label = "Conditionnalité PAC > BCAE8"
     base_slug = "bcae8"
     form_class = Bcae8Form
-    plantation_conditions = [PacParcelCondition]
+    plantation_conditions = [RUMinLengthCondition, PacParcelCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
@@ -228,14 +234,15 @@ class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
             "BEST_ENVIRONMENTAL_LOCATION_ORGANIZATIONS_LIST"
         ]
         is_lte_2percent_pac = False
+        # TODO : catalog variables should be categorized,
+        #  and the subset `self.hedges` might be a better choice than `catalog[“hedges”]`
         haies = self.catalog.get("haies")
         if haies:
-            catalog["lineaire_detruit_pac"] = haies.lineaire_detruit_pac()
+            lineaire_detruit_pac = haies.hedges().to_remove().pac().length
+            catalog["lineaire_detruit_pac"] = lineaire_detruit_pac
             catalog["lineaire_type_4_sur_parcelle_pac"] = (
                 haies.lineaire_type_4_sur_parcelle_pac()
             )
-
-            lineaire_detruit_pac = haies.lineaire_detruit_pac()
             if "lineaire_total" in catalog:
                 lineaire_total = catalog["lineaire_total"]
                 ratio_detruit = lineaire_detruit_pac / lineaire_total
@@ -245,11 +252,9 @@ class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
         return catalog
 
     def get_result_data(self):
-
-        haies = self.catalog["haies"]
-        lineaire_detruit_pac = haies.lineaire_detruit_pac()
+        lineaire_detruit_pac = self.catalog["lineaire_detruit_pac"]
         lte_10m_sections_only = all(
-            section.length <= 10 for section in haies.hedges_to_remove_pac()
+            section.length <= 10 for section in self.hedges.to_remove().pac()
         )
 
         return (
@@ -418,8 +423,13 @@ class Bcae8(PlantationConditionMixin, HaieCriterionEvaluator):
 
     def get_replantation_coefficient(self):
         R = self.R_MATRIX.get(self._result_code, D("1"))
-        haies = self.catalog["haies"]
-        minimum_length_to_plant = D(haies.lineaire_detruit_pac()) * R
-        if haies.length_to_remove() > 0:
-            R = minimum_length_to_plant / D(haies.length_to_remove())
-        return round(R, 2)
+        lineaire_detruit_pac = self.hedges.to_remove().pac().length
+        minimum_length_to_plant = D(lineaire_detruit_pac) * R
+        length_to_remove = self.hedges.to_remove().length
+        if length_to_remove > 0:
+            R = minimum_length_to_plant / D(length_to_remove)
+        return round(float(R), 2)
+
+
+class Bcae8Ru(Bcae8Hru):
+    category: HedgeCategory = HedgeCategory.ru

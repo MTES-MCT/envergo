@@ -19,7 +19,7 @@ from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
@@ -84,18 +84,26 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     def get_conditions_url(self, mode="plantation"):
         """Return conditions url to display plantation conditions"""
         conditions_url = ""
-        if mode == "removal" or mode == "plantation":
+        if mode == "removal":
+            conditions_url = ""
+
+        elif mode == "plantation":
             conditions_url = (
                 f'{reverse("hedge_conditions")}?{self.request.GET.urlencode()}'
             )
 
-        if mode == "read_only":
+        elif mode == "read_only":
             # params are in petition project
             if self.object:
                 petition_project = self.object.petitionproject_set.first()
-                query_string = urlparse(petition_project.moulinette_url)
-                query = QueryDict(query_string.query)
-                conditions_url = reverse("hedge_conditions") + "?" + query.urlencode()
+                if petition_project:
+                    query_string = urlparse(petition_project.moulinette_url)
+                    query = QueryDict(query_string.query)
+                    conditions_url = (
+                        reverse("hedge_conditions") + "?" + query.urlencode()
+                    )
+                else:
+                    conditions_url = ""
         return conditions_url
 
     def get_matomo_custom_url(self, mode="removal"):
@@ -147,6 +155,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                     "lat": centroid.y,
                     "lng": centroid.x,
                 }
+                context["config"] = config
 
         context["hedge_to_plant_data_form"] = self.get_hedge_to_plant_data_form(config)
         context["hedge_to_remove_data_form"] = self.get_hedge_to_remove_data_form(
@@ -172,6 +181,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         )
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
         context["is_alternative"] = bool(self.request.GET.get("alternative", False))
+        context["HedgeCategory"] = HedgeCategory
 
         return context
 
@@ -210,10 +220,18 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         Even though the request is a POST, the moulinette arguments are passed
         in the GET parameters. That's why we had to override this method.
         """
+        data = self.request.GET.dict()
+        self.invalid_json = False
+        if self.request.body:
+            try:
+                body = json.loads(self.request.body)
+                data["haies"] = HedgeData(data=body)
+            except json.JSONDecodeError:
+                self.invalid_json = True
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.request.GET,
+            "data": data,
         }
         return kwargs
 
@@ -221,17 +239,18 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     def post(self, request, *args, **kwargs):
+        if self.invalid_json:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
         if not self.moulinette.is_valid():
             return JsonResponse({"error": "Moulinette is not valid"}, status=400)
 
         try:
-            data = json.loads(request.body)
-            hedge_data = HedgeData(data=data)
-            evaluator = PlantationEvaluator(self.moulinette, hedge_data)
+            evaluator = PlantationEvaluator(
+                self.moulinette, self.moulinette.catalog["haies"]
+            )
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
             logger.exception(e)
             return JsonResponse({"error": "An internal error has occurred"}, status=500)

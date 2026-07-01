@@ -219,7 +219,7 @@ def decision_badge(decision, is_light=False):
             """
             )
             if css_class
-            else "-"
+            else ""
         )
     else:
         return mark_safe(
@@ -245,22 +245,22 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
     date_part = f"""<span class="due-date fr-text--sm">
                 {icon_part}
                 {date_filter(due_date, "SHORT_DATE_FORMAT")}
-              </span><br/>"""
+              </span>"""
 
     if not display_days_left:
         days_left_part = ""
     elif days_left >= 2:
-        days_left_part = f'<span class="days-left">{days_left} jours restants</span>'
+        days_left_part = (
+            f'<br/><span class="days-left">{days_left} jours restants</span>'
+        )
     elif days_left >= 0:
-        days_left_part = f'<span class="days-left">{days_left} jour restant</span>'
+        days_left_part = f'<br/><span class="days-left">{days_left} jour restant</span>'
     elif days_left >= -1:
         days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
+            f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
         )
     elif days_left:
-        days_left_part = (
-            f'<span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
-        )
+        days_left_part = f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
     else:
         days_left_part = ""
 
@@ -281,7 +281,7 @@ def display_pause(due_date):
         f"""<span class="due-date fr-text--sm">
                 <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
                 Attente de compléments
-              </span><br/>"""
+              </span>"""
     )
 
 
@@ -335,3 +335,9 @@ def created_by_display(log):
         return "Administrateur"
 
     return getattr(user, "email", "")
+
+
+@register.simple_tag
+def multiline_title(*parts):
+    """Join non-empty parts with newlines for a multi-line ``title`` tooltip."""
+    return "\n".join(str(part) for part in parts if part)

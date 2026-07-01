@@ -55,9 +55,7 @@ def test_ep_ru_not_regime_unique_yields_non_concerne(ep_ru_criterion):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skip(
-    reason="Le critère EspecesProtegeesHorsRegimeUnique n'est pas encore spécifié"
-)
+@pytest.mark.skip(reason="Le critère EspecesProtegeesL3503 n'est pas encore spécifié")
 def test_ep_ru_aa_only(ep_ru_criterion):
     """All hedges are alignement → derogation_inventaire."""
     RUConfigHaieFactory()

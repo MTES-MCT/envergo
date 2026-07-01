@@ -1,10 +1,16 @@
-<p class="hedges-category-header">
-  <strong>{{ category.label }}</strong> ·
-  {% if category.name == "ru" %}
-    {{ hedge_data.hedges.ru.sort_by_type.names }}
-  {% elif category.name == "l350_3" %}
-    {{ hedge_data.hedges.l350_3.sort_by_type.names }}
-  {% elif category.name == "hru" %}
-    {{ hedge_data.hedges.hru.sort_by_type.names }}
-  {% endif %}
-</p>
+{% load hedges %}
+
+{# djlint:off — the wrapper tag name is dynamic, djlint cannot pair open/close #}
+{% with tag=inline|yesno:"span,p" %}
+  <{{ tag }} class="hedges-category-header {{ category.name }}">
+  <strong>
+    {% if lowercase %}
+      {{ category.label|lower }}
+    {% else %}
+      {{ category.label }}
+    {% endif %}
+  </strong> {{ inline|yesno:":,·" }}
+  {% with hedge_data|hedges_category:category as hedges %}{{ hedges.names }}{% endwith %}
+  </{{ tag }}>
+{% endwith %}
+{# djlint:on #}
