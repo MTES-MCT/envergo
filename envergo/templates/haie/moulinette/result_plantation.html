@@ -2,8 +2,7 @@
 
 {% load static moulinette %}
 
-{% block before-title-content %}
-  {{ block.super }}
+{% block alternative_alert %}
   {% if is_alternative %}
     <div class="fr-alert fr-alert--info fr-mb-3w">
 
@@ -39,7 +38,7 @@
   {% endif %}
 {% endblock %}
 
-{% block result_foreword %}
+{% block plantation_evaluation %}
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
 {% endblock %}
 

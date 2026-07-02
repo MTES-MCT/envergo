@@ -6,6 +6,7 @@ import pytest
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.gis.geos import MultiPolygon
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
@@ -15,7 +16,11 @@ from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
-from envergo.geodata.tests.factories import Department34Factory
+from envergo.geodata.tests.factories import (
+    Department34Factory,
+    DepartmentFactory,
+    calvados_polygon,
+)
 from envergo.hedges.models import TO_PLANT, HedgeTypeBase
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
@@ -267,6 +272,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     mock_post.return_value = mock_response
 
     DCConfigHaieFactory()
+    Department34Factory()
     project = PetitionProjectFactory()
 
     petition_project_url = reverse(
@@ -281,7 +287,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
         category="simulateur", event="consultation", metadata__user_type="anonymous"
     )
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
-    assert response.context["has_hedges_outside_department"]
+    assert response.context["is_outside_department"]
     assert "Le projet est hors du département sélectionné" in response.content.decode()
 
     # Given hedges in department 44 and across the department border
@@ -308,7 +314,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     response = client.get(petition_project_url)
 
     # THEN I should see that there is no hedges to remove outside the department
-    assert not response.context["has_hedges_outside_department"]
+    assert not response.context["is_outside_department"]
     assert (
         "Le projet est hors du département sélectionné" not in response.content.decode()
     )
@@ -1373,55 +1379,64 @@ def test_petition_project_instructor_notes_form(
     )
 
 
-def test_instructor_view_with_hedges_outside_department(client, haie_instructor_44):
-    """Test if a warning is displayed when some hedges are outside department"""
-    # GIVEN a moulinette with at least an hedge to remove outside the department
+def test_instructor_view_multi_departments_alert(client, haie_instructor_44):
+    """Test the multi-department alert on the instructor view."""
 
     client.force_login(haie_instructor_44)
     DCConfigHaieFactory()
+    DepartmentFactory(department="14", geometry=MultiPolygon([calvados_polygon]))
+
+    # GIVEN hedges in department 14 while the project is declared in department 44
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
             {"lat": 49.37828490574639, "lng": 0.10244965553283693},
         ]
-    )  # this hedge is in department 14
-    hedges = HedgeDataFactory(hedges=[hedge_14])
-    project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
-
-    # WHEN requesting the result plantation page
-    project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
     )
-    res = client.get(project_url)
-
-    # THEN the result page is displayed with a warning
-    assert res.context["has_hedges_outside_department"]
-    assert "Le projet est hors du département sélectionné" in res.content.decode()
-
-    # Given hedges in department 44 and accross the department border
+    # Add a hedge in department 44 so we have hedges in both departments
     hedge_44 = HedgeFactory(
         latLngs=[
             {"lat": 47.202984120693635, "lng": -1.7100316286087038},
             {"lat": 47.201198235567496, "lng": -1.7097365856170657},
         ]
     )
-    hedge_44_85 = HedgeFactory(
+    hedges = HedgeDataFactory(hedges=[hedge_14, hedge_44])
+    project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
+
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+
+    # THEN the multi-department alert is displayed with department list
+    assert res.context["is_multi_departments"]
+    content = res.content.decode()
+    assert "Le projet se situe sur plusieurs départements" in content
+    assert "Calvados" in content
+    assert "Loire-Atlantique" in content
+
+
+def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
+    """No multi-department alert when all hedges are in the declared department."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+
+    hedge_44 = HedgeFactory(
         latLngs=[
-            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
-            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
         ]
     )
-    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    hedges = HedgeDataFactory(hedges=[hedge_44])
     project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
     project_url = reverse(
         "petition_project_instructor_view", kwargs={"reference": project.reference}
     )
-    # WHEN requesting the result plantation page
     res = client.get(project_url)
 
-    # THEN the result page is displayed without warning
-    assert not res.context["has_hedges_outside_department"]
-    assert "Le projet est hors du département sélectionné" not in res.content.decode()
+    assert not res.context["is_multi_departments"]
+    assert "Le projet se situe sur plusieurs départements" not in res.content.decode()
 
 
 @patch("envergo.petitions.views.notify")
