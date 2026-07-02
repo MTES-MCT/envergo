@@ -10,6 +10,8 @@ the first call computes, the second is a no-op.
 """
 
 from envergo.geodata.models import MAP_TYPES, Zone
+from envergo.hedges.models import HedgeTypeBase, HedgeTypeFactory
+from envergo.utils.fields import get_human_readable_value
 
 # Maps (hedge_category, density_level) to the official coefficient key name.
 # Numbering follows the instruction technique sent to prefects.
@@ -215,14 +217,21 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
     hedge_data = catalog.get("ru_hedge_data", {})
     effective_coefficients = evaluator.effective_coefficients
 
+    # RU labels (mixte → "Haie arborée") exclude degradee, which can still
+    # appear in the RU category — fall back to the base enum label.
+    ru_types = HedgeTypeFactory.build_from_context(single_procedure=True)
+
     rows = []
     for hedge_id, record in hedge_data.items():
         raw = record["raw_coefficient"]
         coeff_majore = round(effective_coefficients.get(hedge_id, raw), 2)
+        type_label = get_human_readable_value(
+            ru_types.choices, record["hedge_type"]
+        ) or get_human_readable_value(HedgeTypeBase.choices, record["hedge_type"])
         rows.append(
             {
                 "hedge_id": hedge_id,
-                "hedge_type": record["hedge_type"],
+                "hedge_type": type_label,
                 "length": record["length"],
                 "zone_id": record["zone_id"],
                 "x_densite": record["x_densite"],
