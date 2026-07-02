@@ -367,6 +367,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 self.moulinette_url, {"date": date_depot.isoformat()}
             )
 
+            simulations = list(self.simulations.all())
+            for simulation in simulations:
+                simulation.moulinette_url = update_qs(
+                    simulation.moulinette_url, {"date": date_depot.isoformat()}
+                )
+
+            Simulation.objects.bulk_update(simulations, ["moulinette_url"])
+
             # For some ConfigHaie, « Démarche numérique » si configurated to set dossier "en_instruction" on creation.
             # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
             if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
