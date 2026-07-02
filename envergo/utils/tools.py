@@ -1,10 +1,20 @@
 import json
 import secrets
 from collections import OrderedDict
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+
+if TYPE_CHECKING:
+    from envergo.geodata.models import Department
+
+
+def get_department_settings_form_url(department: "Department") -> str:
+    """Build the Tally form url to update a department's contact info."""
+    query = urlencode({"departement": department.get_department_display()})
+    return f"https://tally.so/r/{settings.DEPARTMENT_CONTACT_FORM_ID}?{query}"
 
 
 def get_base_url(site_domain):

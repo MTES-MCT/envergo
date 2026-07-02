@@ -1,3 +1,4 @@
+import decimal
 from datetime import date
 from unittest.mock import patch
 from urllib.parse import urlencode
@@ -8,6 +9,7 @@ from django.urls import reverse
 
 from envergo.analytics.models import Event
 from envergo.geodata.tests.factories import DepartmentFactory
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -36,7 +38,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
             activation_map=loire_atlantique_map,
             activation_mode="department_centroid",
         ),
@@ -191,7 +193,7 @@ def test_debug_result(client):
     # assertTemplateUsed(res, "haie/moulinette/result_debug.html")
 
 
-@patch("envergo.hedges.services.get_replantation_coefficient")
+@patch("envergo.hedges.services.get_replantation_coefficient_by_category")
 def test_result_d_view_with_R_gt_0(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
@@ -210,7 +212,7 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
     }
     url = reverse("moulinette_result")
     query = urlencode(data)
-    mock_R.return_value = 1.0
+    mock_R.return_value = {HedgeCategory.hru: decimal.Decimal(1.0)}
     res = client.get(f"{url}?{query}")
 
     assert "Déposer une demande sans plantation" not in res.content.decode()
@@ -219,7 +221,7 @@ def test_result_d_view_with_R_gt_0(mock_R, client):
     )
 
 
-@patch("envergo.hedges.services.get_replantation_coefficient")
+@patch("envergo.hedges.services.get_replantation_coefficient_by_category")
 def test_result_d_view_with_R_eq_0(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
@@ -238,7 +240,7 @@ def test_result_d_view_with_R_eq_0(mock_R, client):
     }
     url = reverse("moulinette_result")
     query = urlencode(data)
-    mock_R.return_value = 0.0
+    mock_R.return_value = {HedgeCategory.hru: decimal.Decimal(0.0)}
     res = client.get(f"{url}?{query}")
 
     # R should be 0
@@ -274,7 +276,7 @@ def test_result_d_view_non_soumis_with_r_gt_0(client):
     assert "Déposer une demande sans plantation" not in res.content.decode()
 
 
-@patch("envergo.hedges.services.get_replantation_coefficient")
+@patch("envergo.hedges.services.get_replantation_coefficient_by_category")
 def test_result_p_view(mock_R, client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory()
@@ -293,7 +295,7 @@ def test_result_p_view(mock_R, client):
     }
     url = reverse("moulinette_result_plantation")
     query = urlencode(data)
-    mock_R.return_value = 0.0
+    mock_R.return_value = {HedgeCategory.hru: decimal.Decimal(0.0)}
     client.get(f"{url}?{query}")
 
     assert Event.objects.get(
@@ -715,7 +717,7 @@ def test_confighaie_settings_view_map_display(
     assert response.status_code == 200
     # AND only one criterion is in context_data
     # When re-adding Natura2000Haie maps, change following assertion to == 2
-    assert len(response.context_data["grouped_criteria"]) == 1
+    assert len(response.context_data["grouped_criteria"]) == 2
     # AND activation map bizou is in page
     content = response.content.decode()
     assert bizous_town_center.name in content
@@ -812,10 +814,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         n2000_regulation
         in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
     )
-    assert (
-        "La localisation des linéaires à planter dans des zones sensibles "
-        in res.content.decode()
-    )
+    assert "La plantation se situe en zone sensible " in res.content.decode()
 
     # # Given a department configured as régime unique
     config_44.delete()
@@ -832,10 +831,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         n2000_regulation
         not in res.context["hedges_to_plant_intersecting_regulations_perimeter"]
     )
-    assert (
-        "La localisation des linéaires à planter dans des zones sensibles "
-        in res.content.decode()
-    )
+    assert "La plantation se situe en zone sensible " in res.content.decode()
 
 
 def test_confighaie_settings_view_with_multiple_configs(

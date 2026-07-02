@@ -14,12 +14,12 @@ from django.views.generic.edit import FormMixin, FormView
 
 from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.decorators.csp import csp_override, csp_report_only_override
-from envergo.geodata.utils import EPSG_WGS84
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
@@ -84,18 +84,26 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     def get_conditions_url(self, mode="plantation"):
         """Return conditions url to display plantation conditions"""
         conditions_url = ""
-        if mode == "removal" or mode == "plantation":
+        if mode == "removal":
+            conditions_url = ""
+
+        elif mode == "plantation":
             conditions_url = (
                 f'{reverse("hedge_conditions")}?{self.request.GET.urlencode()}'
             )
 
-        if mode == "read_only":
+        elif mode == "read_only":
             # params are in petition project
             if self.object:
                 petition_project = self.object.petitionproject_set.first()
-                query_string = urlparse(petition_project.moulinette_url)
-                query = QueryDict(query_string.query)
-                conditions_url = reverse("hedge_conditions") + "?" + query.urlencode()
+                if petition_project:
+                    query_string = urlparse(petition_project.moulinette_url)
+                    query = QueryDict(query_string.query)
+                    conditions_url = (
+                        reverse("hedge_conditions") + "?" + query.urlencode()
+                    )
+                else:
+                    conditions_url = ""
         return conditions_url
 
     def get_matomo_custom_url(self, mode="removal"):
@@ -147,6 +155,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                     "lat": centroid.y,
                     "lng": centroid.x,
                 }
+                context["config"] = config
 
         context["hedge_to_plant_data_form"] = self.get_hedge_to_plant_data_form(config)
         context["hedge_to_remove_data_form"] = self.get_hedge_to_remove_data_form(
@@ -172,15 +181,19 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
         )
         context["hedge_conditions_url"] = self.get_conditions_url(mode)
         context["is_alternative"] = bool(self.request.GET.get("alternative", False))
+        context["HedgeCategory"] = HedgeCategory
 
         return context
 
     def post(self, request, *args, **kwargs):
+        # Snapshots are immutable: the id-based url is display-only. A shared
+        # uuid must not let anyone overwrite hedges attached to a dossier.
+        if kwargs.get("id"):
+            return JsonResponse({"error": "Method not allowed"}, status=405)
+
         try:
             data = json.loads(request.body)
-            hedge_data, created = HedgeData.objects.update_or_create(
-                id=kwargs.get("id"), defaults={"data": data}
-            )
+            hedge_data = HedgeData.objects.create(data=data)
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
@@ -191,8 +204,7 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 "l350_3_to_remove": hedge_data.hedges_to_remove().l350_3().length,
                 "hru_to_remove": hedge_data.hedges_to_remove().hru().length,
             }
-            status_code = 201 if created else 200
-            return JsonResponse(response_data, status=status_code)
+            return JsonResponse(response_data, status=201)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
@@ -210,10 +222,18 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         Even though the request is a POST, the moulinette arguments are passed
         in the GET parameters. That's why we had to override this method.
         """
+        data = self.request.GET.dict()
+        self.invalid_json = False
+        if self.request.body:
+            try:
+                body = json.loads(self.request.body)
+                data["haies"] = HedgeData(data=body)
+            except json.JSONDecodeError:
+                self.invalid_json = True
         kwargs = {
             "initial": self.get_initial(),
             "prefix": self.get_prefix(),
-            "data": self.request.GET,
+            "data": data,
         }
         return kwargs
 
@@ -221,17 +241,18 @@ class HedgeConditionsView(MoulinetteMixin, FormView):
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
     def post(self, request, *args, **kwargs):
+        if self.invalid_json:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
         if not self.moulinette.is_valid():
             return JsonResponse({"error": "Moulinette is not valid"}, status=400)
 
         try:
-            data = json.loads(request.body)
-            hedge_data = HedgeData(data=data)
-            evaluator = PlantationEvaluator(self.moulinette, hedge_data)
+            evaluator = PlantationEvaluator(
+                self.moulinette, self.moulinette.catalog["haies"]
+            )
             evaluator.evaluate()
             return JsonResponse(evaluator.to_json(), status=200, safe=False)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
             logger.exception(e)
             return JsonResponse({"error": "An internal error has occurred"}, status=500)

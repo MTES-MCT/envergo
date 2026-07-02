@@ -413,6 +413,14 @@ nav#evaluation-summary {
         font-weight: bold;
       }
 
+      .fr-input-group[id$="activate"] .fr-hint-text {
+        display: none;
+      }
+
+      &.active .fr-input-group[id$="activate"] .fr-hint-text {
+        display: block;
+      }
+
       & > .fr-fieldset {
         display: none;
         margin-left: 0;
@@ -2419,7 +2427,7 @@ main.demos {
     padding: initial;
     margin: initial;
     overflow: visible;
-    clip: auto;
+    clip: auto; /* stylelint-disable-line property-no-deprecated -- overrides DSFR's deprecated `clip: rect()` that hides this label */
     white-space: normal;
     border: initial;
     display: block;

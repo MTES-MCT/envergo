@@ -207,13 +207,9 @@ class MapAdmin(gis_admin.GISModelAdmin):
 
     @admin.action(description=_("Extract and import a map (.shp / gpkg)"))
     def process(self, request, queryset):
-        if queryset.count() > 1:
-            error = _("Please only select one map for this action.")
-            self.message_user(request, error, level=messages.ERROR)
-            return
 
-        map = queryset[0]
-        process_map.delay(map.id)
+        for map in queryset:
+            process_map.delay(map.id)
         msg = _("Your map will be processed soon. It might take up to a few minutes.")
         self.message_user(request, msg, level=messages.INFO)
 

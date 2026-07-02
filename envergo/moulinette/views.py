@@ -23,12 +23,21 @@ from envergo.analytics.utils import (
     update_url_with_matomo_params,
 )
 from envergo.evaluations.models import TagStyleEnum
+from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
-from envergo.moulinette.models import ConfigHaie, Criterion, Regulation
+from envergo.moulinette.models import (
+    AaL3503Handling,
+    CityHallSubmission,
+    ConfigHaie,
+    Criterion,
+    Regulation,
+)
 from envergo.moulinette.utils import get_moulinette_class_from_site
 from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
 
@@ -96,6 +105,9 @@ class MoulinetteMixin:
         context["moulinette"] = self.moulinette
         context.update(self.moulinette.catalog)
 
+        user = self.request.user
+        is_staff = user.is_authenticated and (user.is_staff or user.is_superuser)
+
         if self.moulinette.is_evaluated():
 
             context["has_errors"] = (
@@ -155,7 +167,10 @@ class MoulinetteMixin:
             self.request.user.is_staff
             and self.request.user.groups.filter(name="Staff ops").exists()
         )
-        context["optional_forms"] = self.moulinette.optional_forms
+        optional_forms = self.moulinette.optional_forms
+        if not is_staff:
+            optional_forms = [f for f in optional_forms if not f.is_staff_only]
+        context["optional_forms"] = optional_forms
         context["triage_form"] = self.moulinette.triage_form
 
         context = {**context, **self.moulinette.get_extra_context(self.request)}
@@ -215,7 +230,7 @@ class MoulinetteMixin:
         # To build a valid moulinette result url, we need to take the existing url parameters
         # and update them with all the POST'ed moulinette form data.
 
-        # There is an hedge case though with checkbox inputs.
+        # There is a hedge case though with checkbox inputs.
         # When a checkbox is left empty, browsers don't send a "false" value, they
         # send no value at all, meaning an existing value in the url will NOT
         # be overriden.
@@ -236,7 +251,7 @@ class MoulinetteMixin:
         """Return the triage url while preserving existing parameters.
 
         This method MUST NOT be called when a "triage" url is not defined,
-        e.g for amenagement.
+        e.g. for amenagement.
         """
         data = self.get_results_params()
         params = urlencode(data)
@@ -309,7 +324,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return self.moulinette.get_home_template()
 
     def post(self, request, *args, **kwargs):
-        # If the moulinette is valid, i.e it can run the eveluation and provide
+        # If the moulinette is valid, i.e. it can run the eveluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid():
             return HttpResponseRedirect(self.get_result_url())
@@ -602,6 +617,11 @@ class MoulinetteHaieResult(
             result_p_url = reverse("moulinette_result_plantation")
             result_p_url = update_qs(result_p_url, self.request.GET)
             context["result_p_url"] = result_p_url
+
+            context["HedgeCategory"] = HedgeCategory
+            context["CityHallSubmission"] = CityHallSubmission
+            context["AaL3503Handling"] = AaL3503Handling
+
         return context
 
 
@@ -856,6 +876,7 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         #   natura2000_haie map is displayed with custom message : "Map import processing"
         #   protection_captages map is displayed with custom message : "Data not publicly available"
         MAPS_REGULATION_LIST = [
+            "natura2000_haie",
             "reserves_naturelles",
             "code_rural_haie",
             "sites_proteges_haie",
@@ -894,14 +915,22 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         )
 
         grouped_criteria_by_regulation = {
-            k: list(v)
-            for k, v in groupby(criteria_list, key=attrgetter("regulation.regulation"))
+            k: list(v) for k, v in groupby(criteria_list, key=attrgetter("regulation"))
         }
         context["regulation_list"] = regulation_list
         context["grouped_criteria"] = grouped_criteria_by_regulation
-        department_param = {"departement": str(self.department)}
-        department_query_string = urlencode(department_param)
-        context["department_settings_form"] = (
-            f"https://tally.so/r/Pd9b9e?{department_query_string}"
+        context["department_settings_form"] = get_department_settings_form_url(
+            self.department
         )
+
+        context["ru_zone_configs"] = self.object.zone_configs
+
+        # Compute the hedge density reference map list
+        density_maps = (
+            Map.objects.filter(map_type=MAP_TYPES.density_reference)
+            .filter(departments__contains=[department.department])
+            .defer("geometry")
+        )
+        context["density_maps"] = density_maps
+
         return context

@@ -1,7 +1,6 @@
-import json
 import logging
 from datetime import date, timedelta
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
@@ -9,7 +8,7 @@ from django.contrib import messages
 from django.contrib.syndication.views import Feed
 from django.db.models import Exists, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce, NullIf
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseServerError
 from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils import timezone
@@ -20,13 +19,12 @@ from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
-from envergo.analytics.utils import get_user_type, log_event
 from envergo.geodata.models import Department
 from envergo.moulinette.models import ConfigAmenagement, ConfigHaie
 from envergo.moulinette.views import MoulinetteMixin
 from envergo.pages.models import NewsItem
 from envergo.utils.context_processors import multi_sites_context, settings_context
-from envergo.utils.tools import get_site_literal
+from envergo.utils.tools import get_department_settings_form_url, get_site_literal
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +67,17 @@ class DepartmentSearchMixin:
                 ),
                 output_field=TextField(),
             ),
+            contacts_and_links=Coalesce(
+                NullIf(
+                    Subquery(valid_config_qs.values("contacts_and_links")[:1]),
+                    Value(""),
+                ),
+                NullIf(
+                    Subquery(other_config_qs.values("contacts_and_links")[:1]),
+                    Value(""),
+                ),
+                output_field=TextField(),
+            ),
         )
 
     def get_context_data(self, **kwargs):
@@ -79,21 +88,22 @@ class DepartmentSearchMixin:
                 "code": d.department,
                 "label": str(d),
                 "contacts_info": d.contacts_info,
+                "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
+                "settings_form_url": get_department_settings_form_url(d),
             }
             for d in self.get_queryset_with_contacts()
         ]
-        context["departments_json"] = json.dumps(departments_data)
+        context["departments_data"] = departments_data
         return context
 
 
-class HomeHaieView(TemplateView):
+class HomeHaieView(DepartmentSearchMixin, TemplateView):
     template_name = "haie/pages/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Only show activated departments in the button list
         configs = (
             ConfigHaie.objects.valid_at(timezone.now().date())
             .filter(is_activated=True)
@@ -102,45 +112,8 @@ class HomeHaieView(TemplateView):
             .order_by("department__department")
         )
         context["activated_configs"] = configs
-        context["departments"] = Department.objects.defer("geometry").order_by(
-            "department"
-        )
+        context["max_department_tiles"] = settings.HOME_MAX_DEPARTMENT_TILES
         return context
-
-    def post(self, request, *args, **kwargs):
-        """Post response with department
-        TODO: use mixin queryset and update template
-        """
-        data = request.POST
-        department_id = data.get("department")
-        department = None
-        if department_id:
-            try:
-                department = Department.objects.defer("geometry").get(id=department_id)
-            except (Department.DoesNotExist, ValueError, TypeError):
-                pass  # Invalid id submitted — department stays None, handled gracefully below
-
-        config = ConfigHaie.objects.get_valid_config(department) if department else None
-
-        if config and config.is_activated:
-            query_params = {"department": department.department}
-            return HttpResponseRedirect(
-                f"{reverse('triage')}?{urlencode(query_params)}"
-            )
-
-        context = self.get_context_data()
-        context["department"] = department
-        context["config"] = config
-
-        if department:
-            log_event(
-                "simulateur",
-                "localisation",
-                self.request,
-                department=department.department,
-                user_type=get_user_type(request.user),
-            )
-        return self.render_to_response(context)
 
 
 class ContactHaieView(DepartmentSearchMixin, TemplateView):
@@ -296,7 +269,7 @@ class Outlinks(TemplateView):
             f"{last_month:%Y-%m-%d},{today:%Y-%m-%d}&method=Actions.getOutlinks&flat=1&token_auth="
             f"{analytics_config["SECURITY_TOKEN"]}&filter_limit=100",
         )
-        data = requests.get(data_url).json()
+        data = requests.get(data_url, timeout=settings.DEFAULT_HTTP_TIMEOUT).json()
 
         links = []
         errors = []
@@ -304,6 +277,9 @@ class Outlinks(TemplateView):
             url = datum["url"]
             label = datum["label"]
             try:
+                # Short, deliberately aggressive timeout: this probes many
+                # third-party links in a loop, so we don't want a single slow
+                # host to stall the whole page.
                 req = requests.head(url, timeout=5)
                 links.append({"label": label, "url": url, "status": req.status_code})
             except Exception as e:

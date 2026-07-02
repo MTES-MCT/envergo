@@ -49,7 +49,7 @@ def test_batch_import_maps_validation_lists_missing_files(tmp_path):
         cmd.load_and_validate_csv(
             csv_path,
             tmp_path,
-            default_map_type="terres_emergees",
+            default_map_type="density_reference",
             default_data_type="certain",
         )
 
@@ -73,7 +73,7 @@ def test_batch_import_maps_uses_csv_columns_and_ignores_extras(tmp_path):
         "source,map_type,data_type,description,departments",
         [
             "À déposer,A26,1|A26,A26_0001,real.gpkg,Test,Test display,,"
-            'terres_emergees,certain,Some description,"59,62"'
+            'density_reference,certain,Some description,"59,62"'
         ],
     )
 
@@ -87,7 +87,7 @@ def test_batch_import_maps_uses_csv_columns_and_ignores_extras(tmp_path):
 
     assert len(rows) == 1
     row = rows[0]
-    assert row.map_type == "terres_emergees"
+    assert row.map_type == "density_reference"
     assert row.data_type == "certain"
     assert row.name == "Test"
     assert row.display_name == "Test display"
@@ -114,7 +114,7 @@ def test_batch_import_maps_skips_blank_rows(tmp_path):
     rows = cmd.load_and_validate_csv(
         csv_path,
         tmp_path,
-        default_map_type="terres_emergees",
+        default_map_type="density_reference",
         default_data_type="certain",
     )
 
@@ -135,7 +135,7 @@ def test_batch_import_maps_flags_row_with_data_but_no_file(tmp_path):
         cmd.load_and_validate_csv(
             csv_path,
             tmp_path,
-            default_map_type="terres_emergees",
+            default_map_type="density_reference",
             default_data_type="certain",
         )
 
@@ -169,7 +169,7 @@ def test_batch_import_maps_falls_back_to_default_map_type(tmp_path):
 
 def test_detect_geometry_table_zone():
     """detect_geometry_table returns 'geodata_zone' for polygon maps."""
-    map_obj = MapFactory(map_type="terres_emergees", zones=[])
+    map_obj = MapFactory(map_type="density_reference", zones=[])
     ZoneFactory(map=map_obj)
     ZoneFactory(map=map_obj)
 
@@ -199,15 +199,15 @@ def test_detect_geometry_table_raises_on_empty():
 def test_collect_local_map_ids_filters_by_import_status():
     """Only Maps with import_status='success' are eligible for transfer."""
     success_map = MapFactory(
-        map_type="terres_emergees", import_status="success", zones=[]
+        map_type="density_reference", import_status="success", zones=[]
     )
-    MapFactory(map_type="terres_emergees", import_status="failure", zones=[])
-    MapFactory(map_type="terres_emergees", import_status=None, zones=[])
-    MapFactory(map_type="terres_emergees", import_status="partial_success", zones=[])
+    MapFactory(map_type="density_reference", import_status="failure", zones=[])
+    MapFactory(map_type="density_reference", import_status=None, zones=[])
+    MapFactory(map_type="density_reference", import_status="partial_success", zones=[])
     # A different map_type should be ignored entirely.
     MapFactory(map_type="haies", import_status="success", zones=[])
 
-    map_ids, nb_skipped = collect_local_map_ids("terres_emergees")
+    map_ids, nb_skipped = collect_local_map_ids("density_reference")
 
     assert map_ids == [success_map.id]
     assert nb_skipped == 3
@@ -215,11 +215,11 @@ def test_collect_local_map_ids_filters_by_import_status():
 
 def test_collect_local_map_ids_returns_empty_when_all_skipped():
     """When every local map has non-success status, return ([], total)."""
-    MapFactory(map_type="terres_emergees", import_status="failure", zones=[])
-    MapFactory(map_type="terres_emergees", import_status=None, zones=[])
-    MapFactory(map_type="terres_emergees", import_status="partial_success", zones=[])
+    MapFactory(map_type="density_reference", import_status="failure", zones=[])
+    MapFactory(map_type="density_reference", import_status=None, zones=[])
+    MapFactory(map_type="density_reference", import_status="partial_success", zones=[])
 
-    map_ids, nb_skipped = collect_local_map_ids("terres_emergees")
+    map_ids, nb_skipped = collect_local_map_ids("density_reference")
 
     assert map_ids == []
     assert nb_skipped == 3
@@ -231,12 +231,12 @@ def test_count_existing_prod_maps_filters_by_map_type():
     Same DB stands in for prod in this test — we only care that the SQL
     filter does what it claims.
     """
-    same_type = MapFactory(map_type="terres_emergees", zones=[])
+    same_type = MapFactory(map_type="density_reference", zones=[])
     other_type = MapFactory(map_type="haies", zones=[])
-    not_in_batch = MapFactory(map_type="terres_emergees", zones=[])  # noqa: F841
+    not_in_batch = MapFactory(map_type="density_reference", zones=[])  # noqa: F841
 
     count = count_existing_prod_maps(
-        connection, [same_type.id, other_type.id], "terres_emergees"
+        connection, [same_type.id, other_type.id], "density_reference"
     )
     # Only same_type matches: other_type is filtered out by map_type, and
     # not_in_batch is filtered out because its id isn't in the list.
@@ -245,7 +245,7 @@ def test_count_existing_prod_maps_filters_by_map_type():
 
 def test_count_pending_detail_rows_respects_after_id():
     """count_pending_detail_rows only counts rows above after_id."""
-    map_obj = MapFactory(map_type="terres_emergees", zones=[])
+    map_obj = MapFactory(map_type="density_reference", zones=[])
     z1 = ZoneFactory(map=map_obj)
     z2 = ZoneFactory(map=map_obj)
     z3 = ZoneFactory(map=map_obj)
@@ -417,7 +417,7 @@ def test_check_no_id_collisions_flags_empty_map_type():
     legacy = MapFactory(map_type="", zones=[])
 
     with pytest.raises(CommandError, match="Id collision detected"):
-        check_no_id_collisions(connection, [legacy.id], "terres_emergees")
+        check_no_id_collisions(connection, [legacy.id], "density_reference")
 
 
 def test_check_no_id_collisions_returns_clean_on_matching_type():
@@ -426,7 +426,7 @@ def test_check_no_id_collisions_returns_clean_on_matching_type():
     Same id + same map_type is the intended overwrite case (counted by
     count_existing_prod_maps and surfaced separately in the banner).
     """
-    same_type = MapFactory(map_type="terres_emergees", zones=[])
+    same_type = MapFactory(map_type="density_reference", zones=[])
 
     # Should return cleanly (no exception).
-    check_no_id_collisions(connection, [same_type.id], "terres_emergees")
+    check_no_id_collisions(connection, [same_type.id], "density_reference")

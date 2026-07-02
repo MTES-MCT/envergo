@@ -1,0 +1,106 @@
+<p>Une action du porteur de projet est requise, pour déterminer si le projet est soumis à la Loi sur l’eau ou non.</p>
+
+<p>
+  Le projet portant sur une installation classée (ICPE), l’éventuelle instruction au titre de la Loi sur l’eau sera intégrée à celle du dossier ICPE.
+</p>
+<h3>Marche à suivre</h3>
+
+{% if regulation.required_actions_soumis %}
+  <p>Pour être certain que son projet n’est pas soumis à la Loi sur l'eau, le porteur doit s’assurer que celui-ci :</p>
+
+  <ul>
+    {% for action in regulation.required_actions_soumis %}<li>{{ action }}</li>{% endfor %}
+  </ul>
+{% endif %}
+<p>
+  <em>Si le projet s'avère soumis à la Loi sur l'eau, le dossier ICPE devra contenir les éléments permettant l’instruction au titre de la Loi sur l’eau.</em>
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+
+  <p>
+    Le porteur de projet doit mener des études sur les points cités plus haut, afin d'évaluer si le projet est soumis à la Loi sur l'eau.
+  </p>
+
+  <p>Ainsi, il convient de :</p>
+
+  <p>
+    <strong>1/ Faire mener les études par un bureau d'études disposant d'une expertise « Loi sur l'eau »</strong>
+  </p>
+
+  <p>
+    Si les études révèlent que le projet est soumis à la Loi sur l'eau, le dossier de création ou de modification ICPE doit obligatoirement en faire mention, sous peine de sanctions.
+  </p>
+
+  <p>
+    Si les études révèlent que le projet n'est pas soumis à la Loi sur l'eau, le porteur doit conserver la preuve qu'elles ont été menées et leurs conclusions, en cas de contrôle ultérieur par l'administration.
+  </p>
+  <p>
+    <strong>2/ Faire confirmer par un bureau d’études spécialisé le ou les dossiers à déposer</strong>
+  </p>
+
+  <p>
+    L’instruction au titre de la Loi sur l’eau est intégrée à la procédure ICPE s’il est considéré que la partie du projet engendrant les impacts sur les milieux aquatiques (zones humides, cours d’eau, ruissellement des eaux pluviales) sont « connexes » à l’installation classée (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042654882"
+   target="_blank"
+   rel="noopener">art. L512-7 I bis</a> et <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033933191"
+    target="_blank"
+    rel="noopener">L512-8 du code de l’environnement</a>). C’est le cas général pour les projets d’aménagement et de construction.
+  </p>
+
+  <p>
+    Cependant, il peut être considéré que la connexité n’est pas entière, notamment si le projet est soumis à la Loi sur l’eau pour <a href="#criterion-{{ regulation.autres_rubriques.unique_slug }}">d'autres rubriques</a> que celles prises en compte par ce simulateur. Une déclaration IOTA peut alors devoir être déposée.
+  </p>
+
+  <p>Le bureau d’études pourra notamment déterminer si un dossier IOTA est nécessaire ou non.</p>
+
+  <p>Le porteur peut également se rapprocher du service de la DDT(M) en charge de la Loi sur l’eau :</p>
+
+  <div class="fr-highlight fr-mb-3w">{{ config.lse_contact_ddtm|safe }}</div>
+
+  <p>
+    <strong>3/ Constituer et déposer le dossier ICPE (et Loi sur l’eau le cas échéant)</strong>
+  </p>
+
+  <p>
+    Les rubriques de la nomenclature Loi sur l’eau au titre desquelles le projet est soumis doivent être explicitement mentionnées dans le dossier ICPE.
+  </p>
+
+  <p>
+    Les procédures ICPE sont réalisées en ligne (<a href="https://entreprendre.service-public.gouv.fr/vosdroits/F33414"
+   target="_blank"
+   rel="noopener">création</a> ou <a href="https://entreprendre.service-public.gouv.fr/vosdroits/F39594"
+    target="_blank"
+    rel="noopener">modification</a>).
+  </p>
+
+  <h4>Sanctions en cas d'omission</h4>
+
+  <div class="fr-alert fr-alert--info fr-my-3w">
+
+    <p>
+      S'il s'avère que le projet est réalisé sans autorisation du préfet, le responsable s'expose à des sanctions
+      administratives et pénales, qui peuvent aller jusqu'à :
+    </p>
+
+    <ul class="fr-mb-0">
+      <li>
+        <strong>obligation de remettre le terrain en son état initial, avec une astreinte jusqu'à 1 500 € par
+          jour (<a href="https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006074220/LEGISCTA000025136610/#LEGISCTA000025141893"
+   target="_blank"
+   rel="noopener">article L.171-7 du code de
+        l'environnement</a>) ;</strong>
+      </li>
+      <li>
+        un an d'emprisonnement et 75 000 € d'amende (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000042779617/"
+   target="_blank"
+   rel="noopener">article L.173-1 du code de
+        l'environnement</a>).
+      </li>
+    </ul>
+  </div>
+
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+</div>

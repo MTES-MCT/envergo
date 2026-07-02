@@ -4,6 +4,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.utils import get_catchment_area
 from envergo.moulinette.regulations import (
     TO_ADD,
+    TO_SUBTRACT,
     ActionsToTakeMixin,
     AmenagementRegulationEvaluator,
     CriterionEvaluator,
@@ -27,9 +28,30 @@ class LoiSurLEauRegulation(ActionsToTakeMixin, AmenagementRegulationEvaluator):
 
     ACTIONS_TO_TAKE_MATRIX = {
         "soumis_ou_pac": {TO_ADD: {"depot_pac_lse", "mention_arrete_lse"}},
-        "soumis": {TO_ADD: {"depot_dossier_lse", "mention_arrete_lse", "pc_ein"}},
-        "action_requise": {TO_ADD: {"mention_arrete_lse"}},
+        "soumis": {
+            TO_ADD: {"depot_dossier_lse", "mention_arrete_lse", "pc_ein"},
+        },
+        "action_requise": {
+            TO_ADD: {"mention_arrete_lse"},
+            TO_SUBTRACT: {"non_depot_lse"},
+        },
+        "non_soumis": {TO_SUBTRACT: {"non_depot_lse"}},
+        "non_disponible": {TO_SUBTRACT: {"non_depot_lse"}},
     }
+
+    @property
+    def has_icpe(self):
+        """Whether the project is also subject to an ICPE (eval env > ICPE).
+
+        Used by LSE result templates to adapt the wording depending on whether
+        an ICPE is involved.
+        """
+        eval_env = self.moulinette.get_regulation("eval_env")
+        icpe = getattr(eval_env, "icpe", None) if eval_env else None
+        return icpe is not None and icpe.result_code not in (
+            "non_soumis",
+            "non_disponible",
+        )
 
 
 class ZoneHumide(

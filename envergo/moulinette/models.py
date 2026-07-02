@@ -1,8 +1,10 @@
 import logging
+import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
 from datetime import date
-from enum import IntEnum
+from enum import Enum, IntEnum, nonmember
+from functools import reduce
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
@@ -47,15 +49,23 @@ from envergo.evaluations.models import (
     USER_TYPES,
     TagStyleEnum,
 )
+from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import Department, Zone
 from envergo.hedges.forms import (
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList, HedgeTypeFactory
+from envergo.hedges.models import (
+    TO_PLANT,
+    TO_REMOVE,
+    HedgeCategory,
+    HedgeList,
+    HedgeTypeFactory,
+)
 from envergo.moulinette.fields import (
     CriterionEvaluatorChoiceField,
     RegulationEvaluatorChoiceField,
+    classpath,
     get_subclasses,
 )
 from envergo.moulinette.forms import (
@@ -67,21 +77,12 @@ from envergo.moulinette.forms import (
 from envergo.moulinette.regulations import (
     TO_ADD,
     TO_SUBTRACT,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     MapFactory,
 )
 from envergo.moulinette.utils import compute_surfaces, list_moulinette_templates
 from envergo.utils.tools import insert_before
-
-# WGS84, geodetic coordinates, units in degrees
-# Good for storing data and working wordwide
-EPSG_WGS84 = 4326
-
-# Projected coordinates
-# Used for displaying tiles in web map systems (OSM, GoogleMaps)
-# Good for working in meters
-EPSG_MERCATOR = 3857
-
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,7 @@ GLOBAL_RESULT_MATRIX = {
     RESULTS.interdit: RESULTS.interdit,
     RESULTS.systematique: RESULTS.soumis,
     RESULTS.cas_par_cas: RESULTS.soumis,
+    RESULTS.cas_par_cas_icpe: RESULTS.soumis,
     RESULTS.soumis_ou_pac: RESULTS.soumis,
     RESULTS.soumis: RESULTS.soumis,
     RESULTS.soumis_declaration: RESULTS.soumis,
@@ -175,6 +177,7 @@ RESULTS_GROUP_MAPPING = {
     RESULTS.interdit: ResultGroupEnum.BlockingRegulations,
     RESULTS.systematique: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.cas_par_cas: ResultGroupEnum.RestrictiveRegulations,
+    RESULTS.cas_par_cas_icpe: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_ou_pac: ResultGroupEnum.RestrictiveRegulations,
     RESULTS.soumis_declaration: ResultGroupEnum.RestrictiveRegulations,
@@ -231,6 +234,13 @@ ACTIONS_TO_TAKE = Choices(
     ("pc_cas_par_cas", "PC cas par cas"),
     ("pc_ein", "PC EIN"),
     ("pc_etude_impact", "PC étude impact"),
+    ("pc_icpe_d", "PC ICPE déclaration"),
+    ("pc_icpe_e", "PC ICPE enregistrement"),
+    ("pc_icpe_inconnu", "PC ICPE régime inconnu"),
+    ("mention_arrete_icpe_e", "Mention arrêté ICPE E"),
+    ("suspension_delai_icpe", "Suspension délai ICPE"),
+    ("depot_dossier_icpe", "Dépôt dossier ICPE"),
+    ("depot_pac_icpe", "Dépôt PAC ICPE"),
 )
 
 
@@ -351,6 +361,23 @@ class Regulation(models.Model):
             )
 
         return self._evaluator.result
+
+    @property
+    def results_by_category(self):
+        """Return a regulation result for each category of at least one criterion."""
+        if not hasattr(self, "_evaluator"):
+            raise RuntimeError(
+                "Regulation must be evaluated before accessing the results."
+            )
+
+        return self._evaluator.results_by_category
+
+    @property
+    def is_cas_par_cas(self):
+        """Whether this regulation's result is any variant of cas par cas."""
+        if not hasattr(self, "_evaluator"):
+            return False
+        return self.result is not None and self.result.startswith("cas_par_cas")
 
     @property
     def procedure_type(self):
@@ -488,6 +515,15 @@ class Regulation(models.Model):
         ]
         return contacts
 
+    @property
+    def no_other_cas_par_cas_than_icpe(self):
+        """True when no criterion other than ICPE triggers cas_par_cas."""
+        return not any(
+            c
+            for c in self.criteria.all()
+            if c.result == RESULTS.cas_par_cas and c.slug != "icpe"
+        )
+
     def ein_out_of_n2000_site(self):
         """Is the project subject to n2000 even if it is not in a Natura 2000 zone ?
 
@@ -546,6 +582,24 @@ class Regulation(models.Model):
         """
         return self.map_factory.create_map() if self.map_factory else None
 
+    @property
+    def maps_by_category(self):
+        """Returns a map to be displayed for each category of the moulinette for the regulation.
+
+        Returns a dict with the category as keys and `envergo.moulinette.regulations.Map` object or None as values.
+        These maps objects will be serialized to Json and passed to a Leaflet
+        configuration script.
+        """
+        maps_by_category = {}
+        for category in self.moulinette.results_by_category:
+            maps_by_category[category] = (
+                self.map_factory.create_map(category)
+                if self.is_activated() and self.show_map and self.map_factory
+                else None
+            )
+
+        return maps_by_category
+
     def display_map(self):
         """Should / can a perimeter map be displayed?"""
         return self.is_activated() and self.show_map and self.map
@@ -572,9 +626,25 @@ class Regulation(models.Model):
 
     def has_plantation_condition_details_template(self) -> bool:
         """Check if the regulation has a template for plantation condition details for at least one criterion."""
-        return self.has_criterion_template(
-            "haie/petitions/{}/{}_plantation_condition_details.html"
-        )
+        for criterion in self.criteria.all():
+            if issubclass(criterion.evaluator, HaieCriterionEvaluator):
+                template_path = (
+                    "haie/petitions/{}/{}/{}_plantation_condition_details.html"
+                )
+                template_path = template_path.format(
+                    self.slug,
+                    criterion.evaluator.category.name,
+                    criterion.evaluator.base_slug,
+                )
+            else:
+                template_path = "haie/petitions/{}/{}_plantation_condition_details.html"
+                template_path = template_path.format(self.slug, criterion.slug)
+            try:
+                get_template(template_path)
+                return True
+            except TemplateDoesNotExist:
+                pass
+        return False
 
     def has_key_elements_template(self) -> bool:
         """Check if the regulation has a template for key elements."""
@@ -583,16 +653,6 @@ class Regulation(models.Model):
     def has_instruction_guidelines_template(self) -> bool:
         """Check if the regulation has a template for guidelines for instruction."""
         return self.has_template("haie/petitions/{}/instruction_guidelines.html")
-
-    def has_criterion_template(self, template_path) -> bool:
-        """Check if the regulation has a template of the given path for at least one criterion."""
-        for criterion in self.criteria.all():
-            try:
-                get_template(template_path.format(self.slug, criterion.slug))
-                return True
-            except TemplateDoesNotExist:
-                pass
-        return False
 
     def has_template(self, template_path) -> bool:
         """Check if the regulation has a template of the given path."""
@@ -689,6 +749,11 @@ class Criterion(models.Model):
         default=False,
         help_text="Ne s'applique que sur activation expresse de l'utilisateur (questions « optionnelles »)",
     )
+    is_staff_only = models.BooleanField(
+        _("Is staff only"),
+        default=False,
+        help_text="Ne s'affiche et ne s'applique que pour les utilisateurs staff",
+    )
     weight = models.PositiveIntegerField(_("Order"), default=1)
     required_action = models.CharField(
         _("Required action"),
@@ -774,6 +839,10 @@ class Criterion(models.Model):
                     "activation_mode": "Ce champ est obligatoire pour les réglementations du GUH"
                 }
             )
+        if self.is_staff_only and not self.is_optional:
+            raise ValidationError(
+                {"is_optional": "Un critère staff-only doit être optionnel."}
+            )
 
     @property
     def slug(self):
@@ -795,7 +864,9 @@ class Criterion(models.Model):
         self._templates = {t.key: t for t in self.templates.all()}
 
         self.moulinette = moulinette
-        self._evaluator = self.evaluator(moulinette, distance, self.evaluator_settings)
+        self._evaluator = self.evaluator(
+            self, moulinette, distance, self.evaluator_settings
+        )
         self._evaluator.evaluate()
 
     def get_evaluator(self):
@@ -862,7 +933,7 @@ class Criterion(models.Model):
                 "Criterion must be evaluated before accessing the form class."
             )
 
-        return self._evaluator.form_class
+        return self._evaluator.get_form_class()
 
     def get_form(self):
         if not hasattr(self, "_evaluator"):
@@ -1304,8 +1375,8 @@ class ConfigHaie(ConfigBase):
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
-        '<a href="https://www.demarches-simplifiees.fr/admin/procedures" target="_blank" rel="noopener">'
-        "https://www.demarches-simplifiees.fr/admin/procedures</a>",
+        '<a href="https://demarche.numerique.gouv.fr/admin/procedures" target="_blank" rel="noopener">'
+        "https://demarche.numerique.gouv.fr/admin/procedures</a>",
     )
 
     demarche_simplifiee_pre_fill_config = models.JSONField(
@@ -1351,7 +1422,7 @@ class ConfigHaie(ConfigBase):
                     raise ValidationError(
                         {
                             "demarche_simplifiee_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
-                            " au moins l'id côté Démarches Simplifiées et la "
+                            " au moins l'id côté « Démarche numérique » et la "
                             "source de la valeur côté guichet unique de la haie."
                         }
                     )
@@ -1401,6 +1472,15 @@ class ConfigHaie(ConfigBase):
             (
                 "plantation_adequate",
                 "Les conditions d’acceptabilité de la plantation sont toutes respectées (booléen)",
+            ),
+            ("category", "Catégorie du projet (ru, hru ou l350_3)"),
+            (
+                "from_multi_category",
+                "Le projet provient-il d'une simulation comportant plusieurs catégories",
+            ),
+            (
+                "original_multi_category_moulinette_url",
+                "Url de la simulation initiale comportant plusieurs catégories le cas échéant",
             ),
             ("vieil_arbre", "Présence de vieux arbres fissurés ou à cavité (booléen)"),
             ("proximite_mare", "Proximité d'une mare (booléen)"),
@@ -1516,6 +1596,25 @@ class ConfigHaie(ConfigBase):
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
         ]
+
+    @property
+    def zone_configs(self):
+        """Return the matrix of zone -> compensation coeffs.
+
+        There are two cases:
+         - first case, there are multiple specific zones (has_ru_zonage=True)
+         - second case, there is no zonage, a single key exists (default)
+
+        But we suppose the coefficient json is simply correctly filled, hence we just
+        return the full json.
+
+        """
+
+        if not self.single_procedure:
+            return {}
+
+        coeffs = self.single_procedure_settings.get("coeff_compensation")
+        return coeffs
 
 
 TEMPLATE_KEYS = [
@@ -1804,6 +1903,10 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def additional_forms(self):
         return self.get_additional_forms()
 
+    @cached_property
+    def optional_forms(self):
+        return self.get_optional_forms()
+
     def get_optional_forms(self):
         """Get a list of instanciated optional forms.
 
@@ -1838,34 +1941,32 @@ class Moulinette(MoulinetteUrlMixin, ABC):
                 forms.append(form)
         return forms
 
+    def get_optional_criteria_list(self):
+        if self.is_evaluated():
+            criteria = [
+                c
+                for regulation in self.regulations
+                for c in regulation.criteria.all()
+                if c.is_optional
+            ]
+        else:
+            criteria = list(self.get_optional_criteria())
+
+        return criteria
+
     def optional_form_classes(self):
-        """Return the list of forms for optional questions.
-
-        If the moulinette is bound, we can fetch the precise optional criterion list and
-        get their forms.
-
-        Otherwise, we have to fetch every single existing optional criterion.
-        """
+        """Return the list of forms for optional questions."""
         form_classes = []
 
-        if self.is_evaluated():
-            for regulation in self.regulations:
-                for criterion in regulation.criteria.all():
-                    if criterion.is_optional:
-                        form_class = criterion.get_form_class()
-                        if form_class and form_class not in form_classes:
-                            form_classes.append(form_class)
-        else:
-            for criterion in self.get_optional_criteria():
+        for criterion in self.get_optional_criteria_list():
+            if self.is_evaluated():
+                form_class = criterion.get_form_class()
+            else:
                 form_class = criterion.evaluator.form_class
-                if form_class and form_class not in form_classes:
-                    form_classes.append(form_class)
+            if form_class and form_class not in form_classes:
+                form_classes.append(form_class)
 
         return form_classes
-
-    @cached_property
-    def optional_forms(self):
-        return self.get_optional_forms()
 
     def get_all_forms(self):
         """Return all forms associated with the Moulinette."""
@@ -2083,7 +2184,6 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         criteria = Criterion.objects.filter(
             is_optional=True, regulation__regulation__in=self.REGULATIONS
         ).order_by("weight")
-
         return criteria
 
     def get_regulations(self):
@@ -2242,7 +2342,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         }
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Point to center the Leaflet map on. Must be WGS84 (EPSG:4326)."""
         raise NotImplementedError
 
     @cached_property
@@ -2351,10 +2451,6 @@ class MoulinetteAmenagement(Moulinette):
             lng = catalog["lng"]
             lat = catalog["lat"]
             catalog["lng_lat"] = Point(float(lng), float(lat), srid=EPSG_WGS84)
-            catalog["coords"] = catalog["lng_lat"].transform(EPSG_MERCATOR, clone=True)
-            catalog["circle_12"] = catalog["coords"].buffer(12)
-            catalog["circle_25"] = catalog["coords"].buffer(25)
-            catalog["circle_100"] = catalog["coords"].buffer(100)
 
             fetching_radius = int(self.data.get("radius", "200"))
             zones = self.get_zones(catalog["lng_lat"], fetching_radius)
@@ -2502,8 +2598,17 @@ class MoulinetteAmenagement(Moulinette):
         return set()
 
     def get_map_center(self):
-        """Returns at what coordinates the perimeter."""
+        """Project location. WGS84 (4326)."""
         return self.catalog["lng_lat"]
+
+
+class CityHallSubmission(Enum):
+    do_not_call_in_templates = nonmember(True)
+
+    NONE = 0  # nothing to submit
+    AUTORISATION_URBA = 1  # PA, PC, DP ou permis de démolir must be submitted
+    COMPLETE = 2  # All the hedges are hru and/or l350_3 and must be submitted
+    PARTIAL = 3  # Some hedges (hru and/or l350_3) must be submitted
 
 
 class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
@@ -2596,6 +2701,53 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return result or RESULTS.non_soumis
 
     @cached_property
+    def results_by_category(self):
+        """Compute global result from individual regulation results depending on the criteria category."""
+        if not self.is_evaluated():
+            raise RuntimeError(
+                "Moulinette must be evaluated before accessing the results."
+            )
+
+        all_results_by_category = defaultdict(list)
+        for regulation in self.regulations:
+            for category, result in regulation.results_by_category.items():
+                all_results_by_category[category].append(result)
+
+        results_by_category = {}
+        for category, results in all_results_by_category.items():
+            for cascading_result in RESULT_CASCADE:
+                if cascading_result in results:
+                    results_by_category[category] = GLOBAL_RESULT_MATRIX[
+                        cascading_result
+                    ]
+                    break
+
+        # use the procedure result for régime unique category
+        if HedgeCategory.ru in results_by_category:
+            procedures = [regulation.procedure_type for regulation in self.regulations]
+            is_interdit = "interdit" in procedures
+            is_autorisation = "autorisation" in procedures
+
+            if is_interdit:
+                results_by_category[HedgeCategory.ru] = RESULTS.interdit
+            elif is_autorisation:
+                results_by_category[HedgeCategory.ru] = "autorisation"
+            elif results_by_category[HedgeCategory.ru] not in [
+                RESULTS.non_soumis,
+                RESULTS.non_disponible,
+            ]:
+                results_by_category[HedgeCategory.ru] = "declaration"
+
+        # remove the category if there is no hedge concerned
+        for category, hedges in self.catalog["hedges_by_category"].items():
+            if not hedges and category in results_by_category:
+                results_by_category.pop(category)
+
+        return {
+            k: results_by_category[k] for k in HedgeCategory if k in results_by_category
+        }
+
+    @cached_property
     def summary_data(self):
         """Compute the data summary once.
 
@@ -2628,7 +2780,28 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         Criterion-specific debug data is provided by each evaluator's
         get_debug_context() method, rendered via {% criterion_debug_snippet %}.
         """
-        return {}
+        if "haies" in self.catalog:
+            hedges_by_category = self.catalog["haies"].get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            hedges_by_category = {category: [] for category in HedgeCategory}
+
+        hedges_and_category_by_type = defaultdict(list)
+        for category, hedges in hedges_by_category.items():
+            for hedge in hedges:
+                hedges_and_category_by_type[hedge.type].append((hedge, category))
+
+        def sort_key(item):
+            h, _ = item
+            return h.id[0], int(h.id[1:])
+
+        return {
+            "hedges_and_category_by_type": {
+                k: sorted(v, key=sort_key)
+                for k, v in hedges_and_category_by_type.items()
+            }
+        }
 
     def get_triage_params(self):
         return set(TriageFormHaie.base_fields.keys())
@@ -2689,7 +2862,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 )
             )
         }
-
         return context
 
     def get_catalog_data(self):
@@ -2702,6 +2874,11 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["has_hedges_outside_department"] = (
                 hedges.has_hedges_outside_department(self.department)
             )
+            data["hedges_by_category"] = hedges.get_hedges_by_category(
+                self.config.single_procedure
+            )
+        else:
+            data["hedges_by_category"] = {category: [] for category in HedgeCategory}
 
         return data
 
@@ -2761,39 +2938,53 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch the criteria that can be activated for this project.
 
         There are two activation modes for a criterion:
-         * department_centroid: activated if the department centroid is in the activation map
+         * department_centroid: activated if the department centroid is in the activation map,
+           and there is at least one hedge in the criterion's category
          * hedges_intersection: activated if the activation map intersects with the hedges
+           belonging to the same category as the criterion
         """
         dept_centroid = self.department.centroid
-        hedges = self.catalog["haies"].hedges() if "haies" in self.catalog else []
+        hedges_by_category = self.catalog["hedges_by_category"]
 
-        # Filter for department_centroid activation mode
-        subquery = Zone.objects.filter(
+        # Build category → evaluator classpaths mapping
+        evaluators_by_category = {category: [] for category in HedgeCategory}
+        for cls in get_subclasses(HaieCriterionEvaluator):
+            evaluators_by_category[cls.category].append(classpath(cls))
+
+        # department_centroid: geography filter + exclude evaluators whose category has no hedges
+        empty_category_evaluators = [
+            evaluator_classpath
+            for category, hedges in hedges_by_category.items()
+            if not hedges
+            for evaluator_classpath in evaluators_by_category[category]
+        ]
+        centroid_subquery = Zone.objects.filter(
             map_id=OuterRef("activation_map_id"), geometry__intersects=dept_centroid
         ).values("id")
-        department_centroid_criteria = (
-            super()
-            .get_criteria()
-            .filter(
-                Exists(subquery),
-                activation_mode="department_centroid",
-            )
+        centroid_q = (
+            Q(activation_mode="department_centroid")
+            & Exists(centroid_subquery)
+            & ~Q(evaluator__in=empty_category_evaluators)
         )
 
         # Filter for hedges_intersection activation mode
-        hedges_intersection_criteria = super().get_criteria().none()
-        if hedges:
-            map_ids = self.get_intersecting_map_ids(hedges)
-            hedges_intersection_criteria = (
-                super()
-                .get_criteria()
-                .filter(
-                    activation_map_id__in=map_ids,
-                    activation_mode="hedges_intersection",
+        category_qs = []
+        for category, hedges in hedges_by_category.items():
+            if hedges and evaluators_by_category[category]:
+                map_ids = self.get_intersecting_map_ids(hedges)
+                category_qs.append(
+                    Q(evaluator__in=evaluators_by_category[category])
+                    & Q(activation_map_id__in=map_ids)
                 )
-            )
 
-        return department_centroid_criteria | hedges_intersection_criteria
+        final_q = centroid_q
+        if category_qs:
+            intersection_q = Q(activation_mode="hedges_intersection") & reduce(
+                operator.or_, category_qs
+            )
+            final_q |= intersection_q
+
+        return super().get_criteria().filter(final_q)
 
     def get_intersecting_map_ids(self, hedges):
         """Find all map IDs whose zones intersect any of the given hedges.
@@ -2853,21 +3044,27 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return fields
 
     def get_regulations_by_group(self):
-        """Group regulations by their result_group"""
+        """Group regulations by their result_group for each category."""
         regulations_list = sorted(
             self.regulations, key=lambda regulation: regulation.display_order
         )
 
-        regulations_list.sort(key=attrgetter("result_group"))
-        grouped = {
-            key: list(group)
-            for key, group in groupby(regulations_list, key=attrgetter("result_group"))
-        }
-        return grouped
+        grouped_by_category = {}
+        for category in self.results_by_category:
+
+            def result_group_for(reg, cat=category):
+                return RESULTS_GROUP_MAPPING[reg.results_by_category[cat]]
+
+            sorted_regs = sorted(regulations_list, key=result_group_for)
+            grouped_by_category[category] = {
+                key: list(group)
+                for key, group in groupby(sorted_regs, key=result_group_for)
+            }
+
+        return grouped_by_category
 
     def get_map_center(self):
-        """Returns at what coordinates is the perimeter."""
-
+        """Department centroid. WGS84 (4326), from the 4326 geometry column."""
         return self.department.centroid
 
     @cached_property
@@ -2922,6 +3119,86 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             }
             for regulation, perimeters in regulations_dd.items()
         }
+
+    @property
+    def is_multi_category(self):
+        """Do the hedges in this simulation fall under different categories of regulations
+        (e.g. régime Unique, L350-3, Hors régime unique )?"""
+        if not self.is_evaluated():
+            return False
+        return len(self.results_by_category.keys()) > 1
+
+    @property
+    def main_category(self) -> HedgeCategory | None:
+        """Return the most relevant main category of the moulinette.
+
+        RU if it is applicable, or depending on the cascade elsewhere.
+        return None if the moulinette is not evaluated
+        """
+
+        if not self.is_evaluated():
+            return None
+        if HedgeCategory.ru in self.results_by_category:
+            category = HedgeCategory.ru
+        else:
+            category = None
+            hru_result = self.results_by_category.get(HedgeCategory.hru)
+            l350_3_result = self.results_by_category.get(HedgeCategory.l350_3)
+            for result in RESULT_CASCADE:
+                if result == l350_3_result:
+                    category = HedgeCategory.l350_3
+                    break
+                elif result == hru_result:
+                    category = HedgeCategory.hru
+                    break
+            if not category:
+                # There is no result from the Cascade for any category.
+                # e.g. if there is no regulation
+                raise NotImplementedError(
+                    "This simulation has no results in any category."
+                )
+
+        return category
+
+    @property
+    def other_categories(self) -> list[HedgeCategory] | None:
+        """Return the existing categories of the moulinette that are not the most relevant (not the main category).
+
+        return None if the moulinette is not evaluated
+        """
+        if not self.is_evaluated():
+            return None
+        other_categories = [
+            other_category
+            for other_category in self.results_by_category
+            if other_category != self.main_category
+        ]
+        return other_categories
+
+    @property
+    def is_submittable_to_pguh(self):
+        """Can this simulation be submitted to the PGUH?"""
+        return (
+            HedgeCategory.ru in self.results_by_category.keys()
+            or HedgeCategory.hru in self.results_by_category.keys()
+            or HedgeCategory.l350_3 in self.results_by_category.keys()
+            and self.config.aa_l3503_handling == AaL3503Handling.PORTAL
+        )
+
+    @property
+    def city_hall_submission(self) -> CityHallSubmission:
+        """Does this project need to be submitted to city hall, and how ?"""
+        if self.triage_form["contexte"].value() == "projet-urba":
+            return CityHallSubmission.AUTORISATION_URBA
+
+        categories = self.results_by_category.keys()
+        if HedgeCategory.ru in categories:
+            if len(categories) == 1:
+                return CityHallSubmission.NONE
+            else:
+                return CityHallSubmission.PARTIAL
+        else:
+            return CityHallSubmission.COMPLETE
 
 
 class ActionToTake(models.Model):

@@ -1,7 +1,10 @@
+import json
 from datetime import date
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.backends.postgresql.psycopg_any import DateRange
 
@@ -127,7 +130,7 @@ def test_moulinette_amenagement_has_specific_behavior(moulinette_data):
     assert moulinette.get_form_template() == "amenagement/moulinette/form.html"
     assert moulinette.get_result_template() == "amenagement/moulinette/result.html"
 
-    MoulinetteClass = get_moulinette_class_from_url("envergo.beta.gouv.fr")
+    MoulinetteClass = get_moulinette_class_from_url(settings.ENVERGO_AMENAGEMENT_DOMAIN)
     assert MoulinetteClass is MoulinetteAmenagement
 
 
@@ -186,7 +189,7 @@ def test_config_haie_has_invalid_demarche_simplifiee_config(
         )
         config_haie.clean()
     assert exc_info.value.messages == [
-        "Chaque champ (ou annotation privée) doit contenir au moins l'id côté Démarches Simplifiées et la "
+        "Chaque champ (ou annotation privée) doit contenir au moins l'id côté « Démarche numérique » et la "
         "source de la valeur côté guichet unique de la haie."
     ]
 
@@ -280,11 +283,11 @@ def test_config_haie_get_demarche_simplifiee_value_sources(bizous_town_center):
     )
     expected_results_criteria = {
         (
-            "sites_proteges_haie.mh_haie.result_code",
+            "sites_proteges_haie.hru__mh_haie.result_code",
             "Code de résultat du critère MH Haies > bizou2 de la réglementation sites_proteges_haie",
         ),
         (
-            "sites_proteges_haie.spr_haie.result_code",
+            "sites_proteges_haie.hru__spr_haie.result_code",
             "Code de résultat du critère SPR Haies > bizou de la réglementation sites_proteges_haie",
         ),
     }
@@ -700,3 +703,28 @@ class TestConfigQueryWithMultipleValidityPeriods:
         )
         results = list(ConfigAmenagement.objects.valid_at(date(2025, 6, 15)))
         assert results == [config_current]
+
+
+def test_map_to_json_truncates_polygons_around_center():
+    """Guards against the regression where the clip buffer was applied in
+    WGS84 degrees (clipping nothing) instead of metric meters."""
+    from django.contrib.gis.geos import GEOSGeometry, Point, Polygon
+
+    from envergo.moulinette.regulations import Map, MapPolygon
+
+    center = Point(-1.0, 47.0, srid=4326)
+    # A ~1° x 1° square (~110 km wide) — far larger than the 1 km clip disc.
+    big_polygon = Polygon.from_bbox((-1.5, 46.5, -0.5, 47.5))
+    big_polygon.srid = 4326
+    perimeter = SimpleNamespace(geometry=big_polygon)
+    entry = MapPolygon(perimeters=[perimeter], color="red", label="test")
+
+    truncated = json.loads(Map(center=center, entries=[entry], truncate=True).to_json())
+    full = json.loads(Map(center=center, entries=[entry], truncate=False).to_json())
+
+    truncated_geom = GEOSGeometry(json.dumps(truncated["polygons"][0]["polygon"]))
+    full_geom = GEOSGeometry(json.dumps(full["polygons"][0]["polygon"]))
+
+    # The clipped polygon must be a strict, non-empty subset of the source.
+    assert not truncated_geom.empty
+    assert truncated_geom.area < full_geom.area

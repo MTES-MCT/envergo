@@ -60,7 +60,7 @@
         </ul>
         <p>➔ Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
 
-        <script type="application/json" id="departments-data">{{ departments_json|safe }}</script>
+        {{ departments_data|json_script:"departments-data" }}
 
         <div>
           <label class="fr-label fr-text--bold" for="department">Dans quel département le projet est-il situé ?</label>

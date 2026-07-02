@@ -19,15 +19,13 @@ from django.db.models import QuerySet
 from django.utils.translation import gettext_lazy as _
 from scipy.interpolate import griddata
 
+from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
 
 if TYPE_CHECKING:
-    from envergo.hedges.models import HedgeData
+    from envergo.hedges.models import HedgeList
 
 logger = logging.getLogger(__name__)
-
-EPSG_WGS84 = 4326
-EPSG_LAMB93 = 2154
 
 
 FRANCE_LAT = 46.76305599999998
@@ -510,6 +508,7 @@ def get_catchment_area(lng, lat):
     if not pixels:
         return None
 
+    # Pixel coords are in the raster's CRS (Lambert 93), so interpolate there.
     lng_lat = Point(float(lng), float(lat), srid=EPSG_WGS84)
     lamb93_coords = lng_lat.transform(EPSG_LAMB93, clone=True)
 
@@ -645,7 +644,7 @@ def trim_land(geom):
             SELECT ST_AsText(ST_Intersection(u.merged, i.geom))
             FROM unioned u, input_poly i;
         """,
-            [geom.ewkt, geom.ewkt, MAP_TYPES.terres_emergees],
+            [geom.ewkt, geom.ewkt, MAP_TYPES.density_reference],
         )
         wkt = cursor.fetchone()[0]
         if wkt:
@@ -670,6 +669,10 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
       - trunc: the truncated buffer (complex, used for clipping)
       - circ: the raw circle (simple, used for fast containment checks)
       - excluded: ST_Difference(circ, trunc) — sea / forest zones
+
+    ST_MakeValid guards both ST_Difference operands: the unioned truncated
+    buffer can carry near-zero-width spikes that GEOS can't node, otherwise
+    raising a non-noded TopologyException.
 
     The WHERE clause pre-filters hedges against the simple circle (efficient
     spatial index lookup). Then for each hedge, a CASE chooses between:
@@ -700,8 +703,8 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                 ST_GeomFromEWKT(%(truncated)s) AS trunc,
                 ST_GeomFromEWKT(%(circle)s) AS circ,
                 ST_Difference(
-                    ST_GeomFromEWKT(%(circle)s),
-                    ST_GeomFromEWKT(%(truncated)s)
+                    ST_MakeValid(ST_GeomFromEWKT(%(circle)s)),
+                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s))
                 ) AS excluded
         )
         SELECT COALESCE(SUM(CASE
@@ -752,8 +755,8 @@ def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
                 ST_GeomFromEWKT(%(circle)s) AS circ,
                 ST_GeomFromEWKT(%(truncated)s) AS trunc,
                 ST_Difference(
-                    ST_GeomFromEWKT(%(circle)s),
-                    ST_GeomFromEWKT(%(truncated)s)
+                    ST_MakeValid(ST_GeomFromEWKT(%(circle)s)),
+                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s))
                 ) AS excluded
         )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
@@ -920,14 +923,14 @@ def compute_hedge_density_around_lines(
     return {"density": density, "artifacts": artifacts}
 
 
-def _get_centered_url(url, hedges: "HedgeData"):
+def _get_centered_url(url, hedges: "HedgeList"):
     lng = FRANCE_LNG
     lat = FRANCE_LAT
     zoom = FRANCE_ZOOM
 
     if hedges:
         # Generate urls centered on the project
-        centroid = hedges.get_centroid_to_remove()
+        centroid = hedges.to_remove().centroid
         lng = centroid.x
         lat = centroid.y
         zoom = 16
@@ -935,17 +938,17 @@ def _get_centered_url(url, hedges: "HedgeData"):
     return url.format(lng, lat, zoom)
 
 
-def get_google_maps_centered_url(hedges: "HedgeData"):
+def get_google_maps_centered_url(hedges: "HedgeList"):
     """Return the GoogleMaps URL centered on the hedges to remove."""
     return _get_centered_url(GOOGLE_MAPS_URL, hedges)
 
 
-def get_ign_centered_url(hedges: "HedgeData"):
+def get_ign_centered_url(hedges: "HedgeList"):
     """Return the IGN URL centered on the hedges to remove."""
     return _get_centered_url(IGN_URL, hedges)
 
 
-def get_geoportail_urbanisme_centered_url(hedges: "HedgeData"):
+def get_geoportail_urbanisme_centered_url(hedges: "HedgeList"):
     """Return the Geoportail de l'urbanisme url centered on the hedges to remove."""
     url = _get_centered_url(GEOPORTAIL_URL, hedges)
     if hedges:

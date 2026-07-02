@@ -25,7 +25,7 @@ MAP_TYPES = Choices(
     ("species", _("Espèces protégées")),
     ("species_legacy", _("Espèces protégées (historique)")),
     ("haies", "Haies"),
-    ("terres_emergees", "Délimitation terres + France"),
+    ("density_reference", "Surface de référence du calcul de densité bocagère"),
     ("zonage", "Identifiant zonage"),
     ("zone_sensible_ep", "Zone sensible EP"),
 )
@@ -298,6 +298,9 @@ class Department(models.Model):
         choices=DEPARTMENT_CHOICES,
         unique=True,
     )
+    # Plain geometry, NOT geography like Zone/Map/Line: only queried by
+    # __contains and Centroid (both unsupported on geography), never for metric
+    # distance/area. Geography would break these queries for no gain.
     geometry = gis_models.MultiPolygonField(null=True)
 
     class Meta:

@@ -4,7 +4,10 @@ Determines whether a hedge project falls under the régime unique
 (single procedure) and whether it is soumis or non concerné.
 """
 
+from django import forms
+
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     RUMinLengthCondition,
@@ -12,7 +15,7 @@ from envergo.hedges.regulations import (
     SafetyCondition,
 )
 from envergo.moulinette.regulations import (
-    CriterionEvaluator,
+    HaieCriterionEvaluator,
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
@@ -22,6 +25,37 @@ from envergo.moulinette.regulations.regime_unique import (
     get_ru_per_hedge_coefficients,
     get_ru_zone_data,
 )
+
+URGENCE_MOTIFS = ("securite", "chemin_acces", "autre")
+
+
+class RegimeUniqueHaieForm(forms.Form):
+    """Complementary question about emergency works.
+
+    Shown only when the motif suggests a possible emergency situation
+    and the department is under the régime unique.
+    """
+
+    urgence = forms.ChoiceField(
+        label="Les travaux sont-ils réalisés en urgence ?",
+        widget=forms.RadioSelect,
+        choices=(
+            ("non", "Non, les travaux ne sont pas réalisés en urgence."),
+            (
+                "oui",
+                "Oui, les travaux sont réalisés en urgence et ont déjà été "
+                "exécutés, ou le seront dans les prochains jours.",
+            ),
+        ),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        data = self.data if self.data else self.initial
+        motif = data.get("motif")
+        if motif not in URGENCE_MOTIFS:
+            self.fields = {}
 
 
 class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
@@ -35,7 +69,9 @@ class RegimeUniqueHaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEvaluator):
+class RegimeUniqueHaieRu(
+    PlantationConditionMixin, HedgeDensityMixin, HaieCriterionEvaluator
+):
     """Criterion evaluator for the régime unique haie procedure.
 
     Determines whether a hedge project falls under the régime unique
@@ -44,30 +80,42 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
     """
 
     choice_label = "Régime unique haie > Régime unique haie"
-    slug = "regime_unique_haie"
+    base_slug = "regime_unique_haie"
+    form_class = RegimeUniqueHaieForm
     plantation_conditions = [RUMinLengthCondition, RUQualityCondition, SafetyCondition]
+    category = HedgeCategory.ru
 
     RESULT_MATRIX = {
         "non_disponible": RESULTS.non_disponible,
         "non_concerne": RESULTS.non_concerne,
-        "non_concerne_aa": RESULTS.non_concerne,
         "soumis": RESULTS.soumis,
     }
 
     CODE_MATRIX = {
-        ("regime_unique", "aa_only"): "non_concerne_aa",
-        ("regime_unique", "has_hedges"): "soumis",
-        ("droit_constant", "aa_only"): "non_concerne",
-        ("droit_constant", "has_hedges"): "non_concerne",
+        ("regime_unique", "ru_all_zones_resolved"): "soumis",
+        ("regime_unique", "unresolved"): "non_disponible",
+        ("droit_constant", "ru_all_zones_resolved"): "non_active",
+        ("droit_constant", "unresolved"): "non_active",
     }
 
-    def get_result_code(self, result_data):
-        """Override to detect missing zone config before the CODE_MATRIX lookup."""
-        if self.moulinette.config.single_procedure and not self.catalog.get(
-            "ru_all_zones_resolved", False
-        ):
-            return "non_disponible"
-        return super().get_result_code(result_data)
+    def get_result_data(self):
+        regime_unique = self.moulinette.config.single_procedure
+
+        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
+
+        zones_resolved = (
+            "ru_all_zones_resolved"
+            if self.catalog.get("ru_all_zones_resolved", False)
+            else "unresolved"
+        )
+
+        return procedure_mode, zones_resolved
+
+    def get_form_class(self):
+        """Only expose the emergency form when single_procedure is active."""
+        if not self.moulinette.config.single_procedure:
+            return None
+        return self.form_class
 
     def get_catalog_data(self):
         """Inject density and zone-based coefficient data when in régime unique."""
@@ -75,23 +123,15 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
         if self.moulinette.config.single_procedure:
             catalog.update(self.get_density_catalog_data())
             if "per_hedge_coefficients" not in self.catalog:
-                zone_data = get_ru_zone_data(self.moulinette)
+                zone_data = get_ru_zone_data(self.moulinette, self.hedges)
                 catalog.update(zone_data)
                 zone_configs = zone_data["ru_per_hedge_zone_configs"]
                 catalog.update(
-                    get_ru_per_hedge_coefficients(self.moulinette, zone_configs)
+                    get_ru_per_hedge_coefficients(
+                        self.moulinette, self.hedges, zone_configs
+                    )
                 )
         return catalog
-
-    def get_result_data(self):
-        """Return a (procedure_mode, hedge_presence) tuple for CODE_MATRIX lookup."""
-        hedges = self.catalog["haies"].hedges_to_remove()
-        has_hedges = any(h for h in hedges if h.hedge_type != "alignement")
-        regime_unique = self.moulinette.config.single_procedure
-
-        procedure_mode = "regime_unique" if regime_unique else "droit_constant"
-        hedge_presence = "has_hedges" if has_hedges else "aa_only"
-        return procedure_mode, hedge_presence
 
     def get_debug_context(self):
         """Return density and per-hedge zone data for the debug template."""
@@ -106,4 +146,4 @@ class RegimeUniqueHaie(PlantationConditionMixin, HedgeDensityMixin, CriterionEva
 
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
-        return compute_ru_compensation_ratio(self.moulinette)
+        return compute_ru_compensation_ratio(self.moulinette, self.hedges)
