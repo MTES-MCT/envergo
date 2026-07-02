@@ -114,13 +114,12 @@ def resolve_per_hedge_zone_configs(moulinette, hedges):
     }
 
 
-def compute_hedge_data(hedge, zone_config, density_400):
+def compute_hedge_data(hedge, zone_id, zone_config, density_400):
     """Compute all coefficient data for a single hedge.
 
     Returns a record dict with zone inputs, the raw RU coefficient (from
     ``COEFF_KEY``), and the EP bonus (from ``EP_RU_HEDGE_BONUS``).
     """
-    zone_id = None
     if zone_config is None:
         return {
             "hedge_id": hedge.id,
@@ -186,8 +185,7 @@ def ensure_ru_hedge_data(moulinette, hedges):
     hedge_data = {}
     for hedge in hedges:
         zone_id, zone_config = per_hedge_zone_configs[hedge.id]
-        record = compute_hedge_data(hedge, zone_config, density_400)
-        record["zone_id"] = zone_id
+        record = compute_hedge_data(hedge, zone_id, zone_config, density_400)
         if zone_config is None:
             all_resolved = False
         hedge_data[hedge.id] = record
