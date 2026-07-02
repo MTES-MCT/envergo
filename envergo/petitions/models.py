@@ -93,6 +93,18 @@ def dn_archive_file_format(instance, filename):
     return f"dn_archives/{instance.reference}_{secret}{extension}"
 
 
+def prefectural_order_file_format(instance, filename):
+    """Build the upload path for a prefectural order file.
+
+    The random secret makes the public url impossible to guess, since the
+    file is stored on a public-read bucket. `instance` is a StatusLog.
+    """
+    _, extension = splitext(filename)
+    secret = secrets.token_urlsafe(16)
+    reference = instance.petition_project.reference
+    return f"arrete_prefectoral/{reference}_{secret}{extension}"
+
+
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
@@ -287,6 +299,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     @property
     def is_closed(self):
         return self.stage == STAGES.closed
+
+    @property
+    def prefectural_order_log(self):
+        """Get the latest status log carrying a prefectural order, if any.
+
+        Each closing with an uploaded order creates a new log entry, so the
+        latest one is the order currently in force.
+        """
+        return (
+            self.status_history.exclude(prefectural_order="")
+            .order_by("-created_at")
+            .first()
+        )
 
     @cached_property
     def latest_suspension(self):
@@ -536,7 +561,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """
         if self.demarches_simplifiees_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/dossiers/"
+                f"{settings.DEMARCHES_SIMPLIFIEES['DOSSIER_BASE_URL']}/dossiers/"
                 f"{self.demarches_simplifiees_dossier_number}/"
             )
         return None
@@ -547,7 +572,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         """
         if self.demarches_simplifiees_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/dossiers/"
+                f"{settings.DEMARCHES_SIMPLIFIEES['DOSSIER_BASE_URL']}/procedures/{demarche_number}/dossiers/"
                 f"{self.demarches_simplifiees_dossier_number}/"
             )
         return None
@@ -802,6 +827,11 @@ class StatusLog(models.Model):
         help_text="Par défaut, la date du jour. Il est possible de choisir une date passée si le changement est "
         "rétroactif.",
         default=timezone.now,
+    )
+    prefectural_order = models.FileField(
+        "Document de décision",
+        upload_to=prefectural_order_file_format,
+        blank=True,
     )
     due_date = models.DateField(
         "Date de prochaine échéance",
