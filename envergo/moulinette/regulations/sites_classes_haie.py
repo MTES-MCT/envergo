@@ -1,5 +1,8 @@
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class SitesClassesRegulation(HaieRegulationEvaluator):
@@ -11,9 +14,9 @@ class SitesClassesRegulation(HaieRegulationEvaluator):
     }
 
 
-class SitesClassesHaie(CriterionEvaluator):
+class SitesClassesHaie(HaieCriterionEvaluator):
     choice_label = "Sites classés > Sites classés Haie"
-    slug = "sites_classes_haie"
+    base_slug = "sites_classes_haie"
     plantation_conditions = []
 
     RESULT_MATRIX = {
@@ -28,9 +31,7 @@ class SitesClassesHaie(CriterionEvaluator):
 
     def get_catalog_data(self):
         data = super().get_catalog_data()
-        data["aa_only"] = all(
-            h.hedge_type == "alignement" for h in self.catalog["haies"].hedges()
-        )
+        data["aa_only"] = all(h.hedge_type == "alignement" for h in self.hedges)
         return data
 
     def get_result_data(self):

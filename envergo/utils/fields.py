@@ -1,3 +1,5 @@
+from django.db.models import TextChoices
+from django.db.models.enums import ChoicesMeta
 from django.forms import ClearableFileInput, EmailField, FileField
 from django.forms.widgets import RadioSelect, Select
 
@@ -71,3 +73,38 @@ class ProjectStageField(Select):
         context["STAGES"] = STAGES
         context["widget"]["errors"] = getattr(self, "errors", [])
         return context
+
+
+class EnrichedChoicesMeta(ChoicesMeta):
+    """Metaclass that converts dict-style member declarations into TextChoices with extra attributes.
+
+    The name (key) is used as the DB stored value. `label` is required and
+    becomes the enum's standard `.label`; every other dict key becomes a
+    plain attribute on the member.
+    """
+
+    def __new__(metacls, classname, bases, classdict, **kwds):
+        for key in classdict._member_names:
+            value = classdict[key]
+            if isinstance(value, dict):
+                extra = dict(value)
+                label = extra.pop("label")
+                dict.__setitem__(classdict, key, (key, extra, label))
+        return super().__new__(metacls, classname, bases, classdict, **kwds)
+
+
+class EnrichedChoices(TextChoices, metaclass=EnrichedChoicesMeta):
+    """TextChoices with extra named attributes.
+
+    Declare members as a dict, e.g. {"display_value": ..., "label": ...}.
+    The name (key) is used as the DB stored value. `label` is required and
+    becomes the enum's standard `.label`; every other dict key becomes a
+    plain attribute on the member.
+    """
+
+    def __new__(cls, value, extra=None):
+        member = str.__new__(cls, value)
+        member._value_ = value
+        for attr, attr_value in (extra or {}).items():
+            setattr(member, attr, attr_value)
+        return member

@@ -84,12 +84,14 @@ class PetitionProjectFactory(DjangoModelFactory):
     class Meta:
         model = PetitionProject
         skip_postgeneration_save = True
+        rename = {"underscore_category": "_category"}
 
     reference = factory.Sequence(lambda n: f"ABC123{n}")
     moulinette_url = factory.LazyAttribute(
         lambda obj: (
-            "http://haie.local:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
+            "http://haie.testserver:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
             f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie&contexte=non"
+            f"&lineaire_total=5000&transfert_parcelles=non&motif_pac=aucun"
         )
     )
     department = factory.SubFactory(DepartmentFactory)
@@ -109,11 +111,13 @@ class PetitionProjectFactory(DjangoModelFactory):
         is_initial=True,
         is_active=True,
     )
+    underscore_category = "ru"
 
 
 class PetitionProject34Factory(DjangoModelFactory):
     class Meta:
         model = PetitionProject
+        rename = {"underscore_category": "_category"}
 
     reference = "ABC124"
     moulinette_url = (
@@ -123,6 +127,7 @@ class PetitionProject34Factory(DjangoModelFactory):
     hedge_data = factory.SubFactory(HedgeDataFactory)
     demarches_simplifiees_dossier_number = 21059676
     demarches_simplifiees_state = DOSSIER_STATES.draft
+    underscore_category = "ru"
 
 
 class StatusLogFactory(DjangoModelFactory):

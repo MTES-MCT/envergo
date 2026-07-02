@@ -39,13 +39,13 @@
   {% endif %}
 {% endblock %}
 
-{% block result_header %}
+{% block result_foreword %}
   {% show_haie_plantation_evaluation moulinette plantation_evaluation %}
-
-  {% show_plantation_result plantation_evaluation %}
 {% endblock %}
 
-{% block after_result_header %}
+{% block moulinette_result %}
+  {% show_plantation_result plantation_evaluation moulinette.main_category %}
+
   {% if urgence == "oui" and config.single_procedure %}
     <div class="fr-alert fr-alert--info fr-mb-2w">
       <h3 class="fr-alert__title">Travaux réalisés en urgence</h3>
@@ -61,7 +61,8 @@
           Le préfet doit être prévenu sans délai de l'exécution des travaux.
           <a targe="_blank"
              rel="noopener"
-             href="{% url 'contact_us' %}?department={{ department.department }}{{ contact_dossier_anchor }}">Voir le contact dans mon département.</a>
+             href="{% url 'contact_us' %}?department={{ department.department }}{{ contact_dossier_anchor }}">Voir le
+          contact dans mon département.</a>
         </li>
         <li>Le dossier à déposer sur ce portail permet de régulariser la situation.</li>
       </ol>
@@ -74,8 +75,16 @@
   </p>
 {% endblock %}
 
-{% block liability_info %}
-  {% show_haie_plantation_liability_info plantation_evaluation %}
+{% block other_categories_results %}
+  {% if config.single_procedure %}
+    {% if HedgeCategory.l350_3 in moulinette.other_categories %}
+      {% show_plantation_result plantation_evaluation HedgeCategory.l350_3 is_main=False %}
+    {% endif %}
+    {% if HedgeCategory.hru in moulinette.other_categories %}
+      {% show_plantation_result plantation_evaluation HedgeCategory.hru is_main=False %}
+    {% endif %}
+    {% city_hall_submission_callout %}
+  {% endif %}
 {% endblock %}
 
 {% block extra_body %}
@@ -86,11 +95,12 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script>
+    window.REDIRECT_AFTER_PROJECT_CREATION = {{ moulinette.is_multi_category|yesno:'false,true' }};
     window.SUCCESSFUL_COPY_MESSAGE = "Lien copié !";
     window.COPY_DISABLED_MESSAGE = "Impossible de copier le lien";
   </script>
+  <script defer src="{% static 'js/libs/form_project_creation.js' %}"></script>
   <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
   <script defer src="{% static 'js/libs/shorten_url_for_copy.js' %}"></script>
 {% endblock %}

@@ -9,6 +9,7 @@ from envergo.hedges.regulations import (
     AisneQualityCondition,
     EssencesBocageresCondition,
     MinLengthCondition,
+    NormandieMinLengthCondition,
     PacParcelCondition,
     RUMinLengthCondition,
     RUQualityCondition,
@@ -20,26 +21,43 @@ from envergo.hedges.tests.conftest import make_mock_evaluator
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.ep import EspecesProtegeesAisne
-from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
+from envergo.moulinette.tests.factories import (
+    CriterionFactory,
+    DCConfigHaieFactory,
+    RegulationFactory,
+    RUConfigHaieFactory,
+)
 from envergo.moulinette.tests.utils import make_moulinette_haie_data
 
 pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def ep_criterion_evaluator():
-    DCConfigHaieFactory()
-    data = make_moulinette_haie_data()
-    moulinette = MoulinetteHaie(data)
-    return EspecesProtegeesAisne(moulinette, 0, {})
+def ep_criterion(france_map):  # noqa
+    regulation = RegulationFactory(regulation="ep")
+    return CriterionFactory(
+        title="Espèces protégées",
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesSimple",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
 
 
 @pytest.fixture
-def ep_criterion_evaluator_ru():
+def ep_criterion_evaluator(ep_criterion):
+    DCConfigHaieFactory()
+    data = make_moulinette_haie_data()
+    moulinette = MoulinetteHaie(data)
+    return EspecesProtegeesAisne(ep_criterion, moulinette, 0, {})
+
+
+@pytest.fixture
+def ep_criterion_evaluator_ru(ep_criterion):
     RUConfigHaieFactory()
     data = make_moulinette_haie_data()
     moulinette = MoulinetteHaie(data)
-    return EspecesProtegeesAisne(moulinette, 0, {})
+    return EspecesProtegeesAisne(ep_criterion, moulinette, 0, {})
 
 
 @pytest.fixture
@@ -144,21 +162,20 @@ def calvados_hedge_data():
 def test_minimum_length_condition(ep_criterion_evaluator):
     """Length to plant depends on the replantation coefficient."""
 
-    hedge_data = Mock()
-    hedge_data.hedges_to_remove.return_value = []
-    hedge_data.length_to_remove.return_value = 100
+    hedges = Mock()
+    to_remove = Mock()
+    to_remove.length = 100
+    hedges.to_remove.return_value = to_remove
 
-    hedge_data.hedges_to_plant.return_value = []
-    hedge_data.length_to_plant.return_value = 0
+    to_plant = Mock()
+    to_plant.length = 0
+    hedges.to_plant.return_value = to_plant
 
-    hedge_data.lineaire_detruit_pac.return_value = 0
-    hedge_data.length_to_plant_pac.return_value = 0
-
-    condition = MinLengthCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    condition = MinLengthCondition(hedges, 2.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 200
 
-    condition = MinLengthCondition(hedge_data, 4.0, ep_criterion_evaluator)
+    condition = MinLengthCondition(hedges, 4.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant"] == 400
 
@@ -166,25 +183,30 @@ def test_minimum_length_condition(ep_criterion_evaluator):
 def test_minimum_length_pac_condition(ep_criterion_evaluator):
     """Length to plant on pac does not depends on R."""
 
-    hedge_data = Mock()
-    hedge_data.hedges_to_remove.return_value = []
-    hedge_data.length_to_remove.return_value = 100
+    hedges = Mock()
+    to_remove = Mock()
+    to_remove.length = 100
+    to_remove_pac = Mock()
+    to_remove.pac.return_value = to_remove_pac
+    to_remove_pac.length = 100
+    hedges.to_remove.return_value = to_remove
 
-    hedge_data.hedges_to_plant_pac.return_value = []
-    hedge_data.length_to_plant_pac.return_value = 0
+    to_plant = Mock()
+    to_plant.length = 0
+    to_plant_pac = Mock()
+    to_plant.pac.return_value = to_plant_pac
+    to_plant_pac.length = 0
+    hedges.to_plant.return_value = to_plant
 
-    hedge_data.lineaire_detruit_pac.return_value = 100
-    hedge_data.length_to_plant_pac.return_value = 0
-
-    condition = PacParcelCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    condition = PacParcelCondition(hedges, 2.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = PacParcelCondition(hedge_data, 4.0, ep_criterion_evaluator)
+    condition = PacParcelCondition(hedges, 4.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = PacParcelCondition(hedge_data, 0.0, ep_criterion_evaluator)
+    condition = PacParcelCondition(hedges, 0.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 0
 
@@ -192,7 +214,7 @@ def test_minimum_length_pac_condition(ep_criterion_evaluator):
 def test_safety_condition(hedge_data, ep_criterion_evaluator):
     """Planting under power lines is not ok."""
 
-    condition = SafetyCondition(hedge_data, 1.0, ep_criterion_evaluator)
+    condition = SafetyCondition(hedge_data.hedges(), 1.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.result
 
@@ -202,7 +224,7 @@ def test_safety_condition(hedge_data, ep_criterion_evaluator):
             "sous_ligne_electrique": True,
         }
     )
-    condition = SafetyCondition(hedge_data, 1.0, ep_criterion_evaluator)
+    condition = SafetyCondition(hedge_data.hedges(), 1.0, ep_criterion_evaluator)
     condition.evaluate()
     assert not condition.result
 
@@ -210,7 +232,7 @@ def test_safety_condition(hedge_data, ep_criterion_evaluator):
 def test_quality_condition_amounts_to_compensate(hedge_data, ep_criterion_evaluator):
     """Amounts to compensate depend on R."""
 
-    condition = AisneQualityCondition(hedge_data, 2.0, ep_criterion_evaluator)
+    condition = AisneQualityCondition(hedge_data.hedges(), 2.0, ep_criterion_evaluator)
     amounts = condition.get_amounts_to_compensate()
     assert round(amounts[HedgeTypeBase.DEGRADEE]) == 2 * 50
     assert round(amounts[HedgeTypeBase.BUISSONNANTE]) == 2 * 40
@@ -218,7 +240,7 @@ def test_quality_condition_amounts_to_compensate(hedge_data, ep_criterion_evalua
     assert round(amounts[HedgeTypeBase.MIXTE]) == 2 * 20
     assert round(amounts[HedgeTypeBase.ALIGNEMENT]) == 2 * 10
 
-    condition = AisneQualityCondition(hedge_data, 4.0, ep_criterion_evaluator)
+    condition = AisneQualityCondition(hedge_data.hedges(), 4.0, ep_criterion_evaluator)
     amounts = condition.get_amounts_to_compensate()
     assert round(amounts[HedgeTypeBase.DEGRADEE]) == 4 * 50
     assert round(amounts[HedgeTypeBase.BUISSONNANTE]) == 4 * 40
@@ -340,7 +362,7 @@ def test_strengthening_condition(calvados_hedge_data):
     catalog = {"reimplantation": "replantation"}
     evaluator = make_mock_evaluator(effective_coefficients=coefficients)
 
-    condition = StrenghteningCondition(hedge_data, 1.0, evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data.hedges(), 1.0, evaluator, catalog)
     condition.evaluate()
     assert condition.result
     assert condition.context["strengthening_length"] == 0.0
@@ -349,7 +371,7 @@ def test_strengthening_condition(calvados_hedge_data):
     hedge_data.data[-1]["additionalData"]["mode_plantation"] = "renforcement"
     hedge_data.data[-2]["additionalData"]["mode_plantation"] = "reconnexion"
 
-    condition = StrenghteningCondition(hedge_data, 1.0, evaluator, catalog)
+    condition = StrenghteningCondition(hedge_data.hedges(), 1.0, evaluator, catalog)
     condition.evaluate()
     lpm = condition.compute_lpm()
     assert not condition.result
@@ -452,7 +474,7 @@ def test_alignement_arbres_condition():
     catalog = {"reimplantation": "replantation"}
 
     condition = TreeAlignmentsCondition(
-        hedge_data, 2.0, ep_criterion_evaluator, catalog
+        hedge_data.hedges(), 2.0, ep_criterion_evaluator, catalog
     )
     condition.evaluate()
     assert not condition.result
@@ -462,7 +484,7 @@ def test_alignement_arbres_condition():
     ep_criterion_evaluator = Mock(result_code="soumis_esthetique")
 
     condition = TreeAlignmentsCondition(
-        hedge_data, 1.0, ep_criterion_evaluator, catalog
+        hedge_data.hedges(), 1.0, ep_criterion_evaluator, catalog
     )
     condition.evaluate()
     assert condition.result
@@ -471,17 +493,16 @@ def test_alignement_arbres_condition():
 
 
 def test_essences_bocageres_condition(calvados_hedge_data, ep_criterion_evaluator):
-    hedge_data = calvados_hedge_data
     catalog = {}
     condition = EssencesBocageresCondition(
-        hedge_data, 1.0, ep_criterion_evaluator, catalog
+        calvados_hedge_data.hedges(), 1.0, ep_criterion_evaluator, catalog
     )
     condition.evaluate()
     assert condition.result
 
-    hedge_data.data[-1]["additionalData"]["essences_non_bocageres"] = True
+    calvados_hedge_data.data[-1]["additionalData"]["essences_non_bocageres"] = True
     condition = EssencesBocageresCondition(
-        hedge_data, 1.0, ep_criterion_evaluator, catalog
+        calvados_hedge_data.hedges(), 1.0, ep_criterion_evaluator, catalog
     )
     condition.evaluate()
     assert not condition.result
@@ -507,7 +528,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert condition.result
 
@@ -521,7 +544,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert condition.result
 
@@ -535,7 +560,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert condition.result
 
@@ -555,7 +582,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert condition.result
 
@@ -569,7 +598,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert not condition.result
 
@@ -583,7 +614,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert not condition.result
 
@@ -597,7 +630,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert not condition.result
 
@@ -611,18 +646,24 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition_ok = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition_ok = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition_ok.evaluate()
         assert condition_ok.result
 
-        condition_fail = AisneQualityCondition(hedge_data, 2.0, make_mock_evaluator())
+        condition_fail = AisneQualityCondition(
+            hedge_data.hedges(), 2.0, make_mock_evaluator()
+        )
         condition_fail.evaluate()
         assert not condition_fail.result
 
     def test_must_display_false_when_nothing_to_compensate(self):
         """must_display returns False when there are no hedges to remove."""
         hedge_data = HedgeDataFactory(hedges=[])
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         assert not condition.must_display()
 
     def test_must_display_true_when_hedges_to_remove(self):
@@ -632,7 +673,9 @@ class TestAisneQualityConditionSubstitution:
                 HedgeFactory(additionalData__type_haie="mixte", length=10),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         assert condition.must_display()
 
     def test_text_contains_deficit_messages(self):
@@ -643,7 +686,9 @@ class TestAisneQualityConditionSubstitution:
                 HedgeFactory(additionalData__type_haie="arbustive", length=10),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.0, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.0, make_mock_evaluator()
+        )
         condition.evaluate()
         assert not condition.result
         text = " ".join(condition.text.split())
@@ -660,7 +705,9 @@ class TestAisneQualityConditionSubstitution:
                 ),
             ]
         )
-        condition = AisneQualityCondition(hedge_data, 1.5, make_mock_evaluator())
+        condition = AisneQualityCondition(
+            hedge_data.hedges(), 1.5, make_mock_evaluator()
+        )
         condition.evaluate()
         assert condition.result
         assert "convient" in condition.text
@@ -676,7 +723,7 @@ class TestAisneQualityConditionSubstitution:
             ]
         )
         evaluator = make_mock_evaluator(single_procedure=True)
-        condition = AisneQualityCondition(hedge_data, 1.0, evaluator)
+        condition = AisneQualityCondition(hedge_data.hedges(), 1.0, evaluator)
         condition.evaluate()
         assert condition.result
 
@@ -695,9 +742,9 @@ class TestIsStricterThan:
         evaluator = make_mock_evaluator(single_procedure=True)
         evaluator.get_replantation_coefficient.return_value = 1.0
 
-        min_length = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        min_length = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator)
         min_length.evaluate()
-        safety = SafetyCondition(hedge_data, 1.0, evaluator)
+        safety = SafetyCondition(hedge_data.hedges(), 1.0, evaluator)
         safety.evaluate()
 
         with pytest.raises(TypeError):
@@ -713,9 +760,9 @@ class TestIsStricterThan:
         )
         evaluator = make_mock_evaluator(single_procedure=True)
 
-        cond_a = MinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_a = MinLengthCondition(hedge_data.hedges(), 1.0, evaluator)
         cond_a.evaluate()
-        cond_b = MinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_b = MinLengthCondition(hedge_data.hedges(), 1.0, evaluator)
         cond_b.evaluate()
 
         assert not cond_a.is_stricter_than(cond_b)
@@ -734,9 +781,9 @@ class TestIsStricterThan:
         evaluator_high = make_mock_evaluator(single_procedure=True)
         evaluator_high.get_replantation_coefficient.return_value = 1.5
 
-        cond_low = RUMinLengthCondition(hedge_data, 1.0, evaluator_low)
+        cond_low = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator_low)
         cond_low.evaluate()
-        cond_high = RUMinLengthCondition(hedge_data, 1.5, evaluator_high)
+        cond_high = RUMinLengthCondition(hedge_data.hedges(), 1.5, evaluator_high)
         cond_high.evaluate()
 
         assert cond_high.is_stricter_than(cond_low)
@@ -753,9 +800,9 @@ class TestIsStricterThan:
         evaluator = make_mock_evaluator(single_procedure=True)
         evaluator.get_replantation_coefficient.return_value = 1.0
 
-        cond_a = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_a = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator)
         cond_a.evaluate()
-        cond_b = RUMinLengthCondition(hedge_data, 1.0, evaluator)
+        cond_b = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator)
         cond_b.evaluate()
 
         assert not cond_a.is_stricter_than(cond_b)
@@ -784,9 +831,9 @@ class TestIsStricterThan:
             effective_coefficients={hedge_id: 1.5},
         )
 
-        cond_low = RUQualityCondition(hedge_data, 1.0, evaluator_low)
+        cond_low = RUQualityCondition(hedge_data.hedges(), 1.0, evaluator_low)
         cond_low.evaluate()
-        cond_high = RUQualityCondition(hedge_data, 1.5, evaluator_high)
+        cond_high = RUQualityCondition(hedge_data.hedges(), 1.5, evaluator_high)
         cond_high.evaluate()
 
         assert cond_high.is_stricter_than(cond_low)
@@ -803,10 +850,63 @@ class TestIsStricterThan:
         evaluator_a = make_mock_evaluator(single_procedure=True)
         evaluator_b = make_mock_evaluator(single_procedure=True)
 
-        cond_a = SafetyCondition(hedge_data, 1.0, evaluator_a)
+        cond_a = SafetyCondition(hedge_data.hedges(), 1.0, evaluator_a)
         cond_a.evaluate()
-        cond_b = SafetyCondition(hedge_data, 1.0, evaluator_b)
+        cond_b = SafetyCondition(hedge_data.hedges(), 1.0, evaluator_b)
         cond_b.evaluate()
 
         assert not cond_a.is_stricter_than(cond_b)
         assert not cond_b.is_stricter_than(cond_a)
+
+    def test_ru_and_normandie_cross_class_higher_requirement_is_stricter(self):
+        """RUMinLengthCondition and NormandieMinLengthCondition share additive_key,
+        so is_stricter_than must work across classes rather than raising TypeError."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_ru = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        evaluator_ru.get_replantation_coefficient.return_value = 1.0
+        cond_ru = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator_ru)
+        cond_ru.evaluate()
+        # aggregated_r != R so the Normandie reduction is skipped; base logic applies.
+        evaluator_nd = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        cond_normandie = NormandieMinLengthCondition(
+            hedge_data.hedges(), 1.5, evaluator_nd, catalog={"aggregated_r": 999}
+        )
+        cond_normandie.evaluate()
+
+        # cond_normandie requires 150 m; cond_ru requires 100 m → normandie is stricter
+        assert cond_normandie.is_stricter_than(cond_ru)
+        assert not cond_ru.is_stricter_than(cond_normandie)
+
+    def test_ru_and_normandie_cross_class_equal_requirement_neither_stricter(self):
+        """Equal length_to_check across classes — neither condition claims stricter."""
+        hedge_data = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(length=100),
+                HedgeFactory(to_plant=True, length=200),
+            ]
+        )
+        evaluator_ru = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        evaluator_ru.get_replantation_coefficient.return_value = 1.0
+        cond_ru = RUMinLengthCondition(hedge_data.hedges(), 1.0, evaluator_ru)
+        cond_ru.evaluate()
+        evaluator_nd = make_mock_evaluator(
+            single_procedure=True, effective_coefficients={}
+        )
+        cond_normandie = NormandieMinLengthCondition(
+            hedge_data.hedges(), 1.0, evaluator_nd, catalog={"aggregated_r": 999}
+        )
+        cond_normandie.evaluate()
+
+        assert not cond_ru.is_stricter_than(cond_normandie)
+        assert not cond_normandie.is_stricter_than(cond_ru)

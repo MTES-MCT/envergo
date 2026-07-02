@@ -22,7 +22,7 @@ from envergo.analytics.models import Event
 from envergo.analytics.utils import log_event_raw
 from envergo.evaluations.models import generate_reference
 from envergo.geodata.models import DEPARTMENT_CHOICES, Department
-from envergo.hedges.models import HedgeData
+from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
@@ -121,6 +121,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     hedge_data = models.ForeignKey(
         HedgeData,
         on_delete=models.PROTECT,
+    )
+
+    _category = models.CharField(
+        "Catégorie du dossier",
+        max_length=20,
+        choices=HedgeCategory.choices,
+        db_index=True,
+    )
+
+    original_multi_category_moulinette_url = models.URLField(
+        "Url de la moulinette multi catégorie d'où a été extrait ce projet le cas échéant (vide sinon)",
+        max_length=1024,
+        blank=True,
     )
 
     demarches_simplifiees_dossier_number = models.IntegerField(
@@ -573,6 +586,17 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return Regulation.objects.filter(
             regulation__in=self.config.regulations_available
         ).order_by("weight")
+
+    @property
+    def category(self):
+        return HedgeCategory(self._category)
+
+    @category.setter
+    def category(self, value):
+        if not isinstance(value, HedgeCategory):
+            raise ValueError("Category must be an instance of HedgeCategory")
+
+        self._category = value.value
 
 
 USER_TYPE = Choices(

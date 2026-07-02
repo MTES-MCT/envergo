@@ -72,7 +72,7 @@
                   </th>
                   <th scope="col">
                     <div class="fr-mb-1v">Étape</div>
-                    <div>Date d'échéance</div>
+                    <div>Date échéance · Décision</div>
                   </th>
                   <th scope="col">
                     <div class="fr-mb-1v">Demandeur</div>
@@ -83,7 +83,7 @@
                     <br />
                     à détruire
                   </th>
-                  <th scope="col">Décision</th>
+                  <th scope="col">Étiquettes</th>
                   <th scope="col">
                     <span title="Messagerie" class="fr-icon-mail-line fr-icon--sm"></span>
                   </th>
@@ -107,30 +107,30 @@
                       </div>
                       <div>{{ project.prefetched_dossier.dateDepot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
-                    <td>
+                    <td class="procedure">
                       <div>{% stage_badge project.stage %}</div>
-                      {% if project.stage != "closed" %}
-                        <div>
+                      <div>
+                        {% if project.stage != "closed" %}
                           {% if project.is_additional_information_requested %}
                             {% display_pause project.due_date %}
                           {% else %}
                             {% display_due_date project.due_date False True %}
                           {% endif %}
-                        </div>
-                      {% endif %}
-                    </td>
-                    <td>
-                      <div>
-                        {% if project.organization %}
-                          {{ project.organization }}
-                        {% else %}
-                          {{ project.prefetched_dossier.applicant_name }}
+                        {% endif %}
+                        {% if project.decision != "unset" %}
+                          {% decision_badge project.decision True %}
                         {% endif %}
                       </div>
+
+                    </td>
+                    {% firstof project.organization project.prefetched_dossier.applicant_name as applicant_display %}
+                    {% multiline_title applicant_display project.city as applicant_tooltip %}
+                    <td class="ellipsis" title="{{ applicant_tooltip }}">
+                      <div>{{ applicant_display }}</div>
                       <div>{{ project.city }}</div>
                     </td>
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{% decision_badge project.decision True %}</td>
+                    <td>{% include 'haie/petitions/_hedge_category.html' with category=project.category is_light=True %}</td>
                     <td class="messagerie-col {% if project.has_unread_messages and user|has_edit_permission:project %}unread{% else %}read{% endif %}">
                       {% if project.has_unread_messages and user|has_edit_permission:project %}
                         <span class="fr-icon-mail-fill fr-icon--sm"></span>

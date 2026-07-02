@@ -1,5 +1,9 @@
 from envergo.evaluations.models import RESULTS
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.hedges.models import HedgeCategory
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class ProtectionCaptagesRegulation(HaieRegulationEvaluator):
@@ -13,7 +17,7 @@ class ProtectionCaptagesRegulation(HaieRegulationEvaluator):
     }
 
 
-class ProtectionCaptagesHaie(CriterionEvaluator):
+class ProtectionCaptagesHaieHru(HaieCriterionEvaluator):
     """Evaluate the "protection de captages" criterion.
 
     Returns a_verifier if any hedge (to remove or to plant) intersects
@@ -21,8 +25,9 @@ class ProtectionCaptagesHaie(CriterionEvaluator):
     """
 
     choice_label = "Protection de captages > Protection de captages"
-    slug = "protection_captages"
+    base_slug = "protection_captages"
     plantation_conditions = []
+    category = HedgeCategory.hru
 
     RESULT_MATRIX = {
         "a_verifier": RESULTS.a_verifier,
@@ -41,3 +46,11 @@ class ProtectionCaptagesHaie(CriterionEvaluator):
         at least one hedge intersects the perimeter.
         """
         return True
+
+
+class ProtectionCaptagesHaieRu(ProtectionCaptagesHaieHru):
+    category = HedgeCategory.ru
+
+
+class ProtectionCaptagesHaieL3503(ProtectionCaptagesHaieHru):
+    category = HedgeCategory.l350_3

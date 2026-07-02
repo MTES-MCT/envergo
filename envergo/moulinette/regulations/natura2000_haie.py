@@ -10,7 +10,10 @@ from pyproj import Geod
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
-from envergo.moulinette.regulations import CriterionEvaluator, HaieRegulationEvaluator
+from envergo.moulinette.regulations import (
+    HaieCriterionEvaluator,
+    HaieRegulationEvaluator,
+)
 
 
 class Natura2000HaieRegulation(HaieRegulationEvaluator):
@@ -38,9 +41,9 @@ class Natura2000HaieSettings(forms.Form):
     )
 
 
-class Natura2000Haie(CriterionEvaluator):
+class Natura2000Haie(HaieCriterionEvaluator):
     choice_label = "Natura 2000 > Haie"
-    slug = "natura2000_haie"
+    base_slug = "natura2000_haie"
     settings_form_class = Natura2000HaieSettings
 
     RESULT_MATRIX = {
@@ -70,7 +73,7 @@ class Natura2000Haie(CriterionEvaluator):
     def get_catalog_data(self):
         """Let's compute the length of hedges crossing the N2000 perimeter."""
 
-        hedges = self.catalog["haies"].hedges_to_remove()
+        hedges = self.hedges.to_remove()
         hors_alignement = [h for h in hedges if h.hedge_type != "alignement"]
         alignement = [h for h in hedges if h.hedge_type == "alignement"]
 
@@ -80,7 +83,7 @@ class Natura2000Haie(CriterionEvaluator):
 
         # Find all the Zones for the current Perimeter and that intersects any of the hedges
         qs = (
-            self.moulinette.natura2000_haie.natura2000_haie.activation_map.zones.all()
+            self.criterion.activation_map.zones.all()
             .filter(geometry__intersects=hedges_geom)
             .aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
         )
