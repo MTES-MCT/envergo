@@ -469,7 +469,7 @@ class PetitionProjectCreate(FormView):
             )
         except requests.exceptions.RequestException as e:
             logger.error(
-                "Could not reach demarches-simplifiees.fr to pre-fill a dossier",
+                "Could not reach « Démarche numérique » to pre-fill a dossier",
                 extra={"api_url": api_url, "request_body": body, "exception": e},
             )
             self.request.alerts.append(
