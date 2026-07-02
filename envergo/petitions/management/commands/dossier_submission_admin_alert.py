@@ -8,14 +8,14 @@ from django.urls import set_urlconf
 from django.utils import timezone
 
 from envergo.moulinette.models import ConfigHaie
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesClient
-from envergo.petitions.demarches_simplifiees.models import Dossier
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueClient
+from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.models import PetitionProject
 from envergo.utils.mattermost import notify
 
 logger = logging.getLogger(__name__)
 
-DOMAIN_BLACK_LIST = settings.DEMARCHES_SIMPLIFIEES["DOSSIER_DOMAIN_BLACK_LIST"]
+DOMAIN_BLACK_LIST = settings.DEMARCHE_NUMERIQUE["DOSSIER_DOMAIN_BLACK_LIST"]
 
 
 class Command(BaseCommand):
@@ -26,7 +26,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """get all the dossier updated in the last hour"""
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning("« Démarche numérique » is not enabled. Doing nothing.")
             return None
         set_urlconf("config.urls_haie")
@@ -45,15 +45,15 @@ class Command(BaseCommand):
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
         configs_with_ds = ConfigHaie.objects.filter(
-            demarche_simplifiee_number__isnull=False
+            demarche_numerique_number__isnull=False
         ).valid_at(timezone.now().date())
         for config in configs_with_ds:
-            demarche_number = config.demarche_simplifiee_number
-            project_url_id = config.demarches_simplifiees_display_fields.get(
+            demarche_number = config.demarche_numerique_number
+            project_url_id = config.demarche_numerique_display_fields.get(
                 "project_url", None
             )
             if not project_url_id:
-                # A config should always have "project_url" in demarches_simplifiees_display_fields
+                # A config should always have "project_url" in demarche_numerique_display_fields
                 continue
 
             logging.info(f"Handling demarche {demarche_number} ({config})")
@@ -61,7 +61,7 @@ class Command(BaseCommand):
             if demarche_number in handled_demarches:
                 continue
 
-            ds_client = DemarchesSimplifieesClient()
+            ds_client = DemarcheNumeriqueClient()
 
             demarche = ds_client.get_dossiers_for_demarche(
                 demarche_number, two_hours_ago_utc
@@ -74,7 +74,7 @@ class Command(BaseCommand):
                 dossier = Dossier.from_dict(dossier_as_dict)
                 dossier_number = dossier.number
                 project = PetitionProject.objects.filter(
-                    demarches_simplifiees_dossier_number=dossier_number
+                    demarche_numerique_dossier_number=dossier_number
                 ).first()
                 if project is None:
                     self.handle_unlinked_dossier(
@@ -84,7 +84,7 @@ class Command(BaseCommand):
                     )
                     continue
 
-                project.synchronize_with_demarches_simplifiees(dossier_as_dict)
+                project.synchronize_with_demarche_numerique(dossier_as_dict)
 
             handled_demarches.append(demarche_number)
 
@@ -111,7 +111,7 @@ class Command(BaseCommand):
         demarche_name = demarche.title if demarche is not None else "Nom inconnu"
         demarche_number = demarche.number if demarche is not None else "Numéro inconnu"
         ds_url = (
-            f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/"
+            f"{settings.DEMARCHE_NUMERIQUE["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/"
             f"dossiers/{dossier.number}/"
         )
 

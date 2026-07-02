@@ -448,10 +448,10 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         model = ConfigHaie
         fields = "__all__"
         widgets = {
-            "demarche_simplifiee_pre_fill_config": JSONWidget(
+            "demarche_numerique_pre_fill_config": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
-            "demarches_simplifiees_display_fields": JSONWidget(
+            "demarche_numerique_display_fields": JSONWidget(
                 attrs={"rows": 20, "cols": 80}
             ),
             "single_procedure_settings": JSONWidget(attrs={"rows": 20, "cols": 80}),
@@ -459,8 +459,8 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["demarche_simplifiee_pre_fill_config"].help_text = (
-            self.get_demarche_simplifiee_pre_fill_config_help_text()
+        self.fields["demarche_numerique_pre_fill_config"].help_text = (
+            self.get_demarche_numerique_pre_fill_config_help_text()
         )
 
         # Let's not fetch the department geometries when displaying the
@@ -476,14 +476,14 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         When the department uses the single procedure (régime unique), the
         third-party form handling, the external form URL is required.
 
-        Validate demarches_simplifiees_display_fields should have required keys
+        Validate demarche_numerique_display_fields should have required keys
         "organization", "city", "pacage" when demarche number is filled.
         Only project_url is checked by a model constraint because others
         are not filled by default.
         """
         cleaned_data = super().clean()
-        display_dn_fields = cleaned_data.get("demarches_simplifiees_display_fields")
-        dn_number = cleaned_data.get("demarche_simplifiee_number")
+        display_dn_fields = cleaned_data.get("demarche_numerique_display_fields")
+        dn_number = cleaned_data.get("demarche_numerique_number")
         if dn_number and (
             not display_dn_fields
             or not display_dn_fields.get("city", None)
@@ -491,7 +491,7 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             or not display_dn_fields.get("pacage", None)
         ):
             self.add_error(
-                "demarches_simplifiees_display_fields",
+                "demarche_numerique_display_fields",
                 "Les champs city, organization et pacage sont obligatoires "
                 "lorsque le numéro de la démarche est rempli.",
             )
@@ -511,12 +511,12 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
             )
         return cleaned_data
 
-    def get_demarche_simplifiee_pre_fill_config_help_text(self):
+    def get_demarche_numerique_pre_fill_config_help_text(self):
         context = {
-            "sources": ConfigHaie.get_demarche_simplifiee_value_sources(),
+            "sources": ConfigHaie.get_demarche_numerique_value_sources(),
         }
         return render_to_string(
-            "admin/moulinette/confighaie/demarche_simplifiee_pre_fill_config_help_text.html",
+            "admin/moulinette/confighaie/demarche_numerique_pre_fill_config_help_text.html",
             context,
         )
 
@@ -576,9 +576,9 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             "Démarche numérique",
             {
                 "fields": [
-                    "demarche_simplifiee_number",
-                    "demarche_simplifiee_pre_fill_config",
-                    "demarches_simplifiees_display_fields",
+                    "demarche_numerique_number",
+                    "demarche_numerique_pre_fill_config",
+                    "demarche_numerique_display_fields",
                 ],
             },
         ),
