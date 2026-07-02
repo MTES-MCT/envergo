@@ -264,10 +264,20 @@ class ProcedureForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, single_procedure=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+
+        # Single-procedure departments skip the "to_be_processed" stage entirely,
+        # so it shouldn't even be selectable.
+        if single_procedure:
+            self.fields["stage"].choices = [
+                choice
+                for choice in self.fields["stage"].choices
+                if choice[0] != "to_be_processed"
+            ]
+
         # Pass field errors to the widget after validation
         for name, field in self.fields.items():
             bound_field = self[name]
@@ -290,6 +300,16 @@ class ProcedureForm(forms.ModelForm):
             )
 
         previous_stage = self.initial["stage"]
+
+        if stage == "to_be_processed" and previous_stage != "to_be_processed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "L'étape « À instruire » n’est plus disponible car l’instruction a déjà débuté. Utiliser "
+                    "plutôt la demande de compléments et la messagerie pour demander des ajustements au demandeur.",
+                    code="forbidden_transition",
+                ),
+            )
         transition = (previous_stage, stage)
         if transition in FORBIDDEN_STAGE_TRANSITIONS:
             self.add_error(
