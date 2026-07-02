@@ -20,9 +20,9 @@ from envergo.moulinette.regulations import (
     HedgeDensityMixin,
 )
 from envergo.moulinette.regulations.regime_unique import (
+    collect_zone_configs,
     compute_ru_compensation_ratio,
     ensure_ru_hedge_data,
-    get_ru_debug_context,
 )
 
 URGENCE_MOTIFS = ("securite", "chemin_acces", "autre")
@@ -125,9 +125,11 @@ class RegimeUniqueHaieRu(
         return catalog
 
     def get_debug_context(self):
-        """Return density and per-hedge zone data for the debug template."""
+        """Return density and zone config data for the debug template."""
         context = super().get_debug_context()
-        context.update(get_ru_debug_context(self.catalog))
+        context["ru_zone_configs"] = collect_zone_configs(
+            self.catalog.get("ru_hedge_data", {})
+        )
         return context
 
     @property

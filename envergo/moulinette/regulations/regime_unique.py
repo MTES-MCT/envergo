@@ -204,18 +204,6 @@ def collect_zone_configs(hedge_data):
     return seen
 
 
-def get_ru_debug_context(catalog):
-    """Build the RU zone debug context entries from catalog data.
-
-    Shared by both RegimeUniqueHaie and EspecesProtegeesRegimeUnique.
-    """
-    hedge_data = catalog.get("ru_hedge_data", {})
-    return {
-        "ru_hedge_rows": list(hedge_data.values()),
-        "ru_zone_configs": collect_zone_configs(hedge_data),
-    }
-
-
 def build_ru_hedge_detail_rows(catalog, evaluator):
     """Build per-hedge display rows from pre-computed records.
 

@@ -12,7 +12,7 @@ from envergo.moulinette.regulations.ep import (
 )
 from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
-    get_ru_debug_context,
+    collect_zone_configs,
 )
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
@@ -102,8 +102,9 @@ def ep_regime_unique_get_instructor_view_context(
     )
 
     # Zone configs for the coefficient matrix accordion
-    ru_debug = get_ru_debug_context(moulinette.catalog)
-    context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
+    context["ru_zone_configs"] = collect_zone_configs(
+        moulinette.catalog.get("ru_hedge_data", {})
+    )
 
     context["quality_condition"] = {}
     if plantation_evaluation:

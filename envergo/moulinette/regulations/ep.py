@@ -37,9 +37,9 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
+    collect_zone_configs,
     compute_ru_compensation_ratio,
     ensure_ru_hedge_data,
-    get_ru_debug_context,
 )
 from envergo.utils.fields import get_human_readable_value
 
@@ -1027,6 +1027,7 @@ class EspecesProtegeesRegimeUnique(
         )
         context["hedge_debug_rows"] = hedge_rows
         context["ep_ru_settings"] = self.params
-        ru_debug = get_ru_debug_context(self.catalog)
-        context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
+        context["ru_zone_configs"] = collect_zone_configs(
+            self.catalog.get("ru_hedge_data", {})
+        )
         return context
