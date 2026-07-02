@@ -31,14 +31,6 @@
                   <p>Le nouveau document de décision remplacera celui actuellement attaché au dossier.</p>
                 </div>
               {% endif %}
-              <div id="procedure-state-change-message"
-                   class="fr-alert fr-alert--info fr-mb-2w"
-                   style="display: none">
-                <p id="procedure-state-transition-text"></p>
-                <p>
-                  <strong>Le demandeur sera notifié de la mise à jour du statut de son dossier.</strong>
-                </p>
-              </div>
               <button type="submit" class="fr-btn">Enregistrer</button>
             </form>
             {% for decision in DECISIONS %}
