@@ -97,11 +97,9 @@ def ep_regime_unique_get_instructor_view_context(
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
 
     # Per-hedge rows with zone info and coefficients
-    hedge_rows = build_ru_hedge_detail_rows(moulinette.catalog, evaluator)
-    bonuses = evaluator.per_hedge_bonuses
-    for row in hedge_rows:
-        row["bonus_ep"] = bonuses.get(row["hedge_id"], 0.0)
-    context["hedge_detail_rows"] = hedge_rows
+    context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
+        moulinette.catalog, evaluator
+    )
 
     # Zone configs for the coefficient matrix accordion
     ru_debug = get_ru_debug_context(moulinette.catalog)

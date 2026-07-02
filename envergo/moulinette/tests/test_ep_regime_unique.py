@@ -444,11 +444,11 @@ def test_ep_ru_effective_coefficients_include_bonus(
     assert criterion.result_code == "derogation_simplifiee"
 
     effective = evaluator.effective_coefficients
-    raw = moulinette.catalog["per_hedge_coefficients"]
+    hedge_data = moulinette.catalog["ru_hedge_data"]
 
     # Default hedge is buissonnante, density=60 >= X_densite=60 → HD → bonus=0.2
-    for hedge_id, raw_coeff in raw.items():
-        assert effective[hedge_id] == raw_coeff + 0.2
+    for hedge_id, record in hedge_data.items():
+        assert effective[hedge_id] == record["raw_coefficient"] + 0.2
 
 
 def test_ep_ru_effective_coefficients_diverge_from_ru(
@@ -457,9 +457,9 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
 ):
     """EPRU effective coefficients include the EP bonus; RU's do not.
 
-    Both evaluators share the same raw per_hedge_coefficients. After
-    evaluate(), EPRU's effective_coefficients property adds the bonus
-    while RU's returns the raw values unchanged.
+    Both evaluators share the same ru_hedge_data. After evaluate(),
+    EPRU's effective_coefficients adds the bonus while RU's returns
+    the raw values unchanged.
     """
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
@@ -467,7 +467,7 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-    raw = moulinette.catalog["per_hedge_coefficients"]
+    hedge_data = moulinette.catalog["ru_hedge_data"]
 
     ep_evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
     ep_effective = ep_evaluator.effective_coefficients
@@ -475,9 +475,10 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
     ru_evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
     ru_effective = ru_evaluator.effective_coefficients
 
-    for hedge_id in raw:
-        assert ep_effective[hedge_id] > raw[hedge_id]
-        assert ru_effective[hedge_id] == raw[hedge_id]
+    for hedge_id, record in hedge_data.items():
+        raw = record["raw_coefficient"]
+        assert ep_effective[hedge_id] > raw
+        assert ru_effective[hedge_id] == raw
 
 
 def test_ep_ru_dispense_effective_empty(
@@ -497,3 +498,49 @@ def test_ep_ru_dispense_effective_empty(
     evaluator = criterion.get_evaluator()
     assert evaluator.effective_coefficients == {}
     assert evaluator.get_replantation_coefficient() == 0.0
+
+
+def test_ru_zone_query_runs_once(
+    france_map,
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """Both evaluators share ru_hedge_data — the zone query runs only once."""
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    from envergo.geodata.models import MAP_TYPES
+    from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
+
+    zonage_map = MapFactory(
+        map_type=MAP_TYPES.zonage, departments=["44"], zones=[]
+    )
+    ZoneFactory(
+        map=zonage_map,
+        geometry=MultiPolygon([france_polygon]),
+        attributes={"identifiant_zone": "zone_A"},
+    )
+    settings = {
+        "coeff_compensation": {
+            "zone_A": {
+                "X_densite": 60,
+                "R1_non_arboree_HD": 1.5,
+                "R2_non_arboree_LD": 1.5,
+                "R3_arboree_HD": 1.5,
+                "R4_arboree_LD": 1.5,
+            }
+        }
+    }
+    RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+
+    with CaptureQueriesContext(connection) as ctx:
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+
+    assert "ru_hedge_data" in moulinette.catalog
+
+    zone_queries = [q for q in ctx.captured_queries if "ST_Covers" in q["sql"]]
+    assert len(zone_queries) == 1
