@@ -56,7 +56,7 @@
 
 {% block sensitive_areas %}{% endblock %}
 
-{% block result_summary %}
+{% block dossier_actions %}
   {% if user.is_instructor %}
     <h3 class="fr-mt-4w">Vous souhaitez faire une simulation alternative ?</h3>
 
@@ -93,7 +93,6 @@
   {% endif %}
 
   <h3 class="fr-mt-4w">Résultats de la simulation réglementaire</h3>
-  {{ block.super }}
 {% endblock %}
 
 {% block project_summary %}

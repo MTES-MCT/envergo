@@ -2,9 +2,6 @@
 
 {% load static moulinette %}
 
-{% block top-bar %}{% endblock %}
-{% block messages %}{% endblock %}
-
 {% block header %}
   <header role="banner" class="fr-header header-sticky header-slim">
     {% include 'haie/_slim_header.html' %}
@@ -54,7 +51,7 @@
 
   {% include 'haie/moulinette/_department_doctrine_button.html' %}
 
-  {% block result_foreword %}{% endblock %}
+  {% block plantation_evaluation %}{% endblock %}
 
   {% block department_alert %}
     {% include 'haie/moulinette/_department_alert.html' with department_display=moulinette.department relaunch_url=main_department_simulation_url %}
@@ -64,9 +61,7 @@
     {% include 'haie/moulinette/_sensitive_areas.html' %}
   {% endblock %}
 
-  {% block result_summary %}{% endblock %}
-
-  {% block result_disclaimer %}{% endblock %}
+  {% block dossier_actions %}{% endblock %}
 
   {% if moulinette.is_multi_category %}
     <section>
