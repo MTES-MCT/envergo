@@ -96,7 +96,7 @@
                     <td>
                       <div>
                         <a href="{% url 'petition_project_instructor_view' project.reference %}"
-                           class="fr-link">{{ project.demarches_simplifiees_dossier_number|format_ds_number }}</a>
+                           class="fr-link">{{ project.demarche_numerique_dossier_number|format_ds_number }}</a>
                         {% if not user|has_edit_permission:project %}
                           <span class="fr-icon-eye-line fr-icon--sm"
                                 aria-describedby="read-only-tooltip-{{ project.reference }}"></span>

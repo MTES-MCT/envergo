@@ -1,19 +1,19 @@
 (function (exports) {
   'use strict';
 
-  const DemarchesSimplifieesModal = function (modalElt) {
+  const DemarcheNumeriqueModal = function (modalElt) {
     this.modalElt = modalElt;
-    this.formElt = modalElt.querySelector("#demarche-simplifiee-form");
+    this.formElt =  modalElt.querySelector("#demarche-numerique-form");
     this.submitElt = modalElt.querySelector('button[type=submit]');
     this.buttonElts = modalElt.querySelectorAll('input[type="button"], input[type="submit"], button[type=submit]');
     this.closeElt = modalElt.querySelector('.fr-link--close');
   };
-  exports.DemarchesSimplifieesModal = DemarchesSimplifieesModal;
+  exports.DemarcheNumeriqueModal = DemarcheNumeriqueModal;
 
-  DemarchesSimplifieesModal.prototype.init = function () {
-    this.categoryInput = this.formElt.querySelector('#demarche-simplifiee-category');
+  DemarcheNumeriqueModal.prototype.init = function () {
+    this.categoryInput = this.formElt.querySelector('#demarche-numerique-category');
     this.categoriesList = this.modalElt.querySelectorAll('.hedges-category-header');
-    document.querySelectorAll('[aria-controls="demarches-simplifiees-modal"][data-category]').forEach(btn => {
+    document.querySelectorAll('[aria-controls="demarche-numerique-modal"][data-category]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (this.categoryInput) {
           this.categoryInput.value = btn.dataset.category;
@@ -27,7 +27,7 @@
     this.formElt.addEventListener('submit', this.submit.bind(this));
   };
 
-  DemarchesSimplifieesModal.prototype.deactivate = function () {
+  DemarcheNumeriqueModal.prototype.deactivate = function () {
     this.buttonElts.forEach(button => {
       button.disabled = true;
     });
@@ -45,7 +45,7 @@
     this.modalElt.addEventListener('click', this.boundPreventClickOutside, true);
   };
 
-  DemarchesSimplifieesModal.prototype.activate = function () {
+  DemarcheNumeriqueModal.prototype.activate = function () {
     this.buttonElts.forEach(button => {
       button.removeAttribute('disabled');
     });
@@ -58,17 +58,17 @@
     this.modalElt.removeEventListener('click', this.boundPreventClickOutside, true);
   };
 
-  DemarchesSimplifieesModal.prototype.submit = function (event) {
+  DemarcheNumeriqueModal.prototype.submit = function (event) {
     event.preventDefault();
 
     let textElt = document.createElement('span');
     textElt.innerHTML = 'Création en cours…';
-    textElt.id = 'demarche-simplifiee-submit-hint';
+    textElt.id = 'demarche-numerique-submit-hint';
     textElt.classList.add("fr-hint-text");
     this.submitElt.insertAdjacentElement("afterend", textElt);
 
     // remove error message if exists
-    const errorDiv = document.getElementById('demarche_simplifiee_message');
+    const errorDiv = document.getElementById('demarche_numerique_message');
     if (errorDiv) {
       errorDiv.remove();
     }
@@ -85,17 +85,17 @@
     })
       .then(response => response.json())
       .then(data => {
-        if (data.demarche_simplifiee_url && data.read_only_url) {
+        if (data.demarche_numerique_url && data.read_only_url) {
           // open Démarche numérique in a new tab and display the read only
           // version of the simulation result (simply close the tab if there is multiple category)
           if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
             // if the new tab was blocked by the browser, display the link in the current tab
             displayMessage("Votre navigateur empêche l'ouverture d'un nouvel onglet.",
-              `Veuillez cliquer sur <a href="${data.demarche_simplifiee_url}">ce lien</a> pour commencer votre démarche.`,
+              `Veuillez cliquer sur <a href="${data.demarche_numerique_url}">ce lien</a> pour commencer votre démarche.`,
               "info");
           } else {
-            newTab.location = data.demarche_simplifiee_url;
-            if (window.REDIRECT_AFTER_PROJECT_CREATION) {
+            newTab.location = data.demarche_numerique_url;
+            if(window.REDIRECT_AFTER_PROJECT_CREATION){
               window.location.href = data.read_only_url;
             }
           }
@@ -115,7 +115,7 @@
       })
       .finally(() => {
         this.activate();
-        let textElt = document.getElementById('demarche-simplifiee-submit-hint');
+        let textElt = document.getElementById('demarche-numerique-submit-hint');
         if (textElt) {
           textElt.remove();
         }
@@ -126,14 +126,14 @@
       });
   };
 
-  DemarchesSimplifieesModal.prototype.preventEscape = function (event) {
+  DemarcheNumeriqueModal.prototype.preventEscape = function (event) {
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopImmediatePropagation();
     }
   }
 
-  DemarchesSimplifieesModal.prototype.preventClickOutside = function (event) {
+  DemarcheNumeriqueModal.prototype.preventClickOutside = function (event) {
     const body = this.modalElt.querySelector('.fr-modal__body');
     if (!body.contains(event.target)) {
       event.preventDefault();
@@ -147,7 +147,7 @@
 function displayMessage(title, message, type) {
   const projectResultTopBar = document.getElementById('project-result-top-bar');
   const notification = `
-                          <div id="demarche_simplifiee_message" class="messages fr-p-5w">
+                          <div id="demarche_numerique_message" class="messages fr-p-5w">
                             <div class="fr-alert fr-alert--${type} fr-alert--sm">
                               <h3 class="fr-alert__title">${title}</h3>
                               <p>${message}</p>
@@ -162,8 +162,8 @@ function displayMessage(title, message, type) {
 (function () {
   // a script to add actions on the moulinette result banner
   window.addEventListener('load', function () {
-    const modal = document.getElementById('demarches-simplifiees-modal');
-    const demarchesSimplifieesModal = new DemarchesSimplifieesModal(modal);
-    demarchesSimplifieesModal.init();
+    const modal = document.getElementById('demarche-numerique-modal');
+    const demarcheNumeriqueModal = new DemarcheNumeriqueModal(modal);
+    demarcheNumeriqueModal.init();
   });
 })();

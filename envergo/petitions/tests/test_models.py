@@ -164,14 +164,12 @@ class TestResultSnapshot:
 
     @pytest.mark.haie
     def test_snapshot_created_on_dossier_submission(self):
-        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarches_simplifiees."""
+        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarche_numerique."""
         SiteFactory(domain="testserver", name="testserver")
 
         DCConfigHaieFactory()
         # Create project in draft state (not yet submitted)
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
         # Count snapshots after project creation
         initial_count = ResultSnapshot.objects.filter(project=project).count()
@@ -185,7 +183,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (
@@ -204,9 +202,7 @@ class TestResultSnapshot:
         """All simulations get the date param added to their moulinette_url on first submission."""
         SiteFactory(domain="testserver", name="testserver")
         DCConfigHaieFactory()
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         alternative = SimulationFactory(project=project, comment="Alternative")
 
         fake_dossier = {
@@ -217,7 +213,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         alternative.refresh_from_db()
         assert "date=2025-01-29" in alternative.moulinette_url

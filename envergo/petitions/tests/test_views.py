@@ -31,7 +31,7 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
+from envergo.petitions.demarche_numerique.client import DemarchesSimplifieesError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -41,8 +41,8 @@ from envergo.petitions.models import (
     LatestMessagerieAccess,
 )
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHE_NUMERIQUE_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     FILE_TEST_NOK_PATH,
     FILE_TEST_PATH,
@@ -124,15 +124,15 @@ def test_petition_projet_create_view_dispatch(client, site, haie_user):
     assert response.url == "/projet/liste"
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
-def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
+def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
 
     mock_post.return_value.status_code = 200
     mock_post.return_value.json.return_value = {
-        "dossier_url": "demarche_simplifiee_url",
+        "dossier_url": "demarche_numerique_url",
         "state": "prefilled",
         "dossier_id": "RG9zc2llci0yMTA3NTY2NQ==",
         "dossier_number": 21075665,
@@ -140,13 +140,13 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     }
 
     config = DCConfigHaieFactory()
-    config.demarche_simplifiee_pre_fill_config.append(
+    config.demarche_numerique_pre_fill_config.append(
         {"id": "abc", "value": "plantation_adequate"}
     )
-    config.demarche_simplifiee_pre_fill_config.append(
+    config.demarche_numerique_pre_fill_config.append(
         {"id": "def", "value": "sur_talus_d"}
     )
-    config.demarche_simplifiee_pre_fill_config.append(
+    config.demarche_numerique_pre_fill_config.append(
         {"id": "ghi", "value": "sur_talus_p"}
     )
     config.save()
@@ -162,11 +162,11 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+    demarche_numerique_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
 
-    assert demarche_simplifiee_url == "demarche_simplifiee_url"
+    assert demarche_numerique_url == "demarche_numerique_url"
     assert dossier_number == 21075665
 
     # Assert the body of the requests.post call
@@ -184,16 +184,16 @@ def test_pre_fill_demarche_simplifiee(mock_reverse, mock_post):
     assert mock_post.call_args[1]["json"] == expected_body
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
 def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
-    """pre_fill_demarche_simplifiee uses the currently valid config when multiple exist."""
+    """pre_fill_demarche_numerique uses the currently valid config when multiple exist."""
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
 
     mock_post.return_value.status_code = 200
     mock_post.return_value.json.return_value = {
-        "dossier_url": "demarche_simplifiee_url",
+        "dossier_url": "demarche_numerique_url",
         "state": "prefilled",
         "dossier_id": "RG9zc2llci0yMTA3NTY2NQ==",
         "dossier_number": 21075665,
@@ -203,12 +203,12 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     today = date.today()
     # Expired config
     DCConfigHaieFactory(
-        demarche_simplifiee_number=111111,
+        demarche_numerique_number=111111,
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
     DCConfigHaieFactory(
-        demarche_simplifiee_number=222222,
+        demarche_numerique_number=222222,
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
 
@@ -223,20 +223,20 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     hedge_data.data = [hedge_to_plant.toDict()]
 
     petition_project = PetitionProjectFactory(reference="ABC123", hedge_data=hedge_data)
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+    demarche_numerique_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
 
-    assert demarche_simplifiee_url == "demarche_simplifiee_url"
+    assert demarche_numerique_url == "demarche_numerique_url"
     assert dossier_number == 21075665
     # Verify the correct demarche number was used (current config's 222222)
     assert "222222" in mock_post.call_args[0][0]
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")
-def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplog):
+def test_pre_fill_demarche_numerique_not_enabled(mock_reverse, mock_post, caplog):
     mock_reverse.return_value = "http://haie.local:3000/projet/ABC123"
     DCConfigHaieFactory()
 
@@ -247,7 +247,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
     request.alerts = PetitionProjectCreationAlert(request)
 
     petition_project = PetitionProjectFactory()
-    demarche_simplifiee_url, dossier_number = view.pre_fill_demarche_simplifiee(
+    demarche_numerique_url, dossier_number = view.pre_fill_demarche_numerique(
         petition_project
     )
     assert (
@@ -260,7 +260,7 @@ def test_pre_fill_demarche_simplifiee_not_enabled(mock_reverse, mock_post, caplo
         )
         > 0
     )
-    assert demarche_simplifiee_url is None
+    assert demarche_numerique_url is None
     assert dossier_number is None
 
 
@@ -322,7 +322,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     )
 
     # THEN I should see prefill url
-    assert project.demarches_simplifiees_prefill_url in response.content.decode()
+    assert project.demarche_numerique_prefill_url in response.content.decode()
 
     # THEN I should not see instructor info for simulations
     assert "Vous souhaitez modifier votre simulation ?" in response.content.decode()
@@ -433,10 +433,8 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_notes_view(
     mock_post, haie_user_44, haie_instructor_44, client, site
 ):
@@ -482,10 +480,8 @@ def test_petition_project_instructor_notes_view(
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
     mock_post, haie_instructor_44, client, site
 ):
@@ -525,10 +521,8 @@ def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
     assert "Les notes ont été enregistrées." in response.content.decode()
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_invited_sees_only_public_and_cannot_edit(
     mock_post, haie_user_44, client, site
 ):
@@ -573,10 +567,8 @@ def test_instructor_notes_invited_sees_only_public_and_cannot_edit(
     assert project.instructor_private_mention == "Contenu privé"
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_invited_empty_notes(mock_post, haie_user_44, client, site):
     """When public notes are empty, invited instructor sees 'Aucune note.'"""
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -598,10 +590,8 @@ def test_instructor_notes_invited_empty_notes(mock_post, haie_user_44, client, s
     assert "Secret" not in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_invited_links_are_clickable(
     mock_post, haie_user_44, client, site
 ):
@@ -622,10 +612,8 @@ def test_instructor_notes_invited_links_are_clickable(
     assert 'href="https://example.com/doc"' in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_links_are_clickable(
     mock_post, haie_instructor_44, client, site
 ):
@@ -648,10 +636,8 @@ def test_instructor_notes_coordinator_links_are_clickable(
     assert 'href="https://example.com/priv"' in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_empty_notes(
     mock_post, haie_instructor_44, client, site
 ):
@@ -673,10 +659,8 @@ def test_instructor_notes_coordinator_empty_notes(
     assert content.count("Aucune note.") == 2
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_view_reglementation_pages(
     mock_post,
     haie_instructor_44,
@@ -763,10 +747,8 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert project.onagre_number == "1234567"
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_regulation_view_includes_config_in_context(
     mock_post,
     haie_instructor_44,
@@ -800,10 +782,8 @@ def test_regulation_view_includes_config_in_context(
     assert response.context["config"].single_procedure is True
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_display_dossier_ds_info(
     mock_post, haie_instructor_44, client, site
 ):
@@ -830,10 +810,8 @@ def test_petition_project_instructor_display_dossier_ds_info(
     assert "<strong>Travaux envisagés\xa0:</strong> Destruction" in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_project_instructor_messagerie_ds(
     mock_ds_query_execute, haie_user_44, haie_instructor_44, client, site
 ):
@@ -927,7 +905,7 @@ def _setup_messagerie(haie_instructor_44, client):
     """Helper to setup messagerie test context."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory(
-        demarches_simplifiees_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
+        demarche_numerique_dossier_id="RG9zc2llci0yMTA1OTY3NQ==",
     )
     url = reverse(
         "petition_project_instructor_messagerie_view",
@@ -937,10 +915,8 @@ def _setup_messagerie(haie_instructor_44, client):
     return url
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_valid_message_without_file(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -953,10 +929,8 @@ def test_messagerie_valid_message_without_file(
     assert "Le message a bien été envoyé au demandeur." in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_valid_message_with_file(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -972,10 +946,8 @@ def test_messagerie_valid_message_with_file(
     assert "Le message a bien été envoyé au demandeur." in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_empty_message_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -990,10 +962,8 @@ def test_messagerie_empty_message_error(
     assert "Pièce jointe :" not in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_invalid_extension_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1015,10 +985,8 @@ def test_messagerie_invalid_extension_error(
     ) in normalized
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_html_in_filename_is_escaped(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1033,10 +1001,8 @@ def test_messagerie_html_in_filename_is_escaped(
     assert "&lt;h1&gt;" in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_file_too_large_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1053,10 +1019,8 @@ def test_messagerie_file_too_large_error(
     assert "20 Mo" in content
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_opens_on_error(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1071,10 +1035,8 @@ def test_messagerie_modal_opens_on_error(
     )
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_messagerie_modal_not_opened_on_success(
     mock_ds_query_execute, haie_instructor_44, client, site
 ):
@@ -1100,12 +1062,12 @@ def test_petition_project_list(
     now = timezone.now()
     last_month = now - timedelta(days=30)
     project_34 = PetitionProject34Factory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=last_month,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=last_month,
     )
 
     # WHEN visitor acesses to project list
@@ -1178,26 +1140,26 @@ def test_petition_project_list_filters(
     # GIVEN projects non draft followed by users and instructors
     now = timezone.now()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_instructor1.followed_by.add(haie_instructor_44_instructor1)
     project_44_followed_by_instructor2 = PetitionProjectFactory(
         reference="ACB132",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_instructor2.followed_by.add(haie_instructor_44_instructor2)
     project_44_followed_by_invited = PetitionProjectFactory(
         reference="XYZ123",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_invited.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2 = PetitionProjectFactory(
         reference="XYZ456",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_invited_and_instructor2.followed_by.add(haie_user_44)
     project_44_followed_by_invited_and_instructor2.followed_by.add(
@@ -1205,14 +1167,14 @@ def test_petition_project_list_filters(
     )
     project_44_followed_by_superuser = PetitionProjectFactory(
         reference="ADM123",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ789",
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=now,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
     )
 
     # AS haie user with no project
@@ -1306,7 +1268,7 @@ def test_petition_project_dl_geopkg(client, haie_user, site):
     response = client.get(geopkg_url)
     response.get("Content-Disposition")
     assert (
-        f'filename="haies_dossier_{project.demarches_simplifiees_dossier_number}.gpkg"'
+        f'filename="haies_dossier_{project.demarche_numerique_dossier_number}.gpkg"'
         in response.get("Content-Disposition")
     )
     # TODO: check the features
@@ -1560,7 +1522,7 @@ def procedure_url(project):
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1610,7 +1572,7 @@ def test_petition_project_close_with_express_agreement(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1641,7 +1603,7 @@ def test_petition_project_close_with_tacit_agreement(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1667,7 +1629,7 @@ def test_petition_project_close_with_dropped(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1696,10 +1658,10 @@ def test_petition_project_close_with_missing_fields(
     assert not mock_ds_msg.called
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_message_failure_rolls_back(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1712,7 +1674,7 @@ def test_petition_project_close_message_failure_rolls_back(
     client.force_login(haie_instructor_44)
 
     def fake_ds_update(project, new_status):
-        project.demarches_simplifiees_state = new_status
+        project.demarche_numerique_state = new_status
         project.save()
 
     mock_update_ds.side_effect = fake_ds_update
@@ -1733,7 +1695,7 @@ def test_petition_project_close_message_failure_rolls_back(
     assert project.status_history.count() == 1
     # The DS status change went through before the failure
     assert mock_update_ds.call_count == 1
-    assert project.demarches_simplifiees_state == "accepte"
+    assert project.demarche_numerique_state == "accepte"
 
     # WHEN the instructor retries and the message goes through
     mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
@@ -1749,7 +1711,7 @@ def test_petition_project_close_message_failure_rolls_back(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1778,10 +1740,10 @@ def test_petition_project_close_status_change_failure(
     assert not mock_ds_msg.called
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_ds_disabled(
     mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
@@ -1802,12 +1764,10 @@ def test_petition_project_close_with_ds_disabled(
     assert project.stage == "closed"
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.demarche_numerique.client.DemarchesSimplifieesClient.execute")
 @pytest.mark.django_db(transaction=True)
 def test_closing_actually_calls_ds_messagerie(
     mock_execute, mock_update_ds, mock_notify, client, haie_instructor_44, site
@@ -1825,8 +1785,8 @@ def test_closing_actually_calls_ds_messagerie(
     # The dossier id is what gates the message send; a real dossier has it.
     project = PetitionProjectFactory(
         status__stage="preparing_decision",
-        demarches_simplifiees_state="en_instruction",
-        demarches_simplifiees_dossier_id="RG9zc2llci0xMjM=",
+        demarche_numerique_state="en_instruction",
+        demarche_numerique_dossier_id="RG9zc2llci0xMjM=",
     )
 
     message = "Votre dossier a été classé sans suite. Motif : doublon."
@@ -2015,10 +1975,8 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     )
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_petition_invited_instructor_cannot_send_message(
     mock_ds_query_execute, client, haie_instructor_44, haie_user
 ):
@@ -2237,8 +2195,8 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     last_week = now - timedelta(days=7)
     last_month = now - timedelta(days=30)
     project = PetitionProjectFactory(
-        demarches_simplifiees_state=DOSSIER_STATES.prefilled,
-        demarches_simplifiees_date_depot=last_month,
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=last_month,
         latest_petitioner_msg=None,
     )
     client.force_login(haie_instructor_44)
@@ -3461,7 +3419,7 @@ def test_instructor_view_token_matomo_invitation(
 def test_instructor_view_token_expired_403(client, haie_instructor_44, haie_user, site):
     """Test that instructor view returns 403 when user use an invalid token"""
     DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
+        demarche_numerique_display_fields={
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
         }
@@ -3804,7 +3762,7 @@ class TestGetProjectConfig:
     def test_returns_config_without_validity_range(self):
         config = DCConfigHaieFactory(validity_range=None)
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
         )
         view = self._make_view([project])
 
@@ -3822,7 +3780,7 @@ class TestGetProjectConfig:
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
             created_at=timezone.make_aware(datetime(2025, 6, 15)),
         )
         view = self._make_view([project])
@@ -3841,7 +3799,7 @@ class TestGetProjectConfig:
             validity_range=DateRange(date(2025, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
             created_at=timezone.make_aware(datetime(2024, 6, 15)),
         )
         view = self._make_view([project])
@@ -3856,7 +3814,7 @@ class TestGetProjectConfig:
             validity_range=DateRange(date(2026, 1, 1), None, "[)"),
         )
         project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
             created_at=timezone.make_aware(datetime(2025, 6, 15)),
         )
         view = self._make_view([project])
@@ -3869,10 +3827,10 @@ class TestGetProjectConfig:
 
         DCConfigHaieFactory(validity_range=None)
         project1 = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
         )
         project2 = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
         )
         view = self._make_view([project1, project2])
 

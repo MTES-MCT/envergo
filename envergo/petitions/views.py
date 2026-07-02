@@ -64,7 +64,7 @@ from envergo.hedges.models import TO_PLANT, HedgeData, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
     PetitionProjectForm,
     PetitionProjectInstructorEspecesProtegeesForm,
@@ -89,16 +89,16 @@ from envergo.petitions.models import (
     StatusLog,
 )
 from envergo.petitions.services import (
-    DEMARCHES_SIMPLIFIEES_STATUS_MAPPING,
+    DEMARCHE_NUMERIQUE_STATUS_MAPPING,
     PetitionProjectCreationAlert,
     PetitionProjectCreationProblem,
     compute_instructor_informations_ds,
-    get_context_from_ds,
+    get_context_from_dn,
     get_field_data_from_dn_dossier,
     get_messages_and_senders_from_ds,
     get_project_context,
     send_message_dossier_ds,
-    update_demarches_simplifiees_status,
+    update_demarche_numerique_status,
 )
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
@@ -138,7 +138,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
         queryset = (
             PetitionProject.objects.exclude(
-                demarches_simplifiees_state__exact=DOSSIER_STATES.draft
+                demarche_numerique_state__exact=DOSSIER_STATES.draft
             )
             .select_related("hedge_data", "department")
             .defer("department__geometry")
@@ -161,7 +161,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                     )
                 )
             )
-            .order_by("-demarches_simplifiees_date_depot", "-created_at")
+            .order_by("-demarche_numerique_date_depot", "-created_at")
         )
         # Filter on current user status
         if current_user.is_superuser:
@@ -345,19 +345,17 @@ class PetitionProjectCreate(FormView):
                 kwargs={"reference": petition_project.reference},
             )
 
-            demarche_simplifiee_url, dossier_number = self.pre_fill_demarche_simplifiee(
+            demarche_numerique_url, dossier_number = self.pre_fill_demarche_numerique(
                 petition_project
             )
 
-            if not demarche_simplifiee_url:
+            if not demarche_numerique_url:
                 res = self.form_invalid(form)
                 # Rollback the transaction to avoid saving the petition project
                 transaction.set_rollback(True)
             else:
-                petition_project.demarches_simplifiees_dossier_number = dossier_number
-                petition_project.demarches_simplifiees_prefill_url = (
-                    demarche_simplifiee_url
-                )
+                petition_project.demarche_numerique_dossier_number = dossier_number
+                petition_project.demarche_numerique_prefill_url = demarche_numerique_url
                 petition_project.save()
 
                 StatusLog.objects.create(
@@ -386,14 +384,14 @@ class PetitionProjectCreate(FormView):
 
                 res = JsonResponse(
                     {
-                        "demarche_simplifiee_url": demarche_simplifiee_url,
+                        "demarche_numerique_url": demarche_numerique_url,
                         "read_only_url": read_only_url,
                     }
                 )
 
         return res
 
-    def pre_fill_demarche_simplifiee(self, project):
+    def pre_fill_demarche_numerique(self, project):
         """Send a http request to pre-fill a dossier on Démarche numérique based on moulinette data.
 
         Return the url of the created dossier and its number if successful, None otherwise
@@ -411,27 +409,25 @@ class PetitionProjectCreate(FormView):
             )
             return None, None
         self.request.alerts.config = config
-        demarche_id = config.demarche_simplifiee_number
+        demarche_id = config.demarche_numerique_number
+
         if not demarche_id:
             department = extract_param_from_url(moulinette_url, "department")
             logger.error(
-                "An activated department should always have a demarche_simplifiee_number",
-                extra={
-                    "haie config": config.id,
-                    "department": department,
-                },
+                "An activated department should always have a `demarche_numerique_number`",
+                extra={"haie config": config.id, "department": department},
             )
 
             self.request.alerts.append(
                 PetitionProjectCreationProblem(
-                    "missing_demarche_simplifiee_number", is_fatal=True
+                    "missing_demarche_numerique_number", is_fatal=True
                 )
             )
             return None, None
 
-        api_url = f"{settings.DEMARCHES_SIMPLIFIEES['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
+        api_url = f"{settings.DEMARCHE_NUMERIQUE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        for field in config.demarche_simplifiee_pre_fill_config:
+        for field in config.demarche_numerique_pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
                     "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
@@ -456,7 +452,7 @@ class PetitionProjectCreate(FormView):
                 config,
             )
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"« Démarche numérique » is not enabled. Doing nothing."
                 f"\nrequest.url: {api_url}"
@@ -473,7 +469,7 @@ class PetitionProjectCreate(FormView):
             )
         except requests.exceptions.RequestException as e:
             logger.error(
-                "Could not reach demarches-simplifiees.fr to pre-fill a dossier",
+                "Could not reach « Démarche numérique » to pre-fill a dossier",
                 extra={"api_url": api_url, "request_body": body, "exception": e},
             )
             self.request.alerts.append(
@@ -521,7 +517,7 @@ class PetitionProjectCreate(FormView):
     ):
         """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
-        Available sources are listed by this method : ConfigHaie.get_demarche_simplifiee_value_sources()
+        Available sources are listed by this method : ConfigHaie.get_demarche_numerique_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
         Then it will map the value if a mapping is provided.
         """
@@ -761,14 +757,14 @@ class PetitionProjectDetail(DetailView):
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
         )
-        context["demarches_simplifiees_state"] = self.object.demarches_simplifiees_state
+        context["demarche_numerique_state"] = self.object.demarche_numerique_state
 
-        context["demarches_simplifiees_dossier_number"] = (
-            self.object.demarches_simplifiees_dossier_number
+        context["demarche_numerique_dossier_number"] = (
+            self.object.demarche_numerique_dossier_number
         )
         context["created_at"] = self.object.created_at
-        context["demarches_simplifiees_date_depot"] = (
-            self.object.demarches_simplifiees_date_depot
+        context["demarche_numerique_date_depot"] = (
+            self.object.demarche_numerique_date_depot
         )
         plantation_url = reverse(
             "input_hedges",
@@ -797,11 +793,11 @@ class PetitionProjectDetail(DetailView):
         context["share_btn_url"] = share_btn_url
         context["edit_url"] = edit_url
 
-        if self.object.demarches_simplifiees_state == "draft":
-            context["demarches_simplifiees_prefill_url"] = (
-                self.object.demarches_simplifiees_prefill_url or ""
+        if self.object.demarche_numerique_state == "draft":
+            context["demarche_numerique_prefill_url"] = (
+                self.object.demarche_numerique_prefill_url or ""
             )
-        context["ds_url"] = self.object.demarches_simplifiees_petitioner_url
+        context["ds_url"] = self.object.demarche_numerique_petitioner_url
         context["triage_form"] = self.object.get_triage_form()
 
         matomo_custom_path = self.request.path.replace(
@@ -894,7 +890,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             single_procedure=self.object.config.single_procedure
         )
 
-        context.update(get_context_from_ds(self.object))
+        context.update(get_context_from_dn(self.object))
         context.update(self.object.moulinette_data)
 
         plantation_url = reverse(
@@ -931,12 +927,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["matomo_custom_url"] = update_url_with_matomo_params(
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
-        context["ds_url"] = self.object.get_demarches_simplifiees_instructor_url(
-            self.object.config.demarche_simplifiee_number
+        context["ds_url"] = self.object.get_demarche_numerique_instructor_url(
+            self.object.config.demarche_numerique_number
         )
 
         # Send message if info from « Démarche numérique » is not in project details
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             messages.info(
                 self.request,
                 """L'accès à l'API « Démarche numérique » n'est pas activée.
@@ -971,7 +967,7 @@ class BasePetitionProjectInstructorView(
         """Returns new link url"""
         ask_new_link_url_base = f"https://tally.so/r/{settings.ASK_NEW_LINK_FORM_ID}"
         user = self.request.user
-        city = get_context_from_ds(self.object)["ds_info"]["city"]
+        city = get_context_from_dn(self.object)["ds_info"]["city"]
         petition_project_consultation_url = self.request.build_absolute_uri(
             reverse(
                 "petition_project_instructor_consultations_view",
@@ -1156,7 +1152,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         )
 
 
-class PetitionProjectInstructorDossierDSView(
+class PetitionProjectInstructorDossierDNView(
     BasePetitionProjectInstructorView, DetailView
 ):
     """View for petition project page with Démarche numérique data"""
@@ -1266,7 +1262,7 @@ class PetitionProjectInstructorMessagerieView(
         context["ds_sender_emails_categories"] = {
             "petitioner": ds_petitioner_email,
             "instructor": ds_instructeurs_emails,
-            "automatic": settings.DEMARCHES_SIMPLIFIEES["AUTOMATIC_SENDER_EMAIL"],
+            "automatic": settings.DEMARCHE_NUMERIQUE["AUTOMATIC_SENDER_EMAIL"],
         }
 
         # Send message if info from « Démarche numérique » is not in project details
@@ -1685,20 +1681,20 @@ class PetitionProjectInstructorProcedureView(
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
-        ds_status_mapping = {}
+        dn_status_mapping = {}
         for (
             stage,
             decision,
-        ), ds_status in DEMARCHES_SIMPLIFIEES_STATUS_MAPPING.items():
-            ds_status_mapping.setdefault(stage, {})[decision] = ds_status
-        ds_status_labels = {key: str(label) for key, label in DOSSIER_STATES}
+        ), ds_status in DEMARCHE_NUMERIQUE_STATUS_MAPPING.items():
+            dn_status_mapping.setdefault(stage, {})[decision] = ds_status
+        dn_status_labels = {key: str(label) for key, label in DOSSIER_STATES}
         forbidden_transitions = [list(k) for k in FORBIDDEN_STAGE_TRANSITIONS.keys()]
         context.update(
             {
                 "STAGES": STAGES,
                 "DECISIONS": DECISIONS,
-                "ds_status_mapping": ds_status_mapping,
-                "ds_status_labels": ds_status_labels,
+                "dn_status_mapping": dn_status_mapping,
+                "dn_status_labels": dn_status_labels,
                 "forbidden_transitions": forbidden_transitions,
             }
         )
@@ -1756,14 +1752,14 @@ class PetitionProjectInstructorProcedureView(
         fails and the local log is rolled back, a retry only replays the log
         creation and the message. Returns False on failure (form is annotated).
         """
-        previous_ds_status = self.object.demarches_simplifiees_state
-        new_ds_status = DEMARCHES_SIMPLIFIEES_STATUS_MAPPING[(log.stage, log.decision)]
+        previous_ds_status = self.object.demarche_numerique_state
+        new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
         if previous_ds_status == new_ds_status:
             return True
 
         try:
-            update_demarches_simplifiees_status(self.object, new_ds_status)
-        except DemarchesSimplifieesError as e:
+            update_demarche_numerique_status(self.object, new_ds_status)
+        except DemarcheNumeriqueError as e:
             logger.error(e)
             form.add_error(
                 None,
@@ -1792,7 +1788,7 @@ class PetitionProjectInstructorProcedureView(
                 if is_closing:
                     self.send_closing_message(form)
                 log.save()
-        except DemarchesSimplifieesError as e:
+        except DemarcheNumeriqueError as e:
             logger.error(e)
             form.add_error(
                 None,
@@ -1884,14 +1880,14 @@ class PetitionProjectInstructorProcedureView(
             self.object, form.cleaned_data["applicant_message"], attachment
         )
         if ds_response is None or ds_response.get("errors") is not None:
-            if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+            if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                 messages.info(
                     self.request,
                     """L'accès à l'API démarches simplifiées n'est pas activée.
                     Le message n'est pas envoyé""",
                 )
             else:
-                raise DemarchesSimplifieesError(message="DS message not sent")
+                raise DemarcheNumeriqueError(message="DS message not sent")
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
@@ -1944,7 +1940,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 ds_response = send_message_dossier_ds(self.object, message)
 
                 if ds_response is None or ds_response.get("errors") is not None:
-                    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+                    if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                         messages.info(
                             self.request,
                             """L'accès à l'API « Démarche numérique » n'est pas activée.
@@ -1953,7 +1949,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     else:
                         # We raise an exception to make sure the data model transaction
                         # is aborted
-                        raise DemarchesSimplifieesError(message="DN message not sent")
+                        raise DemarcheNumeriqueError(message="DN message not sent")
 
             # Send Mattermost notification
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1999,7 +1995,7 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             res = HttpResponseRedirect(self.get_success_url())
             return res
 
-        except DemarchesSimplifieesError:
+        except DemarcheNumeriqueError:
             error_message = f"""Le message n'a pas pu être envoyé.
             Merci de ré-essayer dans quelques minutes.
             Si le problème persiste,
@@ -2128,8 +2124,8 @@ class PetitionProjectHedgeDataExport(DetailView):
 
             # Create a response with the GeoPackage file
             export_filename = "haies_dossier.gpkg"
-            if self.object.demarches_simplifiees_dossier_number:
-                export_filename = f"haies_dossier_{self.object.demarches_simplifiees_dossier_number}.gpkg"
+            if self.object.demarche_numerique_dossier_number:
+                export_filename = f"haies_dossier_{self.object.demarche_numerique_dossier_number}.gpkg"
 
             with open(export_file, "rb") as f:
                 response = HttpResponse(f.read(), content_type="application/geopackage")

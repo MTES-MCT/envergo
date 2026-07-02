@@ -754,11 +754,11 @@ div#form-group-haies {
   }
 }
 
-div#demarches-simplifiees-modal-btns {
+div#demarche-numerique-modal-btns {
   display: flex;
 }
 
-div#go-to-ds-btn {
+div#go-to-dn-btn {
   display: flex;
   justify-content: flex-end;
 }
@@ -1025,7 +1025,7 @@ ul.instructor-view-list {
   border-top: 1px solid var(--border-default-grey);
 }
 
-.ds-files {
+.dn-files {
   .fr-content-media {
     margin: 1rem 0;
   }
@@ -1043,7 +1043,7 @@ ul.instructor-view-list {
   padding-top: 1rem !important;
 }
 
-.ds-message {
+.dn-message {
   background-color: var(--background-alt-grey);
   border-left: 3px solid var(--grey-425-625);
   padding: 2rem;
@@ -1070,7 +1070,7 @@ ul.instructor-view-list {
     padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
   }
 
-  .ds-message {
+  .dn-message {
     &--instructor,
     &--automatic {
       margin-left: 5rem;
