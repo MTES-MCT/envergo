@@ -220,7 +220,9 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
     """Build per-hedge display rows from pre-computed records.
 
     Reads zone inputs and coefficients from ``ru_hedge_data``, and the
-    final effective coefficient from the evaluator.
+    final effective coefficient from the evaluator. The displayed bonus is
+    the majoration actually applied (majoré − brut), so it shows 0 when the
+    evaluator doesn't apply one (e.g. dispense) and the columns always add up.
     """
     hedge_data = catalog.get("ru_hedge_data", {})
     effective_coefficients = evaluator.effective_coefficients
@@ -228,6 +230,7 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
     rows = []
     for hedge_id, record in hedge_data.items():
         raw = record["raw_coefficient"]
+        coeff_majore = round(effective_coefficients.get(hedge_id, raw), 2)
         rows.append(
             {
                 "hedge_id": hedge_id,
@@ -237,8 +240,8 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
                 "x_densite": record["x_densite"],
                 "high_density": record["high_density"],
                 "coeff_ru_brut": raw,
-                "bonus_ep": record["ep_bonus"],
-                "coeff_ru_majore": effective_coefficients.get(hedge_id, raw),
+                "bonus_ep": round(coeff_majore - raw, 2),
+                "coeff_ru_majore": coeff_majore,
             }
         )
     return rows
