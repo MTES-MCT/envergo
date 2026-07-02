@@ -31,7 +31,7 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
-from envergo.petitions.demarche_numerique.client import DemarchesSimplifieesError
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -1719,7 +1719,7 @@ def test_petition_project_close_status_change_failure(
     """If the DS status change fails, nothing happens locally."""
 
     client.force_login(haie_instructor_44)
-    mock_update_ds.side_effect = DemarchesSimplifieesError("", {}, "boom")
+    mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")

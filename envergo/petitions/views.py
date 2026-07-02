@@ -1866,7 +1866,7 @@ class PetitionProjectInstructorProcedureView(
         """Send the closing message to the applicant via the DS messagerie.
 
         The prefectural order, when there is one, is attached to the message.
-        Raises DemarchesSimplifieesError if the message could not be sent, so
+        Raises DemarcheNumeriqueError if the message could not be sent, so
         that the enclosing transaction is rolled back and the dossier stays
         open.
         """
