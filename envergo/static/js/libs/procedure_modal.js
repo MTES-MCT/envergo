@@ -71,7 +71,6 @@
       this.applicantMessageInput = form.querySelector("#id_applicant_message");
 
       // Démarches Simplifiées state-change notice.
-      this.stateChangeNotice = document.getElementById("procedure-state-change-message");
       this.stateChangeText = document.getElementById("procedure-state-transition-text");
       this.currentDsState = form.dataset.currentDsStatus;
       this.currentStage = readJson("current-stage");
@@ -164,7 +163,6 @@
         nextDsState !== this.currentDsState &&
         !this.isForbidden(this.currentStage, this.stage);
 
-      show(this.stateChangeNotice, changes);
       if (!changes) return;
 
       this.stateChangeText.textContent =
