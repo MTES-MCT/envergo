@@ -59,5 +59,5 @@ RATELIMIT_ENABLE = False
 # Silence the noisiest loggers during tests (DS API calls, GraphQL transport)
 # while keeping other log output visible for debugging.
 LOGGING.setdefault("loggers", {})
-LOGGING["loggers"]["envergo.petitions.demarches_simplifiees"] = {"level": "WARNING"}
+LOGGING["loggers"]["envergo.petitions.demarche_numerique"] = {"level": "WARNING"}
 LOGGING["loggers"]["gql"] = {"level": "WARNING"}
