@@ -44,16 +44,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name="confighaie",
-            name="demarche_simplifiee_number",
-            field=models.IntegerField(
-                blank=True,
-                help_text='Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : <a href="https://demarche.numerique.gouv.fr/admin/procedures" target="_blank" rel="noopener">https://demarche.numerique.gouv.fr/admin/procedures</a>',
-                null=True,
-                verbose_name="Numéro de la démarche DS",
-            ),
-        ),
-        migrations.AlterField(
-            model_name="confighaie",
             name="regulations_available",
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.CharField(
