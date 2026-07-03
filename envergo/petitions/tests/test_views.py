@@ -26,7 +26,7 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
-from envergo.petitions.demarches_simplifiees.client import DemarchesSimplifieesError
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -1507,7 +1507,7 @@ def procedure_url(project):
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_closing_message_async")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
@@ -1555,7 +1555,7 @@ def test_petition_project_close_with_express_agreement(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_closing_message_async")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
     mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
@@ -1585,7 +1585,7 @@ def test_petition_project_close_with_tacit_agreement(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_closing_message_async")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
     mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
@@ -1610,7 +1610,7 @@ def test_petition_project_close_with_dropped(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_closing_message_async")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
     mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
@@ -1641,7 +1641,7 @@ def test_petition_project_close_with_missing_fields(
 
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.send_closing_message_async")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
     mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
@@ -1649,7 +1649,7 @@ def test_petition_project_close_status_change_failure(
     """If the DS status change fails, the log rolls back and no message is sent."""
 
     client.force_login(haie_instructor_44)
-    mock_update_ds.side_effect = DemarchesSimplifieesError("", {}, "boom")
+    mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1661,7 +1661,7 @@ def test_petition_project_close_status_change_failure(
     assert res.status_code == 200
     content = res.content.decode()
     assert (
-        "Impossible de mettre à jour le dossier dans Démarches Simplifiées" in content
+        "Impossible de mettre à jour le dossier dans « Démarche numérique »" in content
     )
 
     project.refresh_from_db()
@@ -1670,11 +1670,11 @@ def test_petition_project_close_status_change_failure(
     assert not mock_message_task.delay.called
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
 @patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
+    "envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute"
 )
 @pytest.mark.django_db(transaction=True)
 def test_closing_actually_calls_ds_messagerie(
@@ -1693,8 +1693,8 @@ def test_closing_actually_calls_ds_messagerie(
     # The dossier id is what gates the message send; a real dossier has it.
     project = PetitionProjectFactory(
         status__stage="preparing_decision",
-        demarches_simplifiees_state="en_instruction",
-        demarches_simplifiees_dossier_id="RG9zc2llci0xMjM=",
+        demarche_numerique_state="en_instruction",
+        demarche_numerique_dossier_id="RG9zc2llci0xMjM=",
     )
 
     message = "Votre dossier a été classé sans suite. Motif : doublon."

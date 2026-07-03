@@ -6,8 +6,8 @@ from django.test import override_settings
 
 from envergo.petitions.tasks import send_closing_message_async
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHE_NUMERIQUE_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     PetitionProjectFactory,
     StatusLogFactory,
@@ -27,7 +27,7 @@ def closing_log(**kwargs):
     )
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.tasks.send_message_dossier_ds")
 def test_send_closing_message_without_attachment(mock_ds_msg):
     mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
@@ -42,7 +42,7 @@ def test_send_closing_message_without_attachment(mock_ds_msg):
     assert args[2] is None
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.tasks.send_message_dossier_ds")
 def test_send_closing_message_with_attachment(mock_ds_msg):
     mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
@@ -57,7 +57,7 @@ def test_send_closing_message_with_attachment(mock_ds_msg):
     assert attachment.read() == b"%PDF-1.4 fake"
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 @patch("envergo.petitions.tasks.send_message_dossier_ds")
 def test_send_closing_message_with_ds_disabled(mock_ds_msg):
     """When the DS API is disabled (dev), the task does nothing."""
@@ -68,7 +68,7 @@ def test_send_closing_message_with_ds_disabled(mock_ds_msg):
     assert not mock_ds_msg.called
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.tasks.send_message_dossier_ds")
 def test_send_closing_message_failure_raises_for_retry(mock_ds_msg):
     mock_ds_msg.return_value = None

@@ -13,7 +13,7 @@ def send_closing_message_async(status_log_id):
     the closing status log. Raises on failure so the default retry policy
     (see `config.celery_app.BaseTaskWithRetry`) replays the send.
     """
-    if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+    if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
         return
 
     log = StatusLog.objects.select_related("petition_project").get(pk=status_log_id)

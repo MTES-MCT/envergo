@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("petitions", "0054_merge_20260702_1009"),
+        ("petitions", "0054_rename_demarches_simplifiees_fields_to_demarche_numerique_and_more"),
     ]
 
     operations = [
