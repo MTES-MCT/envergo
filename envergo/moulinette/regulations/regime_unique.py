@@ -2,7 +2,8 @@
 
 Shared infrastructure for the régime unique compensation system: per-hedge
 zone resolution, coefficient assignment based on density and hedge type,
-EP bonus computation, and a weighted-average compensation ratio.
+EP bonus computation, a weighted-average compensation ratio, and the
+per-hedge display rows for debug and instructor tables.
 
 Used by both the régime unique haie evaluator and the EP régime unique
 evaluator. Both call ``ensure_ru_hedge_data`` in their ``get_catalog_data``;
@@ -23,7 +24,10 @@ COEFF_KEY = {
 }
 
 # Per-hedge EP bonus added to the raw RU coefficient, keyed by (hedge_type, density).
-# "mixte" (arborée) gets a higher bonus in low-density areas; all other types are flat.
+# Destroying a tree-bearing hedge (mixte) in an already sparse landscape is the
+# most damaging case for protected species, hence the single higher entry; the
+# flat 0.2 elsewhere is the current regulatory spec, kept exhaustive so the
+# table can be audited against the instruction technique.
 EP_RU_HEDGE_BONUS = {
     ("buissonnante", "HD"): 0.2,
     ("buissonnante", "LD"): 0.2,
@@ -120,7 +124,10 @@ def compute_hedge_data(hedge, zone_id, zone_config, density_400):
     """Compute all coefficient data for a single hedge.
 
     Returns a record dict with zone inputs, the raw RU coefficient (from
-    ``COEFF_KEY``), and the EP bonus (from ``EP_RU_HEDGE_BONUS``).
+    ``COEFF_KEY``), and the EP bonus (from ``EP_RU_HEDGE_BONUS``). When
+    ``zone_config`` is ``None`` (unresolved zone), returns a zeroed record
+    with null density fields — callers use this to flag the project as
+    ``non_disponible`` via ``ru_all_zones_resolved``.
     """
     if zone_config is None:
         return {
@@ -210,9 +217,14 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
     """Build per-hedge display rows from pre-computed records.
 
     Reads zone inputs and coefficients from ``ru_hedge_data``, and the
-    final effective coefficient from the evaluator. The displayed bonus is
-    the majoration actually applied (majoré − brut), so it shows 0 when the
-    evaluator doesn't apply one (e.g. dispense) and the columns always add up.
+    final effective coefficient from the evaluator. All values are rounded
+    for display only — computations use the unrounded record values.
+
+    ``applied_ep_bonus`` is the majoration actually applied (majoré − brut),
+    deliberately distinct from the record's ``ep_bonus`` (the potential
+    table bonus): when the evaluator provides no effective coefficient for
+    a hedge (e.g. dispense), both EP columns are ``None`` and the template
+    renders a dash instead of a would-be coefficient.
     """
     hedge_data = catalog.get("ru_hedge_data", {})
     effective_coefficients = evaluator.effective_coefficients
@@ -223,21 +235,30 @@ def build_ru_hedge_detail_rows(catalog, evaluator):
 
     rows = []
     for hedge_id, record in hedge_data.items():
-        raw = record["raw_coefficient"]
-        coeff_majore = round(effective_coefficients.get(hedge_id, raw), 2)
-        type_label = get_human_readable_value(
-            ru_types.choices, record["hedge_type"]
-        ) or get_human_readable_value(HedgeTypeBase.choices, record["hedge_type"])
+        coeff_brut = round(record["raw_coefficient"], 2)
+
+        if hedge_id in effective_coefficients:
+            coeff_majore = round(effective_coefficients[hedge_id], 2)
+            applied_ep_bonus = round(coeff_majore - coeff_brut, 2)
+        else:
+            coeff_majore = None
+            applied_ep_bonus = None
+
+        ru_label = get_human_readable_value(ru_types.choices, record["hedge_type"])
+        base_label = get_human_readable_value(
+            HedgeTypeBase.choices, record["hedge_type"]
+        )
+
         rows.append(
             {
                 "hedge_id": hedge_id,
-                "hedge_type": type_label,
+                "hedge_type": ru_label or base_label,
                 "length": record["length"],
                 "zone_id": record["zone_id"],
                 "x_densite": record["x_densite"],
                 "high_density": record["high_density"],
-                "coeff_ru_brut": raw,
-                "bonus_ep": round(coeff_majore - raw, 2),
+                "coeff_ru_brut": coeff_brut,
+                "applied_ep_bonus": applied_ep_bonus,
                 "coeff_ru_majore": coeff_majore,
             }
         )
@@ -259,3 +280,15 @@ def compute_ru_compensation_ratio(hedges, coefficients):
         compensated_length += hedge.length * coefficients.get(hedge.id, 0.0)
 
     return round(compensated_length / total_length, 2)
+
+
+def evaluator_replantation_coefficient(evaluator):
+    """R for an RU evaluator: weighted average of its effective coefficients.
+
+    Returns 0.0 outside the régime unique — the guard is defensive, since
+    RU evaluators are not loaded under droit constant.
+    """
+    if not evaluator.moulinette.config.single_procedure:
+        return 0.0
+    hedges = evaluator.hedges.to_remove().n_alignement()
+    return compute_ru_compensation_ratio(hedges, evaluator.effective_coefficients)

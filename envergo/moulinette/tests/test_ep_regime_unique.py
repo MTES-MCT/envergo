@@ -2,6 +2,8 @@
 
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
@@ -241,8 +243,18 @@ def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
     "length, density, expected_code, expected_coeff",
     [
         (8, 60, "dispense", 0.0),  # dispense → no compensation
-        (50, 60, "derogation_simplifiee", 1.7),  # R_ru=1.5 + bonus=0.2 (buissonnante HD)
-        (120, 40, "derogation_inventaire", 1.7),  # R_ru=1.5 + bonus=0.2 (buissonnante LD)
+        (
+            50,
+            60,
+            "derogation_simplifiee",
+            1.7,
+        ),  # R_ru=1.5 + bonus=0.2 (buissonnante HD)
+        (
+            120,
+            40,
+            "derogation_inventaire",
+            1.7,
+        ),  # R_ru=1.5 + bonus=0.2 (buissonnante LD)
     ],
 )
 def test_ep_ru_replantation_coefficient(
@@ -451,6 +463,39 @@ def test_ep_ru_effective_coefficients_include_bonus(
         assert effective[hedge_id] == record["raw_coefficient"] + 0.2
 
 
+@pytest.mark.parametrize(
+    "type_haie, density, expected_bonus",
+    [
+        ("mixte", 40, 0.3),  # arborée + LD: the only entry that differs
+        ("mixte", 60, 0.2),  # arborée + HD (60 >= X_densite=60)
+        ("arbustive", 40, 0.2),
+        ("arbustive", 60, 0.2),
+    ],
+)
+def test_ep_ru_bonus_depends_on_type_and_density(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+    type_haie,
+    density,
+    expected_bonus,
+):
+    """The EP bonus varies with hedge type and HD/LD classification."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=density,
+        hedges=[make_hedge_factory(length=50, type_haie=type_haie)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == "derogation_simplifiee"
+
+    effective = criterion.get_evaluator().effective_coefficients
+    hedge_data = moulinette.catalog["ru_hedge_data"]
+
+    for hedge_id, record in hedge_data.items():
+        assert effective[hedge_id] == record["raw_coefficient"] + expected_bonus
+
+
 def test_ep_ru_effective_coefficients_diverge_from_ru(
     ep_ru_criterion,
     regime_unique_haie_criterion,
@@ -506,21 +551,13 @@ def test_ru_zone_query_runs_once(
     regime_unique_haie_criterion,
 ):
     """Both evaluators share ru_hedge_data — the zone query runs only once."""
-    from django.db import connection
-    from django.test.utils import CaptureQueriesContext
-
-    from envergo.geodata.models import MAP_TYPES
-    from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
-
-    zonage_map = MapFactory(
-        map_type=MAP_TYPES.zonage, departments=["44"], zones=[]
-    )
+    zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
     ZoneFactory(
         map=zonage_map,
         geometry=MultiPolygon([france_polygon]),
         attributes={"identifiant_zone": "zone_A"},
     )
-    settings = {
+    single_procedure_settings = {
         "coeff_compensation": {
             "zone_A": {
                 "X_densite": 60,
@@ -531,7 +568,9 @@ def test_ru_zone_query_runs_once(
             }
         }
     }
-    RUConfigHaieFactory(single_procedure_settings=settings, has_ru_zonage=True)
+    RUConfigHaieFactory(
+        single_procedure_settings=single_procedure_settings, has_ru_zonage=True
+    )
 
     with CaptureQueriesContext(connection) as ctx:
         moulinette = make_moulinette_haie_with_density(

@@ -38,8 +38,8 @@ from envergo.moulinette.regulations import (
 from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
     collect_zone_configs,
-    compute_ru_compensation_ratio,
     ensure_ru_hedge_data,
+    evaluator_replantation_coefficient,
 )
 from envergo.utils.fields import get_human_readable_value
 
@@ -716,6 +716,7 @@ EP_RU_RESULT_RANK = {
     "derogation_inventaire": 3,
 }
 
+
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
 ):
@@ -974,16 +975,12 @@ class EspecesProtegeesRegimeUnique(
 
         hedge_data = self.catalog.get("ru_hedge_data", {})
         return {
-            h: rec["raw_coefficient"] + rec["ep_bonus"]
-            for h, rec in hedge_data.items()
+            h: rec["raw_coefficient"] + rec["ep_bonus"] for h, rec in hedge_data.items()
         }
 
     def get_replantation_coefficient(self):
-        """Weighted average of the effective per-hedge coefficients."""
-        if not self.moulinette.config.single_procedure:
-            return 0.0
-        hedges = self.hedges.to_remove().n_alignement()
-        return compute_ru_compensation_ratio(hedges, self.effective_coefficients)
+        """Weighted average of the effective (bonus-included) coefficients."""
+        return evaluator_replantation_coefficient(self)
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.

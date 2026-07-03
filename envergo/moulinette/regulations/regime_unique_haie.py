@@ -21,8 +21,8 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.regulations.regime_unique import (
     collect_zone_configs,
-    compute_ru_compensation_ratio,
     ensure_ru_hedge_data,
+    evaluator_replantation_coefficient,
 )
 
 URGENCE_MOTIFS = ("securite", "chemin_acces", "autre")
@@ -140,7 +140,4 @@ class RegimeUniqueHaieRu(
 
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
-        if not self.moulinette.config.single_procedure:
-            return 0.0
-        hedges = self.hedges.to_remove().n_alignement()
-        return compute_ru_compensation_ratio(hedges, self.effective_coefficients)
+        return evaluator_replantation_coefficient(self)
