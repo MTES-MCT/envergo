@@ -3,6 +3,11 @@ from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
+from envergo.moulinette.forms import (
+    DisplayChoiceField,
+    extract_choices,
+    extract_display_function,
+)
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
@@ -20,6 +25,25 @@ class LoiSurLeauHaieRegulation(HaieRegulationEvaluator):
         "non_soumis": "declaration",
         "non_concerne": "declaration",
     }
+
+
+TECHNIQUE_CONSOLIDATION_CHOICES = (
+    ("non", "Pas de consolidation des berges", "Pas de travaux de consolidation"),
+    (
+        "vegetale",
+        mark_safe(
+            "Par des techniques végétales vivantes"
+            '<span class="fr-hint-text">Bouturage, plançons, fascines, garnissage,'
+            " boudins de pré-végétalisé</span>"
+        ),
+        "Par des techniques végétales vivantes",
+    ),
+    (
+        "autre",
+        "Par d’autres techniques",
+        "Par des techniques autres que végétales vivantes",
+    ),
+)
 
 
 class LoiSurLeauHaieRuForm(forms.Form):
@@ -43,25 +67,12 @@ class LoiSurLeauHaieRuForm(forms.Form):
         required=True,
     )
 
-    technique_consolidation = forms.ChoiceField(
+    technique_consolidation = DisplayChoiceField(
         label="S’il s’agit de travaux de consolidation ou de protection des berges, comment sont-ils réalisés ?",
         widget=forms.RadioSelect,
-        choices=(
-            ("non", "Pas de consolidation des berges"),
-            (
-                "vegetale",
-                mark_safe(
-                    "Par des techniques végétales vivantes"
-                    '<span class="fr-hint-text">Bouturage, plançons, fascines, garnissage,'
-                    " boudins de pré-végétalisé</span>"
-                ),
-            ),
-            (
-                "autre",
-                "Par d’autres techniques",
-            ),
-        ),
         required=True,
+        choices=extract_choices(TECHNIQUE_CONSOLIDATION_CHOICES),
+        get_display_value=extract_display_function(TECHNIQUE_CONSOLIDATION_CHOICES),
     )
 
     def clean(self):
