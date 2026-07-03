@@ -253,6 +253,7 @@ class ProcedureForm(forms.ModelForm):
             "status_date",
             "update_comment",
             "prefectural_order",
+            "applicant_message",
         ]
         help_texts = {
             "update_comment": "Ce commentaire ne sera visible que par les services instructeurs dans l'historique du dossier.",  # noqa: E501

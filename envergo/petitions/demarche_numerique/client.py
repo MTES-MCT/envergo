@@ -10,7 +10,7 @@ from textwrap import dedent
 
 import requests
 from django.conf import settings
-from django.core.files.uploadedfile import UploadedFile
+from django.core.files import File
 from django.template.loader import render_to_string
 from gql import Client, gql
 from gql.transport.exceptions import TransportError
@@ -240,8 +240,9 @@ class DemarcheNumeriqueClient:
     def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
         """Create direct upload related to a dossier"""
 
-        # Only uploaded file in django allowed
-        if not isinstance(attachment_file, UploadedFile):
+        # Accept any django File (uploaded file or storage-backed FieldFile):
+        # only .name, .size, read() and seek() are used below.
+        if not isinstance(attachment_file, File):
             logger.error("File will not be sent, format not allowed")
             return None
 

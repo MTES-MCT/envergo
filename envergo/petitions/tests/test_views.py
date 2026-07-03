@@ -1506,16 +1506,15 @@ def procedure_url(project):
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.views.send_closing_message_async")
 @patch("envergo.petitions.views.update_demarches_simplifiees_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_express_agreement(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
 ):
     """Closing with an express agreement uploads the order and notifies the applicant."""
 
     client.force_login(haie_instructor_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1536,6 +1535,7 @@ def test_petition_project_close_with_express_agreement(
     log = project.status_history.order_by("-created_at").first()
     assert log.stage == "closed"
     assert log.update_comment == ""
+    assert log.applicant_message == data["applicant_message"]
     assert log.due_date is None
     assert log.status_date == date.today()
     # The upload path contains a random secret to make the url unguessable
@@ -1546,26 +1546,23 @@ def test_petition_project_close_with_express_agreement(
 
     assert mock_update_ds.call_count == 1
     assert mock_update_ds.call_args[0][1] == "accepte"
-    assert mock_ds_msg.call_count == 1
-    args = mock_ds_msg.call_args[0]
-    assert args[1] == data["applicant_message"]
-    assert args[2] is not None
+    assert mock_message_task.delay.call_count == 1
+    assert mock_message_task.delay.call_args[0][0] == log.pk
 
     # The download block is now displayed on the procedure page
     assert "Télécharger le document de décision" in content
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.views.send_closing_message_async")
 @patch("envergo.petitions.views.update_demarches_simplifiees_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_tacit_agreement(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
 ):
-    """Closing with a tacit agreement needs no order, the message has no attachment."""
+    """Closing with a tacit agreement needs no prefectural order."""
 
     client.force_login(haie_instructor_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1583,20 +1580,19 @@ def test_petition_project_close_with_tacit_agreement(
     assert not log.prefectural_order
 
     assert mock_update_ds.call_args[0][1] == "accepte"
-    assert mock_ds_msg.call_args[0][2] is None
+    assert mock_message_task.delay.call_args[0][0] == log.pk
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.views.send_closing_message_async")
 @patch("envergo.petitions.views.update_demarches_simplifiees_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_dropped(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
 ):
     """Closing as dropped only requires the applicant message."""
 
     client.force_login(haie_instructor_44)
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
     project = PetitionProjectFactory(status__stage="preparing_decision")
@@ -1609,15 +1605,15 @@ def test_petition_project_close_with_dropped(
     assert project.stage == "closed"
     assert project.decision == "dropped"
     assert mock_update_ds.call_args[0][1] == "sans_suite"
-    assert mock_ds_msg.call_count == 1
+    assert mock_message_task.delay.call_count == 1
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.views.send_closing_message_async")
 @patch("envergo.petitions.views.update_demarches_simplifiees_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_with_missing_fields(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
 ):
     """Closing with an opposition requires the check, the order and the message."""
 
@@ -1631,77 +1627,26 @@ def test_petition_project_close_with_missing_fields(
 
     assert res.status_code == 200
     content = res.content.decode()
-    # Apostrophes are html-escaped in the rendered page
     assert (
-        "la cohérence entre le dossier et l&#x27;arrêté doit être vérifiée" in content
+        "la cohérence entre le dossier et le document de décision doit être vérifiée"
+        in content
     )
 
     project.refresh_from_db()
     assert project.stage == "preparing_decision"
     assert project.status_history.count() == 1
     assert not mock_update_ds.called
-    assert not mock_ds_msg.called
-
-
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
-@pytest.mark.django_db(transaction=True)
-def test_petition_project_close_message_failure_rolls_back(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
-):
-    """If the closing message cannot be sent, the dossier stays open.
-
-    The DS status change, however, is not replayed on retry.
-    """
-
-    client.force_login(haie_instructor_44)
-
-    def fake_ds_update(project, new_status):
-        project.demarches_simplifiees_state = new_status
-        project.save()
-
-    mock_update_ds.side_effect = fake_ds_update
-    mock_ds_msg.return_value = None
-
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
-    data = closing_form_data("tacit_agreement")
-
-    res = client.post(procedure_url(project), data, follow=True)
-
-    assert res.status_code == 200
-    content = res.content.decode()
-    assert "Le message n'a pas pu être envoyé au demandeur" in content
-
-    project.refresh_from_db()
-    assert project.stage == "preparing_decision"
-    assert project.status_history.count() == 1
-    # The DS status change went through before the failure
-    assert mock_update_ds.call_count == 1
-    assert project.demarches_simplifiees_state == "accepte"
-
-    # WHEN the instructor retries and the message goes through
-    mock_ds_msg.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
-    res = client.post(procedure_url(project), data, follow=True)
-
-    # THEN the dossier is closed, without a second DS status change
-    assert res.status_code == 200
-    project.refresh_from_db()
-    assert project.stage == "closed"
-    assert project.status_history.count() == 2
-    assert mock_update_ds.call_count == 1
+    assert not mock_message_task.delay.called
 
 
 @patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
+@patch("envergo.petitions.views.send_closing_message_async")
 @patch("envergo.petitions.views.update_demarches_simplifiees_status")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_close_status_change_failure(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
 ):
-    """If the DS status change fails, nothing happens locally."""
+    """If the DS status change fails, the log rolls back and no message is sent."""
 
     client.force_login(haie_instructor_44)
     mock_update_ds.side_effect = DemarchesSimplifieesError("", {}, "boom")
@@ -1722,31 +1667,7 @@ def test_petition_project_close_status_change_failure(
     project.refresh_from_db()
     assert project.stage == "preparing_decision"
     assert project.status_history.count() == 1
-    assert not mock_ds_msg.called
-
-
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-@patch("envergo.petitions.views.notify")
-@patch("envergo.petitions.views.send_message_dossier_ds")
-@patch("envergo.petitions.views.update_demarches_simplifiees_status")
-@pytest.mark.django_db(transaction=True)
-def test_petition_project_close_with_ds_disabled(
-    mock_update_ds, mock_ds_msg, mock_notify, client, haie_instructor_44, site
-):
-    """When the DS API is disabled (dev), the closing succeeds with a warning."""
-
-    client.force_login(haie_instructor_44)
-    mock_ds_msg.return_value = None
-
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory(status__stage="preparing_decision")
-
-    res = client.post(procedure_url(project), closing_form_data("dropped"), follow=True)
-
-    assert res.status_code == 200
-    assert "n'est pas activée" in res.content.decode()
-    project.refresh_from_db()
-    assert project.stage == "closed"
+    assert not mock_message_task.delay.called
 
 
 @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)

@@ -100,6 +100,7 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarche_numerique_status,
 )
+from envergo.petitions.tasks import send_closing_message_async
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -1730,78 +1731,59 @@ class PetitionProjectInstructorProcedureView(
         previous_decision = self.object.decision
         is_closing = log.stage == STAGES.closed
 
-        if not self.update_ds_status(log, form):
-            return self.form_invalid(form)
-        if not self.save_log_and_message(log, form, is_closing):
+        try:
+            with transaction.atomic():
+                # The log is saved first so a failed DS status update rolls
+                # everything back and keeps both systems in sync.
+                log.save()
+                self.update_ds_status(log)
+        except DemarcheNumeriqueError as e:
+            logger.error(e)
+            # The rollback restored the DB, but the in-memory project was
+            # already mutated by the status log post_save signal. Reload it,
+            # otherwise the re-render (which syncs and saves the project)
+            # would persist the aborted stage.
+            self.object.refresh_from_db()
+            form.add_error(
+                None,
+                mark_safe(
+                    f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
+                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                        contacter l'équipe du guichet unique de la haie
+                    </a> en indiquant l'identifiant du dossier."""
+                ),
+            )
             return self.form_invalid(form)
 
         if is_closing:
+            self.schedule_closing_message(log)
             self.notify_closing_succeeded(form)
 
         self.schedule_postcommit_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
 
-    def update_ds_status(self, log, form):
-        """Update the Démarches Simplifiées status to match the new log.
+    def update_ds_status(self, log):
+        """Update the « Démarche numérique » status to match the new log.
 
-        Done before (and outside) the local transaction: the call is skipped
-        when the status is already up to date, so if the closing message later
-        fails and the local log is rolled back, a retry only replays the log
-        creation and the message. Returns False on failure (form is annotated).
+        Skipped when the status is already up to date. Raises
+        DemarcheNumeriqueError on failure so the enclosing transaction
+        rolls the log back.
         """
         previous_ds_status = self.object.demarche_numerique_state
         new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
-        if previous_ds_status == new_ds_status:
-            return True
-
-        try:
+        if previous_ds_status != new_ds_status:
             update_demarche_numerique_status(self.object, new_ds_status)
-        except DemarcheNumeriqueError as e:
-            logger.error(e)
-            form.add_error(
-                None,
-                mark_safe(
-                    f"""Impossible de mettre à jour le dossier dans Démarches Simplifiées. Si le problème persiste,
-                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                        contacter l'équipe du guichet unique de la haie
-                    </a> en indiquant l'identifiant du dossier."""
-                ),
-            )
-            return False
-        return True
 
-    def save_log_and_message(self, log, form, is_closing):
-        """Persist the status log and, when closing, notify the applicant.
+    def schedule_closing_message(self, log):
+        """Queue the closing message to the applicant for after commit.
 
-        Both happen in one transaction so a failed message leaves the dossier
-        open. Returns False on failure (form is annotated).
+        Sent asynchronously so a DS messagerie failure never blocks the
+        closing; the task retry policy handles transient errors.
         """
-        try:
-            with transaction.atomic():
-                # The message is sent before the log is saved, because saving
-                # the log to a file system storage can move the uploaded file
-                # and make it unreadable for the DS client. Saving the log
-                # afterwards is safe: the file is re-read from the start.
-                if is_closing:
-                    self.send_closing_message(form)
-                log.save()
-        except DemarcheNumeriqueError as e:
-            logger.error(e)
-            form.add_error(
-                None,
-                mark_safe(
-                    f"""Le message n'a pas pu être envoyé au demandeur, le dossier n'a donc pas été clos.
-                    Merci de ré-essayer dans quelques minutes. Si le problème persiste,
-                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                        contacter l'équipe du guichet unique de la haie
-                    </a> en indiquant l'identifiant du dossier."""
-                ),
-            )
-            return False
-        return True
+        transaction.on_commit(lambda: send_closing_message_async.delay(log.pk))
 
     def notify_closing_succeeded(self, form):
-        """Flash a success message pointing the instructor to the sent message."""
+        """Flash a success message pointing the instructor to the messagerie."""
         messagerie_url = reverse(
             "petition_project_instructor_messagerie_view",
             args=[self.object.reference],
@@ -1814,7 +1796,8 @@ class PetitionProjectInstructorProcedureView(
         messages.success(
             self.request,
             f"""
-            Le dossier a été clos. Le message au demandeur{attachment_phrase} a bien été envoyé.
+            Le dossier a été clos. Le message au demandeur{attachment_phrase} sera envoyé
+            dans quelques instants.
             <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
             """,
         )
@@ -1858,33 +1841,6 @@ class PetitionProjectInstructorProcedureView(
             )
         )
         transaction.on_commit(notify_admin)
-
-    def send_closing_message(self, form):
-        """Send the closing message to the applicant via the DS messagerie.
-
-        The prefectural order, when there is one, is attached to the message.
-        Raises DemarcheNumeriqueError if the message could not be sent, so
-        that the enclosing transaction is rolled back and the dossier stays
-        open.
-        """
-        attachment = form.cleaned_data["prefectural_order"]
-        if attachment:
-            # The file validators may leave the stream in an arbitrary
-            # position; the DS client reads it from the current position.
-            attachment.seek(0)
-
-        ds_response = send_message_dossier_ds(
-            self.object, form.cleaned_data["applicant_message"], attachment
-        )
-        if ds_response is None or ds_response.get("errors") is not None:
-            if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
-                messages.info(
-                    self.request,
-                    """L'accès à l'API Démarche Numérique n'est pas activée.
-                    Le message n'est pas envoyé""",
-                )
-            else:
-                raise DemarcheNumeriqueError(message="DS message not sent")
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)

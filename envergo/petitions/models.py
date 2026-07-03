@@ -834,6 +834,11 @@ class StatusLog(models.Model):
         upload_to=prefectural_order_file_format,
         blank=True,
     )
+    applicant_message = models.TextField(
+        "Message au demandeur",
+        blank=True,
+        default="",
+    )
     due_date = models.DateField(
         "Date de prochaine échéance",
         null=True,
