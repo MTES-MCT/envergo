@@ -282,8 +282,8 @@
 
       const procedureForm = document.querySelector('#procedure-modal form');
       const currentDsStatus = procedureForm.dataset.currentDsStatus;
-      const dnStatusMapping = JSON.parse(document.getElementById('dn-status-mapping').textContent);
-      const dnStatusLabels = JSON.parse(document.getElementById('dn-status-labels').textContent);
+      const dsStatusMapping = JSON.parse(document.getElementById('ds-status-mapping').textContent);
+      const dsStatusLabels = JSON.parse(document.getElementById('ds-status-labels').textContent);
       const stateChangeMessage = document.getElementById('procedure-state-change-message');
       const stateTransitionText = document.getElementById('procedure-state-transition-text');
       const stageInput = document.getElementById("id_stage");
