@@ -100,6 +100,7 @@ from envergo.petitions.services import (
     send_message_dossier_ds,
     update_demarche_numerique_status,
 )
+from envergo.petitions.tasks import send_closing_message_async
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
@@ -913,7 +914,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         context["invitation_contact_url"] = update_qs(
             self.request.build_absolute_uri(
-                f"{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}"
+                f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
@@ -1709,6 +1710,96 @@ class PetitionProjectInstructorProcedureView(
         return context
 
     def form_valid(self, form):
+        if self.object.is_additional_information_requested:
+            form.add_error(
+                None,
+                ValidationError(
+                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
+                    code="modification_while_paused",
+                ),
+            )
+            return self.form_invalid(form)
+
+        log = form.save(commit=False)
+        log.petition_project = self.object
+        log.created_by = self.request.user
+        previous_stage = self.object.stage
+        previous_decision = self.object.decision
+        is_closing = log.stage == STAGES.closed
+
+        try:
+            with transaction.atomic():
+                # The log is saved first so a failed DS status update rolls
+                # everything back and keeps both systems in sync.
+                log.save()
+                self.update_ds_status(log)
+        except DemarcheNumeriqueError as e:
+            logger.error(e)
+            # The rollback restored the DB, but the in-memory project was
+            # already mutated by the status log post_save signal. Reload it,
+            # otherwise the re-render (which syncs and saves the project)
+            # would persist the aborted stage.
+            self.object.refresh_from_db()
+            form.add_error(
+                None,
+                mark_safe(
+                    f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
+                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                        contacter l'équipe du guichet unique de la haie
+                    </a> en indiquant l'identifiant du dossier."""
+                ),
+            )
+            return self.form_invalid(form)
+
+        if is_closing:
+            self.schedule_closing_message(log)
+            self.notify_closing_succeeded(form)
+
+        self.schedule_postcommit_telemetry(log, previous_stage, previous_decision)
+        return HttpResponseRedirect(self.get_success_url())
+
+    def update_ds_status(self, log):
+        """Update the « Démarche numérique » status to match the new log.
+
+        Skipped when the status is already up to date. Raises
+        DemarcheNumeriqueError on failure so the enclosing transaction
+        rolls the log back.
+        """
+        previous_ds_status = self.object.demarche_numerique_state
+        new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
+        if previous_ds_status != new_ds_status:
+            update_demarche_numerique_status(self.object, new_ds_status)
+
+    def schedule_closing_message(self, log):
+        """Queue the closing message to the applicant for after commit.
+
+        Sent asynchronously so a DS messagerie failure never blocks the
+        closing; the task retry policy handles transient errors.
+        """
+        transaction.on_commit(lambda: send_closing_message_async.delay(log.pk))
+
+    def notify_closing_succeeded(self, form):
+        """Flash a success message pointing the instructor to the messagerie."""
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[self.object.reference],
+        )
+        attachment_phrase = (
+            ", accompagné du document de décision,"
+            if form.cleaned_data["prefectural_order"]
+            else ""
+        )
+        messages.success(
+            self.request,
+            f"""
+            Le dossier a été clos. Le message au demandeur{attachment_phrase} sera envoyé
+            dans quelques instants.
+            <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
+            """,
+        )
+
+    def schedule_postcommit_telemetry(self, log, previous_stage, previous_decision):
+        """Queue the analytics event and Mattermost notification for commit."""
 
         def notify_admin():
             haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -1731,44 +1822,6 @@ class PetitionProjectInstructorProcedureView(
             )
             notify(message, "haie")
 
-        if self.object.is_additional_information_requested:
-            form.add_error(
-                None,
-                ValidationError(
-                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
-                    code="modification_while_paused",
-                ),
-            )
-            return self.form_invalid(form)
-
-        log = form.save(commit=False)
-        log.petition_project = self.object
-        log.created_by = self.request.user
-        previous_stage = self.object.stage
-        previous_decision = self.object.decision
-
-        previous_ds_status = self.object.demarche_numerique_state
-        new_ds_status = DEMARCHE_NUMERIQUE_STATUS_MAPPING[(log.stage, log.decision)]
-        if previous_ds_status != new_ds_status:
-            try:
-                update_demarche_numerique_status(self.object, new_ds_status)
-            except DemarcheNumeriqueError as e:
-                logger.error(e)
-                form.add_error(
-                    None,
-                    mark_safe(
-                        f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
-                        <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                            contacter l'équipe du guichet unique de la haie
-                        </a> en indiquant l'identifiant du dossier."""
-                    ),
-                )
-                return self.form_invalid(form)
-
-        log.save()
-
-        res = HttpResponseRedirect(self.get_success_url())
-
         transaction.on_commit(
             lambda: log_event(
                 "dossier",
@@ -1784,8 +1837,6 @@ class PetitionProjectInstructorProcedureView(
             )
         )
         transaction.on_commit(notify_admin)
-
-        return res
 
     def get_success_url(self):
         return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
@@ -2073,7 +2124,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
         # Return rendered modal HTML instead of JSON
         invitation_contact_url = update_qs(
             self.request.build_absolute_uri(
-                f"{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}"
+                f"{reverse('contact_us')}{settings.CONTACT_TEAM_ANCHOR}"
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )

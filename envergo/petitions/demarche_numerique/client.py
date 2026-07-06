@@ -10,7 +10,7 @@ from textwrap import dedent
 
 import requests
 from django.conf import settings
-from django.core.files.uploadedfile import UploadedFile
+from django.core.files import File
 from django.template.loader import render_to_string
 from gql import Client, gql
 from gql.transport.exceptions import TransportError
@@ -240,8 +240,9 @@ class DemarcheNumeriqueClient:
     def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
         """Create direct upload related to a dossier"""
 
-        # Only uploaded file in django allowed
-        if not isinstance(attachment_file, UploadedFile):
+        # Accept any django File (uploaded file or storage-backed FieldFile):
+        # only .name, .size, read() and seek() are used below.
+        if not isinstance(attachment_file, File):
             logger.error("File will not be sent, format not allowed")
             return None
 
@@ -306,13 +307,18 @@ class DemarcheNumeriqueClient:
                 credentials_headers = json.loads(credentials["headers"])
 
                 try:
-                    with attachment_file.open("rb") as payload:
-                        response = requests.put(
-                            credentials["url"],
-                            data=payload,
-                            headers=credentials_headers,
-                            timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT,
-                        )
+                    # Rewind without taking ownership of the file: the
+                    # checksum read above leaves it at EOF, and the caller
+                    # reuses the attachment afterwards (the closing flow saves
+                    # it to storage). Closing it here would break that save on
+                    # object-storage backends ("read of closed file").
+                    attachment_file.seek(0)
+                    response = requests.put(
+                        credentials["url"],
+                        data=attachment_file,
+                        headers=credentials_headers,
+                        timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT,
+                    )
                 except Exception as e:
                     logger.error(
                         f"Error when sending attachment file « Démarche numérique » direct upload : {e}",

@@ -893,6 +893,37 @@ div#instructor-view-side-menu {
   }
 }
 
+// "Verify the active simulation" block shown when closing a dossier.
+#procedure-modal {
+  div#form-group-simulation_check {
+    border-radius: 0.5rem;
+
+    &__intro {
+      margin-bottom: 0.5rem;
+    }
+
+    // Move the error red broder inside the block
+    &.fr-input-group--error::before {
+      display: none;
+    }
+
+    .field-container--error {
+      border-left: 2px solid var(--border-plain-error);
+      padding-left: 0.5rem;
+    }
+  }
+
+  // Hide "facultatif" labels
+  // Fields are dynamically hidden / shown depending on status value
+  // If they are displayed, they are mandatory
+  div#form-group-prefectural_order,
+  div#form-group-applicant_message {
+    label span.label-content i {
+      display: none;
+    }
+  }
+}
+
 #form-group-instructor_free_mention .label-content,
 #form-group-instructor_private_mention .label-content,
 .notes-label .label-content {
