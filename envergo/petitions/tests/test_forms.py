@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from envergo.moulinette.regulations import HedgeCategory
-from envergo.petitions.forms import PetitionProjectForm, ProcedureForm
+from envergo.petitions.forms import PetitionProjectForm, StateChangeForm
 from envergo.petitions.tests.factories import FILE_TEST_NOK_PATH, FILE_TEST_PATH
 
 pytestmark = pytest.mark.django_db
@@ -65,9 +65,9 @@ class TestPetitionProjectFormCleanCategory:
 
 
 def make_procedure_form(data=None, files=None, previous_stage="preparing_decision"):
-    """Build a ProcedureForm the way the procedure view does."""
+    """Build a StateChangeForm the way the procedure view does."""
     initial = {"stage": previous_stage, "decision": "unset"}
-    return ProcedureForm(data=data, files=files, initial=initial)
+    return StateChangeForm(data=data, files=files, initial=initial)
 
 
 def make_attachment():
