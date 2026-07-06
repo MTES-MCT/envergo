@@ -965,11 +965,7 @@ class EspecesProtegeesRegimeUnique(
 
     @property
     def effective_coefficients(self):
-        """Raw per-hedge coefficients plus the type/density EP bonus.
-
-        Dispense means no compensation is required, so effective coefficients
-        are empty.
-        """
+        """Raw coefficients plus the EP bonus; empty for dispense (no compensation due)."""
         if self.result_code == "dispense":
             return {}
 
