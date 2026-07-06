@@ -402,6 +402,25 @@ class RequestAdditionalInfoForm(forms.Form):
         initial=request_for_info_message,
     )
 
+    def clean_info_due_date(self):
+        info_due_date = self.cleaned_data["info_due_date"]
+        today = timezone.now().date()
+
+        if info_due_date < today:
+            raise ValidationError(
+                "La date limite ne peut pas être dans le passé.",
+                code="date_in_past",
+            )
+
+        max_date = three_months_from_now().date()
+        if info_due_date > max_date:
+            raise ValidationError(
+                "La date limite ne peut pas dépasser 3 mois à compter d'aujourd'hui.",
+                code="date_exceeds_three_months",
+            )
+
+        return info_due_date
+
 
 def today_formatted():
     """[type=date] input require values formatted in iso 8601."""
