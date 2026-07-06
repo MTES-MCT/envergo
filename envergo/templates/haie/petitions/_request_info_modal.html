@@ -20,6 +20,10 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="request_info">
               {% include '_form_snippet.html' with form=request_info_form %}
+
+              <div class="fr-alert fr-alert--warning fr-mb-2w">
+                <p>Pensez à vérifier que la date limite indiquée dans le message est bien celle saisie plus haut.</p>
+              </div>
               <button type="submit" class="fr-btn">Envoyer au demandeur</button>
             </form>
           </div>

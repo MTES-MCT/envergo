@@ -413,6 +413,7 @@ class RequestAdditionalInfoForm(forms.Form):
 
     info_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
+        help_text="Délai maximum : 3 mois",
         required=True,
         initial=three_months_from_now,
     )
@@ -421,9 +422,8 @@ class RequestAdditionalInfoForm(forms.Form):
         required=True,
         widget=forms.Textarea(attrs={"rows": 12}),
         help_text="""
-        Ce message, à compléter par vos soins, sera envoyé au demandeur pour solliciter
-        les compléments et l'informer de la suspension du délai en attendant sa réponse.
-        Une fois envoyé, vous pourrez le retrouver dans la messagerie.
+        Complétez le message afin de lister les pièces complémentaires attendues.<br/>
+        Pensez à vérifier que la date indiquée est cohérente avec la date entrée ci-dessus.
         """,
         initial=request_for_info_message,
     )
