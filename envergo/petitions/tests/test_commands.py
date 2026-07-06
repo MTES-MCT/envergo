@@ -204,3 +204,6 @@ def test_dossier_submission_admin_alert_stage_instruction(
     project.refresh_from_db()
     assert project.demarche_numerique_state == DossierState.en_instruction.value
     assert project.stage == "instruction_d"
+    assert project.due_date == datetime.date(
+        2025, 3, 29
+    )  # date_depot 2025-01-29 + 2 months
