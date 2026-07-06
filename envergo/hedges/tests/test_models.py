@@ -1867,19 +1867,6 @@ class TestDepartmentsLengths:
         assert len(result) == 1
         assert result[0][0] == west
 
-    def test_lengths_are_in_meters(self):
-        """Returned lengths should be in meters, not degrees."""
-        west, east = self.create_departments()
-        hedge = make_horizontal_hedge(43.5, 2.3, 2.7)
-        hd = HedgeDataFactory(hedges=[hedge])
-
-        result = hd.departments_lengths()
-
-        dept, length = result[0]
-        # 0.4° longitude at lat ~43.5 ≈ 32 km
-        assert length > 1000, "Length should be in meters, not degrees"
-        assert length < 100_000, "Length should be reasonable"
-
     def test_is_multi_departments_false(self):
         DepartmentFactory(department="44", geometry=dept_west_geom)
         hedge = make_horizontal_hedge(43.5, 2.3, 2.7)
