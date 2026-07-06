@@ -152,7 +152,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 
 
 # Closing requirements matrix: for each final decision, the set of closing
-# fields the instructor must provide. See ProcedureForm docstring for the
+# fields the instructor must provide. See StateChangeForm docstring for the
 # rationale behind each requirement. Decisions absent from this mapping
 # (i.e. "unset") cannot close a dossier.
 CLOSING_FIELD_REQUIREMENTS = {
@@ -195,7 +195,7 @@ class SimulationCheckWidget(forms.CheckboxInput):
     field_template_name = "haie/petitions/forms/fields/simulation_check.html"
 
 
-class ProcedureForm(forms.ModelForm):
+class StateChangeForm(forms.ModelForm):
     """Form for updating petition project's stage.
 
     When the dossier is being closed (stage = "closed"), three additional
@@ -266,8 +266,9 @@ class ProcedureForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, is_paused=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.is_paused = is_paused
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         # Pass field errors to the widget after validation
@@ -278,6 +279,13 @@ class ProcedureForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        if self.is_paused:
+            raise ValidationError(
+                "Impossible de modifier l'état du dossier tant qu'il est "
+                "en attente de compléments.",
+                code="modification_while_paused",
+            )
         stage = cleaned_data.get("stage")
         decision = cleaned_data.get("decision")
 

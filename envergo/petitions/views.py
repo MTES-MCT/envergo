@@ -70,12 +70,13 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
-    ProcedureForm,
+    StateChangeForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
     SimulationForm,
     validate_simulation_url,
 )
+
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
@@ -1645,36 +1646,83 @@ class PetitionProjectInstructorAlternativeEdit(
 class PetitionProjectInstructorProcedureView(
     BasePetitionProjectInstructorView, MultipleObjectMixin, FormView
 ):
-    """View for display and edit the petition project procedure by the instructor"""
+    """View for the procedure page, handling three forms via modals.
 
-    form_class = ProcedureForm
+    Each form is identified by a hidden "action" field in the POST data:
+    - state_change: modify the dossier stage/decision (StateChangeForm)
+    - request_info: pause instruction and request additional info
+    - resume_processing: resume instruction after receiving info
+    """
+
     template_name = "haie/petitions/instructor_view_procedure.html"
     paginate_by = 10
 
+    FORM_CONTEXT_KEYS = {
+        "state_change": "state_change_form",
+        "request_info": "request_info_form",
+        "resume_processing": "resume_processing_form",
+    }
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.object_list = self.object.status_history.select_related(
-            "created_by"
-        ).order_by("-created_at")
+        self.object_list = self.get_status_history()
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.object_list = self.object.status_history.select_related(
-            "created_by"
-        ).order_by("-created_at")
-        return super().post(request, *args, **kwargs)
+        if not self.has_change_permission(request, self.object):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=403
+            )
+        self.object_list = self.get_status_history()
+
+        action = request.POST.get("action")
+        form = self.build_form(action)
+        if form is None:
+            return HttpResponseBadRequest()
+
+        if not form.is_valid():
+            context_key = self.FORM_CONTEXT_KEYS[action]
+            return self.render_to_response(
+                self.get_context_data(**{context_key: form})
+            )
+
+        handler = getattr(self, f"{action}_form_valid")
+        return handler(form)
+
+    def get_form(self, form_class=None):
+        """Override FormView.get_form so the MRO doesn't need form_class."""
+        return None
+
+    def get_status_history(self):
+        return self.object.status_history.select_related("created_by").order_by(
+            "-created_at"
+        )
+
+    def build_form(self, action):
+        """Instantiate the form identified by the action parameter."""
+        if action == "state_change":
+            return StateChangeForm(
+                self.request.POST,
+                self.request.FILES,
+                initial=self.get_initial(),
+                is_paused=self.object.is_additional_information_requested,
+            )
+        if action == "request_info":
+            return RequestAdditionalInfoForm(self.request.POST)
+        if action == "resume_processing":
+            return ResumeProcessingForm(self.request.POST)
+        return None
 
     def get_initial(self):
         initial = super().get_initial()
         initial["stage"] = self.object.stage
         initial["decision"] = self.object.decision
-
         return initial
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
+
         dn_status_mapping = {}
         for (
             stage,
@@ -1693,33 +1741,26 @@ class PetitionProjectInstructorProcedureView(
             }
         )
 
-        # Request for additional information is only relevant when the project is
-        # in the "instruction" phase
+        context.setdefault(
+            "state_change_form",
+            StateChangeForm(
+                initial=self.get_initial(),
+                is_paused=self.object.is_additional_information_requested,
+            ),
+        )
+
+        # Request info / resume forms are only relevant during instruction phases.
         if self.has_change_permission(
             self.request, self.object
         ) and self.object.stage.startswith("instruction"):
-            request_info_form = RequestAdditionalInfoForm()
-            resume_processing_form = ResumeProcessingForm()
-            context.update(
-                {
-                    "request_info_form": request_info_form,
-                    "resume_processing_form": resume_processing_form,
-                }
-            )
+            context.setdefault("request_info_form", RequestAdditionalInfoForm())
+            context.setdefault("resume_processing_form", ResumeProcessingForm())
 
         return context
 
-    def form_valid(self, form):
-        if self.object.is_additional_information_requested:
-            form.add_error(
-                None,
-                ValidationError(
-                    "Impossible de mofidier l'état du dossier tant qu'il est en attente de compléments.",
-                    code="modification_while_paused",
-                ),
-            )
-            return self.form_invalid(form)
+    # ── state_change: modify the dossier stage/decision ──────────────
 
+    def state_change_form_valid(self, form):
         log = form.save(commit=False)
         log.petition_project = self.object
         log.created_by = self.request.user
@@ -1729,33 +1770,31 @@ class PetitionProjectInstructorProcedureView(
 
         try:
             with transaction.atomic():
-                # The log is saved first so a failed DS status update rolls
-                # everything back and keeps both systems in sync.
                 log.save()
                 self.update_ds_status(log)
         except DemarcheNumeriqueError as e:
             logger.error(e)
             # The rollback restored the DB, but the in-memory project was
-            # already mutated by the status log post_save signal. Reload it,
-            # otherwise the re-render (which syncs and saves the project)
-            # would persist the aborted stage.
+            # already mutated by the status log post_save signal.
             self.object.refresh_from_db()
             form.add_error(
                 None,
                 mark_safe(
                     f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
-                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                        contacter l'équipe du guichet unique de la haie
-                    </a> en indiquant l'identifiant du dossier."""
+                    <a href=’{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}’>
+                        contacter l’équipe du guichet unique de la haie
+                    </a> en indiquant l’identifiant du dossier."""
                 ),
             )
-            return self.form_invalid(form)
+            return self.render_to_response(
+                self.get_context_data(state_change_form=form)
+            )
 
         if is_closing:
             self.schedule_closing_message(log)
             self.notify_closing_succeeded(form)
 
-        self.schedule_postcommit_telemetry(log, previous_stage, previous_decision)
+        self.schedule_state_change_telemetry(log, previous_stage, previous_decision)
         return HttpResponseRedirect(self.get_success_url())
 
     def update_ds_status(self, log):
@@ -1798,7 +1837,9 @@ class PetitionProjectInstructorProcedureView(
             """,
         )
 
-    def schedule_postcommit_telemetry(self, log, previous_stage, previous_decision):
+    def schedule_state_change_telemetry(
+        self, log, previous_stage, previous_decision
+    ):
         """Queue the analytics event and Mattermost notification for commit."""
 
         def notify_admin():
@@ -1838,43 +1879,15 @@ class PetitionProjectInstructorProcedureView(
         )
         transaction.on_commit(notify_admin)
 
-    def get_success_url(self):
-        return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
+    # ── request_info: pause instruction, request additional data ─────
 
-
-class PetitionProjectInstructorRequestAdditionalInfoView(
-    BasePetitionProjectInstructorView, FormView
-):
-    """Process the "request additional info / resume instruction" forms."""
-
-    http_method_names = ["post"]
-
-    def get_form_class(self):
-        if self.object.is_additional_information_requested:
-            form_class = ResumeProcessingForm
-        else:
-            form_class = RequestAdditionalInfoForm
-        return form_class
-
-    def form_invalid(self, form):
-        messages.error(self.request, "L'état du dossier n'a pas pu être mis à jour.")
-
-        return HttpResponseRedirect(self.get_success_url())
-
-    def form_valid(self, form):
-        if isinstance(form, ResumeProcessingForm):
-            return self.resume_form_valid(form)
-        else:
-            return self.pause_form_valid(form)
-
-    def pause_form_valid(self, form):
+    def request_info_form_valid(self, form):
         """Instructor requested additional data."""
 
         project = self.object
 
         try:
             with transaction.atomic():
-                # Create a new suspension log entry
                 StatusLog.objects.create(
                     petition_project=project,
                     type=LOG_TYPES.suspension,
@@ -1884,7 +1897,6 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
                 )
 
-                # Send « Démarche numérique » message
                 message = form.cleaned_data["request_message"]
                 ds_response = send_message_dossier_ds(self.object, message)
 
@@ -1892,41 +1904,14 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                         messages.info(
                             self.request,
-                            """L'accès à l'API « Démarche numérique » n'est pas activée.
-                            Le message n'est pas envoyé""",
+                            """L’accès à l’API « Démarche numérique » n’est pas activée.
+                            Le message n’est pas envoyé""",
                         )
                     else:
-                        # We raise an exception to make sure the data model transaction
-                        # is aborted
                         raise DemarcheNumeriqueError(message="DN message not sent")
 
-            # Send Mattermost notification
-            haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
-            admin_url = reverse(
-                "admin:petitions_petitionproject_change",
-                args=[self.object.pk],
-            )
-            procedure_url = reverse(
-                "petition_project_instructor_procedure_view",
-                kwargs={"reference": self.object.reference},
-            )
-            messagerie_url = reverse(
-                "petition_project_instructor_messagerie_view",
-                args=[project.reference],
-            )
-            message = render_to_string(
-                "haie/petitions/mattermost_project_request_additional_info.txt",
-                context={
-                    "department": self.object.department,
-                    "reference": self.object.reference,
-                    "admin_url": f"https://{haie_site.domain}{admin_url}",
-                    "procedure_url": f"https://{haie_site.domain}{procedure_url}",
-                    "messagerie_url": f"https://{haie_site.domain}{messagerie_url}",
-                },
-            )
-            notify(message, "haie")
+            self.notify_request_info(project)
 
-            # Log analytics event
             log_event(
                 "dossier",
                 "suspension_delai",
@@ -1936,34 +1921,69 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
                 **get_matomo_tags(self.request),
             )
 
-            success_message = f"""
-            Le message au demandeur a bien été envoyé.
-            <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
-            """
-            messages.success(self.request, success_message)
-            res = HttpResponseRedirect(self.get_success_url())
-            return res
+            messagerie_url = reverse(
+                "petition_project_instructor_messagerie_view",
+                args=[project.reference],
+            )
+            messages.success(
+                self.request,
+                f"""
+                Le message au demandeur a bien été envoyé.
+                <a href="{messagerie_url}">Retrouvez-le dans la messagerie.</a>
+                """,
+            )
+            return HttpResponseRedirect(self.get_success_url())
 
         except DemarcheNumeriqueError:
-            error_message = f"""Le message n'a pas pu être envoyé.
-            Merci de ré-essayer dans quelques minutes.
-            Si le problème persiste,
-            <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
-                contacter l'équipe du guichet unique de la haie
-            </a> en indiquant l'identifiant du dossier.
-            """
-            messages.error(self.request, error_message)
-            res = HttpResponseRedirect(self.get_success_url())
-            return res
+            messages.error(
+                self.request,
+                f"""Le message n’a pas pu être envoyé.
+                Merci de ré-essayer dans quelques minutes.
+                Si le problème persiste,
+                <a href=’{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}’>
+                    contacter l’équipe du guichet unique de la haie
+                </a> en indiquant l’identifiant du dossier.
+                """,
+            )
+            return HttpResponseRedirect(self.get_success_url())
 
-    def resume_form_valid(self, form):
+    def notify_request_info(self, project):
+        """Send Mattermost notification for a request for additional info."""
+        haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
+        admin_url = reverse(
+            "admin:petitions_petitionproject_change",
+            args=[self.object.pk],
+        )
+        procedure_url = reverse(
+            "petition_project_instructor_procedure_view",
+            kwargs={"reference": self.object.reference},
+        )
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[project.reference],
+        )
+        message = render_to_string(
+            "haie/petitions/mattermost_project_request_additional_info.txt",
+            context={
+                "department": self.object.department,
+                "reference": self.object.reference,
+                "admin_url": f"https://{haie_site.domain}{admin_url}",
+                "procedure_url": f"https://{haie_site.domain}{procedure_url}",
+                "messagerie_url": f"https://{haie_site.domain}{messagerie_url}",
+            },
+        )
+        notify(message, "haie")
+
+    # ── resume_processing: resume instruction after receiving info ────
+
+    def resume_processing_form_valid(self, form):
         """Instructor received the requested additional info."""
 
         project = self.object
         suspension = project.latest_suspension
 
-        # Compute the new due date, that is the original due date + number of interruption days
-        # Note: if you modify this rule, you must apply the same update in the sync_new_due_date.js file
+        # Compute the new due date: original due date + number of interruption days.
+        # Note: if you modify this rule, you must apply the same update in sync_new_due_date.js
         info_receipt_date = form.cleaned_data["info_receipt_date"]
         interruption_days = info_receipt_date - suspension.created_at.date()
         if suspension.original_due_date:
@@ -1971,7 +1991,6 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         else:
             new_due_date = None
 
-        # Create a new resumption log entry
         StatusLog.objects.create(
             petition_project=project,
             type=LOG_TYPES.resumption,
@@ -1979,13 +1998,28 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
             due_date=new_due_date,
             created_by=self.request.user,
             update_comment=(
-                "Reprise de l’instruction, date d'échéance ajustée."
+                "Reprise de l’instruction, date d’échéance ajustée."
                 if new_due_date
                 else "Reprise de l’instruction."
             ),
         )
 
-        # Send Mattermost notification
+        self.notify_resume_processing(project)
+
+        log_event(
+            "dossier",
+            "suspension_delai",
+            self.request,
+            switch="off",
+            **project.get_log_event_data(),
+            **get_matomo_tags(self.request),
+        )
+
+        messages.success(self.request, "L'instruction du dossier a repris.")
+        return HttpResponseRedirect(self.get_success_url())
+
+    def notify_resume_processing(self, project):
+        """Send Mattermost notification for instruction resumption."""
         haie_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         admin_url = reverse(
             "admin:petitions_petitionproject_change",
@@ -2006,27 +2040,10 @@ class PetitionProjectInstructorRequestAdditionalInfoView(
         )
         notify(message, "haie")
 
-        # Log analytics event
-        log_event(
-            "dossier",
-            "suspension_delai",
-            self.request,
-            switch="off",
-            **project.get_log_event_data(),
-            **get_matomo_tags(self.request),
-        )
-
-        success_message = "L'instruction du dossier a repris."
-        messages.success(self.request, success_message)
-        res = HttpResponseRedirect(self.get_success_url())
-        return res
+    # ── shared ───────────────────────────────────────────────────────
 
     def get_success_url(self):
-        project = self.get_object()
-        url = reverse(
-            "petition_project_instructor_procedure_view", args=[project.reference]
-        )
-        return url
+        return reverse("petition_project_instructor_procedure_view", kwargs=self.kwargs)
 
 
 class PetitionProjectHedgeDataExport(DetailView):
