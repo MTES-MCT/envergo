@@ -1673,9 +1673,7 @@ def test_petition_project_close_status_change_failure(
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.views.notify")
 @patch("envergo.petitions.views.update_demarche_numerique_status")
-@patch(
-    "envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 @pytest.mark.django_db(transaction=True)
 def test_closing_actually_calls_ds_messagerie(
     mock_execute, mock_update_ds, mock_notify, client, haie_instructor_44, site
