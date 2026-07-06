@@ -81,7 +81,7 @@ def test_user_see_optional_criterion_result(client):
     res = client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
 
     # The criterion is activated
     assert "Aire de stationnement" in res.content.decode()
