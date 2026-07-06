@@ -604,10 +604,10 @@ class HedgeData(models.Model):
 
         return bundle[200], bundle[5000], centroid_geos
 
-    def compute_density_around_lines_with_artifacts(self):
-        """Compute the density of hedges around the hedges to remove in 400m buffer."""
+    def compute_density_around_lines_with_artifacts(self, hedges):
+        """Compute the density of hedges around the given hedges in 400m buffer."""
 
-        hedges_geom = self.hedges_to_remove().to_multilinestring()
+        hedges_geom = hedges.to_multilinestring()
         return compute_hedge_density_around_lines(hedges_geom, 400)
 
     @property
@@ -631,21 +631,39 @@ class HedgeData(models.Model):
             self.save()
         return self._density["around_centroid"]
 
-    @property
-    def density_around_lines(self):
-        """Lazily compute and cache line-buffer density (400m buffer)."""
+    @staticmethod
+    def around_lines_cache_key(hedges) -> str:
+        """Build the `_density` cache key for a given hedge subset."""
+        hedge_ids = "-".join(sorted(h.id for h in hedges))
+        return f"around_lines_{hedge_ids}"
 
-        if not self._density or "around_lines" not in self._density:
-            density_400_buffer = self.compute_density_around_lines_with_artifacts()
-            if not self._density:
-                self._density = {}
-            self._density["around_lines"] = {
-                "length_400": density_400_buffer["artifacts"]["length"],
-                "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
-                "density_400": density_400_buffer["density"],
-            }
-            self.save()
-        return self._density["around_lines"]
+    def density_around_lines(self, hedges) -> dict:
+        """Lazily compute and cache the 400m line-buffer density around the
+        given hedges.
+
+        Callers pass the hedge subset they evaluate (typically the evaluator's
+        category-filtered hedges to remove); the cache is keyed by the hedge
+        ids so each distinct subset gets its own entry.
+        Returns a dict of Nones (uncached, no computation) when the subset is
+        empty.
+        """
+        key = self.around_lines_cache_key(hedges)
+        if self._density and key in self._density:
+            return self._density[key]
+
+        if not hedges:
+            return {"length_400": None, "area_400_ha": None, "density_400": None}
+
+        density_400_buffer = self.compute_density_around_lines_with_artifacts(hedges)
+        if not self._density:
+            self._density = {}
+        self._density[key] = {
+            "length_400": density_400_buffer["artifacts"]["length"],
+            "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
+            "density_400": density_400_buffer["density"],
+        }
+        self.save()
+        return self._density[key]
 
     @property
     def density(self):

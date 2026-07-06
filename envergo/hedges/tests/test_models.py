@@ -874,7 +874,7 @@ class TestDensityLazyComputation:
             patch(CENTROID_PATCH) as mock_centroid,
             patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines,
         ):
-            result = hedge_data.density_around_lines
+            result = hedge_data.density_around_lines(hedge_data.hedges_to_remove())
 
         mock_lines.assert_called_once()
         mock_centroid.assert_not_called()
@@ -900,10 +900,11 @@ class TestDensityLazyComputation:
         mock_centroid.assert_called_once()
         mock_lines.assert_not_called()
         assert result["density_5000"] == 55.0
-        assert "around_lines" not in hedge_data._density
+        for entry in hedge_data._density.keys():
+            assert "around_centroid" not in entry
 
     def test_density_properties_compute_incrementally(self):
-        """Accessing both properties computes each type exactly once."""
+        """Accessing both densities computes each type exactly once."""
         hedge_data = HedgeDataFactory()
 
         centroid_return = (
@@ -915,23 +916,67 @@ class TestDensityLazyComputation:
             patch(CENTROID_PATCH, return_value=centroid_return) as mock_centroid,
             patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines,
         ):
-            hedge_data.density_around_lines
+            hedges_to_remove = hedge_data.hedges_to_remove()
+            hedge_data.density_around_lines(hedges_to_remove)
             hedge_data.density_around_centroid
 
         mock_lines.assert_called_once()
         mock_centroid.assert_called_once()
-        assert "around_lines" in hedge_data._density
+        lines_key = hedge_data.around_lines_cache_key(hedges_to_remove)
+        assert lines_key in hedge_data._density
         assert "around_centroid" in hedge_data._density
 
     def test_density_uses_cache(self):
-        """Second access to the same property must not recompute."""
+        """Passing an equivalent hedge subset again must not recompute."""
         hedge_data = HedgeDataFactory()
 
         with patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines:
-            hedge_data.density_around_lines
-            hedge_data.density_around_lines
+            hedge_data.density_around_lines(hedge_data.hedges_to_remove())
+            hedge_data.density_around_lines(hedge_data.hedges_to_remove())
 
         mock_lines.assert_called_once()
+
+    def test_density_around_lines_empty_subset_skips_computation(self):
+        """An empty hedge subset: no computation, no caching."""
+        hedge_data = HedgeDataFactory(hedges=[make_l350_3_hedge("A1")])
+
+        with patch(LINES_PATCH) as mock_lines:
+            result = hedge_data.density_around_lines(HedgeList())
+
+        mock_lines.assert_not_called()
+        assert result == {"length_400": None, "area_400_ha": None, "density_400": None}
+        assert hedge_data._density is None
+
+    def test_density_around_lines_is_cached_per_subset(self):
+        """Each distinct hedge subset gets its own computation and cache entry."""
+        hedge_data = HedgeDataFactory(
+            hedges=[make_ru_hedge("R1"), make_l350_3_hedge("A1")]
+        )
+        all_to_remove = hedge_data.hedges_to_remove()
+        ru_only = all_to_remove.ru()
+
+        with patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines:
+            hedge_data.density_around_lines(ru_only)
+            hedge_data.density_around_lines(all_to_remove)
+            hedge_data.density_around_lines(ru_only)
+            hedge_data.density_around_lines(all_to_remove)
+
+        assert mock_lines.call_count == 2
+        assert hedge_data.around_lines_cache_key(ru_only) in hedge_data._density
+        assert hedge_data.around_lines_cache_key(all_to_remove) in hedge_data._density
+
+    def test_density_around_lines_prefilled_cache_wins(self):
+        """A pre-filled cache entry short-circuits the computation."""
+        hedge_data = HedgeDataFactory(hedges=[make_ru_hedge("R1")])
+        subset = hedge_data.hedges_to_remove()
+        cache_key = hedge_data.around_lines_cache_key(subset)
+        hedge_data._density = {cache_key: {"density_400": 12.0}}
+
+        with patch(LINES_PATCH) as mock_lines:
+            result = hedge_data.density_around_lines(subset)
+
+        mock_lines.assert_not_called()
+        assert result["density_400"] == 12.0
 
     def test_density_property_raises_error(self):
         """The legacy density property must raise to prevent accidental use."""

@@ -187,9 +187,10 @@ def get_ru_zone_data(moulinette, hedges):
 def get_ru_per_hedge_coefficients(moulinette, hedges, per_hedge_zone_configs):
     """Compute per-hedge compensation coefficients from zone configs and density.
 
-    Because X_densite thresholds differ per zone, the same project-wide
-    density_400 can classify as high density in one zone and low density
-    in another.
+    The density_400 is computed on the given hedges to remove (the caller's
+    category-filtered subset). Because X_densite thresholds differ per zone,
+    the same density_400 can classify as high density in one zone and low
+    density in another.
 
     Returns a dict with two keys:
 
@@ -197,12 +198,12 @@ def get_ru_per_hedge_coefficients(moulinette, hedges, per_hedge_zone_configs):
     - ``ru_per_hedge_zone_info``: hedge_id → zone metadata for debug display.
     """
     haies = moulinette.catalog["haies"]
-    hedges = hedges.to_remove().n_alignement()
-    # TODO : this density should be computed only on hedges of the evaluator category.
-    density_400 = haies.density_around_lines.get("density_400") or 0.0
+    density_400 = (
+        haies.density_around_lines(hedges.to_remove()).get("density_400") or 0.0
+    )
 
     coefficients, per_hedge_zone_info, _ = compute_per_hedge_coefficients(
-        hedges, per_hedge_zone_configs, density_400
+        hedges.to_remove(), per_hedge_zone_configs, density_400
     )
 
     return {
