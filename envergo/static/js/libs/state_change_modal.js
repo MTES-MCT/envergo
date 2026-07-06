@@ -62,7 +62,7 @@
   };
   const readJson = (id) => JSON.parse(document.getElementById(id).textContent);
 
-  class ProcedureModal {
+  class StateChangeModal {
     constructor(form) {
       // Inputs that drive the modal, and the fields whose state they control.
       this.stageInput = form.querySelector("#id_stage");
@@ -71,8 +71,8 @@
       this.applicantMessageInput = form.querySelector("#id_applicant_message");
 
       // Démarches Simplifiées state-change notice.
-      this.stateChangeNotice = document.getElementById("procedure-state-change-message");
-      this.stateChangeText = document.getElementById("procedure-state-transition-text");
+      this.stateChangeNotice = document.getElementById("state-change-notice");
+      this.stateChangeText = document.getElementById("state-change-transition-text");
       this.currentDsState = form.dataset.currentDsStatus;
       this.currentStage = readJson("current-stage");
       this.dsStateByStageDecision = readJson("ds-status-mapping");
@@ -226,12 +226,12 @@
     }
   }
 
-  exports.ProcedureModal = ProcedureModal;
+  exports.StateChangeModal = StateChangeModal;
 })(this);
 
 window.addEventListener("load", function () {
-  const form = document.querySelector("#procedure-modal form");
+  const form = document.querySelector("#state-change-modal form");
   if (form) {
-    new ProcedureModal(form).init();
+    new StateChangeModal(form).init();
   }
 });

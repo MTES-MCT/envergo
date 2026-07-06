@@ -1,0 +1,59 @@
+{% load static %}
+
+<dialog aria-labelledby="resume-processing-modal-title"
+        role="dialog"
+        id="resume-processing-modal"
+        class="fr-modal {% if resume_processing_form.errors %}fr-modal--opened{% endif %}">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale"
+                    aria-controls="resume-processing-modal">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="resume-processing-modal-title" class="fr-modal__title">Reprendre l'instruction</h2>
+
+            <form method="post" action="" novalidate class="fr-mb-3w">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="resume_processing">
+              {% include '_form_snippet.html' with form=resume_processing_form %}
+
+              {% if petition_project.latest_suspension.original_due_date %}
+                <div class="fr-input-group">
+                  <label class="fr-label">
+                    <span class="label-content fr-text--bold">Nouvelle échéance d'instruction</span>
+                    <span class="fr-text--light fr-text--sm">(calcul automatique)</span>
+                  </label>
+                  <input id="id_new_due_date"
+                         type="date"
+                         disabled="disabled"
+                         class="fr-input"
+                         data-suspension-date="{{ petition_project.latest_suspension.created_at.date|date:"c" }}"
+                         data-original-due-date="{{ petition_project.latest_suspension.original_due_date|date:"c" }}">
+                </div>
+              {% endif %}
+
+              <button type="submit" class="fr-btn">Reprendre l'instruction</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+{% if petition_project.latest_suspension.original_due_date %}
+  <script defer src="{% static 'js/libs/sync_new_due_date.js' %}"></script>
+  <script>
+  window.addEventListener("load", function() {
+    let receipt_date_input = document.getElementById("id_info_receipt_date");
+    let due_date_input = document.getElementById("id_new_due_date");
+    if(due_date_input) {
+      new DueDateInput(due_date_input, receipt_date_input);
+    }
+  });
+  </script>
+{% endif %}
