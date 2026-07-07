@@ -374,21 +374,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             # For some ConfigHaie, « Démarche numérique » is configured to set dossier "en_instruction" on creation.
             # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
             if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
+                due_date = None
+                stage = STAGES.instruction_h
                 if self.category == HedgeCategory.ru:
-                    StatusLog.objects.create(
-                        petition_project=self,
-                        type=LOG_TYPES.status_change,
-                        stage=STAGES.instruction_d,
-                        update_comment="Dépôt du dossier : passage automatique en instruction.",
-                        due_date=date_depot + relativedelta(months=2),
-                    )
-                else:
-                    StatusLog.objects.create(
-                        petition_project=self,
-                        type=LOG_TYPES.status_change,
-                        stage=STAGES.instruction_h,
-                        update_comment="Dépôt du dossier : passage automatique en instruction.",
-                    )
+                    due_date = date_depot + relativedelta(months=2)
+                    stage = STAGES.instruction_d
+
+                StatusLog.objects.create(
+                    petition_project=self,
+                    type=LOG_TYPES.status_change,
+                    stage=stage,
+                    update_comment="Dépôt du dossier : passage automatique en instruction.",
+                    due_date=due_date,
+                )
 
             usager_email = (
                 dossier["usager"]["email"]
