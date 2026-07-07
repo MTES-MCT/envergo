@@ -176,11 +176,11 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
 
     def get_result_data(self, hedges):
         """Return context with data to display map"""
-
+        ru_hedges_to_remove = hedges.hedges_to_remove().ru().to_multilinestring()
         hedges_to_remove_mls_merged = hedges.hedges_to_remove().to_multilinestring()
 
         density_400 = compute_hedge_density_around_lines(
-            hedges_to_remove_mls_merged, 400, include_display_geojson=True
+            ru_hedges_to_remove, 400, include_display_geojson=True
         )
 
         buffered_400_polygon = (
