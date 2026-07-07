@@ -4,7 +4,7 @@
     <p>
       Une majorité du linéaire de haies saisi est situé hors du département choisi pour cette simulation – {{ department_display }}.
     </p>
-    {% if relaunch_url %}
+    {% if relaunch_url and config.single_procedure %}
       <p>
         Pour poursuivre la demande, il est vivement recommandé de relancer la simulation dans le bon département – {{ main_department }}.
       </p>
