@@ -879,7 +879,7 @@ class TestDensityLazyComputation:
         mock_lines.assert_called_once()
         mock_centroid.assert_not_called()
         assert result["density_400"] == 60.0
-        assert "around_centroid" not in hedge_data._density
+        assert not any(key.startswith("around_centroid") for key in hedge_data._density)
 
     def test_density_around_centroid_does_not_trigger_lines_computation(self):
         """Accessing density_around_centroid must not compute line-buffer density."""
@@ -895,13 +895,12 @@ class TestDensityLazyComputation:
             patch(CENTROID_PATCH, return_value=centroid_return) as mock_centroid,
             patch(LINES_PATCH) as mock_lines,
         ):
-            result = hedge_data.density_around_centroid
+            result = hedge_data.density_around_centroid(hedge_data.hedges_to_remove())
 
         mock_centroid.assert_called_once()
         mock_lines.assert_not_called()
         assert result["density_5000"] == 55.0
-        for entry in hedge_data._density.keys():
-            assert "around_centroid" not in entry
+        assert not any(key.startswith("around_lines") for key in hedge_data._density)
 
     def test_density_properties_compute_incrementally(self):
         """Accessing both densities computes each type exactly once."""
@@ -918,23 +917,56 @@ class TestDensityLazyComputation:
         ):
             hedges_to_remove = hedge_data.hedges_to_remove()
             hedge_data.density_around_lines(hedges_to_remove)
-            hedge_data.density_around_centroid
+            hedge_data.density_around_centroid(hedges_to_remove)
 
         mock_lines.assert_called_once()
         mock_centroid.assert_called_once()
-        lines_key = hedge_data.around_lines_cache_key(hedges_to_remove)
-        assert lines_key in hedge_data._density
-        assert "around_centroid" in hedge_data._density
+        assert (
+            hedge_data.around_lines_cache_key(hedges_to_remove) in hedge_data._density
+        )
+        assert (
+            hedge_data.around_centroid_cache_key(hedges_to_remove)
+            in hedge_data._density
+        )
 
     def test_density_uses_cache(self):
         """Passing an equivalent hedge subset again must not recompute."""
         hedge_data = HedgeDataFactory()
 
-        with patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines:
+        centroid_return = (
+            MOCK_DENSITY_CENTROID_200,
+            MOCK_DENSITY_CENTROID_5000,
+            None,
+        )
+        with (
+            patch(CENTROID_PATCH, return_value=centroid_return) as mock_centroid,
+            patch(LINES_PATCH, return_value=MOCK_DENSITY_LINES_400) as mock_lines,
+        ):
             hedge_data.density_around_lines(hedge_data.hedges_to_remove())
             hedge_data.density_around_lines(hedge_data.hedges_to_remove())
+            hedge_data.density_around_centroid(hedge_data.hedges_to_remove())
+            hedge_data.density_around_centroid(hedge_data.hedges_to_remove())
 
         mock_lines.assert_called_once()
+        mock_centroid.assert_called_once()
+
+    def test_density_around_centroid_empty_subset_skips_computation(self):
+        """An empty hedge subset: no computation, no caching."""
+        hedge_data = HedgeDataFactory()
+
+        with patch(CENTROID_PATCH) as mock_centroid:
+            result = hedge_data.density_around_centroid(HedgeList())
+
+        mock_centroid.assert_not_called()
+        assert result == {
+            "length_200": None,
+            "length_5000": None,
+            "area_200_ha": None,
+            "area_5000_ha": None,
+            "density_200": None,
+            "density_5000": None,
+        }
+        assert hedge_data._density is None
 
     def test_density_around_lines_empty_subset_skips_computation(self):
         """An empty hedge subset: no computation, no caching."""

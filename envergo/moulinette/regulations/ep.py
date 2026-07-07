@@ -454,7 +454,9 @@ class EspecesProtegeesNormandie(
         density_exploitation = self.get_exploitation_density(
             catalog.get("numero_pacage")
         )
-        density_5000 = haies.density_around_centroid["density_5000"]
+        density_5000 = haies.density_around_centroid(self.hedges.to_remove())[
+            "density_5000"
+        ]
         if density_exploitation:
             # If the density at 5km is 0, this means that we're in a hedge case (desert, sea, other?)
             # We then pick a coefficient corresponding to the Normandie average : 1
@@ -612,7 +614,7 @@ class EspecesProtegeesNormandie(
             return {}
 
         density_200, density_5000, centroid_geos = (
-            haies.compute_density_around_points_with_artifacts()
+            haies.compute_density_around_points_with_artifacts(self.hedges.to_remove())
         )
         # Pop circles from artifacts so they don't leak into the template context
         # dict, while keeping them available for the map builder below.
@@ -633,10 +635,9 @@ class EspecesProtegeesNormandie(
             "debug_density_5000": density_5000["density"],
         }
 
-        pre_computed = haies.density_around_centroid
-        if pre_computed:
-            context["pre_computed_density_200"] = pre_computed["density_200"]
-            context["pre_computed_density_5000"] = pre_computed["density_5000"]
+        pre_computed = haies.density_around_centroid(self.hedges.to_remove())
+        context["pre_computed_density_200"] = pre_computed["density_200"]
+        context["pre_computed_density_5000"] = pre_computed["density_5000"]
 
         from envergo.hedges.services import create_density_map
 
