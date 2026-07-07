@@ -48,23 +48,22 @@
   {% if urgence == "oui" and config.single_procedure %}
     <div class="fr-alert fr-alert--info fr-mb-2w">
       <h3 class="fr-alert__title">Travaux réalisés en urgence</h3>
-      <p>
-        Le projet contient des haies soumises au régime unique.
-        En cas de travaux d'urgence,
-        <a href="{{ HAIE_FAQ_URLS.EMERGENCY_PROCEDURE }}"
-           target="_blank"
-           rel="noopener">la procédure à suivre est particulière</a> :
-      </p>
+      <p>La destruction de haies en urgence obéit à une procédure particulière :</p>
       <ol>
         <li>
-          Le préfet doit être prévenu sans délai de l'exécution des travaux.
-          <a targe="_blank"
+          Le guichet unique de la haie doit être prévenu de l'exécution des travaux <b>sans délai</b> –
+          <a target="_blank"
              rel="noopener"
-             href="{% url 'contact_us' %}?department={{ department.department }}{{ contact_dossier_anchor }}">Voir le
-          contact dans mon département.</a>
+             href="{% url 'contact_us' %}?department={{ department.department }}{{ contact_dossier_anchor }}">coordonnées de contact</a>.
         </li>
-        <li>Le dossier à déposer sur ce portail permet de régulariser la situation.</li>
+        <li>Le dossier à déposer sur ce portail permet de régulariser la situation après les travaux.</li>
       </ol>
+
+      <p>
+        <a href="{{ HAIE_FAQ_URLS.EMERGENCY_PROCEDURE }}"
+           target="_blank"
+           rel="noopener">Plus de détails sur la procédure d'urgence</a>
+      </p>
     </div>
   {% endif %}
 

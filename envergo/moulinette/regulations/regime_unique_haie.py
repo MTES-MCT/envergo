@@ -5,6 +5,7 @@ Determines whether a hedge project falls under the régime unique
 """
 
 from django import forms
+from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
@@ -37,14 +38,20 @@ class RegimeUniqueHaieForm(forms.Form):
     """
 
     urgence = forms.ChoiceField(
-        label="Les travaux sont-ils réalisés en urgence ?",
+        label=mark_safe(
+            "Les travaux sont-ils réalisés en urgence ?"
+            '<span class="fr-hint-text">Danger immédiat pour des personnes ou des biens, nécessité d\'intervenir sans '
+            "délai pour des raisons sanitaires ou d'accès…</span>"
+        ),
         widget=forms.RadioSelect,
         choices=(
             ("non", "Non, les travaux ne sont pas réalisés en urgence."),
             (
                 "oui",
-                "Oui, les travaux sont réalisés en urgence et ont déjà été "
-                "exécutés, ou le seront dans les prochains jours.",
+                mark_safe(
+                    "Oui, les travaux sont réalisés en urgence"
+                    '<span class="fr-hint-text">Travaux déjà réalisés, ou prévus dans les prochains jours</span>'
+                ),
             ),
         ),
         required=True,
