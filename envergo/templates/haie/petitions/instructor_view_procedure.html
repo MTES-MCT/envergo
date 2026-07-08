@@ -147,6 +147,40 @@
 
       <h4>Décision</h4>
       <p>{% decision_badge petition_project.decision False %}</p>
+
+      {% with order_log=petition_project.prefectural_order_log %}
+        {% if order_log %}
+
+          <div class="fr-tile fr-tile--download fr-enlarge-link fr-mb-3w">
+            <div class="fr-tile__body">
+              <div class="fr-tile__content">
+                <h3 class="fr-tile__title">
+                  <a download
+                     target="_blank"
+                     rel="noopener"
+                     href="{{ order_log.prefectural_order.url }}">Télécharger le document de décision</a>
+                </h3>
+                <p class="fr-tile__detail">
+                  {{ DECISIONS|get_choice_label:order_log.decision }} du {{ order_log.status_date|date:"SHORT_DATE_FORMAT" }}
+                </p>
+              </div>
+            </div>
+            <div class="fr-tile__header">
+              <div class="fr-tile__pictogram">
+                <svg aria-hidden="true"
+                     class="fr-artwork"
+                     viewBox="0 0 80 80"
+                     width="80px"
+                     height="80px">
+                  <use class="fr-artwork-decorative" href="{% static '@gouvfr/dsfr/dist/artwork/pictograms/document/document-signature.svg' %}#artwork-decorative"></use>
+                  <use class="fr-artwork-minor" href="{% static '@gouvfr/dsfr/dist/artwork/pictograms/document/document-signature.svg' %}#artwork-minor"></use>
+                  <use class="fr-artwork-major" href="{% static '@gouvfr/dsfr/dist/artwork/pictograms/document/document-signature.svg' %}#artwork-major"></use>
+                </svg>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
     </section>
   </div>
   {% if is_department_instructor %}
@@ -249,6 +283,7 @@
 {% block extra_js %}
   {{ block.super }}
   <script defer src="{% static 'js/libs/sync_new_due_date.js' %}"></script>
+  <script defer src="{% static 'js/libs/procedure_modal.js' %}"></script>
 
   {% if resume_processing_form and petition_project.latest_suspension.original_due_date %}
     <script>
@@ -262,66 +297,4 @@
     });
     </script>
   {% endif %}
-
-  <script>
-    window.addEventListener('load', function () {
-      const displayStageObjective = (stage) => {
-        document.querySelectorAll(".stage-objective").forEach(div => div.style.display = "none");
-        document.getElementById(`stage-objective--${stage}`).style.display = "block";
-      };
-
-      const toggleDueDate = (stage) => {
-        if(stage === "closed") {
-          document.getElementById("form-group-due_date").style.display = "none";
-          document.getElementById("id_due_date").value = "";
-        }
-        else {
-          document.getElementById("form-group-due_date").style.display = "block";
-        }
-      };
-
-      const procedureForm = document.querySelector('#procedure-modal form');
-      const currentDsStatus = procedureForm.dataset.currentDsStatus;
-      const dsStatusMapping = JSON.parse(document.getElementById('ds-status-mapping').textContent);
-      const dsStatusLabels = JSON.parse(document.getElementById('ds-status-labels').textContent);
-      const stateChangeMessage = document.getElementById('procedure-state-change-message');
-      const stateTransitionText = document.getElementById('procedure-state-transition-text');
-      const stageInput = document.getElementById("id_stage");
-      const decisionInput = document.getElementById("id_decision");
-      const forbiddenTransitions = JSON.parse(document.getElementById('forbidden-transitions').textContent);
-      const currentStage = JSON.parse(document.getElementById('current-stage').textContent);
-
-      const isForbidden = (from, to) =>
-        forbiddenTransitions.some(([f, t]) => f === from && t === to);
-
-      const checkStateChange = () => {
-        const stageMapping = dnStatusMapping[stageInput.value];
-        const newDNStatus = stageMapping && stageMapping[decisionInput.value];
-        if (!newDNStatus || newDNStatus === currentDsStatus || isForbidden(currentStage, stageInput.value)) {
-          stateChangeMessage.style.display = "none";
-          return;
-        }
-        const currentLabel = dnStatusLabels[currentDsStatus] || currentDsStatus;
-        const newLabel = dnStatusLabels[newDNStatus] || newDNStatus;
-        let msg = `Le dossier passe de l'état « ${currentLabel} » à « ${newLabel} » sur Démarche numérique.`;
-        if (newDNStatus === "en_instruction") {
-          msg += " Il ne sera donc plus modifiable par le demandeur.";
-        } else if (newDNStatus === "en_construction") {
-          msg += " Il sera donc à nouveau modifiable par le demandeur.";
-        }
-        stateTransitionText.textContent = msg;
-        stateChangeMessage.style.display = "block";
-      };
-
-      stageInput.addEventListener("change", (event) => {
-        displayStageObjective(event.target.value);
-        toggleDueDate(event.target.value);
-        checkStateChange();
-      });
-      decisionInput.addEventListener("change", checkStateChange);
-      displayStageObjective(stageInput.value);
-      toggleDueDate(stageInput.value);
-
-    });
-  </script>
 {% endblock %}

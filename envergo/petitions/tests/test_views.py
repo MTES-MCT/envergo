@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime, time, timedelta
 from unittest.mock import ANY, Mock, patch
 
@@ -6,6 +7,7 @@ import pytest
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.gis.geos import MultiPolygon
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
@@ -15,7 +17,11 @@ from django.utils.functional import cached_property
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map, loire_atlantique_map  # noqa
-from envergo.geodata.tests.factories import Department34Factory
+from envergo.geodata.tests.factories import (
+    Department34Factory,
+    DepartmentFactory,
+    calvados_polygon,
+)
 from envergo.hedges.models import TO_PLANT, HedgeTypeBase
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
@@ -25,6 +31,7 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
+from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -267,6 +274,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     mock_post.return_value = mock_response
 
     DCConfigHaieFactory()
+    Department34Factory()
     project = PetitionProjectFactory()
 
     petition_project_url = reverse(
@@ -281,7 +289,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
         category="simulateur", event="consultation", metadata__user_type="anonymous"
     )
     # default PetitionProjectFactory has hedges near Aniane but is declared in department 44
-    assert response.context["has_hedges_outside_department"]
+    assert response.context["is_outside_department"]
     assert "Le projet est hors du département sélectionné" in response.content.decode()
 
     # Given hedges in department 44 and across the department border
@@ -308,7 +316,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     response = client.get(petition_project_url)
 
     # THEN I should see that there is no hedges to remove outside the department
-    assert not response.context["has_hedges_outside_department"]
+    assert not response.context["is_outside_department"]
     assert (
         "Le projet est hors du département sélectionné" not in response.content.decode()
     )
@@ -1335,55 +1343,64 @@ def test_petition_project_instructor_notes_form(
     )
 
 
-def test_instructor_view_with_hedges_outside_department(client, haie_instructor_44):
-    """Test if a warning is displayed when some hedges are outside department"""
-    # GIVEN a moulinette with at least an hedge to remove outside the department
+def test_instructor_view_multi_departments_alert(client, haie_instructor_44):
+    """Test the multi-department alert on the instructor view."""
 
     client.force_login(haie_instructor_44)
     DCConfigHaieFactory()
+    DepartmentFactory(department="14", geometry=MultiPolygon([calvados_polygon]))
+
+    # GIVEN hedges in department 14 while the project is declared in department 44
     hedge_14 = HedgeFactory(
         latLngs=[
             {"lat": 49.37830760743562, "lng": 0.10241746902465822},
             {"lat": 49.37828490574639, "lng": 0.10244965553283693},
         ]
-    )  # this hedge is in department 14
-    hedges = HedgeDataFactory(hedges=[hedge_14])
-    project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
-
-    # WHEN requesting the result plantation page
-    project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
     )
-    res = client.get(project_url)
-
-    # THEN the result page is displayed with a warning
-    assert res.context["has_hedges_outside_department"]
-    assert "Le projet est hors du département sélectionné" in res.content.decode()
-
-    # Given hedges in department 44 and accross the department border
+    # Add a hedge in department 44 so we have hedges in both departments
     hedge_44 = HedgeFactory(
         latLngs=[
             {"lat": 47.202984120693635, "lng": -1.7100316286087038},
             {"lat": 47.201198235567496, "lng": -1.7097365856170657},
         ]
     )
-    hedge_44_85 = HedgeFactory(
+    hedges = HedgeDataFactory(hedges=[hedge_14, hedge_44])
+    project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
+
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+
+    # THEN the multi-department alert is displayed with department list
+    assert res.context["is_multi_departments"]
+    content = res.content.decode()
+    assert "Le projet se situe sur plusieurs départements" in content
+    assert "Calvados" in content
+    assert "Loire-Atlantique" in content
+
+
+def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
+    """No multi-department alert when all hedges are in the declared department."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+
+    hedge_44 = HedgeFactory(
         latLngs=[
-            {"lat": 47.05281499678513, "lng": -1.2435150146484377},
-            {"lat": 47.103783870991634, "lng": -1.1837768554687502},
+            {"lat": 47.202984120693635, "lng": -1.7100316286087038},
+            {"lat": 47.201198235567496, "lng": -1.7097365856170657},
         ]
     )
-    hedges = HedgeDataFactory(hedges=[hedge_44, hedge_44_85])
+    hedges = HedgeDataFactory(hedges=[hedge_44])
     project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
     project_url = reverse(
         "petition_project_instructor_view", kwargs={"reference": project.reference}
     )
-    # WHEN requesting the result plantation page
     res = client.get(project_url)
 
-    # THEN the result page is displayed without warning
-    assert not res.context["has_hedges_outside_department"]
-    assert "Le projet est hors du département sélectionné" not in res.content.decode()
+    assert not res.context["is_multi_departments"]
+    assert "Le projet se situe sur plusieurs départements" not in res.content.decode()
 
 
 @patch("envergo.petitions.views.notify")
@@ -1482,6 +1499,275 @@ def test_petition_project_procedure(
 
     # THEN he should be redirected to a 403 error page
     assert res.status_code == 403
+
+
+def closing_form_data(decision, **overrides):
+    """Build the procedure form data for closing a dossier."""
+    data = {
+        "stage": "closed",
+        "decision": decision,
+        "simulation_check": "on",
+        "applicant_message": "Une décision a été rendue concernant votre dossier.",
+    }
+    data.update(overrides)
+    return data
+
+
+def procedure_url(project):
+    return reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_close_with_express_agreement(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+):
+    """Closing with an express agreement uploads the order and notifies the applicant."""
+
+    client.force_login(haie_instructor_44)
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+    attachment = SimpleUploadedFile(FILE_TEST_PATH.name, FILE_TEST_PATH.read_bytes())
+    data = closing_form_data("express_agreement", prefectural_order=attachment)
+
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "Le dossier a été clos" in content
+    assert "accompagné du document de décision" in content
+
+    project.refresh_from_db()
+    assert project.stage == "closed"
+    assert project.decision == "express_agreement"
+
+    log = project.status_history.order_by("-created_at").first()
+    assert log.stage == "closed"
+    assert log.update_comment == ""
+    assert log.applicant_message == data["applicant_message"]
+    assert log.due_date is None
+    assert log.status_date == date.today()
+    # The upload path contains a random secret to make the url unguessable
+    assert re.fullmatch(
+        rf"arrete_prefectoral/{project.reference}_[A-Za-z0-9_-]+\.jpg",
+        log.prefectural_order.name,
+    )
+
+    assert mock_update_ds.call_count == 1
+    assert mock_update_ds.call_args[0][1] == "accepte"
+    assert mock_message_task.delay.call_count == 1
+    assert mock_message_task.delay.call_args[0][0] == log.pk
+
+    # The download block is now displayed on the procedure page
+    assert "Télécharger le document de décision" in content
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_close_with_tacit_agreement(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+):
+    """Closing with a tacit agreement needs no prefectural order."""
+
+    client.force_login(haie_instructor_44)
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+
+    res = client.post(
+        procedure_url(project), closing_form_data("tacit_agreement"), follow=True
+    )
+
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "closed"
+    assert project.decision == "tacit_agreement"
+
+    log = project.status_history.order_by("-created_at").first()
+    assert not log.prefectural_order
+
+    assert mock_update_ds.call_args[0][1] == "accepte"
+    assert mock_message_task.delay.call_args[0][0] == log.pk
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_close_with_dropped(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+):
+    """Closing as dropped only requires the applicant message."""
+
+    client.force_login(haie_instructor_44)
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+    data = closing_form_data("dropped", simulation_check="")
+
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "closed"
+    assert project.decision == "dropped"
+    assert mock_update_ds.call_args[0][1] == "sans_suite"
+    assert mock_message_task.delay.call_count == 1
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_close_with_missing_fields(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+):
+    """Closing with an opposition requires the check, the order and the message."""
+
+    client.force_login(haie_instructor_44)
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+    data = closing_form_data("opposition", simulation_check="", applicant_message="")
+
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        "la cohérence entre le dossier et le document de décision doit être vérifiée"
+        in content
+    )
+
+    project.refresh_from_db()
+    assert project.stage == "preparing_decision"
+    assert project.status_history.count() == 1
+    assert not mock_update_ds.called
+    assert not mock_message_task.delay.called
+
+
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.send_closing_message_async")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@pytest.mark.django_db(transaction=True)
+def test_petition_project_close_status_change_failure(
+    mock_update_ds, mock_message_task, mock_notify, client, haie_instructor_44, site
+):
+    """If the DS status change fails, the log rolls back and no message is sent."""
+
+    client.force_login(haie_instructor_44)
+    mock_update_ds.side_effect = DemarcheNumeriqueError("", {}, "boom")
+
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+
+    res = client.post(
+        procedure_url(project), closing_form_data("tacit_agreement"), follow=True
+    )
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        "Impossible de mettre à jour le dossier dans « Démarche numérique »" in content
+    )
+
+    project.refresh_from_db()
+    assert project.stage == "preparing_decision"
+    assert project.status_history.count() == 1
+    assert not mock_message_task.delay.called
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.views.notify")
+@patch("envergo.petitions.views.update_demarche_numerique_status")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+@pytest.mark.django_db(transaction=True)
+def test_closing_actually_calls_ds_messagerie(
+    mock_execute, mock_update_ds, mock_notify, client, haie_instructor_44, site
+):
+    """Closing a dossier reaches the real DS "dossierEnvoyerMessage" mutation.
+
+    Only the lowest layer (the GraphQL client.execute) is mocked, so the full
+    view -> send_message_dossier_ds -> client.dossier_send_message send path is
+    exercised. The DS state change is mocked out to isolate the message send.
+    """
+    client.force_login(haie_instructor_44)
+    mock_execute.return_value = DOSSIER_SEND_MESSAGE_FAKE_RESPONSE["data"]
+
+    DCConfigHaieFactory()
+    # The dossier id is what gates the message send; a real dossier has it.
+    project = PetitionProjectFactory(
+        status__stage="preparing_decision",
+        demarche_numerique_state="en_instruction",
+        demarche_numerique_dossier_id="RG9zc2llci0xMjM=",
+    )
+
+    message = "Votre dossier a été classé sans suite. Motif : doublon."
+    data = closing_form_data("dropped", simulation_check="", applicant_message=message)
+    res = client.post(procedure_url(project), data, follow=True)
+
+    assert res.status_code == 200
+    project.refresh_from_db()
+    assert project.stage == "closed"
+
+    # The messagerie mutation was issued exactly once, with our message body.
+    message_calls = [
+        call
+        for call in mock_execute.call_args_list
+        if "dossierEnvoyerMessage" in call.args[0]
+    ]
+    assert len(message_calls) == 1
+    sent_variables = message_calls[0].args[1]
+    assert sent_variables["input"]["body"] == message
+    assert sent_variables["input"]["dossierId"] == "RG9zc2llci0xMjM="
+
+
+def test_petition_project_prefectural_order_download_block(
+    client, haie_instructor_44, site
+):
+    """The procedure page shows a download block when an order exists."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="preparing_decision")
+
+    # WHEN the dossier has no prefectural order
+    res = client.get(procedure_url(project))
+    content = res.content.decode()
+
+    # THEN neither the download block nor the supersede notice are displayed
+    assert "Télécharger le document de décision" not in content
+    assert "Le nouveau document de décision remplacera" not in content
+
+    # WHEN the dossier was closed with a prefectural order, then reopened
+    StatusLogFactory(
+        petition_project=project,
+        stage="closed",
+        decision="opposition",
+        prefectural_order=SimpleUploadedFile("arrete.pdf", b"%PDF-1.4 fake"),
+    )
+    StatusLogFactory(
+        petition_project=project,
+        stage="instruction_d",
+        decision="opposition",
+    )
+    project.refresh_from_db()
+    assert project.stage == "instruction_d"
+
+    res = client.get(procedure_url(project))
+    content = res.content.decode()
+
+    # THEN the order remains downloadable and the modal warns about replacement
+    assert "Télécharger le document de décision" in content
+    assert "Le nouveau document de décision remplacera" in content
 
 
 def test_petition_project_follow_up(client, haie_user, haie_instructor_44, site):
