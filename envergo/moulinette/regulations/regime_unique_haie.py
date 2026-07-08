@@ -45,7 +45,7 @@ class RegimeUniqueHaieForm(forms.Form):
         ),
         widget=forms.RadioSelect,
         choices=(
-            ("non", "Non, les travaux ne sont pas réalisés en urgence."),
+            ("non", "Non"),
             (
                 "oui",
                 mark_safe(
