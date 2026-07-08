@@ -177,24 +177,9 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
     def get_result_data(self, hedges):
         """Return context with data to display map"""
         ru_hedges_to_remove = hedges.hedges_to_remove().ru().to_multilinestring()
+
         hedges_to_remove_mls_merged = hedges.hedges_to_remove().to_multilinestring()
-
-        density_400 = compute_hedge_density_around_lines(
-            ru_hedges_to_remove, 400, include_display_geojson=True
-        )
-
-        buffered_400_polygon = (
-            density_400["artifacts"]["truncated_buffer_zone"]
-            or density_400["artifacts"]["buffer_zone"]
-        )
-
         polygons = [
-            {
-                "polygon": density_400["artifacts"]["display_geojson"],
-                "color": "#f0f921",
-                "legend": "Haies existantes",
-                "opacity": 1.0,
-            },
             {
                 "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
@@ -202,24 +187,52 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "legend": "Linéaires à détruire",
                 "opacity": 1.0,
             },
-            {
-                "polygon": to_geojson(buffered_400_polygon),
-                "color": "#457EAC",
-                "legend": "Zone tampon de 400m",
-                "opacity": 1.0,
-            },
         ]
         context = {
-            "result_available": True,
+            "result_available": False,
             "hedges_to_remove_mls": hedges_to_remove_mls_merged,
-            "polygons": json.dumps(polygons),
-            "length_400": density_400["artifacts"]["length"],
-            "area_400_ha": density_400["artifacts"]["area_ha"],
-            "truncated_buffer_zone_400": density_400["artifacts"][
-                "truncated_buffer_zone"
-            ],
-            "density_400": density_400["density"],
         }
+
+        if ru_hedges_to_remove:
+            density_400 = compute_hedge_density_around_lines(
+                ru_hedges_to_remove, 400, include_display_geojson=True
+            )
+
+            buffered_400_polygon = (
+                density_400["artifacts"]["truncated_buffer_zone"]
+                or density_400["artifacts"]["buffer_zone"]
+            )
+
+            polygons.insert(
+                0,
+                {
+                    "polygon": density_400["artifacts"]["display_geojson"],
+                    "color": "#f0f921",
+                    "legend": "Haies existantes",
+                    "opacity": 1.0,
+                },
+            )
+            polygons.append(
+                {
+                    "polygon": to_geojson(buffered_400_polygon),
+                    "color": "#457EAC",
+                    "legend": "Zone tampon de 400m",
+                    "opacity": 1.0,
+                }
+            )
+            context.update(
+                {
+                    "result_available": True,
+                    "length_400": density_400["artifacts"]["length"],
+                    "area_400_ha": density_400["artifacts"]["area_ha"],
+                    "truncated_buffer_zone_400": density_400["artifacts"][
+                        "truncated_buffer_zone"
+                    ],
+                    "density_400": density_400["density"],
+                }
+            )
+
+        context["polygons"] = polygons
         return context
 
 
