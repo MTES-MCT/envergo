@@ -5,8 +5,6 @@ from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList
 from envergo.hedges.regulations import NormandieQualityCondition, RUQualityCondition
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
-    EP_RU_REPLANTATION_BONUS,
-    EP_RU_SENSITIVE_SPECIES_BONUS,
     EspecesProtegeesAisne,
     EspecesProtegeesNormandie,
     EspecesProtegeesRegimeUnique,
@@ -14,7 +12,7 @@ from envergo.moulinette.regulations.ep import (
 )
 from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
-    get_ru_debug_context,
+    collect_zone_configs,
 )
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
@@ -98,25 +96,15 @@ def ep_regime_unique_get_instructor_view_context(
     context["show_ep_ru_params"] = is_regime_unique and not ep_ru_aa_only
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
 
-    # Bonus breakdown for majoration display
-    procedure_bonus = EP_RU_REPLANTATION_BONUS.get(evaluator.result_code, 0.0)
-    has_sensitive_species = moulinette.catalog.get("has_sensitive_species", False)
-    species_bonus_applies = (
-        evaluator.result_code == "derogation_simplifiee" and has_sensitive_species
-    )
-    context["ep_ru_procedure_bonus"] = procedure_bonus
-    context["ep_ru_species_bonus"] = (
-        EP_RU_SENSITIVE_SPECIES_BONUS if species_bonus_applies else 0.0
-    )
-
     # Per-hedge rows with zone info and coefficients
     context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
         moulinette.catalog, evaluator
     )
 
     # Zone configs for the coefficient matrix accordion
-    ru_debug = get_ru_debug_context(moulinette.catalog)
-    context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
+    context["ru_zone_configs"] = collect_zone_configs(
+        moulinette.catalog.get("ru_hedge_data", {})
+    )
 
     context["quality_condition"] = {}
     if plantation_evaluation:

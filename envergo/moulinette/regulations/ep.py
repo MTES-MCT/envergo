@@ -37,10 +37,9 @@ from envergo.moulinette.regulations import (
 )
 from envergo.moulinette.regulations.regime_unique import (
     build_ru_hedge_detail_rows,
-    compute_ru_compensation_ratio,
-    get_ru_debug_context,
-    get_ru_per_hedge_coefficients,
-    get_ru_zone_data,
+    collect_zone_configs,
+    ensure_ru_hedge_data,
+    evaluator_replantation_coefficient,
 )
 from envergo.utils.fields import get_human_readable_value
 
@@ -717,15 +716,6 @@ EP_RU_RESULT_RANK = {
     "derogation_inventaire": 3,
 }
 
-# Replantation coefficient bonus per result level (added to R_ru).
-EP_RU_REPLANTATION_BONUS = {
-    "derogation_inventaire": 0.5,
-    "derogation_simplifiee": 0.25,
-    "dispense": 0.0,
-}
-
-EP_RU_SENSITIVE_SPECIES_BONUS = 0.25
-
 
 class EspecesProtegeesRegimeUnique(
     PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
@@ -824,17 +814,7 @@ class EspecesProtegeesRegimeUnique(
         catalog.update(self.get_density_catalog_data())
 
         if self.moulinette.config.single_procedure:
-            zone_data = get_ru_zone_data(self.moulinette, self.hedges)
-            catalog.update(zone_data)
-            zone_configs = zone_data["ru_per_hedge_zone_configs"]
-            coeff_result = get_ru_per_hedge_coefficients(
-                self.moulinette, self.hedges, zone_configs
-            )
-            catalog["ru_per_hedge_zone_info"] = coeff_result["ru_per_hedge_zone_info"]
-            if "per_hedge_coefficients" not in self.catalog:
-                catalog["per_hedge_coefficients"] = coeff_result[
-                    "per_hedge_coefficients"
-                ]
+            ensure_ru_hedge_data(self.moulinette, self.hedges)
 
         # TODO : hedges are now filtered by category, this specific variable should be handle
         #  in the evaluators EspecesProtegeesRegimeUniqueHru and EspecesProtegeesRegimeUniqueL3503
@@ -983,33 +963,20 @@ class EspecesProtegeesRegimeUnique(
 
         return result
 
-    def get_ep_ru_bonus(self):
-        """Total EP bonus: base per result level, plus sensitive-species majoration."""
-        bonus = EP_RU_REPLANTATION_BONUS.get(self.result_code, 0.0)
-        if self.result_code == "derogation_simplifiee" and self.catalog.get(
-            "has_sensitive_species", False
-        ):
-            bonus += EP_RU_SENSITIVE_SPECIES_BONUS
-        return bonus
-
     @property
     def effective_coefficients(self):
-        """Raw per-hedge coefficients adjusted with the EP bonus.
-
-        Dispense means no compensation is required, so effective coefficients
-        are empty.
-        """
+        """Raw coefficients plus the EP bonus; empty for dispense (no compensation due)."""
         if self.result_code == "dispense":
             return {}
-        bonus = self.get_ep_ru_bonus()
-        raw = self.catalog.get("per_hedge_coefficients", {})
-        return {h: c + bonus for h, c in raw.items()}
+
+        hedge_data = self.catalog.get("ru_hedge_data", {})
+        return {
+            h: rec["raw_coefficient"] + rec["ep_bonus"] for h, rec in hedge_data.items()
+        }
 
     def get_replantation_coefficient(self):
-        """Weighted average of the effective per-hedge coefficients."""
-        return compute_ru_compensation_ratio(
-            self.moulinette, self.hedges, coefficients=self.effective_coefficients
-        )
+        """Weighted average of the effective (bonus-included) coefficients."""
+        return evaluator_replantation_coefficient(self)
 
     def build_hedge_rows(self):
         """Build per-hedge display rows for non-alignement hedges.
@@ -1053,6 +1020,7 @@ class EspecesProtegeesRegimeUnique(
         )
         context["hedge_debug_rows"] = hedge_rows
         context["ep_ru_settings"] = self.params
-        ru_debug = get_ru_debug_context(self.catalog)
-        context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
+        context["ru_zone_configs"] = collect_zone_configs(
+            self.catalog.get("ru_hedge_data", {})
+        )
         return context
