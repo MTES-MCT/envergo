@@ -13,7 +13,7 @@ from envergo.moulinette.regulations import HaieCriterionEvaluator
 from envergo.petitions.models import DECISIONS, STAGES
 from envergo.petitions.regulations import get_instructor_view_context
 from envergo.petitions.services import (
-    get_demarches_simplifiees_dossier,
+    get_demarche_numerique_dossier,
     get_field_data_from_dn_dossier,
 )
 
@@ -290,12 +290,12 @@ def get_ds_field(context, field_name):
     """Get field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
-    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    `field_name` must be set in config.demarche_numerique_display_fields.
     """
     petition_project = context.get("petition_project", None)
     if petition_project is None:
         return None
-    ds_dossier = get_demarches_simplifiees_dossier(petition_project)
+    ds_dossier = get_demarche_numerique_dossier(petition_project)
     if ds_dossier is None:
         return None
     config = context.get("moulinette").config
@@ -308,7 +308,7 @@ def display_ds_field(context, field_name, inline=False):
     """Includes template to display a field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
-    `field_name` must be set in config.demarches_simplifiees_display_fields.
+    `field_name` must be set in config.demarche_numerique_display_fields.
 
     Uses _item_ds.html template, also included in full « Démarche numérique » view template.
     """

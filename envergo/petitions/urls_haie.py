@@ -10,7 +10,7 @@ from envergo.petitions.views import (
     PetitionProjectInstructorAlternativeEdit,
     PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorConsultationsView,
-    PetitionProjectInstructorDossierDSView,
+    PetitionProjectInstructorDossierDNView,
     PetitionProjectInstructorMessagerieMarkUnreadView,
     PetitionProjectInstructorMessagerieView,
     PetitionProjectInstructorNotesView,
@@ -32,7 +32,7 @@ instruction_urlpatterns = [
     ),
     path(
         "dossier-complet/",
-        PetitionProjectInstructorDossierDSView.as_view(),
+        PetitionProjectInstructorDossierDNView.as_view(),
         name="petition_project_instructor_dossier_complet_view",
     ),
     path(

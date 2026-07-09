@@ -18,7 +18,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.utils.html import format_html, linebreaks, mark_safe
+from django.utils.html import format_html, mark_safe
 from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 
@@ -567,7 +567,6 @@ class RequestAdmin(admin.ModelAdmin):
     readonly_fields = [
         "reference",
         "created_at",
-        "summary",
     ]
     inlines = [RequestFileInline]
     search_fields = [
@@ -621,22 +620,6 @@ class RequestAdmin(admin.ModelAdmin):
         )
         link = f'<a href="{eval_admin_url}">{obj.evaluation}</a>'
         return mark_safe(link)
-
-    @admin.display(description=_("Résumé"))
-    def summary(self, obj):
-        request_url = reverse("admin:evaluations_request_change", args=[obj.id])
-        site = Site.objects.get(id=settings.SITE_ID)
-
-        parcel_map_url = obj.get_parcel_map_url()
-        summary_body = render_to_string(
-            "evaluations/eval_request_notification.txt",
-            {
-                "request": obj,
-                "request_url": f"https://{site.domain}{request_url}",
-                "parcel_map_url": f"https://{site.domain}{parcel_map_url}",
-            },
-        )
-        return mark_safe(linebreaks(summary_body))
 
     def render_change_form(
         self, request, context, add=False, change=False, form_url="", obj=None

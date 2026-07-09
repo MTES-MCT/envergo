@@ -7,7 +7,7 @@ from django.test import override_settings
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES, ResultSnapshot
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE,
     PetitionProjectFactory,
     SimulationFactory,
 )
@@ -169,20 +169,18 @@ class TestResultSnapshot:
 
     @pytest.mark.urls("config.urls_haie")
     @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-    @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+    @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
     @patch("envergo.petitions.models.notify")
     @patch("envergo.petitions.models.log_event_raw")
     def test_snapshot_created_on_dossier_submission(self, mock_log_event, mock_notify):
-        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarches_simplifiees."""
+        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarche_numerique."""
         from django.contrib.sites.models import Site
 
         Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
 
         DCConfigHaieFactory()
         # Create project in draft state (not yet submitted)
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
         # Count snapshots after project creation
         initial_count = ResultSnapshot.objects.filter(project=project).count()
@@ -196,7 +194,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (

@@ -1,8 +1,14 @@
-{% extends 'moulinette/base.html' %}
+{% extends 'base.html' %}
 
 {% load evaluations static l10n %}
 
+{% block title %}Simulation réglementaire du projet{% endblock %}
+
 {% block header %}{% endblock %}
+
+{% block top-bar %}{# no top bar on result pages #}{% endblock %}
+
+{% block messages %}{# messages are displayed in the result container #}{% endblock %}
 
 {% block body-classes %}moulinette-result-body{% endblock %}
 
