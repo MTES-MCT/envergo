@@ -152,7 +152,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 
 
 # Closing requirements matrix: for each final decision, the set of closing
-# fields the instructor must provide. See ProcedureForm docstring for the
+# fields the instructor must provide. See StateChangeForm docstring for the
 # rationale behind each requirement. Decisions absent from this mapping
 # (i.e. "unset") cannot close a dossier.
 CLOSING_FIELD_REQUIREMENTS = {
@@ -195,7 +195,7 @@ class SimulationCheckWidget(forms.CheckboxInput):
     field_template_name = "haie/petitions/forms/fields/simulation_check.html"
 
 
-class ProcedureForm(forms.ModelForm):
+class StateChangeForm(forms.ModelForm):
     """Form for updating petition project's stage.
 
     When the dossier is being closed (stage = "closed"), three additional
@@ -266,8 +266,9 @@ class ProcedureForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, is_paused=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.is_paused = is_paused
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         # Pass field errors to the widget after validation
@@ -278,6 +279,13 @@ class ProcedureForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        if self.is_paused:
+            raise ValidationError(
+                "Impossible de modifier l'état du dossier tant qu'il est "
+                "en attente de compléments.",
+                code="modification_while_paused",
+            )
         stage = cleaned_data.get("stage")
         decision = cleaned_data.get("decision")
 
@@ -364,8 +372,7 @@ def request_for_info_message():
     """Format the default text for request for information message."""
     date = three_months_from_now()
     date_fmt = date_format(date, "d F Y")
-    message = dedent(
-        f"""
+    message = dedent(f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
@@ -377,8 +384,7 @@ def request_for_info_message():
 
         Cordialement,
         L'instructeur / le service instructeur.
-    """
-    )
+    """)
     return message.strip()
 
 
@@ -387,6 +393,7 @@ class RequestAdditionalInfoForm(forms.Form):
 
     info_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
+        help_text="Délai maximum : 3 mois",
         required=True,
         initial=three_months_from_now,
     )
@@ -395,12 +402,30 @@ class RequestAdditionalInfoForm(forms.Form):
         required=True,
         widget=forms.Textarea(attrs={"rows": 12}),
         help_text="""
-        Ce message, à compléter par vos soins, sera envoyé au demandeur pour solliciter
-        les compléments et l'informer de la suspension du délai en attendant sa réponse.
-        Une fois envoyé, vous pourrez le retrouver dans la messagerie.
+        Complétez le message afin de lister les pièces complémentaires attendues.<br/>
+        Pensez à vérifier que la date indiquée est cohérente avec la date entrée ci-dessus.
         """,
         initial=request_for_info_message,
     )
+
+    def clean_info_due_date(self):
+        info_due_date = self.cleaned_data["info_due_date"]
+        today = timezone.now().date()
+
+        if info_due_date < today:
+            raise ValidationError(
+                "La date limite ne peut pas être dans le passé.",
+                code="date_in_past",
+            )
+
+        max_date = three_months_from_now().date()
+        if info_due_date > max_date:
+            raise ValidationError(
+                "La date limite ne peut pas dépasser 3 mois à compter d'aujourd'hui.",
+                code="date_exceeds_three_months",
+            )
+
+        return info_due_date
 
 
 def today_formatted():

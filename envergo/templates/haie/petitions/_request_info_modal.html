@@ -1,0 +1,34 @@
+<dialog aria-labelledby="request-info-modal-title"
+        role="dialog"
+        id="request-info-modal"
+        class="fr-modal {% if request_info_form.errors %}fr-modal--opened{% endif %}">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale"
+                    aria-controls="request-info-modal">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="request-info-modal-title" class="fr-modal__title">Demander des compléments</h2>
+
+            <p>La demande de compléments suspendra le délai d'instruction.</p>
+
+            <form method="post" action="" novalidate class="fr-mb-3w">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="request_info">
+              {% include '_form_snippet.html' with form=request_info_form %}
+
+              <div class="fr-alert fr-alert--warning fr-mb-2w">
+                <p>Pensez à vérifier que la date limite indiquée dans le message est bien celle saisie plus haut.</p>
+              </div>
+              <button type="submit" class="fr-btn">Envoyer au demandeur</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
