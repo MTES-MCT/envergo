@@ -443,9 +443,12 @@ def list_moulinette_errors(moulinette):
 def validate_simulation_url(url):
     """Tells whether an url is a valid simulation, and details why if it is not.
 
-    Returns ``(is_valid, errors)`` where ``errors`` is the field-prefixed list
-    from the moulinette (empty when the url builds no moulinette at all). Shared
-    by the creation form and the activation view so both apply the same rule.
+    Returns ``(is_valid, errors, moulinette)`` where ``errors`` is the
+    field-prefixed list from the moulinette (empty when the url builds no
+    moulinette at all). The instantiated moulinette (None when the url builds
+    none) is returned so callers can reuse it — building one is expensive.
+    Shared by the creation form and the activation view so both apply the same
+    rule.
     """
     is_valid, errors = True, []
 
@@ -455,7 +458,7 @@ def validate_simulation_url(url):
     elif not moulinette.is_valid():
         is_valid, errors = False, list_moulinette_errors(moulinette)
 
-    return is_valid, errors
+    return is_valid, errors, moulinette
 
 
 class SimulationForm(forms.ModelForm):
@@ -490,7 +493,7 @@ class SimulationForm(forms.ModelForm):
 
         # Reject a url that is not a valid simulation. The underlying errors are
         # exposed so the template can list them below the field.
-        is_valid, errors = validate_simulation_url(url)
+        is_valid, errors, _moulinette = validate_simulation_url(url)
         if not is_valid:
             self.moulinette_errors = errors
             raise ValidationError(

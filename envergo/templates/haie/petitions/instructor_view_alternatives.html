@@ -50,6 +50,18 @@
       </div>
     {% endif %}
 
+    {% if activation_category_error %}
+      <div class="fr-alert fr-alert--error fr-mb-3w">
+        <p class="fr-alert__title">Erreur d'activation de la simulation</p>
+        <p>Impossible d’activer cette simulation car les linéaires ne sont pas tous de la même catégorie.</p>
+        <p>Catégories présentes dans la simulation :</p>
+        <ul>
+          {% for category_error in activation_category_error %}<li>{{ category_error }}</li>{% endfor %}
+        </ul>
+        <p>Chaque dossier déposé ne peut contenir qu'une seule catégorie de linéaires.</p>
+      </div>
+    {% endif %}
+
     {% include 'haie/petitions/_alternatives_table.html' with simulations=simulations %}
 
     {% if has_change_permission %}
