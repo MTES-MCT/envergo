@@ -122,8 +122,8 @@ class DCConfigHaieFactory(DjangoModelFactory):
     ]
     aa_l3503_handling = "not_handled"
     aa_l3503_contact_info = "<p>À compléter</p>"
-    demarche_simplifiee_number = 123456
-    demarche_simplifiee_pre_fill_config = [
+    demarche_numerique_number = 123456
+    demarche_numerique_pre_fill_config = [
         {
             "id": "123",
             "value": "profil",
@@ -141,7 +141,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
         {"id": "321", "value": "ref_projet"},
         {"id": "654", "value": "url_moulinette"},
     ]
-    demarches_simplifiees_display_fields = {
+    demarche_numerique_display_fields = {
         "project_url": "ABC123",
     }
 

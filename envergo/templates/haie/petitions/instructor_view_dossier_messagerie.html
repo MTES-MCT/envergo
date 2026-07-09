@@ -32,7 +32,7 @@
 
 {% block project_content %}
 
-  <section class="ds-messages fr-my-4w">
+  <section class="dn-messages fr-my-4w">
     {% if ds_info.representative %}
       <p class="fr-hint-text">
         {% if ds_info.applicant_email %}
@@ -50,17 +50,17 @@
       </p>
 
       {% for message in ds_messages %}
-        <div class="ds-message ds-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
-          <div class="fr-mb-2w ds-message__metadata">
-            <span class="ds-message__exp">{{ message.email }}</span> –
-            <span class="ds-message__date">{{ message.createdAt|date:"D\. j F Y" }} {{ message.createdAt|time:"H\hi" }}</span>
+        <div class="dn-message dn-message--{% ds_sender_category message.email ds_sender_emails_categories %} fr-mb-3w fr-p-3w">
+          <div class="fr-mb-2w dn-message__metadata">
+            <span class="dn-message__exp">{{ message.email }}</span> –
+            <span class="dn-message__date">{{ message.createdAt|date:"D\. j F Y" }} {{ message.createdAt|time:"H\hi" }}</span>
           </div>
-          <div class="ds-message__content">{{ message.body|safe|urlize_html|linebreaks }}</div>
+          <div class="dn-message__content">{{ message.body|safe|urlize_html|linebreaks }}</div>
 
           <div class="fr-mt-2w">
             {% for pj in message.attachments %}
               <div class="fr-download">
-                <a class="fr-link ds-message__pj"
+                <a class="fr-link dn-message__pj"
                    target="_blank"
                    href="{{ pj.url }}"
                    data-sql-event-category="message"

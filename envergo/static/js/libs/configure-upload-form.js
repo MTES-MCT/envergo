@@ -17,7 +17,7 @@ window.addEventListener('load', function () {
     acceptedFiles: 'image/*,application/pdf,application/zip,application/x-zip-compressed,application/octet-stream,.zip',
     autoProcessQueue: true,
     uploadMultiple: false,
-    parallelUploads: 100,
+    parallelUploads: 1,
     addRemoveLinks: true,
     previewsContainer: previewElt,
     clickable: previewElt,

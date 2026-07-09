@@ -1,20 +1,20 @@
 {% load static hedges %}
 
-<dialog id="demarches-simplifiees-modal"
+<dialog id="demarche-numerique-modal"
         class="fr-modal"
         role="dialog"
-        aria-labelledby="demarches-simplifiees-modal-title">
+        aria-labelledby="demarche-numerique-modal-title">
   <div class="fr-container fr-container--fluid fr-container-md">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-md-6">
         <div class="fr-modal__body">
           <div class="fr-modal__header">
             <button class="fr-link--close fr-link"
-                    aria-controls="demarches-simplifiees-modal">Fermer</button>
+                    aria-controls="demarche-numerique-modal">Fermer</button>
           </div>
           <div class="fr-modal__content">
             {% if moulinette.is_multi_category %}
-              <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmation</h3>
+              <h3 id="demarche-numerique-modal-title" class="fr-modal__title">Confirmation</h3>
               <p>
                 Vous allez démarrer le dépôt de dossier portant sur la destruction des
                 {% category_hedges category=HedgeCategory.ru lowercase=True inline=True %}
@@ -30,7 +30,7 @@
                 page et suivez les instructions correspondantes.
               </p>
             {% else %}
-              <h3 id="demarches-simplifiees-modal-title" class="fr-modal__title">Confirmez le verrouillage de votre simulation</h3>
+              <h3 id="demarche-numerique-modal-title" class="fr-modal__title">Confirmez le verrouillage de votre simulation</h3>
               <p>Vous souhaitez déposer votre dossier.</p>
               <p>
                 <strong>Si vous continuez, votre simulation ne sera plus modifiable.</strong> Vous pourrez toujours la consulter.
@@ -41,25 +41,25 @@
               </p>
             {% endif %}
             <p>Souhaitez-vous continuer ?</p>
-            <form id="demarche-simplifiee-form"
+            <form id="demarche-numerique-form"
                   action="{% url 'petition_project_create' %}"
                   method="post">
               {% csrf_token %}
               <input type="hidden" name="moulinette_url" value="{{ moulinette_url }}" />
               <input type="hidden"
                      name="_category"
-                     id="demarche-simplifiee-category"
+                     id="demarche-numerique-category"
                      value="" />
-              <div id="demarches-simplifiees-modal-btns">
+              <div id="demarche-numerique-modal-btns">
                 <div>
                   <input type="button"
                          class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-arrow-left-line"
-                         aria-controls="demarches-simplifiees-modal"
+                         aria-controls="demarche-numerique-modal"
                          value="Revenir à la simulation" />
                 </div>
                 <div class="fr-ml-2w">
                   <button type="submit"
-                          class="fr-btn demarche-simplifiee-btn fr-btn--icon-right fr-icon-external-link-line">
+                          class="fr-btn demarche-numerique-btn fr-btn--icon-right fr-icon-external-link-line">
                     Poursuivre vers la demande
                   </button>
                 </div>

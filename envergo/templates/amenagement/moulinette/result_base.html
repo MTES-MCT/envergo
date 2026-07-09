@@ -1,10 +1,7 @@
-{% extends 'moulinette/base_result.html' %}
+{% extends 'moulinette/result_layout.html' %}
 
 {% load evaluations static l10n %}
 
-{% block top-bar %}{# no top bar on result pages#}{% endblock %}
-
-{% block messages %}{# messages are displayed in the result container #}{% endblock %}
 {% block result %}
   {% if config and not config.is_activated %}
     <div class="fr-alert fr-alert--info fr-alert--small fr-mb-3w">
@@ -13,7 +10,7 @@
     </div>
   {% endif %}
   <h1 class="fr-mb-5w">Simulation réglementaire</h1>
-  {% block after-title-content %}{% endblock %}
+  {% block action_buttons %}{% endblock %}
 
   <h2 class="fr-h3">Réglementations environnementales</h2>
 

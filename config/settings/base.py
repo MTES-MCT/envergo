@@ -441,24 +441,24 @@ HAIE_SINGLE_PROCEDURE_ACTIVATED = env.bool(
     "DJANGO_HAIE_SINGLE_PROCEDURE_ACTIVATED", default=False
 )
 
-DEMARCHES_SIMPLIFIEES = {
+DEMARCHE_NUMERIQUE = {
     # Documentation API de pré-remplissage :
     # https://doc.demarche.numerique.gouv.fr/pour-aller-plus-loin/api-de-preremplissage
-    "ENABLED": env("DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED", default=False),
+    "ENABLED": env("DJANGO_DEMARCHE_NUMERIQUE_ENABLED", default=False),
     "DOSSIER_BASE_URL": "https://demarche.numerique.gouv.fr",
     "PRE_FILL_API_URL": env(
-        "DJANGO_DEMARCHE_SIMPLIFIE_PRE_FILL_API_URL",
+        "DJANGO_DEMARCHE_NUMERIQUE_PRE_FILL_API_URL",
         default="https://demarche.numerique.gouv.fr/api/public/v1/",
     ),
     "GRAPHQL_API_URL": env(
-        "DJANGO_DEMARCHE_SIMPLIFIE_GRAPHQL_API_URL",
+        "DJANGO_DEMARCHE_NUMERIQUE_GRAPHQL_API_URL",
         default="https://demarche.numerique.gouv.fr/api/v2/graphql",
     ),
-    "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN", default=None),
+    "GRAPHQL_API_BEARER_TOKEN": env("DJANGO_DEMARCHE_NUMERIQUE_TOKEN", default=None),
     "DOSSIER_DOMAIN_BLACK_LIST": env.list(
         "DJANGO_DOSSIER_DOMAIN_BLACK_LIST", default=[]
     ),
-    "INSTRUCTEUR_ID": env("DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID", default=None),
+    "INSTRUCTEUR_ID": env("DJANGO_DEMARCHE_NUMERIQUE_INSTRUCTEUR_ID", default=None),
     "AUTOMATIC_SENDER_EMAIL": "contact@demarche.numerique.gouv.fr",
     "ARCHIVE_MAX_SIZE": 20 * 1024 * 1024,
 }

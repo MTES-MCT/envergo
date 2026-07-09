@@ -8,17 +8,17 @@ from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.petitions.demarches_simplifiees.models import DossierState
+from envergo.petitions.demarche_numerique.models import DossierState
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHE_NUMERIQUE_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE_DISABLED,
     PetitionProjectFactory,
 )
 
 pytestmark = pytest.mark.django_db
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
     PetitionProjectFactory()
     DCConfigHaieFactory()
@@ -36,12 +36,10 @@ def test_dossier_submission_admin_alert_ds_not_enabled(caplog):
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -132,21 +130,19 @@ def test_dossier_submission_admin_alert(
     assert mock_notify_command.call_count == 2
     assert mock_notify_model.call_count == 1
     project.refresh_from_db()
-    assert project.demarches_simplifiees_date_depot == datetime.datetime(
+    assert project.demarche_numerique_date_depot == datetime.datetime(
         2025, 1, 29, 15, 25, 3, tzinfo=datetime.timezone.utc
     )
-    assert project.demarches_simplifiees_last_sync is not None
+    assert project.demarche_numerique_last_sync is not None
     assert mock_post.call_count == 2
     assert "date=2025-01-29" in project.moulinette_url
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_ignores_expired_config(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -167,12 +163,10 @@ def test_dossier_submission_admin_alert_ignores_expired_config(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.models.notify")
 @patch("envergo.petitions.management.commands.dossier_submission_admin_alert.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_dossier_submission_admin_alert_stage_instruction(
     mock_post, mock_notify_command, mock_notify_model
 ):
@@ -208,5 +202,5 @@ def test_dossier_submission_admin_alert_stage_instruction(
     call_command("dossier_submission_admin_alert")
 
     project.refresh_from_db()
-    assert project.demarches_simplifiees_state == DossierState.en_instruction.value
+    assert project.demarche_numerique_state == DossierState.en_instruction.value
     assert project.stage == "instruction_d"

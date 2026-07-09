@@ -110,11 +110,11 @@
     var style = function (polygon) {
       return {
         color: polygon.properties.color,
-        fillColor: "transparent",
-        fillOpacity: polygon.properties.opacity,
+        fillColor: polygon.properties.fillColor,
+        fillOpacity: polygon.properties.fillOpacity,
         opacity: polygon.properties.opacity,
         className: polygon.properties.className,
-        weight: 5,
+        weight: polygon.properties.weight,
       };
     };
 
@@ -123,7 +123,14 @@
         var polygonJSON = {
           type: "Feature",
           geometry: polygon.polygon,
-          properties: { color: polygon.color, opacity: polygon.opacity, className: polygon.className }
+          properties: {
+            color: polygon.color,
+            fillColor: polygon.fillColor,
+            fillOpacity: polygon.fillOpacity,
+            opacity: polygon.opacity,
+            className: polygon.className,
+            weight: polygon.weight,
+          }
         };
         return polygonJSON;
       });

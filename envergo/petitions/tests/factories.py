@@ -7,8 +7,8 @@ from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory
 from envergo.hedges.tests.factories import HedgeDataFactory
-from envergo.petitions.demarches_simplifiees.client import (
-    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH,
+from envergo.petitions.demarche_numerique.client import (
+    DEMARCHE_NUMERIQUE_FAKE_DATA_PATH,
 )
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -20,7 +20,7 @@ from envergo.petitions.models import (
 )
 from envergo.users.tests.factories import UserFactory
 
-DEMARCHES_SIMPLIFIEES_FAKE = {
+DEMARCHE_NUMERIQUE_FAKE = {
     "ENABLED": True,
     "DOSSIER_BASE_URL": "https://www.demarche-numerique.example.com/",
     "PRE_FILL_API_URL": "https://www.demarche-numerique.example.com/api/public/v1/",
@@ -31,52 +31,51 @@ DEMARCHES_SIMPLIFIEES_FAKE = {
     "AUTOMATIC_SENDER_EMAIL": "contact@test.gouv.fr",
 }
 
-DEMARCHES_SIMPLIFIEES_FAKE_DISABLED = copy(DEMARCHES_SIMPLIFIEES_FAKE)
-DEMARCHES_SIMPLIFIEES_FAKE_DISABLED["ENABLED"] = False
+DEMARCHE_NUMERIQUE_FAKE_DISABLED = copy(DEMARCHE_NUMERIQUE_FAKE)
+DEMARCHE_NUMERIQUE_FAKE_DISABLED["ENABLED"] = False
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier.json"),
     "r",
 ) as file:
     GET_DOSSIER_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_0_messages.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_0_messages.json"),
     "r",
 ) as file:
     GET_DOSSIER_MESSAGES_0_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_send_message.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_send_message.json"),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier_error.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_error.json"),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR = json.load(file)
 
 with open(
-    Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_createupload_response.json"),
+    Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_createupload_response.json"),
     "r",
 ) as file:
     CREATEUPLOAD_FAKE_RESPONSE = json.load(file)
 
 with open(
     Path(
-        DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH
-        / "fake_dossier_send_message_attachment.json"
+        DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier_send_message_attachment.json"
     ),
     "r",
 ) as file:
     DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE = json.load(file)
 
-FILE_TEST_PATH = Path(DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
+FILE_TEST_PATH = Path(DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "Coriandrum_sativum.jpg")
 
 FILE_TEST_NOK_PATH = Path(
-    DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fichier_non_autorise.odt"
+    DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fichier_non_autorise.odt"
 )
 
 
@@ -96,11 +95,9 @@ class PetitionProjectFactory(DjangoModelFactory):
     )
     department = factory.SubFactory(DepartmentFactory)
     hedge_data = factory.SubFactory(HedgeDataFactory)
-    demarches_simplifiees_dossier_number = 21059675
-    demarches_simplifiees_prefill_url = (
-        "https://exemple.com/commencer/21059675/token?1234"
-    )
-    demarches_simplifiees_state = DOSSIER_STATES.draft
+    demarche_numerique_dossier_number = 21059675
+    demarche_numerique_prefill_url = "https://exemple.com/commencer/21059675/token?1234"
+    demarche_numerique_state = DOSSIER_STATES.draft
     status = factory.RelatedFactory(
         "envergo.petitions.tests.factories.StatusLogFactory",
         factory_related_name="petition_project",
@@ -125,8 +122,8 @@ class PetitionProject34Factory(DjangoModelFactory):
         "&haies=4406e311-d379-488f-b80e-68999a142c9d&department=34&travaux=destruction&element=haie"
     )
     hedge_data = factory.SubFactory(HedgeDataFactory)
-    demarches_simplifiees_dossier_number = 21059676
-    demarches_simplifiees_state = DOSSIER_STATES.draft
+    demarche_numerique_dossier_number = 21059676
+    demarche_numerique_state = DOSSIER_STATES.draft
     underscore_category = "ru"
 
 
