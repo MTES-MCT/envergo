@@ -1577,8 +1577,6 @@ class PetitionProjectInstructorAlternativeEdit(
                 errors,
             )
 
-        # results_by_category only keeps the categories with concerned hedges,
-        # so its keys are the categories actually present in the simulation.
         if moulinette.is_multi_category:
             hedges_by_category = moulinette.catalog["hedges_by_category"]
             request.session["activation_category_error"] = [
@@ -1600,7 +1598,6 @@ class PetitionProjectInstructorAlternativeEdit(
             project = simulation.project
             project.moulinette_url = simulation.moulinette_url
             project.hedge_data = moulinette.catalog["haies"]
-            # The dossier takes on the category of the simulation it activates
             project.category = moulinette.main_category
             project.save()
 
