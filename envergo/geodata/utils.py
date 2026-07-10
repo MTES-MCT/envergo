@@ -491,14 +491,12 @@ def fill_polygon_stats():
     This is only used manually when the need arises, for debugging purpose.
     """
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
+        cursor.execute("""
         UPDATE geodata_zone
         SET
             area = ST_Area(geometry),
             npoints = ST_NPoints(geometry::geometry);
-        """
-        )
+        """)
 
 
 def get_catchment_area(lng, lat):
@@ -661,31 +659,22 @@ WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
 def query_hedge_length(truncated_buffer, untruncated_circle):
     """Sum the geodetic length of hedges clipped to the truncated buffer.
 
-    The truncated buffer is the circle intersected with terres émergées — it
-    can be a complex polygon (thousands of vertices along coastlines or forest
-    boundaries). Only hedges inside this polygon count toward density.
+    Only hedges inside the truncated buffer (circle ∩ terres émergées) count
+    toward density. The buffer is a complex polygon; the raw circle is simple.
+    Each candidate hedge is measured by one of two paths:
 
-    A CTE pre-computes three geometries once:
-      - trunc: the truncated buffer (complex, used for clipping)
-      - circ: the raw circle (simple, used for fast containment checks)
-      - excluded: ST_Difference(circ, trunc) — sea / forest zones
+      Fast path — hedge covered by the circle and clear of the excluded
+        (sea / forest) zone: measure it whole, skipping the costly clip.
+      Slow path — hedge straddles a boundary: clip to the buffer first.
 
-    ST_MakeValid guards both ST_Difference operands: the unioned truncated
-    buffer can carry near-zero-width spikes that GEOS can't node, otherwise
-    raising a non-noded TopologyException.
+    trunc is sanitized (ST_MakeValid + ST_CollectionExtract): the buffer can
+    arrive invalid — tile-seam crack rings collapsed by trim_land's WKT
+    roundtrip (2026-07 TopologyException incident).
 
-    The WHERE clause pre-filters hedges against the simple circle (efficient
-    spatial index lookup). Then for each hedge, a CASE chooses between:
-
-      Fast path — hedge is fully inside the truncated buffer:
-        ST_CoveredBy(hedge, circ) AND NOT ST_Intersects(hedge, excluded)
-        Both tests are cheap: the circle has few vertices, and the excluded
-        zone is small so bbox pre-filtering eliminates most hedges instantly.
-        The full hedge length is measured without clipping.
-
-      Slow path — hedge crosses a boundary (coast, forest, or circle edge):
-        ST_Intersection(hedge, trunc) clips the hedge to the truncated buffer
-        and measures the remaining portion.
+    Hedges are cast to ::geometry so the clip runs in planar 4326; the bare
+    geography ST_Intersection would reproject to UTM, where the 4326-valid
+    buffer can degenerate. Length is measured on the spheroid regardless.
+    Predicates keep the geography inputs to use the GIST index.
 
     Args:
         truncated_buffer: land-trimmed polygon, or None if off-land.
@@ -697,30 +686,41 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
     if truncated_buffer is None or truncated_buffer.empty:
         return 0.0
 
-    sql = f"""
-        WITH zones AS (
+    sql = """
+        -- inputs: the sanitized truncated buffer and the raw circle.
+        WITH inputs AS (
             SELECT
-                ST_GeomFromEWKT(%(truncated)s) AS trunc,
-                ST_GeomFromEWKT(%(circle)s) AS circ,
-                ST_Difference(
-                    ST_MakeValid(ST_GeomFromEWKT(%(circle)s)),
-                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s))
-                ) AS excluded
+                ST_CollectionExtract(
+                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s)), 3) AS trunc,
+                ST_GeomFromEWKT(%(circle)s) AS circ
+        ),
+        -- zones: adds the excluded ring (circle minus buffer = sea / forest).
+        zones AS (
+            SELECT trunc, circ,
+                ST_Difference(ST_MakeValid(circ), trunc) AS excluded
+            FROM inputs
+        ),
+        -- candidates: hedges intersecting the circle, each flagged fully_inside
+        -- (covered by the circle and clear of the excluded zone).
+        candidates AS (
+            SELECT
+                l.geometry::geometry AS hedge,
+                zones.trunc,
+                ST_CoveredBy(l.geometry, zones.circ)
+                    AND NOT ST_Intersects(l.geometry, zones.excluded)
+                        AS fully_inside
+            FROM geodata_line l
+            JOIN geodata_map m ON l.map_id = m.id
+            CROSS JOIN zones
+            WHERE m.map_type = %(map_type)s
+              AND ST_Intersects(l.geometry, zones.circ)
         )
-        SELECT COALESCE(SUM(CASE
-            WHEN ST_CoveredBy(l.geometry, zones.circ)
-                 AND NOT ST_Intersects(l.geometry, zones.excluded)
-            THEN ST_LengthSpheroid(
-                l.geometry::geometry(GEOMETRY,4326), '{WGS84_SPHEROID}')
-            ELSE ST_LengthSpheroid(
-                ST_Intersection(l.geometry, zones.trunc)
-                ::geometry(GEOMETRY,4326), '{WGS84_SPHEROID}')
-        END), 0)
-        FROM geodata_line l
-        JOIN geodata_map m ON l.map_id = m.id
-        CROSS JOIN zones
-        WHERE m.map_type = %(map_type)s
-          AND ST_Intersects(l.geometry, zones.circ);
+        SELECT COALESCE(SUM(ST_LengthSpheroid(
+            CASE WHEN fully_inside THEN hedge
+                 ELSE ST_Intersection(hedge, trunc) END,
+            %(spheroid)s
+        )), 0)
+        FROM candidates;
     """
 
     with connection.cursor() as cursor:
@@ -730,6 +730,7 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                 "truncated": truncated_buffer.ewkt,
                 "circle": untruncated_circle.ewkt,
                 "map_type": MAP_TYPES.haies,
+                "spheroid": WGS84_SPHEROID,
             },
         )
         return cursor.fetchone()[0]
@@ -738,7 +739,8 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
 def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
     """Return hedge geometries clipped to the truncated buffer for display.
 
-    Uses the same CTE excluded-zone strategy as `query_hedge_length`:
+    Uses the same CTE excluded-zone strategy as `query_hedge_length` — see
+    its docstring for the trunc sanitization and the ::geometry casts:
 
       Fast path — hedge fully inside the truncated buffer (covered by the
         simple circle and not touching the excluded zone): return as-is.
@@ -750,21 +752,23 @@ def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
     """
 
     sql = """
-        WITH zones AS (
+        WITH inputs AS (
             SELECT
-                ST_GeomFromEWKT(%(circle)s) AS circ,
-                ST_GeomFromEWKT(%(truncated)s) AS trunc,
-                ST_Difference(
-                    ST_MakeValid(ST_GeomFromEWKT(%(circle)s)),
-                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s))
-                ) AS excluded
+                ST_CollectionExtract(
+                    ST_MakeValid(ST_GeomFromEWKT(%(truncated)s)), 3) AS trunc,
+                ST_GeomFromEWKT(%(circle)s) AS circ
+        ),
+        zones AS (
+            SELECT trunc, circ,
+                ST_Difference(ST_MakeValid(circ), trunc) AS excluded
+            FROM inputs
         )
         SELECT ST_AsGeoJSON(ST_CollectionExtract(ST_Collect(
             CASE
                 WHEN ST_CoveredBy(l.geometry, zones.circ)
                      AND NOT ST_Intersects(l.geometry, zones.excluded)
                 THEN l.geometry::geometry
-                ELSE ST_Intersection(l.geometry, zones.trunc)::geometry
+                ELSE ST_Intersection(l.geometry::geometry, zones.trunc)
             END
         ), 2))
         FROM geodata_line l
