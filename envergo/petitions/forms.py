@@ -372,7 +372,8 @@ def request_for_info_message():
     """Format the default text for request for information message."""
     date = three_months_from_now()
     date_fmt = date_format(date, "d F Y")
-    message = dedent(f"""
+    message = dedent(
+        f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
@@ -384,7 +385,8 @@ def request_for_info_message():
 
         Cordialement,
         L'instructeur / le service instructeur.
-    """)
+    """
+    )
     return message.strip()
 
 
