@@ -615,12 +615,16 @@ def trim_land(geom):
     before merging them (which is a costly operation).
 
     Returns:
-        - the intersection of the input geometry with the union of land zones
+        - the intersection of the input geometry with the union of land zones,
+          guaranteed valid (consumers feed it to GEOS overlays)
         - None if there is no intersection (input is entirely off-land)
     """
 
     with connection.cursor() as cursor:
         cursor.execute(
+            # EWKB, not WKT: unioning near-coincident tiles leaves crack rings
+            # whose vertices differ below text precision — a WKT roundtrip
+            # collapses them into invalid rings (2026-07 TopologyException).
             """
             WITH input_poly AS (
               SELECT
@@ -639,18 +643,22 @@ def trim_land(geom):
               FROM clipped
               WHERE NOT ST_IsEmpty(g)
             )
-            SELECT ST_AsText(ST_Intersection(u.merged, i.geom))
+            SELECT ST_AsEWKB(ST_Intersection(u.merged, i.geom))
             FROM unioned u, input_poly i;
         """,
             [geom.ewkt, geom.ewkt, MAP_TYPES.density_reference],
         )
-        wkt = cursor.fetchone()[0]
-        if wkt:
-            trimmed_geom = GEOSGeometry(wkt)
-            trimmed_geom.srid = geom.srid  # Set SRID explicitly
-        else:
-            trimmed_geom = None
-        return trimmed_geom
+        ewkb = cursor.fetchone()[0]
+
+    if ewkb is None:
+        return None
+
+    # GEOSGeometry only reads WKB from a memoryview (bytes are parsed as text)
+    trimmed_geom = GEOSGeometry(memoryview(ewkb))
+    trimmed_geom.srid = geom.srid
+    if not trimmed_geom.valid:
+        trimmed_geom = trimmed_geom.make_valid()
+    return trimmed_geom
 
 
 WGS84_SPHEROID = 'SPHEROID["WGS 84",6378137,298.257223563]'
