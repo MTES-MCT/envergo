@@ -185,37 +185,58 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
 
     def get_result_data(self, hedges):
         """Return context with data to display map"""
+        ru_hedges_to_remove = hedges.hedges_to_remove().ru().to_multilinestring()
 
         hedges_to_remove_mls_merged = hedges.hedges_to_remove().to_multilinestring()
+        polygons = []
+        context = {
+            "result_available": False,
+            "hedges_to_remove_mls": hedges_to_remove_mls_merged,
+        }
 
-        density_400 = compute_hedge_density_around_lines(
-            hedges_to_remove_mls_merged, 400, include_display_geojson=True
-        )
+        if ru_hedges_to_remove:
+            density_400 = compute_hedge_density_around_lines(
+                ru_hedges_to_remove, 400, include_display_geojson=True
+            )
 
-        buffered_400_polygon = (
-            density_400["artifacts"]["truncated_buffer_zone"]
-            or density_400["artifacts"]["buffer_zone"]
-        )
+            buffered_400_polygon = (
+                density_400["artifacts"]["truncated_buffer_zone"]
+                or density_400["artifacts"]["buffer_zone"]
+            )
 
-        polygons = [
-            {
-                "polygon": to_geojson(buffered_400_polygon),
-                "color": "#7e03a8",
-                "fillColor": "#7e03a8",
-                "fillOpacity": 0.3,
-                "weight": 2,
-                "legend": "Aire de calcul, rayon 400 m",
-                "opacity": 1.0,
-            },
-            {
-                "polygon": density_400["artifacts"]["display_geojson"],
-                "color": "#f0f921",
-                "fillColor": "transparent",
-                "fillOpacity": 0,
-                "weight": 3,
-                "legend": "Haies existantes",
-                "opacity": 1.0,
-            },
+            polygons = [
+                {
+                    "polygon": to_geojson(buffered_400_polygon),
+                    "color": "#7e03a8",
+                    "fillColor": "#7e03a8",
+                    "fillOpacity": 0.3,
+                    "weight": 2,
+                    "legend": "Aire de calcul, rayon 400 m",
+                    "opacity": 1.0,
+                },
+                {
+                    "polygon": density_400["artifacts"]["display_geojson"],
+                    "color": "#f0f921",
+                    "fillColor": "transparent",
+                    "fillOpacity": 0,
+                    "weight": 3,
+                    "legend": "Haies existantes",
+                    "opacity": 1.0,
+                },
+            ]
+            context.update(
+                {
+                    "result_available": True,
+                    "length_400": density_400["artifacts"]["length"],
+                    "area_400_ha": density_400["artifacts"]["area_ha"],
+                    "truncated_buffer_zone_400": density_400["artifacts"][
+                        "truncated_buffer_zone"
+                    ],
+                    "density_400": density_400["density"],
+                }
+            )
+
+        polygons.append(
             {
                 "polygon": to_geojson(hedges_to_remove_mls_merged),
                 "color": "red",
@@ -225,19 +246,9 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "className": "hedge to-remove",
                 "legend": "Linéaires à détruire",
                 "opacity": 1.0,
-            },
-        ]
-        context = {
-            "result_available": True,
-            "hedges_to_remove_mls": hedges_to_remove_mls_merged,
-            "polygons": json.dumps(polygons),
-            "length_400": density_400["artifacts"]["length"],
-            "area_400_ha": density_400["artifacts"]["area_ha"],
-            "truncated_buffer_zone_400": density_400["artifacts"][
-                "truncated_buffer_zone"
-            ],
-            "density_400": density_400["density"],
-        }
+            }
+        )
+        context["polygons"] = polygons
         return context
 
 

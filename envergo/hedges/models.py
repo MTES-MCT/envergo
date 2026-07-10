@@ -597,65 +597,102 @@ class HedgeData(models.Model):
         """Return True if at least one hedge to remove is containing old tree."""
         return any(h.vieil_arbre for h in self.hedges_to_remove())
 
-    def compute_density_around_points_with_artifacts(self):
-        """Compute the density of hedges around the hedges to remove at 200m and 5000m."""
+    def compute_density_around_points_with_artifacts(self, hedges):
+        """Compute the density of hedges around the given hedges at 200m and 5000m."""
 
-        centroid_shapely = self.hedges_to_remove().centroid
+        centroid_shapely = hedges.centroid
         centroid_geos = GEOSGeometry(centroid_shapely.wkt, srid=EPSG_WGS84)
         bundle = compute_hedge_densities_around_point(centroid_geos, radii=[200, 5000])
 
         return bundle[200], bundle[5000], centroid_geos
 
-    def compute_density_around_lines_with_artifacts(self):
-        """Compute the density of hedges around the hedges to remove in 400m buffer."""
+    def compute_density_around_lines_with_artifacts(self, hedges):
+        """Compute the density of hedges around the given hedges in 400m buffer."""
 
-        hedges_geom = self.hedges_to_remove().to_multilinestring()
+        hedges_geom = hedges.to_multilinestring()
         return compute_hedge_density_around_lines(hedges_geom, 400)
 
-    @property
-    def density_around_centroid(self):
-        """Lazily compute and cache centroid-based density (200m + 5000m circles)."""
+    @staticmethod
+    def density_cache_key(prefix: str, hedges) -> str:
+        """Build the `_density` cache key for a given hedge subset."""
+        hedge_ids = "-".join(sorted(h.id for h in hedges))
+        return f"{prefix}_{hedge_ids}"
 
-        if not self._density or "around_centroid" not in self._density:
-            density_200, density_5000, _ = (
-                self.compute_density_around_points_with_artifacts()
-            )
-            if not self._density:
-                self._density = {}
-            self._density["around_centroid"] = {
-                "length_200": density_200["artifacts"]["length"],
-                "length_5000": density_5000["artifacts"]["length"],
-                "area_200_ha": density_200["artifacts"]["area_ha"],
-                "area_5000_ha": density_5000["artifacts"]["area_ha"],
-                "density_200": density_200["density"],
-                "density_5000": density_5000["density"],
+    @classmethod
+    def around_centroid_cache_key(cls, hedges) -> str:
+        return cls.density_cache_key("around_centroid", hedges)
+
+    @classmethod
+    def around_lines_cache_key(cls, hedges) -> str:
+        return cls.density_cache_key("around_lines", hedges)
+
+    def density_around_centroid(self, hedges) -> dict:
+        """Lazily compute and cache the centroid-based density (200m + 5000m
+        circles) around the given hedges.
+
+        Callers pass the hedge subset they evaluate (typically the evaluator's
+        category-filtered hedges to remove); the cache is keyed by the hedge
+        ids so each distinct subset gets its own entry.
+        Returns a dict of Nones (uncached, no computation) when the subset is
+        empty.
+        """
+        key = self.around_centroid_cache_key(hedges)
+        if self._density and key in self._density:
+            return self._density[key]
+
+        if not hedges:
+            return {
+                "length_200": None,
+                "length_5000": None,
+                "area_200_ha": None,
+                "area_5000_ha": None,
+                "density_200": None,
+                "density_5000": None,
             }
-            self.save()
-        return self._density["around_centroid"]
 
-    @property
-    def density_around_lines(self):
-        """Lazily compute and cache line-buffer density (400m buffer)."""
-
-        if not self._density or "around_lines" not in self._density:
-            density_400_buffer = self.compute_density_around_lines_with_artifacts()
-            if not self._density:
-                self._density = {}
-            self._density["around_lines"] = {
-                "length_400": density_400_buffer["artifacts"]["length"],
-                "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
-                "density_400": density_400_buffer["density"],
-            }
-            self.save()
-        return self._density["around_lines"]
-
-    @property
-    def density(self):
-        """Legacy method, deprecated."""
-
-        raise AttributeError(
-            "Use density_around_centroid or density_around_lines instead of density."
+        density_200, density_5000, _ = (
+            self.compute_density_around_points_with_artifacts(hedges)
         )
+        if not self._density:
+            self._density = {}
+        self._density[key] = {
+            "length_200": density_200["artifacts"]["length"],
+            "length_5000": density_5000["artifacts"]["length"],
+            "area_200_ha": density_200["artifacts"]["area_ha"],
+            "area_5000_ha": density_5000["artifacts"]["area_ha"],
+            "density_200": density_200["density"],
+            "density_5000": density_5000["density"],
+        }
+        self.save()
+        return self._density[key]
+
+    def density_around_lines(self, hedges) -> dict:
+        """Lazily compute and cache the 400m line-buffer density around the
+        given hedges.
+
+        Callers pass the hedge subset they evaluate (typically the evaluator's
+        category-filtered hedges to remove); the cache is keyed by the hedge
+        ids so each distinct subset gets its own entry.
+        Returns a dict of Nones (uncached, no computation) when the subset is
+        empty.
+        """
+        key = self.around_lines_cache_key(hedges)
+        if self._density and key in self._density:
+            return self._density[key]
+
+        if not hedges:
+            return {"length_400": None, "area_400_ha": None, "density_400": None}
+
+        density_400_buffer = self.compute_density_around_lines_with_artifacts(hedges)
+        if not self._density:
+            self._density = {}
+        self._density[key] = {
+            "length_400": density_400_buffer["artifacts"]["length"],
+            "area_400_ha": density_400_buffer["artifacts"]["area_ha"],
+            "density_400": density_400_buffer["density"],
+        }
+        self.save()
+        return self._density[key]
 
     def departments_lengths(self):
         """Return the list of departments intersected by the hedges.
