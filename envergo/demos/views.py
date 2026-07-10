@@ -248,7 +248,7 @@ class HedgeDensityBuffer(LatLngDemoMixin, FormView):
                 "opacity": 1.0,
             }
         )
-        context["polygons"] = polygons
+        context["polygons"] = json.dumps(polygons)
         return context
 
 
