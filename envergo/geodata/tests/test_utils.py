@@ -43,8 +43,8 @@ def hedge_density_fixture():
 EXPECTED_AROUND_POINT = {
     200: {"density": 0.0, "length": 0.0, "area_ha": 12.485780609039368},
     400: {
-        "density": 20.041485812958307,
-        "length": 1000.9343797592853,
+        "density": 20.04085317702949,
+        "length": 1000.902783945812,
         "area_ha": 49.943122436167236,
     },
     5000: {
@@ -180,9 +180,9 @@ def test_query_hedge_length_excludes_forest_portion():
     ]
     truncated = Polygon(outer, forest, srid=4326)
 
-    # Expected: only the western half (3.50→3.55) is counted.
-    # Pinned from ST_LengthSpheroid on that segment.
-    expected_length = 3635.0917235660813
+    # Only the western half (3.50→3.55) counts: exactly ST_LengthSpheroid
+    # on that segment.
+    expected_length = 3635.0942003379914
 
     actual_length = query_hedge_length(truncated, circle)
     assert actual_length == pytest.approx(expected_length, **APPROX)
@@ -245,6 +245,70 @@ def test_query_hedges_display_geojson_handles_non_noded_difference(
 
     # Returns without raising; result may be None when nothing intersects.
     query_hedges_display_geojson(truncated, circle)
+
+
+# Regression fixture for the 2026-07 staging TopologyException ("Input geom 1
+# is invalid: Too few points in geometry component"). trim_land's union of
+# near-coincident tiles leaves micrometer-wide crack rings whose vertices
+# collapse in the WKT roundtrip, so the buffer reaches query_hedge_length
+# invalid. The hole is a real crack ring from the incident, in a simple shell.
+CRACK_TRUNCATED = (
+    "SRID=4326;POLYGON ((-0.90 48.95, -0.79 48.95, -0.79 49.06, "
+    "-0.90 49.06, -0.90 48.95), "
+    "(-0.873686783197342 48.97633255528753, "
+    "-0.873686783197342 48.97633255528753, "
+    "-0.873686783214866 48.9763325555225, "
+    "-0.873686783197342 48.97633255528753))"
+)
+CRACK_CIRCLE = (
+    "SRID=4326;POLYGON ((-0.90 48.95, -0.79 48.95, -0.79 49.06, "
+    "-0.90 49.06, -0.90 48.95))"
+)
+
+# Crosses the circle's west edge at the crack's latitude → forces the
+# slow-path ST_Intersection against the invalid buffer (the crash path).
+CRACK_HEDGE = MultiLineString(
+    [LineString([(-0.92, 48.97633255528753), (-0.85, 48.97633255528753)])]
+)
+
+# ST_LengthSpheroid of the in-buffer portion (-0.90 → -0.85). Only the
+# planar-4326 clip yields this exactly; the geography (UTM) overload drifts
+# ~5 cm on recent GEOS and raises the production error on older GEOS.
+CRACK_EXPECTED_LENGTH = 3660.3227769668383
+
+
+@pytest.fixture
+def crack_geometries():
+    """Return (truncated_buffer, untruncated_circle) from the 2026-07 incident."""
+    truncated = GEOSGeometry(CRACK_TRUNCATED)
+    circle = GEOSGeometry(CRACK_CIRCLE)
+    # The fixture is only meaningful while the buffer stays invalid.
+    assert not truncated.valid
+    return truncated, circle
+
+
+def test_query_hedge_length_handles_collapsed_crack_ring(crack_geometries):
+    """No TopologyException on the invalid buffer, and planar-4326 clip
+    semantics (the geography/UTM detour returned 3660.374)."""
+    truncated, circle = crack_geometries
+    LineFactory(geometry=CRACK_HEDGE)
+
+    length = query_hedge_length(truncated, circle)
+
+    assert length == pytest.approx(CRACK_EXPECTED_LENGTH, **APPROX)
+
+
+def test_query_hedges_display_geojson_handles_collapsed_crack_ring(
+    crack_geometries,
+):
+    """Same collapsed-ring flaw, same fix, in the display query."""
+    truncated, circle = crack_geometries
+    LineFactory(geometry=CRACK_HEDGE)
+
+    display = query_hedges_display_geojson(truncated, circle)
+
+    assert display is not None
+    assert display["type"] == "MultiLineString"
 
 
 @pytest.mark.parametrize(
