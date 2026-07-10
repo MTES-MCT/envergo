@@ -33,6 +33,10 @@ class BaseMoulinetteForm(forms.Form):
             for error in date_errors.as_data():
                 # switch date error to non_field_errors to ensure it is displayed in form even if the field is hidden
                 self.add_error(None, error)
+        if data.get("date") is None:
+            # An empty optional date must not end up in the result url as
+            # "date=None", which would invalidate the form on the next request
+            data.pop("date", None)
         return data
 
 
