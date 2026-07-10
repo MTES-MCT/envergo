@@ -19,7 +19,7 @@ def date_depot_on_alternative_simulations(apps, schema_editor):
     PetitionProject = apps.get_model("petitions", "PetitionProject")
     Simulation = apps.get_model("petitions", "Simulation")
     qs = (PetitionProject.objects.prefetch_related('simulations')
-          .exclude(demarches_simplifiees_state__in=['draft', 'prefilled']).all())
+          .exclude(demarche_numerique_state__in=['draft', 'prefilled']).all())
     total = qs.count()
     batch_size = 1000
     i = 0
@@ -31,14 +31,14 @@ def date_depot_on_alternative_simulations(apps, schema_editor):
             for model in models:
                 # add date in the url or overwrite it if there is already one
                 model.moulinette_url = update_qs(
-                    model.moulinette_url, {"date": model.demarches_simplifiees_date_depot.date().isoformat()}
+                    model.moulinette_url, {"date": model.demarche_numerique_date_depot.date().isoformat()}
                 )
 
                 simulations = list(model.simulations.all())
                 for simulation in simulations:
-                    simulation.moulinette_url = update_qs(simulation.moulinette_url, {"date": model.demarches_simplifiees_date_depot.date().isoformat()})
+                    simulation.moulinette_url = update_qs(simulation.moulinette_url, {"date": model.demarche_numerique_date_depot.date().isoformat()})
                     if simulation.is_initial:
-                        simulation.created_at = model.demarches_simplifiees_date_depot
+                        simulation.created_at = model.demarche_numerique_date_depot
 
                 simulations_to_update.extend(simulations)
                 to_update.append(model)
