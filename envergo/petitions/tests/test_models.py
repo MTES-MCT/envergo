@@ -202,9 +202,7 @@ class TestResultSnapshot:
         """All simulations get the date param added to their moulinette_url on first submission."""
         SiteFactory(domain="testserver", name="testserver")
         DCConfigHaieFactory()
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         alternative = SimulationFactory(project=project, comment="Alternative")
 
         fake_dossier = {
@@ -215,7 +213,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         alternative.refresh_from_db()
         assert "date=2025-01-29" in alternative.moulinette_url
