@@ -18,7 +18,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
-from envergo.petitions.demarches_simplifiees.models import Dossier, DossierState
+from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
@@ -32,16 +32,16 @@ from envergo.petitions.regulations.ep import (
 )
 from envergo.petitions.services import (
     compute_instructor_informations_ds,
-    get_context_from_ds,
-    get_demarches_simplifiees_dossier,
+    get_context_from_dn,
+    get_demarche_numerique_dossier,
     get_messages_and_senders_from_ds,
     send_message_dossier_ds,
-    update_demarches_simplifiees_status,
+    update_demarche_numerique_status,
 )
 from envergo.petitions.tests.factories import (
     CREATEUPLOAD_FAKE_RESPONSE,
-    DEMARCHES_SIMPLIFIEES_FAKE,
-    DEMARCHES_SIMPLIFIEES_FAKE_DISABLED,
+    DEMARCHE_NUMERIQUE_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE_DISABLED,
     DOSSIER_SEND_MESSAGE_ATTACHMENT_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE,
     DOSSIER_SEND_MESSAGE_FAKE_RESPONSE_ERROR,
@@ -54,17 +54,15 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
-def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, site):
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, site):
     """Test fetch project details from Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
+        demarche_numerique_display_fields={
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
             "organization": "Q2hhbXAtNDcyOTE3MQ==",
@@ -74,13 +72,13 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     petition_project = PetitionProjectFactory()
 
     # WHEN I fetch it from « Démarche numérique » for the first time
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
     # THEN the dossier is returned and an event is created
     assert dossier is not None
     assert Event.objects.get(category="demande", event="depot", session_key=SESSION_KEY)
 
     # AND the project details are correctly populated
-    project_details = get_context_from_ds(petition_project)
+    project_details = get_context_from_dn(petition_project)
 
     assert project_details["ds_info"]["city"] == "Laon (02000)"
     assert project_details["ds_info"]["pacage"] == "123456789"
@@ -91,23 +89,23 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     assert project_details["ds_info"]["representative"] == "HOPPER Grace"
 
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_date_depot == datetime.datetime(
+    assert petition_project.demarche_numerique_date_depot == datetime.datetime(
         2025, 3, 21, 10, 8, 34, tzinfo=datetime.timezone.utc
     )
-    assert petition_project.demarches_simplifiees_last_sync is not None
+    assert petition_project.demarche_numerique_last_sync is not None
 
     # WHEN I fetch it again less than one hour later
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
     # THEN the same dossier is returned from cache, and the « Démarche numérique » Api is not called again
     assert dossier is not None
     mock_post.assert_called_once()
 
     # WHEN I fetch it again more than one hour later
-    petition_project.demarches_simplifiees_last_sync = datetime.datetime.now(
+    petition_project.demarche_numerique_last_sync = datetime.datetime.now(
         datetime.timezone.utc
     ) - datetime.timedelta(hours=2)
     petition_project.save()
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
     # THEN the cache is not used, and the « Démarche numérique » Api called
     assert dossier is not None
     assert mock_post.call_count == 2
@@ -123,7 +121,7 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
     )
 
     # WHEN I synchronize it with « Démarche numérique » for the first time
-    get_demarches_simplifiees_dossier(petition_project)
+    get_demarche_numerique_dossier(petition_project)
 
     # THEN an event is created with the same session key as the creation event
     assert Event.objects.get(
@@ -133,14 +131,12 @@ def test_fetch_project_details_from_demarches_simplifiees(mock_post, haie_user, 
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-def test_fetch_project_details_from_demarches_simplifiees_not_enabled(
-    caplog, haie_user
-):
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
+def test_fetch_project_details_from_demarche_numerique_not_enabled(caplog, haie_user):
     petition_project = PetitionProjectFactory()
     DCConfigHaieFactory()
 
-    details = get_demarches_simplifiees_dossier(petition_project)
+    details = get_demarche_numerique_dossier(petition_project)
 
     assert (
         len(
@@ -164,7 +160,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     petition_project = PetitionProjectFactory()
 
     DCConfigHaieFactory()
-    get_context_from_ds(petition_project)
+    get_context_from_dn(petition_project)
 
     args, kwargs = mock_notify.call_args
     assert (
@@ -176,10 +172,10 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
     mock_notify.assert_called_once()
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.demarches_simplifiees.client.notify")
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.notify")
 @patch("gql.client.Client.execute")
-def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_error(
+def test_fetch_project_details_from_demarche_numerique_should_notify_API_error(
     mock_post, mock_notify, haie_user
 ):
     mock_post.side_effect = TransportQueryError(
@@ -189,7 +185,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     petition_project = PetitionProjectFactory()
     DCConfigHaieFactory()
 
-    details = get_demarches_simplifiees_dossier(petition_project)
+    details = get_demarche_numerique_dossier(petition_project)
 
     assert details is None
 
@@ -203,19 +199,17 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_API_erro
     mock_notify.assert_called_once()
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch("envergo.petitions.demarches_simplifiees.client.notify")
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
-def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpected_response(
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.notify")
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_fetch_project_details_from_demarche_numerique_should_notify_unexpected_response(
     mock_post, mock_notify, haie_user
 ):
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
     petition_project = PetitionProjectFactory()
     DCConfigHaieFactory()
 
-    details = get_demarches_simplifiees_dossier(petition_project)
+    details = get_demarche_numerique_dossier(petition_project)
 
     assert details is None
 
@@ -229,7 +223,7 @@ def test_fetch_project_details_from_demarches_simplifiees_should_notify_unexpect
     mock_notify.assert_called_once()
 
 
-@patch("envergo.petitions.services.get_demarches_simplifiees_dossier")
+@patch("envergo.petitions.services.get_demarche_numerique_dossier")
 def test_compute_instructor_information(mock_get_dossier):
     """Test compute instructor information from Démarche numérique dossier data"""
     mock_get_dossier.return_value = Dossier.from_dict(
@@ -853,11 +847,9 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("gql.Client.execute")
-def test_get_message_project_via_demarches_simplifiees(
-    mock_gql_execute, haie_user, site
-):
+def test_get_message_project_via_demarche_numerique(mock_gql_execute, haie_user, site):
     """Test send message for project via Démarche numérique"""
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
@@ -867,7 +859,7 @@ def test_get_message_project_via_demarches_simplifiees(
     petition_project = PetitionProjectFactory()
 
     # Fetch project from « Démarche numérique » to create it
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I get messages for this dossier
@@ -882,11 +874,9 @@ def test_get_message_project_via_demarches_simplifiees(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees(
-    mock_gql_execute, haie_user, site
-):
+def test_send_message_project_via_demarche_numerique(mock_gql_execute, haie_user, site):
     """Test send message for project via Démarche numérique"""
 
     DCConfigHaieFactory()
@@ -895,7 +885,7 @@ def test_send_message_project_via_demarches_simplifiees(
 
     # Fetch project from « Démarche numérique » to create it
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I send message for this dossier
@@ -921,10 +911,10 @@ def test_send_message_project_via_demarches_simplifiees(
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.sessions.Session.request")
 @patch("gql.Client.execute")
-def test_send_message_project_via_demarches_simplifiees_with_attachments(
+def test_send_message_project_via_demarches_numerique_with_attachments(
     mock_gql_execute, mock_request_put, haie_user, site
 ):
     """Test send message for project via Démarche numérique"""
@@ -935,7 +925,7 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
 
     # Fetch project from « Démarche numérique » to create it
     mock_gql_execute.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
-    dossier = get_demarches_simplifiees_dossier(petition_project)
+    dossier = get_demarche_numerique_dossier(petition_project)
     assert dossier.id == "RG9zc2llci0yMzE3ODQ0Mw=="
 
     # WHEN I send message for this dossier with attachment
@@ -950,6 +940,11 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
     result = send_message_dossier_ds(
         petition_project, message_body, attachment_file=attachment
     )
+
+    # The client must not close the borrowed attachment: the closing flow
+    # reuses it afterwards (saved to storage), and closing it here breaks that
+    # save on object-storage backends ("read of closed file").
+    assert not attachment.closed
 
     # THEN messages has this new message
     assert result == {
@@ -970,46 +965,45 @@ def test_send_message_project_via_demarches_simplifiees_with_attachments(
     }
 
 
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE_DISABLED)
-def test_update_demarches_simplifiees_state():
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
+def test_update_demarches_numerique_state():
     # GIVEN a petition project in "en construction" state
     petition_project = PetitionProjectFactory(
-        demarches_simplifiees_state="en_construction"
+        demarche_numerique_state="en_construction"
     )
 
     # WHEN I update its status to "en instruction"
-    update_demarches_simplifiees_status(
+    update_demarche_numerique_status(
         petition_project, DossierState.en_instruction.value
     )
 
     # THEN the status is updated
     petition_project.refresh_from_db()
     assert (
-        petition_project.demarches_simplifiees_state
-        == DossierState.en_instruction.value
+        petition_project.demarche_numerique_state == DossierState.en_instruction.value
     )
     assert petition_project.prefetched_dossier.state == DossierState.en_instruction
 
     # WHEN I update its status to "Accepté"
-    update_demarches_simplifiees_status(petition_project, DossierState.accepte.value)
+    update_demarche_numerique_status(petition_project, DossierState.accepte.value)
 
     # THEN the status is updated
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_state == DossierState.accepte.value
+    assert petition_project.demarche_numerique_state == DossierState.accepte.value
     assert petition_project.prefetched_dossier.state == DossierState.accepte
 
     # WHEN I update its status to "Refusé"
-    update_demarches_simplifiees_status(petition_project, DossierState.refuse.value)
+    update_demarche_numerique_status(petition_project, DossierState.refuse.value)
 
     # THEN the status is updated
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_state == DossierState.refuse.value
+    assert petition_project.demarche_numerique_state == DossierState.refuse.value
     assert petition_project.prefetched_dossier.state == DossierState.refuse
 
     # WHEN I update its status to "Classé sans suite"
-    update_demarches_simplifiees_status(petition_project, DossierState.sans_suite.value)
+    update_demarche_numerique_status(petition_project, DossierState.sans_suite.value)
 
     # THEN the status is updated
     petition_project.refresh_from_db()
-    assert petition_project.demarches_simplifiees_state == DossierState.sans_suite.value
+    assert petition_project.demarche_numerique_state == DossierState.sans_suite.value
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite

@@ -126,7 +126,7 @@ class Civilite(Enum):
 class ConnectionUsager(Enum):
     deleted = "deleted"
     france_connect = "france_connect"
-    password = "password"
+    password = "password"  # pragma: allowlist secret
 
 
 class CorrectionReason(Enum):

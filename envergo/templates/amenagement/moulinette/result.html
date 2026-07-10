@@ -1,4 +1,4 @@
-{% extends 'moulinette/result.html' %}
+{% extends 'amenagement/moulinette/result_base.html' %}
 
 {% load utils %}
 
@@ -43,7 +43,7 @@
   {% include 'evaluations/_specifications.html' with params=moulinette.raw_data address=address coords=coords %}
 {% endblock %}
 
-{% block after-title-content %}
+{% block action_buttons %}
   <ul class="fr-btns-group fr-btns-group--inline fr-btns-group--icon-left fr-btns-group--center hide-print">
     <li>{% include '_share_url_btn.html' %}</li>
     <li>

@@ -508,7 +508,7 @@ class MoulinetteResultMixin:
         if moulinette:
             context["base_result"] = moulinette.get_result_template()
         else:
-            context["base_result"] = "moulinette/base_result.html"
+            context["base_result"] = "moulinette/result_layout.html"
 
         if moulinette and is_debug:
             debug_context_data = moulinette.get_debug_context()
@@ -621,6 +621,19 @@ class MoulinetteHaieResult(
             context["HedgeCategory"] = HedgeCategory
             context["CityHallSubmission"] = CityHallSubmission
             context["AaL3503Handling"] = AaL3503Handling
+
+            main_department = hedge_data.main_department()
+            if (
+                main_department
+                and ConfigHaie.objects.valid_at(moulinette.date)
+                .filter(department=main_department, is_activated=True)
+                .exists()
+            ):
+                form_url = self.request.build_absolute_uri(reverse("moulinette_form"))
+                form_url = update_qs(form_url, self.request.GET)
+                context["main_department_simulation_url"] = update_qs(
+                    form_url, {"department": main_department.department}
+                )
 
         return context
 

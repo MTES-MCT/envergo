@@ -26,7 +26,7 @@ from envergo.hedges.models import HedgeCategory, HedgeData
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Regulation
 from envergo.moulinette.utils import MoulinetteUrl
-from envergo.petitions.demarches_simplifiees.models import Dossier
+from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.users.models import User
 from envergo.utils.mattermost import notify
 from envergo.utils.models import ResultSnapshotBase
@@ -93,6 +93,18 @@ def dn_archive_file_format(instance, filename):
     return f"dn_archives/{instance.reference}_{secret}{extension}"
 
 
+def prefectural_order_file_format(instance, filename):
+    """Build the upload path for a prefectural order file.
+
+    The random secret makes the public url impossible to guess, since the
+    file is stored on a public-read bucket. `instance` is a StatusLog.
+    """
+    _, extension = splitext(filename)
+    secret = secrets.token_urlsafe(16)
+    reference = instance.petition_project.reference
+    return f"arrete_prefectoral/{reference}_{secret}{extension}"
+
+
 class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     """A petition project by a project owner.
 
@@ -140,45 +152,48 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         blank=True,
     )
 
-    demarches_simplifiees_dossier_number = models.IntegerField(
-        help_text=_("Dossier number on demarches-simplifiees.fr"),
+    demarche_numerique_dossier_number = models.IntegerField(
+        help_text=_("Dossier number on « Démarche numérique »"),
         blank=True,
         null=True,
         db_index=True,
     )
 
-    demarches_simplifiees_dossier_id = models.CharField(
-        help_text=_("Dossier ID on demarches-simplifiees.fr"), blank=True, null=True
+    demarche_numerique_dossier_id = models.CharField(
+        help_text=_("Dossier ID on « Démarche numérique »"), blank=True, null=True
     )
 
-    demarches_simplifiees_prefill_url = models.URLField(
+    demarche_numerique_prefill_url = models.URLField(
         help_text=_(
-            "Prefill dossier url on demarches-simplifiees.fr, used only when dossier is draft"
+            "Prefill dossier url on « Démarche numérique », used only when dossier is draft"
         ),
         blank=True,
         null=True,
     )
 
-    demarches_simplifiees_state = models.CharField(
-        _("State of the dossier on demarches-simplifiees.fr"),
+    demarche_numerique_state = models.CharField(
+        _("State of the dossier on « Démarche numérique »"),
         max_length=20,
         choices=DOSSIER_STATES,
         default=DOSSIER_STATES.draft,
         db_index=True,
     )
 
-    demarches_simplifiees_date_depot = models.DateTimeField(
-        "Date de dépôt dans Démarches Simplifiées", null=True, blank=True, db_index=True
+    demarche_numerique_date_depot = models.DateTimeField(
+        "Date de dépôt dans « Démarche numérique »",
+        null=True,
+        blank=True,
+        db_index=True,
     )
 
-    demarches_simplifiees_raw_dossier = models.JSONField(
-        "Données brutes du dossier provenant de Démarches Simplifiées",
+    demarche_numerique_raw_dossier = models.JSONField(
+        "Données brutes du dossier provenant de demarche.numerique.gouv.fr",
         default=dict,
         blank=True,
     )
 
-    demarches_simplifiees_last_sync = models.DateTimeField(
-        "Date de la dernière synchronisation avec Démarches Simplifiées",
+    demarche_numerique_last_sync = models.DateTimeField(
+        "Date de la dernière synchronisation avec demarche.numerique.gouv.fr",
         null=True,
         blank=True,
     )
@@ -254,8 +269,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         indexes = [
             models.Index(
                 fields=[
-                    "demarches_simplifiees_state",
-                    "demarches_simplifiees_date_depot",
+                    "demarche_numerique_state",
+                    "demarche_numerique_date_depot",
                 ],
                 name="pp_state_datedepot_idx",
             ),
@@ -288,6 +303,19 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     def is_closed(self):
         return self.stage == STAGES.closed
 
+    @property
+    def prefectural_order_log(self):
+        """Get the latest status log carrying a prefectural order, if any.
+
+        Each closing with an uploaded order creates a new log entry, so the
+        latest one is the order currently in force.
+        """
+        return (
+            self.status_history.exclude(prefectural_order="")
+            .order_by("-created_at")
+            .first()
+        )
+
     @cached_property
     def latest_suspension(self):
         """Get the latest suspension log."""
@@ -311,11 +339,11 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     @property
     def is_dossier_submitted(self):
         return (
-            self.demarches_simplifiees_state != DOSSIER_STATES.draft
-            and self.demarches_simplifiees_state != DOSSIER_STATES.prefilled
+            self.demarche_numerique_state != DOSSIER_STATES.draft
+            and self.demarche_numerique_state != DOSSIER_STATES.prefilled
         )
 
-    def synchronize_with_demarches_simplifiees(self, dossier: dict):
+    def synchronize_with_demarche_numerique(self, dossier: dict):
         """Update the petition project with the latest data from Démarche numérique
 
         a notification is sent to the mattermost channel when the dossier is submitted for the first time
@@ -339,7 +367,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 else "Numéro inconnu"
             )
 
-            return self.get_demarches_simplifiees_instructor_url(demarche_number)
+            return self.get_demarche_numerique_instructor_url(demarche_number)
 
         def get_latest_petitioner_msg():
             parsed_dossier = Dossier.from_dict(dossier)
@@ -396,7 +424,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 "haie/petitions/mattermost_dossier_submission_notif.txt",
                 context={
                     "department": dict(DEPARTMENT_CHOICES).get(department, department),
-                    "dossier_number": self.demarches_simplifiees_dossier_number,
+                    "dossier_number": self.demarche_numerique_dossier_number,
                     "created_at": self.created_at.date(),
                     "instructor_url": f"https://{haie_site.domain}{get_instructor_url()}",
                     "admin_url": f"https://{haie_site.domain}{get_admin_url()}",
@@ -439,8 +467,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
 
         elif (
-            self.demarches_simplifiees_state
-            and dossier["state"] != self.demarches_simplifiees_state
+            self.demarche_numerique_state
+            and dossier["state"] != self.demarche_numerique_state
         ):
             # « Démarche numérique » state have been changed outside of GUH. We are trying to prevent this. Notify admin
             department = extract_param_from_url(self.moulinette_url, "department")
@@ -457,22 +485,20 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
             notify(message_body, "haie")
 
-        self.demarches_simplifiees_dossier_id = dossier["id"]
-        self.demarches_simplifiees_state = dossier["state"]
+        self.demarche_numerique_dossier_id = dossier["id"]
+        self.demarche_numerique_state = dossier["state"]
 
         if "dateDepot" in dossier and dossier["dateDepot"]:
-            self.demarches_simplifiees_date_depot = parser.isoparse(
-                dossier["dateDepot"]
-            )
+            self.demarche_numerique_date_depot = parser.isoparse(dossier["dateDepot"])
 
-        self.demarches_simplifiees_raw_dossier = dossier
+        self.demarche_numerique_raw_dossier = dossier
         if hasattr(self, "prefetched_dossier"):
             del self.prefetched_dossier
 
         if "messages" in dossier:
             self.latest_petitioner_msg = get_latest_petitioner_msg()
 
-        self.demarches_simplifiees_last_sync = timezone.now()
+        self.demarche_numerique_last_sync = timezone.now()
         self.save()
 
     def get_moulinette(self):
@@ -538,32 +564,32 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         )
 
     @property
-    def demarches_simplifiees_petitioner_url(self) -> str | None:
+    def demarche_numerique_petitioner_url(self) -> str | None:
         """
         Returns the URL of the dossier for the petitioner.
         """
-        if self.demarches_simplifiees_dossier_number:
+        if self.demarche_numerique_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/dossiers/"
-                f"{self.demarches_simplifiees_dossier_number}/"
+                f"{settings.DEMARCHE_NUMERIQUE['DOSSIER_BASE_URL']}/dossiers/"
+                f"{self.demarche_numerique_dossier_number}/"
             )
         return None
 
-    def get_demarches_simplifiees_instructor_url(self, demarche_number) -> str | None:
+    def get_demarche_numerique_instructor_url(self, demarche_number) -> str | None:
         """
         Returns the URL of the dossier for the instructor.
         """
-        if self.demarches_simplifiees_dossier_number:
+        if self.demarche_numerique_dossier_number:
             return (
-                f"{settings.DEMARCHES_SIMPLIFIEES["DOSSIER_BASE_URL"]}/procedures/{demarche_number}/dossiers/"
-                f"{self.demarches_simplifiees_dossier_number}/"
+                f"{settings.DEMARCHE_NUMERIQUE['DOSSIER_BASE_URL']}/procedures/{demarche_number}/dossiers/"
+                f"{self.demarche_numerique_dossier_number}/"
             )
         return None
 
     @cached_property
     def prefetched_dossier(self) -> Dossier | None:
         """Returns the dossier from Démarche numérique if it has been fetched before."""
-        dossier_as_dict = self.demarches_simplifiees_raw_dossier
+        dossier_as_dict = self.demarche_numerique_raw_dossier
         return Dossier.from_dict(dossier_as_dict) if dossier_as_dict else None
 
     @property
@@ -810,6 +836,16 @@ class StatusLog(models.Model):
         help_text="Par défaut, la date du jour. Il est possible de choisir une date passée si le changement est "
         "rétroactif.",
         default=timezone.now,
+    )
+    prefectural_order = models.FileField(
+        "Document de décision",
+        upload_to=prefectural_order_file_format,
+        blank=True,
+    )
+    applicant_message = models.TextField(
+        "Message au demandeur",
+        blank=True,
+        default="",
     )
     due_date = models.DateField(
         "Date de prochaine échéance",

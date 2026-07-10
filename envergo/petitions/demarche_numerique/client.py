@@ -10,18 +10,18 @@ from textwrap import dedent
 
 import requests
 from django.conf import settings
-from django.core.files.uploadedfile import UploadedFile
+from django.core.files import File
 from django.template.loader import render_to_string
 from gql import Client, gql
 from gql.transport.exceptions import TransportError
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import GraphQLError
 
-from envergo.petitions.demarches_simplifiees.models import (
+from envergo.petitions.demarche_numerique.models import (
     DemarcheWithRawDossiers,
     DossierState,
 )
-from envergo.petitions.demarches_simplifiees.queries import (
+from envergo.petitions.demarche_numerique.queries import (
     DOSSIER_ACCEPTER_MUTATION,
     DOSSIER_CLASSER_SANS_SUITE_MUTATION,
     DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION,
@@ -38,19 +38,19 @@ from envergo.utils.mattermost import notify
 logger = logging.getLogger(__name__)
 
 
-DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH = Path(
-    settings.APPS_DIR / "petitions" / "demarches_simplifiees" / "data"
+DEMARCHE_NUMERIQUE_FAKE_DATA_PATH = Path(
+    settings.APPS_DIR / "petitions" / "demarche_numerique" / "data"
 )
 
 DS_DISABLED_BASE_MESSAGE = "« Démarche numérique » is not enabled. Doing nothing. Use fake dossier if dossier is not draft."  # noqa: E501
 
 
-class DemarchesSimplifieesClient:
+class DemarcheNumeriqueClient:
     def __init__(self):
         self.transport = RequestsHTTPTransport(
-            url=settings.DEMARCHES_SIMPLIFIEES["GRAPHQL_API_URL"],
+            url=settings.DEMARCHE_NUMERIQUE["GRAPHQL_API_URL"],
             headers={
-                "Authorization": f"Bearer {settings.DEMARCHES_SIMPLIFIEES['GRAPHQL_API_BEARER_TOKEN']}"
+                "Authorization": f"Bearer {settings.DEMARCHE_NUMERIQUE['GRAPHQL_API_BEARER_TOKEN']}"
             },
             # gql's transport only accepts a single scalar timeout (not the
             # (connect, read) tuple requests supports), so we pass the read
@@ -64,14 +64,14 @@ class DemarchesSimplifieesClient:
     def _fake_execute(self, fake_dossier_filename):
         """Mock response when Démarche numérique is not enabled"""
         with open(
-            DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / fake_dossier_filename,
+            DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / fake_dossier_filename,
             "r",
         ) as file:
             response = json.load(file)
             return copy.deepcopy(response["data"])
 
     def execute(self, query_str: str, variables: dict = None):
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             raise NotImplementedError("« Démarche numérique » is not enabled")
 
         query = gql(query_str)
@@ -95,7 +95,7 @@ class DemarchesSimplifieesClient:
                     "variables": variables,
                 },
             )
-            raise DemarchesSimplifieesError(
+            raise DemarcheNumeriqueError(
                 query=query_str,
                 variables=variables,
                 message=str(e),
@@ -113,7 +113,7 @@ class DemarchesSimplifieesClient:
 
         variables = {"dossierNumber": dossier_number}
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
@@ -124,7 +124,7 @@ class DemarchesSimplifieesClient:
         else:
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 if any(
                     error.get("extensions", {}).get("code") == "not_found"
                     and any(path == "dossier" for path in error.get("path", []))
@@ -143,7 +143,7 @@ class DemarchesSimplifieesClient:
                     )
                 else:
                     message = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error_one_dossier.txt",
+                        "haie/petitions/mattermost_demarche_numerique_api_error_one_dossier.txt",
                         context={
                             "dossier_number": dossier_number,
                             "error": e.__cause__ if e.__cause__ else e.message,
@@ -165,7 +165,7 @@ class DemarchesSimplifieesClient:
             )
 
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_unexpected_format.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_unexpected_format.txt",
                 context={
                     "response": data,
                     "query": query,
@@ -213,9 +213,9 @@ class DemarchesSimplifieesClient:
         }
         try:
             data = self.execute(GET_DOSSIERS_FOR_DEMARCHE_QUERY, variables)
-        except DemarchesSimplifieesError as e:
+        except DemarcheNumeriqueError as e:
             message_body = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_error.txt",
                 context={
                     "demarche_number": demarche_number,
                     "error": e.__cause__ if e.__cause__ else e.message,
@@ -240,8 +240,9 @@ class DemarchesSimplifieesClient:
     def _create_direct_upload(self, dossier_number, dossier_id, attachment_file):
         """Create direct upload related to a dossier"""
 
-        # Only uploaded file in django allowed
-        if not isinstance(attachment_file, UploadedFile):
+        # Accept any django File (uploaded file or storage-backed FieldFile):
+        # only .name, .size, read() and seek() are used below.
+        if not isinstance(attachment_file, File):
             logger.error("File will not be sent, format not allowed")
             return None
 
@@ -262,7 +263,7 @@ class DemarchesSimplifieesClient:
 
         query = DOSSIER_CREATE_DIRECT_UPLOAD_MUTATION
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
@@ -275,7 +276,7 @@ class DemarchesSimplifieesClient:
             # Send query to create direct upload
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(
                     "Error when getting credentials to direct upload file to « Démarche numérique »",
                     extra={
@@ -286,7 +287,7 @@ class DemarchesSimplifieesClient:
                     },
                 )
                 message = render_to_string(
-                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                     context={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -306,13 +307,18 @@ class DemarchesSimplifieesClient:
                 credentials_headers = json.loads(credentials["headers"])
 
                 try:
-                    with attachment_file.open("rb") as payload:
-                        response = requests.put(
-                            credentials["url"],
-                            data=payload,
-                            headers=credentials_headers,
-                            timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT,
-                        )
+                    # Rewind without taking ownership of the file: the
+                    # checksum read above leaves it at EOF, and the caller
+                    # reuses the attachment afterwards (the closing flow saves
+                    # it to storage). Closing it here would break that save on
+                    # object-storage backends ("read of closed file").
+                    attachment_file.seek(0)
+                    response = requests.put(
+                        credentials["url"],
+                        data=attachment_file,
+                        headers=credentials_headers,
+                        timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT,
+                    )
                 except Exception as e:
                     logger.error(
                         f"Error when sending attachment file « Démarche numérique » direct upload : {e}",
@@ -321,7 +327,7 @@ class DemarchesSimplifieesClient:
                         },
                     )
                     message = render_to_string(
-                        "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                        "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                         context={
                             "dossier_number": dossier_number,
                         },
@@ -366,7 +372,7 @@ class DemarchesSimplifieesClient:
     ) -> dict:
         """Dossier send message query"""
 
-        instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+        instructeur_id = settings.DEMARCHE_NUMERIQUE["INSTRUCTEUR_ID"]
         if not instructeur_id:
             logger.warning("Missing instructeur id.")
             return None
@@ -403,7 +409,7 @@ class DemarchesSimplifieesClient:
         # Send message
         query = DOSSIER_ENVOYER_MESSAGE_MUTATION
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"{DS_DISABLED_BASE_MESSAGE}"
                 f"\nquery: {query}"
@@ -415,7 +421,7 @@ class DemarchesSimplifieesClient:
         else:
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(
                     "Error when sending message to « Démarche numérique »",
                     extra={
@@ -426,7 +432,7 @@ class DemarchesSimplifieesClient:
                     },
                 )
                 message = render_to_string(
-                    "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                    "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                     context={
                         "dossier_number": dossier_number,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -450,7 +456,7 @@ class DemarchesSimplifieesClient:
                 },
             )
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_dossier_send_message.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_error_dossier_send_message.txt",
                 context={
                     "dossier_number": dossier_number,
                     "error": data,
@@ -508,7 +514,7 @@ class DemarchesSimplifieesClient:
         if motivation:
             variables["input"]["motivation"] = motivation
 
-        if not settings.DEMARCHES_SIMPLIFIEES["ENABLED"]:
+        if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
             logger.warning(
                 f"« Démarche numérique » is not enabled. Doing nothing."
                 f"Use fake dossier if dossier is not draft."
@@ -516,7 +522,7 @@ class DemarchesSimplifieesClient:
                 f"\nvariables: {variables}"
             )
             with open(
-                DEMARCHES_SIMPLIFIEES_FAKE_DATA_PATH / "fake_dossier.json",
+                DEMARCHE_NUMERIQUE_FAKE_DATA_PATH / "fake_dossier.json",
                 "r",
             ) as file:
                 response = json.load(file)
@@ -528,9 +534,9 @@ class DemarchesSimplifieesClient:
                 )
                 data = {result_key: data, "errors": []}
         else:
-            instructeur_id = settings.DEMARCHES_SIMPLIFIEES["INSTRUCTEUR_ID"]
+            instructeur_id = settings.DEMARCHE_NUMERIQUE["INSTRUCTEUR_ID"]
             if not instructeur_id:
-                raise DemarchesSimplifieesError(
+                raise DemarcheNumeriqueError(
                     query,
                     {},
                     "INSTRUCTEUR_ID is not set, please check the configuration.",
@@ -540,7 +546,7 @@ class DemarchesSimplifieesClient:
 
             try:
                 data = self.execute(query, variables)
-            except DemarchesSimplifieesError as e:
+            except DemarcheNumeriqueError as e:
                 logger.error(
                     "Error when changing dossier state via « Démarche numérique » API",
                     extra={
@@ -551,7 +557,7 @@ class DemarchesSimplifieesClient:
                     },
                 )
                 message = render_to_string(
-                    "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                    "haie/petitions/mattermost_demarche_numerique_api_error_change_dossier_state.txt",
                     context={
                         "dossier_number": project_reference,
                         "error": e.__cause__ if e.__cause__ else e.message,
@@ -577,7 +583,7 @@ class DemarchesSimplifieesClient:
                 },
             )
             message = render_to_string(
-                "haie/petitions/mattermost_demarches_simplifiees_api_error_change_dossier_state.txt",
+                "haie/petitions/mattermost_demarche_numerique_api_error_change_dossier_state.txt",
                 context={
                     "dossier_number": project_reference,
                     "error": data,
@@ -703,7 +709,7 @@ class DemarchesSimplifieesClient:
         )
 
 
-class DemarchesSimplifieesError(Exception):
+class DemarcheNumeriqueError(Exception):
     """Démarche numérique client Exception"""
 
     def __init__(self, query: str = None, variables: dict = None, message: str = None):

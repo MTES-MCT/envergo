@@ -169,9 +169,7 @@ class TestResultSnapshot:
 
         DCConfigHaieFactory()
         # Create project in draft state (not yet submitted)
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
         # Count snapshots after project creation
         initial_count = ResultSnapshot.objects.filter(project=project).count()
@@ -185,7 +183,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (

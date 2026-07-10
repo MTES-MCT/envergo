@@ -21,7 +21,7 @@
           type="button"
           data-fr-opened="false"
           data-category="{{ category.value }}"
-          aria-controls="demarches-simplifiees-modal">Compléter le dossier</button>
+          aria-controls="demarche-numerique-modal">Compléter le dossier</button>
 {% else %}
 
   {% if not is_read_only %}
@@ -44,7 +44,8 @@
       <button class="fr-btn fr-btn--primary"
               type="button"
               data-fr-opened="false"
-              aria-controls="demarches-simplifiees-modal">Déposer une demande d'autorisation</button>
+              data-category="{{ category.value }}"
+              aria-controls="demarche-numerique-modal">Déposer une demande d'autorisation</button>
     </p>
   {% else %}
     <h6>
