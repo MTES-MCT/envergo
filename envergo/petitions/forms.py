@@ -266,11 +266,21 @@ class StateChangeForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, is_paused=False, **kwargs):
+    def __init__(self, *args, single_procedure=False, is_paused=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_paused = is_paused
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+
+        # Single-procedure departments skip the "to_be_processed" stage entirely,
+        # so it shouldn't even be selectable.
+        if single_procedure:
+            self.fields["stage"].choices = [
+                choice
+                for choice in self.fields["stage"].choices
+                if choice[0] != "to_be_processed"
+            ]
+
         # Pass field errors to the widget after validation
         for name, field in self.fields.items():
             bound_field = self[name]
@@ -300,6 +310,16 @@ class StateChangeForm(forms.ModelForm):
             )
 
         previous_stage = self.initial["stage"]
+
+        if stage == "to_be_processed" and previous_stage != "to_be_processed":
+            self.add_error(
+                "stage",
+                ValidationError(
+                    "L'étape « À instruire » n’est plus disponible car l’instruction a déjà débuté. Utiliser "
+                    "plutôt la demande de compléments et la messagerie pour demander des ajustements au demandeur.",
+                    code="forbidden_transition",
+                ),
+            )
         transition = (previous_stage, stage)
         if transition in FORBIDDEN_STAGE_TRANSITIONS:
             self.add_error(
@@ -372,7 +392,8 @@ def request_for_info_message():
     """Format the default text for request for information message."""
     date = three_months_from_now()
     date_fmt = date_format(date, "d F Y")
-    message = dedent(f"""
+    message = dedent(
+        f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
@@ -384,7 +405,8 @@ def request_for_info_message():
 
         Cordialement,
         L'instructeur / le service instructeur.
-    """)
+    """
+    )
     return message.strip()
 
 
