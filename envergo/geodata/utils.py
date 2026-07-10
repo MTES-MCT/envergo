@@ -491,12 +491,14 @@ def fill_polygon_stats():
     This is only used manually when the need arises, for debugging purpose.
     """
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            """
         UPDATE geodata_zone
         SET
             area = ST_Area(geometry),
             npoints = ST_NPoints(geometry::geometry);
-        """)
+        """
+        )
 
 
 def get_catchment_area(lng, lat):
