@@ -245,3 +245,54 @@ def test_ep_regime_unique_included_with_ru_hedges(france_map):
         hedge_data=[make_hedge(type_haie="mixte")],
     )
     assert MoulinetteHaie(data).get_criteria().count() == 1
+
+
+# ---------------------------------------------------------------------------
+# Criteria evaluated should have their regulation activated
+# ---------------------------------------------------------------------------
+
+
+EVALUATOR_EP_RU = "envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique"
+
+
+def test_get_only_criteria_with_regulation_activated(france_map):
+    """Criteria evaluated should have their regulation activated"""
+    regulation_ep = RegulationFactory(regulation="ep")
+    regulation_lse = RegulationFactory(
+        regulation="loi_sur_leau_haie",
+        evaluator="envergo.moulinette.regulations.loi_sur_leau_haie.LoiSurLeauHaieRegulation",
+    )
+    CriterionFactory(
+        regulation=regulation_ep,
+        evaluator=EVALUATOR_EP_RU,
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    CriterionFactory(
+        title="Loi sur l'eau Haie RU",
+        regulation=regulation_lse,
+        evaluator="envergo.moulinette.regulations.loi_sur_leau_haie.LoiSurLeauHaieRu",
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    config = RUConfigHaieFactory(
+        regulations_available=[
+            "ep",
+            "loi_sur_leau_haie",
+        ]
+    )
+    data = make_moulinette_haie_data(
+        reimplantation="remplacement",
+        hedge_data=[make_hedge(type_haie="mixte")],
+    )
+    assert MoulinetteHaie(data).get_criteria().count() == 2
+
+    config.regulations_available = [
+        "ep",
+    ]
+    config.save()
+    data = make_moulinette_haie_data(
+        reimplantation="remplacement",
+        hedge_data=[make_hedge(type_haie="mixte")],
+    )
+    assert MoulinetteHaie(data).get_criteria().count() == 1
