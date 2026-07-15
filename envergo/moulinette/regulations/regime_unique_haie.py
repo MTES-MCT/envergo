@@ -19,7 +19,7 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique import (
+from envergo.moulinette.regulations.utils import (
     collect_zone_configs,
     ensure_ru_hedge_data,
     evaluator_replantation_coefficient,
