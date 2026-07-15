@@ -624,9 +624,8 @@ def trim_land(geom):
 
     with connection.cursor() as cursor:
         cursor.execute(
-            # EWKB, not WKT: unioning near-coincident tiles leaves crack rings
-            # whose vertices differ below text precision — a WKT roundtrip
-            # collapses them into invalid rings (2026-07 TopologyException).
+            # EWKB: ST_AsText's precision merges near-identical vertices in
+            # the microscopic holes left by the tile union (see trim_land doc).
             """
             WITH input_poly AS (
               SELECT
@@ -677,14 +676,11 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
         (sea / forest) zone: measure it whole, skipping the costly clip.
       Slow path — hedge straddles a boundary: clip to the buffer first.
 
-    trunc is sanitized (ST_MakeValid + ST_CollectionExtract): the buffer can
-    arrive invalid — tile-seam crack rings collapsed by trim_land's WKT
-    roundtrip (2026-07 TopologyException incident).
+    trunc is sanitized (ST_MakeValid + ST_CollectionExtract): land-trimmed
+    buffers can carry degenerate holes (see trim_land).
 
-    Hedges are cast to ::geometry so the clip runs in planar 4326; the bare
-    geography ST_Intersection would reproject to UTM, where the 4326-valid
-    buffer can degenerate. Length is measured on the spheroid regardless.
-    Predicates keep the geography inputs to use the GIST index.
+    The clip casts hedges to ::geometry so it runs in planar 4326, the plane
+    the buffer was built in. Predicates stay on geography for the GIST index.
 
     Args:
         truncated_buffer: land-trimmed polygon, or None if off-land.
@@ -704,14 +700,13 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                     ST_MakeValid(ST_GeomFromEWKT(%(truncated)s)), 3) AS trunc,
                 ST_GeomFromEWKT(%(circle)s) AS circ
         ),
-        -- zones: adds the excluded ring (circle minus buffer = sea / forest).
+        -- zones: adds the excluded area (circle minus buffer = sea / forest).
         zones AS (
             SELECT trunc, circ,
                 ST_Difference(ST_MakeValid(circ), trunc) AS excluded
             FROM inputs
         ),
-        -- candidates: hedges intersecting the circle, each flagged fully_inside
-        -- (covered by the circle and clear of the excluded zone).
+        -- candidates: hedges inside the circle, with fast/slow path flag.
         candidates AS (
             SELECT
                 l.geometry::geometry AS hedge,
