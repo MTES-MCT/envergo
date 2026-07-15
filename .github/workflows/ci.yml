@@ -31,7 +31,7 @@ jobs:
 
       # stylelint runs from node_modules (see .pre-commit-config.yaml)
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 20
       - name: Install js dependencies
@@ -132,7 +132,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - name: Install dependencies
