@@ -14,7 +14,7 @@
           <div class="fr-modal__content">
             <h2 id="request-info-modal-title" class="fr-modal__title">Demander des compléments</h2>
 
-            <p>La demande de compléments suspendra le délai d'instruction.</p>
+            <p>La demande de compléments interrompra le délai d'instruction.</p>
 
             <form method="post" action="" novalidate class="fr-mb-3w">
               {% csrf_token %}
@@ -22,7 +22,7 @@
               {% include '_form_snippet.html' with form=request_info_form %}
 
               <div class="fr-alert fr-alert--warning fr-mb-2w">
-                <p>Pensez à vérifier que la date limite indiquée dans le message est bien celle saisie plus haut.</p>
+                <p>Vérifier que la date limite indiquée dans le message est bien celle saisie plus haut.</p>
               </div>
               <button type="submit" class="fr-btn">Envoyer au demandeur</button>
             </form>

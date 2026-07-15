@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.exceptions import SuspiciousOperation, ValidationError
+from django.core.exceptions import SuspiciousOperation
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -70,13 +70,12 @@ from envergo.petitions.forms import (
     PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
-    StateChangeForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
     SimulationForm,
+    StateChangeForm,
     validate_simulation_url,
 )
-
 from envergo.petitions.models import (
     DECISIONS,
     DOSSIER_STATES,
@@ -1683,9 +1682,7 @@ class PetitionProjectInstructorProcedureView(
 
         if not form.is_valid():
             context_key = self.FORM_CONTEXT_KEYS[action]
-            return self.render_to_response(
-                self.get_context_data(**{context_key: form})
-            )
+            return self.render_to_response(self.get_context_data(**{context_key: form}))
 
         handler = getattr(self, f"{action}_form_valid")
         return handler(form)
@@ -1753,7 +1750,10 @@ class PetitionProjectInstructorProcedureView(
         if self.has_change_permission(
             self.request, self.object
         ) and self.object.stage.startswith("instruction"):
-            context.setdefault("request_info_form", RequestAdditionalInfoForm())
+            context.setdefault(
+                "request_info_form",
+                RequestAdditionalInfoForm(petition_project=self.object),
+            )
             context.setdefault("resume_processing_form", ResumeProcessingForm())
 
         return context
@@ -1837,9 +1837,7 @@ class PetitionProjectInstructorProcedureView(
             """,
         )
 
-    def schedule_state_change_telemetry(
-        self, log, previous_stage, previous_decision
-    ):
+    def schedule_state_change_telemetry(self, log, previous_stage, previous_decision):
         """Queue the analytics event and Mattermost notification for commit."""
 
         def notify_admin():

@@ -368,23 +368,38 @@ def three_months_from_now():
     return res
 
 
-def request_for_info_message():
+def request_for_info_message(petition_project, is_regime_unique):
     """Format the default text for request for information message."""
     date = three_months_from_now()
     date_fmt = date_format(date, "d F Y")
-    message = dedent(f"""
+
+    if is_regime_unique:
+        ru_fragment = """
+        Si vous ne fournissez pas les compléments demandés dans le délai imparti,
+        le projet sera considéré comme abandonné. Vous devrez déposer une nouvelle
+        demande pour avoir le droit de le réaliser.
+        """
+    else:
+        ru_fragment = ""
+
+    message = dedent(
+        f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
 
-        Vous avez jusqu'au {date_fmt} pour les fournir.
+        Vous avez jusqu'au {date_fmt} pour les fournir via la messagerie.
 
-        ***Liste des compléments à fournir***
+        ***Liste des compléments à fournir :***
 
-
+        - Pièce manquante n°1
+        - Pièce manquante n°2
+        - …
+        {ru_fragment}
         Cordialement,
-        L'instructeur / le service instructeur.
-    """)
+        Le guichet unique de la haie – {petition_project.department}
+    """
+    )
     return message.strip()
 
 
@@ -401,12 +416,17 @@ class RequestAdditionalInfoForm(forms.Form):
         label="Message au demandeur",
         required=True,
         widget=forms.Textarea(attrs={"rows": 12}),
-        help_text="""
-        Complétez le message afin de lister les pièces complémentaires attendues.<br/>
-        Pensez à vérifier que la date indiquée est cohérente avec la date entrée ci-dessus.
-        """,
-        initial=request_for_info_message,
+        help_text="Complétez le message afin de lister les pièces complémentaires attendues.",
     )
+
+    def __init__(self, *args, petition_project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Setup user message initial content
+        if petition_project:
+            self.fields["request_message"].initial = request_for_info_message(
+                petition_project, petition_project.is_regime_unique()
+            )
 
     def clean_info_due_date(self):
         info_due_date = self.cleaned_data["info_due_date"]
