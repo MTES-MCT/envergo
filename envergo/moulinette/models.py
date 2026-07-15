@@ -2168,12 +2168,8 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         We don't actually use the criteria directly, the returned queryset will only
         be used in a prefetch_related call when we fetch the regulations.
         """
-        activated_regulations = Regulation.objects.filter(
-            regulation__in=self.config.regulations_available
-        )
         criteria = (
-            Criterion.objects.filter(regulation__in=activated_regulations)
-            .valid_at(self.date)
+            Criterion.objects.valid_at(self.date)
             .order_by("weight")
             .distinct("weight", "id")
             .prefetch_related("templates")
@@ -2991,7 +2987,16 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
             final_q |= intersection_q
 
-        return super().get_criteria().filter(final_q)
+        # Activated regulations filter
+        activated_regulations_q = Regulation.objects.filter(
+            regulation__in=self.config.regulations_available
+        )
+        return (
+            super()
+            .get_criteria()
+            .filter(regulation__in=activated_regulations_q)
+            .filter(final_q)
+        )
 
     def get_intersecting_map_ids(self, hedges):
         """Find all map IDs whose zones intersect any of the given hedges.
