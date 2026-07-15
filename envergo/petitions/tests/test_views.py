@@ -1965,6 +1965,42 @@ def test_petition_project_rai_button(client, haie_user, haie_instructor_44, site
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "category, expect_ru_fragment",
+    [
+        ("ru", True),
+        ("hru", False),
+    ],
+)
+def test_request_info_default_message(
+    client, haie_instructor_44, site, category, expect_ru_fragment
+):
+    """The default message includes the department and, for RU projects, a warning."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        underscore_category=category,
+    )
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    response = client.get(url)
+    content = response.content.decode()
+
+    assert project.department.get_department_display() in content
+
+    ru_text = "le projet sera considéré comme abandonné"
+    if expect_ru_fragment:
+        assert ru_text in content
+    else:
+        assert ru_text not in content
+
+
+@pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_request_for_info(
     mock_ds_msg, client, haie_instructor_44, site
