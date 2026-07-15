@@ -124,7 +124,7 @@ test.describe('Procedure modal — dynamic form', () => {
 
   test('a Démarches Simplifiées state change is announced', async ({ page }) => {
     const stage = page.locator('#id_stage');
-    const notice = page.locator('#procedure-state-change-message');
+    const notice = page.locator('#state-change-notice');
 
     // en_construction → en_instruction: the applicant loses edit rights.
     await stage.selectOption('instruction_d');
