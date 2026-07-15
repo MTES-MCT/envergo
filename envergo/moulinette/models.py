@@ -2168,8 +2168,12 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         We don't actually use the criteria directly, the returned queryset will only
         be used in a prefetch_related call when we fetch the regulations.
         """
+        activated_regulations = Regulation.objects.filter(
+            regulation__in=self.config.regulations_available
+        )
         criteria = (
-            Criterion.objects.valid_at(self.date)
+            Criterion.objects.filter(regulation__in=activated_regulations)
+            .valid_at(self.date)
             .order_by("weight")
             .distinct("weight", "id")
             .prefetch_related("templates")
@@ -2939,6 +2943,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
     def get_criteria(self):
         """Fetch the criteria that can be activated for this project.
+        Criteria can be activated only if its regulation is activated in config.
 
         There are two activation modes for a criterion:
          * department_centroid: activated if the department centroid is in the activation map,
@@ -2969,7 +2974,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             & Exists(centroid_subquery)
             & ~Q(evaluator__in=empty_category_evaluators)
         )
-
         # Filter for hedges_intersection activation mode
         category_qs = []
         for category, hedges in hedges_by_category.items():
