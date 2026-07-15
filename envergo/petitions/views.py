@@ -1756,7 +1756,10 @@ class PetitionProjectInstructorProcedureView(
         if self.has_change_permission(
             self.request, self.object
         ) and self.object.stage.startswith("instruction"):
-            context.setdefault("request_info_form", RequestAdditionalInfoForm())
+            context.setdefault(
+                "request_info_form",
+                RequestAdditionalInfoForm(petition_project=self.object),
+            )
             context.setdefault("resume_processing_form", ResumeProcessingForm())
 
         return context
