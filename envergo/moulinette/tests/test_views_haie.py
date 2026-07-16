@@ -19,6 +19,7 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import make_moulinette_haie_data
 
 pytestmark = pytest.mark.haie
 
@@ -427,6 +428,32 @@ def test_moulinette_post_form_hedge_length_within_limit(client):
     client.post(f"{url}?{triage}", data)
 
     assert not Event.objects.filter(category="erreur", event="formulaire-simu").exists()
+
+
+def test_moulinette_post_form_pac_selected_hedge_not_pac(client):
+    """The form shows an error when PAC is selected but no hedge is within PAC area, and
+    haies are listed in localisation des haies."""
+
+    DCConfigHaieFactory()
+    hedge = HedgeFactory(additionalData__sur_parcelle_pac=False)
+    triage = urlencode(
+        {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+        }
+    )
+    data = make_moulinette_haie_data(
+        localisation_pac="oui",
+        hedges=[hedge],
+    )
+
+    url = reverse("moulinette_form")
+    res = client.post(f"{url}?{triage}", data)
+
+    assert "Aucune haie renseignée" not in res.content.decode()
+    assert "1 tracé" in res.content.decode()
 
 
 def test_result_p_view_with_hedges_to_remove_outside_department(client):
