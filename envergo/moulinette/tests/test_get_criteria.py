@@ -43,6 +43,11 @@ def urbanisme_regulation():
     return RegulationFactory(regulation="urbanisme_haie")
 
 
+@pytest.fixture
+def ep_regulation():
+    return RegulationFactory(regulation="ep")
+
+
 # ---------------------------------------------------------------------------
 # department_centroid activation mode
 # ---------------------------------------------------------------------------
@@ -216,11 +221,10 @@ def test_intersection_ru_criterion_excluded_when_only_hru_hedge_intersects_zone(
 EVALUATOR_EP_RU = "envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique"
 
 
-def test_ep_regime_unique_excluded_without_ru_hedges(france_map):
+def test_ep_regime_unique_excluded_without_ru_hedges(france_map, ep_regulation):
     """EP RU criterion (category=ru) is excluded in DC mode — no RU hedges exist."""
-    regulation = RegulationFactory(regulation="ep")
     CriterionFactory(
-        regulation=regulation,
+        regulation=ep_regulation,
         evaluator=EVALUATOR_EP_RU,
         activation_map=france_map,
         activation_mode="department_centroid",
@@ -230,18 +234,60 @@ def test_ep_regime_unique_excluded_without_ru_hedges(france_map):
     assert MoulinetteHaie(data).get_criteria().count() == 0
 
 
-def test_ep_regime_unique_included_with_ru_hedges(france_map):
+def test_ep_regime_unique_included_with_ru_hedges(france_map, ep_regulation):
     """EP RU criterion (category=ru) is included in RU mode with a RU hedge."""
-    regulation = RegulationFactory(regulation="ep")
     CriterionFactory(
-        regulation=regulation,
+        regulation=ep_regulation,
         evaluator=EVALUATOR_EP_RU,
         activation_map=france_map,
         activation_mode="department_centroid",
     )
     RUConfigHaieFactory()
     data = make_moulinette_haie_data(
-        reimplantation="remplacement",
         hedge_data=[make_hedge(type_haie="mixte")],
+    )
+    assert MoulinetteHaie(data).get_criteria().count() == 1
+
+
+# ---------------------------------------------------------------------------
+# Criteria evaluated should have their regulation activated
+# ---------------------------------------------------------------------------
+
+
+def test_get_only_criteria_with_regulation_activated(
+    france_map, bizous_town_center, ep_regulation, urbanisme_regulation
+):
+    """Criteria evaluated should have their regulation activated"""
+    CriterionFactory(
+        regulation=ep_regulation,
+        evaluator=EVALUATOR_EP_RU,
+        activation_map=france_map,
+        activation_mode="department_centroid",
+    )
+    CriterionFactory(
+        regulation=urbanisme_regulation,
+        evaluator=EVALUATOR_RU,
+        activation_map=bizous_town_center,
+        activation_mode="hedges_intersection",
+    )
+    config = RUConfigHaieFactory(
+        regulations_available=[
+            "ep",
+            "urbanisme_haie",
+        ]
+    )
+    data = make_moulinette_haie_data(
+        reimplantation="remplacement",
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, **HEDGE_RU)],
+    )
+    assert MoulinetteHaie(data).get_criteria().count() == 2
+
+    config.regulations_available = [
+        "ep",
+    ]
+    config.save()
+    data = make_moulinette_haie_data(
+        reimplantation="remplacement",
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, **HEDGE_RU)],
     )
     assert MoulinetteHaie(data).get_criteria().count() == 1
