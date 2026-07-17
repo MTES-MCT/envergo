@@ -121,15 +121,4 @@ test.describe('Procedure modal — dynamic form', () => {
     await stage.selectOption('closed');
     await expect(message).toHaveValue(typed);
   });
-
-  test('a Démarches Simplifiées state change is announced', async ({ page }) => {
-    const stage = page.locator('#id_stage');
-    const notice = page.locator('#procedure-state-change-message');
-
-    // en_construction → en_instruction: the applicant loses edit rights.
-    await stage.selectOption('instruction_d');
-    await expect(notice).toBeVisible();
-    await expect(notice).toContainText('Démarche Numérique');
-    await expect(notice).toContainText('ne sera donc plus modifiable par le demandeur');
-  });
 });

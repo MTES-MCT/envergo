@@ -1454,6 +1454,7 @@ def test_petition_project_procedure(
 
     # WHEN the user try to go from to_be_processed to closed
     data = {
+        "action": "state_change",
         "stage": "closed",
         "decision": "dropped",
         "update_comment": "aucun retour depuis 15 ans",
@@ -1467,6 +1468,7 @@ def test_petition_project_procedure(
 
     # WHEN the user edit the status
     data = {
+        "action": "state_change",
         "stage": "preparing_decision",
         "decision": "dropped",
         "update_comment": "aucun retour depuis 15 ans",
@@ -1504,6 +1506,7 @@ def test_petition_project_procedure(
 def closing_form_data(decision, **overrides):
     """Build the procedure form data for closing a dossier."""
     data = {
+        "action": "state_change",
         "stage": "closed",
         "decision": decision,
         "simulation_check": "on",
@@ -1962,6 +1965,42 @@ def test_petition_project_rai_button(client, haie_user, haie_instructor_44, site
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize(
+    "category, expect_ru_fragment",
+    [
+        ("ru", True),
+        ("hru", False),
+    ],
+)
+def test_request_info_default_message(
+    client, haie_instructor_44, site, category, expect_ru_fragment
+):
+    """The default message includes the department and, for RU projects, a warning."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        underscore_category=category,
+    )
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    response = client.get(url)
+    content = response.content.decode()
+
+    assert project.department.get_department_display() in content
+
+    ru_text = "le projet sera considéré comme abandonné"
+    if expect_ru_fragment:
+        assert ru_text in content
+    else:
+        assert ru_text not in content
+
+
+@pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.views.send_message_dossier_ds")
 def test_petition_project_request_for_info(
     mock_ds_msg, client, haie_instructor_44, site
@@ -1980,15 +2019,16 @@ def test_petition_project_request_for_info(
     assert project.is_additional_information_requested is False
 
     # Request for additional info
-    rai_url = reverse(
-        "petition_project_instructor_request_info_view",
+    procedure_url = reverse(
+        "petition_project_instructor_procedure_view",
         kwargs={"reference": project.reference},
     )
     form_data = {
+        "action": "request_info",
         "info_due_date": next_month,
         "request_message": "Test",
     }
-    res = client.post(rai_url, form_data, follow=True)
+    res = client.post(procedure_url, form_data, follow=True)
     assert res.status_code == 200
     assert "Le message au demandeur a bien été envoyé." in res.content.decode()
 
@@ -2036,6 +2076,7 @@ def test_petition_project_resume_instruction(
     )
 
     data = {
+        "action": "state_change",
         "stage": "closed",
         "decision": "dropped",
         "update_comment": "aucun retour depuis 15 ans",
@@ -2050,14 +2091,11 @@ def test_petition_project_resume_instruction(
     assert project.decision == "unset"
 
     # Resume instruction
-    rai_url = reverse(
-        "petition_project_instructor_request_info_view",
-        kwargs={"reference": project.reference},
-    )
     form_data = {
+        "action": "resume_processing",
         "info_receipt_date": today,
     }
-    res = client.post(rai_url, form_data, follow=True)
+    res = client.post(status_url, form_data, follow=True)
     assert res.status_code == 200
     assert "L'instruction du dossier a repris." in res.content.decode()
 
@@ -2066,6 +2104,83 @@ def test_petition_project_resume_instruction(
     assert project.is_additional_information_requested is False
     # The new due_date is computed on the resumption log
     assert project.due_date == next_month
+
+
+@pytest.mark.django_db(transaction=True)
+def test_request_info_date_in_past(client, haie_instructor_44, site):
+    """Requesting additional info with a past date is rejected."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    yesterday = date.today() - timedelta(days=1)
+    form_data = {
+        "action": "request_info",
+        "info_due_date": yesterday,
+        "request_message": "Test",
+    }
+    res = client.post(url, form_data)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "La date limite ne peut pas" in content
+    assert project.is_additional_information_requested is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_request_info_date_exceeds_three_months(client, haie_instructor_44, site):
+    """Requesting additional info with a date beyond 3 months is rejected."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    too_far = date.today() + timedelta(days=365)
+    form_data = {
+        "action": "request_info",
+        "info_due_date": too_far,
+        "request_message": "Test",
+    }
+    res = client.post(url, form_data)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "La date limite ne peut pas" in content
+    assert project.is_additional_information_requested is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_request_info_errors_reopen_modal(client, haie_instructor_44, site):
+    """When the request-info form has errors, the modal auto-opens."""
+
+    client.force_login(haie_instructor_44)
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory(status__stage="instruction_d")
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "action": "request_info",
+        "info_due_date": "",
+        "request_message": "",
+    }
+    res = client.post(url, form_data)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    # The request-info modal should be auto-opened via the DSFR class
+    assert "fr-modal--opened" in content
 
 
 def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_user):

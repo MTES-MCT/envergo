@@ -636,6 +636,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self._category = value.value
 
+    def is_regime_unique(self):
+        return self.category == HedgeCategory.ru
+
 
 USER_TYPE = Choices(
     ("petitioner", "Demandeur"),
