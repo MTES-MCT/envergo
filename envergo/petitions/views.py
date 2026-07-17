@@ -1775,7 +1775,9 @@ class PetitionProjectInstructorProcedureView(
         except DemarcheNumeriqueError as e:
             logger.error(e)
             # The rollback restored the DB, but the in-memory project was
-            # already mutated by the status log post_save signal.
+            # already mutated by the status log post_save signal. Reload it,
+            # otherwise the re-render (which syncs and saves the project)
+            # would persist the aborted stage.
             self.object.refresh_from_db()
             form.add_error(
                 None,
@@ -1906,6 +1908,8 @@ class PetitionProjectInstructorProcedureView(
                             Le message n'est pas envoyé""",
                         )
                     else:
+                        # Raise to abort the transaction and roll back the
+                        # suspension log created above.
                         raise DemarcheNumeriqueError(message="DN message not sent")
 
             self.notify_request_info(project)
