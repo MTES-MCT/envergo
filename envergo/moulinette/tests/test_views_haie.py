@@ -1131,11 +1131,46 @@ class TestReimplantationFieldRemoval:
         assert moulinette.catalog["reimplantation"] == "replantation"
 
     def test_provided_value_used_when_present_dc_bcae8(self, client):
-        """BCAE8: when reimplantation is in the URL (saved simulation),
+        """When reimplantation is in the URL (saved simulation),
         the provided value is used."""
         DCConfigHaieFactory()
         hedges = HedgeDataFactory(
             hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "reimplantation": "non",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "non"
+
+    def test_provided_value_used_when_present_ru(self, client):
+        """Regime unique: when reimplantation is in the URL (saved
+        simulation), the provided value is used despite the field not
+        being on the form."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=True,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
         )
         url = reverse("moulinette_result")
         data = {
