@@ -406,8 +406,40 @@ class BaseMoulinetteFormHaie(BaseMoulinetteForm):
             "geometry"
         ).annotate(centroid=Centroid("geometry"))
 
+    def validate_reimplantation(self):
+        """Reject impossible motif + reimplantation combos.
+
+        Reads from raw data so it works whether or not the reimplantation
+        field is declared on the form. Adds the error to the field when
+        it exists (HRU), or as a non-field error otherwise (RU).
+        """
+        reimplantation = self.data.get("reimplantation")
+        motif = self.data.get("motif")
+        error = None
+
+        if motif == "chemin_acces" and reimplantation == "remplacement":
+            error = ValidationError(
+                "Le remplacement de la haie au même endroit est incompatible avec la "
+                "raison « création d’un accès ». "
+                "Modifiez l’une ou l’autre des réponses du formulaire.",
+                code="inconsistent_motif",
+            )
+        elif motif == "amelioration_ecologique" and reimplantation == "non":
+            error = ValidationError(
+                "La destruction de la haie sans réimplantation est incompatible "
+                "avec la raison « amélioration écologique ». "
+                "Modifiez l’une ou l’autre des réponses du formulaire.",
+                code="inconsistent_motif",
+            )
+
+        if error:
+            field = "reimplantation" if "reimplantation" in self.fields else None
+            self.add_error(field, error)
+
     def clean(self):
         data = super().clean()
+
+        self.validate_reimplantation()
 
         localisation_pac = data.get("localisation_pac")
         haies = data.get("haies")
@@ -506,33 +538,6 @@ class MoulinetteFormHaieHRU(BaseMoulinetteFormHaie):
         required=True,
         get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
     )
-
-    def clean(self):
-        data = super().clean()
-
-        reimplantation = data.get("reimplantation")
-        motif = data.get("motif")
-
-        if motif == "chemin_acces" and reimplantation == "remplacement":
-            self.add_error(
-                "reimplantation",
-                ValidationError(
-                    """Le remplacement de la haie au même endroit est incompatible avec la
-                    raison « création d’un accès ». Modifiez l’une ou l’autre des réponses du formulaire.""",
-                    code="inconsistent_motif",
-                ),
-            )
-        elif motif == "amelioration_ecologique" and reimplantation == "non":
-            self.add_error(
-                "reimplantation",
-                ValidationError(
-                    """La destruction de la haie sans réimplantation est incompatible avec la raison
-                    « amélioration écologique ». Modifiez l’une ou l’autre des réponses du formulaire.""",
-                    code="inconsistent_motif",
-                ),
-            )
-
-        return data
 
 
 class TriageFormHaie(forms.Form):
