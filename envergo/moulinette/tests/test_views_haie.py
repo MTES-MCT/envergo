@@ -1033,12 +1033,12 @@ def test_triage_nul_byte_in_department(client):
 
 
 class TestReimplantationFieldRemoval:
-    """The reimplantation question is removed from the main form.
+    """In regime unique, the reimplantation question is removed from the
+    main form. When regime unique is not activated, it stays visible and
+    required.
 
-    It must not appear on the form page in any department configuration.
-    When absent from the submitted data, criteria that need it fall back
-    to a default value of "replantation". Saved simulations that include
-    the field in their URL still use the provided value.
+    When absent from the submitted data (RU or saved simulations),
+    criteria that need it fall back to "replantation".
     """
 
     REIMPLANTATION_LABEL = "Est-il prévu de planter une nouvelle haie"
@@ -1057,7 +1057,13 @@ class TestReimplantationFieldRemoval:
         """Regime unique: a simulation is valid without reimplantation."""
         RUConfigHaieFactory()
         hedges = HedgeDataFactory(
-            hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)]
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=False,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
         )
         url = reverse("moulinette_form")
         triage = urlencode(
@@ -1079,26 +1085,30 @@ class TestReimplantationFieldRemoval:
         }
         res = client.post(f"{url}?{triage}", data)
 
-        assert res.status_code == 200
-        content = res.content.decode()
-        assert FORM_ERROR not in content
+        assert FORM_ERROR not in res.content.decode()
 
-    def test_field_not_shown_on_form_page_dc(self, client):
-        """Droit constant: the reimplantation question does not appear either."""
+    def test_field_shown_on_form_page_dc(self, client):
+        """Regime unique not activated: the reimplantation question appears."""
         DCConfigHaieFactory()
         url = reverse("moulinette_form")
         params = "department=44&element=haie&travaux=destruction&contexte=non"
         res = client.get(f"{url}?{params}")
 
         assert res.status_code == 200
-        assert self.REIMPLANTATION_LABEL not in res.content.decode()
+        assert self.REIMPLANTATION_LABEL in res.content.decode()
 
-    def test_default_value_used_when_absent_dc_bcae8(self, client):
-        """Droit constant + BCAE8: without reimplantation in the data,
+    def test_default_value_used_when_absent_ru_bcae8(self, client):
+        """Regime unique + BCAE8: without reimplantation in the data,
         the criterion falls back to 'replantation'."""
-        DCConfigHaieFactory()
+        RUConfigHaieFactory()
         hedges = HedgeDataFactory(
-            hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=True,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
         )
         url = reverse("moulinette_result")
         data = {
@@ -1121,8 +1131,8 @@ class TestReimplantationFieldRemoval:
         assert moulinette.catalog["reimplantation"] == "replantation"
 
     def test_provided_value_used_when_present_dc_bcae8(self, client):
-        """Droit constant + BCAE8: when reimplantation is in the URL
-        (saved simulation), the provided value is used."""
+        """BCAE8: when reimplantation is in the URL (saved simulation),
+        the provided value is used."""
         DCConfigHaieFactory()
         hedges = HedgeDataFactory(
             hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]

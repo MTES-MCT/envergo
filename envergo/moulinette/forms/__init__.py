@@ -350,7 +350,7 @@ CONTEXT_CHOICES = (
 )
 
 
-class MoulinetteFormHaie(BaseMoulinetteForm):
+class BaseMoulinetteFormHaie(BaseMoulinetteForm):
     department = SafeModelChoiceField(
         queryset=Department.objects.all(),
         required=True,
@@ -381,13 +381,6 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         required=True,
     )
 
-    reimplantation = DisplayChoiceField(
-        label="Est-il prévu de planter une nouvelle haie ?",
-        widget=forms.RadioSelect,
-        choices=extract_choices(REIMPLANTATION_CHOICES),
-        required=True,
-        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
-    )
     localisation_pac = forms.ChoiceField(
         label="Les haies à détruire sont-elles situées sur des parcelles agricoles déclarées à la PAC ?",
         widget=forms.RadioSelect,
@@ -403,9 +396,10 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         },
     )
 
-    def __init__(self, *args, single_procedure=False, **kwargs):
+    single_procedure = False
+
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.single_procedure = single_procedure
 
         # We override the queryset here because it prevents a "models are not ready" exception
         self.fields["department"].queryset = Department.objects.defer(
@@ -415,30 +409,8 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
     def clean(self):
         data = super().clean()
 
-        reimplantation = data.get("reimplantation")
-        motif = data.get("motif")
         localisation_pac = data.get("localisation_pac")
         haies = data.get("haies")
-
-        if motif == "chemin_acces" and reimplantation == "remplacement":
-            self.add_error(
-                "reimplantation",
-                ValidationError(
-                    """Le remplacement de la haie au même endroit est incompatible avec la
-                    raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
-                    code="inconsistent_motif",
-                ),
-            )
-
-        elif motif == "amelioration_ecologique" and reimplantation == "non":
-            self.add_error(
-                "reimplantation",
-                ValidationError(
-                    """La destruction de la haie sans réimplantation est incompatible avec la raison
-                    « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
-                    code="inconsistent_motif",
-                ),
-            )
 
         if localisation_pac == "oui" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
@@ -518,6 +490,49 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                 ),
             )
         return haies
+
+
+class MoulinetteFormHaieRU(BaseMoulinetteFormHaie):
+    single_procedure = True
+
+
+class MoulinetteFormHaieHRU(BaseMoulinetteFormHaie):
+    single_procedure = False
+
+    reimplantation = DisplayChoiceField(
+        label="Est-il prévu de planter une nouvelle haie ?",
+        widget=forms.RadioSelect,
+        choices=extract_choices(REIMPLANTATION_CHOICES),
+        required=True,
+        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
+    )
+
+    def clean(self):
+        data = super().clean()
+
+        reimplantation = data.get("reimplantation")
+        motif = data.get("motif")
+
+        if motif == "chemin_acces" and reimplantation == "remplacement":
+            self.add_error(
+                "reimplantation",
+                ValidationError(
+                    """Le remplacement de la haie au même endroit est incompatible avec la
+                    raison « création d’un accès ». Modifiez l’une ou l’autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
+            )
+        elif motif == "amelioration_ecologique" and reimplantation == "non":
+            self.add_error(
+                "reimplantation",
+                ValidationError(
+                    """La destruction de la haie sans réimplantation est incompatible avec la raison
+                    « amélioration écologique ». Modifiez l’une ou l’autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
+            )
+
+        return data
 
 
 class TriageFormHaie(forms.Form):
