@@ -244,6 +244,7 @@ def test_ep_regime_unique_included_with_ru_hedges(france_map, ep_regulation):
     )
     RUConfigHaieFactory()
     data = make_moulinette_haie_data(
+        reimplantation="remplacement",
         hedge_data=[make_hedge(type_haie="mixte")],
     )
     assert MoulinetteHaie(data).get_criteria().count() == 1
