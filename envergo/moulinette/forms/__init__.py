@@ -506,6 +506,10 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                     ),
                 )
 
+        # We need hedge_data in context even if its in error
+        if "haies" not in data and haies is not None:
+            data["haies"] = haies
+
         return data
 
     def clean_haies(self):
