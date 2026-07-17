@@ -2918,8 +2918,11 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 del data["haies"]
 
         if "reimplantation" not in data:
-            raw = self.bound_main_form.data
-            data["reimplantation"] = raw.get("reimplantation", "replantation")
+            raw_data = self.bound_main_form.data
+            initial = self.bound_main_form.initial or {}
+            data["reimplantation"] = raw_data.get("reimplantation") or initial.get(
+                "reimplantation", "replantation"
+            )
 
         if "haies" in data:
             hedges = data["haies"]
