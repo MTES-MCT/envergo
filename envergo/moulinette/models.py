@@ -2988,14 +2988,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
             final_q |= intersection_q
 
-        # Activated regulations filter
-        activated_regulations_q = Regulation.objects.filter(
-            regulation__in=self.config.regulations_available
-        )
         return (
             super()
             .get_criteria()
-            .filter(regulation__in=activated_regulations_q)
+            .filter(regulation__regulation__in=self.config.regulations_available)
             .filter(final_q)
         )
 
