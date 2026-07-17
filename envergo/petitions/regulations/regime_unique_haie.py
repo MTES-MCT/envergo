@@ -1,9 +1,9 @@
 from envergo.hedges.regulations import RUQualityCondition
-from envergo.moulinette.regulations.regime_unique import (
-    build_ru_hedge_detail_rows,
-    get_ru_debug_context,
-)
 from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
+from envergo.moulinette.regulations.utils import (
+    build_ru_hedge_detail_rows,
+    collect_zone_configs,
+)
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
@@ -16,8 +16,9 @@ def regime_unique_haie_get_instructor_view_context(
         "replantation_coefficient": evaluator.get_replantation_coefficient(),
     }
 
-    ru_debug = get_ru_debug_context(moulinette.catalog)
-    context["ru_zone_configs"] = ru_debug["ru_zone_configs"]
+    context["ru_zone_configs"] = collect_zone_configs(
+        moulinette.catalog.get("ru_hedge_data", {})
+    )
 
     context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
         moulinette.catalog, evaluator
