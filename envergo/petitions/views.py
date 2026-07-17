@@ -1781,9 +1781,9 @@ class PetitionProjectInstructorProcedureView(
                 None,
                 mark_safe(
                     f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
-                    <a href=’{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}’>
-                        contacter l’équipe du guichet unique de la haie
-                    </a> en indiquant l’identifiant du dossier."""
+                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                        contacter l'équipe du guichet unique de la haie
+                    </a> en indiquant l'identifiant du dossier."""
                 ),
             )
             return self.render_to_response(
@@ -1902,8 +1902,8 @@ class PetitionProjectInstructorProcedureView(
                     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                         messages.info(
                             self.request,
-                            """L’accès à l’API « Démarche numérique » n’est pas activée.
-                            Le message n’est pas envoyé""",
+                            """L'accès à l'API « Démarche numérique » n'est pas activée.
+                            Le message n'est pas envoyé""",
                         )
                     else:
                         raise DemarcheNumeriqueError(message="DN message not sent")
@@ -1935,12 +1935,12 @@ class PetitionProjectInstructorProcedureView(
         except DemarcheNumeriqueError:
             messages.error(
                 self.request,
-                f"""Le message n’a pas pu être envoyé.
+                f"""Le message n'a pas pu être envoyé.
                 Merci de ré-essayer dans quelques minutes.
                 Si le problème persiste,
-                <a href=’{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}’>
-                    contacter l’équipe du guichet unique de la haie
-                </a> en indiquant l’identifiant du dossier.
+                <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                    contacter l'équipe du guichet unique de la haie
+                </a> en indiquant l'identifiant du dossier.
                 """,
             )
             return HttpResponseRedirect(self.get_success_url())
@@ -1996,7 +1996,7 @@ class PetitionProjectInstructorProcedureView(
             due_date=new_due_date,
             created_by=self.request.user,
             update_comment=(
-                "Reprise de l’instruction, date d’échéance ajustée."
+                "Reprise de l’instruction, date d'échéance ajustée."
                 if new_due_date
                 else "Reprise de l’instruction."
             ),
