@@ -402,7 +402,8 @@ def request_for_info_message(petition_project, is_regime_unique):
     else:
         ru_fragment = ""
 
-    message = dedent(f"""
+    message = dedent(
+        f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
@@ -417,7 +418,8 @@ def request_for_info_message(petition_project, is_regime_unique):
         {ru_fragment}
         Cordialement,
         Le guichet unique de la haie – {petition_project.department}
-    """)
+    """
+    )
     return message.strip()
 
 
