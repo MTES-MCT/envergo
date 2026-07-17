@@ -71,7 +71,8 @@ from envergo.moulinette.fields import (
 from envergo.moulinette.forms import (
     DisplayIntegerField,
     MoulinetteFormAmenagement,
-    MoulinetteFormHaie,
+    MoulinetteFormHaieHRU,
+    MoulinetteFormHaieRU,
     TriageFormHaie,
 )
 from envergo.moulinette.regulations import (
@@ -1463,7 +1464,8 @@ class ConfigHaie(ConfigBase):
         }
         main_form_fields = {
             (key, field.label)
-            for key, field in MoulinetteHaie.main_form_class.base_fields.items()
+            for form_class in (MoulinetteFormHaieRU, MoulinetteFormHaieHRU)
+            for key, field in form_class.base_fields.items()
         }
 
         identified_sources = {
@@ -2634,42 +2636,20 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     result_available_soon = "haie/moulinette/result_non_disponible.html"
     result_non_disponible = "haie/moulinette/result_non_disponible.html"
     form_template = "haie/moulinette/form.html"
-    main_form_class = MoulinetteFormHaie
     triage_form_class = TriageFormHaie
 
     def _get_single_procedure(self):
         config = self.config
         return config.single_procedure if config else False
 
-    def get_main_form(self):
-        """Instantiate the main form with data.
-
-        Overridden to pass some context to the main form constructor
-        """
-        return self.get_main_form_class()(
-            single_procedure=self._get_single_procedure(), **self.form_kwargs
+    def get_main_form_class(self):
+        """Return the form class for the main questions."""
+        FormClass = (
+            MoulinetteFormHaieRU
+            if self._get_single_procedure()
+            else MoulinetteFormHaieHRU
         )
-
-    @cached_property
-    def bound_main_form(self):
-        """Get the main form with forced bound data.
-
-        Overridden to pass some context to the main form constructor
-
-        When we display the moulinette form, we show the main form with
-        initial values. But if the initial data would be valid data, then we
-        want to also display the additional forms.
-
-        In that case, we force a form validation by creating a moulinette form
-        where we pass initial data as validation data.
-        """
-        if self.main_form.is_bound:
-            return self.main_form
-        form_kwargs = self.form_kwargs.copy()
-        form_kwargs["data"] = form_kwargs.get("initial", {})
-        return self.get_main_form_class()(
-            single_procedure=self._get_single_procedure(), **form_kwargs
-        )
+        return FormClass
 
     @property
     def result(self):
@@ -2870,6 +2850,11 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch / compute data required for further computations."""
 
         data = super().get_catalog_data()
+
+        if "reimplantation" not in data:
+            raw = self.bound_main_form.data
+            data["reimplantation"] = raw.get("reimplantation", "replantation")
+
         if "haies" in data:
             hedges = data["haies"]
             data["departments_lengths"] = hedges.departments_lengths()

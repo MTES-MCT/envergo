@@ -1030,3 +1030,165 @@ def test_triage_nul_byte_in_department(client):
     url = reverse("triage")
     res = client.get(f"{url}?department=44%00")
     assert res.status_code in (200, 302)
+
+
+class TestReimplantationFieldRemoval:
+    """In regime unique, the reimplantation question is removed from the
+    main form. When regime unique is not activated, it stays visible and
+    required.
+
+    When absent from the submitted data (RU or saved simulations),
+    criteria that need it fall back to "replantation".
+    """
+
+    REIMPLANTATION_LABEL = "Est-il prévu de planter une nouvelle haie"
+
+    def test_field_not_shown_on_form_page_ru(self, client):
+        """Regime unique: the reimplantation question does not appear."""
+        RUConfigHaieFactory()
+        url = reverse("moulinette_form")
+        params = "department=44&element=haie&travaux=destruction&contexte=non"
+        res = client.get(f"{url}?{params}")
+
+        assert res.status_code == 200
+        assert self.REIMPLANTATION_LABEL not in res.content.decode()
+
+    def test_simulation_valid_without_reimplantation_ru(self, client):
+        """Regime unique: a simulation is valid without reimplantation."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=False,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_form")
+        triage = urlencode(
+            {
+                "department": "44",
+                "element": "haie",
+                "travaux": "destruction",
+                "contexte": "non",
+            }
+        )
+        data = {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "localisation_pac": "non",
+            "haies": str(hedges.id),
+        }
+        res = client.post(f"{url}?{triage}", data)
+
+        assert FORM_ERROR not in res.content.decode()
+
+    def test_field_shown_on_form_page_dc(self, client):
+        """Regime unique not activated: the reimplantation question appears."""
+        DCConfigHaieFactory()
+        url = reverse("moulinette_form")
+        params = "department=44&element=haie&travaux=destruction&contexte=non"
+        res = client.get(f"{url}?{params}")
+
+        assert res.status_code == 200
+        assert self.REIMPLANTATION_LABEL in res.content.decode()
+
+    def test_default_value_used_when_absent_ru_bcae8(self, client):
+        """Regime unique + BCAE8: without reimplantation in the data,
+        the criterion falls back to 'replantation'."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=True,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "replantation"
+
+    def test_provided_value_used_when_present_dc_bcae8(self, client):
+        """When reimplantation is in the URL (saved simulation),
+        the provided value is used."""
+        DCConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "reimplantation": "non",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "non"
+
+    def test_provided_value_used_when_present_ru(self, client):
+        """Regime unique: when reimplantation is in the URL (saved
+        simulation), the provided value is used despite the field not
+        being on the form."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=True,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_result")
+        data = {
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "reimplantation": "non",
+            "localisation_pac": "oui",
+            "department": "44",
+            "haies": hedges.id,
+            "lineaire_total": 100,
+            "transfert_parcelles": "non",
+            "meilleur_emplacement": "non",
+        }
+        query = urlencode(data)
+        res = client.get(f"{url}?{query}")
+
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "non"
