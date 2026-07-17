@@ -13,14 +13,11 @@
           </div>
           <div class="fr-modal__content">
             <h2 id="state-change-modal-title" class="fr-modal__title">Modification de l'état du dossier</h2>
-            {{ dn_status_mapping|json_script:"ds-status-mapping" }}
-            {{ dn_status_labels|json_script:"ds-status-labels" }}
             <form method="post"
                   action=""
                   novalidate
                   enctype="multipart/form-data"
-                  class="fr-mb-3w"
-                  data-current-ds-status="{{ petition_project.demarche_numerique_state }}">
+                  class="fr-mb-3w">
               {% csrf_token %}
               <input type="hidden" name="action" value="state_change">
               {% include '_form_snippet.html' with form=state_change_form %}
@@ -32,14 +29,6 @@
                   <p>Le nouveau document de décision remplacera celui actuellement attaché au dossier.</p>
                 </div>
               {% endif %}
-              <div id="state-change-notice"
-                   class="fr-alert fr-alert--info fr-mb-2w"
-                   style="display: none">
-                <p id="state-change-transition-text"></p>
-                <p>
-                  <strong>Le demandeur sera notifié de la mise à jour du statut de son dossier.</strong>
-                </p>
-              </div>
               <button type="submit" class="fr-btn">Enregistrer</button>
             </form>
             {% for decision in DECISIONS %}

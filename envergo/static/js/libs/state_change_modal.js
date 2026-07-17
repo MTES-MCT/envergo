@@ -3,7 +3,6 @@
  *
  * Three independent concerns react to the stage and decision <select>s:
  *  - the per-stage objective help text,
- *  - the Démarches Simplifiées state-change notice,
  *  - the closing fields (simulation check, prefectural order, applicant
  *    message) plus the message template pre-filled from the decision.
  *
@@ -21,12 +20,6 @@
     TACIT: "tacit_agreement",
     EXPRESS: "express_agreement",
     OPPOSITION: "opposition",
-  };
-
-  // DS states whose transition is worth an extra word of warning.
-  const DS_STATE = {
-    UNDER_INSTRUCTION: "en_instruction",
-    UNDER_CONSTRUCTION: "en_construction",
   };
 
   // Closing fields and the decisions that make them mandatory. A field is
@@ -60,7 +53,6 @@
   const show = (elt, visible) => {
     if (elt) elt.style.display = visible ? "block" : "none";
   };
-  const readJson = (id) => JSON.parse(document.getElementById(id).textContent);
 
   class StateChangeModal {
     constructor(form) {
@@ -69,15 +61,6 @@
       this.decisionInput = form.querySelector("#id_decision");
       this.dueDateInput = form.querySelector("#id_due_date");
       this.applicantMessageInput = form.querySelector("#id_applicant_message");
-
-      // Démarches Simplifiées state-change notice.
-      this.stateChangeNotice = document.getElementById("state-change-notice");
-      this.stateChangeText = document.getElementById("state-change-transition-text");
-      this.currentDsState = form.dataset.currentDsStatus;
-      this.currentStage = readJson("current-stage");
-      this.dsStateByStageDecision = readJson("ds-status-mapping");
-      this.dsStateLabels = readJson("ds-status-labels");
-      this.forbiddenTransitions = readJson("forbidden-transitions");
     }
 
     /**
@@ -117,7 +100,6 @@
     sync() {
       this.syncStageObjective();
       this.syncClosingFields();
-      this.syncStateChangeNotice();
     }
 
     /**
@@ -150,28 +132,6 @@
       });
     }
 
-    /**
-     * Warn the instructor when saving will change the Démarches Simplifiées
-     * state.
-     *
-     * Shown only for a real, allowed transition: the target state differs from
-     * the current one and the stage move is not forbidden.
-     */
-    syncStateChangeNotice() {
-      const nextDsState = (this.dsStateByStageDecision[this.stage] || {})[this.decision];
-      const changes =
-        nextDsState &&
-        nextDsState !== this.currentDsState &&
-        !this.isForbidden(this.currentStage, this.stage);
-
-      show(this.stateChangeNotice, changes);
-      if (!changes) return;
-
-      this.stateChangeText.textContent =
-        `Le dossier passe de l'état « ${this.dsLabel(this.currentDsState)} » ` +
-        `à « ${this.dsLabel(nextDsState)} » sur Démarche Numérique.` +
-        this.dsTransitionHint(nextDsState);
-    }
 
     /**
      * Pre-fill the applicant message from the selected decision's template.
@@ -202,28 +162,6 @@
       }
     }
 
-    isForbidden(from, to) {
-      return this.forbiddenTransitions.some(([f, t]) => f === from && t === to);
-    }
-
-    dsLabel(state) {
-      return this.dsStateLabels[state] || state;
-    }
-
-    /**
-     * Spell out what a DS state change means for the applicant: passing to
-     * instruction locks their editing, returning to construction unlocks it.
-     * Empty for transitions with no such effect.
-     */
-    dsTransitionHint(nextDsState) {
-      if (nextDsState === DS_STATE.UNDER_INSTRUCTION) {
-        return " Il ne sera donc plus modifiable par le demandeur.";
-      }
-      if (nextDsState === DS_STATE.UNDER_CONSTRUCTION) {
-        return " Il sera donc à nouveau modifiable par le demandeur.";
-      }
-      return "";
-    }
   }
 
   exports.StateChangeModal = StateChangeModal;
