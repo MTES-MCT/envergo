@@ -432,12 +432,15 @@ class BaseMoulinetteFormHaie(BaseMoulinetteForm):
     def validate_reimplantation(self):
         """Reject impossible motif + reimplantation combos.
 
-        Reads from raw data so it works whether or not the reimplantation
-        field is declared on the form. Adds the error to the field when
+        Checks both bound data (POST) and initial data (URL params),
+        because in RU mode the field is absent from the form and the
+        value only comes from the URL. Adds the error to the field when
         it exists (HRU), or as a non-field error otherwise (RU).
         """
-        reimplantation = self.data.get("reimplantation")
-        motif = self.data.get("motif")
+        reimplantation = self.data.get("reimplantation") or self.initial.get(
+            "reimplantation"
+        )
+        motif = self.data.get("motif") or self.initial.get("motif")
         error = None
 
         if motif == "chemin_acces" and reimplantation == "remplacement":
