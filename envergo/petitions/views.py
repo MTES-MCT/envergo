@@ -1896,9 +1896,9 @@ class PetitionProjectInstructorProcedureView(
                 )
 
                 message = form.cleaned_data["request_message"]
-                ds_response = send_message_dossier_ds(self.object, message)
+                dn_response = send_message_dossier_ds(self.object, message)
 
-                if ds_response is None or ds_response.get("errors") is not None:
+                if dn_response is None or dn_response.get("errors") is not None:
                     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                         messages.info(
                             self.request,
