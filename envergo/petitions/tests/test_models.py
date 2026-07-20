@@ -1,3 +1,4 @@
+from datetime import date
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
@@ -5,9 +6,14 @@ import pytest
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.petitions.models import DOSSIER_STATES, ResultSnapshot
+from envergo.petitions.models import (
+    DOSSIER_STATES,
+    LOG_TYPES,
+    ResultSnapshot,
+    StatusLog,
+)
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE,
     PetitionProjectFactory,
     SimulationFactory,
 )
@@ -169,20 +175,18 @@ class TestResultSnapshot:
 
     @pytest.mark.urls("config.urls_haie")
     @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-    @override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
+    @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
     @patch("envergo.petitions.models.notify")
     @patch("envergo.petitions.models.log_event_raw")
     def test_snapshot_created_on_dossier_submission(self, mock_log_event, mock_notify):
-        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarches_simplifiees."""
+        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarche_numerique."""
         from django.contrib.sites.models import Site
 
         Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
 
         DCConfigHaieFactory()
         # Create project in draft state (not yet submitted)
-        project = PetitionProjectFactory(
-            demarches_simplifiees_state=DOSSIER_STATES.draft
-        )
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
 
         # Count snapshots after project creation
         initial_count = ResultSnapshot.objects.filter(project=project).count()
@@ -196,7 +200,7 @@ class TestResultSnapshot:
             "demarche": {"number": 103363},
         }
 
-        project.synchronize_with_demarches_simplifiees(fake_dossier)
+        project.synchronize_with_demarche_numerique(fake_dossier)
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (
@@ -209,3 +213,76 @@ class TestResultSnapshot:
         )
         # The snapshot should have the updated moulinette_url (with date param added)
         assert "date=2025-01-29" in latest_snapshot.moulinette_url
+
+    @pytest.mark.haie
+    def test_auto_instruction_ru_sets_instruction_d_with_due_date(self):
+        """A « ru » dossier arriving en_instruction is auto-moved to instruction_d
+        with a due date equal to the deposit date."""
+        from django.contrib.sites.models import Site
+
+        Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
+
+        DCConfigHaieFactory()
+        # Default factory category is "ru"
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+        assert project.stage == "to_be_processed"
+
+        fake_dossier = {
+            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+            "state": "en_instruction",
+            "dateDepot": "2025-01-29T16:25:03+01:00",
+            "usager": {"email": "test@example.com"},
+            "demarche": {"number": 103363},
+        }
+
+        project.synchronize_with_demarche_numerique(fake_dossier)
+
+        status_log = StatusLog.objects.filter(
+            petition_project=project,
+            type=LOG_TYPES.status_change,
+            stage="instruction_d",
+        ).first()
+        assert status_log is not None
+        # Due date is the deposit date + 2 months (instruction period)
+        assert status_log.due_date == date(2025, 3, 29)
+
+        project.refresh_from_db()
+        assert project.stage == "instruction_d"
+        assert project.due_date == date(2025, 3, 29)
+
+    @pytest.mark.haie
+    def test_auto_instruction_non_ru_sets_instruction_h_without_due_date(self):
+        """A non-« ru » dossier arriving en_instruction is auto-moved to instruction_h
+        without a due date."""
+        from django.contrib.sites.models import Site
+
+        Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
+
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(
+            underscore_category="hru",
+            demarche_numerique_state=DOSSIER_STATES.draft,
+        )
+        assert project.stage == "to_be_processed"
+
+        fake_dossier = {
+            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+            "state": "en_instruction",
+            "dateDepot": "2025-01-29T16:25:03+01:00",
+            "usager": {"email": "test@example.com"},
+            "demarche": {"number": 103363},
+        }
+
+        project.synchronize_with_demarche_numerique(fake_dossier)
+
+        status_log = StatusLog.objects.filter(
+            petition_project=project,
+            type=LOG_TYPES.status_change,
+            stage="instruction_h",
+        ).first()
+        assert status_log is not None
+        assert status_log.due_date is None
+
+        project.refresh_from_db()
+        assert project.stage == "instruction_h"
+        assert project.due_date is None

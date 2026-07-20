@@ -17,10 +17,10 @@ Celui-ci permet d'envoyer des requêtes GraphQL pour :
 
 Ce client est appelé pour les méthodes
 
-- `envergo.petitions.services.get_demarches_simplifiees_dossier`
+- `envergo.petitions.services.get_demarche_numerique_dossier`
 - `envergo.petitions.services.get_messages_and_senders_from_ds`
 - `envergo.petitions.management.commands.dossier_submission_admin_alert`
 
 Une requête vers « Démarche numérique » peut être aussi exécutées hors du client :
 
-- `envergo.petitions.views.pre_fill_demarche_simplifiee`
+- `envergo.petitions.views.pre_fill_demarche_numerique`

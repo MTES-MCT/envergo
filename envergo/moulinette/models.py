@@ -1370,8 +1370,8 @@ class ConfigHaie(ConfigBase):
         ),
     )
 
-    demarche_simplifiee_number = models.IntegerField(
-        "Numéro de la démarche DS",
+    demarche_numerique_number = models.IntegerField(
+        "Numéro de la « Démarche numérique »",
         blank=True,
         null=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
@@ -1379,14 +1379,14 @@ class ConfigHaie(ConfigBase):
         "https://demarche.numerique.gouv.fr/admin/procedures</a>",
     )
 
-    demarche_simplifiee_pre_fill_config = models.JSONField(
-        "Configuration pré-remplissage DS",
+    demarche_numerique_pre_fill_config = models.JSONField(
+        "Configuration pré-remplissage sur « Démarche numérique »",
         blank=True,
         null=False,
         default=list,
     )
 
-    demarches_simplifiees_display_fields = models.JSONField(
+    demarche_numerique_display_fields = models.JSONField(
         blank=True,
         null=False,
         default=dict,
@@ -1397,23 +1397,23 @@ class ConfigHaie(ConfigBase):
 
     def clean(self):
         super().clean()
-        if self.is_activated and self.demarche_simplifiee_pre_fill_config is not None:
+        if self.is_activated and self.demarche_numerique_pre_fill_config is not None:
             # add constraints on the pre-fill configuration json to avoid unexpected entries
 
-            if not isinstance(self.demarche_simplifiee_pre_fill_config, list):
+            if not isinstance(self.demarche_numerique_pre_fill_config, list):
                 raise ValidationError(
                     {
-                        "demarche_simplifiee_pre_fill_config": "Cette configuration doit être une liste de champs"
+                        "demarche_numerique_pre_fill_config": "Cette configuration doit être une liste de champs"
                         " (ou d'annotations privées) à pré-remplir"
                     }
                 )
 
             availables_sources = {
                 tup[0]
-                for value in self.get_demarche_simplifiee_value_sources().values()
+                for value in self.get_demarche_numerique_value_sources().values()
                 for tup in value
             }
-            for field in self.demarche_simplifiee_pre_fill_config:
+            for field in self.demarche_numerique_pre_fill_config:
                 if (
                     not isinstance(field, dict)
                     or "id" not in field
@@ -1421,7 +1421,7 @@ class ConfigHaie(ConfigBase):
                 ):
                     raise ValidationError(
                         {
-                            "demarche_simplifiee_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
+                            "demarche_numerique_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
                             " au moins l'id côté « Démarche numérique » et la "
                             "source de la valeur côté guichet unique de la haie."
                         }
@@ -1429,21 +1429,21 @@ class ConfigHaie(ConfigBase):
                 if field["value"] not in availables_sources:
                     raise ValidationError(
                         {
-                            "demarche_simplifiee_pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
+                            "demarche_numerique_pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
                             f"valide pour le champ dont l'id est {field['id']}"
                         }
                     )
                 if "mapping" in field and not isinstance(field["mapping"], dict):
                     raise ValidationError(
                         {
-                            "demarche_simplifiee_pre_fill_config": f"Le mapping du champ dont l'id est {field['id']} "
+                            "demarche_numerique_pre_fill_config": f"Le mapping du champ dont l'id est {field['id']} "
                             f"doit être un dictionnaire."
                         }
                     )
 
     @classmethod
-    def get_demarche_simplifiee_value_sources(cls):
-        """Populate a list of available sources for the pre-fill configuration of the demarche simplifiee
+    def get_demarche_numerique_value_sources(cls):
+        """Populate a list of available sources for the pre-fill configuration of the Démarche numérique
 
         This method aggregates :
          * some well known values (e.g. moulinette_url)
@@ -1548,12 +1548,12 @@ class ConfigHaie(ConfigBase):
         constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
                 check=Q(is_activated=False)
-                | Q(demarche_simplifiee_number__isnull=False),
-                name="demarche_simplifiee_number_required_if_activated",
+                | Q(demarche_numerique_number__isnull=False),
+                name="demarche_numerique_number_required_if_activated",
             ),
             CheckConstraint(
-                check=Q(demarche_simplifiee_number__isnull=True)
-                | Q(demarches_simplifiees_display_fields__project_url__isnull=False),
+                check=Q(demarche_numerique_number__isnull=True)
+                | Q(demarche_numerique_display_fields__project_url__isnull=False),
                 name="project_url_id_required_if_demarche_number",
             ),
             CheckConstraint(
@@ -2868,12 +2868,15 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch / compute data required for further computations."""
 
         data = super().get_catalog_data()
-        # TODO check if this goes in extra context
         if "haies" in data:
             hedges = data["haies"]
-            data["has_hedges_outside_department"] = (
-                hedges.has_hedges_outside_department(self.department)
+            data["departments_lengths"] = hedges.departments_lengths()
+            data["main_department"] = hedges.main_department()
+            data["is_multi_departments"] = hedges.is_multi_departments()
+            data["is_outside_department"] = hedges.is_outside_department(
+                self.department
             )
+
             data["hedges_by_category"] = hedges.get_hedges_by_category(
                 self.config.single_procedure
             )
@@ -2937,6 +2940,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     def get_criteria(self):
         """Fetch the criteria that can be activated for this project.
 
+        Criteria can be activated only if its regulation is activated in config.
+
         There are two activation modes for a criterion:
          * department_centroid: activated if the department centroid is in the activation map,
            and there is at least one hedge in the criterion's category
@@ -2966,7 +2971,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             & Exists(centroid_subquery)
             & ~Q(evaluator__in=empty_category_evaluators)
         )
-
         # Filter for hedges_intersection activation mode
         category_qs = []
         for category, hedges in hedges_by_category.items():
@@ -2984,7 +2988,12 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
             final_q |= intersection_q
 
-        return super().get_criteria().filter(final_q)
+        return (
+            super()
+            .get_criteria()
+            .filter(regulation__regulation__in=self.config.regulations_available)
+            .filter(final_q)
+        )
 
     def get_intersecting_map_ids(self, hedges):
         """Find all map IDs whose zones intersect any of the given hedges.

@@ -103,7 +103,7 @@ def test_moulinette_result_with_deactivated_config_admin_access(client, admin_us
     res = client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
     assert ADMIN_MSG in res.content.decode()
 
 
@@ -116,7 +116,7 @@ def test_moulinette_result_with_activated_config(client):
     res = client.get(full_url)
 
     assert res.status_code == 200
-    assertTemplateUsed(res, "moulinette/result.html")
+    assertTemplateUsed(res, "amenagement/moulinette/result.html")
 
 
 def test_moulinette_result_without_params_redirects_to_home(client):

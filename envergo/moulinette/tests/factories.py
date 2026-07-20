@@ -112,17 +112,19 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "ep",
         "natura2000_haie",
         "alignement_arbres",
+        "urbanisme_haie",
         "reserves_naturelles",
         "code_rural_haie",
         "regime_unique_haie",
         "sites_proteges_haie",
         "sites_inscrits_haie",
+        "sites_classes_haie",
         "protection_captages",
     ]
     aa_l3503_handling = "not_handled"
     aa_l3503_contact_info = "<p>À compléter</p>"
-    demarche_simplifiee_number = 123456
-    demarche_simplifiee_pre_fill_config = [
+    demarche_numerique_number = 123456
+    demarche_numerique_pre_fill_config = [
         {
             "id": "123",
             "value": "profil",
@@ -140,7 +142,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
         {"id": "321", "value": "ref_projet"},
         {"id": "654", "value": "url_moulinette"},
     ]
-    demarches_simplifiees_display_fields = {
+    demarche_numerique_display_fields = {
         "project_url": "ABC123",
     }
 

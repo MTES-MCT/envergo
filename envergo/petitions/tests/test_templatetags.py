@@ -8,7 +8,7 @@ from django.test import override_settings
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
 from envergo.petitions.tests.factories import (
-    DEMARCHES_SIMPLIFIEES_FAKE,
+    DEMARCHE_NUMERIQUE_FAKE,
     GET_DOSSIER_FAKE_RESPONSE,
     PetitionProjectFactory,
 )
@@ -51,16 +51,14 @@ def test_display_choice():
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_ds_field(mock_post):
     """Test display Démarche numérique field template tag"""
 
     # Given a config haie with a « Démarche numérique » display field
     config = DCConfigHaieFactory()
-    config.demarches_simplifiees_display_fields.update(
+    config.demarche_numerique_display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
@@ -95,16 +93,14 @@ def test_display_ds_field(mock_post):
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_empty_ds_fields(mock_post):
     """Test display Démarche numérique field template tag"""
 
     # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={
+        demarche_numerique_display_fields={
             "project_url": "ABC123",
         }
     )
@@ -128,16 +124,14 @@ def test_display_empty_ds_fields(mock_post):
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_ds_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
     config = DCConfigHaieFactory(
-        demarches_simplifiees_display_fields={"project_url": "ABC123"}
+        demarche_numerique_display_fields={"project_url": "ABC123"}
     )
-    config.demarches_simplifiees_display_fields.update(
+    config.demarche_numerique_display_fields.update(
         {
             "motivation": "Q3IMAGINARYBOYS",
         }
@@ -163,14 +157,12 @@ def test_display_ds_field_invalid_field_id(mock_post):
 
 
 @pytest.mark.haie
-@override_settings(DEMARCHES_SIMPLIFIEES=DEMARCHES_SIMPLIFIEES_FAKE)
-@patch(
-    "envergo.petitions.demarches_simplifiees.client.DemarchesSimplifieesClient.execute"
-)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_ds_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
     config = DCConfigHaieFactory()
-    config.demarches_simplifiees_display_fields.update(
+    config.demarche_numerique_display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
@@ -179,7 +171,7 @@ def test_display_ds_field_unavailable_dossier(mock_post):
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is not available
-    petition_project.demarches_simplifiees_raw_dossier = None
+    petition_project.demarche_numerique_raw_dossier = None
     mock_post.return_value = {"data": {"weirdely_formatted": "response"}}
 
     # When I want to display this « Démarche numérique » field in a template

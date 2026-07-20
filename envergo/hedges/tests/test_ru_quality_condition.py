@@ -17,7 +17,6 @@ pytestmark = pytest.mark.django_db
 def make_mock_evaluator(**kwargs):
     """Wrap shared helper with RU-specific defaults."""
     kwargs.setdefault("single_procedure", True)
-    kwargs.setdefault("ep_bonus", 0.0)
     return _make_mock_evaluator(**kwargs)
 
 
@@ -398,6 +397,6 @@ class TestRUQualityConditionMustDisplay:
         condition = RUQualityCondition(
             hedge_data.hedges(),
             0,
-            make_mock_evaluator(ep_bonus=0.0, effective_coefficients=coefficients),
+            make_mock_evaluator(effective_coefficients=coefficients),
         )
         assert not condition.must_display()

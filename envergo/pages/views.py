@@ -113,6 +113,9 @@ class HomeHaieView(DepartmentSearchMixin, TemplateView):
         )
         context["activated_configs"] = configs
         context["max_department_tiles"] = settings.HOME_MAX_DEPARTMENT_TILES
+        context["is_single_procedure_activated"] = (
+            settings.HAIE_SINGLE_PROCEDURE_ACTIVATED
+        )
         return context
 
 
