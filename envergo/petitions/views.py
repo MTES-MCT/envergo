@@ -74,7 +74,6 @@ from envergo.petitions.forms import (
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
     SimulationForm,
-    validate_simulation_url,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1566,9 +1565,16 @@ class PetitionProjectInstructorAlternativeEdit(
                 [],
             )
 
-        is_valid, errors, moulinette = validate_simulation_url(
-            simulation.moulinette_url
-        )
+        moulinette_url = MoulinetteUrl(simulation.moulinette_url)
+
+        moulinette = moulinette_url.get_moulinette()
+        if moulinette:
+            is_valid = moulinette.is_valid()
+            errors = moulinette.get_errors()
+        else:
+            is_valid = False
+            errors = []
+
         if not is_valid:
             return self.reject_activation(
                 request,
