@@ -959,12 +959,12 @@ class TestDensityLazyComputation:
 
         mock_centroid.assert_not_called()
         assert result == {
-            "length_200": None,
-            "length_5000": None,
-            "area_200_ha": None,
-            "area_5000_ha": None,
-            "density_200": None,
-            "density_5000": None,
+            "length_200": 0.0,
+            "length_5000": 0.0,
+            "area_200_ha": 0.0,
+            "area_5000_ha": 0.0,
+            "density_200": 0.0,
+            "density_5000": 0.0,
         }
         assert hedge_data._density is None
 
@@ -976,7 +976,7 @@ class TestDensityLazyComputation:
             result = hedge_data.density_around_lines(HedgeList())
 
         mock_lines.assert_not_called()
-        assert result == {"length_400": None, "area_400_ha": None, "density_400": None}
+        assert result == {"length_400": 0.0, "area_400_ha": 0.0, "density_400": 0.0}
         assert hedge_data._density is None
 
     def test_density_around_lines_is_cached_per_subset(self):
