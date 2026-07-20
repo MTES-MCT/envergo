@@ -452,6 +452,10 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                         code="inconsistent_hedges",
                     ),
                 )
+                # In this case we need hedge_data in context even if its in error
+                if "haies" not in data and haies is not None:
+                    data["haies"] = haies
+
         elif localisation_pac == "non" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
@@ -505,10 +509,6 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                         code="not_supported",
                     ),
                 )
-
-        # We need hedge_data in context even if its in error
-        if "haies" not in data and haies is not None:
-            data["haies"] = haies
 
         return data
 
