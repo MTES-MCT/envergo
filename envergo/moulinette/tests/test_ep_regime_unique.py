@@ -2,6 +2,8 @@
 
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from envergo.geodata.models import MAP_TYPES
 from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_polygon
@@ -241,8 +243,18 @@ def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
     "length, density, expected_code, expected_coeff",
     [
         (8, 60, "dispense", 0.0),  # dispense → no compensation
-        (50, 60, "derogation_simplifiee", 1.75),  # R_ru=1.5 + bonus=0.25
-        (120, 40, "derogation_inventaire", 2.0),  # R_ru=1.5 + bonus=0.5
+        (
+            50,
+            60,
+            "derogation_simplifiee",
+            1.7,
+        ),  # R_ru=1.5 + bonus=0.2 (buissonnante HD)
+        (
+            120,
+            40,
+            "derogation_inventaire",
+            1.7,
+        ),  # R_ru=1.5 + bonus=0.2 (buissonnante LD)
     ],
 )
 def test_ep_ru_replantation_coefficient(
@@ -253,7 +265,7 @@ def test_ep_ru_replantation_coefficient(
     expected_code,
     expected_coeff,
 ):
-    """Replantation coefficient = R_ru + bonus per result level."""
+    """Replantation coefficient = R_ru + per-hedge type/density bonus."""
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=density,
@@ -266,15 +278,15 @@ def test_ep_ru_replantation_coefficient(
 
 
 # ---------------------------------------------------------------------------
-# Sensitive species bonus
+# Sensitive species — no longer affect coefficients
 # ---------------------------------------------------------------------------
 
 
-def test_ep_ru_sensitive_species_bonus_on_derogation_simplifiee(
+def test_ep_ru_sensitive_species_do_not_affect_coefficient(
     ep_ru_criterion,
     regime_unique_haie_criterion,
 ):
-    """Sensitive species add +0.25 to the coefficient for derogation_simplifiee."""
+    """Sensitive species presence does not change the replantation coefficient."""
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=60,
@@ -283,38 +295,6 @@ def test_ep_ru_sensitive_species_bonus_on_derogation_simplifiee(
     )
     criterion = moulinette.ep.ru__ep_regime_unique
     assert criterion.result_code == "derogation_simplifiee"
-
-    evaluator = criterion.get_evaluator()
-    assert evaluator.get_replantation_coefficient() == 1.75
-
-    evaluator.catalog["has_sensitive_species"] = True
-    evaluator.evaluate()
-    assert evaluator.get_replantation_coefficient() == 2.0
-
-
-@pytest.mark.parametrize(
-    "length, density, expected_code",
-    [
-        (8, 60, "dispense"),
-        (120, 40, "derogation_inventaire"),
-    ],
-)
-def test_ep_ru_sensitive_species_no_bonus_other_results(
-    ep_ru_criterion,
-    regime_unique_haie_criterion,
-    length,
-    density,
-    expected_code,
-):
-    """Sensitive species do NOT add a bonus for dispense or derogation_inventaire."""
-    RUConfigHaieFactory()
-    moulinette = make_moulinette_haie_with_density(
-        density=density,
-        hedges=[make_hedge_factory(length=length)],
-        reimplantation="replantation",
-    )
-    criterion = moulinette.ep.ru__ep_regime_unique
-    assert criterion.result_code == expected_code
 
     evaluator = criterion.get_evaluator()
     coeff_before = evaluator.get_replantation_coefficient()
@@ -464,7 +444,7 @@ def test_ep_ru_effective_coefficients_include_bonus(
     ep_ru_criterion,
     regime_unique_haie_criterion,
 ):
-    """The effective_coefficients property returns raw + EP bonus."""
+    """The effective_coefficients property returns raw + per-hedge type/density bonus."""
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=60,
@@ -476,12 +456,44 @@ def test_ep_ru_effective_coefficients_include_bonus(
     assert criterion.result_code == "derogation_simplifiee"
 
     effective = evaluator.effective_coefficients
-    raw = moulinette.catalog["per_hedge_coefficients"]
-    bonus = evaluator.get_ep_ru_bonus()
-    assert bonus > 0
+    hedge_data = moulinette.catalog["ru_hedge_data"]
 
-    for hedge_id, raw_coeff in raw.items():
-        assert effective[hedge_id] == raw_coeff + bonus
+    # Default hedge is buissonnante, density=60 >= X_densite=60 → HD → bonus=0.2
+    for hedge_id, record in hedge_data.items():
+        assert effective[hedge_id] == record["raw_coefficient"] + 0.2
+
+
+@pytest.mark.parametrize(
+    "type_haie, density, expected_bonus",
+    [
+        ("mixte", 40, 0.3),  # arborée + LD: the only entry that differs
+        ("mixte", 60, 0.2),  # arborée + HD (60 >= X_densite=60)
+        ("arbustive", 40, 0.2),
+        ("arbustive", 60, 0.2),
+    ],
+)
+def test_ep_ru_bonus_depends_on_type_and_density(
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+    type_haie,
+    density,
+    expected_bonus,
+):
+    """The EP bonus varies with hedge type and HD/LD classification."""
+    RUConfigHaieFactory()
+    moulinette = make_moulinette_haie_with_density(
+        density=density,
+        hedges=[make_hedge_factory(length=50, type_haie=type_haie)],
+        reimplantation="replantation",
+    )
+    criterion = moulinette.ep.ru__ep_regime_unique
+    assert criterion.result_code == "derogation_simplifiee"
+
+    effective = criterion.get_evaluator().effective_coefficients
+    hedge_data = moulinette.catalog["ru_hedge_data"]
+
+    for hedge_id, record in hedge_data.items():
+        assert effective[hedge_id] == record["raw_coefficient"] + expected_bonus
 
 
 def test_ep_ru_effective_coefficients_diverge_from_ru(
@@ -490,9 +502,9 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
 ):
     """EPRU effective coefficients include the EP bonus; RU's do not.
 
-    Both evaluators share the same raw per_hedge_coefficients. After
-    evaluate(), EPRU's effective_coefficients property adds the bonus
-    while RU's returns the raw values unchanged.
+    Both evaluators share the same ru_hedge_data. After evaluate(),
+    EPRU's effective_coefficients adds the bonus while RU's returns
+    the raw values unchanged.
     """
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
@@ -500,7 +512,7 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-    raw = moulinette.catalog["per_hedge_coefficients"]
+    hedge_data = moulinette.catalog["ru_hedge_data"]
 
     ep_evaluator = moulinette.ep.ru__ep_regime_unique.get_evaluator()
     ep_effective = ep_evaluator.effective_coefficients
@@ -508,9 +520,10 @@ def test_ep_ru_effective_coefficients_diverge_from_ru(
     ru_evaluator = moulinette.regime_unique_haie.ru__regime_unique_haie.get_evaluator()
     ru_effective = ru_evaluator.effective_coefficients
 
-    for hedge_id in raw:
-        assert ep_effective[hedge_id] > raw[hedge_id]
-        assert ru_effective[hedge_id] == raw[hedge_id]
+    for hedge_id, record in hedge_data.items():
+        raw = record["raw_coefficient"]
+        assert ep_effective[hedge_id] > raw
+        assert ru_effective[hedge_id] == raw
 
 
 def test_ep_ru_dispense_effective_empty(
@@ -530,3 +543,43 @@ def test_ep_ru_dispense_effective_empty(
     evaluator = criterion.get_evaluator()
     assert evaluator.effective_coefficients == {}
     assert evaluator.get_replantation_coefficient() == 0.0
+
+
+def test_ru_zone_query_runs_once(
+    france_map,
+    ep_ru_criterion,
+    regime_unique_haie_criterion,
+):
+    """Both evaluators share ru_hedge_data — the zone query runs only once."""
+    zonage_map = MapFactory(map_type=MAP_TYPES.zonage, departments=["44"], zones=[])
+    ZoneFactory(
+        map=zonage_map,
+        geometry=MultiPolygon([france_polygon]),
+        attributes={"identifiant_zone": "zone_A"},
+    )
+    single_procedure_settings = {
+        "coeff_compensation": {
+            "zone_A": {
+                "X_densite": 60,
+                "R1_non_arboree_HD": 1.5,
+                "R2_non_arboree_LD": 1.5,
+                "R3_arboree_HD": 1.5,
+                "R4_arboree_LD": 1.5,
+            }
+        }
+    }
+    RUConfigHaieFactory(
+        single_procedure_settings=single_procedure_settings, has_ru_zonage=True
+    )
+
+    with CaptureQueriesContext(connection) as ctx:
+        moulinette = make_moulinette_haie_with_density(
+            density=60,
+            hedges=[make_hedge_factory(length=50)],
+            reimplantation="replantation",
+        )
+
+    assert "ru_hedge_data" in moulinette.catalog
+
+    zone_queries = [q for q in ctx.captured_queries if "ST_Covers" in q["sql"]]
+    assert len(zone_queries) == 1
