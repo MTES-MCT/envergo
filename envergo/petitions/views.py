@@ -74,7 +74,7 @@ from envergo.petitions.forms import (
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
     SimulationForm,
-    validate_simulation_url,
+    list_moulinette_errors,
 )
 from envergo.petitions.models import (
     DECISIONS,
@@ -1459,6 +1459,9 @@ class PetitionProjectInstructorAlternativeView(
         context["activation_errors"] = self.request.session.pop(
             "activation_errors", None
         )
+        context["activation_category_error"] = self.request.session.pop(
+            "activation_category_error", None
+        )
 
         return context
 
@@ -1551,7 +1554,9 @@ class PetitionProjectInstructorAlternativeEdit(
         """Make the simulation the project's active one, or reject it.
 
         Activation is refused with an explanatory message when the dossier is
-        closed or when the simulation url is no longer a valid moulinette.
+        closed, when the simulation url is no longer a valid moulinette, or
+        when the simulation mixes several hedge categories (a dossier must
+        stay mono-category)
         """
         if not simulation.can_be_activated():
             return self.reject_activation(
@@ -1561,13 +1566,35 @@ class PetitionProjectInstructorAlternativeEdit(
                 [],
             )
 
-        is_valid, errors = validate_simulation_url(simulation.moulinette_url)
+        moulinette_url = MoulinetteUrl(simulation.moulinette_url)
+
+        moulinette = moulinette_url.get_moulinette()
+        if moulinette:
+            is_valid = moulinette.is_valid()
+            errors = list_moulinette_errors(moulinette)
+        else:
+            is_valid = False
+            errors = []
+
         if not is_valid:
             return self.reject_activation(
                 request,
                 simulation,
                 "La simulation n'a pas pu être activée car elle n'est plus valide.",
                 errors,
+            )
+
+        if moulinette.is_multi_category:
+            hedges_by_category = moulinette.catalog["hedges_by_category"]
+            request.session["activation_category_error"] = [
+                f"{category.instructor_label} ({hedges_by_category[category].to_remove().names})"
+                for category in moulinette.results_by_category
+            ]
+            return self.reject_activation(
+                request,
+                simulation,
+                "La simulation n'a pas pu être activée car elle comporte des linéaires de différente catégorie.",
+                [],
             )
 
         with transaction.atomic():
@@ -1577,8 +1604,8 @@ class PetitionProjectInstructorAlternativeEdit(
 
             project = simulation.project
             project.moulinette_url = simulation.moulinette_url
-            url = MoulinetteUrl(project.moulinette_url)
-            project.hedge_data_id = url["haies"]
+            project.hedge_data = moulinette.catalog["haies"]
+            project.category = moulinette.main_category
             project.save()
 
         messages.success(request, "La simulation alternative a été activée.")
