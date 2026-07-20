@@ -5,6 +5,7 @@ from os.path import splitext
 from urllib.parse import urlparse
 
 from dateutil import parser
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
@@ -403,14 +404,21 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
             Simulation.objects.bulk_update(simulations, ["moulinette_url"])
 
-            # For some ConfigHaie, « Démarche numérique » si configurated to set dossier "en_instruction" on creation.
+            # For some ConfigHaie, « Démarche numérique » is configured to set dossier "en_instruction" on creation.
             # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
             if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
+                due_date = None
+                stage = STAGES.instruction_h
+                if self.category == HedgeCategory.ru:
+                    due_date = date_depot + relativedelta(months=2)
+                    stage = STAGES.instruction_d
+
                 StatusLog.objects.create(
                     petition_project=self,
                     type=LOG_TYPES.status_change,
-                    stage="instruction_d",
+                    stage=stage,
                     update_comment="Dépôt du dossier : passage automatique en instruction.",
+                    due_date=due_date,
                 )
 
             usager_email = (
