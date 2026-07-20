@@ -162,9 +162,21 @@ MOTIF_CHOICES = (
         "amelioration_culture",
         mark_safe(
             """
-            Amélioration des conditions d’exploitation agricole<br />
+            Modification de parcelle agricole<br />
             <span class="fr-hint-text">
-                Faciliter l’exploitation mécanique ou la culture des parcelles
+                Regroupement d'îlots, modification de la forme de la parcelle, agrandissement de la surface cultivée…
+            </span>
+            """
+        ),
+    ),
+    (
+        "amenagement",
+        mark_safe(
+            """
+            Opération de construction ou d'aménagement<br/>
+            <span class="fr-hint-text">
+                Création ou agrandissement d’un bâtiment, d’un lotissement, de la voirie, d’une infrastructure ;
+                installation d’équipements : réseaux, bassin…
             </span>
             """
         ),
@@ -173,7 +185,7 @@ MOTIF_CHOICES = (
         "chemin_acces",
         mark_safe(
             """
-            Création d’un accès à la parcelle<br/>
+            Création ou élargissement d'un accès à la parcelle<br/>
             <span class="fr-hint-text">
                 Brèche dans une haie pour créer un chemin, permettre le passage d’engins…
             </span>
@@ -186,19 +198,8 @@ MOTIF_CHOICES = (
             """
             Mise en sécurité, risque sanitaire<br/>
             <span class="fr-hint-text">
-                Sécurité des riverains, de la circulation, d’une installation attenante ; maladie transmissible à
-                d’autres arbres…
-            </span>
-            """
-        ),
-    ),
-    (
-        "amenagement",
-        mark_safe(
-            """
-            Opération de construction ou d'aménagement<br/>
-            <span class="fr-hint-text">
-                Création ou agrandissement d’un bâtiment, d’un lotissement, d’une infrastructure…
+                Sécurité des riverains, de la circulation, d’une installation ou équipement attenant… ;
+                prévention des incendies ; maladie transmissible à d’autres arbres…
             </span>
             """
         ),
@@ -209,8 +210,8 @@ MOTIF_CHOICES = (
             """
             Amélioration environnementale<br/>
             <span class="fr-hint-text">
-                Restauration de la continuité écologique, réimplantation sur un meilleur
-                emplacement environnemental, amélioration de l'accueil de la faune et de la flore…
+                Restauration de la continuité écologique, réimplantation sur un meilleur emplacement environnemental,
+                remplacement par des essences plus favorables à la biodiversité, restauration d’un cours d’eau…
             </span>
             """
         ),
@@ -219,17 +220,25 @@ MOTIF_CHOICES = (
         "embellissement",
         mark_safe(
             """
-            Raison esthétique<br/>
+            Motif paysager ou esthétique<br/>
             <span class="fr-hint-text">
-                Embellissement, amélioration de l’ensoleillement d’une habitation, intervention pour garantir
-                l'esthétique d'un alignement d'arbres…
+                Amélioration de l’ensoleillement d’une habitation, amélioration de la perspective,
+                intervention pour garantir l'esthétique d'un alignement d'arbres…
             </span>
             """
         ),
     ),
     (
         "autre",
-        "Autre",
+        mark_safe(
+            """
+            Autre<br/>
+            <span class="fr-hint-text">
+                Tout motif non couvert par les catégories précédentes, y compris :
+                curage de fossé, pose de drains, installation ou entretien d'une clôture…
+            </span>
+            """
+        ),
     ),
 )
 
