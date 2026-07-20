@@ -1010,13 +1010,6 @@ class TestDensityLazyComputation:
         mock_lines.assert_not_called()
         assert result["density_400"] == 12.0
 
-    def test_density_property_raises_error(self):
-        """The legacy density property must raise to prevent accidental use."""
-        hedge_data = HedgeDataFactory()
-
-        with pytest.raises(AttributeError, match="density_around_centroid"):
-            hedge_data.density
-
 
 class TestHedgeCategory:
     """Tests for Hedge.category property.

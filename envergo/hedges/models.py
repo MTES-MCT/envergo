@@ -642,12 +642,12 @@ class HedgeData(models.Model):
 
         if not hedges:
             return {
-                "length_200": None,
-                "length_5000": None,
-                "area_200_ha": None,
-                "area_5000_ha": None,
-                "density_200": None,
-                "density_5000": None,
+                "length_200": 0.0,
+                "length_5000": 0.0,
+                "area_200_ha": 0.0,
+                "area_5000_ha": 0.0,
+                "density_200": 0.0,
+                "density_5000": 0.0,
             }
 
         density_200, density_5000, _ = (
@@ -681,7 +681,7 @@ class HedgeData(models.Model):
             return self._density[key]
 
         if not hedges:
-            return {"length_400": None, "area_400_ha": None, "density_400": None}
+            return {"length_400": 0.0, "area_400_ha": 0.0, "density_400": 0.0}
 
         density_400_buffer = self.compute_density_around_lines_with_artifacts(hedges)
         if not self._density:
