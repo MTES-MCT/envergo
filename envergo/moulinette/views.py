@@ -324,7 +324,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return self.moulinette.get_home_template()
 
     def post(self, request, *args, **kwargs):
-        # If the moulinette is valid, i.e. it can run the eveluation and provide
+        # If the moulinette is valid, i.e. it can run the evaluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid():
             return HttpResponseRedirect(self.get_result_url())

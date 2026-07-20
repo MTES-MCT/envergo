@@ -429,6 +429,40 @@ def test_moulinette_post_form_hedge_length_within_limit(client):
     assert not Event.objects.filter(category="erreur", event="formulaire-simu").exists()
 
 
+def test_moulinette_post_form_pac_selected_hedge_not_pac(client):
+    """The form shows an error when PAC is selected but no hedge is within PAC area, and
+    haies are listed in localisation des haies."""
+
+    DCConfigHaieFactory()
+    hedge = HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)
+    hedges = HedgeDataFactory(hedges=[hedge])
+    triage = urlencode(
+        {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+        }
+    )
+    data = {
+        "department": "44",
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "haies": str(hedges.id),
+    }
+
+    url = reverse("moulinette_form")
+    res = client.post(f"{url}?{triage}", data)
+
+    assert "1 tracé" in res.content.decode()
+    assert "Linéaire total" in res.content.decode()
+    assert "Aucune haie saisie n’a été marquée sur parcelle PAC" in res.content.decode()
+
+
 def test_result_p_view_with_hedges_to_remove_outside_department(client):
     """Test if a warning is displayed on result pages when hedges to remove are outside department"""
 

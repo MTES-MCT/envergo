@@ -482,6 +482,10 @@ class BaseMoulinetteFormHaie(BaseMoulinetteForm):
                         code="inconsistent_hedges",
                     ),
                 )
+                # We want to keep hedges to remove info even if haies field is in error
+                if "haies" not in data and haies is not None:
+                    data["hedges_to_remove"] = haies
+
         elif localisation_pac == "non" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
