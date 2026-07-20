@@ -2940,6 +2940,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     def get_criteria(self):
         """Fetch the criteria that can be activated for this project.
 
+        Criteria can be activated only if its regulation is activated in config.
+
         There are two activation modes for a criterion:
          * department_centroid: activated if the department centroid is in the activation map,
            and there is at least one hedge in the criterion's category
@@ -2969,7 +2971,6 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             & Exists(centroid_subquery)
             & ~Q(evaluator__in=empty_category_evaluators)
         )
-
         # Filter for hedges_intersection activation mode
         category_qs = []
         for category, hedges in hedges_by_category.items():
@@ -2987,7 +2988,12 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
             final_q |= intersection_q
 
-        return super().get_criteria().filter(final_q)
+        return (
+            super()
+            .get_criteria()
+            .filter(regulation__regulation__in=self.config.regulations_available)
+            .filter(final_q)
+        )
 
     def get_intersecting_map_ids(self, hedges):
         """Find all map IDs whose zones intersect any of the given hedges.
