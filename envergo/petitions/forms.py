@@ -477,7 +477,7 @@ class SimulationForm(forms.ModelForm):
         moulinette = moulinette_url.get_moulinette()
         if moulinette:
             is_valid = moulinette.is_valid()
-            errors = moulinette.get_errors()
+            errors = list_moulinette_errors(moulinette)
         else:
             is_valid = False
             errors = []
