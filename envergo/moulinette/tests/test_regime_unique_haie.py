@@ -8,8 +8,8 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_poly
 from envergo.hedges.models import HedgeCategory, HedgeList
 from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
-from envergo.moulinette.regulations.regime_unique import compute_ru_compensation_ratio
 from envergo.moulinette.regulations.regime_unique_haie import URGENCE_MOTIFS
+from envergo.moulinette.regulations.utils import compute_ru_compensation_ratio
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,

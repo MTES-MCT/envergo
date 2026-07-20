@@ -35,7 +35,7 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique import (
+from envergo.moulinette.regulations.utils import (
     build_ru_hedge_detail_rows,
     collect_zone_configs,
     ensure_ru_hedge_data,

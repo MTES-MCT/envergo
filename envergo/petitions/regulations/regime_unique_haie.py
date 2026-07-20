@@ -1,9 +1,9 @@
 from envergo.hedges.regulations import RUQualityCondition
-from envergo.moulinette.regulations.regime_unique import (
+from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
+from envergo.moulinette.regulations.utils import (
     build_ru_hedge_detail_rows,
     collect_zone_configs,
 )
-from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 

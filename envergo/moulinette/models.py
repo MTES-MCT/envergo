@@ -2929,6 +2929,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
     def get_criteria(self):
         """Fetch the criteria that can be activated for this project.
+
         Criteria can be activated only if its regulation is activated in config.
 
         There are two activation modes for a criterion:
@@ -2977,14 +2978,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             )
             final_q |= intersection_q
 
-        # Activated regulations filter
-        activated_regulations_q = Regulation.objects.filter(
-            regulation__in=self.config.regulations_available
-        )
         return (
             super()
             .get_criteria()
-            .filter(regulation__in=activated_regulations_q)
+            .filter(regulation__regulation__in=self.config.regulations_available)
             .filter(final_q)
         )
 
