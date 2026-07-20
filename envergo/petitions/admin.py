@@ -10,7 +10,6 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from envergo.geodata.models import DEPARTMENT_CHOICES
-from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.models import (
     InvitationToken,
     PetitionProject,
@@ -142,7 +141,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
             dossier_number = obj.demarche_numerique_dossier_number
             try:
                 dossier = get_demarche_numerique_dossier(obj, force_update=True)
-            except DemarcheNumeriqueError:
+            except Exception:
                 logger.exception(
                     "Unable to synchronize petition project %s with dossier %s",
                     obj.reference,

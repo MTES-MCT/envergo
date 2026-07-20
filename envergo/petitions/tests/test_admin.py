@@ -9,7 +9,6 @@ from django.test import RequestFactory, override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.admin import PetitionProjectAdmin
-from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.models import PetitionProject
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -94,7 +93,7 @@ def test_save_model_survives_sync_failure(
     mock_get_dossier, project_admin, admin_request
 ):
     """A DN API error must not prevent saving the project."""
-    mock_get_dossier.side_effect = DemarcheNumeriqueError(message="DN API is down")
+    mock_get_dossier.side_effect = RuntimeError("unexpected boom")
     project = PetitionProjectFactory()
     form = Mock(changed_data=["demarche_numerique_dossier_number"])
 
