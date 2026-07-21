@@ -2,6 +2,7 @@ import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.loi_sur_leau_haie import LoiSurLeauHaieRuForm
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -139,3 +140,26 @@ def test_ru(ripisylve, travaux_berges, technique_consolidation, expected_result)
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.loi_sur_leau_haie.ru__loi_sur_leau_haie.result == expected_result
+
+
+@pytest.mark.parametrize(
+    "ripisylve, expected_form_class",
+    [
+        # A ripisylve hedge is removed → the complementary questions are asked.
+        (True, LoiSurLeauHaieRuForm),
+        # No ripisylve hedge removed → the two fields are dropped (no form).
+        (False, None),
+    ],
+)
+def test_ru_form_is_removed_if_no_ripisylve(ripisylve, expected_form_class):
+    RUConfigHaieFactory()
+    data = make_moulinette_haie_data(
+        hedge_data=[make_hedge(ripisylve=ripisylve, type_haie="mixte")],
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
+    criterion = moulinette.loi_sur_leau_haie.ru__loi_sur_leau_haie
+    assert criterion.get_form_class() is expected_form_class
+    if expected_form_class is None:
+        # The criterion still resolves without requiring the two fields.
+        assert criterion.result == "non_concerne"

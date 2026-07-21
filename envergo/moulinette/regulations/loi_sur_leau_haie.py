@@ -134,6 +134,12 @@ class LoiSurLeauHaieRu(LoiSurLeauHaieHru):
         "non_concerne": RESULTS.non_concerne,
     }
 
+    def get_form_class(self):
+        """Skip the ripisylve questions when no ripisylve hedge is being removed."""
+        if not self.hedges.to_remove().prop("ripisylve").length:
+            return None
+        return super().get_form_class()
+
     CODE_MATRIX = {
         ("destruction_ripisylve", "autre_travaux_sur_cours_d_eau"): "soumis",
         ("pas_de_destruction", "autre_travaux_sur_cours_d_eau"): "non_concerne",
