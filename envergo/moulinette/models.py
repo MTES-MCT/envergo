@@ -2869,9 +2869,11 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
 
         data = super().get_catalog_data()
 
-        if "invalid_hedges" in data and self.config:
-            # We want to display hedges to remove even if haies field is in error, but config must be valid
+        if "invalid_hedges" in data:
+            # We want to display hedges to remove even if haies field has error, but config must be valid
             data["haies"] = data.pop("invalid_hedges")
+            if not self.config:
+                del data["haies"]
 
         if "haies" in data:
             hedges = data["haies"]
