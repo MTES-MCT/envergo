@@ -8,7 +8,7 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.getByText('Toute intervention supprimant définitivement la végétation').click();
     await page.getByText('Uniquement les travaux sur la végétation').click();
     await page.getByRole('button', { name: 'Valider' }).click();
-    await page.getByText('Création d’un accès à la').click();
+    await page.getByText('Création ou élargissement d\'un accès à la parcelle').click();
     await page.locator('label').filter({ hasText: 'Oui, en plantant une haie à' }).click();
     await page.getByText('Oui, au moins une des haies').click();
     await page.getByRole('button', { name: 'Localiser les haies' }).click();

@@ -5,6 +5,7 @@ Determines whether a hedge project falls under the régime unique
 """
 
 from django import forms
+from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
@@ -19,11 +20,10 @@ from envergo.moulinette.regulations import (
     HaieRegulationEvaluator,
     HedgeDensityMixin,
 )
-from envergo.moulinette.regulations.regime_unique import (
-    compute_ru_compensation_ratio,
-    get_ru_debug_context,
-    get_ru_per_hedge_coefficients,
-    get_ru_zone_data,
+from envergo.moulinette.regulations.utils import (
+    collect_zone_configs,
+    ensure_ru_hedge_data,
+    evaluator_replantation_coefficient,
 )
 
 URGENCE_MOTIFS = ("securite", "chemin_acces", "autre")
@@ -37,14 +37,20 @@ class RegimeUniqueHaieForm(forms.Form):
     """
 
     urgence = forms.ChoiceField(
-        label="Les travaux sont-ils réalisés en urgence ?",
+        label=mark_safe(
+            "Les travaux sont-ils réalisés en urgence ?"
+            '<span class="fr-hint-text">Danger immédiat pour des personnes ou des biens, nécessité d\'intervenir sans '
+            "délai pour des raisons sanitaires ou d'accès…</span>"
+        ),
         widget=forms.RadioSelect,
         choices=(
-            ("non", "Non, les travaux ne sont pas réalisés en urgence."),
+            ("non", "Non"),
             (
                 "oui",
-                "Oui, les travaux sont réalisés en urgence et ont déjà été "
-                "exécutés, ou le seront dans les prochains jours.",
+                mark_safe(
+                    "Oui, les travaux sont réalisés en urgence"
+                    '<span class="fr-hint-text">Travaux déjà réalisés, ou prévus dans les prochains jours</span>'
+                ),
             ),
         ),
         required=True,
@@ -122,28 +128,23 @@ class RegimeUniqueHaieRu(
         catalog = super().get_catalog_data()
         if self.moulinette.config.single_procedure:
             catalog.update(self.get_density_catalog_data())
-            if "per_hedge_coefficients" not in self.catalog:
-                zone_data = get_ru_zone_data(self.moulinette, self.hedges)
-                catalog.update(zone_data)
-                zone_configs = zone_data["ru_per_hedge_zone_configs"]
-                catalog.update(
-                    get_ru_per_hedge_coefficients(
-                        self.moulinette, self.hedges, zone_configs
-                    )
-                )
+            ensure_ru_hedge_data(self.moulinette, self.hedges)
         return catalog
 
     def get_debug_context(self):
-        """Return density and per-hedge zone data for the debug template."""
+        """Return density and zone config data for the debug template."""
         context = super().get_debug_context()
-        context.update(get_ru_debug_context(self.catalog))
+        context["ru_zone_configs"] = collect_zone_configs(
+            self.catalog.get("ru_hedge_data", {})
+        )
         return context
 
     @property
     def effective_coefficients(self):
         """Raw per-hedge zone-based compensation coefficients."""
-        return self.catalog.get("per_hedge_coefficients", {})
+        hedge_data = self.catalog.get("ru_hedge_data", {})
+        return {h: rec["raw_coefficient"] for h, rec in hedge_data.items()}
 
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
-        return compute_ru_compensation_ratio(self.moulinette, self.hedges)
+        return evaluator_replantation_coefficient(self)
