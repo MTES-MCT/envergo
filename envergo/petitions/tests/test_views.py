@@ -2247,6 +2247,7 @@ def test_alternatives_list_shows_data(client, haie_instructor_44):
 
 def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
     DCConfigHaieFactory()
+    HaieRegulationFactory()
     project = PetitionProjectFactory(reference="ABC123")
     s2 = SimulationFactory(project=project, comment="Simulation 2")
 
@@ -2279,6 +2280,9 @@ def test_alternative_edit_permission(client, haie_user, haie_instructor_44):
 def test_alternative_activate(client, haie_instructor_44):
 
     DCConfigHaieFactory()
+    # At least one regulation is needed so the moulinette produces results by
+    # category, from which the activation takes the project's new category.
+    HaieRegulationFactory()
     project = PetitionProjectFactory()
     SimulationFactory(project=project, comment="Simulation 2")
 
@@ -2776,6 +2780,186 @@ def test_alternative_activate_rejected_when_simulation_invalid(
     assert any(
         "création d’un accès" in error for error in event.metadata["moulinette_errors"]
     )
+
+
+def test_alternative_activate_rejected_when_multi_category(client, haie_instructor_44):
+    """A multi-category simulation cannot be activated.
+
+    A dossier must stay mono-category, so activating a simulation mixing
+    several hedge categories is rejected with a dedicated alert listing the
+    categories present, and an "erreur"/"simualt_activate" event is recorded.
+    """
+    RUConfigHaieFactory()
+    HaieRegulationFactory()
+    project = PetitionProjectFactory()
+    mixed_hedges = HedgeDataFactory(
+        hedges=[
+            # The "dégradée" type is not allowed under the single procedure.
+            HedgeFactory(id="D1", additionalData__type_haie="arbustive"),  # RU
+            HedgeFactory(id="D2", additionalData__type_haie="alignement"),  # L350-3
+        ]
+    )
+    mixed_url = update_qs(project.moulinette_url, {"haies": str(mixed_hedges.id)})
+    alternative = SimulationFactory(
+        project=project, comment="Mixte", moulinette_url=mixed_url
+    )
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url, follow=True)
+
+    assert response.status_code == 200
+
+    # The simulation is not activated and the project is left untouched.
+    alternative.refresh_from_db()
+    assert not alternative.is_active
+    assert project.simulations.get(is_initial=True).is_active
+    original_hedge_data_id = project.hedge_data_id
+    project.refresh_from_db()
+    assert project.hedge_data_id == original_hedge_data_id
+    assert project._category == "ru"
+
+    page_messages = [str(message) for message in response.context["messages"]]
+    assert any("linéaires de différente catégorie" in m for m in page_messages)
+
+    # The dedicated alert lists the categories present in the simulation.
+    content = response.content.decode()
+    assert "Erreur d'activation de la simulation" in content
+    assert "Haies régime unique (D1)" in content
+    assert "Alignements arbres L350-3 (D2)" in content
+    assert "Chaque dossier déposé ne peut contenir qu'une seule catégorie" in content
+
+    event = Event.objects.get(category="erreur", event="simualt_activate")
+    assert event.metadata["reference"] == project.reference
+    assert event.metadata["user_type"] == "instructor"
+    assert event.metadata["moulinette_url"] == mixed_url
+    assert "catégorie" in event.metadata["message"]
+
+
+def test_alternative_activate_updates_project_category(client, haie_instructor_44):
+    """Activating a mono-category simulation gives its category to the dossier.
+
+    A simulation of a single category different from the dossier's one is
+    activatable: the dossier then takes on the simulation's category.
+    """
+    RUConfigHaieFactory()
+    HaieRegulationFactory()
+    project = PetitionProjectFactory()
+    assert project._category == "ru"
+
+    alignment_hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(id="D1", additionalData__type_haie="alignement")]
+    )
+    l350_3_url = update_qs(project.moulinette_url, {"haies": str(alignment_hedges.id)})
+    alternative = SimulationFactory(
+        project=project, comment="L350-3", moulinette_url=l350_3_url
+    )
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url)
+
+    assert response.status_code == 302
+    alternative.refresh_from_db()
+    assert alternative.is_active
+    project.refresh_from_db()
+    assert project.moulinette_url == alternative.moulinette_url
+    assert project.hedge_data_id == alignment_hedges.id
+    assert project._category == "l350_3"
+
+
+def test_alternative_activate_mixed_hedges_without_single_procedure(
+    client, haie_instructor_44
+):
+    """Without single procedure, mixed hedges are no obstacle to activation.
+
+    All hedges then fall under the same (hors régime unique) procedure, so the
+    multi-category rejection does not apply and the dossier becomes hru.
+    """
+    DCConfigHaieFactory()
+    HaieRegulationFactory()
+    project = PetitionProjectFactory()
+    mixed_hedges = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(id="D1"),
+            HedgeFactory(id="D2", additionalData__type_haie="alignement"),
+        ]
+    )
+    mixed_url = update_qs(project.moulinette_url, {"haies": str(mixed_hedges.id)})
+    alternative = SimulationFactory(
+        project=project, comment="Mixte", moulinette_url=mixed_url
+    )
+
+    activate_url = reverse(
+        "petition_project_instructor_alternative_edit",
+        kwargs={
+            "reference": project.reference,
+            "simulation_id": alternative.id,
+            "action": "activate",
+        },
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(activate_url)
+
+    assert response.status_code == 302
+    alternative.refresh_from_db()
+    assert alternative.is_active
+    project.refresh_from_db()
+    assert project._category == "hru"
+
+
+def test_alternative_create_allows_multi_category(client, haie_instructor_44):
+    """Saving a multi-category alternative simulation stays possible.
+
+    Only the activation is blocked for multi-category simulations; recording
+    one as an inert alternative must keep working.
+    """
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory()
+    mixed_hedges = HedgeDataFactory(
+        hedges=[
+            # The "dégradée" type is not allowed under the single procedure.
+            HedgeFactory(id="D1", additionalData__type_haie="arbustive"),  # RU
+            HedgeFactory(id="D2", additionalData__type_haie="alignement"),  # L350-3
+        ]
+    )
+    mixed_url = update_qs(project.moulinette_url, {"haies": str(mixed_hedges.id)})
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_instructor_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": mixed_url,
+            "source": "instructor",
+            "comment": "Simulation multi-catégorie",
+        },
+    )
+
+    assert response.status_code == 302
+    assert project.simulations.count() == 2
+    created = project.simulations.get(is_initial=False)
+    assert not created.is_active
 
 
 # =============================================================================

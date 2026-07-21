@@ -112,11 +112,13 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "ep",
         "natura2000_haie",
         "alignement_arbres",
+        "urbanisme_haie",
         "reserves_naturelles",
         "code_rural_haie",
         "regime_unique_haie",
         "sites_proteges_haie",
         "sites_inscrits_haie",
+        "sites_classes_haie",
         "protection_captages",
         "loi_sur_leau_haie",
     ]
