@@ -133,7 +133,7 @@
                     <td>
                       {% include 'haie/petitions/_hedge_category.html' with category=project.category is_light=True %}
 
-                      {% if urgence == "oui" and config.single_procedure %}
+                      {% if project.moulinette_data.urgence == "oui" and project.config.single_procedure %}
                         <span class="fr-badge fr-badge--pink-tuile fr-badge--sm">Urgence</span>
                       {% endif %}
                     </td>
