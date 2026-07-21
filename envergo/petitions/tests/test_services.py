@@ -18,6 +18,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     RegulationFactory,
 )
+from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations.alignementarbres import (
@@ -29,6 +30,9 @@ from envergo.petitions.regulations.conditionnalitepac import (
 from envergo.petitions.regulations.ep import (
     ep_aisne_get_instructor_view_context,
     ep_normandie_get_instructor_view_context,
+)
+from envergo.petitions.regulations.loi_sur_leau_haie import (
+    loi_sur_leau_haie_get_instructor_view_context,
 )
 from envergo.petitions.services import (
     compute_instructor_informations_ds,
@@ -844,6 +848,58 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     assert aa_bord_voie_to_plant_hedge.type == "TO_PLANT"
     assert aa_bord_voie_to_plant_hedge.hedge_type == "alignement"
     assert aa_bord_voie_to_plant_hedge.prop("bord_voie") is True
+
+
+def test_loi_sur_leau_haie_get_instructor_view_context(france_map):  # noqa
+    """The getter exposes only the ripisylve hedges (to remove and to plant)."""
+
+    regulation = RegulationFactory(
+        regulation="loi_sur_leau_haie",
+        evaluator="envergo.moulinette.regulations.loi_sur_leau_haie.LoiSurLeauHaieRegulation",
+    )
+    for title, evaluator in [
+        ("Loi sur l'eau Haie HRU", "LoiSurLeauHaieHru"),
+        ("Loi sur l'eau Haie L350-3", "LoiSurLeauHaieL3503"),
+        ("Loi sur l'eau Haie RU", "LoiSurLeauHaieRu"),
+    ]:
+        CriterionFactory(
+            title=title,
+            regulation=regulation,
+            evaluator=f"envergo.moulinette.regulations.loi_sur_leau_haie.{evaluator}",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        )
+
+    data = make_moulinette_haie_data(
+        hedge_data=[
+            make_hedge(hedge_id="D1", type_haie="mixte", ripisylve=True),
+            make_hedge(hedge_id="D2", type_haie="mixte", ripisylve=False),
+            make_hedge(
+                hedge_id="P1",
+                hedge_type="TO_PLANT",
+                type_haie="mixte",
+                ripisylve=True,
+            ),
+        ],
+        reimplantation="replantation",
+    )
+    petition_project = PetitionProjectFactory(hedge_data=data["data"]["haies"])
+    DCConfigHaieFactory()
+
+    moulinette = MoulinetteHaie(data)
+    assert moulinette.is_valid(), moulinette.form_errors
+    plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+
+    context = loi_sur_leau_haie_get_instructor_view_context(
+        moulinette.loi_sur_leau_haie.get_evaluator(),
+        petition_project,
+        moulinette,
+        plantation_eval,
+    )
+
+    ripisylve_ids = {hedge.id for hedge in context["ripisylve_hedges"]}
+    assert ripisylve_ids == {"D1", "P1"}
+    assert "D2" not in ripisylve_ids
 
 
 @pytest.mark.haie

@@ -120,6 +120,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
         "sites_inscrits_haie",
         "sites_classes_haie",
         "protection_captages",
+        "loi_sur_leau_haie",
     ]
     aa_l3503_handling = "not_handled"
     aa_l3503_contact_info = "<p>À compléter</p>"

@@ -13,6 +13,7 @@ from envergo.moulinette.regulations import (  # noqa
     conditionnalitepac,
     ep,
     evalenv,
+    loi_sur_leau_haie,
     loisurleau,
     natura2000,
     natura2000_haie,
