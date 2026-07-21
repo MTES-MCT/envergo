@@ -2868,6 +2868,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch / compute data required for further computations."""
 
         data = super().get_catalog_data()
+
+        if "invalid_hedges" in data:
+            # We want to display hedges to remove even if haies field has error, but config must be valid
+            data["haies"] = data.pop("invalid_hedges")
+            if not self.config:
+                del data["haies"]
+
         if "haies" in data:
             hedges = data["haies"]
             data["departments_lengths"] = hedges.departments_lengths()
@@ -2880,6 +2887,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["hedges_by_category"] = hedges.get_hedges_by_category(
                 self.config.single_procedure
             )
+
         else:
             data["hedges_by_category"] = {category: [] for category in HedgeCategory}
 
