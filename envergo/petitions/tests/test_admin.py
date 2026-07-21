@@ -95,11 +95,13 @@ def test_save_model_survives_sync_failure(
     """A DN API error must not prevent saving the project."""
     mock_get_dossier.side_effect = RuntimeError("unexpected boom")
     project = PetitionProjectFactory()
+    project.demarche_numerique_dossier_number = 99999
     form = Mock(changed_data=["demarche_numerique_dossier_number"])
 
     project_admin.save_model(admin_request, project, form, change=True)
 
-    assert PetitionProject.objects.filter(pk=project.pk).exists()
+    project.refresh_from_db()
+    assert project.demarche_numerique_dossier_number == 99999
     stored = list(get_messages(admin_request))
     assert len(stored) == 1
     assert stored[0].level == messages.ERROR
