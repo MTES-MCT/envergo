@@ -1,8 +1,9 @@
 import json
+import logging
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
@@ -15,9 +16,12 @@ from envergo.petitions.models import (
     ResultSnapshot,
     Simulation,
 )
+from envergo.petitions.services import get_demarche_numerique_dossier
 from envergo.users.models import User
 from envergo.utils.validators import validate_mime
 from envergo.utils.widgets import JSONWidget
+
+logger = logging.getLogger(__name__)
 
 
 class InvitationTokenInlineForm(forms.ModelForm):
@@ -123,6 +127,47 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         return queryset.select_related("department", "hedge_data").defer(
             "department__geometry"
         )
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        # A manually attached dossier is never picked up by the hourly sync
+        # command (its `updatedSince` filter excludes dossiers not recently
+        # updated on the DN side), so we force a sync right away.
+        if (
+            "demarche_numerique_dossier_number" in form.changed_data
+            and obj.demarche_numerique_dossier_number
+        ):
+            dossier_number = obj.demarche_numerique_dossier_number
+            try:
+                dossier = get_demarche_numerique_dossier(obj, force_update=True)
+            except Exception:
+                logger.exception(
+                    "Unable to synchronize petition project %s with dossier %s",
+                    obj.reference,
+                    dossier_number,
+                )
+                self.message_user(
+                    request,
+                    f"La synchronisation avec Démarche Numérique a échoué pour le "
+                    f"dossier n°{dossier_number}. Le projet a bien été enregistré.",
+                    messages.ERROR,
+                )
+            else:
+                if dossier:
+                    self.message_user(
+                        request,
+                        f"Le dossier Démarche Numérique n°{dossier_number} a été "
+                        f"synchronisé avec le projet.",
+                        messages.SUCCESS,
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        f"Aucun dossier Démarche Numérique trouvé pour le "
+                        f"n°{dossier_number} — vérifiez le numéro.",
+                        messages.WARNING,
+                    )
 
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj))
