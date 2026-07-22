@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from datetime import date
 from itertools import groupby
 from operator import attrgetter
 from urllib.parse import urlencode
@@ -820,11 +821,16 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
     template_name = "haie/moulinette/confighaie_settings.html"
 
     def get_object(self, queryset=None):
-        """Return ConfigHaie for the department, optionally by date slug.
+        """Return ConfigHaie for the department, optionally discriminated by date.
 
-        When a ``date_slug`` kwarg is present the lookup targets a specific
-        config (by its validity_range lower bound). Otherwise, the currently
-        valid config is returned — same behavior as before.
+        Two complementary discriminators are supported:
+
+        - a ``date_slug`` kwarg (URL path) targets a specific config by its
+          exact ``validity_range`` bounds — see ``ConfigBase.date_slug``;
+        - a ``?date=YYYY-MM-DD`` query parameter targets the config *valid at*
+          that calendar date.
+
+        ``date_slug`` takes precedence when both are present.
         """
         if queryset is None:
             queryset = self.get_queryset()
@@ -832,8 +838,17 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
             self.department = self.get_departement()
 
         date_slug = self.kwargs.get("date_slug")
+        at_date_str = self.request.GET.get("date")
         if date_slug:
             obj = queryset.get_by_date_slug(self.department, date_slug)
+            if obj is None:
+                raise ConfigHaie.DoesNotExist
+        elif at_date_str:
+            try:
+                at_date = date.fromisoformat(at_date_str)
+            except ValueError:
+                raise ConfigHaie.DoesNotExist
+            obj = queryset.get_valid_config(self.department, at_date)
             if obj is None:
                 raise ConfigHaie.DoesNotExist
         else:

@@ -1,3 +1,4 @@
+from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import RUQualityCondition
 from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.moulinette.regulations.utils import (
@@ -14,6 +15,7 @@ def regime_unique_haie_get_instructor_view_context(
     """Build régime unique haie parameters for the instructor view."""
     context = {
         "replantation_coefficient": evaluator.get_replantation_coefficient(),
+        "HedgeCategory": HedgeCategory,
     }
 
     context["ru_zone_configs"] = collect_zone_configs(
