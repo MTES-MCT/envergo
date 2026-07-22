@@ -3,9 +3,13 @@
 <h5 class="fr-mt-3w">Calcul de la compensation attendue</h5>
 
 <ul class="instructor-view-list">
-  {% include 'haie/petitions/_item.html' with label="Densité bocagère des haies à détruire (rayon 400 m) :" value=density_400|floatformat:"1g" unit="ml/ha" %}
+  {% include 'haie/petitions/_item.html' with label="Densité bocagère autour des haies à détruire :" value=density_400|floatformat:"1g" unit="ml/ha" comment="Rayon de 400 m autour des haies" %}
 </ul>
-
+<a class="fr-btn fr-btn--secondary fr-mb-3w"
+   href="{% url 'demo_density_project' %}?haies={{ petition_project.hedge_data.id }}">Voir le détail du calcul de densité</a>
+<ul class="instructor-view-list">
+  {% include 'haie/petitions/_item.html' with label="Coefficient de compensation moyen :" value=replantation_coefficient|floatformat:"2g" %}
+</ul>
 {% if hedge_detail_rows %}
   {% include 'haie/_ru_hedge_detail_table.html' with rows=hedge_detail_rows show_coeff_majore=show_ep_majorations %}
 {% endif %}
@@ -17,7 +21,7 @@
               class="fr-accordion__btn"
               aria-expanded="false"
               aria-controls="accordion-coeff-matrix-{{ regulation_slug }}">
-        Afficher le détail des matrices de coefficients du régime unique
+        Détail des coefficients du régime unique dans le département
       </button>
     </h3>
     <div id="accordion-coeff-matrix-{{ regulation_slug }}" class="fr-collapse">

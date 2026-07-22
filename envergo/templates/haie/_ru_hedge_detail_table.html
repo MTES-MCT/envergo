@@ -10,13 +10,21 @@
               <th scope="col">Type</th>
               <th scope="col">Longueur</th>
               <th scope="col">Zone</th>
-              <th scope="col">X_densite</th>
+              <th scope="col">Seuil densité</th>
               <th scope="col">Densité</th>
               {% if show_partial_result %}<th scope="col">Résultat partiel</th>{% endif %}
-              <th scope="col">Coef RU</th>
+              <th scope="col">
+                Coefficient compensation
+                <br />
+                régime unique
+              </th>
               {% if show_coeff_majore %}
-                <th scope="col">Majoration EP</th>
-                <th scope="col">Coef majoré EP</th>
+                <th scope="col">
+                  Majoration
+                  <br />
+                  espèces protégées
+                </th>
+                <th scope="col">Coefficient majoré</th>
               {% endif %}
             </tr>
           </thead>
@@ -36,10 +44,10 @@
                 </td>
                 <td>{{ row.high_density|yesno:"Haute,Basse,-" }}</td>
                 {% if show_partial_result %}<td>{{ row.partial_result }}</td>{% endif %}
-                <td>{{ row.coeff_ru_brut|floatformat:"-2" }}</td>
+                <td>{{ row.coeff_ru_brut|floatformat:"2" }}</td>
                 {% if show_coeff_majore %}
-                  <td>{{ row.applied_ep_bonus|floatformat:"-2"|default:"—" }}</td>
-                  <td>{{ row.coeff_ru_majore|floatformat:"-2"|default:"—" }}</td>
+                  <td>{{ row.applied_ep_bonus|floatformat:"2"|default:"—" }}</td>
+                  <td>{{ row.coeff_ru_majore|floatformat:"2"|default:"—" }}</td>
                 {% endif %}
               </tr>
             {% endfor %}
