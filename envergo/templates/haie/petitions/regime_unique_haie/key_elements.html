@@ -1,0 +1,61 @@
+{% load utils %}
+
+<div class="fr-table">
+  <div class="fr-table__wrapper">
+    <div class="fr-table__container">
+      <div class="fr-table__content">
+        <table>
+          <caption>Détail des caractéristiques des linéaires à détruire vis-à-vis de la définition du régime unique :</caption>
+          <thead>
+            <tr>
+              <th scope="col">Haie</th>
+              <th scope="col">Type</th>
+              <th scope="col">Longueur</th>
+              <th scope="col">
+                bordure de
+                <br />
+                bâtiment
+              </th>
+              <th scope="col">
+                bordure de
+                <br />
+                place publique
+              </th>
+              <th scope="col">
+                parc ou
+                <br />
+                jardin
+              </th>
+              <th scope="col">
+                bordure de voie
+                <br />
+                ouverte circ. public
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hedge in petition_project.hedge_data.hedges.to_remove %}
+              <tr>
+                <th scope="row">{{ hedge.id }}</th>
+                <td>{{ HedgeType.choices|get_choice_label:hedge.hedge_type }}</td>
+                <td>{{ hedge.length|floatformat:"0g" }} m</td>
+                <td>
+                  {{ hedge.bord_batiment|yesno:"<strong>Oui</strong>,Non,Non"|safe }}
+                </td>
+                <td>
+                  {{ hedge.place_publique|yesno:"<strong>Oui</strong>,Non,Non"|safe }}
+                </td>
+                <td>
+                  {{ hedge.parc_jardin|yesno:"<strong>Oui</strong>,Non,Non"|safe }}
+                </td>
+                <td>
+                  {{ hedge.bord_voie|yesno:"<strong>Oui</strong>,Non,<strong>Oui</strong>"|safe }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
