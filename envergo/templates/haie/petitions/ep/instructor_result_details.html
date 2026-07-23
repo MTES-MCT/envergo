@@ -4,11 +4,11 @@
   <h5 class="fr-mt-3w">Densité bocagère</h5>
 
   <ul class="instructor-view-list">
-    {% include 'haie/petitions/_item.html' with label="Densité bocagère autour des haies à détruire (rayon 400 m) :" value=density_400|floatformat:"1g" unit="ml/ha" %}
+    {% include 'haie/petitions/_item.html' with label="Densité bocagère autour des haies à détruire :" value=density_400|floatformat:"1g" unit="ml/ha" comment="Rayon de 400 m autour des haies" %}
   </ul>
 
-  <a class="fr-btn fr-btn--secondary fr-btn--sm"
-     href="{% url 'demo_density_project' %}?haies={{ petition_project.hedge_data.id }}">Voir le calcul de densité</a>
+  <a class="fr-btn fr-btn--secondary"
+     href="{% url 'demo_density_project' %}?haies={{ petition_project.hedge_data.id }}">Voir le détail du calcul de densité</a>
 
 {% endif %}
 
