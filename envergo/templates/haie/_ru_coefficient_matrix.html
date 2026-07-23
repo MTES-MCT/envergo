@@ -1,4 +1,4 @@
-{% for zone_id, config in ru_zone_configs.items %}
+{% for zone_id, ru_zone_config in ru_zone_configs.items %}
   {% if config.has_ru_zonage %}
     <p>
       <strong>Zone : « {{ zone_id }} »</strong>
@@ -15,23 +15,23 @@
                 <th scope="col">
                   Densité haute
                   <br />
-                  ≥ {{ config.X_densite|floatformat:"1g" }} ml/ha
+                  ≥ {{ ru_zone_config.X_densite|floatformat:"1g" }} ml/ha
                 </th>
                 <th scope="col">
                   Densité basse
                   <br />
-                  < {{ config.X_densite|floatformat:"1g" }} ml/ha
+                  < {{ ru_zone_config.X_densite|floatformat:"1g" }} ml/ha
                 </th>
               </tr>
               <tr>
                 <th scope="row">Non arborée</th>
-                <td>{{ config.R1_non_arboree_HD|floatformat:"1g" }}</td>
-                <td>{{ config.R2_non_arboree_LD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R1_non_arboree_HD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R2_non_arboree_LD|floatformat:"1g" }}</td>
               </tr>
               <tr>
                 <th scope="row">Arborée</th>
-                <td>{{ config.R3_arboree_HD|floatformat:"1g" }}</td>
-                <td>{{ config.R4_arboree_LD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R3_arboree_HD|floatformat:"1g" }}</td>
+                <td>{{ ru_zone_config.R4_arboree_LD|floatformat:"1g" }}</td>
               </tr>
             </tbody>
           </table>

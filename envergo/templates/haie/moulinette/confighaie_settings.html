@@ -35,7 +35,7 @@
       </ul>
       {% if object.single_procedure %}
         <h4>Coefficients de compensation régime unique :</h4>
-        {% include 'haie/_ru_coefficient_matrix.html' %}
+        {% include 'haie/_ru_coefficient_matrix.html' with config=object %}
       {% endif %}
 
       <h2 id="title-contact">Informations de contact</h2>
