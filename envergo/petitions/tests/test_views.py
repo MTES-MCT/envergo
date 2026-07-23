@@ -2056,6 +2056,9 @@ def test_petition_project_resume_instruction(
     )
     form_data = {
         "info_receipt_date": today,
+        # The suspension has an original due date, so the form asks for a new one.
+        # The value is informative: the view recomputes the due date itself.
+        "due_date": today + timedelta(days=60),
     }
     res = client.post(rai_url, form_data, follow=True)
     assert res.status_code == 200

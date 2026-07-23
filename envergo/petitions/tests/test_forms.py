@@ -1,14 +1,62 @@
 from datetime import date
 
 import pytest
+from dateutil.relativedelta import relativedelta
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from envergo.moulinette.regulations import HedgeCategory
-from envergo.petitions.forms import PetitionProjectForm, ProcedureForm
+from envergo.petitions.forms import (
+    PetitionProjectForm,
+    ProcedureForm,
+    ResumeProcessingForm,
+)
 from envergo.petitions.tests.factories import FILE_TEST_NOK_PATH, FILE_TEST_PATH
 
 pytestmark = pytest.mark.django_db
+
+
+class TestResumeProcessingFormDueDate:
+    """The due date field only makes sense when a deadline can be postponed."""
+
+    def test_due_date_removed_without_original_due_date(self):
+        form = ResumeProcessingForm(original_due_date=None)
+
+        assert "due_date" not in form.fields
+        assert "info_receipt_date" in form.fields
+
+    def test_due_date_removed_by_default(self):
+        # No original due date passed at all
+        form = ResumeProcessingForm()
+
+        assert "due_date" not in form.fields
+
+    def test_due_date_kept_with_original_due_date(self):
+        form = ResumeProcessingForm(original_due_date=date(2026, 1, 1))
+
+        assert "due_date" in form.fields
+
+    def test_due_date_initial_is_two_months_from_today(self):
+        form = ResumeProcessingForm(original_due_date=date(2026, 1, 1))
+
+        expected = (timezone.now().date() + relativedelta(months=2)).isoformat()
+        assert form.fields["due_date"].initial() == expected
+
+    def test_valid_without_due_date_when_no_original_due_date(self):
+        form = ResumeProcessingForm(
+            data={"info_receipt_date": "2026-01-15"}, original_due_date=None
+        )
+
+        assert form.is_valid(), form.errors
+
+    def test_due_date_required_when_original_due_date_is_set(self):
+        form = ResumeProcessingForm(
+            data={"info_receipt_date": "2026-01-15"},
+            original_due_date=date(2026, 1, 1),
+        )
+
+        assert not form.is_valid()
+        assert "due_date" in form.errors
 
 
 class TestPetitionProjectFormCleanCategory:

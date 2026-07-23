@@ -875,6 +875,12 @@ div#instructor-view-side-menu {
           color: var(--text-title-grey);
         }
       }
+
+      .fr-input[readonly] {
+        color: var(--text-disabled-grey);
+        box-shadow: inset 0 -2px 0 0 var(--border-disabled-grey);
+        cursor: not-allowed;
+      }
     }
   }
 }
