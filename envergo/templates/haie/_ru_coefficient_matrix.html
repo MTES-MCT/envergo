@@ -1,7 +1,9 @@
 {% for zone_id, config in ru_zone_configs.items %}
-  <p>
-    <strong>Zone : « {{ zone_id }} »</strong>
-  </p>
+  {% if config.has_ru_zonage %}
+    <p>
+      <strong>Zone : « {{ zone_id }} »</strong>
+    </p>
+  {% endif %}
   <div class="fr-table fr-table--sm">
     <div class="fr-table__wrapper">
       <div class="fr-table__container">

@@ -34,7 +34,13 @@
                 <th scope="row">{{ row.hedge_id }}</th>
                 <td>{{ row.hedge_type }}</td>
                 <td>{{ row.length }} m</td>
-                <td>{{ row.zone_id|default:"-" }}</td>
+                <td>
+                  {% if config.has_ru_zonage %}
+                    {{ row.zone_id|default:"-" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
                 <td>
                   {% if row.x_densite != None %}
                     {{ row.x_densite }} ml/ha
