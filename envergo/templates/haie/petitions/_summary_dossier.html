@@ -10,7 +10,12 @@
           {% include 'haie/petitions/_dossier_followers.html' with reference=petition_project.reference followers=petition_project.followers %}
         </div>
       </div>
-      <div class="fr-mb-3w">{% include 'haie/petitions/_hedge_category.html' with category=petition_project.category %}</div>
+      <div class="fr-mb-3w">
+        {% include 'haie/petitions/_hedge_category.html' with category=petition_project.category %}
+        {% if petition_project.moulinette_data.urgence == "oui" and petition_project.config.single_procedure %}
+          <span class="fr-badge fr-badge--pink-tuile fr-badge--sm">Urgence</span>
+        {% endif %}
+      </div>
       <ul id="instruction-summary-list" class="fr-text--sm fr-mb-0">
         <li>
           {% if petition_project.demarche_numerique_date_depot %}
