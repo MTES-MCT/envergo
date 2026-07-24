@@ -229,6 +229,7 @@ def decision_badge(decision, is_light=False):
 
 @register.simple_tag
 def display_due_date(due_date, display_days_left=True, self_explanatory_label=False):
+    """Display project due date"""
     if not due_date or not isinstance(due_date, date):
         return mark_safe(
             f'<span class="due-date">{"Échéance à" if self_explanatory_label else "À"} renseigner</span>'
@@ -269,6 +270,7 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
 
 @register.simple_tag
 def display_pause(due_date):
+    """Display project pause status"""
     days_left = (due_date - date.today()).days
     if days_left >= 7:
         icon_class = ""

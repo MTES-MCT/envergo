@@ -6,7 +6,11 @@ from django.template import Context, Template
 from django.test import override_settings
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
-from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
+from envergo.petitions.templatetags.petitions import (
+    display_due_date,
+    display_pause,
+    get_ds_field,
+)
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
     GET_DOSSIER_FAKE_RESPONSE,
@@ -16,38 +20,59 @@ from envergo.petitions.tests.factories import (
 pytestmark = pytest.mark.django_db
 
 
-def test_display_choice():
-    today = datetime.now()
+class TestProjectPauseDueDate:
+    """Tests for project due date and pause status"""
 
-    ten_days_ago = (today - timedelta(days=10)).date()
-    one_day_ago = (today - timedelta(days=1)).date()
-    in_one_day = (today + timedelta(days=1)).date()
-    in_five_days = (today + timedelta(days=5)).date()
-    in_ten_days = (today + timedelta(days=10)).date()
+    def test_display_due_date(self):
+        """Test display_due_date template tag"""
+        today = datetime.now()
 
-    result = display_due_date(in_ten_days)
-    assert "fr-icon-timer-line" in result
-    assert "10 jours restants" in result
+        ten_days_ago = (today - timedelta(days=10)).date()
+        one_day_ago = (today - timedelta(days=1)).date()
+        in_one_day = (today + timedelta(days=1)).date()
+        in_five_days = (today + timedelta(days=5)).date()
+        in_ten_days = (today + timedelta(days=10)).date()
 
-    result = display_due_date(in_five_days)
-    assert "fr-icon-hourglass-2-fill" in result
-    assert "5 jours restants" in result
+        result = display_due_date(in_ten_days)
+        assert "fr-icon-timer-line" in result
+        assert "10 jours restants" in result
 
-    result = display_due_date(in_one_day)
-    assert "fr-icon-hourglass-2-fill" in result
-    assert "1 jour restant" in result
+        result = display_due_date(in_five_days)
+        assert "fr-icon-hourglass-2-fill" in result
+        assert "5 jours restants" in result
 
-    result = display_due_date(today.date())
-    assert "fr-icon-hourglass-2-fill" in result
-    assert "0 jour restant" in result
+        result = display_due_date(in_one_day)
+        assert "fr-icon-hourglass-2-fill" in result
+        assert "1 jour restant" in result
 
-    result = display_due_date(one_day_ago)
-    assert "fr-icon-warning-fill" in result
-    assert "Dépassée depuis 1 jour" in result
+        result = display_due_date(today.date())
+        assert "fr-icon-hourglass-2-fill" in result
+        assert "0 jour restant" in result
 
-    result = display_due_date(ten_days_ago)
-    assert "fr-icon-warning-fill" in result
-    assert "Dépassée depuis 10 jours" in result
+        result = display_due_date(one_day_ago)
+        assert "fr-icon-warning-fill" in result
+        assert "Dépassée depuis 1 jour" in result
+
+        result = display_due_date(ten_days_ago)
+        assert "fr-icon-warning-fill" in result
+        assert "Dépassée depuis 10 jours" in result
+
+    def test_display_pause(self):
+        """Test display_pause template tag"""
+        today = datetime.now()
+        one_day_ago = (today - timedelta(days=1)).date()
+        in_five_days = (today + timedelta(days=5)).date()
+        in_ten_days = (today + timedelta(days=10)).date()
+
+        result = display_pause(one_day_ago)
+        assert "red" in result
+
+        result = display_pause(in_five_days)
+        assert "orange" in result
+
+        result = display_pause(in_ten_days)
+        assert "red" not in result
+        assert "orange" not in result
 
 
 @pytest.mark.haie
