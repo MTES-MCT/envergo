@@ -113,10 +113,9 @@
                         {% if project.stage != "closed" %}
                           {% if project.is_additional_information_requested %}
                             {% display_pause project.due_date %}
-                          {% else %}
-                            {% display_due_date project.due_date False True %}
                           {% endif %}
                         {% endif %}
+                        {% display_due_date project.due_date True True %}
                         {% if project.decision != "unset" %}
                           {% decision_badge project.decision True %}
                         {% endif %}
