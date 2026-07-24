@@ -5,6 +5,7 @@ from typing import Literal
 from django import template
 from django.template import TemplateDoesNotExist
 from django.template.defaultfilters import date as date_filter
+from django.template.defaultfilters import pluralize
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
@@ -235,55 +236,43 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
             f'<span class="due-date">{"Échéance à" if self_explanatory_label else "À"} renseigner</span>'
         )
 
+    # Select color and icon left time
     days_left = (due_date - date.today()).days
     if days_left >= 7:
-        icon_part = '<span class="fr-icon-timer-line fr-icon--sm"></span>'
+        icon_part = "timer-line"
+        color = ""
     elif days_left >= 0:
-        icon_part = '<span class="fr-icon-hourglass-2-fill fr-icon--sm"></span>'
+        icon_part = "hourglass-2-fill"
+        color = "orange "
     else:
-        icon_part = '<span class="fr-icon-warning-fill fr-icon--sm"></span>'
+        icon_part = "warning-fill"
+        color = "red "
 
-    date_part = f"""<span class="due-date fr-text--sm">
-                {icon_part}
-                {date_filter(due_date, "SHORT_DATE_FORMAT")}
-              </span>"""
+    date_part = f"""<span class="fr-icon-{icon_part} fr-icon--sm"></span> {date_filter(due_date, "d N")}"""
 
-    if not display_days_left:
-        days_left_part = ""
-    elif days_left >= 2:
-        days_left_part = (
-            f'<br/><span class="days-left">{days_left} jours restants</span>'
-        )
-    elif days_left >= 0:
-        days_left_part = f'<br/><span class="days-left">{days_left} jour restant</span>'
-    elif days_left >= -1:
-        days_left_part = (
-            f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jour</span>'
-        )
-    elif days_left:
-        days_left_part = f'<br/><span class="days-left">Dépassée depuis {abs(days_left)} jours</span>'
-    else:
-        days_left_part = ""
+    days_left_part = ""
+    if display_days_left:
+        plural = pluralize(days_left)
+        days_left_content = ""
+        if days_left > 0:
+            days_left_content = f"{days_left} j restant{plural}"
+        elif days_left == 0:
+            days_left_content = f"{days_left} j restant"
+        elif days_left < 0:
+            days_left_content = f"retard {abs(days_left)} j"
 
-    return mark_safe(date_part + days_left_part)
+        days_left_part = f'(<span class="days-left">{days_left_content}</span>)'
+
+    return mark_safe(
+        f"""<span class="due-date fr-text--sm {color}">{date_part} {days_left_part}</span>"""
+    )
 
 
 @register.simple_tag
 def display_pause(due_date):
     """Display project pause status"""
-    days_left = (due_date - date.today()).days
-    if days_left >= 7:
-        icon_class = ""
-    elif days_left >= 0:
-        icon_class = "orange"
-    else:
-        icon_class = "red"
-
     return mark_safe(
-        f"""<span class="due-date fr-text--sm">
-                <span class="fr-icon-pause-circle-line fr-icon--sm {icon_class}"></span>
-                Attente de compléments
-              </span>"""
+        """<span class="fr-badge fr-badge--sm">Attente de compléments</span>"""
     )
 
 

@@ -1221,23 +1221,17 @@ div#project-header-container {
 }
 
 .due-date {
+  font-style: italic;
+  font-size: 0.75rem;
   color: var(--text-mention-grey);
 
-  span.fr-icon-hourglass-2-fill,
-  span.orange {
+  &.orange {
     color: var(--orange-terre-battue-main-645);
   }
 
-  span.fr-icon-warning-fill,
-  span.red {
+  &.red {
     color: var(--artwork-minor-red-marianne);
   }
-}
-
-.days-left {
-  font-style: italic;
-  color: var(--text-mention-grey);
-  font-size: 0.75rem;
 }
 
 .stage-objective {
