@@ -1221,7 +1221,10 @@ div#project-header-container {
 }
 
 .due-date {
-  font-style: italic;
+  &.displayed {
+    font-style: italic;
+  }
+
   font-size: 0.75rem;
   color: var(--text-mention-grey);
 

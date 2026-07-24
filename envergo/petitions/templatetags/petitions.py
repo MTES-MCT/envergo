@@ -264,7 +264,7 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
         days_left_part = f'(<span class="days-left">{days_left_content}</span>)'
 
     return mark_safe(
-        f"""<span class="due-date fr-text--sm {color}">{date_part} {days_left_part}</span>"""
+        f"""<span class="due-date displayed {color}">{date_part} {days_left_part}</span>"""
     )
 
 
