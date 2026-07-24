@@ -2050,12 +2050,15 @@ def test_petition_project_resume_instruction(
     assert project.decision == "unset"
 
     # Resume instruction
+
     rai_url = reverse(
         "petition_project_instructor_request_info_view",
         kwargs={"reference": project.reference},
     )
+    new_due_date = today + timedelta(days=60)
     form_data = {
         "info_receipt_date": today,
+        "due_date": new_due_date,
     }
     res = client.post(rai_url, form_data, follow=True)
     assert res.status_code == 200
@@ -2064,8 +2067,7 @@ def test_petition_project_resume_instruction(
     project.refresh_from_db()
     clear_cached_properties(project)
     assert project.is_additional_information_requested is False
-    # The new due_date is computed on the resumption log
-    assert project.due_date == next_month
+    assert project.due_date == new_due_date
 
 
 def test_messagerie_access_stores_access_date(client, haie_instructor_44, haie_user):
