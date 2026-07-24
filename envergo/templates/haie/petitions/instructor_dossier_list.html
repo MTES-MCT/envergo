@@ -115,10 +115,10 @@
                             {% display_pause project.due_date %}
                           {% endif %}
                         {% endif %}
+                        {% display_due_date project.due_date True True %}
                         {% if project.decision != "unset" %}
                           {% decision_badge project.decision True %}
                         {% endif %}
-                        {% display_due_date project.due_date True True %}
                       </div>
 
                     </td>
