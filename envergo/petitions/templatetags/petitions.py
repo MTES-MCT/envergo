@@ -257,7 +257,7 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
         if days_left > 0:
             days_left_content = f"{days_left} j restant{plural}"
         elif days_left == 0:
-            days_left_content = f"{days_left} j restant"
+            days_left_content = f"{days_left} j restant"  # Yes plural puts an "s"
         elif days_left < 0:
             days_left_content = f"retard {abs(days_left)} j"
 

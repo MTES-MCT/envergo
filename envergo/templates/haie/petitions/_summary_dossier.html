@@ -48,17 +48,16 @@
           <div>{% decision_badge petition_project.decision %}</div>
         {% endif %}
         {% if petition_project.stage != "closed" %}
+          <div>
+            {% if petition_project.is_additional_information_requested %}
+              {% display_pause petition_project.due_date %}
+            {% endif %}
+          </div>
           <div class="fr-mt-2v">
             <div>
               <strong>Prochaine échéance :</strong>
             </div>
-            <div>
-              {% if petition_project.is_additional_information_requested %}
-                {% display_pause petition_project.due_date %}
-              {% else %}
-                {% display_due_date petition_project.due_date False %}
-              {% endif %}
-            </div>
+            <div>{% display_due_date petition_project.due_date False %}</div>
           </div>
         {% endif %}
         {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
