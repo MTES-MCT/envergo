@@ -1,17 +1,21 @@
 from datetime import timedelta
 from textwrap import dedent
 
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.safestring import mark_safe
 
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
+    STAGES,
     PetitionProject,
     Simulation,
     StatusLog,
@@ -474,6 +478,12 @@ def today_formatted():
     return timezone.now().date().isoformat()
 
 
+def two_months_from_now():
+    """[type=date] input require values formatted in iso 8601."""
+
+    return (timezone.now().date() + relativedelta(months=2)).isoformat()
+
+
 class ResumeProcessingForm(forms.Form):
     """Resume instruction processing."""
 
@@ -483,6 +493,29 @@ class ResumeProcessingForm(forms.Form):
         initial=today_formatted,
         widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
     )
+
+    due_date = forms.DateField(
+        label="Nouvelle échéance d'instruction",
+        required=True,
+        initial=two_months_from_now,
+        widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
+    )
+
+    def __init__(
+        self, *args, category=None, stage=None, original_due_date=None, **kwargs
+    ):
+        """Drop the due date field when the suspension has no original due date."""
+        super().__init__(*args, **kwargs)
+
+        if category == HedgeCategory.ru and stage == STAGES.instruction_d:
+            self.fields["due_date"].widget.attrs["readonly"] = True
+            self.fields["due_date"].label = mark_safe(
+                f"{self.fields['due_date'].label}"
+                '<span class="fr-hint-text">Le délai de 2 mois pour l\'accord tacite redémarre.<br/>'
+                "Le demandeur recevra un nouveau récépissé de déclaration.</span>"
+            )
+        elif original_due_date is None:
+            del self.fields["due_date"]
 
 
 USER_TYPE = (
