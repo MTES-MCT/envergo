@@ -11,11 +11,35 @@ from envergo.utils.fields import get_human_readable_value
 # Maps (hedge_category, density_level) to the official coefficient key name.
 # Numbering follows the instruction technique sent to prefects.
 COEFF_KEY = {
-    ("arboree", "HD"): "R3_arboree_HD",
-    ("arboree", "LD"): "R4_arboree_LD",
-    ("non_arboree", "HD"): "R1_non_arboree_HD",
-    ("non_arboree", "LD"): "R2_non_arboree_LD",
+    ("buissonnante", "HD"): "R1_buissonnante_HD",
+    ("buissonnante", "LD"): "R2_buissonnante_LD",
+    ("arbustive", "HD"): "R3_arbustive_HD",
+    ("arbustive", "LD"): "R4_arbustive_LD",
+    ("arboree", "HD"): "R5_arboree_HD",
+    ("arboree", "LD"): "R6_arboree_LD",
 }
+
+# Maps a hedge type to its compensation coefficient category. Only the three
+# types selectable in an RU department appear here: "degradee" and "alignement"
+# are never valid RU hedges to remove (see resolve_coeff_category).
+HEDGE_TYPE_TO_COEFF_CATEGORY = {
+    "buissonnante": "buissonnante",
+    "arbustive": "arbustive",
+    "mixte": "arboree",
+}
+
+
+def resolve_coeff_category(hedge_type):
+    """Return the RU compensation coefficient category for a hedge type."""
+    try:
+        return HEDGE_TYPE_TO_COEFF_CATEGORY[hedge_type]
+    except KeyError:
+        raise ValueError(
+            f"Type de haie « {hedge_type} » invalide pour le régime unique : "
+            "le calcul du coefficient de compensation n'est défini que pour "
+            "les haies buissonnantes, arbustives et mixtes."
+        )
+
 
 # Per-hedge EP bonus added to the raw RU coefficient, keyed by (hedge_type, density).
 # Only mixte/LD differs: destroying a tree-bearing hedge in a sparse landscape is
@@ -137,8 +161,9 @@ def compute_hedge_data(hedge, zone_id, zone_config, density_400):
     high_density = density_400 >= x_densite
     density_key = "HD" if high_density else "LD"
 
-    # Raw RU coefficient (binary type split: mixte = arborée, rest = non arborée)
-    type_key = "arboree" if hedge.hedge_type == "mixte" else "non_arboree"
+    # Raw RU coefficient, keyed by hedge type (buissonnante / arbustive /
+    # arborée) crossed with the density level.
+    type_key = resolve_coeff_category(hedge.hedge_type)
     raw_coefficient = zone_config.get(COEFF_KEY[(type_key, density_key)], 0.0)
 
     ep_bonus = EP_RU_HEDGE_BONUS.get((hedge.hedge_type, density_key), 0.0)
