@@ -1560,8 +1560,8 @@ class ConfigHaie(ConfigBase):
                 name="single_procedure_requires_coeff_compensation",
                 violation_error_message="Les paramètres de régime unique doivent comporter une clé "
                 "'coeff_compensation'. Sans zonage, une entrée 'default' avec "
-                "X_densite, R1_non_arboree_HD, R2_non_arboree_LD, R3_arboree_HD, "
-                "R4_arboree_LD est requise.",
+                "X_densite, R1_buissonnante_HD, R2_buissonnante_LD, R3_arbustive_HD, "
+                "R4_arbustive_LD, R5_arboree_HD, R6_arboree_LD est requise.",
                 check=Q(single_procedure=False)
                 | (
                     Q(has_ru_zonage=True)
@@ -1577,16 +1577,22 @@ class ConfigHaie(ConfigBase):
                         single_procedure_settings__coeff_compensation__default__has_key="X_densite"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R1_non_arboree_HD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R1_buissonnante_HD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R2_non_arboree_LD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R2_buissonnante_LD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R3_arboree_HD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R3_arbustive_HD"
                     )
                     & Q(
-                        single_procedure_settings__coeff_compensation__default__has_key="R4_arboree_LD"
+                        single_procedure_settings__coeff_compensation__default__has_key="R4_arbustive_LD"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__default__has_key="R5_arboree_HD"
+                    )
+                    & Q(
+                        single_procedure_settings__coeff_compensation__default__has_key="R6_arboree_LD"
                     )
                 ),
             ),
