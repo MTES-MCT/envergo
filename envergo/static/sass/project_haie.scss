@@ -875,12 +875,6 @@ div#instructor-view-side-menu {
           color: var(--text-title-grey);
         }
       }
-
-      .fr-input[readonly] {
-        color: var(--text-disabled-grey);
-        box-shadow: inset 0 -2px 0 0 var(--border-disabled-grey);
-        cursor: not-allowed;
-      }
     }
   }
 }
@@ -1437,4 +1431,12 @@ button.hide-expanded[aria-expanded="true"] {
 
 #multi-categories-callout.fr-callout[class*=" fr-icon-"]::before {
   background-color: var(--blue-france-sun-113-625);
+}
+
+#resume-processing-modal {
+  .fr-input[readonly] {
+    color: var(--text-disabled-grey);
+    box-shadow: inset 0 -2px 0 0 var(--border-disabled-grey);
+    cursor: not-allowed;
+  }
 }
