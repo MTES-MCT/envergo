@@ -113,6 +113,7 @@
                         {% if project.stage != "closed" %}
                           {% if project.is_additional_information_requested %}
                             {% display_pause project.due_date %}
+                            <br>
                           {% endif %}
                         {% endif %}
                         {% display_due_date project.due_date True True %}
