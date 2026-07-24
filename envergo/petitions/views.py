@@ -1944,6 +1944,8 @@ class PetitionProjectInstructorProcedureView(
                     original_due_date=project.due_date,
                     created_by=self.request.user,
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
+                    stage=project.stage,
+                    decision=project.decision,
                 )
 
                 message = form.cleaned_data["request_message"]
@@ -2044,6 +2046,8 @@ class PetitionProjectInstructorProcedureView(
                 if new_due_date
                 else "Reprise de l’instruction."
             ),
+            stage=project.stage,
+            decision=project.decision,
         )
 
         self.notify_resume_processing(project)
