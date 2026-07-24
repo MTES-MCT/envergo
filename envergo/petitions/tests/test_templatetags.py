@@ -28,27 +28,27 @@ def test_display_due_date():
 
     result = display_due_date(in_ten_days)
     assert "fr-icon-timer-line" in result
-    assert "10 jours restants" in result
+    assert "10 j restants" in result
 
     result = display_due_date(in_five_days)
     assert "fr-icon-hourglass-2-fill" in result
-    assert "5 jours restants" in result
+    assert "5 j restants" in result
 
     result = display_due_date(in_one_day)
     assert "fr-icon-hourglass-2-fill" in result
-    assert "1 jour restant" in result
+    assert "1 j restant" in result
 
     result = display_due_date(today.date())
     assert "fr-icon-hourglass-2-fill" in result
-    assert "0 jour restant" in result
+    assert "0 j restant" in result
 
     result = display_due_date(one_day_ago)
     assert "fr-icon-warning-fill" in result
-    assert "Dépassée depuis 1 jour" in result
+    assert "retard 1 j" in result
 
     result = display_due_date(ten_days_ago)
     assert "fr-icon-warning-fill" in result
-    assert "Dépassée depuis 10 jours" in result
+    assert "retard 10 j" in result
 
 
 @pytest.mark.haie
