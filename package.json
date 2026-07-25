@@ -19,7 +19,7 @@
     "@playwright/test": "^1.61.0",
     "@types/node": "^24.6.2",
     "autoprefixer": "^10.4.20",
-    "cssnano": "^7.0.6",
+    "cssnano": "^7.1.9",
     "gulp": "^5.0.0",
     "gulp-cli": "^3.0.0",
     "gulp-concat": "^2.6.1",
