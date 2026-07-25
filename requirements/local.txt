@@ -235,7 +235,7 @@ kombu==5.5.4
     # via
     #   -r base.txt
     #   celery
-librt==0.7.7
+librt==0.11.0
     # via mypy
 markdown==3.8.2
     # via -r base.txt
@@ -251,7 +251,7 @@ multidict==6.6.3
     # via
     #   -r base.txt
     #   yarl
-mypy==1.19.1
+mypy==1.20.2
     # via -r local.in
 mypy-extensions==1.1.0
     # via
@@ -274,7 +274,7 @@ packaging==25.0
     #   pytest-sugar
 parso==0.8.4
     # via jedi
-pathspec==0.12.1
+pathspec==1.1.1
     # via
     #   black
     #   djlint
