@@ -109,13 +109,10 @@
                     </td>
                     <td class="procedure">
                       <div>{% stage_badge project.stage %}</div>
+                      {% if project.stage != "closed" and project.is_additional_information_requested %}
+                        <div>{% display_pause project.due_date %}</div>
+                      {% endif %}
                       <div>
-                        {% if project.stage != "closed" %}
-                          {% if project.is_additional_information_requested %}
-                            {% display_pause project.due_date %}
-                            <br>
-                          {% endif %}
-                        {% endif %}
                         {% display_due_date project.due_date True True %}
                         {% if project.decision != "unset" %}
                           {% decision_badge project.decision True %}
