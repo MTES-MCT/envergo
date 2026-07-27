@@ -98,6 +98,7 @@ class MoulinetteMixin:
             for prefix in ignore_prefixes:
                 if key.startswith(prefix):
                     GET.pop(key)
+
         return GET
 
     def get_context_data(self, **kwargs):
@@ -245,6 +246,10 @@ class MoulinetteMixin:
 
         cleaned_data = self.moulinette.cleaned_data
         data.update(cleaned_data)
+
+        for key in self.moulinette.get_excluded_params():
+            data.pop(key, None)
+
         return data
 
     def get_triage_url(self):

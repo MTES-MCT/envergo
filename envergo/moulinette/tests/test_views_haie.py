@@ -1158,10 +1158,10 @@ class TestReimplantationFieldRemoval:
         moulinette = res.context["moulinette"]
         assert moulinette.catalog["reimplantation"] == "non"
 
-    def test_provided_value_used_when_present_ru(self, client):
-        """Regime unique: when reimplantation is in the URL (saved
-        simulation), the provided value is used despite the field not
-        being on the form."""
+    def test_stale_reimplantation_ignored_in_ru(self, client):
+        """Regime unique: a stale reimplantation value in the URL is
+        ignored — the catalog always gets 'replantation' so the user
+        is never trapped by an invisible field they cannot change."""
         RUConfigHaieFactory()
         hedges = HedgeDataFactory(
             hedges=[
@@ -1191,4 +1191,42 @@ class TestReimplantationFieldRemoval:
 
         assert res.status_code == 200
         moulinette = res.context["moulinette"]
-        assert moulinette.catalog["reimplantation"] == "non"
+        assert moulinette.catalog["reimplantation"] == "replantation"
+
+    def test_reimplantation_stripped_from_redirect_url_in_ru(self, client):
+        """Regime unique: when the form view builds a redirect URL
+        (e.g. to the result page), the stale reimplantation param
+        from the original URL is stripped."""
+        RUConfigHaieFactory()
+        hedges = HedgeDataFactory(
+            hedges=[
+                HedgeFactory(
+                    length=4,
+                    additionalData__sur_parcelle_pac=False,
+                    additionalData__type_haie="buissonnante",
+                )
+            ]
+        )
+        url = reverse("moulinette_form")
+        triage = urlencode(
+            {
+                "department": "44",
+                "element": "haie",
+                "travaux": "destruction",
+                "contexte": "non",
+                "reimplantation": "non",
+            }
+        )
+        data = {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+            "motif": "amelioration_culture",
+            "localisation_pac": "non",
+            "haies": str(hedges.id),
+        }
+        res = client.post(f"{url}?{triage}", data)
+
+        assert res.status_code == 302
+        assert "reimplantation" not in res["Location"]
