@@ -431,6 +431,10 @@ class RequestAdditionalInfoForm(forms.Form):
         help_text="Délai maximum : 3 mois",
         required=True,
         initial=three_months_from_now,
+        error_messages={
+            "required": "Ce champ est obligatoire. La date doit être au format JJ/MM/AAAA",
+            "invalid": "La date doit être au format JJ/MM/AAAA",
+        },
     )
     request_message = forms.CharField(
         label="Message au demandeur",
@@ -441,6 +445,8 @@ class RequestAdditionalInfoForm(forms.Form):
 
     def __init__(self, *args, petition_project=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.fields["info_due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
 
         # Setup user message initial content
         if petition_project:
