@@ -1730,6 +1730,9 @@ class PetitionProjectInstructorProcedureView(
                 self.request.POST,
                 self.request.FILES,
                 initial=self.get_initial(),
+                single_procedure=bool(
+                    self.object.config and self.object.config.single_procedure
+                ),
                 is_paused=self.object.is_additional_information_requested,
             )
         if action == "request_info":
@@ -1751,13 +1754,6 @@ class PetitionProjectInstructorProcedureView(
         initial["stage"] = self.object.stage
         initial["decision"] = self.object.decision
         return initial
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["single_procedure"] = bool(
-            self.object.config and self.object.config.single_procedure
-        )
-        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1785,6 +1781,9 @@ class PetitionProjectInstructorProcedureView(
             StateChangeForm(
                 initial=self.get_initial(),
                 is_paused=self.object.is_additional_information_requested,
+                single_procedure=bool(
+                    self.object.config and self.object.config.single_procedure
+                ),
             ),
         )
 

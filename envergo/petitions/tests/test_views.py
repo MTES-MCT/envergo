@@ -4062,3 +4062,27 @@ class TestGetProjectConfig:
             view.get_project_config(project2)
 
             mock_filter.assert_called_once()
+
+
+def test_state_change_modal_hides_to_be_processed_for_single_procedure(
+    client, haie_instructor_44, site
+):
+    """The view must pass single_procedure down to StateChangeForm.
+
+    The form filters the "to_be_processed" choice out on its own, but only if
+    the view tells it the department runs a single procedure.
+    """
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_instructor_44)
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
+    assert "to_be_processed" not in stage_choices
