@@ -410,35 +410,34 @@ class BaseMoulinetteFormHaie(BaseMoulinetteForm):
     def validate_reimplantation(self):
         """Reject impossible motif + reimplantation combos.
 
-        Checks both bound data (POST) and initial data (URL params),
-        because in RU mode the field is absent from the form and the
-        value only comes from the URL. Adds the error to the field when
-        it exists (HRU), or as a non-field error otherwise (RU).
+        Only runs when the reimplantation field is on the form (non-RU).
+        In RU mode the value is forced to "replantation" so the check
+        is unnecessary and would produce an error the user cannot fix.
         """
-        reimplantation = self.data.get("reimplantation") or self.initial.get(
-            "reimplantation"
-        )
-        motif = self.data.get("motif") or self.initial.get("motif")
-        error = None
+        if "reimplantation" not in self.fields:
+            return
+
+        reimplantation = self.cleaned_data.get("reimplantation")
+        motif = self.cleaned_data.get("motif")
 
         if motif == "chemin_acces" and reimplantation == "remplacement":
-            error = ValidationError(
-                "Le remplacement de la haie au même endroit est incompatible avec la "
-                "raison « création d’un accès ». "
-                "Modifiez l’une ou l’autre des réponses du formulaire.",
-                code="inconsistent_motif",
+            self.add_error(
+                "reimplantation",
+                ValidationError(
+                    """Le remplacement de la haie au même endroit est incompatible avec la
+                    raison « création d’un accès ». Modifiez l’une ou l’autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
             )
         elif motif == "amelioration_ecologique" and reimplantation == "non":
-            error = ValidationError(
-                "La destruction de la haie sans réimplantation est incompatible "
-                "avec la raison « amélioration écologique ». "
-                "Modifiez l’une ou l’autre des réponses du formulaire.",
-                code="inconsistent_motif",
+            self.add_error(
+                "reimplantation",
+                ValidationError(
+                    """La destruction de la haie sans réimplantation est incompatible avec la raison
+                    « amélioration écologique ». Modifiez l’une ou l’autre des réponses du formulaire.""",
+                    code="inconsistent_motif",
+                ),
             )
-
-        if error:
-            field = "reimplantation" if "reimplantation" in self.fields else None
-            self.add_error(field, error)
 
     def clean(self):
         data = super().clean()
@@ -560,6 +559,7 @@ class EviterReduireForm(forms.Form):
 
 class MoulinetteFormHaieRU(BaseMoulinetteFormHaie):
     single_procedure = True
+    excluded_params = ["reimplantation"]
 
 
 class MoulinetteFormHaieHRU(BaseMoulinetteFormHaie):

@@ -1989,6 +1989,10 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def all_forms(self):
         return self.get_all_forms()
 
+    def get_excluded_params(self):
+        """URL params the main form says should be stripped from redirects."""
+        return getattr(self.main_form, "excluded_params", [])
+
     def get_prefixed_fields(self):
         """Return all known fields, with prefixed keys."""
 
@@ -2918,11 +2922,14 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
                 del data["haies"]
 
         if "reimplantation" not in data:
-            raw_data = self.bound_main_form.data
-            initial = self.bound_main_form.initial or {}
-            data["reimplantation"] = raw_data.get("reimplantation") or initial.get(
-                "reimplantation", "replantation"
-            )
+            if self._get_single_procedure():
+                data["reimplantation"] = "replantation"
+            else:
+                raw_data = self.bound_main_form.data
+                initial = self.bound_main_form.initial or {}
+                data["reimplantation"] = raw_data.get("reimplantation") or initial.get(
+                    "reimplantation", "replantation"
+                )
 
         if "haies" in data:
             hedges = data["haies"]
