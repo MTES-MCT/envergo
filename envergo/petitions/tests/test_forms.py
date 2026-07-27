@@ -26,7 +26,7 @@ class TestResumeProcessingFormDueDate:
         assert "info_receipt_date" in form.fields
 
     def test_due_date_removed_by_default(self):
-        # No original due date passed at all
+        """No original due date passed at all"""
         form = ResumeProcessingForm()
 
         assert "due_date" not in form.fields
