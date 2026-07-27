@@ -3,7 +3,8 @@
   'use strict';
 
   class SpinnerElement {
-    constructor(elt) {
+    constructor(elt, inner=false) {
+      this.inner = inner;
 
       // The main node (form, link, button)
       this.elt = elt;
@@ -21,15 +22,21 @@
           break;
       }
 
+      this.originalText = this.spinnerElt.innerText;
       exports.addEventListener("pageshow", this.onPageShow.bind(this));
     }
 
     activate() {
       this.spinnerElt.disabled = false;
       this.spinnerElt.classList.remove("icon-spinner");
-      let textElt = this.spinnerElt.parentNode.querySelector('.submit-feedback-hint-text');
-      if (textElt) {
-        textElt.remove();
+      if(this.inner){
+         this.spinnerElt.innerText = this.originalText;
+      }
+      else{
+        let textElt = this.spinnerElt.parentNode.querySelector('.submit-feedback-hint-text');
+        if (textElt) {
+          textElt.remove();
+        }
       }
     }
 
@@ -37,11 +44,16 @@
       this.spinnerElt.disabled = true;
       this.spinnerElt.classList.add("icon-spinner");
 
-      let textElt = document.createElement('span');
-      textElt.innerHTML = 'Chargement en cours…';
-      textElt.classList.add("fr-hint-text");
-      textElt.classList.add("submit-feedback-hint-text");
-      this.spinnerElt.insertAdjacentElement("afterend", textElt);
+      if(this.inner){
+        this.spinnerElt.innerText = 'Chargement en cours';
+      }
+      else{
+        let textElt = document.createElement('span');
+        textElt.innerHTML = 'Chargement en cours…';
+        textElt.classList.add("fr-hint-text");
+        textElt.classList.add("submit-feedback-hint-text");
+        this.spinnerElt.insertAdjacentElement("afterend", textElt);
+      }
     }
 
     onPageShow(event) {
@@ -58,6 +70,11 @@ window.addEventListener("load", function () {
   let links = document.querySelectorAll(".spinner-link");
   links.forEach((link) => {
     new SpinnerElement(link);
+  });
+
+  let innerLinks = document.querySelectorAll(".inner-spinner-link");
+  innerLinks.forEach((link) => {
+    new SpinnerElement(link, inner=true);
   });
 
   let forms = document.querySelectorAll(".spinner-form");
