@@ -821,8 +821,10 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
     # # Given a department configured as régime unique
     config_44.delete()
     RUConfigHaieFactory()
-    # WHEN requesting the result plantation page with droit constant
-    res = client.get(f"{url}?{query}")
+    # WHEN requesting the result plantation page with RU config
+    ru_data = {k: v for k, v in data.items() if k != "reimplantation"}
+    ru_query = urlencode(ru_data)
+    res = client.get(f"{url}?{ru_query}")
 
     # THEN the result page is displayed with a warning listing only regulations that can be in "autorisation"
     assert (
@@ -1158,10 +1160,11 @@ class TestReimplantationFieldRemoval:
         moulinette = res.context["moulinette"]
         assert moulinette.catalog["reimplantation"] == "non"
 
-    def test_stale_reimplantation_ignored_in_ru(self, client):
-        """Regime unique: a stale reimplantation value in the URL is
-        ignored — the catalog always gets 'replantation' so the user
-        is never trapped by an invisible field they cannot change."""
+    def test_stale_reimplantation_redirects_to_form_in_ru(self, client):
+        """Regime unique: when the result URL contains a stale
+        reimplantation param, the result view redirects to the form
+        with that param stripped — rather than silently using a
+        different value than what the URL shows."""
         RUConfigHaieFactory()
         hedges = HedgeDataFactory(
             hedges=[
@@ -1189,9 +1192,9 @@ class TestReimplantationFieldRemoval:
         query = urlencode(data)
         res = client.get(f"{url}?{query}")
 
-        assert res.status_code == 200
-        moulinette = res.context["moulinette"]
-        assert moulinette.catalog["reimplantation"] == "replantation"
+        assert res.status_code == 302
+        assert "reimplantation" not in res["Location"]
+        assert "/simulateur/formulaire/" in res["Location"]
 
     def test_reimplantation_stripped_from_redirect_url_in_ru(self, client):
         """Regime unique: when the form view builds a redirect URL
