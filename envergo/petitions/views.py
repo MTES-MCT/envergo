@@ -1826,13 +1826,15 @@ class PetitionProjectInstructorProcedureView(
         except DemarcheNumeriqueError as e:
             logger.error(e)
             # The rollback restored the DB, but the in-memory project was
-            # already mutated by the status log post_save signal.
+            # already mutated by the status log post_save signal. Reload it,
+            # otherwise the re-render (which syncs and saves the project)
+            # would persist the aborted stage.
             self.object.refresh_from_db()
             form.add_error(
                 None,
                 mark_safe(
                     f"""Impossible de mettre à jour le dossier dans « Démarche numérique ». Si le problème persiste,
-                    <a href=’{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}’>
+                    <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
                         contacter l’équipe du guichet unique de la haie
                     </a> en indiquant l’identifiant du dossier."""
                 ),
@@ -1949,9 +1951,9 @@ class PetitionProjectInstructorProcedureView(
                 )
 
                 message = form.cleaned_data["request_message"]
-                ds_response = send_message_dossier_ds(self.object, message)
+                dn_response = send_message_dossier_ds(self.object, message)
 
-                if ds_response is None or ds_response.get("errors") is not None:
+                if dn_response is None or dn_response.get("errors") is not None:
                     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
                         messages.info(
                             self.request,
@@ -1959,6 +1961,8 @@ class PetitionProjectInstructorProcedureView(
                             Le message n’est pas envoyé""",
                         )
                     else:
+                        # Raise to abort the transaction and roll back the
+                        # suspension log created above.
                         raise DemarcheNumeriqueError(message="DN message not sent")
 
             self.notify_request_info(project)
@@ -1988,12 +1992,12 @@ class PetitionProjectInstructorProcedureView(
         except DemarcheNumeriqueError:
             messages.error(
                 self.request,
-                f"""Le message n’a pas pu être envoyé.
+                f"""Le message n'a pas pu être envoyé.
                 Merci de ré-essayer dans quelques minutes.
                 Si le problème persiste,
-                <a href=’{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}’>
-                    contacter l’équipe du guichet unique de la haie
-                </a> en indiquant l’identifiant du dossier.
+                <a href='{reverse("contact_us")}{settings.CONTACT_TEAM_ANCHOR}'>
+                    contacter l'équipe du guichet unique de la haie
+                </a> en indiquant l'identifiant du dossier.
                 """,
             )
             return HttpResponseRedirect(self.get_success_url())
