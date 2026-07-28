@@ -105,11 +105,11 @@ ACTIVATION_MODES = Choices(
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
-    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
     ("reserves_naturelles", "Réserves naturelles"),
@@ -119,6 +119,7 @@ REGULATIONS = Choices(
     ("sites_inscrits_haie", "Sites inscrits"),
     ("sites_classes_haie", "Sites classés"),
     ("protection_captages", "Protection de captages"),
+    ("loi_sur_leau_haie", "Loi sur l'eau Haie"),
 )
 
 
@@ -2625,6 +2626,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         "sites_inscrits_haie",
         "sites_classes_haie",
         "protection_captages",
+        "loi_sur_leau_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
