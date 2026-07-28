@@ -2323,6 +2323,22 @@ def test_alternatives_list_permission(client, haie_user, haie_instructor_44, sit
     assert "<h2>Simulations alternatives</h2>" in content
 
 
+def test_alternatives_detail_view(client, haie_instructor_44):
+    """Test alternative detail view"""
+
+    # GIVEN a petition project
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_display",
+        kwargs={"reference": project.reference, "simulation_id": s2.id},
+    )
+    client.force_login(haie_instructor_44)
+    response = client.get(alternative_url)
+    assert response.status_code == 200
+
+
 def test_alternatives_list_shows_data(client, haie_instructor_44):
 
     # GIVEN a petition project
