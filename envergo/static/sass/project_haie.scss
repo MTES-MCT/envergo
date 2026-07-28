@@ -1160,6 +1160,13 @@ div.title-with-link-container {
 
       &.procedure {
         text-wrap: auto;
+
+        @media (width < 991px) {
+          div {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
       }
 
       &.ellipsis {
