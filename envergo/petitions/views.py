@@ -1806,7 +1806,6 @@ class PetitionProjectInstructorProcedureView(
                     stage=self.object.stage,
                 ),
             )
-
         return context
 
     # ── state_change: modify the dossier stage/decision ──────────────

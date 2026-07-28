@@ -19,13 +19,14 @@ def date_depot_on_alternative_simulations(apps, schema_editor):
     PetitionProject = apps.get_model("petitions", "PetitionProject")
     Simulation = apps.get_model("petitions", "Simulation")
     qs = (PetitionProject.objects.prefetch_related('simulations')
-          .exclude(demarche_numerique_state__in=['draft', 'prefilled']).all())
+          .exclude(demarche_numerique_state__in=['draft', 'prefilled'])
+          .order_by('pk'))
     total = qs.count()
     batch_size = 1000
     i = 0
     with tqdm(total=total) as pbar:
         while i < total:
-            models = qs[i: i + batch_size].iterator()  # noqa
+            models = qs[i: i + batch_size]
             to_update = []
             simulations_to_update = []
             for model in models:
