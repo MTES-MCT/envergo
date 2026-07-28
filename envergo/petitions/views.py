@@ -1669,6 +1669,43 @@ class PetitionProjectInstructorAlternativeEdit(
         return url
 
 
+class PetitionProjectInstructorAlternativeDisplay(PetitionProjectDetail):
+    """View for display an alternative simulation."""
+
+    template_name = "haie/petitions/instructor_view_alternative_display.html"
+
+    def has_view_permission(self, request, object):
+        """Check if request has view permission on object"""
+        return object.has_view_permission(request.user)
+
+    def has_change_permission(self, request, object):
+        """Check if request has edit permission on object"""
+        return object.has_change_permission(request.user)
+
+    def get_simulation(self, simulation_id):
+        """Return the targeted simulation (with its project) or raise 404."""
+        simulation_qs = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+        )
+        try:
+            return simulation_qs.get(pk=simulation_id)
+        except Simulation.DoesNotExist:
+            raise Http404()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["simulation"] = self.get_simulation(self.kwargs["simulation_id"])
+
+        return context
+
+
 class PetitionProjectInstructorProcedureView(
     BasePetitionProjectInstructorView, MultipleObjectMixin, FormView
 ):
