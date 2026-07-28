@@ -49,7 +49,9 @@
             <div>{% decision_badge petition_project.decision %}</div>
           {% endif %}
           {% if petition_project.stage != "closed" and petition_project.is_additional_information_requested %}
-            <div>{% display_pause petition_project.due_date %}</div>
+            <div>
+              <span class="fr-badge fr-badge--sm">Attente de compléments</span>
+            </div>
           {% endif %}
         </div>
         <div class="fr-mt-2v">
