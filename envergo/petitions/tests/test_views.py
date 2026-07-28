@@ -1406,14 +1406,30 @@ def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
 def test_petition_emergency_badge(client, haie_instructor_44):
     """Test emergency badge in project list and project detail"""
 
-    # GIVEN RU config and project with urgence
+    # GIVEN project with no urgence
     RUConfigHaieFactory()
     hedge = HedgeFactory(additionalData__type_haie="mixte")
     hedges = HedgeDataFactory(hedges=[hedge])
-
     project = PetitionProjectFactory(
         demarche_numerique_state=DOSSIER_STATES.prefilled, hedge_data=hedges
     )
+    client.force_login(haie_instructor_44)
+
+    # WHEN Instructor visits project list page
+    project_list_url = reverse("petition_project_list")
+    res = client.get(project_list_url)
+    # THEN badge "Urgence" is not in content
+    assert "Urgence" not in res.content.decode()
+
+    # WHEN Instructor visits project instructor page
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+    # THEN badge "Urgence" is in content
+    assert "Urgence" not in res.content.decode()
+
+    # GIVEN project with urgence
     moulinette_data = {
         "reimplantation": "replantation",
         "motif": "securite",
@@ -1424,7 +1440,6 @@ def test_petition_emergency_badge(client, haie_instructor_44):
     project.save()
 
     # WHEN Instructor visits project list page
-    client.force_login(haie_instructor_44)
     project_list_url = reverse("petition_project_list")
     res = client.get(project_list_url)
     # THEN badge "Urgence" is in content
