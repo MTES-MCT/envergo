@@ -1898,3 +1898,38 @@ class TestDepartmentsLengths:
 
         assert hd.is_outside_department(west)
         assert not hd.is_outside_department(east)
+
+
+SITUATION_PROPERTIES = [
+    "bord_batiment",
+    "place_publique",
+    "parc_jardin",
+    "bord_voie",
+]
+
+
+class TestHedgeSituationProperties:
+    """The 'Situation' properties used by the régime unique key elements table.
+
+    They return None when absent, which lets templates distinguish an
+    unanswered question from an explicit "no".
+    """
+
+    @pytest.mark.parametrize("prop", SITUATION_PROPERTIES)
+    def test_returns_true_when_property_is_true(self, prop):
+        hedge = HedgeFactory(additionalData={prop: True})
+
+        assert getattr(hedge, prop) is True
+
+    @pytest.mark.parametrize("prop", SITUATION_PROPERTIES)
+    def test_returns_false_when_property_is_false(self, prop):
+        hedge = HedgeFactory(additionalData={prop: False})
+
+        assert getattr(hedge, prop) is False
+
+    @pytest.mark.parametrize("prop", SITUATION_PROPERTIES)
+    def test_returns_none_when_property_is_absent(self, prop):
+        # The factory's default additionalData omits all four properties
+        hedge = HedgeFactory()
+
+        assert getattr(hedge, prop) is None

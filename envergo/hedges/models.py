@@ -216,6 +216,22 @@ class Hedge:
         return self.additionalData.get("sous_ligne_electrique", None)
 
     @property
+    def bord_batiment(self):
+        return self.additionalData.get("bord_batiment", None)
+
+    @property
+    def place_publique(self):
+        return self.additionalData.get("place_publique", None)
+
+    @property
+    def parc_jardin(self):
+        return self.additionalData.get("parc_jardin", None)
+
+    @property
+    def bord_voie(self):
+        return self.additionalData.get("bord_voie", None)
+
+    @property
     def category(self):
         """Return the category of the hedge (régime unique, L350-3 or hors régime unique).
 
