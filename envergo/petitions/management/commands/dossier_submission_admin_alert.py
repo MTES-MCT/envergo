@@ -73,9 +73,13 @@ class Command(BaseCommand):
             for dossier_as_dict in demarche.dossiers:
                 dossier = Dossier.from_dict(dossier_as_dict)
                 dossier_number = dossier.number
-                project = PetitionProject.objects.filter(
-                    demarche_numerique_dossier_number=dossier_number
-                ).first()
+                project = (
+                    PetitionProject.objects.filter(
+                        demarche_numerique_dossier_number=dossier_number
+                    )
+                    .prefetch_related("simulations")
+                    .first()
+                )
                 if project is None:
                     self.handle_unlinked_dossier(
                         dossier,
