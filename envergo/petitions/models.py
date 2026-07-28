@@ -632,6 +632,13 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self._category = value.value
 
+    @property
+    def is_emergency(self):
+        return (
+            self.config.single_procedure
+            and self.moulinette_data.get("urgence", None) == "oui"
+        )
+
 
 USER_TYPE = Choices(
     ("petitioner", "Demandeur"),
