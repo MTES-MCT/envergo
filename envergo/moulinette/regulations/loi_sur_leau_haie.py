@@ -88,7 +88,7 @@ class LoiSurLeauHaieRuForm(forms.Form):
         elif travaux_berges != "non" and technique_consolidation == "non":
             self.add_error(
                 "technique_consolidation",
-                " Le choix « Pas de consolidation des berges » est incompatible avec la réponse plus haut "
+                "Le choix « Pas de consolidation des berges » est incompatible avec la réponse plus haut "
                 "qui indique qu’il s’agit de travaux de consolidation ou de protection des berges. Modifier l’une ou "
                 "l’autre des réponses.",
             )
