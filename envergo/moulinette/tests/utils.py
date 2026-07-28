@@ -210,9 +210,14 @@ def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **e
     )
     # Pre-populate the lazy cache so density_around_lines returns our value
     # without calling compute_density_around_lines_with_artifacts.
+    # The cache key targets all hedges to remove: this assumes the test data
+    # holds a single category, so the evaluators request that exact subset.
     hedge_data_instance = data["data"]["haies"]
+    cache_key = hedge_data_instance.around_lines_cache_key(
+        hedge_data_instance.hedges_to_remove()
+    )
     hedge_data_instance._density = {
-        "around_lines": {
+        cache_key: {
             "density_400": density,
             "length_400": 3000,
             "area_400_ha": 50.0,

@@ -24,7 +24,19 @@
 {% endblock %}
 
 {% block no_result %}
-  <p>Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation.</p>
+  {% if hedges_to_remove_mls %}
+    {# There is a HedgeData object, but no density computed#}
+    <h2>Calcul impossible</h2>
+    <p>
+      La densité bocagère n’est pour le moment pas définie pour les haies qui ne sont pas concernées par
+      <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051372209"
+         target="_blank"
+         rel="noopener">le régime unique de la haie</a>.
+    </p>
+  {% else %}
+    {# There is no HedgeData object#}
+    <p>Ce démonstrateur fonctionne pour des haies provenant des données d'une simulation.</p>
+  {% endif %}
 {% endblock %}
 
 {% block extra_body %}

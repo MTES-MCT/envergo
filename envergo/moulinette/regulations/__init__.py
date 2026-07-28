@@ -868,8 +868,9 @@ class SelfDeclarationMixin:
 class HedgeDensityMixin:
     """Mixin for criterion evaluators that need "hedge density" to be evaluated.
 
-    Evaluators that use centroid-based density (e.g. EspecesProtegeesNormandie)
-    must override the debug method.
+    Density is computed on the evaluator's hedges to remove (`self.hedges` is
+    the category-filtered subset). Evaluators that use centroid-based density
+    (e.g. EspecesProtegeesNormandie) must override the debug method.
     """
 
     debug_template = "haie/moulinette/debug/density_around_lines.html"
@@ -880,7 +881,7 @@ class HedgeDensityMixin:
         if not haies:
             return {}
 
-        density_data = haies.density_around_lines
+        density_data = haies.density_around_lines(self.hedges.to_remove())
         return {
             "density_400": density_data.get("density_400"),
             "density_400_length": density_data.get("length_400"),
@@ -890,22 +891,22 @@ class HedgeDensityMixin:
     def get_debug_context(self):
         """Return line-buffer density data for the debug template.
 
-        Freshly computes the 400 m density and compares it against the
-        cached value stored on the HedgeData model.
+        Freshly computes the 400 m density on the evaluator's hedges to remove
+        and compares it against the cached value stored on the HedgeData model.
         """
         haies = self.catalog.get("haies")
         if not haies:
             return {}
 
-        density_400 = haies.compute_density_around_lines_with_artifacts()
-        context = {
-            "density_400": density_400["density"],
-            "haies_id": haies.id,
-        }
+        context = {"haies_id": haies.id}
 
-        pre_computed = haies.density_around_lines
-        if pre_computed:
-            context["pre_computed_density_400"] = pre_computed.get("density_400")
+        subset = self.hedges.to_remove()
+        if subset:
+            density_400 = haies.compute_density_around_lines_with_artifacts(subset)
+            context["density_400"] = density_400["density"]
+
+        pre_computed = haies.density_around_lines(subset)
+        context["pre_computed_density_400"] = pre_computed.get("density_400")
 
         return context
 
