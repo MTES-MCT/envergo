@@ -1161,6 +1161,10 @@ div.title-with-link-container {
       &.procedure {
         text-wrap: auto;
 
+        .fr-badge.icon-only-badge {
+          vertical-align: center;
+        }
+
         @media (width < 991px) {
           div {
             overflow: hidden;
