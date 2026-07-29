@@ -1,17 +1,21 @@
 from datetime import timedelta
 from textwrap import dedent
 
+from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.safestring import mark_safe
 
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.models import (
     DECISIONS,
     FORBIDDEN_STAGE_TRANSITIONS,
+    STAGES,
     PetitionProject,
     Simulation,
     StatusLog,
@@ -152,7 +156,7 @@ class PetitionProjectInstructorMessageForm(forms.Form):
 
 
 # Closing requirements matrix: for each final decision, the set of closing
-# fields the instructor must provide. See ProcedureForm docstring for the
+# fields the instructor must provide. See StateChangeForm docstring for the
 # rationale behind each requirement. Decisions absent from this mapping
 # (i.e. "unset") cannot close a dossier.
 CLOSING_FIELD_REQUIREMENTS = {
@@ -195,7 +199,7 @@ class SimulationCheckWidget(forms.CheckboxInput):
     field_template_name = "haie/petitions/forms/fields/simulation_check.html"
 
 
-class ProcedureForm(forms.ModelForm):
+class StateChangeForm(forms.ModelForm):
     """Form for updating petition project's stage.
 
     When the dossier is being closed (stage = "closed"), three additional
@@ -266,8 +270,9 @@ class ProcedureForm(forms.ModelForm):
             "update_comment": forms.Textarea(attrs={"rows": 2}),
         }
 
-    def __init__(self, *args, single_procedure=False, **kwargs):
+    def __init__(self, *args, single_procedure=False, is_paused=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.is_paused = is_paused
         self.fields["due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
         self.fields["status_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
 
@@ -288,6 +293,13 @@ class ProcedureForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        if self.is_paused:
+            raise ValidationError(
+                "Impossible de modifier l'état du dossier tant qu'il est "
+                "en attente de compléments.",
+                code="modification_while_paused",
+            )
         stage = cleaned_data.get("stage")
         decision = cleaned_data.get("decision")
 
@@ -380,23 +392,36 @@ def three_months_from_now():
     return res
 
 
-def request_for_info_message():
+def request_for_info_message(petition_project, is_regime_unique):
     """Format the default text for request for information message."""
     date = three_months_from_now()
     date_fmt = date_format(date, "d F Y")
+
+    if is_regime_unique:
+        ru_fragment = """
+        Si vous ne fournissez pas les compléments demandés dans le délai imparti,
+        le projet sera considéré comme abandonné. Vous devrez déposer une nouvelle
+        demande pour avoir le droit de le réaliser.
+        """
+    else:
+        ru_fragment = ""
+
     message = dedent(
         f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
 
-        Vous avez jusqu'au {date_fmt} pour les fournir.
+        Vous avez jusqu'au {date_fmt} pour les fournir via la messagerie.
 
-        ***Liste des compléments à fournir***
+        ***Liste des compléments à fournir :***
 
-
+        - Pièce manquante n°1
+        - Pièce manquante n°2
+        - …
+        {ru_fragment}
         Cordialement,
-        L'instructeur / le service instructeur.
+        Le guichet unique de la haie – {petition_project.department}
     """
     )
     return message.strip()
@@ -407,26 +432,62 @@ class RequestAdditionalInfoForm(forms.Form):
 
     info_due_date = forms.DateField(
         label="Date limite de réponse du demandeur",
+        help_text="Délai maximum : 3 mois",
         required=True,
         initial=three_months_from_now,
+        error_messages={
+            "required": "Ce champ est obligatoire. La date doit être au format JJ/MM/AAAA",
+            "invalid": "La date doit être au format JJ/MM/AAAA",
+        },
     )
     request_message = forms.CharField(
         label="Message au demandeur",
         required=True,
         widget=forms.Textarea(attrs={"rows": 12}),
-        help_text="""
-        Ce message, à compléter par vos soins, sera envoyé au demandeur pour solliciter
-        les compléments et l'informer de la suspension du délai en attendant sa réponse.
-        Une fois envoyé, vous pourrez le retrouver dans la messagerie.
-        """,
-        initial=request_for_info_message,
+        help_text="Complétez le message afin de lister les pièces complémentaires attendues.",
     )
+
+    def __init__(self, *args, petition_project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["info_due_date"].widget.attrs["placeholder"] = "JJ/MM/AAAA"
+
+        # Setup user message initial content
+        if petition_project:
+            self.fields["request_message"].initial = request_for_info_message(
+                petition_project, petition_project.is_regime_unique()
+            )
+
+    def clean_info_due_date(self):
+        info_due_date = self.cleaned_data["info_due_date"]
+        today = timezone.now().date()
+
+        if info_due_date < today:
+            raise ValidationError(
+                "La date limite ne peut pas être dans le passé.",
+                code="date_in_past",
+            )
+
+        max_date = three_months_from_now().date()
+        if info_due_date > max_date:
+            raise ValidationError(
+                "La date limite ne peut pas dépasser 3 mois à compter d'aujourd'hui.",
+                code="date_exceeds_three_months",
+            )
+
+        return info_due_date
 
 
 def today_formatted():
     """[type=date] input require values formatted in iso 8601."""
 
     return timezone.now().date().isoformat()
+
+
+def two_months_from_now():
+    """[type=date] input require values formatted in iso 8601."""
+
+    return (timezone.now().date() + relativedelta(months=2)).isoformat()
 
 
 class ResumeProcessingForm(forms.Form):
@@ -438,6 +499,29 @@ class ResumeProcessingForm(forms.Form):
         initial=today_formatted,
         widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
     )
+
+    due_date = forms.DateField(
+        label="Nouvelle échéance d'instruction",
+        required=True,
+        initial=two_months_from_now,
+        widget=forms.DateInput(attrs={"type": "date", "autocomplete": "off"}),
+    )
+
+    def __init__(
+        self, *args, category=None, stage=None, original_due_date=None, **kwargs
+    ):
+        """Drop the due date field when the suspension has no original due date."""
+        super().__init__(*args, **kwargs)
+
+        if category == HedgeCategory.ru and stage == STAGES.instruction_d:
+            self.fields["due_date"].widget.attrs["readonly"] = True
+            self.fields["due_date"].label = mark_safe(
+                f"{self.fields['due_date'].label}"
+                '<span class="fr-hint-text">Le délai de 2 mois pour l\'accord tacite redémarre.<br/>'
+                "Le demandeur recevra un nouveau récépissé de déclaration.</span>"
+            )
+        elif original_due_date is None:
+            del self.fields["due_date"]
 
 
 USER_TYPE = (
