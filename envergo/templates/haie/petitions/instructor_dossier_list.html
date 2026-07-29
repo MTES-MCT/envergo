@@ -117,7 +117,9 @@
                         {% endif %}
                       </div>
                       <div>
-                        {% display_due_date project.due_date True %}
+                        {% if project.stage != "closed" %}
+                          {% display_due_date project.due_date True %}
+                        {% endif %}
                         {% if project.decision != "unset" %}
                           {% decision_badge project.decision True %}
                         {% endif %}
