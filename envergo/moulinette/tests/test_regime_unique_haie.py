@@ -10,6 +10,7 @@ from envergo.hedges.tests.factories import HedgeFactory
 from envergo.moulinette.models import CityHallSubmission, MoulinetteHaie
 from envergo.moulinette.regulations.regime_unique_haie import URGENCE_MOTIFS
 from envergo.moulinette.regulations.utils import (
+    compute_hedge_data,
     compute_ru_compensation_ratio,
     resolve_coeff_category,
 )
@@ -424,6 +425,22 @@ class TestPerHedgeCoefficients:
         """
         with pytest.raises(ValueError, match="invalide pour le régime unique"):
             resolve_coeff_category(hedge_type)
+
+    @pytest.mark.parametrize("hedge_type", ["degradee", "unknown"])
+    def test_invalid_type_yields_unresolved_record(self, hedge_type):
+        """A hedge whose type has no RU coefficient degrades to a zeroed,
+        unresolved record (zone_config=None) instead of raising. The record
+        flags the project non_disponible via ru_all_zones_resolved, the same
+        path as an unresolved zone. Guards evaluation against data bypassing
+        the RU form's client-side type filtering.
+        """
+        hedge = make_hedge_factory(length=100, type_haie=hedge_type)
+        zone_config = {"X_densite": 50, "R3_arbustive_HD": 2.0}
+
+        record = compute_hedge_data(hedge, "default", zone_config, density_400=80)
+
+        assert record["zone_config"] is None
+        assert record["raw_coefficient"] == 0.0
 
     def test_alignements_excluded_from_coefficients(self):
         """When all hedges are alignements, the RU evaluator is not loaded and
