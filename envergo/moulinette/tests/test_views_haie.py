@@ -429,6 +429,40 @@ def test_moulinette_post_form_hedge_length_within_limit(client):
     assert not Event.objects.filter(category="erreur", event="formulaire-simu").exists()
 
 
+def test_moulinette_post_form_pac_selected_hedge_not_pac(client):
+    """The form shows an error when PAC is selected but no hedge is within PAC area, and
+    haies are listed in localisation des haies."""
+
+    DCConfigHaieFactory()
+    hedge = HedgeFactory(length=4, additionalData__sur_parcelle_pac=False)
+    hedges = HedgeDataFactory(hedges=[hedge])
+    triage = urlencode(
+        {
+            "department": "44",
+            "element": "haie",
+            "travaux": "destruction",
+            "contexte": "non",
+        }
+    )
+    data = {
+        "department": "44",
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "haies": str(hedges.id),
+    }
+
+    url = reverse("moulinette_form")
+    res = client.post(f"{url}?{triage}", data)
+
+    assert "1 tracé" in res.content.decode()
+    assert "Linéaire total" in res.content.decode()
+    assert "Aucune haie saisie n’a été marquée sur parcelle PAC" in res.content.decode()
+
+
 def test_result_p_view_with_hedges_to_remove_outside_department(client):
     """Test if a warning is displayed on result pages when hedges to remove are outside department"""
 
@@ -951,6 +985,124 @@ def test_confighaie_detail_invalid_slug_returns_404_with_link_to_config_list_vie
     response = client.get(url)
     assert response.status_code == 404
     assert "Aucune configuration n'a été trouvée." in response.content.decode()
+
+
+def test_confighaie_settings_by_date_query_param(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """?date= returns the config valid at that date."""
+    from datetime import timedelta
+
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    old_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    current_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+
+    # A date inside the old range returns the old config
+    a_date = (one_year_ago + timedelta(days=1)).isoformat()
+    response = client.get(url, {"date": a_date})
+    assert response.status_code == 200
+    assert response.context["object"].pk == old_config.pk
+
+    # Today falls in the current config's range
+    response = client.get(url, {"date": today.isoformat()})
+    assert response.status_code == 200
+    assert response.context["object"].pk == current_config.pk
+
+
+def test_confighaie_settings_by_date_matches_permanent_config(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """?date= matches a config with no validity_range (always valid)."""
+    permanent_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=None,
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+    response = client.get(url, {"date": date.today().isoformat()})
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == permanent_config.pk
+
+
+def test_confighaie_settings_by_date_no_match_returns_404(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """?date= with no config valid at that date, or a malformed date, returns 404."""
+    from datetime import timedelta
+
+    today = date.today()
+    one_year_ago = today - timedelta(days=365)
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+    url = reverse("confighaie_settings", kwargs={"department": "44"})
+
+    # No config valid at a far-future date
+    response = client.get(url, {"date": "9999-01-01"})
+    assert response.status_code == 404
+    assert "Aucune configuration n'a été trouvée." in response.content.decode()
+
+    # Malformed date
+    response = client.get(url, {"date": "garbage"})
+    assert response.status_code == 404
+    assert "Aucune configuration n'a été trouvée." in response.content.decode()
+
+
+def test_confighaie_date_slug_takes_precedence_over_date_query_param(
+    client,
+    loire_atlantique_department,  # noqa
+    haie_instructor_44,
+):
+    """When both date_slug and ?date= are present, date_slug wins."""
+    from datetime import timedelta
+
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    one_year_ago = today - timedelta(days=365)
+
+    old_config = DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(one_year_ago, today, "[)"),
+    )
+    DCConfigHaieFactory(
+        department=loire_atlantique_department,
+        validity_range=DateRange(today, tomorrow, "[)"),
+    )
+
+    client.force_login(haie_instructor_44)
+    slug = f"{one_year_ago.isoformat()}_{today.isoformat()}"
+    url = reverse(
+        "confighaie_detail",
+        kwargs={"department": "44", "date_slug": slug},
+    )
+    # ?date= points at today (the current config), but date_slug targets the old one
+    response = client.get(url, {"date": today.isoformat()})
+
+    assert response.status_code == 200
+    assert response.context["object"].pk == old_config.pk
 
 
 def test_old_parametrage_url_redirects(

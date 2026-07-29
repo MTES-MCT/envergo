@@ -1,10 +1,9 @@
 from datetime import date
-from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from django.test import override_settings
 
+from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -12,11 +11,7 @@ from envergo.petitions.models import (
     ResultSnapshot,
     StatusLog,
 )
-from envergo.petitions.tests.factories import (
-    DEMARCHE_NUMERIQUE_FAKE,
-    PetitionProjectFactory,
-    SimulationFactory,
-)
+from envergo.petitions.tests.factories import PetitionProjectFactory, SimulationFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -173,16 +168,10 @@ class TestResultSnapshot:
         assert isinstance(snapshot.payload, dict)
         assert "haies" in snapshot.payload
 
-    @pytest.mark.urls("config.urls_haie")
-    @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
-    @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
-    @patch("envergo.petitions.models.notify")
-    @patch("envergo.petitions.models.log_event_raw")
-    def test_snapshot_created_on_dossier_submission(self, mock_log_event, mock_notify):
-        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarche_numerique."""
-        from django.contrib.sites.models import Site
-
-        Site.objects.get_or_create(domain="testserver", defaults={"name": "testserver"})
+    @pytest.mark.haie
+    def test_snapshot_created_on_dossier_submission(self):
+        """A ResultSnapshot is created when a dossier is submitted via synchronize_with_demarches_simplifiees."""
+        SiteFactory(domain="testserver", name="testserver")
 
         DCConfigHaieFactory()
         # Create project in draft state (not yet submitted)
@@ -213,6 +202,27 @@ class TestResultSnapshot:
         )
         # The snapshot should have the updated moulinette_url (with date param added)
         assert "date=2025-01-29" in latest_snapshot.moulinette_url
+
+    @pytest.mark.haie
+    def test_simulations_date_updated_on_dossier_submission(self):
+        """All simulations get the date param added to their moulinette_url on first submission."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+        alternative = SimulationFactory(project=project, comment="Alternative")
+
+        fake_dossier = {
+            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+            "state": "en_construction",
+            "dateDepot": "2025-01-29T16:25:03+01:00",
+            "usager": {"email": "test@example.com"},
+            "demarche": {"number": 103363},
+        }
+
+        project.synchronize_with_demarche_numerique(fake_dossier)
+
+        alternative.refresh_from_db()
+        assert "date=2025-01-29" in alternative.moulinette_url
 
     @pytest.mark.haie
     def test_auto_instruction_ru_sets_instruction_d_with_due_date(self):

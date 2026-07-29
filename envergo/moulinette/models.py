@@ -105,11 +105,11 @@ ACTIVATION_MODES = Choices(
 REGULATIONS = Choices(
     ("loi_sur_leau", "Loi sur l'eau"),
     ("natura2000", "Natura 2000"),
-    ("natura2000_haie", "Natura 2000 Haie"),
     ("eval_env", "Évaluation environnementale"),
     ("sage", "Règlement de SAGE"),
     ("conditionnalite_pac", "Conditionnalité PAC"),
     ("ep", "Espèces protégées"),
+    ("natura2000_haie", "Natura 2000 Haie"),
     ("alignement_arbres", "Alignements d'arbres (L350-3)"),
     ("urbanisme_haie", "Urbanisme haie"),
     ("reserves_naturelles", "Réserves naturelles"),
@@ -119,6 +119,7 @@ REGULATIONS = Choices(
     ("sites_inscrits_haie", "Sites inscrits"),
     ("sites_classes_haie", "Sites classés"),
     ("protection_captages", "Protection de captages"),
+    ("loi_sur_leau_haie", "Loi sur l'eau Haie"),
 )
 
 
@@ -2631,6 +2632,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         "sites_inscrits_haie",
         "sites_classes_haie",
         "protection_captages",
+        "loi_sur_leau_haie",
     ]
     home_template = "haie/moulinette/home.html"
     result_template = "haie/moulinette/result.html"
@@ -2874,6 +2876,13 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Fetch / compute data required for further computations."""
 
         data = super().get_catalog_data()
+
+        if "invalid_hedges" in data:
+            # We want to display hedges to remove even if haies field has error, but config must be valid
+            data["haies"] = data.pop("invalid_hedges")
+            if not self.config:
+                del data["haies"]
+
         if "haies" in data:
             hedges = data["haies"]
             data["departments_lengths"] = hedges.departments_lengths()
@@ -2886,6 +2895,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             data["hedges_by_category"] = hedges.get_hedges_by_category(
                 self.config.single_procedure
             )
+
         else:
             data["hedges_by_category"] = {category: [] for category in HedgeCategory}
 

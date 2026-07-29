@@ -1,0 +1,31 @@
+{% load static %}
+
+<dialog aria-labelledby="resume-processing-modal-title"
+        role="dialog"
+        id="resume-processing-modal"
+        class="fr-modal {% if resume_processing_form.errors %}fr-modal--opened{% endif %}">
+  <div class="fr-container fr-container--fluid fr-container-md">
+    <div class="fr-grid-row fr-grid-row--center">
+      <div class="fr-col-12 fr-col-md-8">
+        <div class="fr-modal__body">
+          <div class="fr-modal__header">
+            <button class="fr-link--close fr-link"
+                    title="Fermer la modale"
+                    aria-controls="resume-processing-modal">Fermer</button>
+          </div>
+          <div class="fr-modal__content">
+            <h2 id="resume-processing-modal-title" class="fr-modal__title">Reprendre l'instruction</h2>
+
+            <form method="post" action="" novalidate class="fr-mb-3w">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="resume_processing">
+              {% include '_form_snippet.html' with form=resume_processing_form %}
+
+              <button type="submit" class="fr-btn">Reprendre l'instruction</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
