@@ -1023,4 +1023,7 @@ class EspecesProtegeesRegimeUnique(
         context["ru_zone_configs"] = collect_zone_configs(
             self.catalog.get("ru_hedge_data", {})
         )
+        context["RuHedgeType"] = HedgeTypeFactory.build_from_context(
+            single_procedure=True
+        )
         return context

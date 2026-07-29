@@ -25,7 +25,7 @@ from envergo.analytics.utils import (
 from envergo.evaluations.models import TagStyleEnum
 from envergo.geodata.models import MAP_TYPES, Map
 from envergo.geodata.utils import get_address_from_coords
-from envergo.hedges.models import HedgeCategory
+from envergo.hedges.models import HedgeCategory, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.forms import TriageFormHaie
 from envergo.moulinette.models import (
@@ -937,6 +937,9 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
         )
 
         context["ru_zone_configs"] = self.object.zone_configs
+        context["RuHedgeType"] = HedgeTypeFactory.build_from_context(
+            single_procedure=True
+        )
 
         # Compute the hedge density reference map list
         density_maps = (

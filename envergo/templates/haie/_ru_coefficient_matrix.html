@@ -1,3 +1,5 @@
+{% load utils %}
+
 <div class="fr-table fr-table--sm">
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
@@ -14,19 +16,19 @@
                 </th>
               </tr>
               <tr>
-                <th scope="row">Buissonnante</th>
-                <td>{{ config.R1_buissonnante_HD }}</td>
-                <td>{{ config.R2_buissonnante_LD }}</td>
+                <th scope="row">{{ RuHedgeType.choices|get_choice_label:'mixte' }}</th>
+                <td>{{ config.R5_arboree_HD }}</td>
+                <td>{{ config.R6_arboree_LD }}</td>
               </tr>
               <tr>
-                <th scope="row">Arbustive</th>
+                <th scope="row">{{ RuHedgeType.choices|get_choice_label:'arbustive' }}</th>
                 <td>{{ config.R3_arbustive_HD }}</td>
                 <td>{{ config.R4_arbustive_LD }}</td>
               </tr>
               <tr>
-                <th scope="row">Arborée</th>
-                <td>{{ config.R5_arboree_HD }}</td>
-                <td>{{ config.R6_arboree_LD }}</td>
+                <th scope="row">{{ RuHedgeType.choices|get_choice_label:'buissonnante' }}</th>
+                <td>{{ config.R1_buissonnante_HD }}</td>
+                <td>{{ config.R2_buissonnante_LD }}</td>
               </tr>
             {% endfor %}
           </tbody>

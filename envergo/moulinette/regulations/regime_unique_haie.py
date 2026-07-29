@@ -8,7 +8,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 
 from envergo.evaluations.models import RESULTS
-from envergo.hedges.models import HedgeCategory
+from envergo.hedges.models import HedgeCategory, HedgeTypeFactory
 from envergo.hedges.regulations import (
     PlantationConditionMixin,
     RUMinLengthCondition,
@@ -136,6 +136,9 @@ class RegimeUniqueHaieRu(
         context = super().get_debug_context()
         context["ru_zone_configs"] = collect_zone_configs(
             self.catalog.get("ru_hedge_data", {})
+        )
+        context["RuHedgeType"] = HedgeTypeFactory.build_from_context(
+            single_procedure=True
         )
         return context
 

@@ -1,3 +1,4 @@
+from envergo.hedges.models import HedgeTypeFactory
 from envergo.hedges.regulations import RUQualityCondition
 from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.moulinette.regulations.utils import (
@@ -19,6 +20,7 @@ def regime_unique_haie_get_instructor_view_context(
     context["ru_zone_configs"] = collect_zone_configs(
         moulinette.catalog.get("ru_hedge_data", {})
     )
+    context["RuHedgeType"] = HedgeTypeFactory.build_from_context(single_procedure=True)
 
     context["hedge_detail_rows"] = build_ru_hedge_detail_rows(
         moulinette.catalog, evaluator
