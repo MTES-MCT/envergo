@@ -116,7 +116,7 @@
                           </div>
                         {% endif %}
                       </div>
-                      <div>
+                      <div {% if project.stage == 'closed' %}class="fr-ml-n1v"{% endif %}>
                         {% if project.stage != "closed" %}
                           {% display_due_date project.due_date True %}
                         {% endif %}
