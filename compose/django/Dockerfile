@@ -1,18 +1,24 @@
-FROM docker.io/python:3.12.8-slim-bookworm as python
+FROM docker.io/python:3.12.8-slim-bookworm AS python
 
 # Python build stage
-FROM python as python-build-stage
+FROM python AS python-build-stage
 
 ARG BUILD_ENVIRONMENT=local
 
 # Install apt packages
 RUN apt-get update && apt-get install --no-install-recommends -y \
   # dependencies for building Python packages
-  build-essential
+  build-essential \
+  # GDAL dev libraries required to build GDAL Python wheels on arm64
+  libgdal-dev \
+  # required for NodeSource setup
+  curl \
+  && rm -rf /var/lib/apt/lists/*
 
 # build assets
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-  && apt-get install -y nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements .
 
@@ -22,7 +28,7 @@ RUN python -m ensurepip --upgrade && pip wheel --wheel-dir /usr/src/app/wheels  
 
 
 # Python 'run' stage
-FROM python as python-run-stage
+FROM python AS python-run-stage
 
 ARG BUILD_ENVIRONMENT=local
 ARG APP_HOME=/app
@@ -46,13 +52,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   curl \
   # python-magic mimetype detection dependencies
   libmagic1 \
+  # image optimization
+  optipng \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js and npm
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-  && apt-get install -y nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen fr_FR.UTF-8 && update-locale LANG="fr_FR.UTF-8" LC_ALL="fr_FR.UTF-8"
 
@@ -78,8 +87,5 @@ RUN chmod +x /start
 
 # copy application code to WORKDIR
 COPY . ${APP_HOME}
-
-# This is required because we disabled all npm scripts in .npmrc
-RUN node node_modules/optipng-bin/lib/install.js
 
 ENTRYPOINT ["/entrypoint"]
