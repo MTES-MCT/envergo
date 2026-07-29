@@ -1735,7 +1735,15 @@ class PetitionProjectInstructorProcedureView(
         if action == "request_info":
             return RequestAdditionalInfoForm(self.request.POST)
         if action == "resume_processing":
-            return ResumeProcessingForm(self.request.POST)
+            suspension = self.object.latest_suspension
+            return ResumeProcessingForm(
+                self.request.POST,
+                original_due_date=(
+                    suspension.original_due_date if suspension else None
+                ),
+                category=self.object.category,
+                stage=self.object.stage,
+            )
         return None
 
     def get_initial(self):
@@ -1784,12 +1792,22 @@ class PetitionProjectInstructorProcedureView(
         if self.has_change_permission(
             self.request, self.object
         ) and self.object.stage.startswith("instruction"):
+
+            suspension = self.object.latest_suspension
             context.setdefault(
                 "request_info_form",
                 RequestAdditionalInfoForm(petition_project=self.object),
             )
-            context.setdefault("resume_processing_form", ResumeProcessingForm())
-
+            context.setdefault(
+                "resume_processing_form",
+                ResumeProcessingForm(
+                    original_due_date=(
+                        suspension.original_due_date if suspension else None
+                    ),
+                    category=self.object.category,
+                    stage=self.object.stage,
+                ),
+            )
         return context
 
     # ── state_change: modify the dossier stage/decision ──────────────
@@ -1929,6 +1947,8 @@ class PetitionProjectInstructorProcedureView(
                     original_due_date=project.due_date,
                     created_by=self.request.user,
                     update_comment="Suspension de l’instruction, message envoyé au demandeur.",
+                    stage=project.stage,
+                    decision=project.decision,
                 )
 
                 message = form.cleaned_data["request_message"]
@@ -2016,16 +2036,9 @@ class PetitionProjectInstructorProcedureView(
         """Instructor received the requested additional info."""
 
         project = self.object
-        suspension = project.latest_suspension
 
-        # Compute the new due date: original due date + number of interruption days.
-        # Note: if you modify this rule, you must apply the same update in sync_new_due_date.js
         info_receipt_date = form.cleaned_data["info_receipt_date"]
-        interruption_days = info_receipt_date - suspension.created_at.date()
-        if suspension.original_due_date:
-            new_due_date = suspension.original_due_date + interruption_days
-        else:
-            new_due_date = None
+        new_due_date = form.cleaned_data.get("due_date")
 
         StatusLog.objects.create(
             petition_project=project,
@@ -2038,6 +2051,8 @@ class PetitionProjectInstructorProcedureView(
                 if new_due_date
                 else "Reprise de l’instruction."
             ),
+            stage=project.stage,
+            decision=project.decision,
         )
 
         self.notify_resume_processing(project)

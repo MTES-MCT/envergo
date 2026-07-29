@@ -14,8 +14,13 @@
           <div class="fr-modal__content">
             <h2 id="request-info-modal-title" class="fr-modal__title">Demander des compléments</h2>
 
-            <p>La demande de compléments interrompra le délai d'instruction.</p>
-
+            <p>
+              La demande de compléments interrompra le délai d'instruction.
+              {% if petition_project.category == 'ru' and petition_project.stage == 'instruction_d' %}
+                <br />
+                À la réception des compléments, le délai de 2 mois pour l'accord tacite repartira à zéro.
+              {% endif %}
+            </p>
             <form method="post" action="" novalidate class="fr-mb-3w">
               {% csrf_token %}
               <input type="hidden" name="action" value="request_info">
