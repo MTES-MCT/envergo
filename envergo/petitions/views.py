@@ -1735,7 +1735,15 @@ class PetitionProjectInstructorProcedureView(
         if action == "request_info":
             return RequestAdditionalInfoForm(self.request.POST)
         if action == "resume_processing":
-            return ResumeProcessingForm(self.request.POST)
+            suspension = self.object.latest_suspension
+            return ResumeProcessingForm(
+                self.request.POST,
+                original_due_date=(
+                    suspension.original_due_date if suspension else None
+                ),
+                category=self.object.category,
+                stage=self.object.stage,
+            )
         return None
 
     def get_initial(self):
