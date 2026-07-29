@@ -188,7 +188,7 @@ def stage_badge(stage, is_small=True):
     color = color_map.get(stage, None)
     label = label_map.get(stage, dict(STAGES).get(stage, stage))
     badge_color_class = f"fr-badge--{color}" if color else ""
-    badge_size_class = "fr-badge--sm fr-ml-n1v" if is_small else "badge--lg fr-ml-n3v"
+    badge_size_class = "fr-badge--sm" if is_small else "badge--lg fr-ml-n3v"
 
     return mark_safe(
         f"""<p class="fr-badge {badge_color_class}  {badge_size_class}">
@@ -229,7 +229,7 @@ def decision_badge(decision, is_light=False):
 
 
 @register.simple_tag
-def display_due_date(due_date, display_days_left=True, self_explanatory_label=False):
+def display_due_date(due_date, self_explanatory_label=False):
     """Display project due date"""
     if not due_date or not isinstance(due_date, date):
         return mark_safe(
@@ -250,29 +250,19 @@ def display_due_date(due_date, display_days_left=True, self_explanatory_label=Fa
 
     date_part = f"""<span class="fr-icon-{icon_part} fr-icon--sm"></span> {date_filter(due_date, "d N")}"""
 
-    days_left_part = ""
-    if display_days_left:
-        plural = pluralize(days_left)
-        days_left_content = ""
-        if days_left > 0:
-            days_left_content = f"{days_left} j restant{plural}"
-        elif days_left == 0:
-            days_left_content = f"{days_left} j restant"  # Yes plural puts an "s"
-        elif days_left < 0:
-            days_left_content = f"retard {abs(days_left)} j"
+    days_left_content = ""
+    plural = pluralize(days_left)
+    if days_left > 0:
+        days_left_content = f"{days_left} j restant{plural}"
+    elif days_left == 0:
+        days_left_content = f"{days_left} j restant"  # Yes plural puts an "s"
+    elif days_left < 0:
+        days_left_content = f"retard {abs(days_left)} j"
 
-        days_left_part = f'(<span class="days-left">{days_left_content}</span>)'
+    days_left_part = f'(<span class="days-left">{days_left_content}</span>)'
 
     return mark_safe(
         f"""<span class="due-date displayed {color}">{date_part} {days_left_part}</span>"""
-    )
-
-
-@register.simple_tag
-def display_pause(due_date):
-    """Display project pause status"""
-    return mark_safe(
-        """<span class="fr-badge fr-badge--sm">Attente de compléments</span>"""
     )
 
 
