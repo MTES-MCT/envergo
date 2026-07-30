@@ -136,7 +136,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             .filter(followed_petition_projects=OuterRef("pk"))
             .filter(departments=OuterRef("department"))
         )
-        confighaie_qs = ConfigHaie.objects.filter(department__in=OuterRef("department"))
 
         queryset = (
             PetitionProject.objects.exclude(
@@ -149,9 +148,6 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
                     "status_history",
                     queryset=StatusLog.objects.all().order_by("-created_at"),
                 )
-            )
-            .annotate(
-                is_single_procedure=Subquery(confighaie_qs.values("single_procedure"))
             )
             .annotate(messagerie_access=Subquery(messagerie_access_qs.values("access")))
             .annotate(
@@ -858,7 +854,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             .filter(followed_petition_projects=OuterRef("pk"))
             .filter(departments=OuterRef("department"))
         )
-        confighaie_qs = ConfigHaie.objects.filter(department=OuterRef("department"))
 
         queryset = (
             PetitionProject.objects.all()
@@ -869,9 +864,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
                     "status_history",
                     queryset=StatusLog.objects.all().order_by("-created_at"),
                 )
-            )
-            .annotate(
-                is_single_procedure=Subquery(confighaie_qs.values("single_procedure"))
             )
             .annotate(messagerie_access=Subquery(messagerie_access_qs.values("access")))
             .annotate(

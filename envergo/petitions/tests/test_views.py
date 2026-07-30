@@ -1403,16 +1403,7 @@ def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
     assert "Le projet se situe sur plusieurs départements" not in res.content.decode()
 
 
-@pytest.mark.parametrize(
-    "emergency, expect_emergency_badge",
-    [
-        ("non", False),
-        ("oui", True),
-    ],
-)
-def test_petition_emergency_badge(
-    client, haie_instructor_44, emergency, expect_emergency_badge
-):
+def test_petition_emergency_badge(client, haie_instructor_44):
     """Test emergency badge in project list and project detail"""
 
     # GIVEN project with no urgence
@@ -1422,12 +1413,27 @@ def test_petition_emergency_badge(
     project = PetitionProjectFactory(
         demarche_numerique_state=DOSSIER_STATES.prefilled, hedge_data=hedges
     )
+    client.force_login(haie_instructor_44)
 
-    # GIVEN project with urgence or not
+    # WHEN Instructor visits project list page
+    project_list_url = reverse("petition_project_list")
+    res = client.get(project_list_url)
+    # THEN badge "Urgence" is not in content
+    assert "Urgence" not in res.content.decode()
+
+    # WHEN Instructor visits project instructor page
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+    # THEN badge "Urgence" is in content
+    assert "Urgence" not in res.content.decode()
+
+    # GIVEN project with urgence
     moulinette_data = {
         "reimplantation": "replantation",
         "motif": "securite",
-        "urgence": emergency,
+        "urgence": "oui",
     }
     new_url = update_qs(project.moulinette_url, moulinette_data)
     project.moulinette_url = new_url
@@ -1435,18 +1441,17 @@ def test_petition_emergency_badge(
 
     # WHEN Instructor visits project list page
     project_list_url = reverse("petition_project_list")
-    client.force_login(haie_instructor_44)
     res = client.get(project_list_url)
-    # THEN badge "Urgence" is in content if "urgence" == "oui"
-    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+    # THEN badge "Urgence" is in content
+    assert "Urgence" in res.content.decode()
 
     # WHEN Instructor visits project instructor page
     project_url = reverse(
         "petition_project_instructor_view", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
-    # THEN badge "Urgence" is in content if "urgence" == "oui"
-    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+    # THEN badge "Urgence" is in content
+    assert "Urgence" in res.content.decode()
 
 
 @patch("envergo.petitions.views.notify")
