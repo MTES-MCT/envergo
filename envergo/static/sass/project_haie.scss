@@ -1164,13 +1164,6 @@ div.title-with-link-container {
         .fr-badge.icon-only-badge {
           vertical-align: center;
         }
-
-        @media (width < 991px) {
-          div {
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-        }
       }
 
       &.ellipsis {
