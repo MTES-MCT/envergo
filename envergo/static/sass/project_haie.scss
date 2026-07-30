@@ -1161,6 +1161,19 @@ div.title-with-link-container {
       &.procedure {
         text-wrap: auto;
 
+        @media (width < 992px) {
+          div {
+            overflow: hidden;
+          }
+
+          .fr-badge {
+            display: block;
+            text-wrap: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+
         .fr-badge.icon-only-badge {
           vertical-align: center;
         }
