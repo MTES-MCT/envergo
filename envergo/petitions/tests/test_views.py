@@ -2335,6 +2335,36 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg not in res.content.decode()
 
 
+def test_alternatives_detail_view(client, haie_instructor_44):
+    """Test alternative result page view"""
+
+    DCConfigHaieFactory()
+    # At least one regulation is needed so the moulinette produces results by
+    # category, from which the activation takes the project's new category.
+    HaieRegulationFactory()
+    project = PetitionProjectFactory()
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+    # AS instructor
+    client.force_login(haie_instructor_44)
+    # WHEN I visit alternative page
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_display",
+        kwargs={"reference": project.reference, "simulation_id": s2.id},
+    )
+    response = client.get(alternative_url)
+    # THEN page is 200
+    assert response.status_code == 200
+
+    # WHEN I visit not existing alternative page
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_display",
+        kwargs={"reference": project.reference, "simulation_id": "1234"},
+    )
+    client.force_login(haie_instructor_44)
+    response = client.get(alternative_url)
+    assert response.status_code == 404
+
+
 def test_alternatives_list_permission(client, haie_user, haie_instructor_44, site):
     """Test alternative flow for petition project"""
 
@@ -2368,22 +2398,6 @@ def test_alternatives_list_permission(client, haie_user, haie_instructor_44, sit
     assert response.status_code == 200
     content = response.content.decode()
     assert "<h2>Simulations alternatives</h2>" in content
-
-
-def test_alternatives_detail_view(client, haie_instructor_44):
-    """Test alternative detail view"""
-
-    # GIVEN a petition project
-    DCConfigHaieFactory()
-    project = PetitionProjectFactory()
-    s2 = SimulationFactory(project=project, comment="Simulation 2")
-    alternative_url = reverse(
-        "petition_project_instructor_alternative_display",
-        kwargs={"reference": project.reference, "simulation_id": s2.id},
-    )
-    client.force_login(haie_instructor_44)
-    response = client.get(alternative_url)
-    assert response.status_code == 200
 
 
 def test_alternatives_list_shows_data(client, haie_instructor_44):

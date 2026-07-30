@@ -732,10 +732,33 @@ class PetitionProjectDetail(DetailView):
 
         return result
 
+    def get_simulation(self, simulation_id):
+        """Return the targeted simulation (with its project) or raise 404."""
+
+        simulation_qs = (
+            Simulation.objects.filter(project=self.object)
+            .select_related("project")
+            .prefetch_related(
+                Prefetch(
+                    "project__status_history",
+                    queryset=StatusLog.objects.all().order_by("-created_at"),
+                )
+            )
+        )
+        try:
+            return simulation_qs.get(pk=simulation_id)
+        except Simulation.DoesNotExist:
+            raise Http404()
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        moulinette = self.object.get_moulinette()
+        if "simulation_id" in self.kwargs:
+            simulation = self.get_simulation(self.kwargs["simulation_id"])
+            moulinette_url = MoulinetteUrl(simulation.moulinette_url)
+            moulinette = moulinette_url.get_moulinette()
+        else:
+            moulinette = self.object.get_moulinette()
 
         if moulinette.has_missing_data():
             # this should not happen, unless we have stored an incomplete project
