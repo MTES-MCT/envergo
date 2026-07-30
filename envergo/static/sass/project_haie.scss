@@ -1160,8 +1160,9 @@ div.title-with-link-container {
 
       &.procedure {
         text-wrap: auto;
+        max-width: none;
 
-        @media (width < 992px) {
+        @media (width <= 575px) {
           div {
             overflow: hidden;
           }
@@ -1171,6 +1172,7 @@ div.title-with-link-container {
             text-wrap: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
           }
         }
 
