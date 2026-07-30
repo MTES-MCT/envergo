@@ -1131,6 +1131,10 @@ div.title-with-link-container {
         text-wrap: auto;
         max-width: none;
 
+        .ellipsis-badge-wrapper .fr-badge {
+          text-wrap: nowrap;
+        }
+
         @media (width <= 575px) {
           div {
             overflow: hidden;
@@ -1138,7 +1142,6 @@ div.title-with-link-container {
 
           .ellipsis-badge-wrapper .fr-badge {
             display: block;
-            text-wrap: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin-bottom: 0.25rem;
