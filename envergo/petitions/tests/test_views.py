@@ -1252,9 +1252,7 @@ def test_petition_project_list_filters(
     ] == [haie_instructor_44_instructor2.email]
 
 
-def test_petition_project_list_filter_show_closed(
-    haie_instructor_44, client, site
-):
+def test_petition_project_list_filter_show_closed(haie_instructor_44, client, site):
     """Closed dossiers are hidden by default, shown with ?show_closed=1."""
 
     DCConfigHaieFactory()
@@ -1289,9 +1287,7 @@ def test_petition_project_list_filter_show_closed(
     assert closed_project.reference in content
 
 
-def test_petition_project_list_filter_category(
-    haie_instructor_44, client, site
-):
+def test_petition_project_list_filter_category(haie_instructor_44, client, site):
     """Category filter shows only selected categories."""
 
     DCConfigHaieFactory()
@@ -1349,9 +1345,7 @@ def test_petition_project_list_filter_category(
     assert hru_project.reference in content
 
 
-def test_petition_project_list_filter_combined(
-    haie_instructor_44, client, site
-):
+def test_petition_project_list_filter_combined(haie_instructor_44, client, site):
     """Multiple filters apply as intersection."""
 
     DCConfigHaieFactory()
@@ -1390,9 +1384,7 @@ def test_petition_project_list_filter_combined(
     assert followed_hru.reference not in content
 
 
-def test_petition_project_list_filter_pagination(
-    haie_instructor_44, client, site
-):
+def test_petition_project_list_filter_pagination(haie_instructor_44, client, site):
     """Pagination count reflects filtered results, not unfiltered total."""
 
     DCConfigHaieFactory()
@@ -1426,9 +1418,7 @@ def test_petition_project_list_filter_pagination(
     assert response.context["page_obj"].paginator.count == 5
 
 
-def test_petition_project_list_htmx_response(
-    haie_instructor_44, client, site
-):
+def test_petition_project_list_htmx_response(haie_instructor_44, client, site):
     """HX-Request header returns partial HTML, not a full page."""
 
     DCConfigHaieFactory()
