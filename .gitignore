@@ -297,7 +297,3 @@ data.*
 /playwright/.cache/
 
 altis/
-
-# PY's AI-agent sandbox tooling
-/compose/agent/
-/bin/agent
