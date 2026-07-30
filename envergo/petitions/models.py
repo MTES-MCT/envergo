@@ -644,11 +644,8 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         return self.category == HedgeCategory.ru
 
     @property
-    def is_emergency(self):
-        return (
-            self.config.single_procedure
-            and self.moulinette_data.get("urgence", None) == "oui"
-        )
+    def emergency_in_moulinette_data(self):
+        return self.moulinette_data.get("urgence", None) == "oui"
 
 
 USER_TYPE = Choices(
