@@ -12,7 +12,7 @@
       </div>
       <div class="fr-mb-3w">
         {% include 'haie/petitions/_hedge_category.html' with category=petition_project.category %}
-        {% if petition_project.is_emergency %}
+        {% if petition_project.is_single_procedure and petition_project.emergency_in_moulinette_data %}
           <span class="fr-badge fr-badge--pink-tuile fr-badge--sm">Urgence</span>
         {% endif %}
       </div>
