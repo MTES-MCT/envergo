@@ -1440,3 +1440,37 @@ button.hide-expanded[aria-expanded="true"] {
     cursor: not-allowed;
   }
 }
+
+#dossier-filters {
+  // Hide the filter feature on the tiniest screens
+  display: none;
+  @media (min-width: 576px) {
+    display: block;
+  }
+
+  .filter-line {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fr-segmented {
+    margin-bottom: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .filter-line {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fr-fieldset,
+    .fr-segmented {
+      margin-bottom: 0;
+    }
+  }
+
+  .fr-fieldset__element {
+    margin-bottom: 0;
+  }
+}

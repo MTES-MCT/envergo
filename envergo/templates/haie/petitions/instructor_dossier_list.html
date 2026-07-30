@@ -27,32 +27,7 @@
         </p>
       </div>
     {% else %}
-      <fieldset class="fr-segmented fr-segmented--sm">
-        <legend class="fr-segmented__legend fr-mb-1v">Filtrer la liste :</legend>
-        <div class="fr-segmented__elements">
-          <div class="fr-segmented__element">
-            <a href="{% url 'petition_project_list' %}"
-               data-event-category="ProjectList"
-               data-event-action="Filter"
-               data-event-name="FollowedOff"
-               {% if request.GET.f is None %}class="active"{% endif %}>Tous les dossiers</a>
-          </div>
-          <div class="fr-segmented__element">
-            <a href="{% url 'petition_project_list' %}?f=mes_dossiers"
-               data-event-category="ProjectList"
-               data-event-action="Filter"
-               data-event-name="FollowedByMe"
-               {% if 'mes_dossiers' in request.GET.f %}class="active"{% endif %}>Mes dossiers suivis</a>
-          </div>
-          <div class="fr-segmented__element">
-            <a href="{% url 'petition_project_list' %}?f=dossiers_sans_instructeur"
-               data-event-category="ProjectList"
-               data-event-action="Filter"
-               data-event-name="FollowedByNobody"
-               {% if 'dossiers_sans_instructeur' in request.GET.f %}class="active"{% endif %}>Dossiers sans instructeur</a>
-          </div>
-        </div>
-      </fieldset>
+      {% include 'haie/petitions/_dossier_list_filters.html' %}
     {% endif %}
 
     <div class="fr-table--lg fr-table project-list__table">
