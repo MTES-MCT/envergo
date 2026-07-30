@@ -800,37 +800,6 @@ div#instructor-view-side-menu {
 /**
  * Page project list
  */
-.fr-segmented {
-  &.fr-segmented--sm {
-    a {
-      text-decoration: none;
-      background-image: none;
-      align-items: center;
-      border-radius: 0.25rem;
-      display: inline-flex;
-      font-size: 0.875rem;
-      font-weight: 500;
-      line-height: 1.5rem;
-      max-height: none;
-      max-width: 100%;
-      min-height: 2rem;
-      overflow: initial;
-      padding: 0.25rem 0.75rem;
-      white-space: nowrap;
-      width: 100%;
-
-      &:hover {
-        background-color: var(--hover);
-      }
-    }
-  }
-
-  &__element a.active {
-    box-shadow: inset 0 0 0 1px var(--border-active-blue-france);
-    color: var(--text-active-blue-france);
-  }
-}
-
 .project-list__table,
 .procedure-history__table {
   caption {
@@ -1456,3 +1425,38 @@ button.hide-expanded[aria-expanded="true"] {
     cursor: not-allowed;
   }
 }
+
+#dossier-filters {
+  // Hide the filter feature on the tiniest screens
+  display: none;
+  @media (min-width: 576px) {
+    display: block;
+  }
+
+  .filter-line {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fr-segmented {
+    margin-bottom: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .filter-line {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fr-fieldset,
+    .fr-segmented {
+      margin-bottom: 0;
+    }
+  }
+
+  .fr-fieldset__element {
+    margin-bottom: 0;
+  }
+}
+
