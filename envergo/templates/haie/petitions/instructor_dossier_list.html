@@ -10,153 +10,36 @@
 
 {% block content %}
   <h1 class="fr-my-2w project-list__title">Liste des dossiers</h1>
-  {% with project_number=page_obj.paginator.count %}
-    {% if not user_can_view_one_petition_project %}
-      <div class="fr-alert fr-alert--info">
-        <h3 class="fr-alert__title">Aucun dossier n’est accessible pour le moment</h3>
-        <p>Vous n’avez actuellement accès à aucun dossier.</p>
-        <p>
-          Pour accéder à un dossier spécifique, vous devez être invité par un instructeur et cliquer sur le lien
-          d’invitation qu’il vous a transmis.
-        </p>
-        <p>
-          Si vous attendez des droits d’accès à l’ensemble d’un département, leur attribution peut prendre jusqu’à 24
-          heures après la création de votre compte.
-          En cas de difficulté, vous pouvez contacter
-          <a href="{{ contact_url }}">l’équipe du Guichet unique de la haie.</a>
-        </p>
-      </div>
-    {% else %}
-      {% include 'haie/petitions/_dossier_list_filters.html' %}
-    {% endif %}
-
-    <div class="fr-table--lg fr-table project-list__table">
-      <div class="fr-table__wrapper">
-        <div class="fr-table__container">
-          <div class="fr-table__content">
-            <table id="table-dossier-list">
-              <caption class="fr-mt-1w fr-mb-0">
-                {{ project_number }}
-                dossier{{ project_number|pluralize }}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">
-                    <div class="fr-mb-1v">N° dossier</div>
-                    <div>Date de dépôt</div>
-                  </th>
-                  <th scope="col">
-                    <div class="fr-mb-1v">Étape</div>
-                    <div>Date échéance · Décision</div>
-                  </th>
-                  <th scope="col">
-                    <div class="fr-mb-1v">Demandeur</div>
-                    <div>Commune</div>
-                  </th>
-                  <th scope="col">
-                    Linéaire
-                    <br />
-                    à détruire
-                  </th>
-                  <th scope="col">Étiquettes</th>
-                  <th scope="col">
-                    <span title="Messagerie" class="fr-icon-mail-line fr-icon--sm"></span>
-                  </th>
-                  <th colspan="2" scope="col">Suivi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for project in object_list %}
-                  <tr class="project">
-                    <td>
-                      <div>
-                        <a href="{% url 'petition_project_instructor_view' project.reference %}"
-                           class="fr-link">{{ project.demarche_numerique_dossier_number|format_ds_number }}</a>
-                        {% if not user|has_edit_permission:project %}
-                          <span class="fr-icon-eye-line fr-icon--sm"
-                                aria-describedby="read-only-tooltip-{{ project.reference }}"></span>
-                          <span class="fr-tooltip fr-placement"
-                                id="read-only-tooltip-{{ project.reference }}"
-                                role="tooltip">Lecture seule</span>
-                        {% endif %}
-                      </div>
-                      <div>{{ project.prefetched_dossier.dateDepot|date:"SHORT_DATE_FORMAT" }}</div>
-                    </td>
-                    <td class="procedure">
-                      <div>{% stage_badge project.stage %}</div>
-                      <div>
-                        {% if project.stage != "closed" %}
-                          {% if project.is_additional_information_requested %}
-                            {% display_pause project.due_date %}
-                          {% else %}
-                            {% display_due_date project.due_date False True %}
-                          {% endif %}
-                        {% endif %}
-                        {% if project.decision != "unset" %}
-                          {% decision_badge project.decision True %}
-                        {% endif %}
-                      </div>
-
-                    </td>
-                    {% firstof project.organization project.prefetched_dossier.applicant_name as applicant_display %}
-                    {% multiline_title applicant_display project.city as applicant_tooltip %}
-                    <td class="ellipsis" title="{{ applicant_tooltip }}">
-                      <div>{{ applicant_display }}</div>
-                      <div>{{ project.city }}</div>
-                    </td>
-                    <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
-                    <td>{% include 'haie/petitions/_hedge_category.html' with category=project.category is_light=True %}</td>
-                    <td class="messagerie-col {% if project.has_unread_messages and user|has_edit_permission:project %}unread{% else %}read{% endif %}">
-                      {% if project.has_unread_messages and user|has_edit_permission:project %}
-                        <span class="fr-icon-mail-fill fr-icon--sm"></span>
-                        <span style="font-size: 150%;" class="fr-ml-1v">●</span>
-                      {% else %}
-                        <span class="fr-icon-mail-line fr-icon--sm"></span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% include 'haie/petitions/_follow_form.html' with reference=project.reference followed_up=project.followed_up %}
-                    </td>
-                    <td>
-                      {% include 'haie/petitions/_dossier_followers.html' with reference=project.reference followers=project.followers %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-      </div>
-      {% if page_obj.paginator.num_pages > 1 %}
-        <div class="fr-table__footer">
-          <div class="fr-table__footer--middle fr-mt-0">{% include "_pagination.html" with page_obj=page_obj %}</div>
-        </div>
-      {% endif %}
+  {% if not user_can_view_one_petition_project %}
+    <div class="fr-alert fr-alert--info">
+      <h3 class="fr-alert__title">Aucun dossier n’est accessible pour le moment</h3>
+      <p>Vous n’avez actuellement accès à aucun dossier.</p>
+      <p>
+        Pour accéder à un dossier spécifique, vous devez être invité par un instructeur et cliquer sur le lien
+        d’invitation qu’il vous a transmis.
+      </p>
+      <p>
+        Si vous attendez des droits d’accès à l’ensemble d’un département, leur attribution peut prendre jusqu’à 24
+        heures après la création de votre compte.
+        En cas de difficulté, vous pouvez contacter
+        <a href="{{ contact_url }}">l’équipe du Guichet unique de la haie.</a>
+      </p>
     </div>
+  {% else %}
+    {% include 'haie/petitions/_dossier_list_filters.html' %}
+  {% endif %}
 
-  {% endwith %}
+  <div id="dossier-results">
+    {% include 'haie/petitions/_dossier_list_results.html' %}
+  </div>
+
 {% endblock %}
 
 {% block after-content %}{% endblock %}
 
 {% block extra_js %}
+  <script defer src="{% static 'htmx.org/dist/htmx.min.js' %}"></script>
   <script defer src="{% static 'js/libs/follow_up_form.js' %}"></script>
   <script defer src="{% static 'js/libs/data_event_attributes_analytics.js' %}"></script>
-  <script>
-    window.addEventListener('load', function () {
-      document.querySelectorAll("#table-dossier-list tbody tr").forEach(row => {
-        const link = row.querySelector("td:first-child a");
-        if (!link) return;
-
-        row.addEventListener("click", (e) => {
-          // Prevent row click if user clicked another link or a button
-          if (e.target.closest("a, button, input, textarea, select")) return;
-          window.location.href = link.href;
-        });
-
-        row.style.cursor = "pointer";
-      });
-    });
-  </script>
+  <script defer src="{% static 'js/libs/dossier_list_filters.js' %}"></script>
 {% endblock %}
