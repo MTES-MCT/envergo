@@ -109,9 +109,9 @@
                     </td>
                     <td class="procedure">
                       <div class="fr-ml-n1v">
-                        <div>{% stage_badge project.stage %}</div>
+                        <div class="ellipsis-badge-wrapper">{% stage_badge project.stage %}</div>
                         {% if project.stage != "closed" and project.is_additional_information_requested %}
-                          <div>
+                          <div class="ellipsis-badge-wrapper">
                             <span class="fr-badge fr-badge--sm">Attente de compléments</span>
                           </div>
                         {% endif %}
