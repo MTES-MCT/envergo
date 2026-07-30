@@ -1432,7 +1432,8 @@ button.hide-expanded[aria-expanded="true"] {
 #dossier-filters {
   // Hide the filter feature on the tiniest screens
   display: none;
-  @media (min-width: 576px) {
+
+  @media (width >= 576px) {
     display: block;
   }
 
@@ -1445,7 +1446,7 @@ button.hide-expanded[aria-expanded="true"] {
     margin-bottom: 1rem;
   }
 
-  @media (min-width: 768px) {
+  @media (width >= 768px) {
     .filter-line {
       flex-direction: row;
       justify-content: space-between;
@@ -1462,4 +1463,3 @@ button.hide-expanded[aria-expanded="true"] {
     margin-bottom: 0;
   }
 }
-
