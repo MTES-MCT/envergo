@@ -762,7 +762,10 @@ createApp({
     }
 
     // Attach the help bubble to the cursor, right after the length tooltip
+<<<<<<< Updated upstream
     // (8px margin, top aligned)
+=======
+>>>>>>> Stashed changes
     const updateHelpBubble = (e) => {
       const tooltipLeft = e.originalEvent.clientX - 10;
       helpBubbleEl.style.left = tooltipLeft + tooltip.offsetWidth + 8 + 'px';
