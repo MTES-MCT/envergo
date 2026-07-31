@@ -1,0 +1,16 @@
+{% load static %}
+
+{# djlint:off #}
+<span class="dn-logo-wrap">&nbsp;
+  <img class="dn-logo"
+       src="{% static 'images/dn_logo.svg' %}"
+       alt="Démarche numérique"
+       width="16"
+       height="16"
+       tabindex="0"
+       aria-describedby="dn-logo-tooltip-{{ id }}" />
+</span>
+{# djlint: on #}
+<span class="fr-tooltip fr-placement"
+      id="dn-logo-tooltip-{{ id }}"
+      role="tooltip">Information saisie dans le formulaire Démarche numérique</span>
