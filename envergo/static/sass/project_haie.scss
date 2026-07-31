@@ -328,6 +328,16 @@ div#app {
       &.hidden {
         display: none;
       }
+
+      // Attached to the cursor while drawing a hedge
+      &.help-bubble--cursor {
+        position: fixed;
+        bottom: auto;
+        max-width: none;
+        font-size: 0.875rem;
+        pointer-events: none;
+        white-space: nowrap;
+      }
     }
 
     .leaflet-vertex-icon {
