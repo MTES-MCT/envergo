@@ -215,7 +215,7 @@ div#app {
 
     #tooltip {
       display: none;
-      position: absolute;
+      position: fixed;
       background: white;
       color: black;
       border-radius: 0.75rem;
