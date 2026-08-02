@@ -115,7 +115,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
-    paginate_by = 30
+    paginate_by = 10
 
     def get_base_queryset(self):
         """Queryset filtered by user access, without filter params applied.
