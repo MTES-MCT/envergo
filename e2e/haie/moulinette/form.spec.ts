@@ -34,6 +34,7 @@ test('A petitioner can submit a project', async ({ page }) => {
     await page.getByRole('button', { name: 'Valider' }).click();
     await page.getByRole('textbox', { name: 'Linéaire total de haies sur l' }).click();
     await page.getByRole('textbox', { name: 'Linéaire total de haies sur l' }).fill('5000');
+    await page.getByRole('checkbox', { name: "J'ai compris" }).check();
     await page.getByRole('button', { name: 'Valider' }).click();
     await page.getByText('Autorisation', { exact: true }).click();
     await expect(await page.getByRole('heading', { name: 'Alignements d\'arbres (L350-3' })).toContainText('Autorisation');
