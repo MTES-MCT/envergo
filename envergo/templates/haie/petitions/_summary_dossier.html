@@ -48,13 +48,13 @@
     </div>
     <div class="fr-col-12 fr-col-sm-4 fr-pb-2w fr-text--sm">
       <div class="fr-ml-n1v">{% stage_badge petition_project.stage %}</div>
-      {% if petition_project.decision != "unset" %}
-        <div class="fr-ml-n1v">{% decision_badge petition_project.decision %}</div>
-      {% endif %}
       {% if petition_project.stage != "closed" and petition_project.is_additional_information_requested %}
         <div class="fr-ml-n1v">
           <span class="fr-badge fr-badge--sm">Attente de compléments</span>
         </div>
+      {% endif %}
+      {% if petition_project.decision != "unset" %}
+        <div class="fr-ml-n1v">{% decision_badge petition_project.decision %}</div>
       {% endif %}
       {% if petition_project.stage != "closed" %}
         <div class="fr-mt-2v">
