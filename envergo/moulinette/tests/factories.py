@@ -150,6 +150,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
 
 class RUConfigHaieFactory(DCConfigHaieFactory):
     single_procedure = True
+    has_ru_zonage = True
     single_procedure_settings = {
         "coeff_compensation": {
             "default": {
