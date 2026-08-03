@@ -1256,22 +1256,25 @@ def test_petition_project_list_filters(
 
 
 def test_petition_project_list_num_queries(
-    haie_instructor_44, client, site, django_assert_num_queries
+    haie_instructor_44, admin_user, client, site, django_assert_num_queries
 ):
     """Test num queries for project list"""
 
     # GIVEN several projects
-    DCConfigHaieFactory(
-        is_activated=False,
-        validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
-    )
-    DCConfigHaieFactory(validity_range=DateRange(date(2025, 1, 1), None, "[)"))
+    DCConfigHaieFactory()
     PetitionProjectFactory.create_batch(
         15, demarche_numerique_state=DOSSIER_STATES.prefilled
     )
     project_list_url = reverse("petition_project_list")
+
+    # WHEN admin user visit project list
+    client.force_login(admin_user)
+    with django_assert_num_queries(12):
+        client.get(project_list_url)
+
+    # WHEN haie_instructor_44 visit project list
     client.force_login(haie_instructor_44)
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(13):
         client.get(project_list_url)
 
 
