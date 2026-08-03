@@ -2101,10 +2101,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def is_acknowledgment_pending(self):
         """Return True when an acknowledgment is required but not displayed yet.
 
-        The form is unbound when the displayed-marker key was not posted,
-        i.e. the user never saw the block: it must be displayed without a
-        validation error. A displayed-but-unchecked submission binds the
-        form instead, making this False and `is_acknowledged` False too.
+        Unbound means not displayed: see EviterReduireForm for the mechanism.
         """
         form = self.acknowledgment_form
         return form is not None and not form.is_bound
@@ -2712,15 +2709,8 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     def get_acknowledgment_form(self):
         """Return the « Éviter / réduire » acknowledgment form when required.
 
-        The block is required when any hedge to remove has a `Hedge.category`
-        of RU or HRU — i.e. every project except a pure L350-3 one. This is
-        the hedge's own category, not the department-dependent evaluator
-        routing.
-
-        The form is bound only when the displayed-marker key was posted:
-        binding from initial data would prefill the checkbox from the url,
-        and binding a marker-less POST would raise an error before the
-        block was ever displayed.
+        Required when any hedge to remove has a `Hedge.category` of RU or
+        HRU — every project except a pure L350-3 one.
         """
         if not settings.HAIE_EVITER_REDUIRE_ENABLED:
             return None

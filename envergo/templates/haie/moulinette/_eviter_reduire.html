@@ -1,13 +1,9 @@
 {% load utils %}
 
 {% comment %}
-The « Éviter / réduire » acknowledgment block.
-
-Every motif variant is rendered so the message can be swapped client-side
-when the motif changes, without a server round-trip; only the variant
-matching the current motif is visible. The variants live in a polite live
-region so assistive tech announces the swap. The hidden marker input tells
-the server the block was displayed (an unchecked checkbox posts nothing).
+All motif variants are rendered so JS can swap them without a round-trip;
+only the current one is visible, in a live region so the swap is announced.
+The hidden marker input tells the server the block was displayed.
 {% endcomment %}
 <section id="eviter-reduire" class="form-section">
   <h4>
