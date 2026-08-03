@@ -137,7 +137,7 @@
                     <td>{{ project.hedge_data.length_to_remove|floatformat:"0g" }}&nbsp;m</td>
                     <td>
                       {% include 'haie/petitions/_hedge_category.html' with category=project.category is_light=True %}
-                      {% if project.is_single_procedure and project.emergency_in_moulinette_data %}
+                      {% if project.is_regime_unique and project.emergency_in_moulinette_data %}
                         <span class="fr-badge fr-badge--pink-tuile fr-badge--sm">Urgence</span>
                       {% endif %}
                     </td>
