@@ -1416,7 +1416,11 @@ def test_petition_emergency_badge(
     """Test emergency badge in project list and project detail"""
 
     # GIVEN project with no urgence
-    RUConfigHaieFactory()
+    RUConfigHaieFactory(
+        is_activated=False,
+        validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+    )
+    RUConfigHaieFactory(validity_range=DateRange(date(2025, 1, 1), None, "[)"))
     hedge = HedgeFactory(additionalData__type_haie="mixte")
     hedges = HedgeDataFactory(hedges=[hedge])
     project = PetitionProjectFactory(
