@@ -361,6 +361,15 @@ nav#evaluation-summary {
     }
   }
 
+  #eviter-reduire {
+    background-color: var(--blue-france-950-100-hover);
+    padding: 1rem;
+
+    .eviter-reduire-motif {
+      margin-bottom: 1.5rem;
+    }
+  }
+
   #optional-forms {
     padding: 0;
 
