@@ -441,8 +441,7 @@ HAIE_SINGLE_PROCEDURE_ACTIVATED = env.bool(
     "DJANGO_HAIE_SINGLE_PROCEDURE_ACTIVATED", default=False
 )
 
-# Kill switch for the « Éviter / réduire » acknowledgment block and its
-# submission gate on the haie simulation form
+# Kill switch for the « Éviter / réduire » gate on the haie simulation form
 HAIE_EVITER_REDUIRE_ENABLED = env.bool(
     "DJANGO_HAIE_EVITER_REDUIRE_ENABLED", default=True
 )

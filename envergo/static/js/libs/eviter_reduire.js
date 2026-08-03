@@ -1,11 +1,9 @@
 (function (exports) {
   'use strict';
 
-  // The « Éviter / réduire » acknowledgment block.
-  //
-  // The displayed message depends on the "motif" value. When the motif
-  // changes, swap the visible message variant and uncheck the "J'ai compris"
-  // input: the user must acknowledge the message matching their motif.
+  // The « Éviter / réduire » block: when the motif changes, swap the visible
+  // message variant and uncheck the box, so the user acknowledges the message
+  // matching their actual motif.
   const EviterReduire = function (sectionElt, form) {
     this.form = form;
     this.checkbox = sectionElt.querySelector('input[type=checkbox][name=eviter_reduire]');

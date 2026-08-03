@@ -66,9 +66,8 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
     ]
 
 
-# The helpers disable sur_parcelle_pac: it does not affect the hedge
-# category, but a PAC hedge would pull the BCAE8 additional questions
-# into the flow.
+# The hedge helpers disable sur_parcelle_pac to keep the BCAE8 additional
+# questions out of the flow; it plays no role in the category.
 
 
 def ru_hedge():
@@ -222,8 +221,7 @@ def test_resubmission_without_checking_shows_the_error(client):
     assert FORM_ERROR in content
     assert ACK_ERROR in content
 
-    # The error event carries the acknowledgment error, even though the
-    # acknowledgment form is not part of the moulinette forms
+    # The error is logged despite not being a moulinette form error
     error_event = Event.objects.get(category="erreur", event="formulaire-simu")
     assert CHECKBOX_NAME in error_event.metadata["errors"]
 

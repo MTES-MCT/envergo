@@ -330,11 +330,6 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return self.moulinette.get_home_template()
 
     def post(self, request, *args, **kwargs):
-        # The acknowledgment (e.g. « Éviter / réduire ») gates the submission
-        # but is not part of the simulation data: it is only ever enforced
-        # here, never on the result pages, and its values must not reach the
-        # result url.
-
         # If the moulinette is valid, i.e. it can run the evaluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid() and self.moulinette.is_acknowledged():
@@ -349,9 +344,8 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         ):
             return HttpResponseRedirect(f"{self.get_form_url()}#additional-forms")
 
-        # If only the acknowledgment is missing and its block was never
-        # displayed, redirect to the form so it appears — without a
-        # validation error, like the additional questions above.
+        # If the acknowledgment block was never displayed, redirect to the form
+        # so it appears — without an error, like the additional questions above.
         elif self.moulinette.is_valid() and self.moulinette.is_acknowledgment_pending():
             return HttpResponseRedirect(f"{self.get_form_url()}#eviter-reduire")
 
@@ -363,8 +357,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
 
-        # The acknowledgment form is excluded from the moulinette forms, so
-        # its errors must be merged into the logged metadata separately.
+        # The acknowledgment form is not part of moulinette.form_errors
         all_errors = dict(self.moulinette.form_errors)
         if self.moulinette.has_acknowledgment_error():
             all_errors.update(self.moulinette.acknowledgment_form.errors)
@@ -393,12 +386,9 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # The acknowledgment block is only rendered on the form page: result
-        # views must never see, nor require, this form.
+        # Exposed here rather than in the mixin: result views must never see it
         context["acknowledgment_form"] = self.moulinette.acknowledgment_form
 
-        # A displayed-but-refused acknowledgment is a validation error like
-        # any other
         if self.moulinette.has_acknowledgment_error():
             context["has_errors"] = True
 

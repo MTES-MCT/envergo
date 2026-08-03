@@ -548,18 +548,14 @@ class MoulinetteFormHaieHRU(BaseMoulinetteFormHaie):
 class EviterReduireForm(forms.Form):
     """Acknowledgment of the « Éviter / réduire » message.
 
-    This form gates the simulation form submission but is not part of the
+    Gates the simulation form submission without being part of the
     simulation data: its values must never reach the result urls, and the
     checkbox must never be prefilled.
 
-    An unchecked checkbox posts nothing, yet two cases must be told apart:
-
-     - the checkbox is displayed for the first time (don't show any errors)
-     - the checkbox was displayed and not checked (field must be in error)
-
-    A hidden input, named by DISPLAYED_MARKER and rendered next to the
-    checkbox by the template, marks the block as displayed: this form must
-    only be bound when the marker key was posted.
+    An unchecked checkbox posts nothing, so a hidden input (named by
+    DISPLAYED_MARKER, rendered by the template) marks the block as
+    displayed. Bind this form only when the marker key was posted: a first
+    display then shows no error, while an ignored checkbox does.
     """
 
     # Name of the hidden input rendered alongside the checkbox
@@ -568,8 +564,7 @@ class EviterReduireForm(forms.Form):
     eviter_reduire = forms.BooleanField(
         label="J'ai compris",
         required=True,
-        # Out of context — as screen-reader form mode presents it — the
-        # label alone is meaningless; point at the displayed message.
+        # The label alone is meaningless in a screen reader's form mode
         widget=forms.CheckboxInput(
             attrs={"aria-describedby": "eviter-reduire-message"}
         ),
