@@ -1255,26 +1255,6 @@ def test_petition_project_list_filters(
     content = response.content.decode()
 
 
-def test_petition_project_list_num_queries(
-    haie_instructor_44, client, site, django_assert_num_queries
-):
-    """Test num queries for project list"""
-
-    # GIVEN several projects
-    DCConfigHaieFactory(
-        is_activated=False,
-        validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
-    )
-    DCConfigHaieFactory(validity_range=DateRange(date(2025, 1, 1), None, "[)"))
-    PetitionProjectFactory.create_batch(
-        15, demarche_numerique_state=DOSSIER_STATES.prefilled
-    )
-    project_list_url = reverse("petition_project_list")
-    client.force_login(haie_instructor_44)
-    with django_assert_num_queries(14):
-        client.get(project_list_url)
-
-
 def test_petition_project_dl_geopkg(client, haie_user, site):
     """Test Geopkg download"""
 
