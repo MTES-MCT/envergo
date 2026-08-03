@@ -1,9 +1,9 @@
 """Tests for the « Éviter / réduire » acknowledgment block on the haie form.
 
 The block appears below the additional questions when the project removes
-hedges of the RU or HRU intrinsic categories. It gates the form submission
-behind a "J'ai compris" checkbox whose value is not part of the simulation:
-it must never reach the result urls, and result pages must never require it.
+hedges whose category is RU or HRU. It gates the form submission behind a
+"J'ai compris" checkbox whose value is not part of the simulation: it must
+never reach the result urls, and result pages must never require it.
 """
 
 import decimal
@@ -14,8 +14,10 @@ from urllib.parse import urlencode
 import pytest
 from django.urls import reverse
 
+from envergo.analytics.models import Event
 from envergo.hedges.models import HedgeCategory
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
+from envergo.moulinette.forms import MOTIF_CHOICES
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -31,15 +33,7 @@ ACK_ERROR = "Vous devez confirmer avoir pris connaissance de cette information."
 FORM_ERROR = (
     "Nous n'avons pas pu traiter votre demande car le formulaire contient des erreurs."
 )
-ALL_MOTIFS = [
-    "amelioration_culture",
-    "amenagement",
-    "chemin_acces",
-    "securite",
-    "amelioration_ecologique",
-    "embellissement",
-    "autre",
-]
+ALL_MOTIFS = [key for key, _ in MOTIF_CHOICES]
 
 TRIAGE_PARAMS = {
     "department": "44",
@@ -72,14 +66,18 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
     ]
 
 
-def ru_hedge(**kwargs):
-    """A hedge of intrinsic category RU (non-alignement, no urban property)."""
-    kwargs.setdefault("additionalData__sur_parcelle_pac", False)
-    return HedgeFactory(**kwargs)
+# The helpers disable sur_parcelle_pac: it does not affect the hedge
+# category, but a PAC hedge would pull the BCAE8 additional questions
+# into the flow.
+
+
+def ru_hedge():
+    """A hedge of category RU (non-alignement, no urban property)."""
+    return HedgeFactory(additionalData__sur_parcelle_pac=False)
 
 
 def hru_hedge():
-    """A hedge of intrinsic category HRU (alignement not along a road)."""
+    """A hedge of category HRU (alignement not along a road)."""
     return HedgeFactory(
         additionalData__type_haie="alignement",
         additionalData__bord_voie=False,
@@ -88,7 +86,7 @@ def hru_hedge():
 
 
 def l350_3_hedge():
-    """A hedge of intrinsic category L350-3 (alignement along a road)."""
+    """A hedge of category L350-3 (alignement along a road)."""
     return HedgeFactory(
         additionalData__type_haie="alignement",
         additionalData__bord_voie=True,
@@ -223,6 +221,11 @@ def test_resubmission_without_checking_shows_the_error(client):
     content = res.content.decode()
     assert FORM_ERROR in content
     assert ACK_ERROR in content
+
+    # The error event carries the acknowledgment error, even though the
+    # acknowledgment form is not part of the moulinette forms
+    error_event = Event.objects.get(category="erreur", event="formulaire-simu")
+    assert CHECKBOX_NAME in error_event.metadata["errors"]
 
 
 def test_checked_submission_reaches_the_result(client):

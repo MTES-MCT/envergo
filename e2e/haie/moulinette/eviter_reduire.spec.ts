@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 // The « Éviter / réduire » block appears once the form is valid and the
-// project removes RU or HRU hedges. It swaps its message when the motif
-// changes (unchecking the box), and gates the submission behind a
+// project removes RU or HRU hedges. When the motif changes, it swaps its
+// message and unchecks the box; the submission is gated behind a
 // "J'ai compris" checkbox.
 test('The éviter / réduire block gates the simulation submission', async ({ page }) => {
     await page.goto('/');

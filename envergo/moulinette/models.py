@@ -2082,9 +2082,9 @@ class Moulinette(MoulinetteUrlMixin, ABC):
     def get_acknowledgment_form(self):
         """Return a form gating the simulation form submission, or None.
 
-        The form has a single field (a "j'ai compris" checkbox), and it's data is
-        not part of the simulation: it must gatekeep form submission, but not reach the
-        simulation url, and make existing simulation urls invalid.
+        The form's data is not part of the simulation: it gates the form
+        submission but must never reach the result url, and existing
+        simulation urls must stay valid without it.
         """
         return None
 
@@ -2099,7 +2099,7 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         return form is None or form.is_valid()
 
     def is_acknowledgment_pending(self):
-        """Return True when the acknowledgment block was not displayed yet.
+        """Return True when an acknowledgment is required but not displayed yet.
 
         The form is unbound when the displayed-marker key was not posted,
         i.e. the user never saw the block: it must be displayed without a
@@ -2108,6 +2108,12 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         """
         form = self.acknowledgment_form
         return form is not None and not form.is_bound
+
+    def has_acknowledgment_error(self):
+        """Return True when the acknowledgment was displayed and refused."""
+
+        form = self.acknowledgment_form
+        return form is not None and form.is_bound and not form.is_valid()
 
     @cached_property
     def optional_fields(self):
@@ -2706,9 +2712,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
     def get_acknowledgment_form(self):
         """Return the « Éviter / réduire » acknowledgment form when required.
 
-        The block is required for every project that removes hedges of the
-        intrinsic RU or HRU categories — i.e. every project except a pure
-        L350-3 one.
+        The block is required when any hedge to remove has a `Hedge.category`
+        of RU or HRU — i.e. every project except a pure L350-3 one. This is
+        the hedge's own category, not the department-dependent evaluator
+        routing.
 
         The form is bound only when the displayed-marker key was posted:
         binding from initial data would prefill the checkbox from the url,

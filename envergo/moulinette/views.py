@@ -326,7 +326,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
     def post(self, request, *args, **kwargs):
         # The acknowledgment (e.g. « Éviter / réduire ») gates the submission
-        # but is not part of the simulation data: it is only ever checked
+        # but is not part of the simulation data: it is only ever enforced
         # here, never on the result pages, and its values must not reach the
         # result url.
 
@@ -358,8 +358,14 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def form_invalid(self, form):
         context = self.get_context_data(form=form)
 
+        # The acknowledgment form is excluded from the moulinette forms, so
+        # its errors must be merged into the logged metadata separately.
+        all_errors = dict(self.moulinette.form_errors)
+        if self.moulinette.has_acknowledgment_error():
+            all_errors.update(self.moulinette.acknowledgment_form.errors)
+
         form_errors = defaultdict(list)
-        for field, errors in self.moulinette.form_errors.items():
+        for field, errors in all_errors.items():
             for error in errors.as_data():
                 form_errors[field].append(
                     {"code": str(error.code), "message": str(error.message)}
@@ -384,12 +390,11 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
         # The acknowledgment block is only rendered on the form page: result
         # views must never see, nor require, this form.
-        moulinette = self.moulinette
-        context["acknowledgment_form"] = moulinette.acknowledgment_form
+        context["acknowledgment_form"] = self.moulinette.acknowledgment_form
 
-        # Neither confirmed nor pending display: the block was displayed and
-        # submitted unchecked, a validation error like any other
-        if not (moulinette.is_acknowledged() or moulinette.is_acknowledgment_pending()):
+        # A displayed-but-refused acknowledgment is a validation error like
+        # any other
+        if self.moulinette.has_acknowledgment_error():
             context["has_errors"] = True
 
         matomo_url = self.request.path

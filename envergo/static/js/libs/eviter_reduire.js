@@ -3,10 +3,10 @@
 
   // The « Éviter / réduire » acknowledgment block.
   //
-  // The message depends on the "motif" value.
-  // The the value change, swap the message and uncheck the "J'ai compris" input.
+  // The displayed message depends on the "motif" value. When the motif
+  // changes, swap the visible message variant and uncheck the "J'ai compris"
+  // input: the user must acknowledge the message matching their motif.
   const EviterReduire = function (sectionElt, form) {
-    this.sectionElt = sectionElt;
     this.form = form;
     this.checkbox = sectionElt.querySelector('input[type=checkbox][name=eviter_reduire]');
     this.variants = sectionElt.querySelectorAll('.eviter-reduire-motif');
@@ -14,10 +14,11 @@
   exports.EviterReduire = EviterReduire;
 
   EviterReduire.prototype.init = function () {
+    const onMotifChange = this.onMotifChange.bind(this);
     const motifRadios = this.form.querySelectorAll('input[type=radio][name=motif]');
     motifRadios.forEach(function (radio) {
-      radio.addEventListener('change', this.onMotifChange.bind(this));
-    }, this);
+      radio.addEventListener('change', onMotifChange);
+    });
   };
 
   EviterReduire.prototype.onMotifChange = function (evt) {

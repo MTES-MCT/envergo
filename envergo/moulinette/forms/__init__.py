@@ -557,12 +557,14 @@ class EviterReduireForm(forms.Form):
     simulation data: its values must never reach the result urls, and the
     checkbox must never be prefilled.
 
-    An unchecked checkbox posts nothing. But we need to separate two cases:
+    An unchecked checkbox posts nothing, yet two cases must be told apart:
 
      - the checkbox is displayed for the first time (don't show any errors)
      - the checkbox was displayed and not checked (field must be in error)
 
-    We need to use a hidden field "DISPLAYED_MARKER" for that.
+    A hidden input, named by DISPLAYED_MARKER and rendered next to the
+    checkbox by the template, marks the block as displayed: this form must
+    only be bound when the marker key was posted.
     """
 
     # Name of the hidden input rendered alongside the checkbox
@@ -571,6 +573,11 @@ class EviterReduireForm(forms.Form):
     eviter_reduire = forms.BooleanField(
         label="J'ai compris",
         required=True,
+        # Out of context — as screen-reader form mode presents it — the
+        # label alone is meaningless; point at the displayed message.
+        widget=forms.CheckboxInput(
+            attrs={"aria-describedby": "eviter-reduire-message"}
+        ),
         error_messages={
             "required": "Vous devez confirmer avoir pris connaissance de cette information."
         },

@@ -1,23 +1,26 @@
 {% load utils %}
 
 {% comment %}
-The « Éviter / réduire » acknowledgment block.
+The « Éviter / réduire » acknowledgment block.
 
 Every motif variant is rendered so the message can be swapped client-side
 when the motif changes, without a server round-trip; only the variant
-matching the current motif is visible. The hidden marker input tells the
-server the block was displayed (an unchecked checkbox posts nothing).
+matching the current motif is visible. The variants live in a polite live
+region so assistive tech announces the swap. The hidden marker input tells
+the server the block was displayed (an unchecked checkbox posts nothing).
 {% endcomment %}
 <section id="eviter-reduire" class="form-section">
   <h4>
     <strong>Évitement et réduction des impacts</strong>
   </h4>
 
-  <p class="fr-callout fr-icon-information-line">
-    L'autorisation d’une destruction de haies dépend en grande partie de la
-    démonstration dans le dossier que le demandeur a cherché à limiter au
-    maximum les impacts sur les haies et sur la faune qu’elles abritent.
-  </p>
+  <div class="fr-callout fr-icon-information-line">
+    <p class="fr-callout__text">
+      L’autorisation d’une destruction de haies dépend en grande partie de la
+      démonstration dans le dossier que le demandeur a cherché à limiter au
+      maximum les impacts sur les haies et sur la faune qu’elles abritent.
+    </p>
+  </div>
 
   <p>
     <em>
@@ -25,139 +28,205 @@ server the block was displayed (an unchecked checkbox posts nothing).
       Prenez le temps de les examiner : certaines peuvent réduire le besoin
       d’échanges avec le service instructeur, accélérer l’instruction, et
       améliorer l’acceptabilité du dossier.
-
     </em>
   </p>
 
-  <div class="eviter-reduire-motif"
-       data-motif="amelioration_culture"
-       {% if motif != "amelioration_culture" %}hidden{% endif %}>
-    <p>
-      Le choix des haies à détruire doit tenir compte de leur valeur pour l'écoulement des eaux, la faune et la flore, et le paysage local. Par exemple, une haie en bas de pente ou en bordure de fossé retient l'eau et limite le ruissellement ; la justification de sa destruction sera examinée attentivement dans l’instruction du dossier.
-    </p>
+  <div id="eviter-reduire-message" aria-live="polite">
+    <div class="eviter-reduire-motif"
+         data-motif="amelioration_culture"
+         {% if motif != "amelioration_culture" %}hidden{% endif %}>
+      <p>
+        Le choix des haies à détruire doit tenir compte de leur valeur pour
+        l’écoulement des eaux, la faune et la flore, et le paysage local. Par
+        exemple, une haie en bas de pente ou en bordure de fossé retient l’eau
+        et limite le ruissellement ; la justification de sa destruction sera
+        examinée attentivement dans l’instruction du dossier.
+      </p>
 
-    <p>Est-il possible de :</p>
+      <p>Est-il possible de :</p>
 
-    <ul>
-      <li>
-        Ménager un chemin d'accès plutôt qu’une modification de parcelle ? Une brèche peut parfois répondre au même besoin, et sera plus facilement acceptée.
-      </li>
-      <li>Privilégier un regroupement de parcelles sans détruire les haies périphériques ?</li>
-      <li>Conserver une partie de la haie pour modifier la forme de la parcelle, plutôt que de l'agrandir ?</li>
-    </ul>
+      <ul>
+        <li>
+          Ménager un chemin d’accès plutôt qu’une modification de parcelle ?
+          Une brèche peut parfois répondre au même besoin, et sera plus
+          facilement acceptée.
+        </li>
+        <li>
+          Privilégier un regroupement de parcelles sans détruire les haies
+          périphériques ?
+        </li>
+        <li>
+          Conserver une partie de la haie pour modifier la forme de la
+          parcelle, plutôt que de l’agrandir ?
+        </li>
+      </ul>
 
-    <p>
-      Si la destruction est inévitable, limiter au strict nécessaire le linéaire détruit. Le gain économique attendu devra être clairement démontré dans le dossier.
-    </p>
+      <p>
+        Si la destruction est inévitable, limiter au strict nécessaire le
+        linéaire détruit. Le gain économique attendu devra être clairement
+        démontré dans le dossier.
+      </p>
+    </div>
 
-  </div>
+    <div class="eviter-reduire-motif"
+         data-motif="amenagement"
+         {% if motif != "amenagement" %}hidden{% endif %}>
+      <p>Est-il possible de :</p>
 
-  <div class="eviter-reduire-motif"
-       data-motif="amenagement"
-       {% if motif != "amenagement" %}hidden{% endif %}>
-    <p>Est-il possible de :</p>
+      <ul>
+        <li>
+          Privilégier un emplacement ou une orientation du projet épargnant
+          tout ou partie de la haie ?
+        </li>
+        <li>
+          Choisir un emplacement qui n’interrompt pas de corridor entre deux
+          espaces naturels (boisement, mare, cours d’eau) ni l’écoulement des
+          eaux ?
+        </li>
+        <li>
+          Pour une voirie, privilégier un tracé parallèle à la haie ? À
+          défaut, identifier en amont les portions de haie les plus sensibles
+          à éviter ?
+        </li>
+      </ul>
 
-    <ul>
-      <li>Privilégier un emplacement ou une orientation du projet épargnant tout ou partie de la haie ?</li>
-      <li>
-        Choisir un emplacement qui n’interrompt pas de corridor entre deux espaces naturels (boisement, mare, cours d’eau) ni l’écoulement des eaux ?
-      </li>
-      <li>
-        Pour une voirie, de privilégier un tracé parallèle à la haie ? À défaut, d’identifier en amont les portions de haie les plus sensibles à éviter ?
-      </li>
-    </ul>
+      <p>
+        Si la destruction est inévitable, limiter les haies affectées à la
+        stricte emprise des travaux. Mieux les améliorations apportées par
+        rapport au projet initial seront documentées dans le dossier, plus
+        l’instruction pourra aboutir rapidement.
+      </p>
+    </div>
 
-    <p>
-      Si la destruction est inévitable, limiter les haies affectées à la stricte emprise des travaux. Mieux les améliorations apportées par rapport au projet initial seront documentées dans le dossier, plus l’instruction pourra aboutir rapidement.
-    </p>
-  </div>
+    <div class="eviter-reduire-motif"
+         data-motif="chemin_acces"
+         {% if motif != "chemin_acces" %}hidden{% endif %}>
+      <p>
+        Le choix des haies à détruire doit tenir compte de leur valeur pour
+        l’écoulement des eaux, la faune et la flore, et le paysage local. Par
+        exemple, une haie en bas de pente ou en bordure de fossé retient l’eau
+        et limite le ruissellement ; la justification de sa destruction sera
+        examinée attentivement dans l’instruction du dossier.
+      </p>
 
-  <div class="eviter-reduire-motif"
-       data-motif="chemin_acces"
-       {% if motif != "chemin_acces" %}hidden{% endif %}>
+      <p>Est-il possible de :</p>
 
-    <p>
-      Le choix des haies à détruire doit tenir compte de leur valeur pour l'écoulement des eaux, la faune et la flore, et le paysage local. Par exemple, une haie en bas de pente ou en bordure de fossé retient l'eau et limite le ruissellement ; la justification de sa destruction sera examinée de très près dans l’instruction du dossier.
-    </p>
+      <ul>
+        <li>
+          Privilégier un accès alternatif n’impliquant pas la destruction de
+          la haie ?
+        </li>
+        <li>
+          Éviter les emplacements en bas de pente ou à proximité d’un fossé ?
+          Un déplacement de quelques mètres peut suffire à éviter un problème
+          d’écoulement des eaux.
+        </li>
+      </ul>
 
-    <p>Est-il possible de :</p>
-    <ul>
-      <li>Privilégier un accès alternatif n'impliquant pas la destruction de la haie ?</li>
-      <li>
-        Éviter les emplacements en bas de pente ou à proximité d'un fossé ? Un déplacement de quelques mètres peut suffire à éviter un problème d’écoulement des eaux.
-      </li>
-    </ul>
+      <p>
+        Si la destruction est inévitable, limiter l’ouverture au strict
+        nécessaire pour le passage des engins (généralement 4 à 6 m) et la
+        positionner sur la partie la moins arborée. Les contraintes d’accès de
+        l’existant devront être clairement démontrées et documentées dans le
+        dossier.
+      </p>
+    </div>
 
-    <p>
-      Si la destruction est inévitable, limiter l’ouverture au strict nécessaire pour le passage des engins (généralement 4 à 6 m) et la positionner sur la partie la moins arborée. Les contraintes d’accès de l’existant devront être clairement démontrées et documentées dans le dossier.
-    </p>
+    <div class="eviter-reduire-motif"
+         data-motif="securite"
+         {% if motif != "securite" %}hidden{% endif %}>
+      <p>Est-il possible de :</p>
 
-  </div>
+      <ul>
+        <li>
+          Privilégier une intervention arbre par arbre, ou branche par branche
+          plutôt qu’une destruction de l’ensemble du linéaire ? Supprimer
+          uniquement les arbres ou les branches présentant un danger réel
+          permet souvent de conserver le reste de la haie. En cas d’arbre
+          dépérissant, faire confirmer le diagnostic avant d’intervenir.
+        </li>
+        <li>
+          Envisager de conserver les troncs morts sur pied ou au sol ? Ils
+          sont favorables à la biodiversité.
+        </li>
+        <li>
+          Pour un enjeu de visibilité depuis une route, tailler uniquement la
+          face donnant sur la voie ?
+        </li>
+        <li>
+          Pour un risque d’incendie, dégager le pied de la haie et tailler les
+          branches basses ? Cela suffit souvent pour répondre aux obligations
+          légales.
+        </li>
+      </ul>
+    </div>
 
-  <div class="eviter-reduire-motif"
-       data-motif="securite"
-       {% if motif != "securite" %}hidden{% endif %}>
-    <p>Est-il possible de :</p>
+    <div class="eviter-reduire-motif"
+         data-motif="amelioration_ecologique"
+         {% if motif != "amelioration_ecologique" %}hidden{% endif %}>
+      <p>
+        Une haie existante, même dégradée, rend des services qu’une haie
+        nouvellement plantée mettra plusieurs décennies à égaler.
+      </p>
 
-    <ul>
-      <li>
-        Privilégier une intervention arbre par arbre, ou branche par branche plutôt qu’une destruction de l’ensemble du linéaire ? Supprimer uniquement les arbres ou les branches présentant un danger réel permet souvent de conserver le reste de la haie. En cas d’arbre dépérissant, faire confirmer le diagnostic avant d’intervenir.
-      </li>
-      <li>Envisager de conserver les troncs morts sur pied ou au sol ? Ils sont favorables à la biodiversité.</li>
-      <li>Pour un enjeu de visibilité depuis une route, tailler uniquement la face donnant sur la voie ?</li>
-      <li>
-        Pour un risque d'incendie, dégager le pied de la haie et tailler les branches basses ? Cela suffit souvent pour répondre aux obligations légales.
-      </li>
-    </ul>
-  </div>
+      <p>
+        Est-il possible de privilégier des actions de gestion ou de
+        remplacement progressif des essences avant toute destruction ? Elles
+        peuvent améliorer la valeur écologique de la haie sans la détruire.
+      </p>
 
-  <div class="eviter-reduire-motif"
-       data-motif="amelioration_ecologique"
-       {% if motif != "amelioration_ecologique" %}hidden{% endif %}>
-    <p>
-      Une haie existante, même dégradée, rend des services qu'une haie nouvellement plantée mettra plusieurs décennies à égaler.
-    </p>
+      <p>
+        Si la destruction est inévitable, s’assurer que le nouvel emplacement
+        et le profil de la haie apportent un réel gain environnemental par
+        rapport à la situation actuelle : grande largeur, essences variées et
+        locales, sur plusieurs strates arbustives et arborées.
+      </p>
+    </div>
 
-    <p>
-      Est-il possible de privilégier des actions de gestion ou de remplacement progressif des essences avant toute destruction ? Elles peuvent améliorer la valeur écologique de la haie sans la détruire.
-    </p>
+    <div class="eviter-reduire-motif"
+         data-motif="embellissement"
+         {% if motif != "embellissement" %}hidden{% endif %}>
+      <p>Est-il possible de :</p>
 
-    <p>
-      Si la destruction est inévitable, s'assurer que le nouvel emplacement et le profil de la haie apportent un réel gain environnemental par rapport à la situation actuelle : grande largeur, essences variées et locales, sur plusieurs strates arbustives et arborées.
-    </p>
-  </div>
+      <ul>
+        <li>
+          Privilégier une trouée plutôt qu’une destruction totale, en
+          maintenant certains arbres et en plantant des essences basses à la
+          place ?
+        </li>
+        <li>
+          Conserver en priorité les arbres les plus grands et les plus
+          anciens ? Leur suppression fera l’objet d’une attention particulière
+          lors de l’instruction.
+        </li>
+      </ul>
+    </div>
 
-  <div class="eviter-reduire-motif"
-       data-motif="embellissement"
-       {% if motif != "embellissement" %}hidden{% endif %}>
-    <p>Est-il possible de :</p>
+    <div class="eviter-reduire-motif"
+         data-motif="autre"
+         {% if motif != "autre" %}hidden{% endif %}>
+      <p>
+        Une haie existante, même dégradée, rend des services qu’une haie
+        nouvellement plantée mettra plusieurs décennies à égaler.
+      </p>
 
-    <ul>
-      <li>
-        Privilégier une trouée plutôt qu’une destruction totale, en maintenant certains arbres et en plantant des essences basses à la place ?
-      </li>
-      <li>
-        Conserver en priorité les arbres les plus grands et les plus anciens ? Leur suppression fera l’objet d’une attention particulière lors de l'instruction.
-      </li>
-    </ul>
-  </div>
+      <p>Est-il possible de :</p>
 
-  <div class="eviter-reduire-motif"
-       data-motif="autre"
-       {% if motif != "autre" %}hidden{% endif %}>
-    <p>
-      Une haie existante, même dégradée, rend des services qu'une haie nouvellement plantée mettra plusieurs décennies à égaler.
-    </p>
-
-    <p>Est-il possible de :</p>
-
-    <ul>
-      <li>Privilégier toute solution permettant de limiter ou d'éviter la destruction ?</li>
-      <li>
-        Pour une clôture, installer celle-ci le long de la haie en laissant quelques mètres pour son entretien, plutôt que de la détruire ?
-      </li>
-      <li>Pour des travaux hydrauliques (fossés, drains), choisir un tracé qui peut contourner les linéaires existants ?</li>
-    </ul>
+      <ul>
+        <li>
+          Privilégier toute solution permettant de limiter ou d’éviter la
+          destruction ?
+        </li>
+        <li>
+          Pour une clôture, installer celle-ci le long de la haie en laissant
+          quelques mètres pour son entretien, plutôt que de la détruire ?
+        </li>
+        <li>
+          Pour des travaux hydrauliques (fossés, drains), choisir un tracé qui
+          peut contourner les linéaires existants ?
+        </li>
+      </ul>
+    </div>
   </div>
 
   {% render_field acknowledgment_form.eviter_reduire %}
