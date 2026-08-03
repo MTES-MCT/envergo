@@ -550,6 +550,33 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         return haies
 
 
+class EviterReduireForm(forms.Form):
+    """Acknowledgment of the « Éviter / réduire » message.
+
+    This form gates the simulation form submission but is not part of the
+    simulation data: its values must never reach the result urls, and the
+    checkbox must never be prefilled.
+
+    An unchecked checkbox posts nothing. But we need to separate two cases:
+
+     - the checkbox is displayed for the first time (don't show any errors)
+     - the checkbox was displayed and not checked (field must be in error)
+
+    We need to use a hidden field "DISPLAYED_MARKER" for that.
+    """
+
+    # Name of the hidden input rendered alongside the checkbox
+    DISPLAYED_MARKER = "eviter_reduire_displayed"
+
+    eviter_reduire = forms.BooleanField(
+        label="J'ai compris",
+        required=True,
+        error_messages={
+            "required": "Vous devez confirmer avoir pris connaissance de cette information."
+        },
+    )
+
+
 class TriageFormHaie(forms.Form):
     department = DisplayCharField(
         label="Département",
