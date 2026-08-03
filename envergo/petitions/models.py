@@ -643,10 +643,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     def is_regime_unique(self):
         return self.category == HedgeCategory.ru
 
-    @property
     def is_emergency(self):
         return (
-            self.config.single_procedure
+            self.is_regime_unique()
             and self.moulinette_data.get("urgence", None) == "oui"
         )
 
