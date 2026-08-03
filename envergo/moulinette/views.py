@@ -325,9 +325,14 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return self.moulinette.get_home_template()
 
     def post(self, request, *args, **kwargs):
+        # The acknowledgment (e.g. « Éviter / réduire ») gates the submission
+        # but is not part of the simulation data: it is only ever checked
+        # here, never on the result pages, and its values must not reach the
+        # result url.
+
         # If the moulinette is valid, i.e. it can run the evaluation and provide
         # a result, then we redirect to the result page
-        if self.moulinette.is_valid():
+        if self.moulinette.is_valid() and self.moulinette.is_acknowledged():
             return HttpResponseRedirect(self.get_result_url())
 
         # If the main form is valid and all the errors are missing data, it means
@@ -338,6 +343,12 @@ class MoulinetteForm(MoulinetteMixin, FormView):
             and not self.moulinette.are_additional_forms_bound()
         ):
             return HttpResponseRedirect(f"{self.get_form_url()}#additional-forms")
+
+        # If only the acknowledgment is missing and its block was never
+        # displayed, redirect to the form so it appears — without a
+        # validation error, like the additional questions above.
+        elif self.moulinette.is_valid() and self.moulinette.is_acknowledgment_pending():
+            return HttpResponseRedirect(f"{self.get_form_url()}#eviter-reduire")
 
         # In other cases, it means there are errors in one of the submitted forms,
         # so we just display back the page with the validation errors
@@ -370,6 +381,17 @@ class MoulinetteForm(MoulinetteMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # The acknowledgment block is only rendered on the form page: result
+        # views must never see, nor require, this form.
+        moulinette = self.moulinette
+        context["acknowledgment_form"] = moulinette.acknowledgment_form
+
+        # Neither confirmed nor pending display: the block was displayed and
+        # submitted unchecked, a validation error like any other
+        if not (moulinette.is_acknowledged() or moulinette.is_acknowledgment_pending()):
+            context["has_errors"] = True
+
         matomo_url = self.request.path
 
         # Custom url when some values are pre-filled
