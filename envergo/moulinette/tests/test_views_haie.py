@@ -1312,11 +1312,11 @@ class TestReimplantationFieldRemoval:
         moulinette = res.context["moulinette"]
         assert moulinette.catalog["reimplantation"] == "non"
 
-    def test_stale_reimplantation_redirects_to_form_in_ru(self, client):
+    def test_stale_reimplantation_stripped_from_result_url_in_ru(self, client):
         """Regime unique: when the result URL contains a stale
-        reimplantation param, the result view redirects to the form
-        with that param stripped — rather than silently using a
-        different value than what the URL shows."""
+        reimplantation param, the result view redirects to the same
+        result URL with that param stripped. Following the redirect
+        renders the result with the default value."""
         RUConfigHaieFactory()
         hedges = HedgeDataFactory(
             hedges=[
@@ -1346,7 +1346,11 @@ class TestReimplantationFieldRemoval:
 
         assert res.status_code == 302
         assert "reimplantation" not in res["Location"]
-        assert "/simulateur/formulaire/" in res["Location"]
+
+        res = client.get(res["Location"])
+        assert res.status_code == 200
+        moulinette = res.context["moulinette"]
+        assert moulinette.catalog["reimplantation"] == "replantation"
 
     def test_reimplantation_stripped_from_redirect_url_in_ru(self, client):
         """Regime unique: when the form view builds a redirect URL
