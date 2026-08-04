@@ -551,12 +551,12 @@ class BaseMoulinetteResult(FormView):
             redirect_url = reverse("moulinette_form")
             redirect_url = update_qs(redirect_url, request.GET)
 
-        # The URL contains params that the moulinette form excludes
-        # (e.g. reimplantation in RU mode). Redirect to the form so
-        # the excluded params are stripped via get_results_params().
+        # The URL contains stale params that this moulinette form
+        # excludes (e.g. reimplantation in RU mode). Redirect to the
+        # same result URL with those params stripped so the moulinette
+        # evaluates with the default value.
         elif any(key in request.GET for key in moulinette.get_excluded_params()):
-            redirect_url = reverse("moulinette_form")
-            redirect_url = update_qs(redirect_url, request.GET)
+            redirect_url = request.get_full_path()
             for key in moulinette.get_excluded_params():
                 redirect_url = remove_from_qs(redirect_url, key)
 
