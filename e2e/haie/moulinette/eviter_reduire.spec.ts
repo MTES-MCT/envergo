@@ -7,7 +7,7 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     await page.goto('/');
     await page.getByRole('link', { name: 'Simuler un projet' }).click();
     await page.getByRole('link', { name: 'Loire-Atlantique (44)' }).click();
-    await page.getByText('Haies ou alignements d'arbres').click();
+    await page.getByText('Haies ou alignements d’arbres').click();
     await page.getByText('Toute intervention supprimant définitivement la végétation').click();
     await page.getByText('Uniquement les travaux sur la végétation').click();
     await page.getByRole('button', { name: 'Valider' }).click();
