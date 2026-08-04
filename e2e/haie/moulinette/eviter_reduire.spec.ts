@@ -58,6 +58,6 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     // Acknowledging lets the submission through to the result page
     await block.getByText("J'ai compris").click();
     await page.getByRole('button', { name: 'Valider' }).click();
-    await expect(page).toHaveURL(/resultat/);
+    await expect(page).toHaveURL(/result/);
     await expect(page).not.toHaveURL(/eviter_reduire/);
 });
