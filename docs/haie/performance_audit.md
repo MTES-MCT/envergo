@@ -58,20 +58,19 @@ clôture. Chaque action synchronise l'état vers DS.
 ## 3. Méthodologie de mesure
 
 Mesures réalisées avec le client de test Django + capture des
-requêtes SQL, sur la base de données de dev locale (départements
-14 et 02 activés).
+requêtes SQL, en local sur un dump de la base de production
+(15,2 M zones, 20,6 M lignes de haies, 561 dossiers).
 
 Limites connues :
 
-- dataset local ≠ production (volumes de zones, dossiers, etc.)
 - DEBUG activé, machine de dev : les temps sont indicatifs,
   les nombres de requêtes sont fiables
 - API Démarches Simplifiées désactivée localement : les vues qui
   en dépendent ne mesurent que le travail local
-- paramètres réalistes issus du dossier Z4PDWH (dept 14) :
+- paramètres réalistes issus du dossier PK8A7J (dept 14) :
   `?department=14&element=haie&travaux=destruction&contexte=non
 &motif=amelioration_culture&reimplantation=replantation
-&localisation_pac=non&haies={uuid}`
+&localisation_pac=non&date=2026-08-05&haies={uuid}`
 - vues instructeur mesurées avec un compte instructeur (dept 14)
 
 Script de mesure : `profile_endpoints.py`.
@@ -95,25 +94,27 @@ Parcours public, sans authentification.
 
 | Verbe | URL                                | Requêtes SQL        | Temps SQL  |
 | ----- | ---------------------------------- | ------------------- | ---------- |
-| GET   | `/`                                | 5                   | 3 ms       |
+| GET   | `/`                                | 5                   | 5 ms       |
 | GET   | `/simulateur/triage/`              | 9                   | 4 ms       |
-| GET   | `/simulateur/formulaire/`          | 18                  | 85 ms      |
+| GET   | `/simulateur/formulaire/`          | 15                  | 73 ms      |
 | GET   | `/haies/14/removal/`               | 4                   | 3 ms       |
 | POST  | `/haies/14/removal/`               | non mesuré (INSERT) | —          |
-| GET   | `/simulateur/resultat/`            | 20                  | 92 ms      |
-| GET   | `/haies/14/plantation/{uuid}/`     | 19                  | 97 ms      |
-| POST  | `/haies/conditions/`               | 18                  | **149 ms** |
+| GET   | `/simulateur/resultat/`            | 18                  | 120 ms     |
+| GET   | `/haies/14/plantation/{uuid}/`     | 16                  | 82 ms      |
+| POST  | `/haies/conditions/`               | 16                  | **443 ms** |
 | POST  | `/haies/14/plantation/`            | non mesuré (INSERT) | —          |
-| GET   | `/simulateur/resultat-plantation/` | 19                  | 92 ms      |
+| GET   | `/simulateur/resultat-plantation/` | 17                  | 128 ms     |
 
 Constats mesurés :
 
 - Le formulaire, les deux résultats, la saisie plantation et les
   conditions exécutent chacun une évaluation moulinette complète
-  (~15 requêtes de pipeline, voir section 5).
-- `POST /haies/conditions/` est le plus coûteux en temps SQL et
+  (voir section 5).
+- `POST /haies/conditions/` est le plus coûteux (443 ms SQL) et
   il est appelé à chaque modification du tracé par le frontend.
-  Chaque appel **insère une ligne `hedges_hedgedata`** en base
+  Chaque appel crée un `HedgeData` neuf : le cache de densité ne
+  s'applique jamais (nouvelle clé), le calcul complet tourne à
+  chaque fois, et une ligne est **insérée en base à chaque appel**
   (endpoint anonyme, volume non borné).
 - Un parcours complet = au moins 5 évaluations moulinette,
   plus N appels conditions.
@@ -131,7 +132,8 @@ Déclenché par le pétitionnaire après la simulation.
 | POST  | `/projet/` | non mesuré   | —         |
 
 Le code exécute 2 évaluations moulinette (pré-remplissage DS
-+ ResultSnapshot en `on_commit`) plus l'appel à l'API DS.
+
+- ResultSnapshot en `on_commit`) plus l'appel à l'API DS.
 
 ### UC3 — Consulter un dossier déposé
 
@@ -139,7 +141,7 @@ Accessible par quiconque connaît la référence du dossier.
 
 | Verbe | URL                           | Requêtes SQL | Temps SQL |
 | ----- | ----------------------------- | ------------ | --------- |
-| GET   | `/projet/{ref}/consultation/` | 20           | 97 ms     |
+| GET   | `/projet/{ref}/consultation/` | 18           | 120 ms    |
 
 Évaluation moulinette complète reconstruite depuis l'URL stockée.
 
@@ -158,13 +160,13 @@ Instructeur authentifié.
 | Verbe | URL                    | Requêtes SQL | Temps SQL |
 | ----- | ---------------------- | ------------ | --------- |
 | POST  | `/comptes/connexion/`  | non mesuré   | —         |
-| GET   | `/projet/liste`        | **48**       | 76 ms     |
+| GET   | `/projet/liste`        | **50**       | 92 ms     |
 | POST  | `/projet/{ref}/suivi/` | non mesuré   | —         |
 
 Constat : **N+1 sur les permissions**. Le template appelle le
 filtre `has_edit_permission` pour chaque dossier affiché, et
 chaque appel exécute `user.departments.filter(id=…).exists()` —
-36 requêtes pour une page de 30 dossiers.
+42 requêtes pour une page de 30 dossiers.
 
 ### UC5 — Instruire un dossier
 
@@ -172,8 +174,8 @@ Instructeur authentifié. Chaque onglet est une requête séparée.
 
 | Verbe | URL                                | Requêtes SQL        | Temps SQL |
 | ----- | ---------------------------------- | ------------------- | --------- |
-| GET   | `/projet/{ref}/instruction/`       | 31                  | 98 ms     |
-| GET   | `/projet/{ref}/instruction/{reg}/` | 29                  | 91 ms     |
+| GET   | `/projet/{ref}/instruction/`       | 28                  | 82 ms     |
+| GET   | `/projet/{ref}/instruction/{reg}/` | 27                  | 118 ms    |
 | GET   | `…/instruction/dossier-complet/`   | non mesuré (API DS) | —         |
 | GET   | `…/instruction/messagerie/`        | non mesuré (API DS) | —         |
 | GET   | `…/instruction/notes/`             | 16                  | 2 ms      |
@@ -195,10 +197,10 @@ Instructeur authentifié. Actions qui font avancer le dossier.
 
 | Verbe | URL                             | Requêtes SQL        | Temps SQL |
 | ----- | ------------------------------- | ------------------- | --------- |
-| GET   | `…/instruction/procedure/`      | 21                  | 2 ms      |
+| GET   | `…/instruction/procedure/`      | 21                  | 3 ms      |
 | POST  | `…/instruction/procedure/`      | non mesuré (API DS) | —         |
 | POST  | `…/instruction/messagerie/`     | non mesuré (API DS) | —         |
-| GET   | `…/instruction/alternatives/`   | 18                  | 2 ms      |
+| GET   | `…/instruction/alternatives/`   | 18                  | 3 ms      |
 | POST  | `…/alternatives/{id}/activate/` | non mesuré          | —         |
 
 Les POST synchronisent l'état vers DS (GraphQL) ; le changement
@@ -207,28 +209,30 @@ via Celery.
 
 ## 5. Décomposition d'une évaluation moulinette
 
-Mesuré sur `GET /simulateur/resultat/` (20 requêtes, 92 ms SQL) :
+Mesuré sur `GET /simulateur/resultat/` (18 requêtes, 120 ms SQL) :
 
-| Requête                                 | Temps | Note                 |
-| --------------------------------------- | ----- | -------------------- |
-| SELECT geodata_zone (espèces, buffer)   | 47 ms | la plus lourde       |
-| SELECT moulinette_criterion             | 22 ms | filtrage activation  |
-| SELECT geodata_department (×4)          | 10 ms | lookups répétés      |
-| SELECT geodata_zone (×3 autres)         | 5 ms  | zonages              |
-| WITH centroids (LATERAL)                | 1 ms  | résolution zonage RU |
-| Regulation, perimeter, template, config | ~2 ms |                      |
-| INSERT analytics_event                  | 3 ms  | écriture par visite  |
-| BEGIN/COMMIT                            | 2 ms  | ATOMIC_REQUESTS      |
+| Requête                                 | Temps  | Note                |
+| --------------------------------------- | ------ | ------------------- |
+| SELECT hedges_species                   | 41 ms  | espèces protégées   |
+| SELECT geodata_zone                     | 36 ms  | zonages spatiaux    |
+| SELECT moulinette_criterion             | 24 ms  | filtrage activation |
+| SELECT geodata_department               | 5 ms   | lookups répétés     |
+| Autres (regulation, perimeter, config…) | ~10 ms |                     |
+| INSERT analytics_event                  | 3 ms   | écriture par visite |
 
 Sur `POST /haies/conditions/` s'ajoutent :
 
-| Requête                                 | Temps | Note                    |
-| --------------------------------------- | ----- | ----------------------- |
-| WITH geodata_zone (densité + trim land) | 56 ms | calcul densité          |
-| INSERT hedges_hedgedata                 | 1 ms  | **une ligne par appel** |
+| Requête                          | Temps  | Note                     |
+| -------------------------------- | ------ | ------------------------ |
+| query_hedge_length (WITH inputs) | 253 ms | longueur haies (densité) |
+| trim_land (WITH geodata_zone)    | 117 ms | découpe terres émergées  |
+| INSERT hedges_hedgedata          | 1 ms   | **une ligne par appel**  |
 
-Deux requêtes dominent le coût : la requête espèces (47 ms) et
-le calcul de densité (56 ms), toutes deux sur `geodata_zone`.
+Le calcul de densité (370 ms cumulés sur `geodata_line` 20,6 M
+lignes et `geodata_zone`) domine le coût du endpoint conditions.
+Sur les pages résultat, il est absorbé par le cache `_density`
+du HedgeData stocké ; sur conditions, jamais (HedgeData neuf à
+chaque appel).
 
 ## 6. Coût transversal par requête
 
@@ -242,15 +246,16 @@ Vérifié dans les logs de mesure :
 
 ## 7. Pistes identifiées (à mesurer/valider)
 
-1. N+1 permissions sur `/projet/liste` : filtre template
+1. Calcul de densité sur `/haies/conditions/` : 370 ms par appel,
+   jamais caché (HedgeData neuf à chaque appel), déclenché à
+   chaque modification du tracé
+2. N+1 permissions sur `/projet/liste` : filtre template
    `has_edit_permission` → 1 requête `departments…exists()` par
-   dossier affiché (36 requêtes/page pour un instructeur)
-2. INSERT `hedges_hedgedata` à chaque appel conditions (volume
+   dossier affiché (42 requêtes/page pour un instructeur)
+3. INSERT `hedges_hedgedata` à chaque appel conditions (volume
    non borné, endpoint anonyme)
-3. Lookups department/confighaie répétés dans une même requête
+4. Lookups department/confighaie répétés dans une même requête
    (8× sur la synthèse instructeur)
-4. Requête espèces (47 ms) et densité (56 ms) : à re-mesurer
-   sur volumes de production
 5. Pas de cache applicatif sur les évaluations moulinette alors
    qu'un parcours en exécute ≥ 5 fois avec les mêmes paramètres
 
