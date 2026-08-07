@@ -5,9 +5,11 @@
 
 ## 1. Infrastructure
 
-- Gunicorn × 9 workers, timeout 120 s, max-requests 300
-- Scalingo M : 1 conteneur web + 1 worker Celery
-- PostGIS, CONN_MAX_AGE=60, ATOMIC_REQUESTS=True
+- Gunicorn × 9 workers sync par conteneur, timeout 120 s,
+  max-requests 300
+- Scalingo : 4 conteneurs web 2XL (4 Go, priorité CPU haute)
+  = 36 workers, + 1 worker Celery
+- PostGIS plan Business 4G, CONN_MAX_AGE=60, ATOMIC_REQUESTS=True
 - Redis (rate limiting, sessions)
 - Templates cachés en prod (cached.Loader)
 - Aucun cache applicatif sur les résultats moulinette
@@ -67,13 +69,13 @@ Limites connues :
   les nombres de requêtes sont fiables
 - API Démarches Simplifiées désactivée localement : les vues qui
   en dépendent ne mesurent que le travail local
-- paramètres réalistes issus du dossier PK8A7J (dept 14) :
-  `?department=14&element=haie&travaux=destruction&contexte=non
-&motif=amelioration_culture&reimplantation=replantation
-&localisation_pac=non&date=2026-08-05&haies={uuid}`
 - vues instructeur mesurées avec un compte instructeur (dept 14)
 
-Script de mesure : `profile_endpoints.py`.
+Outillage : `manage.py bootstrap_loadtest` crée le jeu de données
+(dossier LOADTEST dept 14, haies réelles, compte instructeur) et
+écrit `perf/fixtures.json`, consommé par `perf/profile_endpoints.py`
+(mesures par endpoint) et `perf/locustfile.py` (scénarios de
+charge).
 
 ## 4. Parcours et mesures
 
@@ -261,7 +263,54 @@ Vérifié dans les logs de mesure :
 
 ## 8. Tests de charge
 
-_À venir._
+Dispositif :
+
+- gunicorn 9 workers sync (config production), `DEBUG=False`,
+  templates cachés, rate limiting désactivé — settings dédiés
+  `config/settings/loadtest.py`
+- scénarios Locust : pétitionnaire (poids 4) déroulant UC1 avec
+  4 appels conditions par parcours ; instructeur (poids 1)
+  naviguant liste + synthèse + réglementation + procédure
+- exclus : dépôt de dossier et messagerie (API DS), inscription,
+  newsletter
+
+Résultats (90 s par palier, 0 erreur à tous les paliers) :
+
+| Utilisateurs actifs | Req/s | p50     | p95    |
+| ------------------- | ----- | ------- | ------ |
+| 20                  | 20,6  | 280 ms  | 940 ms |
+| 50                  | 22,8  | 1,4 s   | 2,3 s  |
+| 100                 | 23,1  | 3,2 s   | 5,5 s  |
+| 150                 | 23,7  | 5,0 s   | 8,3 s  |
+
+Lecture :
+
+- Le débit plafonne à **~23 req/s** dès 50 utilisateurs : les
+  9 workers sync saturent. Au-delà, la latence croît linéairement
+  avec la file d'attente, sans erreur.
+- La saturation est cohérente avec le coût unitaire : 9 workers
+  ÷ ~0,39 s de temps de service moyen ≈ 23 req/s.
+- Les appels conditions représentent ~34 % des requêtes mais
+  ~77 % du temps workers (~0,77 s en moyenne à charge faible).
+  C'est le levier n°1 : le corriger multiplierait la capacité
+  par ~2,5.
+- Capacité confortable actuelle : **~20-30 utilisateurs actifs
+  simultanés par conteneur 9-workers** (latence médiane < 300 ms).
+
+Extrapolation production (4 conteneurs × 9 workers = 36 workers) :
+
+- Plafond côté workers : ~4 × 23 ≈ **90 req/s**, soit ~80-120
+  utilisateurs actifs simultanés à latence confortable.
+- Mais le vrai plafond sera probablement la base : le mix mesuré
+  consomme ~150 ms de temps SQL par requête en moyenne, dominé
+  par les requêtes de densité (CPU Postgres). 36 workers face à
+  un seul Postgres Business 4G saturent le CPU base avant les
+  workers. La correction du calcul de densité (piste n°1)
+  soulage les deux plafonds à la fois.
+
+Réserve : mesures sur machine de dev ; les temps absolus ne sont
+pas transposables tels quels, les ratios et le point de
+saturation par worker le sont raisonnablement.
 
 ## 9. Optimisations appliquées
 
