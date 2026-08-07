@@ -301,3 +301,5 @@ altis/
 # PY's AI-agent sandbox tooling
 /compose/agent/
 /bin/agent
+perf/results/
+perf/fixtures.json
