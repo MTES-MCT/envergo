@@ -2335,8 +2335,8 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg not in res.content.decode()
 
 
-def test_alternatives_detail_view(client, haie_user, haie_instructor_44):
-    """Test alternative result page view"""
+def test_alternatives_result_view_permissions(client, haie_user, haie_instructor_44):
+    """Test alternative result page view permissions"""
 
     DCConfigHaieFactory()
     # At least one regulation is needed so the moulinette produces results by
@@ -2351,17 +2351,33 @@ def test_alternatives_detail_view(client, haie_user, haie_instructor_44):
     )
     # AS anonymous WHEN I visit alternative page
     response = client.get(alternative_url)
-    # THEN page is 200
+    # THEN page redirects to moulinette form
     assert response.status_code == 302
-    assert response.url == s2.moulinette_url
+    assert response.url.startswith(reverse("moulinette_form"))
 
     # AS basic haie user
     client.force_login(haie_user)
     # WHEN I visit alternative page
     response = client.get(alternative_url)
-    # THEN page is 200
+    # THEN page redirects to moulinette form
     assert response.status_code == 302
-    assert response.url == s2.moulinette_url
+    assert response.url.startswith(reverse("moulinette_form"))
+
+
+def test_alternatives_result_view_content(client, haie_user, haie_instructor_44):
+    """Test alternative result page view permissions"""
+
+    DCConfigHaieFactory()
+    # At least one regulation is needed so the moulinette produces results by
+    # category, from which the activation takes the project's new category.
+    HaieRegulationFactory()
+    project = PetitionProjectFactory()
+    s2 = SimulationFactory(project=project, comment="Simulation 2")
+
+    alternative_url = reverse(
+        "petition_project_instructor_alternative_display",
+        kwargs={"reference": project.reference, "simulation_id": s2.id},
+    )
 
     # AS instructor
     client.force_login(haie_instructor_44)

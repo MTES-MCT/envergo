@@ -8,6 +8,7 @@ from envergo.petitions.views import (
     PetitionProjectDetail,
     PetitionProjectHedgeDataExport,
     PetitionProjectInstructorAlternativeEdit,
+    PetitionProjectInstructorAlternativeResultsView,
     PetitionProjectInstructorAlternativeView,
     PetitionProjectInstructorConsultationsView,
     PetitionProjectInstructorDossierDNView,
@@ -63,7 +64,7 @@ instruction_urlpatterns = [
     ),
     path(
         "alternatives/<int:simulation_id>/",
-        PetitionProjectDetail.as_view(),
+        PetitionProjectInstructorAlternativeResultsView.as_view(),
         name="petition_project_instructor_alternative_display",
     ),
     path(
