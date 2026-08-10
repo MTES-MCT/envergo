@@ -734,9 +734,8 @@ class PetitionProjectDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        if "moulinette" in self.kwargs:
-            moulinette = self.kwargs["moulinette"]
+        if "moulinette" in kwargs:
+            moulinette = kwargs["moulinette"]
         else:
             moulinette = self.object.get_moulinette()
 
@@ -1711,9 +1710,16 @@ class PetitionProjectInstructorAlternativeResultsView(
         self.simulation_object = self.get_simulation_object()
         moulinette_url = MoulinetteUrl(self.simulation_object.moulinette_url)
         moulinette = moulinette_url.get_moulinette()
-        kwargs["moulinette"] = moulinette
 
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(moulinette=moulinette, **kwargs)
+        context["simulation"] = self.simulation_object
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        ).replace(str(self.simulation_object.id), "+simulation+")
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
+        )
         return context
 
     def handle_no_permission(self):
