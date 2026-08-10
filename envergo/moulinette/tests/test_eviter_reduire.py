@@ -243,6 +243,8 @@ def test_checked_submission_reaches_the_result(client):
 
 
 def test_pure_l350_3_submission_is_not_gated(client):
+    """Éviter / réduire does not block submission for Alignement projects."""
+
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(hedges=[l350_3_hedge()])
 
