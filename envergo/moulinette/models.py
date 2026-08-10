@@ -10,6 +10,7 @@ from operator import attrgetter
 from typing import Literal
 
 from dateutil import parser
+from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
@@ -70,6 +71,7 @@ from envergo.moulinette.fields import (
 )
 from envergo.moulinette.forms import (
     DisplayIntegerField,
+    EviterReduireForm,
     MoulinetteFormAmenagement,
     MoulinetteFormHaie,
     TriageFormHaie,
@@ -2077,6 +2079,39 @@ class Moulinette(MoulinetteUrlMixin, ABC):
         data = self.data
         return any(key in data for key in self.additional_fields.keys())
 
+    def get_acknowledgment_form(self):
+        """Return a form gating the simulation form submission, or None.
+
+        The form's data is not part of the simulation: it gates the form
+        submission but must never reach the result url, and existing
+        simulation urls must stay valid without it.
+        """
+        return None
+
+    @cached_property
+    def acknowledgment_form(self):
+        return self.get_acknowledgment_form()
+
+    def is_acknowledged(self):
+        """Return True when no acknowledgment is required, or it was confirmed."""
+
+        form = self.acknowledgment_form
+        return form is None or form.is_valid()
+
+    def is_acknowledgment_pending(self):
+        """Return True when an acknowledgment is required but not displayed yet.
+
+        Unbound means not displayed: see EviterReduireForm for the mechanism.
+        """
+        form = self.acknowledgment_form
+        return form is not None and not form.is_bound
+
+    def has_acknowledgment_error(self):
+        """Return True when the acknowledgment was displayed and refused."""
+
+        form = self.acknowledgment_form
+        return form is not None and form.is_bound and not form.is_valid()
+
     @cached_property
     def optional_fields(self):
         """Get a {field_name: field} dict of all optional questions fields."""
@@ -2670,6 +2705,31 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         return self.get_main_form_class()(
             single_procedure=self._get_single_procedure(), **form_kwargs
         )
+
+    def get_acknowledgment_form(self):
+        """Return the « Éviter / réduire » acknowledgment form when required.
+
+        Required when any hedge to remove has a `Hedge.category` of RU or
+        HRU — every project except a pure L350-3 one.
+        """
+        if not settings.HAIE_EVITER_REDUIRE_ENABLED:
+            return None
+
+        if not self.is_evaluated():
+            return None
+
+        haies = self.catalog.get("haies")
+        if not haies:
+            return None
+
+        to_remove = haies.hedges_to_remove()
+        if not (to_remove.ru() or to_remove.hru()):
+            return None
+
+        form_kwargs = {}
+        if EviterReduireForm.DISPLAYED_MARKER in self.data:
+            form_kwargs["data"] = self.data
+        return EviterReduireForm(**form_kwargs)
 
     @property
     def result(self):
