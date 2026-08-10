@@ -2335,7 +2335,7 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg not in res.content.decode()
 
 
-def test_alternatives_detail_view(client, haie_instructor_44):
+def test_alternatives_detail_view(client, haie_user, haie_instructor_44):
     """Test alternative result page view"""
 
     DCConfigHaieFactory()
@@ -2344,16 +2344,38 @@ def test_alternatives_detail_view(client, haie_instructor_44):
     HaieRegulationFactory()
     project = PetitionProjectFactory()
     s2 = SimulationFactory(project=project, comment="Simulation 2")
-    # AS instructor
-    client.force_login(haie_instructor_44)
-    # WHEN I visit alternative page
+
     alternative_url = reverse(
         "petition_project_instructor_alternative_display",
         kwargs={"reference": project.reference, "simulation_id": s2.id},
     )
+    # AS anonymous WHEN I visit alternative page
+    response = client.get(alternative_url)
+    # THEN page is 200
+    assert response.status_code == 302
+    assert response.url == s2.moulinette_url
+
+    # AS basic haie user
+    client.force_login(haie_user)
+    # WHEN I visit alternative page
+    response = client.get(alternative_url)
+    # THEN page is 200
+    assert response.status_code == 302
+    assert response.url == s2.moulinette_url
+
+    # AS instructor
+    client.force_login(haie_instructor_44)
+    # WHEN I visit alternative page
     response = client.get(alternative_url)
     # THEN page is 200
     assert response.status_code == 200
+    assert "Simulation alternative Dossier n°" in response.content.decode()
+    assert "Modifier" not in response.content.decode()
+    assert "Démarrer une nouvelle simulation" in response.content.decode()
+    assert (
+        response.context["matomo_custom_url"]
+        == "/projet/+ref_projet+/instruction/alternatives/+simulation+"
+    )
 
     # WHEN I visit not existing alternative page
     alternative_url = reverse(
