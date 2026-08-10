@@ -163,6 +163,7 @@ def test_block_absent_for_pure_l350_3_project(client):
 
 
 def test_block_displayed_for_hru_project(client):
+    """One HRU hedge is enough to show the block."""
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(hedges=[hru_hedge()])
 
