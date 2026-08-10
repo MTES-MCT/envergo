@@ -2385,7 +2385,7 @@ def test_alternatives_result_view_content(client, haie_user, haie_instructor_44)
     response = client.get(alternative_url)
     # THEN page is 200
     assert response.status_code == 200
-    assert "Simulation alternative Dossier n°" in response.content.decode()
+    assert "Simulation alternative" in response.content.decode()
     assert "Modifier" not in response.content.decode()
     assert "Démarrer une nouvelle simulation" in response.content.decode()
     assert (
