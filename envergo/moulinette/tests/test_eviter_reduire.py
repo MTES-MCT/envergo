@@ -163,6 +163,7 @@ def test_block_absent_for_pure_l350_3_project(client):
 
 
 def test_block_displayed_for_hru_project(client):
+    """One HRU hedge is enough to show the block."""
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(hedges=[hru_hedge()])
 
@@ -242,6 +243,8 @@ def test_checked_submission_reaches_the_result(client):
 
 
 def test_pure_l350_3_submission_is_not_gated(client):
+    """Éviter / réduire does not block submission for Alignement projects."""
+
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(hedges=[l350_3_hedge()])
 

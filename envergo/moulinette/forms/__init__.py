@@ -574,6 +574,23 @@ class EviterReduireForm(forms.Form):
     )
 
 
+class MoulinetteFormHaieRU(BaseMoulinetteFormHaie):
+    single_procedure = True
+    excluded_params = ["reimplantation"]
+
+
+class MoulinetteFormHaieHRU(BaseMoulinetteFormHaie):
+    single_procedure = False
+
+    reimplantation = DisplayChoiceField(
+        label="Est-il prévu de planter une nouvelle haie ?",
+        widget=forms.RadioSelect,
+        choices=extract_choices(REIMPLANTATION_CHOICES),
+        required=True,
+        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
+    )
+
+
 class TriageFormHaie(forms.Form):
     department = DisplayCharField(
         label="Département",

@@ -2937,6 +2937,16 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
             if not self.config:
                 del data["haies"]
 
+        if "reimplantation" not in data:
+            if self._get_single_procedure():
+                data["reimplantation"] = "replantation"
+            else:
+                raw_data = self.bound_main_form.data
+                initial = self.bound_main_form.initial or {}
+                data["reimplantation"] = raw_data.get("reimplantation") or initial.get(
+                    "reimplantation", "replantation"
+                )
+
         if "haies" in data:
             hedges = data["haies"]
             data["departments_lengths"] = hedges.departments_lengths()
