@@ -59,7 +59,7 @@
                name="show_closed"
                value="1"
                id="show-closed-dossiers"
-               {% if active_filters.show_closed %}checked{% endif %}
+               {% if active_filters.show_closed %}checked{% endif %}>
         <label class="fr-label" for="show-closed-dossiers">Afficher les dossiers clos</label>
       </div>
     </div>
@@ -76,7 +76,7 @@
                    value="ru"
                    id="category-ru"
                    type="checkbox"
-                   {% if not active_filters.categories or "ru" in active_filters.categories %}checked{% endif %}
+                   {% if not active_filters.categories or "ru" in active_filters.categories %}checked{% endif %}>
             <label class="fr-label" for="category-ru">Régime unique</label>
           </div>
         </div>
@@ -86,7 +86,7 @@
                    value="l350_3"
                    id="category-aa"
                    type="checkbox"
-                   {% if not active_filters.categories or "l350_3" in active_filters.categories %}checked{% endif %}
+                   {% if not active_filters.categories or "l350_3" in active_filters.categories %}checked{% endif %}>
             <label class="fr-label" for="category-aa">AA L350-3</label>
           </div>
         </div>
@@ -96,7 +96,7 @@
                    value="hru"
                    id="category-hru"
                    type="checkbox"
-                   {% if not active_filters.categories or "hru" in active_filters.categories %}checked{% endif %}
+                   {% if not active_filters.categories or "hru" in active_filters.categories %}checked{% endif %}>
             <label class="fr-label" for="category-hru">Hors régime unique</label>
           </div>
         </div>
