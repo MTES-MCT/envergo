@@ -42,7 +42,6 @@ class HedgeDataAdmin(admin.ModelAdmin):
         "hedges_to_remove",
         "length_to_remove",
         "all_species",
-        "_density",
     ]
     exclude = ["_length_to_plant", "_length_to_remove"]
 
