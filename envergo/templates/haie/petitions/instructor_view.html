@@ -51,9 +51,11 @@
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
-                  {# djlint:off #}
-                  Identité :{% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
-                  {# djlint:on #}
+                  {% spaceless %}
+                    <span>Identité&nbsp;</span>
+                    {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
+                    <span>&nbsp;:</span>
+                  {% endspaceless %}
                 </b>
               </p>
               <div class="champ-content">{{ ds_info.applicant }}</div>
@@ -63,9 +65,11 @@
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
-                  {# djlint:off #}
-                  Structure :{% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
-                  {# djlint:on #}
+                  {% spaceless %}
+                    <span>Structure&nbsp;</span>
+                    {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
+                    <span>&nbsp;:</span>
+                  {% endspaceless %}
                 </b>
               </p>
               <div class="champ-content">{{ ds_info.organization }}</div>
@@ -80,9 +84,11 @@
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
-                  {# djlint:off #}
-                  Identité :{% include "haie/petitions/_dn_logo.html" with id="mandataire-identite" %}
-                  {# djlint:on #}
+                  {% spaceless %}
+                    <span>Identité&nbsp;</span>
+                    {% include "haie/petitions/_dn_logo.html" with id="mandataire-identite" %}
+                    <span>&nbsp;:</span>
+                  {% endspaceless %}
                 </b>
               </p>
               <div class="champ-content">{{ ds_info.representative }}</div>
@@ -127,9 +133,11 @@
           <li>
             <span>
               <b>
-                {# djlint:off #}
-                Description du projet de construction ou d’aménagement :{% include "haie/petitions/_dn_logo.html" with id="description-projet-urba" %}
-                {# djlint:on #}
+                {% spaceless %}
+                  <span>Description du projet de construction ou d’aménagement&nbsp;</span>
+                  {% include "haie/petitions/_dn_logo.html" with id="description-projet-urba" %}
+                  <span>&nbsp;:</span>
+                {% endspaceless %}
               </b>
             </span>
             {% get_ds_field "description_projet_urba" as desc_urba_field %}
@@ -144,9 +152,11 @@
           <li>
             <span>
               <b>
-                {# djlint:off #}
-                N° d’autorisation d’urbanisme :{% include "haie/petitions/_dn_logo.html" with id="numero-auto-urba" %}
-                {# djlint:on #}
+                {% spaceless %}
+                  <span>N° d’autorisation d’urbanisme&nbsp;</span>
+                  {% include "haie/petitions/_dn_logo.html" with id="numero-auto-urba" %}
+                  <span>&nbsp;:</span>
+                {% endspaceless %}
               </b>
             </span>
             {% get_ds_field "numero_auto_urba" as auto_urba_field %}
