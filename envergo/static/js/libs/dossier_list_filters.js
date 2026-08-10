@@ -47,6 +47,14 @@
     });
   }
 
+  var CATEGORY_NAMES = { "ru": "Ru", "l350_3": "Aa", "hru": "Hru" };
+
+  // Track checkbox filter interactions to Matomo with on/off state in the event name.
+  function trackCheckboxEvent(checkbox, action, baseName) {
+    var suffix = checkbox.checked ? "On" : "Off";
+    _paq.push(["trackEvent", "ProjectList", action, baseName + suffix]);
+  }
+
   // Align filter controls with the current URL params, used after browser back/forward.
   function syncFormFromUrl() {
     var params = new URLSearchParams(window.location.search);
@@ -74,7 +82,13 @@
 
     var form = document.getElementById("dossier-filter-form");
     if (form) {
-      form.addEventListener("change", function () {
+      form.addEventListener("change", function (e) {
+        var input = e.target;
+        if (input.name === "show_closed") {
+          trackCheckboxEvent(input, "FilterShowClosed", "ShowClosed");
+        } else if (input.name === "category") {
+          trackCheckboxEvent(input, "FilterCategory", CATEGORY_NAMES[input.value] || input.value);
+        }
         showLoadingIndicator();
       });
     }
