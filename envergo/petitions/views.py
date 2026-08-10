@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -732,31 +732,11 @@ class PetitionProjectDetail(DetailView):
 
         return result
 
-    def get_simulation(self, simulation_id):
-        """Return the targeted simulation (with its project) or raise 404."""
-
-        simulation_qs = (
-            Simulation.objects.filter(project=self.object)
-            .select_related("project")
-            .prefetch_related(
-                Prefetch(
-                    "project__status_history",
-                    queryset=StatusLog.objects.all().order_by("-created_at"),
-                )
-            )
-        )
-        try:
-            return simulation_qs.get(pk=simulation_id)
-        except Simulation.DoesNotExist:
-            raise Http404()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        if "simulation_id" in self.kwargs:
-            simulation = self.get_simulation(self.kwargs["simulation_id"])
-            moulinette_url = MoulinetteUrl(simulation.moulinette_url)
-            moulinette = moulinette_url.get_moulinette()
+        if "moulinette" in self.kwargs:
+            moulinette = self.kwargs["moulinette"]
         else:
             moulinette = self.object.get_moulinette()
 
@@ -1692,41 +1672,67 @@ class PetitionProjectInstructorAlternativeEdit(
         return url
 
 
-class PetitionProjectInstructorAlternativeDisplay(PetitionProjectDetail):
+class PetitionProjectInstructorAlternativeResultsView(
+    BasePetitionProjectInstructorView, PetitionProjectDetail
+):
     """View for display an alternative simulation."""
 
+    simulation_object = None
+    queryset = PetitionProject.objects.all()
     template_name = "haie/petitions/instructor_view_alternative_display.html"
 
-    def has_view_permission(self, request, object):
-        """Check if request has view permission on object"""
-        return object.has_view_permission(request.user)
-
-    def has_change_permission(self, request, object):
-        """Check if request has edit permission on object"""
-        return object.has_change_permission(request.user)
-
-    def get_simulation(self, simulation_id):
+    def get_simulation_object(self):
         """Return the targeted simulation (with its project) or raise 404."""
-        simulation_qs = (
-            Simulation.objects.filter(project=self.object)
-            .select_related("project")
-            .prefetch_related(
-                Prefetch(
-                    "project__status_history",
-                    queryset=StatusLog.objects.all().order_by("-created_at"),
-                )
-            )
+        simulation_pk = self.kwargs.get("simulation_id")
+        self.object = self.get_object(self.queryset)
+        simulation_qs = Simulation.objects.filter(project=self.object).select_related(
+            "project"
         )
         try:
-            return simulation_qs.get(pk=simulation_id)
+            simulation_obj = simulation_qs.get(pk=simulation_pk)
         except Simulation.DoesNotExist:
-            raise Http404()
+            raise Http404("Cette simulation alternative n'existe pas")
+        return simulation_obj
+
+    def get_simulation_moulinette_url(self):
+        if not self.simulation_object:
+            self.simulation_object = self.get_simulation_object()
+        parsed_moulinette_url = urlparse(self.simulation_object.moulinette_url)
+        moulinette_params = parse_qs(parsed_moulinette_url.query)
+        moulinette_params["alternative"] = "true"
+        form_url = reverse("moulinette_form")
+        simulation_moulinette_url = update_qs(form_url, moulinette_params)
+        return simulation_moulinette_url
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["simulation"] = self.get_simulation(self.kwargs["simulation_id"])
+        """Inserts simulation moulinette into kwargs to get results data context"""
+        context = {}
 
+        self.simulation_object = self.get_simulation_object()
+        moulinette_url = MoulinetteUrl(self.simulation_object.moulinette_url)
+        moulinette = moulinette_url.get_moulinette()
+        kwargs["moulinette"] = moulinette
+
+        context = super().get_context_data(**kwargs)
         return context
+
+    def handle_no_permission(self):
+        """Redirects to simulation form if user is not loggued in"""
+        if self.raise_exception or self.request.user.is_authenticated:
+            raise PermissionDenied(self.get_permission_denied_message())
+        simulation_moulinette_url = self.get_simulation_moulinette_url()
+        return HttpResponseRedirect(simulation_moulinette_url)
+
+    def get(self, request, *args, **kwargs):
+        """Redirects to simulation form if user has not view permissions,
+        else render response"""
+        self.object = self.get_object()
+        if not self.has_view_permission(request, self.object):
+            simulation_moulinette_url = self.get_simulation_moulinette_url()
+            return HttpResponseRedirect(simulation_moulinette_url)
+
+        res = super().get(request, *args, **kwargs)
+        return res
 
 
 class PetitionProjectInstructorProcedureView(
