@@ -10,11 +10,12 @@
 
   <div id="dossier-filters">
 
-    <p class="fr-mb-1w">Filtrer la liste :</p>
+    <p class="fr-mb-1w">Filtrer la liste :</p>
 
     <div class="filter-line fr-mb-3w">
 
       <fieldset class="fr-segmented fr-segmented--sm">
+        <legend class="fr-hidden">Filtrer par instructeurs</legend>
 
         <div class="fr-segmented__elements">
           <div class="fr-segmented__element">
@@ -24,7 +25,7 @@
                    id="followed-by-off"
                    {% if active_filters.followed_by == "off" %}checked{% endif %}
                    data-event-category="ProjectList"
-                   data-event-action="Filter"
+                   data-event-action="FilterFollowedBy"
                    data-event-name="FollowedOff">
             <label class="fr-label" for="followed-by-off">Tous les dossiers</label>
           </div>
@@ -35,7 +36,7 @@
                    id="followed-by-me"
                    {% if active_filters.followed_by == "me" %}checked{% endif %}
                    data-event-category="ProjectList"
-                   data-event-action="Filter"
+                   data-event-action="FilterFollowedBy"
                    data-event-name="FollowedByMe">
             <label class="fr-label" for="followed-by-me">Mes dossiers suivis</label>
           </div>
@@ -46,7 +47,7 @@
                    id="followed-by-nobody"
                    {% if active_filters.followed_by == "nobody" %}checked{% endif %}
                    data-event-category="ProjectList"
-                   data-event-action="Filter"
+                   data-event-action="FilterFollowedBy"
                    data-event-name="FollowedByNobody">
             <label class="fr-label" for="followed-by-nobody">Dossiers sans instructeur</label>
           </div>
@@ -59,9 +60,6 @@
                value="1"
                id="show-closed-dossiers"
                {% if active_filters.show_closed %}checked{% endif %}
-               data-event-category="ProjectList"
-               data-event-action="Filter"
-               data-event-name="ShowClosed">
         <label class="fr-label" for="show-closed-dossiers">Afficher les dossiers clos</label>
       </div>
     </div>
@@ -79,9 +77,6 @@
                    id="category-ru"
                    type="checkbox"
                    {% if not active_filters.categories or "ru" in active_filters.categories %}checked{% endif %}
-                   data-event-category="ProjectList"
-                   data-event-action="Filter"
-                   data-event-name="CategoryRU">
             <label class="fr-label" for="category-ru">Régime unique</label>
           </div>
         </div>
@@ -92,9 +87,6 @@
                    id="category-aa"
                    type="checkbox"
                    {% if not active_filters.categories or "l350_3" in active_filters.categories %}checked{% endif %}
-                   data-event-category="ProjectList"
-                   data-event-action="Filter"
-                   data-event-name="CategoryAA">
             <label class="fr-label" for="category-aa">AA L350-3</label>
           </div>
         </div>
@@ -105,9 +97,6 @@
                    id="category-hru"
                    type="checkbox"
                    {% if not active_filters.categories or "hru" in active_filters.categories %}checked{% endif %}
-                   data-event-category="ProjectList"
-                   data-event-action="Filter"
-                   data-event-name="CategoryHRU">
             <label class="fr-label" for="category-hru">Hors régime unique</label>
           </div>
         </div>
@@ -119,7 +108,9 @@
            class="fr-btn fr-btn--sm fr-btn--secondary"
            hx-get="{% url 'petition_project_list' %}"
            hx-target="#dossier-results"
-           hx-push-url="true">Réinitialiser les filtres</a>
+           hx-push-url="true"
+           data-event-category="ProjectList"
+           data-event-action="RemoveFilters">Réinitialiser les filtres</a>
 
         <noscript>
           <button type="submit" class="fr-btn fr-btn--sm">Appliquer les filtres</button>

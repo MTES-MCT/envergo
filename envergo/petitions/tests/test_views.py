@@ -1120,7 +1120,7 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
-def test_petition_project_list_filters(
+def test_petition_project_list_filters_followed_by(
     haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
 ):
     """Test followed_by filter on project list."""
