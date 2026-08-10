@@ -99,6 +99,7 @@ class MoulinetteMixin:
             for prefix in ignore_prefixes:
                 if key.startswith(prefix):
                     GET.pop(key)
+
         return GET
 
     def get_context_data(self, **kwargs):
@@ -246,6 +247,10 @@ class MoulinetteMixin:
 
         cleaned_data = self.moulinette.cleaned_data
         data.update(cleaned_data)
+
+        for key in self.moulinette.get_excluded_params():
+            data.pop(key, None)
+
         return data
 
     def get_triage_url(self):
@@ -563,6 +568,15 @@ class BaseMoulinetteResult(FormView):
         elif moulinette.is_triage_valid() and not moulinette.is_valid():
             redirect_url = reverse("moulinette_form")
             redirect_url = update_qs(redirect_url, request.GET)
+
+        # The URL contains stale params that this moulinette form
+        # excludes (e.g. reimplantation in RU mode). Redirect to the
+        # same result URL with those params stripped so the moulinette
+        # evaluates with the default value.
+        elif any(key in request.GET for key in moulinette.get_excluded_params()):
+            redirect_url = request.get_full_path()
+            for key in moulinette.get_excluded_params():
+                redirect_url = remove_from_qs(redirect_url, key)
 
         if redirect_url:
             return HttpResponseRedirect(redirect_url)
