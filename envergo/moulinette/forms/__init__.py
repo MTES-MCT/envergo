@@ -42,7 +42,8 @@ class BaseMoulinetteForm(forms.Form):
 
 class MoulinetteFormAmenagement(BaseMoulinetteForm):
     created_surface = DisplayIntegerField(
-        label=mark_safe("""
+        label=mark_safe(
+            """
             <span class="help-sidebar-label">
                 Nouveaux impacts
                 <button type="button"
@@ -51,7 +52,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
                     Voir l'aide pour le champ « Nouveaux impacts ».
                 </button>
             </span>
-            """),
+            """
+        ),
         required=True,
         min_value=0,
         max_value=10000000,
@@ -81,7 +83,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
         },
     )
     final_surface = DisplayIntegerField(
-        label=mark_safe("""
+        label=mark_safe(
+            """
             <span class="help-sidebar-label">
                 État final
                 <button type="button"
@@ -90,7 +93,8 @@ class MoulinetteFormAmenagement(BaseMoulinetteForm):
                     Voir l'aide pour le champ « État final ».
                 </button>
             </span>
-            """),
+            """
+        ),
         required=False,
         min_value=0,
         max_value=10000000,
@@ -170,71 +174,85 @@ REIMPLANTATION_CHOICES = (
 MOTIF_CHOICES = (
     (
         "amelioration_culture",
-        mark_safe("""
+        mark_safe(
+            """
             Modification de parcelle agricole<br />
             <span class="fr-hint-text">
                 Regroupement d'îlots, modification de la forme de la parcelle, agrandissement de la surface cultivée…
             </span>
-            """),
+            """
+        ),
     ),
     (
         "amenagement",
-        mark_safe("""
+        mark_safe(
+            """
             Opération de construction ou d'aménagement<br/>
             <span class="fr-hint-text">
                 Création ou agrandissement d’un bâtiment, d’un lotissement, de la voirie, d’une infrastructure ;
                 installation d’équipements : réseaux, bassin…
             </span>
-            """),
+            """
+        ),
     ),
     (
         "chemin_acces",
-        mark_safe("""
+        mark_safe(
+            """
             Création ou élargissement d'un accès à la parcelle<br/>
             <span class="fr-hint-text">
                 Brèche dans une haie pour créer un chemin, permettre le passage d’engins…
             </span>
-            """),
+            """
+        ),
     ),
     (
         "securite",
-        mark_safe("""
+        mark_safe(
+            """
             Mise en sécurité, risque sanitaire<br/>
             <span class="fr-hint-text">
                 Sécurité des riverains, de la circulation, d’une installation ou équipement attenant… ;
                 prévention des incendies ; maladie transmissible à d’autres arbres…
             </span>
-            """),
+            """
+        ),
     ),
     (
         "amelioration_ecologique",
-        mark_safe("""
+        mark_safe(
+            """
             Amélioration environnementale<br/>
             <span class="fr-hint-text">
                 Restauration de la continuité écologique, réimplantation sur un meilleur emplacement environnemental,
                 remplacement par des essences plus favorables à la biodiversité, restauration d’un cours d’eau…
             </span>
-            """),
+            """
+        ),
     ),
     (
         "embellissement",
-        mark_safe("""
+        mark_safe(
+            """
             Motif paysager ou esthétique<br/>
             <span class="fr-hint-text">
                 Amélioration de l’ensoleillement d’une habitation, amélioration de la perspective,
                 intervention pour garantir l'esthétique d'un alignement d'arbres…
             </span>
-            """),
+            """
+        ),
     ),
     (
         "autre",
-        mark_safe("""
+        mark_safe(
+            """
             Autre<br/>
             <span class="fr-hint-text">
                 Tout motif non couvert par les catégories précédentes, y compris :
                 curage de fossé, pose de drains, installation ou entretien d'une clôture…
             </span>
-            """),
+            """
+        ),
     ),
 )
 
@@ -277,18 +295,21 @@ ELEMENT_CHOICES = (
     ("bosquet", "Bosquets"),
     (
         "autre",
-        mark_safe("""Autre<br />
+        mark_safe(
+            """Autre<br />
 <span class="fr-hint-text">
     Arbres isolés, bandes boisées, lisières forestières, fourrés, etc.
 </span>
-                    """),
+                    """
+        ),
     ),
 )
 
 TRAVAUX_CHOICES = (
     (
         "destruction",
-        mark_safe(f"""Destruction<br />
+        mark_safe(
+            f"""Destruction<br />
 <span class="fr-hint-text">
 Toute intervention supprimant définitivement la végétation :
 arrachage ; « déplacement » de haie ;
@@ -297,27 +318,32 @@ coupe à blanc sur essences qui ne recèpent pas
 target="_blank" rel="noopener">voir liste</a>) ;
 entretien sévère et récurrent ; etc.
 </span>
-                    """),
+                    """
+        ),
     ),
     (
         "entretien",
-        mark_safe(f"""Entretien<br />
+        mark_safe(
+            f"""Entretien<br />
 <span class="fr-hint-text">
     Intervention qui permet la repousse de la végétation :
     élagage, taille, coupe à blanc sur une essence capable de recéper
     (<a href="{settings.HAIE_FAQ_URLS["TREE_SPECIES_COPPICING_CAPACITY"]}"
     target="_blank" rel="noopener">voir liste</a>), etc.
 </span>
-                    """),
+                    """
+        ),
     ),
     (
         "autre",
-        mark_safe("""Autre<br />
+        mark_safe(
+            """Autre<br />
 <span class="fr-hint-text">
     Plantation d’une nouvelle haie sans destruction préalable, mise en défens, travaux de restauration écologique,
     travaux de revégétalisation, etc.
 </span>
-                    """),
+                    """
+        ),
     ),
 )
 
@@ -325,11 +351,13 @@ CONTEXT_CHOICES = (
     ("non", "Uniquement les travaux sur la végétation", "Non"),
     (
         "projet",
-        mark_safe("""Dans le cadre d'un projet plus large<br />
+        mark_safe(
+            """Dans le cadre d'un projet plus large<br />
 <span class="fr-hint-text">
     Destruction de haie à l'occasion de l'extension d'un bâtiment, d'une construction nouvelle, d'un aménagement, ou de
     la démolition d’un bâtiment, etc.
-</span>"""),
+</span>"""
+        ),
         "Non renseigné",
     ),
     (
