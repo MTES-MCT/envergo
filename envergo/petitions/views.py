@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -765,7 +765,11 @@ class PetitionProjectDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        moulinette = self.object.get_moulinette()
+        # Get moulinette from kwargs, used for simulation display
+        if "moulinette" in kwargs:
+            moulinette = kwargs["moulinette"]
+        else:
+            moulinette = self.object.get_moulinette()
 
         if moulinette.has_missing_data():
             # this should not happen, unless we have stored an incomplete project
@@ -1697,6 +1701,72 @@ class PetitionProjectInstructorAlternativeEdit(
             "petition_project_instructor_alternative_view", args=[self.object.reference]
         )
         return url
+
+
+class PetitionProjectInstructorAlternativeResultsView(
+    BasePetitionProjectInstructorView, PetitionProjectDetail
+):
+    """View for display an alternative simulation."""
+
+    event_action = None
+    simulation_object = None
+    template_name = "haie/petitions/instructor_view_alternative_display.html"
+
+    def get_queryset(self):
+        """Overrides queryset to avoid unused anotations"""
+        return PetitionProject.objects.all()
+
+    def get_simulation_object(self):
+        """Return the targeted simulation (with its project) or raise 404."""
+        if self.simulation_object:
+            return self.simulation_object
+        self.object = self.get_object()
+        simulation_pk = self.kwargs.get("simulation_id")
+        simulation_qs = Simulation.objects.filter(project=self.object).select_related(
+            "project"
+        )
+        try:
+            simulation_obj = simulation_qs.get(pk=simulation_pk)
+        except Simulation.DoesNotExist:
+            raise Http404("Cette simulation alternative n'existe pas")
+        return simulation_obj
+
+    def get_context_data(self, **kwargs):
+        """Inserts simulation moulinette into kwargs to get results data context"""
+        context = {}
+
+        self.simulation_object = self.get_simulation_object()
+        moulinette_url = MoulinetteUrl(self.simulation_object.moulinette_url)
+        moulinette = moulinette_url.get_moulinette()
+
+        context = super().get_context_data(moulinette=moulinette, **kwargs)
+        context["simulation"] = self.simulation_object
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        ).replace(str(self.simulation_object.id), "+simulation+")
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
+        )
+        return context
+
+    def handle_no_permission(self):
+        """Redirects to simulation form if user is not loggued in"""
+        if self.raise_exception or self.request.user.is_authenticated:
+            raise PermissionDenied(self.get_permission_denied_message())
+        simulation_form_url = self.get_simulation_object().form_url
+        return HttpResponseRedirect(simulation_form_url)
+
+    def get(self, request, *args, **kwargs):
+        """Redirects to simulation form if user has not view permissions,
+        else render response"""
+        self.object = self.get_object()
+        if not self.has_view_permission(request, self.object):
+            simulation_form_url = self.get_simulation_object().form_url
+            return HttpResponseRedirect(simulation_form_url)
+
+        res = super().get(request, *args, **kwargs)
+        return res
 
 
 class PetitionProjectInstructorProcedureView(

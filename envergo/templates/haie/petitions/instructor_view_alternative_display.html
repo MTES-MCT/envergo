@@ -1,0 +1,25 @@
+{% extends 'haie/moulinette/petition_project.html' %}
+
+{% load petitions %}
+
+{% load static %}
+
+{% block action_buttons %}{% endblock %}
+
+{% block result_title %}
+  <h1 class="fr-mt-4w fr-mb-1w">
+    Simulation alternative
+    <br>
+    Dossier n° {{ demarche_numerique_dossier_number|format_ds_number }}
+  </h1>
+  {% if simulation.is_active %}<p class="fr-badge fr-badge--sm fr-badge--success">Active</p>{% endif %}
+{% endblock %}
+
+{% block dossier_actions %}
+  <p class="fr-text--sm fr-hint-text">
+    <a href="{{ simulation.form_url }}"
+       target="_self"
+       class="fr-btn fr-icon-play-circle-line fr-btn--icon-left fr-btn--secondary"
+       rel="noopener">Démarrer une nouvelle simulation</a>
+  </p>
+{% endblock %}
