@@ -64,9 +64,7 @@ class PetitionerUser(HttpUser):
             name="hedge_input_plantation",
         )
         # Real-time feedback loop: one conditions call per drawing change.
-        csrf = response.cookies.get("csrftoken") or self.client.cookies.get(
-            "csrftoken"
-        )
+        csrf = response.cookies.get("csrftoken") or self.client.cookies.get("csrftoken")
         headers = {"Content-Type": "application/json"}
         if csrf:
             headers["X-CSRFToken"] = csrf
@@ -91,9 +89,7 @@ class InstructorUser(HttpUser):
     def on_start(self):
         self.client.headers.update(HOST_HEADER)
         response = self.client.get("/comptes/connexion/", name="login_page")
-        csrf = response.cookies.get("csrftoken") or self.client.cookies.get(
-            "csrftoken"
-        )
+        csrf = response.cookies.get("csrftoken") or self.client.cookies.get("csrftoken")
         self.client.post(
             "/comptes/connexion/",
             data={
