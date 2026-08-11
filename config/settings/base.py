@@ -518,6 +518,7 @@ HAIE_FAQ_URLS = {
     "GUIDE_FORM_HEDGE_DESTRUCTION": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/formulaire-de-declaration-prealable-pour-une-destruction-de-haie-ou-alignement-darbres",  # noqa: E501
     "IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-les-protections-sur-les-haies-dans-le-geoportail-de-lurbanisme#methode-preferentielle",  # noqa: E501
     "EMERGENCY_PROCEDURE": "https://aide.haie.beta.gouv.fr/",
+    "INSTRUCTORS_SIMULATIONS_ALTERNATIVES": "https://instruction.haie.beta.gouv.fr/a-propos-du-portail-numerique/utiliser-la-simulation-alternative",  # noqa: E501
 }
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload
