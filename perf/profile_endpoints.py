@@ -58,7 +58,12 @@ def build_scenarios():
     return [
         # (name, method, path, kwargs)
         ("home", "GET", "/", {}),
-        ("triage", "GET", f"/simulateur/triage/?department={DEPARTMENT}&element=haie&travaux=destruction", {}),
+        (
+            "triage",
+            "GET",
+            f"/simulateur/triage/?department={DEPARTMENT}&element=haie&travaux=destruction",
+            {},
+        ),
         ("formulaire", "GET", f"/simulateur/formulaire/?{SIM_PARAMS}", {}),
         ("hedge_input_removal", "GET", f"/haies/{DEPARTMENT}/removal/", {}),
         (
@@ -78,7 +83,12 @@ def build_scenarios():
         ("consultation", "GET", f"/projet/{PROJECT_REF}/consultation/", {}),
         # Instructor views (auth)
         ("liste_dossiers", "GET", "/projet/liste", {"auth": True}),
-        ("instruction_synthese", "GET", f"/projet/{PROJECT_REF}/instruction/", {"auth": True}),
+        (
+            "instruction_synthese",
+            "GET",
+            f"/projet/{PROJECT_REF}/instruction/",
+            {"auth": True},
+        ),
         (
             "instruction_regulation_ep",
             "GET",

@@ -56,9 +56,7 @@ COMPRESS_ENABLED = False
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
-    },
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
     "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
 }
 
@@ -70,7 +68,9 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # The rate limiter caps per-IP request rates; a single-IP load generator
 # would hit the cap immediately and measure the limiter, not the app.
 MIDDLEWARE = [
-    m for m in MIDDLEWARE if m != "envergo.middleware.rate_limiting.RateLimitingMiddleware"
+    m
+    for m in MIDDLEWARE
+    if m != "envergo.middleware.rate_limiting.RateLimitingMiddleware"
 ]
 
 # Fail at boot if any outbound channel is armed.
