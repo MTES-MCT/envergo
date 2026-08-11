@@ -1252,7 +1252,7 @@ button.hide-expanded[aria-expanded="true"] {
   display: none;
 }
 
-#alternative-simulations-table {
+.alternative-simulations__table {
   form {
     display: inline;
     margin: 0;
@@ -1265,24 +1265,12 @@ button.hide-expanded[aria-expanded="true"] {
   }
 
   .comment-col {
-    white-space: normal;
-    overflow-wrap: break-word;
     hyphens: auto;
+    overflow-wrap: break-word;
   }
 
   .actions-col {
-    .action + .action {
-      margin-left: 0.25rem;
-    }
-
-    a {
-      text-decoration: none;
-      background-image: none;
-
-      &::after {
-        display: none;
-      }
-    }
+    white-space: nowrap;
 
     a:not(:disabled),
     button:not(:disabled) {
@@ -1290,7 +1278,13 @@ button.hide-expanded[aria-expanded="true"] {
     }
 
     button {
+      background-image: none;
       padding: 0;
+    }
+
+    .action[target="_blank"][class*=" fr-icon-"]::after {
+      display: none;
+      content: "";
     }
   }
 }
