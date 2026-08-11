@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Fichiers du lot {{ batch }}{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block content %}
+
+  <div class="title-line">
+    <h1 class="fr-h6">Fichiers du lot « {{ batch }} »</h1>
+    <small>
+      <a href="{{ back_url }}">Revenir à l'admin</a>
+    </small>
+  </div>
+
+  <p>
+    Déposez ici les fichiers de cartes (.gpkg ou .zip) référencés dans la
+    colonne <code>file</code> du CSV.
+    <br />
+    Maximum : {{ max_files }} fichiers, {{ max_filesize }} Mo par fichier.
+  </p>
+
+  <form action=""
+        autocomplete="off"
+        method="post"
+        id="batch-upload-form"
+        novalidate
+        enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div id="dropzone-previews" class="dropzone-previews">
+      <div class="dz-default dz-message">
+        <button class="dz-button" type="button">
+          <span class="fr-link">Cliquez</span> ou glissez-déposez vos fichiers ici.
+        </button>
+        <div id="max-files-exceeded-alert"
+             class="fr-alert fr-alert--sm fr-alert--warning fr-alert--soft-warning fr-mt-2w">
+          <p>Vous avez atteint le nombre maximum de fichiers autorisés.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="has-errors-warning" class="fr-mt-6w fr-alert fr-alert--error">
+      <p class="fr-alert__title">Les fichiers marqués d'une croix n'ont pas été envoyés</p>
+      <p>Survolez les icônes correspondantes pour déterminer la cause du rejet.</p>
+    </div>
+  </form>
+
+{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'dropzone/dist/dropzone.css' %}" />
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    DROPZONE_FORM = 'batch-upload-form';
+    DROPZONE_UPLOAD_URL = '{{ upload_url }}';
+    DROPZONE_MAX_FILES = {{ max_files }};
+    DROPZONE_MAX_FILESIZE = {{ max_filesize }};
+  </script>
+  {{ uploaded_files|json_script:'uploaded-files' }}
+  <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
+  <script defer src="{% static 'js/libs/configure-batch-upload-form.js' %}"></script>
+{% endblock %}

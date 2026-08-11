@@ -353,6 +353,10 @@ VISITOR_COOKIE_NAME = "visitorid"
 MAX_EVALREQ_FILES = 25
 MAX_EVALREQ_FILESIZE = 50
 
+# The max number of map files that can be uploaded with a single import batch
+MAX_MAP_BATCH_FILES = 200
+MAX_MAP_BATCH_FILESIZE = 200
+
 TEST_EMAIL = "test@test.fr"
 
 
