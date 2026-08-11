@@ -666,6 +666,7 @@ class Simulation(models.Model):
     comment = models.TextField("Commentaire")
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    # created_by
 
     class Meta:
         verbose_name = "Simulation alternative"
