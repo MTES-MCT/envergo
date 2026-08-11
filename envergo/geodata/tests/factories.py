@@ -7,7 +7,15 @@ from factory import fuzzy
 from factory.django import DjangoModelFactory
 from faker import Faker
 
-from envergo.geodata.models import MAP_TYPES, Department, Line, Map, Zone
+from envergo.geodata.models import (
+    MAP_TYPES,
+    Department,
+    Line,
+    Map,
+    MapImportBatch,
+    MapImportBatchFile,
+    Zone,
+)
 
 # This is a rough pentagon that I manually drew on geoportail and that contains
 # France's mainland.
@@ -219,6 +227,23 @@ class TerresEmergeesZoneFactory(DjangoModelFactory):
     map = factory.SubFactory(TerresEmergeesMapFactory)
     geometry = france_multipolygon
     species_taxrefs = []
+
+
+class MapImportBatchFactory(DjangoModelFactory):
+    class Meta:
+        model = MapImportBatch
+
+    name = "Lot de test"
+    csv_file = factory.django.FileField(filename="batch.csv")
+
+
+class MapImportBatchFileFactory(DjangoModelFactory):
+    class Meta:
+        model = MapImportBatchFile
+
+    batch = factory.SubFactory(MapImportBatchFactory)
+    file = factory.django.FileField(filename="map.gpkg")
+    name = "map.gpkg"
 
 
 class DepartmentFactory(DjangoModelFactory):
