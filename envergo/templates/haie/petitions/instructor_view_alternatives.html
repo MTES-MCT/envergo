@@ -24,13 +24,19 @@
 
     {% if has_change_permission %}
       <p>
-        Si la simulation transmise par le pétitionnaire comporte une erreur manifeste (par exemple : type de haie inadapté, absence de sélection des options « Proximité d’une mare » ou « Présence d’arbres à cavité »), il est possible de la reprendre, de la modifier et de vérifier si cela impacte les résultats obtenus.
+        Si la simulation transmise par le pétitionnaire comporte une erreur manifeste, elle peut être reprise, modifiée et comparée pour vérifier l'impact sur les résultats.
       </p>
-
+      <p>Exemples d'erreurs manifestes :</p>
+      <ul>
+        <li>type de haie inadapté</li>
+        <li>option « Proximité d'une mare » non sélectionnée</li>
+        <li>option « Présence d'arbres à cavité » non sélectionnée</li>
+      </ul>
       <p>Le lien de la simulation alternative peut être enregistré et activé pour modifier le dossier.</p>
-
       <p>
-        <a href="#how-to">Comment faire une simulation alternative ?</a>
+        <a href="{{ HAIE_FAQ_URLS.INSTRUCTORS_SIMULATIONS_ALTERNATIVES }}"
+           target="_blank"
+           rel="noopener external">Comment faire une simulation alternative ?</a>
       </p>
     {% else %}
       <p>
