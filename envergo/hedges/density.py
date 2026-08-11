@@ -1,9 +1,9 @@
 """Hedge density computations, cached by geometry content.
 
-Density is a pure function of hedge coordinates and parameters: values are
-cached under a geometry-derived key, so identical drawings share one
-computation. Entries expire after DENSITY_CACHE_TIMEOUT and re-sync with
-the geodata referential.
+Values are cached under a geometry-derived key, so identical drawings
+share one computation. Density also depends on the imported hedgerow
+maps: after an import, cached values may be outdated for up to
+DENSITY_CACHE_TIMEOUT.
 """
 
 import hashlib
@@ -23,6 +23,7 @@ CACHE_VERSION = "v1"
 
 DENSITY_CACHE_TIMEOUT = 7 * 24 * 3600
 
+
 def zero_densities(radii) -> dict:
     """The density dict shape for an empty hedge subset."""
     value = {}
@@ -34,15 +35,12 @@ def zero_densities(radii) -> dict:
 
 
 def hedge_set_content_key(hedges) -> str:
-    """Digest a hedge subset's geometry, order-insensitive.
-
-    No rounding: a false hit returns a wrong density, a false miss only
-    costs a recomputation.
-    """
-    coords = sorted(
+    """Digest a hedge subset's geometry, order-insensitive."""
+    serialized_geometries = sorted(
         json.dumps(h.latLngs, sort_keys=True, separators=(",", ":")) for h in hedges
     )
-    return hashlib.sha256("|".join(coords).encode()).hexdigest()
+    payload = "|".join(serialized_geometries)
+    return hashlib.sha256(payload.encode()).hexdigest()
 
 
 def compute_lines_bundle(hedges, radius):
