@@ -17,13 +17,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-import django
+import django  # noqa: E402
 
 django.setup()
 
-from django.db import connection, reset_queries
-from django.test import Client
-from django.test.utils import CaptureQueriesContext
+# Django modules require setup() to have run.
+from django.db import connection, reset_queries  # noqa: E402
+from django.test import Client  # noqa: E402
+from django.test.utils import CaptureQueriesContext  # noqa: E402
 
 OUT_DIR = Path(__file__).resolve().parent / "results"
 

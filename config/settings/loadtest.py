@@ -5,10 +5,9 @@ local backend and asserted at import: a stray env var (e.g. via .env)
 kills boot instead of arming a real channel.
 """
 
-from .base import *  # noqa: F403
+from .base import *  # noqa
 from .base import (
     BREVO,
-    env,
     DEMARCHE_NUMERIQUE,
     MAKE_COM_EVALUATION_EDITION_WEBHOOK,
     MAKE_COM_WEBHOOK,
@@ -16,6 +15,7 @@ from .base import (
     MATTERMOST_ENDPOINT_HAIE,
     MIDDLEWARE,
     TEMPLATES,
+    env,
 )
 
 DEBUG = False
