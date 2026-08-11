@@ -17,7 +17,7 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     await page.locator('label').filter({ hasText: 'Oui, en plantant une haie à' }).click();
     await page.getByText('Non, aucune des haies').click();
 
-    // Draw a single "haie mixte" hedge: intrinsic category RU
+    // Draw a single "haie mixte" hedge: category RU
     await page.getByRole('button', { name: 'Localiser les haies' }).click();
     const frame = page.locator('#hedge-input-iframe').contentFrame();
     await frame.getByRole('combobox', { name: 'Rechercher une commune ou une' }).click();
@@ -34,7 +34,9 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     await page.getByRole('button', { name: 'Valider' }).click();
     const block = page.locator('#eviter-reduire');
     await expect(block.getByText('Évitement et réduction des impacts')).toBeVisible();
-    await expect(block.getByRole('checkbox', { name: "J'ai compris" })).not.toBeChecked();
+    // DSFR hides the raw <input> — assert its state without a visibility check
+    const checkbox = block.locator('input[name="eviter_reduire"]');
+    await expect(checkbox).not.toBeChecked();
     await expect(page.getByText('Vous devez confirmer avoir pris connaissance')).not.toBeVisible();
 
     // The message matches the selected motif
@@ -46,16 +48,16 @@ test('The éviter / réduire block gates the simulation submission', async ({ pa
     await expect(page.getByText('Vous devez confirmer avoir pris connaissance de cette information.')).toBeVisible();
 
     // Changing the motif swaps the message and unchecks the box
-    await block.getByRole('checkbox', { name: "J'ai compris" }).check();
+    // Click the label — the DSFR-styled surface — not the hidden input
+    await block.getByText("J'ai compris").click();
     await page.getByText('Mise en sécurité, risque sanitaire').click();
     await expect(block.locator('[data-motif="securite"]')).toBeVisible();
     await expect(block.locator('[data-motif="chemin_acces"]')).toBeHidden();
-    await expect(block.getByRole('checkbox', { name: "J'ai compris" })).not.toBeChecked();
+    await expect(checkbox).not.toBeChecked();
 
     // Acknowledging lets the submission through to the result page
-    await block.getByRole('checkbox', { name: "J'ai compris" }).check();
+    await block.getByText("J'ai compris").click();
     await page.getByRole('button', { name: 'Valider' }).click();
-    await expect(page).toHaveURL(/resultat/);
-    // The acknowledgment never leaks into the simulation url
+    await expect(page).toHaveURL(/result/);
     await expect(page).not.toHaveURL(/eviter_reduire/);
 });
