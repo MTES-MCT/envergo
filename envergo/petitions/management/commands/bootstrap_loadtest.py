@@ -1,11 +1,7 @@
 """Create the deterministic dataset used by the load tests in perf/.
 
-Idempotent: safe to re-run after each database import. Produces
-perf/fixtures.json, consumed by perf/locustfile.py and
-perf/profile_endpoints.py.
-
-Refuses to run outside a load-test environment: this command writes
-synthetic accounts and dossiers, which must never reach production.
+Idempotent: re-run after each database import. Writes perf/fixtures.json,
+read by the perf/ scripts. Refuses to run outside a load-test environment.
 """
 
 import json
@@ -83,8 +79,7 @@ class Command(BaseCommand):
     def check_environment(self):
         """Refuse to run anywhere but a load-test environment.
 
-        Guards are redundant on purpose: any single one blocks
-        production (ENV_NAME=production, DS enabled, anymail backend).
+        Guards are redundant on purpose: any single one blocks production.
         """
         if settings.ENV_NAME not in ALLOWED_ENV_NAMES:
             raise CommandError(
@@ -187,8 +182,8 @@ class Command(BaseCommand):
                 "comment": "Simulation initiale (load test)",
             },
         )
-        # The initial simulation mirrors the project URL, which changes
-        # across runs (its date param tracks the bootstrap day).
+        # Keep the initial simulation in sync: the URL's date param
+        # changes at each bootstrap run.
         if not sim_created and simulation.moulinette_url != moulinette_url:
             simulation.moulinette_url = moulinette_url
             simulation.save()
