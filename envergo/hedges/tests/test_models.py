@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from shapely import centroid
 
@@ -14,8 +15,6 @@ from envergo.geodata.tests.factories import (
     herault_multipolygon,
     limé_polygon,
 )
-from django.core.cache import cache
-
 from envergo.hedges import density
 from envergo.hedges.models import HedgeCategory, HedgeData, HedgeList, Species
 from envergo.hedges.tests.factories import (
