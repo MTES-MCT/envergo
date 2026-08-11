@@ -734,6 +734,8 @@ class PetitionProjectDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Get moulinette from kwargs, used for simulation display
         if "moulinette" in kwargs:
             moulinette = kwargs["moulinette"]
         else:
@@ -1676,17 +1678,20 @@ class PetitionProjectInstructorAlternativeResultsView(
 ):
     """View for display an alternative simulation."""
 
+    event_action = None
     simulation_object = None
-    queryset = PetitionProject.objects.all()
     template_name = "haie/petitions/instructor_view_alternative_display.html"
+
+    def get_queryset(self):
+        """Overrides queryset to avoid unused anotations"""
+        return PetitionProject.objects.all()
 
     def get_simulation_object(self):
         """Return the targeted simulation (with its project) or raise 404."""
         if self.simulation_object:
             return self.simulation_object
-
+        self.object = self.get_object()
         simulation_pk = self.kwargs.get("simulation_id")
-        self.object = self.get_object(self.queryset)
         simulation_qs = Simulation.objects.filter(project=self.object).select_related(
             "project"
         )
