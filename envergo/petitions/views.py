@@ -1682,6 +1682,9 @@ class PetitionProjectInstructorAlternativeResultsView(
 
     def get_simulation_object(self):
         """Return the targeted simulation (with its project) or raise 404."""
+        if self.simulation_object:
+            return self.simulation_object
+
         simulation_pk = self.kwargs.get("simulation_id")
         self.object = self.get_object(self.queryset)
         simulation_qs = Simulation.objects.filter(project=self.object).select_related(
@@ -1692,16 +1695,6 @@ class PetitionProjectInstructorAlternativeResultsView(
         except Simulation.DoesNotExist:
             raise Http404("Cette simulation alternative n'existe pas")
         return simulation_obj
-
-    def get_simulation_moulinette_url(self):
-        if not self.simulation_object:
-            self.simulation_object = self.get_simulation_object()
-        parsed_moulinette_url = urlparse(self.simulation_object.moulinette_url)
-        moulinette_params = parse_qs(parsed_moulinette_url.query)
-        moulinette_params["alternative"] = "true"
-        form_url = reverse("moulinette_form")
-        simulation_moulinette_url = update_qs(form_url, moulinette_params)
-        return simulation_moulinette_url
 
     def get_context_data(self, **kwargs):
         """Inserts simulation moulinette into kwargs to get results data context"""
@@ -1726,16 +1719,16 @@ class PetitionProjectInstructorAlternativeResultsView(
         """Redirects to simulation form if user is not loggued in"""
         if self.raise_exception or self.request.user.is_authenticated:
             raise PermissionDenied(self.get_permission_denied_message())
-        simulation_moulinette_url = self.get_simulation_moulinette_url()
-        return HttpResponseRedirect(simulation_moulinette_url)
+        simulation_form_url = self.get_simulation_object().form_url
+        return HttpResponseRedirect(simulation_form_url)
 
     def get(self, request, *args, **kwargs):
         """Redirects to simulation form if user has not view permissions,
         else render response"""
         self.object = self.get_object()
         if not self.has_view_permission(request, self.object):
-            simulation_moulinette_url = self.get_simulation_moulinette_url()
-            return HttpResponseRedirect(simulation_moulinette_url)
+            simulation_form_url = self.get_simulation_object().form_url
+            return HttpResponseRedirect(simulation_form_url)
 
         res = super().get(request, *args, **kwargs)
         return res
