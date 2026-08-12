@@ -41,33 +41,34 @@
         </li>
       </ul>
     </div>
-    <div class="fr-col-12 fr-col-sm-4 fr-pb-2w fr-text--sm">
-      {% if user|has_edit_permission:petition_project %}
-        <div>{% stage_badge petition_project.stage %}</div>
-        {% if petition_project.decision != "unset" %}
-          <div>{% decision_badge petition_project.decision %}</div>
-        {% endif %}
-        {% if petition_project.stage != "closed" %}
-          <div class="fr-mt-2v">
-            <div>
-              <strong>Prochaine échéance :</strong>
-            </div>
-            <div>
-              {% if petition_project.is_additional_information_requested %}
-                {% display_pause petition_project.due_date %}
-              {% else %}
-                {% display_due_date petition_project.due_date False %}
-              {% endif %}
-            </div>
+    <div class="project-summary--status fr-col-12 fr-col-sm-4 fr-pb-2w fr-text--sm">
+      <div class="fr-ml-n1v">{% stage_badge petition_project.stage %}</div>
+      {% if petition_project.stage != "closed" and petition_project.is_additional_information_requested %}
+        <div class="fr-ml-n1v">
+          <span class="fr-badge fr-badge--sm">Attente de compléments</span>
+        </div>
+      {% endif %}
+      {% if petition_project.decision != "unset" %}
+        <div class="fr-ml-n1v">{% decision_badge petition_project.decision %}</div>
+      {% endif %}
+      {% if petition_project.stage != "closed" %}
+        <div class="fr-mt-2v">
+          <div>
+            <strong>Prochaine échéance :</strong>
           </div>
-        {% endif %}
+          <div>{% display_due_date petition_project.due_date %}</div>
+        </div>
+      {% endif %}
+      {% if user|has_edit_permission:petition_project %}
         {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
           <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
              href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
              {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
+
         {% endif %}
       {% else %}
-        <span class="fr-text--sm"><span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule</span>
+        <div class="project-summary--spacer"></div>
+        <span class="fr-text--sm fr-mb-0"><span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Dossier en lecture seule</span>
       {% endif %}
     </div>
   </div>

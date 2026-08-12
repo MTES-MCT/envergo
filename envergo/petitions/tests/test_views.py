@@ -1893,10 +1893,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client.force_login(haie_user)
     res = client.get(messagerie_url)
     assert "Nouveau message</button>" not in res.content.decode()
-    assert (
-        '<span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule'
-        in res.content.decode()
-    )
+    assert "</span>Dossier en lecture seule" in res.content.decode()
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
