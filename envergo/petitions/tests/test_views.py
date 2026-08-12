@@ -34,6 +34,7 @@ from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
+    DECISIONS,
     DOSSIER_STATES,
     LOG_TYPES,
     STAGES,
@@ -1119,17 +1120,15 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
-def test_petition_project_list_filters(
+def test_petition_project_list_filters_followed_by(
     haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
 ):
-    """Test filters on project list"""
+    """Test followed_by filter on project list."""
 
     project_list_url = reverse("petition_project_list")
-    # Given config haie on 44
     config_haie_44 = DCConfigHaieFactory()
     department_44 = config_haie_44.department
 
-    # Given two haie instructors, haie user, `haie_user_44` and admin user instructor
     haie_instructor_44_instructor1 = UserFactory(is_haie_instructor=True)
     haie_instructor_44_instructor1.departments.add(department_44)
     haie_instructor_44_instructor2 = UserFactory(is_haie_instructor=True)
@@ -1137,7 +1136,6 @@ def test_petition_project_list_filters(
     admin_user.is_instructor = True
     admin_user.save()
 
-    # GIVEN projects non draft followed by users and instructors
     now = timezone.now()
     project_44_followed_by_instructor1 = PetitionProjectFactory(
         demarche_numerique_state=DOSSIER_STATES.prefilled,
@@ -1179,8 +1177,8 @@ def test_petition_project_list_filters(
 
     # AS haie user with no project
     client.force_login(haie_user)
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is displayed
     assert "Aucun dossier n’est accessible pour le moment" in content
@@ -1189,8 +1187,8 @@ def test_petition_project_list_filters(
     InvitationTokenFactory(
         user=haie_user, petition_project=project_44_followed_by_instructor1
     )
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is not displayed, only a table
     assert "Aucun dossier n’est accessible pour le moment" not in content
@@ -1199,8 +1197,8 @@ def test_petition_project_list_filters(
 
     # AS Instructor 1 on 44
     client.force_login(haie_instructor_44_instructor1)
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
 
     # THEN project list is filtered on user followed projects
@@ -1210,8 +1208,8 @@ def test_petition_project_list_filters(
     assert project_44_followed_by_superuser.reference not in content
     assert project_44_no_instructor.reference not in content
 
-    # WHEN I search on projects followed by no instructor
-    response = client.get(f"{project_list_url}?f=dossiers_sans_instructeur")
+    # WHEN I filter on projects followed by nobody
+    response = client.get(f"{project_list_url}?followed_by=nobody")
     content = response.content.decode()
 
     # THEN project list is filtered on project followed by no instructor, excluding admin users
@@ -1223,11 +1221,11 @@ def test_petition_project_list_filters(
 
     # AS Instructor 2 on 44
     client.force_login(haie_instructor_44_instructor2)
-    # WHEN I search on my projects
-    response = client.get(f"{project_list_url}?f=mes_dossiers")
+    # WHEN I filter on my followed projects
+    response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
 
-    # Then project list is filtered on user followed projects
+    # THEN project list is filtered on user followed projects
     assert project_44_followed_by_instructor1.reference not in content
     assert project_44_followed_by_instructor2.reference in content
     assert project_44_followed_by_invited.reference not in content
@@ -1252,7 +1250,200 @@ def test_petition_project_list_filters(
     assert projects_followers[
         project_44_followed_by_invited_and_instructor2.reference
     ] == [haie_instructor_44_instructor2.email]
+
+
+def test_petition_project_list_filter_show_closed(haie_instructor_44, client, site):
+    """Closed dossiers are hidden by default, shown with ?show_closed=1."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    open_project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        status__stage=STAGES.instruction_d,
+    )
+    closed_project = PetitionProjectFactory(
+        reference="CLOSED1",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        status__stage=STAGES.closed,
+        status__decision=DECISIONS.express_agreement,
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # Default: closed dossiers are hidden
+    response = client.get(project_list_url)
     content = response.content.decode()
+    assert open_project.reference in content
+    assert closed_project.reference not in content
+
+    # With show_closed=1, closed dossiers are visible
+    response = client.get(f"{project_list_url}?show_closed=1")
+    content = response.content.decode()
+    assert open_project.reference in content
+    assert closed_project.reference in content
+
+
+def test_petition_project_list_filter_category(haie_instructor_44, client, site):
+    """Category filter shows only selected categories."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    ru_project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="ru",
+    )
+    aa_project = PetitionProjectFactory(
+        reference="AA001",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="l350_3",
+    )
+    hru_project = PetitionProjectFactory(
+        reference="HRU001",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="hru",
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # No category param: all categories shown
+    response = client.get(project_list_url)
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference in content
+    assert hru_project.reference in content
+
+    # Single category selected
+    response = client.get(f"{project_list_url}?category=ru")
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference not in content
+    assert hru_project.reference not in content
+
+    # Two categories selected
+    response = client.get(f"{project_list_url}?category=ru&category=hru")
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference not in content
+    assert hru_project.reference in content
+
+    # All three selected = no filter (same as no param)
+    response = client.get(
+        f"{project_list_url}?category=ru&category=l350_3&category=hru"
+    )
+    content = response.content.decode()
+    assert ru_project.reference in content
+    assert aa_project.reference in content
+    assert hru_project.reference in content
+
+
+def test_petition_project_list_filter_combined(haie_instructor_44, client, site):
+    """Multiple filters apply as intersection."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    followed_ru = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="ru",
+    )
+    followed_ru.followed_by.add(haie_instructor_44)
+
+    unfollowed_ru = PetitionProjectFactory(
+        reference="UNFRU1",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="ru",
+    )
+
+    followed_hru = PetitionProjectFactory(
+        reference="FOLHRU",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+        underscore_category="hru",
+    )
+    followed_hru.followed_by.add(haie_instructor_44)
+
+    client.force_login(haie_instructor_44)
+
+    # followed_by=me AND category=ru → only the followed RU project
+    response = client.get(f"{project_list_url}?followed_by=me&category=ru")
+    content = response.content.decode()
+    assert followed_ru.reference in content
+    assert unfollowed_ru.reference not in content
+    assert followed_hru.reference not in content
+
+
+def test_petition_project_list_filter_pagination(haie_instructor_44, client, site):
+    """Pagination count reflects filtered results, not unfiltered total."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+
+    # Create 5 RU projects and 3 HRU projects
+    for i in range(5):
+        PetitionProjectFactory(
+            reference=f"RU{i:03d}",
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_date_depot=now,
+            underscore_category="ru",
+        )
+    for i in range(3):
+        PetitionProjectFactory(
+            reference=f"HRU{i:03d}",
+            demarche_numerique_state=DOSSIER_STATES.prefilled,
+            demarche_numerique_date_depot=now,
+            underscore_category="hru",
+        )
+
+    client.force_login(haie_instructor_44)
+
+    # Unfiltered: 8 projects total
+    response = client.get(project_list_url)
+    assert response.context["page_obj"].paginator.count == 8
+
+    # Filtered by category=ru: only 5
+    response = client.get(f"{project_list_url}?category=ru")
+    assert response.context["page_obj"].paginator.count == 5
+
+
+def test_petition_project_list_htmx_response(haie_instructor_44, client, site):
+    """HX-Request header returns partial HTML, not a full page."""
+
+    DCConfigHaieFactory()
+    project_list_url = reverse("petition_project_list")
+    now = timezone.now()
+    PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+    )
+
+    client.force_login(haie_instructor_44)
+
+    # Normal request returns full page with the wrapper div
+    response = client.get(project_list_url)
+    content = response.content.decode()
+    assert "<!DOCTYPE" in content
+    assert 'id="dossier-results"' in content
+    assert "table-dossier-list" in content
+
+    # HX-Request returns partial (content only, no wrapper div, no full page)
+    response = client.get(project_list_url, HTTP_HX_REQUEST="true")
+    content = response.content.decode()
+    assert "<!DOCTYPE" not in content
+    assert 'id="dossier-results"' not in content
+    assert "table-dossier-list" in content
 
 
 def test_petition_project_dl_geopkg(client, haie_user, site):
