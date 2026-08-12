@@ -767,6 +767,10 @@ button#project-summary-hedge-input-open-btn {
   background-color: var(--grey-1000-50);
 }
 
+/**
+ * Page project instructor view
+ */
+
 div#project-specifications-instructor {
   container-type: inline-size;
 
@@ -794,6 +798,22 @@ div#instructor-view-side-menu {
 
   a {
     color: var(--blue-france-sun-113-625);
+  }
+}
+
+.project-summary {
+  &--status {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+
+  &--read-only {
+    margin-bottom: 0;
+  }
+
+  &--spacer {
+    flex-basis: 100%;
   }
 }
 
