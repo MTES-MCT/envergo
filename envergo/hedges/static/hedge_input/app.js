@@ -462,6 +462,7 @@ createApp({
   setup() {
     let map = null;
     let tooltip = null;
+    let helpBubbleEl = null;
 
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
@@ -760,6 +761,13 @@ createApp({
       }
     }
 
+    // Attach the help bubble to the cursor, right after the length tooltip
+    const updateHelpBubble = (e) => {
+      const tooltipLeft = e.originalEvent.clientX - 10;
+      helpBubbleEl.style.left = tooltipLeft + tooltip.offsetWidth + 8 + 'px';
+      helpBubbleEl.style.top = e.originalEvent.clientY + 20 + 'px';
+    }
+
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
       const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
@@ -825,6 +833,7 @@ createApp({
         layers: [satelliteLayer, pciLayer]
       });
       tooltip = L.DomUtil.get('tooltip');
+      helpBubbleEl = L.DomUtil.get('help-bubble');
 
       L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(map);
 
@@ -879,6 +888,7 @@ createApp({
       map.on('editable:vertex:dragstart', addTooltip);
       map.on('editable:vertex:dragend', removeTooltip);
       map.on("editable:drawing:move", updateTooltip);
+      map.on("editable:drawing:move", updateHelpBubble);
 
       isSetupDone = true;
     });
