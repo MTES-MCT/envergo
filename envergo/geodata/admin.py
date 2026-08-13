@@ -128,12 +128,12 @@ class MapAdmin(gis_admin.GISModelAdmin):
     list_filter = ["import_status", "map_type", "data_type", DepartmentsListFilter]
     enable_nav_sidebar = False
 
-    def lookup_allowed(self, lookup, value, request=None):
+    def lookup_allowed(self, lookup, value, *args, **kwargs):
         # The batch admin page links to the list of maps it created,
         # without needing a `list_filter` entry.
         if lookup == "import_batch__id__exact":
             return True
-        return super().lookup_allowed(lookup, value, request)
+        return super().lookup_allowed(lookup, value, *args, **kwargs)
 
     @admin.display(description="Importé par lot")
     def import_batch_link(self, obj):
