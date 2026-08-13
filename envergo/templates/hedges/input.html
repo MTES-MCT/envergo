@@ -368,6 +368,10 @@
   {% if mode != "read_only" %}
     <script>
       window.addEventListener("load", function () {
+        if (window.matchMedia("(min-width: 48em)").matches) {
+          return;
+        }
+
         const warning = document.getElementById("hedge-input-small-screen-warning");
         const modal = warning && window.dsfr ? dsfr(warning).modal : null;
         if (modal) {
