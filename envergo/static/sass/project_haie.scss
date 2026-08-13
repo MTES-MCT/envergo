@@ -1285,8 +1285,13 @@ button.hide-expanded[aria-expanded="true"] {
     }
 
     button {
-      background-image: none;
+      font-weight: normal;
+      box-shadow: none;
       padding: 0;
+
+      &:hover {
+        background-color: transparent;
+      }
     }
 
     .action[target="_blank"][class*=" fr-icon-"]::after {

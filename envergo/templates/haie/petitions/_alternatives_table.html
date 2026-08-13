@@ -47,18 +47,19 @@
                 <td class="actions-col">
                   <div class="fr-mb-1w">
                     <a href="{% url 'petition_project_instructor_alternative_display' petition_project.reference simulation.id %}"
-                       class="action fr-icon--sm fr-icon-eye-line"
+                       class="action fr-icon--sm fr-btn--icon-left fr-icon-eye-line"
                        target="_blank"
                        rel="noopener"
                        title="Voir le résultat de cette simulation (nouvel onglet)">Voir la simulation</a>
                   </div>
 
                   <div class="fr-mb-1w">
+                    <!-- data-clipboard-text="{{ base_url }}{{ simulation.form_url }}"-->
                     <button title="Partager le lien vers cette simulation"
-                            data-clipboard-text="{{ base_url }}{{ simulation.form_url }}"
-                            class="action btn--copy-to-clipboard btn--shorten-url fr-icon--sm fr-icon-mail-line">
-                      Partager la simulation
-                    </button>
+                            class="js fr-btn fr-btn--tertiary fr-btn--sm fr-btn--icon-left fr-icon-mail-fill share-btn"
+                            data-fr-opened="false"
+                            aria-controls="share-modal-{{ simulation.id }}"
+                            data-btn="bottom">Partager la simulation</button>
                   </div>
 
                   <div class="fr-mb-1w">
@@ -66,12 +67,12 @@
                       <a href="#"
                          aria-controls="simulation-delete-modal-{{ simulation.id }}"
                          data-fr-opened="false"
-                         class="action fr-icon--sm fr-icon-delete-line"
+                         class="action fr-icon--sm fr-btn--icon-left fr-icon-delete-line"
                          title="Supprimer la simulation">Supprimer</a>
                     {% else %}
                       <button type="button"
                               disabled="disabled"
-                              class="action fr-icon--sm fr-icon-delete-line"
+                              class="action fr-icon--sm fr-btn--icon-left fr-icon-delete-line"
                               title="Supprimer la simulation">Supprimer</button>
                     {% endif %}
                   </div>
