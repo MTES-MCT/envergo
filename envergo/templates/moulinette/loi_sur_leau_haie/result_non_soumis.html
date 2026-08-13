@@ -1,0 +1,56 @@
+<p>
+  La procédure unique encadrant les destructions de haie inclut l'instruction au titre de la Loi sur l'eau si celles-ci
+  sont réalisées dans le cadre de travaux de consolidation ou de protection des berges d'un cours d'eau
+  (<a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051372215"
+   target="_blank"
+   rel="noopener">art. L412-24 3° du code de l’environnement</a>).
+  Il s'agit de la <a href="https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000048136763"
+    target="_blank"
+    rel="noopener">rubrique 3.1.4.0. de la nomenclature Loi sur l'eau</a>.
+</p>
+
+{% if travaux_berges == 'non' %}
+  <p>
+    Au vu des informations saisies, la destruction des haies ripisylves n'est pas soumise à cette rubrique car elle
+    n'intervient pas à l'occasion de travaux de consolidation ou de protection des berges.
+  </p>
+
+{% elif travaux_berges == "hors_cours_eau" %}
+  <p>
+    Au vu des informations saisies, la destruction des haies ripisylves n'est pas soumise à cette rubrique car il
+    s'agit de travaux sur des berges autres que celles d’un cours d’eau.
+  </p>
+
+{% else %}
+  <p>
+    Au vu des informations saisies, la destruction des haies ripisylves n'est pas soumise à cette rubrique car la
+    consolidation ou la protection des berges du cours d’eau se fait par techniques végétales, qui sont exclues du champ
+    de la nomenclature Loi sur l'eau.
+  </p>
+{% endif %}
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
+
+<div class="more fr-collapse" id="read-more-{{ regulation.slug }}">
+  <p>
+    Attention : le projet n'entre pas dans le champ de la rubrique 3.1.4.0 de la Loi sur l'eau, mais il est peut-être
+    concerné par d'autres rubriques, en particulier si les travaux :
+  </p>
+  <ul>
+    <li>modifient le profil en travers du cours d’eau (rubrique 3.1.2.0.)</li>
+    <li>modifient la luminosité du cours d’eau sur plus de 10 m (rubrique 3.1.3.0.)</li>
+    <li>détruisent des frayères (rubrique 3.1.5.0.)</li>
+  </ul>
+  <p>
+    Les travaux devraient alors faire l’objet d’une <a title="Voir la procédure IOTA"
+    href="https://entreprendre.service-public.gouv.fr/vosdroits/F36721"
+    target="_blank"
+    rel="noopener">déclaration Loi sur l’eau</a>, distincte de la
+    déclaration de destruction de haie. Une procédure
+    d'<a title="Voir la procédure d'Autorisation Environnementale"
+   href="https://entreprendre.service-public.gouv.fr/vosdroits/F37901"
+   target="_blank"
+   rel="noopener">Autorisation Environnementale</a> est requise au-delà de certains seuils (plus de
+    100 m de long pour les rubriques 3.1.2.0. et 3.1.3.0, 200 m pour la rubrique 3.1.4.0., et plus de 200 m² de frayères).
+  </p>
+</div>

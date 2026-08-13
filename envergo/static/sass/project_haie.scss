@@ -767,6 +767,10 @@ button#project-summary-hedge-input-open-btn {
   background-color: var(--grey-1000-50);
 }
 
+/**
+ * Page project instructor view
+ */
+
 div#project-specifications-instructor {
   container-type: inline-size;
 
@@ -794,6 +798,18 @@ div#instructor-view-side-menu {
 
   a {
     color: var(--blue-france-sun-113-625);
+  }
+}
+
+.project-summary {
+  &--status {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+
+  &--spacer {
+    flex-basis: 100%;
   }
 }
 
@@ -1160,6 +1176,28 @@ div.title-with-link-container {
 
       &.procedure {
         text-wrap: auto;
+        max-width: none;
+
+        .ellipsis-badge-wrapper .fr-badge {
+          text-wrap: nowrap;
+        }
+
+        @media (width <= 575px) {
+          div {
+            overflow: hidden;
+          }
+
+          .ellipsis-badge-wrapper .fr-badge {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 0.25rem;
+          }
+        }
+
+        .fr-badge.icon-only-badge {
+          vertical-align: center;
+        }
       }
 
       &.ellipsis {
@@ -1221,23 +1259,20 @@ div#project-header-container {
 }
 
 .due-date {
+  &.displayed {
+    font-style: italic;
+  }
+
+  font-size: 0.75rem;
   color: var(--text-mention-grey);
 
-  span.fr-icon-hourglass-2-fill,
-  span.orange {
+  &.orange {
     color: var(--orange-terre-battue-main-645);
   }
 
-  span.fr-icon-warning-fill,
-  span.red {
+  &.red {
     color: var(--artwork-minor-red-marianne);
   }
-}
-
-.days-left {
-  font-style: italic;
-  color: var(--text-mention-grey);
-  font-size: 0.75rem;
 }
 
 .stage-objective {
@@ -1431,4 +1466,12 @@ button.hide-expanded[aria-expanded="true"] {
 
 #multi-categories-callout.fr-callout[class*=" fr-icon-"]::before {
   background-color: var(--blue-france-sun-113-625);
+}
+
+#resume-processing-modal {
+  .fr-input[readonly] {
+    color: var(--text-disabled-grey);
+    box-shadow: inset 0 -2px 0 0 var(--border-disabled-grey);
+    cursor: not-allowed;
+  }
 }

@@ -39,24 +39,13 @@
           </div>
 
           <p>
-            <strong>Date de la suspension</strong>
+            <strong>Date de la demande de compléments</strong>
             <br />
             <span class="due-date fr-text--sm">
               <span class="fr-icon-pause-circle-line fr-icon--sm"></span>
               {{ petition_project.latest_suspension.created_at|date:"DATE_FORMAT" }}
             </span>
           </p>
-
-          {% if petition_project.latest_suspension.original_due_date %}
-            <p>
-              <strong>Échéance d'instruction avant la suspension</strong>
-              <br />
-              <span class="due-date fr-text--sm">
-                <span class="fr-icon-timer-line fr-icon--sm"></span>
-                {{ petition_project.latest_suspension.original_due_date|date:"DATE_FORMAT" }}
-              </span>
-            </p>
-          {% endif %}
 
         {% else %}
 

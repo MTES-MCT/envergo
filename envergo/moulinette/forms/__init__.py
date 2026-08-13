@@ -23,7 +23,21 @@ from envergo.moulinette.forms.fields import (
 
 
 class BaseMoulinetteForm(forms.Form):
-    pass
+
+    date = forms.DateField(required=False, widget=forms.HiddenInput)
+
+    def clean(self):
+        data = super().clean()
+        date_errors = self._errors.pop("date", None)
+        if date_errors:
+            for error in date_errors.as_data():
+                # switch date error to non_field_errors to ensure it is displayed in form even if the field is hidden
+                self.add_error(None, error)
+        if data.get("date") is None:
+            # An empty optional date must not end up in the result url as
+            # "date=None", which would invalidate the form on the next request
+            data.pop("date", None)
+        return data
 
 
 class MoulinetteFormAmenagement(BaseMoulinetteForm):
@@ -359,7 +373,7 @@ CONTEXT_CHOICES = (
 )
 
 
-class MoulinetteFormHaie(BaseMoulinetteForm):
+class BaseMoulinetteFormHaie(BaseMoulinetteForm):
     department = SafeModelChoiceField(
         queryset=Department.objects.all(),
         required=True,
@@ -390,13 +404,6 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         required=True,
     )
 
-    reimplantation = DisplayChoiceField(
-        label="Est-il prévu de planter une nouvelle haie ?",
-        widget=forms.RadioSelect,
-        choices=extract_choices(REIMPLANTATION_CHOICES),
-        required=True,
-        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
-    )
     localisation_pac = forms.ChoiceField(
         label="Les haies à détruire sont-elles situées sur des parcelles agricoles déclarées à la PAC ?",
         widget=forms.RadioSelect,
@@ -412,42 +419,61 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
         },
     )
 
-    def __init__(self, *args, single_procedure=False, **kwargs):
+    single_procedure = False
+
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.single_procedure = single_procedure
 
         # We override the queryset here because it prevents a "models are not ready" exception
         self.fields["department"].queryset = Department.objects.defer(
             "geometry"
         ).annotate(centroid=Centroid("geometry"))
 
-    def clean(self):
-        data = super().clean()
+    def add_error(self, field, error):
+        """Override add_error to keep invalid hedges in cleaned_data if haies field has error"""
+        if field == "haies" and "haies" in self.cleaned_data:
+            self.cleaned_data["invalid_hedges"] = self.cleaned_data["haies"]
+        super().add_error(field, error)
 
-        reimplantation = data.get("reimplantation")
-        motif = data.get("motif")
-        localisation_pac = data.get("localisation_pac")
-        haies = data.get("haies")
+    def validate_reimplantation(self):
+        """Reject impossible motif + reimplantation combos.
+
+        Only runs when the reimplantation field is on the form (non-RU).
+        In RU mode the value is forced to "replantation" so the check
+        is unnecessary and would produce an error the user cannot fix.
+        """
+        if "reimplantation" not in self.fields:
+            return
+
+        reimplantation = self.cleaned_data.get("reimplantation")
+        motif = self.cleaned_data.get("motif")
 
         if motif == "chemin_acces" and reimplantation == "remplacement":
             self.add_error(
                 "reimplantation",
                 ValidationError(
                     """Le remplacement de la haie au même endroit est incompatible avec la
-                    raison « création d’un accès ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                    raison « création d’un accès ». Modifiez l’une ou l’autre des réponses du formulaire.""",
                     code="inconsistent_motif",
                 ),
             )
-
         elif motif == "amelioration_ecologique" and reimplantation == "non":
             self.add_error(
                 "reimplantation",
                 ValidationError(
                     """La destruction de la haie sans réimplantation est incompatible avec la raison
-                    « amélioration écologique ». Modifiez l'une ou l'autre des réponses du formulaire.""",
+                    « amélioration écologique ». Modifiez l’une ou l’autre des réponses du formulaire.""",
                     code="inconsistent_motif",
                 ),
             )
+
+    def clean(self):
+        data = super().clean()
+
+        self.validate_reimplantation()
+
+        localisation_pac = data.get("localisation_pac")
+        haies = data.get("haies")
 
         if localisation_pac == "oui" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
@@ -461,6 +487,7 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                         code="inconsistent_hedges",
                     ),
                 )
+
         elif localisation_pac == "non" and haies:
             on_pac_values = [h.is_on_pac for h in haies.hedges_to_remove()]
             if any(on_pac_values):
@@ -527,6 +554,52 @@ class MoulinetteFormHaie(BaseMoulinetteForm):
                 ),
             )
         return haies
+
+
+class EviterReduireForm(forms.Form):
+    """Acknowledgment of the « Éviter / réduire » message.
+
+    Gates the simulation form submission without being part of the
+    simulation data: its values must never reach the result urls, and the
+    checkbox must never be prefilled.
+
+    An unchecked checkbox posts nothing, so a hidden input (named by
+    DISPLAYED_MARKER, rendered by the template) marks the block as
+    displayed. Bind this form only when the marker key was posted: a first
+    display then shows no error, while an ignored checkbox does.
+    """
+
+    # Name of the hidden input rendered alongside the checkbox
+    DISPLAYED_MARKER = "eviter_reduire_displayed"
+
+    eviter_reduire = forms.BooleanField(
+        label="J'ai compris",
+        required=True,
+        # The label alone is meaningless in a screen reader's form mode
+        widget=forms.CheckboxInput(
+            attrs={"aria-describedby": "eviter-reduire-message"}
+        ),
+        error_messages={
+            "required": "Vous devez confirmer avoir pris connaissance de cette information."
+        },
+    )
+
+
+class MoulinetteFormHaieRU(BaseMoulinetteFormHaie):
+    single_procedure = True
+    excluded_params = ["reimplantation"]
+
+
+class MoulinetteFormHaieHRU(BaseMoulinetteFormHaie):
+    single_procedure = False
+
+    reimplantation = DisplayChoiceField(
+        label="Est-il prévu de planter une nouvelle haie ?",
+        widget=forms.RadioSelect,
+        choices=extract_choices(REIMPLANTATION_CHOICES),
+        required=True,
+        get_display_value=extract_display_function(REIMPLANTATION_CHOICES),
+    )
 
 
 class TriageFormHaie(forms.Form):

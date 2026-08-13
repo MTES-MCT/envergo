@@ -1893,10 +1893,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client.force_login(haie_user)
     res = client.get(messagerie_url)
     assert "Nouveau message</button>" not in res.content.decode()
-    assert (
-        '<span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule'
-        in res.content.decode()
-    )
+    assert "</span>Dossier en lecture seule" in res.content.decode()
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -2091,9 +2088,11 @@ def test_petition_project_resume_instruction(
     assert project.decision == "unset"
 
     # Resume instruction
+    new_due_date = today + timedelta(days=60)
     form_data = {
         "action": "resume_processing",
         "info_receipt_date": today,
+        "due_date": new_due_date,
     }
     res = client.post(status_url, form_data, follow=True)
     assert res.status_code == 200
@@ -2102,8 +2101,7 @@ def test_petition_project_resume_instruction(
     project.refresh_from_db()
     clear_cached_properties(project)
     assert project.is_additional_information_requested is False
-    # The new due_date is computed on the resumption log
-    assert project.due_date == next_month
+    assert project.due_date == new_due_date
 
 
 @pytest.mark.django_db(transaction=True)
@@ -4061,3 +4059,27 @@ class TestGetProjectConfig:
             view.get_project_config(project2)
 
             mock_filter.assert_called_once()
+
+
+def test_state_change_modal_hides_to_be_processed_for_single_procedure(
+    client, haie_instructor_44, site
+):
+    """The view must pass single_procedure down to StateChangeForm.
+
+    The form filters the "to_be_processed" choice out on its own, but only if
+    the view tells it the department runs a single procedure.
+    """
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_instructor_44)
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
+    assert "to_be_processed" not in stage_choices

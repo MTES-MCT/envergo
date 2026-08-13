@@ -168,9 +168,10 @@ def ensure_ru_hedge_data(moulinette, hedges):
         return
 
     hedges = hedges.to_remove().n_alignement()
-    # TODO : this density should be computed only on hedges of the evaluator category.
     haies = moulinette.catalog["haies"]
-    density_400 = haies.density_around_lines.get("density_400") or 0.0
+    density_400 = (
+        haies.density_around_lines(hedges.to_remove()).get("density_400") or 0.0
+    )
 
     per_hedge_zone_configs = resolve_per_hedge_zone_configs(moulinette, hedges)
 
