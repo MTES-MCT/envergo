@@ -142,9 +142,7 @@ def resolve_per_hedge_zone_configs(moulinette, hedges):
 
 
 def _unresolved_hedge_record(hedge, zone_id):
-    """Zeroed record for a hedge that can't be scored — an unresolved zone or a
-    type with no RU coefficient. ``zone_config=None`` flags the project
-    ``non_disponible`` via ``ru_all_zones_resolved``."""
+    """Default hedge coeff: used if the zone is not defined or configured incorrectly"""
     return {
         "hedge_id": hedge.id,
         "hedge_type": hedge.hedge_type,
