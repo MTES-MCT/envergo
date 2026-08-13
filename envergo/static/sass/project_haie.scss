@@ -1291,6 +1291,13 @@ button.hide-expanded[aria-expanded="true"] {
   .comment-col {
     hyphens: auto;
     overflow-wrap: break-word;
+
+    .fr-btn {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      min-height: 2rem;
+      padding: 0.25rem 0.75rem;
+    }
   }
 
   .actions-col {
