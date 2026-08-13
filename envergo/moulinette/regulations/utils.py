@@ -4,18 +4,46 @@ Both RU evaluators call ``ensure_ru_hedge_data`` in their ``get_catalog_data``;
 the first call computes the per-hedge coefficient records, the second is a no-op.
 """
 
+import logging
+
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.hedges.models import HedgeTypeBase, HedgeTypeFactory
 from envergo.utils.fields import get_human_readable_value
 
+logger = logging.getLogger(__name__)
+
 # Maps (hedge_category, density_level) to the official coefficient key name.
 # Numbering follows the instruction technique sent to prefects.
 COEFF_KEY = {
-    ("arboree", "HD"): "R3_arboree_HD",
-    ("arboree", "LD"): "R4_arboree_LD",
-    ("non_arboree", "HD"): "R1_non_arboree_HD",
-    ("non_arboree", "LD"): "R2_non_arboree_LD",
+    ("buissonnante", "HD"): "R1_buissonnante_HD",
+    ("buissonnante", "LD"): "R2_buissonnante_LD",
+    ("arbustive", "HD"): "R3_arbustive_HD",
+    ("arbustive", "LD"): "R4_arbustive_LD",
+    ("arboree", "HD"): "R5_arboree_HD",
+    ("arboree", "LD"): "R6_arboree_LD",
 }
+
+# Maps a hedge type to its compensation coefficient category. Only the three
+# types selectable in an RU department appear here: "degradee" and "alignement"
+# are never valid RU hedges to remove (see resolve_coeff_category).
+HEDGE_TYPE_TO_COEFF_CATEGORY = {
+    "buissonnante": "buissonnante",
+    "arbustive": "arbustive",
+    "mixte": "arboree",
+}
+
+
+def resolve_coeff_category(hedge_type):
+    """Return the RU compensation coefficient category for a hedge type."""
+    try:
+        return HEDGE_TYPE_TO_COEFF_CATEGORY[hedge_type]
+    except KeyError:
+        raise ValueError(
+            f"Type de haie « {hedge_type} » invalide pour le régime unique : "
+            "le calcul du coefficient de compensation n'est défini que pour "
+            "les haies buissonnantes, arbustives et mixtes."
+        )
+
 
 # Per-hedge EP bonus added to the raw RU coefficient, keyed by (hedge_type, density).
 # Only mixte/LD differs: destroying a tree-bearing hedge in a sparse landscape is
@@ -113,32 +141,50 @@ def resolve_per_hedge_zone_configs(moulinette, hedges):
     }
 
 
+def _unresolved_hedge_record(hedge, zone_id):
+    """Default hedge coeff: used if the zone is not defined or configured incorrectly"""
+    return {
+        "hedge_id": hedge.id,
+        "hedge_type": hedge.hedge_type,
+        "length": round(hedge.length),
+        "zone_id": zone_id,
+        "zone_config": None,
+        "x_densite": None,
+        "high_density": None,
+        "raw_coefficient": 0.0,
+        "ep_bonus": 0.0,
+    }
+
+
 def compute_hedge_data(hedge, zone_id, zone_config, density_400):
     """Compute all coefficient data for a single hedge.
 
     Returns a record with zone inputs, the raw RU coefficient and the EP
-    bonus. An unresolved zone (``zone_config=None``) yields a zeroed record,
-    which flags the project ``non_disponible`` via ``ru_all_zones_resolved``.
+    bonus. A hedge that can't be scored — an unresolved zone
+    (``zone_config=None``) or a type with no RU coefficient (e.g. a ``degradee``
+    hedge falling into the RU category) — yields a zeroed record, which flags
+    the project ``non_disponible`` via ``ru_all_zones_resolved``.
     """
     if zone_config is None:
-        return {
-            "hedge_id": hedge.id,
-            "hedge_type": hedge.hedge_type,
-            "length": round(hedge.length),
-            "zone_id": zone_id,
-            "zone_config": None,
-            "x_densite": None,
-            "high_density": None,
-            "raw_coefficient": 0.0,
-            "ep_bonus": 0.0,
-        }
+        return _unresolved_hedge_record(hedge, zone_id)
+
+    try:
+        # Raw RU coefficient category (buissonnante / arbustive / arborée).
+        type_key = resolve_coeff_category(hedge.hedge_type)
+    except ValueError:
+        # There is a not RU hedge type: Log to sentry and evaluate criteria to "non disponible"
+        logger.exception(
+            "Haie %s de type « %s » classée en régime unique sans coefficient "
+            "RU défini : résultat non disponible.",
+            hedge.id,
+            hedge.hedge_type,
+        )
+        return _unresolved_hedge_record(hedge, zone_id)
 
     x_densite = zone_config.get("X_densite", 0.0)
     high_density = density_400 >= x_densite
     density_key = "HD" if high_density else "LD"
 
-    # Raw RU coefficient (binary type split: mixte = arborée, rest = non arborée)
-    type_key = "arboree" if hedge.hedge_type == "mixte" else "non_arboree"
     raw_coefficient = zone_config.get(COEFF_KEY[(type_key, density_key)], 0.0)
 
     ep_bonus = EP_RU_HEDGE_BONUS.get((hedge.hedge_type, density_key), 0.0)
@@ -180,7 +226,8 @@ def ensure_ru_hedge_data(moulinette, hedges):
     for hedge in hedges:
         zone_id, zone_config = per_hedge_zone_configs[hedge.id]
         record = compute_hedge_data(hedge, zone_id, zone_config, density_400)
-        if zone_config is None:
+        # A zeroed record (unresolved zone or unmappable type) has no zone_config.
+        if record["zone_config"] is None:
             all_resolved = False
         hedge_data[hedge.id] = record
 
