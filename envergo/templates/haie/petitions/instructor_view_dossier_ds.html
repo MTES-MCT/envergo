@@ -13,7 +13,10 @@
     <h3>Formulaire détaillé et pièces jointes</h3>
     <section class="fr-py-3w">
       <div class="tab-title">
-        <h4>Identité du demandeur</h4>
+        <h4>
+          Identité du demandeur
+          {% include "haie/petitions/_dn_logo.html" with id="demandeur-identite" %}
+        </h4>
         <div class="champ-content">{{ ds_info.applicant }}</div>
       </div>
     </section>

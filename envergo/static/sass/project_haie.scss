@@ -1041,6 +1041,16 @@ ul.instructor-view-list {
   border-top: 1px solid var(--border-default-grey);
 }
 
+.dn-logo-wrap {
+  white-space: nowrap;
+}
+
+.dn-logo {
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+}
+
 .dn-files {
   .fr-content-media {
     margin: 1rem 0;

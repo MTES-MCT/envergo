@@ -50,7 +50,13 @@
           {% if ds_info.applicant %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
-                <b>Identité :</b>
+                <b>
+                  {% spaceless %}
+                    <span>Identité&nbsp;</span>
+                    {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
+                    <span>&nbsp;:</span>
+                  {% endspaceless %}
+                </b>
               </p>
               <div class="champ-content">{{ ds_info.applicant }}</div>
             </div>
@@ -58,7 +64,13 @@
           {% if ds_info.organization %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
-                <b>Structure :</b>
+                <b>
+                  {% spaceless %}
+                    <span>Structure&nbsp;</span>
+                    {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
+                    <span>&nbsp;:</span>
+                  {% endspaceless %}
+                </b>
               </p>
               <div class="champ-content">{{ ds_info.organization }}</div>
             </div>
@@ -71,7 +83,13 @@
             <h4 class="fr-mb-0">Mandataire</h4>
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
-                <b>Identité :</b>
+                <b>
+                  {% spaceless %}
+                    <span>Identité&nbsp;</span>
+                    {% include "haie/petitions/_dn_logo.html" with id="mandataire-identite" %}
+                    <span>&nbsp;:</span>
+                  {% endspaceless %}
+                </b>
               </p>
               <div class="champ-content">{{ ds_info.representative }}</div>
             </div>
@@ -113,7 +131,15 @@
         <li>{% field_summary moulinette.triage_form.contexte %}</li>
         {% if moulinette.triage_form.contexte.value == "projet-urba" %}
           <li>
-            <span><b>Description du projet de construction ou d’aménagement :</b></span>
+            <span>
+              <b>
+                {% spaceless %}
+                  <span>Description du projet de construction ou d’aménagement&nbsp;</span>
+                  {% include "haie/petitions/_dn_logo.html" with id="description-projet-urba" %}
+                  <span>&nbsp;:</span>
+                {% endspaceless %}
+              </b>
+            </span>
             {% get_ds_field "description_projet_urba" as desc_urba_field %}
             <span>
               {% if desc_urba_field and desc_urba_field.value %}
@@ -124,7 +150,15 @@
             </span>
           </li>
           <li>
-            <span><b>N° d’autorisation d’urbanisme :</b></span>
+            <span>
+              <b>
+                {% spaceless %}
+                  <span>N° d’autorisation d’urbanisme&nbsp;</span>
+                  {% include "haie/petitions/_dn_logo.html" with id="numero-auto-urba" %}
+                  <span>&nbsp;:</span>
+                {% endspaceless %}
+              </b>
+            </span>
             {% get_ds_field "numero_auto_urba" as auto_urba_field %}
             <span>
               {% if auto_urba_field and auto_urba_field.value %}
