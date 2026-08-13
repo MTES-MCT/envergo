@@ -397,6 +397,19 @@ class TestUploadView:
 
         assert form.is_valid(), form.errors
 
+    def test_upload_page_renders(self, admin_client):
+        """The template wires the dropzone scripts and the already sent files."""
+        batch = MapImportBatchFactory()
+        MapImportBatchFileFactory(batch=batch, name="deja-envoye.gpkg")
+
+        res = admin_client.get(self.upload_url(batch))
+        content = res.content.decode()
+
+        assert res.status_code == 200
+        assert "js/libs/dropzone-upload.js" in content
+        assert "js/libs/configure-batch-upload-form.js" in content
+        assert "deja-envoye.gpkg" in content
+
     def test_view_requires_authentication(self, client):
         batch = MapImportBatchFactory()
         res = client.get(self.upload_url(batch))

@@ -63,5 +63,6 @@
   </script>
   {{ uploaded_files|json_script:'uploaded-files' }}
   <script defer src="{% static 'dropzone/dist/dropzone-min.js' %}"></script>
+  <script defer src="{% static 'js/libs/dropzone-upload.js' %}"></script>
   <script defer src="{% static 'js/libs/configure-batch-upload-form.js' %}"></script>
 {% endblock %}
