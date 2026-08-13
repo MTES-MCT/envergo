@@ -1,6 +1,6 @@
 import pytest
 
-from envergo.moulinette.forms import MoulinetteFormHaie
+from envergo.moulinette.forms import MoulinetteFormHaieRU
 from envergo.moulinette.tests.factories import RUConfigHaieFactory
 from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 
@@ -16,7 +16,7 @@ class TestFormSimulation:
         data = make_moulinette_haie_data(
             hedge_data=[make_hedge(type_haie="mixte")],
         )
-        form = MoulinetteFormHaie(data["data"])
+        form = MoulinetteFormHaieRU(data["data"])
         assert form.is_valid(), form.errors
 
     def test_form_errors_no_hedges(self):
@@ -24,7 +24,7 @@ class TestFormSimulation:
         RUConfigHaieFactory()
         data = make_moulinette_haie_data(hedge_data=[])
         data["data"]["haies"] = []
-        form = MoulinetteFormHaie(data["data"])
+        form = MoulinetteFormHaieRU(data["data"])
         assert "haies" in form.errors
         assert "Aucune haie n'a été saisie." in form.errors["haies"][0]
 
@@ -35,7 +35,7 @@ class TestFormSimulation:
             localisation_pac="oui",
             hedge_data=[make_hedge(type_haie="mixte")],
         )
-        form = MoulinetteFormHaie(data["data"])
+        form = MoulinetteFormHaieRU(data["data"])
         assert "haies" in form.errors
         assert (
             "Aucune haie saisie n’a été marquée sur parcelle PAC"
