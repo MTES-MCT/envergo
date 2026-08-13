@@ -108,19 +108,24 @@
                       <div>{{ project.prefetched_dossier.dateDepot|date:"SHORT_DATE_FORMAT" }}</div>
                     </td>
                     <td class="procedure">
-                      <div>{% stage_badge project.stage %}</div>
-                      <div>
-                        {% if project.stage != "closed" %}
-                          {% if project.is_additional_information_requested %}
-                            {% display_pause project.due_date %}
-                          {% else %}
-                            {% display_due_date project.due_date False True %}
-                          {% endif %}
-                        {% endif %}
-                        {% if project.decision != "unset" %}
-                          {% decision_badge project.decision True %}
+                      <div class="fr-ml-n1v">
+                        <div class="ellipsis-badge-wrapper">{% stage_badge project.stage %}</div>
+                        {% if project.stage != "closed" and project.is_additional_information_requested %}
+                          <div class="ellipsis-badge-wrapper">
+                            <span class="fr-badge fr-badge--sm">Attente de compléments</span>
+                          </div>
                         {% endif %}
                       </div>
+                      {% if project.stage != "closed" %}
+                        <div class="due-date-wrapper">
+                          {% display_due_date project.due_date True %}
+                          {% if project.decision != "unset" %}
+                            {% decision_badge project.decision True %}
+                          {% endif %}
+                        </div>
+                      {% else %}
+                        <div class="fr-ml-n1v">{% decision_badge project.decision True %}</div>
+                      {% endif %}
 
                     </td>
                     {% firstof project.organization project.prefetched_dossier.applicant_name as applicant_display %}
