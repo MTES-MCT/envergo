@@ -24,7 +24,7 @@
               <tr>
                 <td>{{ simulation.created_at|date:"SHORT_DATE_FORMAT" }}</td>
                 <td>{{ simulation.get_source_display }}{{ simulation.created_by.email }}</td>
-                <td class="comment-col fr-cell--multiline">{% truncated_comment simulation.comment forloop.counter 150 %}</td>
+                <td class="comment-col fr-cell--multiline">{% truncated_comment simulation.comment forloop.counter 120 %}</td>
                 <td class="status-col">
                   {% if simulation.is_active %}
                     <p class="fr-badge fr-badge--sm fr-badge--success">Active</p>
@@ -47,7 +47,7 @@
                 <td class="actions-col">
                   <div class="fr-mb-1w">
                     <a href="{% url 'petition_project_instructor_alternative_display' petition_project.reference simulation.id %}"
-                       class="action fr-icon--sm fr-btn--icon-left fr-icon-eye-line"
+                       class="action fr-icon--sm fr-link--icon-left fr-icon-eye-line"
                        target="_blank"
                        rel="noopener"
                        title="Voir le résultat de cette simulation (nouvel onglet)">Voir la simulation</a>
@@ -55,11 +55,13 @@
 
                   <div class="fr-mb-1w">
                     <!-- data-clipboard-text="{{ base_url }}{{ simulation.form_url }}"-->
-                    <button title="Partager le lien vers cette simulation"
-                            class="js fr-btn fr-btn--tertiary fr-btn--sm fr-btn--icon-left fr-icon-mail-fill share-btn"
-                            data-fr-opened="false"
-                            aria-controls="share-modal-{{ simulation.id }}"
-                            data-btn="bottom">Partager la simulation</button>
+                    <a href="#"
+                       role="button"
+                       title="Partager le lien vers cette simulation"
+                       class="js fr-link fr-link--sm fr-link--icon-left fr-icon-mail-fill share-btn"
+                       data-fr-opened="false"
+                       aria-controls="share-modal-{{ simulation.id }}"
+                       data-btn="bottom">Partager la simulation</a>
                   </div>
 
                   <div class="fr-mb-1w">
@@ -67,12 +69,12 @@
                       <a href="#"
                          aria-controls="simulation-delete-modal-{{ simulation.id }}"
                          data-fr-opened="false"
-                         class="action fr-icon--sm fr-btn--icon-left fr-icon-delete-line"
+                         class="action fr-link--sm fr-link--icon-left fr-icon-delete-line"
                          title="Supprimer la simulation">Supprimer</a>
                     {% else %}
                       <button type="button"
                               disabled="disabled"
-                              class="action fr-icon--sm fr-btn--icon-left fr-icon-delete-line"
+                              class="action fr-btv--sm fr-btn--icon-left fr-icon-delete-line"
                               title="Supprimer la simulation">Supprimer</button>
                     {% endif %}
                   </div>
