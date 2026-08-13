@@ -175,14 +175,12 @@ def make_zonage_map(zone_id, departments=None):
 def _zone_coeff(dx, *coeffs):
     """Build one zone's coefficient dict from a values tuple.
 
-    Two shorthands are accepted after ``dx`` (X_densite):
-
+    Coeffs can be populated with:
     - 6 values — the full ``(buissonnante_HD, buissonnante_LD, arbustive_HD,
       arbustive_LD, arboree_HD, arboree_LD)`` matrix.
     - 4 values — legacy ``(non_arboree_HD, non_arboree_LD, arboree_HD,
       arboree_LD)``. buissonnante and arbustive both take the non_arboree
-      value, matching the pre-split behaviour, so tests that don't exercise
-      the buissonnante/arbustive distinction keep their expected coefficients.
+      value.
     """
     if len(coeffs) == 6:
         r1, r2, r3, r4, r5, r6 = coeffs
