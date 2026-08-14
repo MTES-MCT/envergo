@@ -34,7 +34,7 @@ class InstructorDepartmentAuthorised(AccessMixin):
         """
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not request.user.is_superuser and not request.user.is_instructor:
+        if not request.user.is_superuser and not request.user.is_coordinator:
             return self.handle_no_permission()
 
         if "department" in kwargs:

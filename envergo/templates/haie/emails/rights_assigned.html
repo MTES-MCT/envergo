@@ -6,13 +6,13 @@
 
   <p>Bonjour,</p>
 
-  {% if is_new_instructor %}
+  {% if is_new_coordinator %}
     <p>Votre compte sur le portail du guichet unique de la haie a été validé.</p>
   {% else %}
     <p>Des droits ont été modifiés sur votre compte du portail du guichet unique de la haie.</p>
   {% endif %}
 
-  {% if is_instructor %}
+  {% if is_coordinator %}
     <p>Vous avez les droits de modification (service coordonnateur) sur tous les dossiers des départements suivants :</p>
   {% else %}
     <p>Vous avez les droits de lecture (service consulté) sur tous les dossiers des départements suivants :</p>

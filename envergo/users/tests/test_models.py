@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
@@ -5,28 +7,46 @@ from envergo.petitions.tests.factories import (
     InvitationTokenFactory,
     PetitionProjectFactory,
 )
+from envergo.users.models import GuhRole
 
 pytestmark = pytest.mark.django_db
 
 
-def test_user_is_involved_in_guh(
-    haie_user, haie_user_44, haie_instructor_44, admin_user
+def test_user_has_instruction_access(
+    haie_user, haie_user_44, haie_coordinator_44, admin_user
 ):
-    """Test when user is involved in GUH"""
-    # AS superuser, user is involved in GUH
-    assert admin_user.is_involved_in_guh()
-    # AS instructor on 44, user is involved in GUH
-    assert haie_instructor_44.is_involved_in_guh()
-    # AS basic user on 44, user is involved in GUH
-    assert haie_user_44.is_involved_in_guh()
-    # AS basic user with no rights, user is involved in GUH
-    assert not haie_user.is_involved_in_guh()
+    """Test has_instruction_access (« instructeur au sens produit »)."""
+    # AS superuser (administrator), user has instruction access
+    assert admin_user.has_instruction_access
+    # AS coordinator on 44, user has instruction access
+    assert haie_coordinator_44.has_instruction_access
+    # AS consulted instructor (dept 44, not coordinator), user has instruction access
+    assert haie_user_44.has_instruction_access
+    # AS basic authenticated user with no rights (guest), no instruction access
+    assert not haie_user.has_instruction_access
     # WHEN basic user has a token
     DCConfigHaieFactory()
     petition_project = PetitionProjectFactory()
-    # THEN this user is involved in GUH
+    # THEN this user has instruction access
     InvitationTokenFactory(user=haie_user, petition_project=petition_project)
-    assert haie_user.is_involved_in_guh()
+    assert haie_user.has_instruction_access
+    # AS Anonymous user, no instruction access
+    with patch.object(type(haie_user), "is_authenticated", False):
+        assert not haie_user.has_instruction_access
+
+
+def test_user_get_guh_role(haie_user, haie_user_44, haie_coordinator_44, admin_user):
+    """get_guh_role returns the business typology for each role."""
+    assert admin_user.get_guh_role() == GuhRole.ADMINISTRATOR
+    assert haie_coordinator_44.get_guh_role() == GuhRole.COORDINATOR
+    # dept access but not coordinator -> consulted instructor
+    assert haie_user_44.get_guh_role() == GuhRole.INSTRUCTOR
+    # authenticated, no dept/token -> guest
+    assert haie_user.get_guh_role() == GuhRole.GUEST
+
+    # unauthenticated -> anonymous
+    with patch.object(type(haie_user), "is_authenticated", False):
+        assert haie_user.get_guh_role() == GuhRole.ANONYMOUS
 
 
 def test_get_unique_hash(haie_user, haie_user_44):
