@@ -294,6 +294,7 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
     "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "tchap": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
 }
 
 # CELERY
@@ -360,6 +361,16 @@ TEST_EMAIL = "test@test.fr"
 
 MATTERMOST_ENDPOINT_AMENAGEMENT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
 MATTERMOST_ENDPOINT_HAIE = env("DJANGO_MATTERMOST_ENDPOINT_HAIE", default=None)
+
+# Tchap is the primary channel for these notifications, Mattermost above is the backup
+# The bot account must already be invited to and have joined the rooms below;
+# this app only ever sends messages to them, it never joins rooms itself.
+TCHAP_HOMESERVER_URL = env("DJANGO_TCHAP_HOMESERVER_URL", default=None)
+TCHAP_USER_ID = env("DJANGO_TCHAP_USER_ID", default=None)
+TCHAP_ACCESS_TOKEN = env("DJANGO_TCHAP_ACCESS_TOKEN", default=None)
+TCHAP_DEVICE_ID = env("DJANGO_TCHAP_DEVICE_ID", default="envergo")
+TCHAP_ROOM_ID_AMENAGEMENT = env("DJANGO_TCHAP_ROOM_ID", default=None)
+TCHAP_ROOM_ID_HAIE = env("DJANGO_TCHAP_ROOM_ID_HAIE", default=None)
 
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
@@ -439,6 +450,11 @@ HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
 HAIE_SINGLE_PROCEDURE_ACTIVATED = env.bool(
     "DJANGO_HAIE_SINGLE_PROCEDURE_ACTIVATED", default=False
+)
+
+# Kill switch for the « Éviter / réduire » gate on the haie simulation form
+HAIE_EVITER_REDUIRE_ENABLED = env.bool(
+    "DJANGO_HAIE_EVITER_REDUIRE_ENABLED", default=True
 )
 
 DEMARCHE_NUMERIQUE = {

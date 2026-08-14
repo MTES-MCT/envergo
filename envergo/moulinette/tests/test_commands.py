@@ -12,7 +12,7 @@ from envergo.moulinette.tests.factories import (
 pytestmark = pytest.mark.django_db
 
 
-@patch("envergo.utils.mattermost.notify")
+@patch("envergo.utils.tchap.notify")
 def test_dossier_submission_admin_alert(mock_notify):
     """Test obsolete moulinette template admin alert"""
     criterion = CriterionFactory()
@@ -37,7 +37,7 @@ def test_dossier_submission_admin_alert(mock_notify):
 
 @override_settings(ENVERGO_HAIE_DOMAIN="testserver")
 @override_settings(ENVERGO_AMENAGEMENT_DOMAIN="")
-@patch("envergo.utils.mattermost.notify")
+@patch("envergo.utils.tchap.notify")
 def test_dossier_submission_admin_alert_amenagement_domain_not_configured(
     mock_notify,
 ):

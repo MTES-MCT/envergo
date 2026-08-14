@@ -4,6 +4,18 @@
 #
 #    pip-compile base.in
 #
+aiofiles==25.1.0
+    # via matrix-nio
+aiohappyeyeballs==2.7.1
+    # via aiohttp
+aiohttp==3.14.3
+    # via
+    #   aiohttp-socks
+    #   matrix-nio
+aiohttp-socks==0.12.0
+    # via matrix-nio
+aiosignal==1.4.0
+    # via aiohttp
 amqp==5.3.1
     # via kombu
 anyio==4.10.0
@@ -16,14 +28,22 @@ asgiref==3.9.1
     # via
     #   django
     #   django-allauth
+atomicwrites==1.4.1
+    # via matrix-nio
 attrs==25.3.0
-    # via fiona
+    # via
+    #   aiohttp
+    #   fiona
+    #   jsonschema
+    #   referencing
 backoff==2.2.1
     # via gql
 billiard==4.2.1
     # via celery
 build==1.3.0
     # via pip-tools
+cachetools==7.1.7
+    # via matrix-nio
 celery==5.5.3
     # via -r base.in
 certifi==2025.8.3
@@ -103,23 +123,43 @@ faker==37.5.3
     # via -r base.in
 fiona==1.10.1
     # via -r base.in
+frozenlist==1.8.0
+    # via
+    #   aiohttp
+    #   aiosignal
 gql==4.0.0
     # via -r base.in
 graphql-core==3.2.6
     # via gql
+h11==0.16.0
+    # via matrix-nio
+h2==4.4.1
+    # via matrix-nio
 hiredis==3.2.1
     # via -r base.in
+hpack==4.2.0
+    # via h2
+hyperframe==6.1.0
+    # via h2
 idna==3.10
     # via
     #   anyio
     #   requests
     #   yarl
+jsonschema==4.26.0
+    # via matrix-nio
+jsonschema-specifications==2025.9.1
+    # via jsonschema
 kombu==5.5.4
     # via celery
 markdown==3.8.2
     # via -r base.in
+matrix-nio[e2e]==0.26.0
+    # via -r base.in
 multidict==6.6.3
-    # via yarl
+    # via
+    #   aiohttp
+    #   yarl
 numpy==2.3.2
     # via
     #   scipy
@@ -128,6 +168,8 @@ packaging==25.0
     # via
     #   build
     #   kombu
+peewee==3.19.0
+    # via matrix-nio
 phonenumbers==9.0.10
     # via django-phonenumber-field
 pillow==11.3.0
@@ -137,13 +179,17 @@ pip-tools==7.5.0
 prompt-toolkit==3.0.51
     # via click-repl
 propcache==0.3.2
-    # via yarl
+    # via
+    #   aiohttp
+    #   yarl
 psycopg[binary]==3.2.9
     # via -r base.in
 psycopg-binary==3.2.9
     # via psycopg
 pycparser==2.22
     # via cffi
+pycryptodome==3.23.0
+    # via matrix-nio
 pyproj==3.7.2
     # via -r base.in
 pyproject-hooks==1.2.0
@@ -156,6 +202,8 @@ python-magic==0.4.27
     # via -r base.in
 python-slugify==8.0.4
     # via -r base.in
+python-socks[asyncio]==3.0.0
+    # via aiohttp-socks
 python-stdnum==2.1
     # via django-localflavor
 pytz==2025.2
@@ -170,6 +218,10 @@ redis==6.4.0
     # via
     #   -r base.in
     #   django-redis
+referencing==0.37.0
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.32.4
     # via
     #   django-anymail
@@ -178,6 +230,10 @@ requests-toolbelt==1.0.0
     # via -r base.in
 rjsmin==1.2.5
     # via django-compressor
+rpds-py==2026.6.3
+    # via
+    #   jsonschema
+    #   referencing
 scipy==1.16.1
     # via -r base.in
 shapely==2.1.1
@@ -194,12 +250,17 @@ tqdm==4.67.1
     # via -r base.in
 typing-extensions==4.15.0
     # via
+    #   aiohttp
+    #   aiosignal
     #   anyio
     #   psycopg
+    #   referencing
 tzdata==2025.2
     # via
     #   faker
     #   kombu
+unpaddedbase64==2.1.0
+    # via matrix-nio
 urllib3==2.6.3
     # via
     #   -r base.in
@@ -210,6 +271,8 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
+vodozemac==0.10.0
+    # via matrix-nio
 wcwidth==0.2.13
     # via prompt-toolkit
 wheel==0.45.1
@@ -217,7 +280,9 @@ wheel==0.45.1
 whitenoise==6.9.0
     # via -r base.in
 yarl==1.20.1
-    # via gql
+    # via
+    #   aiohttp
+    #   gql
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

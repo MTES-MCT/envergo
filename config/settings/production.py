@@ -90,6 +90,7 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
     },
     "upload": {"BACKEND": "envergo.utils.storages.UploadS3Boto3Storage"},
+    "tchap": {"BACKEND": "envergo.utils.storages.TchapCryptoStoreS3Storage"},
 }
 
 

@@ -25,7 +25,7 @@ from envergo.petitions.demarche_numerique.models import (
     PieceJustificativeChamp,
     YesNoChamp,
 )
-from envergo.utils.mattermost import notify
+from envergo.utils.tchap import notify
 from envergo.utils.tools import display_form_details
 
 logger = logging.getLogger(__name__)
