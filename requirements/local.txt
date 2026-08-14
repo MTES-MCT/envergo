@@ -209,6 +209,8 @@ editorconfig==0.17.1
     # via
     #   cssbeautifier
     #   jsbeautifier
+emoji==2.15.0
+    # via -r base.txt
 executing==2.2.0
     # via stack-data
 factory-boy==3.3.3
