@@ -4,7 +4,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from django.core.cache import cache
-from nio import RoomSendError, SyncError
+from nio import JoinError, RoomSendError, SyncError
 
 from envergo.utils import tchap
 
@@ -39,8 +39,10 @@ def _mock_nio_client(**overrides):
     client.loaded_sync_token = overrides.get("loaded_sync_token", "")
     client.should_upload_keys = overrides.get("should_upload_keys", False)
     client.rooms = overrides.get("rooms", {})
+    client.invited_rooms = overrides.get("invited_rooms", {})
     client.sync = AsyncMock(return_value=overrides.get("sync_return", MagicMock()))
     client.keys_upload = AsyncMock()
+    client.join = AsyncMock(return_value=overrides.get("join_return", MagicMock()))
     client.room_send = AsyncMock(
         return_value=overrides.get("room_send_return", MagicMock())
     )
@@ -237,6 +239,46 @@ def test_notify_with_store_skips_upload_if_nio_never_wrote_anything(settings):
     storage.save.assert_not_called()
 
 
+def test_notify_with_store_uses_notify_timeout_when_store_exists(settings):
+    """A device that has sent here before only gets the steady-state budget."""
+    storage = _fake_storage(existing_bytes=b"state")
+
+    async def fake_send(msg, room_id, store_path):
+        pass
+
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+        patch(
+            "envergo.utils.tchap.asyncio.wait_for", wraps=asyncio.wait_for
+        ) as mock_wait_for,
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
+
+    assert mock_wait_for.call_args.kwargs["timeout"] == tchap.NOTIFY_TIMEOUT
+
+
+def test_notify_with_store_uses_bootstrap_timeout_when_store_is_new(settings):
+    """A device sending here for the first time gets the larger budget, since
+    it still has to establish Olm sessions with every room member.
+    """
+    storage = _fake_storage(existing_bytes=None)
+
+    async def fake_send(msg, room_id, store_path):
+        pass
+
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+        patch(
+            "envergo.utils.tchap.asyncio.wait_for", wraps=asyncio.wait_for
+        ) as mock_wait_for,
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
+
+    assert mock_wait_for.call_args.kwargs["timeout"] == tchap.BOOTSTRAP_TIMEOUT
+
+
 # ---- _send() (nio mocked, no network) -------------------------------------
 
 
@@ -259,6 +301,10 @@ def test_send_happy_path(settings, tmp_path):
         device_id=settings.TCHAP_DEVICE_ID,
         access_token=settings.TCHAP_ACCESS_TOKEN,
     )
+    # No sync_filter: an earlier attempt at scoping the sync to just the
+    # target room made Tchap stop returning it as joined at all.
+    _, sync_kwargs = client.sync.call_args
+    assert "sync_filter" not in sync_kwargs
     client.keys_upload.assert_not_called()
     _, kwargs = client.room_send.call_args
     assert kwargs["room_id"] == room_id
@@ -295,13 +341,57 @@ def test_send_returns_early_on_sync_error(settings, tmp_path):
 
 
 def test_send_returns_early_when_room_not_joined(settings, tmp_path):
-    client = _mock_nio_client(rooms={})
+    """Neither joined nor invited: unchanged behavior, no join attempted."""
+    client = _mock_nio_client(rooms={}, invited_rooms={})
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
         asyncio.run(
             tchap._send("hello", settings.TCHAP_ROOM_ID_AMENAGEMENT, str(tmp_path))
         )
 
+    client.join.assert_not_called()
+    client.room_send.assert_not_called()
+    client.close.assert_called_once()
+
+
+def test_send_accepts_pending_invite_and_resyncs(settings, tmp_path):
+    """A room the bot was invited to (but never accepted) gets joined, then
+    a follow-up sync picks up its state, then the send goes through.
+    """
+    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
+    client = _mock_nio_client(rooms={}, invited_rooms={room_id: MagicMock()})
+
+    async def fake_sync(*args, **kwargs):
+        # The 2nd sync (post-join) is what makes nio learn the room is now
+        # joined, mirroring real nio behavior: join() alone doesn't.
+        if client.sync.await_count == 2:
+            client.rooms[room_id] = MagicMock()
+        return MagicMock()
+
+    client.sync = AsyncMock(side_effect=fake_sync)
+
+    with patch("envergo.utils.tchap.AsyncClient", return_value=client):
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))
+
+    client.join.assert_called_once_with(room_id)
+    assert client.sync.await_count == 2
+    _, second_sync_kwargs = client.sync.call_args
+    assert second_sync_kwargs["full_state"] is False
+    client.room_send.assert_called_once()
+    client.close.assert_called_once()
+
+
+def test_send_returns_early_when_join_fails(settings, tmp_path):
+    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
+    client = _mock_nio_client(
+        rooms={}, invited_rooms={room_id: MagicMock()}, join_return=JoinError("boom")
+    )
+
+    with patch("envergo.utils.tchap.AsyncClient", return_value=client):
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))
+
+    client.join.assert_called_once_with(room_id)
+    assert client.sync.await_count == 1  # no follow-up sync attempted
     client.room_send.assert_not_called()
     client.close.assert_called_once()
 
