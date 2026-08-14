@@ -171,6 +171,8 @@ django-redis==6.0.0
     # via -r base.txt
 django-storages[boto3]==1.14.6
     # via -r production.in
+emoji==2.15.0
+    # via -r base.txt
 faker==37.5.3
     # via -r base.txt
 fiona==1.10.1

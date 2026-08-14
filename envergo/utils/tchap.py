@@ -5,6 +5,7 @@ import tempfile
 import time
 from pathlib import Path
 
+import emoji
 from django.conf import settings
 from django.core.cache import cache
 from django.core.files.base import ContentFile
@@ -186,11 +187,13 @@ async def _send(msg, room_id, store_path):
             )
             return
 
+        # Tchap doesn't render :x:-style shortcodes like Mattermost does.
+        msg_with_emoji = emoji.emojize(msg, language="alias")
         content = {
             "msgtype": "m.text",
-            "body": msg,
+            "body": msg_with_emoji,
             "format": "org.matrix.custom.html",
-            "formatted_body": markdown_to_html(msg),
+            "formatted_body": markdown_to_html(msg_with_emoji),
         }
         # room_send encrypts automatically for encrypted rooms. The bot never
         # runs a device verification flow, so devices are always "unverified";

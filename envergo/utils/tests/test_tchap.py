@@ -319,6 +319,21 @@ def test_send_happy_path(settings, tmp_path):
     client.close.assert_called_once()
 
 
+def test_send_converts_mattermost_style_emoji_shortcodes(settings, tmp_path):
+    """Mattermost renders :x:/:warning: itself; Tchap needs real Unicode
+    emoji instead. Unknown/custom shortcodes are left untouched.
+    """
+    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
+    client = _mock_nio_client(rooms={room_id: MagicMock()})
+
+    with patch("envergo.utils.tchap.AsyncClient", return_value=client):
+        asyncio.run(tchap._send(":x: erreur :icon-info:", room_id, str(tmp_path)))
+
+    _, kwargs = client.room_send.call_args
+    assert kwargs["content"]["body"] == "❌ erreur :icon-info:"
+    assert "❌ erreur :icon-info:" in kwargs["content"]["formatted_body"]
+
+
 def test_send_uploads_keys_when_needed(settings, tmp_path):
     room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
     client = _mock_nio_client(should_upload_keys=True, rooms={room_id: MagicMock()})

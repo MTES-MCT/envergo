@@ -119,6 +119,8 @@ django-ratelimit==4.1.0
     # via -r base.in
 django-redis==6.0.0
     # via -r base.in
+emoji==2.15.0
+    # via -r base.in
 faker==37.5.3
     # via -r base.in
 fiona==1.10.1
