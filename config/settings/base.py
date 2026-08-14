@@ -295,6 +295,7 @@ STORAGES = {
     },
     "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "public": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "tchap": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
 }
 
 # Bucket names — only meaningful in production (set via env vars).
@@ -365,6 +366,16 @@ TEST_EMAIL = "test@test.fr"
 
 MATTERMOST_ENDPOINT_AMENAGEMENT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
 MATTERMOST_ENDPOINT_HAIE = env("DJANGO_MATTERMOST_ENDPOINT_HAIE", default=None)
+
+# Tchap is the primary channel for these notifications, Mattermost above is the backup
+# The bot account must already be invited to and have joined the rooms below;
+# this app only ever sends messages to them, it never joins rooms itself.
+TCHAP_HOMESERVER_URL = env("DJANGO_TCHAP_HOMESERVER_URL", default=None)
+TCHAP_USER_ID = env("DJANGO_TCHAP_USER_ID", default=None)
+TCHAP_ACCESS_TOKEN = env("DJANGO_TCHAP_ACCESS_TOKEN", default=None)
+TCHAP_DEVICE_ID = env("DJANGO_TCHAP_DEVICE_ID", default="envergo")
+TCHAP_ROOM_ID_AMENAGEMENT = env("DJANGO_TCHAP_ROOM_ID", default=None)
+TCHAP_ROOM_ID_HAIE = env("DJANGO_TCHAP_ROOM_ID_HAIE", default=None)
 
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
