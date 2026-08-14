@@ -15,8 +15,8 @@ pytestmark = pytest.mark.django_db
 @pytest.mark.haie
 def test_petition_department_list(
     inactive_haie_user_44,
-    haie_instructor_no_dept,
-    haie_instructor_44,
+    haie_coordinator_no_dept,
+    haie_coordinator_44,
     haie_user,
     admin_user,
     client,
@@ -44,7 +44,7 @@ def test_petition_department_list(
     assert "Paramétrage" not in content
 
     # GIVEN an authenticated user with no department
-    client.force_login(haie_instructor_no_dept)
+    client.force_login(haie_coordinator_no_dept)
     response = client.get("/")
 
     # THEN department menu is not displayed
@@ -52,7 +52,7 @@ def test_petition_department_list(
     assert "Paramétrage" not in content
 
     # GIVEN an authenticated user instructor
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     response = client.get("/")
 
     # THEN department menu is displayed with only 44
@@ -70,6 +70,40 @@ def test_petition_department_list(
     assert "Paramétrage" in content
     assert "/parametrage/44/" in content
     assert "/parametrage/34/" in content
+
+
+@pytest.mark.haie
+class TestInstructorFaqMenu:
+    """The "FAQ instructeur" is reserved to users with instruction access.
+
+    Guests and anonymous only get the public one.
+    """
+
+    ADMIN_FAQ_MARKER = "Pour l'administration"
+
+    def test_anonymous_visitor_sees_only_public_faq(self, client):
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER not in content
+
+    def test_guest_sees_only_public_faq(self, client, haie_user):
+        client.force_login(haie_user)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER not in content
+
+    def test_consulted_instructor_sees_instructor_faq(self, client, haie_user_44):
+        client.force_login(haie_user_44)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER in content
+
+    def test_coordinator_sees_instructor_faq(self, client, haie_coordinator_44):
+        client.force_login(haie_coordinator_44)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER in content
+
+    def test_administrator_sees_instructor_faq(self, client, admin_user):
+        client.force_login(admin_user)
+        content = client.get("/").content.decode()
+        assert self.ADMIN_FAQ_MARKER in content
 
 
 def test_urlize_html():
@@ -421,11 +455,11 @@ class TestParametrageDepartmentsMenu:
 
         assert "Paramétrage" not in content
 
-    def test_instructor_sees_only_own_department(self, client, haie_instructor_44):
+    def test_instructor_sees_only_own_department(self, client, haie_coordinator_44):
         DCConfigHaieFactory()  # dept 44
         DCConfigHaieFactory(department=factory.SubFactory(Department34Factory))
 
-        client.force_login(haie_instructor_44)
+        client.force_login(haie_coordinator_44)
         content = client.get("/").content.decode()
 
         assert "Paramétrage" in content

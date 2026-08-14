@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 from envergo.contrib.sites.tests.factories import SiteFactory
+from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import (
     DOSSIER_STATES,
@@ -11,7 +12,12 @@ from envergo.petitions.models import (
     ResultSnapshot,
     StatusLog,
 )
-from envergo.petitions.tests.factories import PetitionProjectFactory, SimulationFactory
+from envergo.petitions.tests.factories import (
+    InvitationTokenFactory,
+    PetitionProjectFactory,
+    SimulationFactory,
+)
+from envergo.users.tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -20,6 +26,49 @@ def test_set_department_on_save():
     DCConfigHaieFactory()
     petition_project = PetitionProjectFactory()
     assert petition_project.department.department == "44"
+
+
+def test_petition_project_view_and_change_permissions(haie_user, admin_user):
+    """Per-role matrix for has_view_permission / has_change_permission (referentiel)."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    dept = project.department
+    other_dept = Department34Factory()
+
+    # Coordinator on the project's department: can view AND change.
+    coordinator = UserFactory(is_haie_coordinator=True)
+    coordinator.departments.add(dept)
+
+    # Coordinator on another department: no access at all on this project.
+    other_coordinator = UserFactory(is_haie_coordinator=True)
+    other_coordinator.departments.add(other_dept)
+
+    # Consulted instructor (department access, not coordinator): view only.
+    instructor = UserFactory(is_haie_user=True)
+    instructor.departments.add(dept)
+
+    # Invited on the dossier through a token: view only.
+    invited = UserFactory(is_haie_user=True)
+    InvitationTokenFactory(user=invited, petition_project=project)
+
+    # Superuser: everything.
+    assert project.has_view_permission(admin_user)
+    assert project.has_change_permission(admin_user)
+
+    assert project.has_view_permission(coordinator)
+    assert project.has_change_permission(coordinator)
+
+    assert project.has_view_permission(instructor)
+    assert not project.has_change_permission(instructor)
+
+    assert project.has_view_permission(invited)
+    assert not project.has_change_permission(invited)
+
+    # Guest (authenticated, no dept/token) and wrong-department coordinator: nothing.
+    assert not project.has_view_permission(haie_user)
+    assert not project.has_change_permission(haie_user)
+    assert not project.has_view_permission(other_coordinator)
+    assert not project.has_change_permission(other_coordinator)
 
 
 def test_form_url_adds_alternative_param():
