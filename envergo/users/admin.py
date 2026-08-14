@@ -82,7 +82,7 @@ class UserAdmin(auth_admin.UserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
-                    "is_instructor",
+                    "is_coordinator",
                     "groups",
                     "departments",
                     "followed_petition_projects",
@@ -109,7 +109,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "access_haie_col",
         "is_staff_col",
         "superuser_col",
-        "is_instructor_col",
+        "is_coordinator_col",
     ]
     readonly_fields = ["last_login", "date_joined"]
     inlines = [InvitationTokenInline]
@@ -121,7 +121,7 @@ class UserAdmin(auth_admin.UserAdmin):
         "access_haie",
         "is_superuser",
         "is_staff",
-        "is_instructor",
+        "is_coordinator",
     ]
 
     filter_horizontal = (
@@ -162,12 +162,12 @@ class UserAdmin(auth_admin.UserAdmin):
         return obj.access_haie
 
     @admin.display(
-        ordering="access_haie",
-        description="Instruct.",
+        ordering="is_coordinator",
+        description="Coord.",
         boolean=True,
     )
-    def is_instructor_col(self, obj):
-        return obj.is_instructor
+    def is_coordinator_col(self, obj):
+        return obj.is_coordinator
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name == "departments":
@@ -178,7 +178,7 @@ class UserAdmin(auth_admin.UserAdmin):
         return super().formfield_for_manytomany(db_field, request=request, **kwargs)
 
     def save_related(self, request, form, formsets, change):
-        original_is_instructor = form.initial.get("is_instructor", False)
+        original_is_coordinator = form.initial.get("is_coordinator", False)
         original_departments = set(
             dept.id for dept in form.initial.get("departments") or []
         )
@@ -187,17 +187,17 @@ class UserAdmin(auth_admin.UserAdmin):
 
         obj = form.instance
         new_departments = set(obj.departments.values_list("pk", flat=True))
-        is_instructor_changed = original_is_instructor != obj.is_instructor
+        is_coordinator_changed = original_is_coordinator != obj.is_coordinator
         departments_changed = original_departments != new_departments
 
         if (
             obj.access_haie
             and new_departments
-            and (is_instructor_changed or departments_changed)
+            and (is_coordinator_changed or departments_changed)
         ):
-            is_new_instructor = not original_is_instructor and obj.is_instructor
+            is_new_coordinator = not original_is_coordinator and obj.is_coordinator
             transaction.on_commit(
                 lambda: send_guh_instruction_rights_update_email.delay(
-                    obj.pk, is_new_instructor
+                    obj.pk, is_new_coordinator
                 )
             )

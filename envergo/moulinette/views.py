@@ -921,12 +921,12 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
             .order_by("email")
         )
         departement_members_dict = {
-            "instructors_emails": [],
+            "coordinators_emails": [],
             "invited_emails": [],
         }
         for user in department_members:
-            if user.is_instructor:
-                departement_members_dict["instructors_emails"].append(user.email)
+            if user.is_coordinator:
+                departement_members_dict["coordinators_emails"].append(user.email)
             else:
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict

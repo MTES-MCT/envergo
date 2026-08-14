@@ -300,9 +300,9 @@ def display_ds_field(context, field_name, inline=False):
 
 
 @register.filter
-def has_edit_permission(user, project):
+def has_change_permission(user, project):
     """Check if the user can edit the project."""
-    return project.has_change_permission(user)
+    return user.has_perm("petitions.change_petitionproject", project)
 
 
 @register.simple_tag

@@ -562,7 +562,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             (
                 user.is_active,
                 user.access_haie,
-                user.is_instructor,
+                user.is_coordinator,
                 user.departments.filter(id=department.id).exists(),
             )
         )

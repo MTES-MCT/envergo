@@ -132,7 +132,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         ).filter(project=OuterRef("pk"))
         followers_qs = (
             User.objects.filter(is_superuser=False)
-            .filter(is_instructor=True)
+            .filter(is_coordinator=True)
             .filter(followed_petition_projects=OuterRef("pk"))
             .filter(departments=OuterRef("department"))
         )
@@ -186,10 +186,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             queryset = queryset.filter(followed_up=True)
 
         if "dossiers_sans_instructeur" in request_filters:
-            is_instructor = Q(followed_by__is_instructor=True) & Q(
+            is_coordinator = Q(followed_by__is_coordinator=True) & Q(
                 followed_by__is_superuser=False
             )
-            queryset = queryset.exclude(is_instructor)
+            queryset = queryset.exclude(is_coordinator)
 
         return queryset
 
@@ -850,7 +850,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         ).filter(project=OuterRef("pk"))
         followers_qs = (
             User.objects.filter(is_superuser=False)
-            .filter(is_instructor=True)
+            .filter(is_coordinator=True)
             .filter(followed_petition_projects=OuterRef("pk"))
             .filter(departments=OuterRef("department"))
         )
@@ -918,7 +918,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
-        context["is_department_instructor"] = self.has_change_permission(
+        context["has_change_permission"] = self.has_change_permission(
             self.request, self.object
         )
 
@@ -1104,7 +1104,7 @@ class BasePetitionProjectInstructorUpdateView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not context["is_department_instructor"]:
+        if not context["has_change_permission"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
         return context
