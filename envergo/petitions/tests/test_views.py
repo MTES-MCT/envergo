@@ -2335,6 +2335,104 @@ def test_project_list_unread_pill(client, haie_instructor_44):
     assert unread_msg not in res.content.decode()
 
 
+class TestAlternativeResultView:
+    """Tests for Alternative result instruction page view"""
+
+    @pytest.fixture
+    def project(self):
+        """Create config and regulation needed for"""
+        DCConfigHaieFactory()
+        # At least one regulation is needed so the moulinette produces results by
+        # category, from which the activation takes the project's new category.
+        HaieRegulationFactory()
+        project = PetitionProjectFactory()
+        return project
+
+    def test_alternatives_result_view_permissions(
+        self, client, haie_user, haie_instructor_44, project
+    ):
+        """Test alternative result page view permissions"""
+        simulation = SimulationFactory(project=project, comment="Simulation 2")
+
+        display_alternative_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation.id},
+        )
+        # AS anonymous WHEN I visit alternative page
+        response = client.get(display_alternative_url)
+        # THEN page redirects to moulinette form
+        assert response.status_code == 302
+        assert response.url.startswith(reverse("moulinette_form"))
+
+        # AS basic haie user
+        client.force_login(haie_user)
+        # WHEN I visit alternative page
+        response = client.get(display_alternative_url)
+        # THEN page redirects to moulinette form
+        assert response.status_code == 302
+        assert response.url.startswith(reverse("moulinette_form"))
+
+    def test_alternatives_result_view_content(
+        self, client, haie_user, haie_instructor_44, project
+    ):
+        """Test alternative result page view permissions"""
+        simulation_moulinette_url = update_qs(
+            project.moulinette_url,
+            {"motif": "securite"},
+        )
+
+        simulation1 = project.simulations.first()
+        simulation2 = SimulationFactory(
+            project=project,
+            moulinette_url=simulation_moulinette_url,
+            comment="Simulation 2",
+        )
+
+        # AS instructor
+        client.force_login(haie_instructor_44)
+
+        # WHEN I visit active and initiale simulation page
+        display_active_simulation_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation1.id},
+        )
+        response = client.get(display_active_simulation_url)
+        # THEN page is 200
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Simulation initiale" in content
+        assert "Modifier" not in content
+        assert "Active" in content
+        assert "Démarrer une nouvelle simulation" in content
+        assert "Autre" in content
+        assert_matomo_url(
+            response, "/projet/+ref_projet+/instruction/alternatives/+simulation+/"
+        )
+
+        # WHEN I visit alternative simulation page
+        display_alternative_simulation_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation2.id},
+        )
+        response = client.get(display_alternative_simulation_url)
+        # THEN page is 200
+        assert response.status_code == 200
+        content = response.content.decode()
+        # AND simulation is not displayed as active
+        assert "Active" not in content
+        # AND content is related to this simulation
+        assert "Mise en sécurité, risque sanitaire" in content
+
+        # WHEN I visit not existing alternative page
+        display_alternative_url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": "1234"},
+        )
+        response = client.get(display_alternative_url)
+        # THEN page is 404
+        assert response.status_code == 404
+
+
 def test_alternatives_list_permission(client, haie_user, haie_instructor_44, site):
     """Test alternative flow for petition project"""
 
