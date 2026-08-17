@@ -1411,13 +1411,6 @@ button.hide-expanded[aria-expanded="true"] {
 }
 
 #dossier-filters {
-  // Hide the filter feature on the tiniest screens
-  display: none;
-
-  @media (width >= 576px) {
-    display: block;
-  }
-
   .filter-line {
     display: flex;
     flex-direction: column;
@@ -1425,6 +1418,12 @@ button.hide-expanded[aria-expanded="true"] {
 
   .fr-segmented {
     margin-bottom: 1rem;
+  }
+
+  @media (width >= 576px) {
+    .fr-fieldset__element {
+      margin-bottom: 0;
+    }
   }
 
   @media (width >= 768px) {
@@ -1438,9 +1437,5 @@ button.hide-expanded[aria-expanded="true"] {
     .fr-segmented {
       margin-bottom: 0;
     }
-  }
-
-  .fr-fieldset__element {
-    margin-bottom: 0;
   }
 }
