@@ -9,8 +9,10 @@ from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.geos import MultiPolygon
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -1119,6 +1121,30 @@ def test_petition_project_list(
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
 
 
+def test_petition_project_list_query_count_is_constant(
+    haie_instructor_44, client, site
+):
+    """Rendering the list must not run per-project queries."""
+    DCConfigHaieFactory()
+    for _ in range(3):
+        PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.prefilled)
+
+    client.force_login(haie_instructor_44)
+    url = reverse("petition_project_list")
+    client.get(url)  # warm up session-related queries
+
+    with CaptureQueriesContext(connection) as with_3_projects:
+        client.get(url)
+
+    for _ in range(5):
+        PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.prefilled)
+
+    with CaptureQueriesContext(connection) as with_8_projects:
+        client.get(url)
+
+    assert len(with_8_projects) == len(with_3_projects)
+
+
 def test_petition_project_list_filters(
     haie_user_44, haie_instructor_44, haie_user, admin_user, client, site
 ):
@@ -1401,6 +1427,56 @@ def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
 
     assert not res.context["is_multi_departments"]
     assert "Le projet se situe sur plusieurs départements" not in res.content.decode()
+
+
+@pytest.mark.parametrize(
+    "emergency, expect_emergency_badge",
+    [
+        ("non", False),
+        ("oui", True),
+    ],
+)
+def test_petition_emergency_badge(
+    client, haie_instructor_44, emergency, expect_emergency_badge
+):
+    """Test emergency badge in project list and project detail"""
+
+    # GIVEN project with no urgence
+    RUConfigHaieFactory(
+        is_activated=False,
+        validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+    )
+    RUConfigHaieFactory(validity_range=DateRange(date(2025, 1, 1), None, "[)"))
+    hedge = HedgeFactory(additionalData__type_haie="mixte")
+    hedges = HedgeDataFactory(hedges=[hedge])
+    project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled, hedge_data=hedges
+    )
+
+    # GIVEN project with urgence or not
+    moulinette_data = {
+        "reimplantation": "replantation",
+        "motif": "securite",
+        "urgence": emergency,
+    }
+    new_url = update_qs(project.moulinette_url, moulinette_data)
+    project.moulinette_url = new_url
+    project.save()
+
+    # WHEN Instructor visits project list page
+    project_list_url = reverse("petition_project_list")
+    client.force_login(haie_instructor_44)
+    res = client.get(project_list_url)
+    # THEN badge "Urgence" is in content if "urgence" == "oui"
+    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+
+    # WHEN Instructor visits project instructor page
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+    # THEN badge "Urgence" is in content if "urgence" == "oui"
+    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
 
 
 @patch("envergo.petitions.views.notify")
