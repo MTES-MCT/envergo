@@ -666,7 +666,12 @@ class Simulation(models.Model):
     comment = models.TextField("Commentaire")
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
-    # created_by
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        verbose_name=_("Created by"),
+        null=True,
+    )
 
     class Meta:
         verbose_name = "Simulation alternative"
