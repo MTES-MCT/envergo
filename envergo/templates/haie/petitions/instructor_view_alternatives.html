@@ -198,9 +198,9 @@
         </div>
       </div>
     </dialog>
-
-    {% include '_share_url_modal.html' with title="Partager la simulation" content='<p>Avec ce lien le destinataire accèdera directement accéder au formulaire et pourra :</p> <ol class="fr-mb-0w"> <li>Consulter et/ou modifier les caractéristiques du projet</li> <li>Voir le résultat de la simulation</li> <li>Vous renvoyer la simulation modifiée</li> </ol>' shorten_url=True share_url=simulation.form_url uid=simulation.id %}
-
+    {% with form_absolute_url=base_url|add:simulation.form_url %}
+      {% include '_share_url_modal.html' with title="Partager la simulation" content='<p>Avec ce lien le destinataire accèdera directement accéder au formulaire et pourra :</p> <ol class="fr-mb-0w"> <li>Consulter et/ou modifier les caractéristiques du projet</li> <li>Voir le résultat de la simulation</li> <li>Vous renvoyer la simulation modifiée</li> </ol>' shorten_url=True share_url=form_absolute_url uid=simulation.id %}
+    {% endwith %}
   {% endfor %}
 
 {% endblock %}
