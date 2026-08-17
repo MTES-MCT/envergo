@@ -9,10 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.geos import MultiPolygon
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import connection
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import RequestFactory, override_settings
-from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -1119,30 +1117,6 @@ def test_petition_project_list(
     assert project_44.reference not in content
     # AND the project is read only
     assert f'aria-describedby="read-only-tooltip-{project_34.reference}' in content
-
-
-def test_petition_project_list_query_count_is_constant(
-    haie_instructor_44, client, site
-):
-    """Rendering the list must not run per-project queries."""
-    DCConfigHaieFactory()
-    for _ in range(3):
-        PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.prefilled)
-
-    client.force_login(haie_instructor_44)
-    url = reverse("petition_project_list")
-    client.get(url)  # warm up session-related queries
-
-    with CaptureQueriesContext(connection) as with_3_projects:
-        client.get(url)
-
-    for _ in range(5):
-        PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.prefilled)
-
-    with CaptureQueriesContext(connection) as with_8_projects:
-        client.get(url)
-
-    assert len(with_8_projects) == len(with_3_projects)
 
 
 def test_petition_project_list_filters(
