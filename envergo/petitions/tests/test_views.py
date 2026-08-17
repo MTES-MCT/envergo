@@ -3052,6 +3052,7 @@ def test_alternative_create_happy_path(client, haie_coordinator_44):
     assert project.simulations.count() == 2
     created = project.simulations.get(is_initial=False)
     assert created.source == "instructor"
+    assert created.created_by == haie_coordinator_44
     assert created.comment == "Nouvelle alternative"
     assert not created.is_active
     assert not created.is_initial
