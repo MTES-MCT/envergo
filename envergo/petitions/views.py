@@ -1478,6 +1478,7 @@ class PetitionProjectInstructorAlternativeView(
     def form_valid(self, form):
         simulation = form.save(commit=False)
         simulation.project = self.object
+        simulation.created_by = self.request.user
         simulation.save()
 
         messages.success(self.request, "La simulation alternative a été ajoutée.")
