@@ -18,11 +18,10 @@
 
 {% block result_title %}
   <h1 class="fr-mt-4w fr-mb-1w">
-    Simulation
     {% if simulation.is_initial %}
-      initiale
+      Simulation initiale
     {% else %}
-      alternative
+      Simulation alternative
     {% endif %}
     <br>
     Dossier n° {{ demarche_numerique_dossier_number|format_ds_number }}
