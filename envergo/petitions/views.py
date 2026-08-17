@@ -1083,6 +1083,12 @@ class BasePetitionProjectInstructorView(
         return context
 
     def log_event_action(self, request):
+        """Log event with
+        - category = self.event_category
+        - action = self.event_action
+
+        Set self.event_action = None to avoid event log.
+        """
         if not self.event_action:
             return
 
@@ -1708,7 +1714,7 @@ class PetitionProjectInstructorAlternativeResultsView(
 ):
     """View for display an alternative simulation."""
 
-    event_action = None
+    event_action = None  # Avoid log_event
     simulation_object = None
     template_name = "haie/petitions/instructor_view_alternative_display.html"
 
@@ -1733,8 +1739,6 @@ class PetitionProjectInstructorAlternativeResultsView(
 
     def get_context_data(self, **kwargs):
         """Inserts simulation moulinette into kwargs to get results data context"""
-        context = {}
-
         self.simulation_object = self.get_simulation_object()
         moulinette_url = MoulinetteUrl(self.simulation_object.moulinette_url)
         moulinette = moulinette_url.get_moulinette()
@@ -1758,8 +1762,10 @@ class PetitionProjectInstructorAlternativeResultsView(
         return HttpResponseRedirect(simulation_form_url)
 
     def get(self, request, *args, **kwargs):
-        """Redirects to simulation form if user has not view permissions,
-        else render response"""
+        """Render response, unless there is no permission.
+
+        If user has no view or change permission, redirect to simulation form.
+        """
         self.object = self.get_object()
         if not self.has_view_permission(request, self.object):
             simulation_form_url = self.get_simulation_object().form_url

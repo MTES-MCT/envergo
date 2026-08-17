@@ -2582,7 +2582,7 @@ class TestAlternativeResultView:
         # AS instructor
         client.force_login(haie_instructor_44)
 
-        # WHEN I visit active simulation page
+        # WHEN I visit active and initiale simulation page
         display_active_simulation_url = reverse(
             "petition_project_instructor_alternative_display",
             kwargs={"reference": project.reference, "simulation_id": simulation1.id},
@@ -2591,7 +2591,7 @@ class TestAlternativeResultView:
         # THEN page is 200
         assert response.status_code == 200
         content = response.content.decode()
-        assert "Simulation alternative" in content
+        assert "Simulation initiale" in content
         assert "Modifier" not in content
         assert "Active" in content
         assert "Démarrer une nouvelle simulation" in content
