@@ -1252,7 +1252,7 @@ def test_petition_project_list_filters_followed_by(
     ] == [haie_coordinator_44_instructor2.email]
 
 
-def test_petition_project_list_filter_show_closed(haie_instructor_44, client, site):
+def test_petition_project_list_filter_show_closed(haie_coordinator_44, client, site):
     """Closed dossiers are hidden by default, shown with ?show_closed=1."""
 
     DCConfigHaieFactory()
@@ -1272,7 +1272,7 @@ def test_petition_project_list_filter_show_closed(haie_instructor_44, client, si
         status__decision=DECISIONS.express_agreement,
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Default: closed dossiers are hidden
     response = client.get(project_list_url)
@@ -1287,7 +1287,7 @@ def test_petition_project_list_filter_show_closed(haie_instructor_44, client, si
     assert closed_project.reference in content
 
 
-def test_petition_project_list_filter_category(haie_instructor_44, client, site):
+def test_petition_project_list_filter_category(haie_coordinator_44, client, site):
     """Category filter shows only selected categories."""
 
     DCConfigHaieFactory()
@@ -1312,7 +1312,7 @@ def test_petition_project_list_filter_category(haie_instructor_44, client, site)
         underscore_category="hru",
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # No category param: all categories shown
     response = client.get(project_list_url)
@@ -1345,7 +1345,7 @@ def test_petition_project_list_filter_category(haie_instructor_44, client, site)
     assert hru_project.reference in content
 
 
-def test_petition_project_list_filter_combined(haie_instructor_44, client, site):
+def test_petition_project_list_filter_combined(haie_coordinator_44, client, site):
     """Multiple filters apply as intersection."""
 
     DCConfigHaieFactory()
@@ -1357,7 +1357,7 @@ def test_petition_project_list_filter_combined(haie_instructor_44, client, site)
         demarche_numerique_date_depot=now,
         underscore_category="ru",
     )
-    followed_ru.followed_by.add(haie_instructor_44)
+    followed_ru.followed_by.add(haie_coordinator_44)
 
     unfollowed_ru = PetitionProjectFactory(
         reference="UNFRU1",
@@ -1372,9 +1372,9 @@ def test_petition_project_list_filter_combined(haie_instructor_44, client, site)
         demarche_numerique_date_depot=now,
         underscore_category="hru",
     )
-    followed_hru.followed_by.add(haie_instructor_44)
+    followed_hru.followed_by.add(haie_coordinator_44)
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # followed_by=me AND category=ru → only the followed RU project
     response = client.get(f"{project_list_url}?followed_by=me&category=ru")
@@ -1384,7 +1384,7 @@ def test_petition_project_list_filter_combined(haie_instructor_44, client, site)
     assert followed_hru.reference not in content
 
 
-def test_petition_project_list_filter_pagination(haie_instructor_44, client, site):
+def test_petition_project_list_filter_pagination(haie_coordinator_44, client, site):
     """Pagination count reflects filtered results, not unfiltered total."""
 
     DCConfigHaieFactory()
@@ -1407,7 +1407,7 @@ def test_petition_project_list_filter_pagination(haie_instructor_44, client, sit
             underscore_category="hru",
         )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Unfiltered: 8 projects total
     response = client.get(project_list_url)
@@ -1418,7 +1418,7 @@ def test_petition_project_list_filter_pagination(haie_instructor_44, client, sit
     assert response.context["page_obj"].paginator.count == 5
 
 
-def test_petition_project_list_htmx_response(haie_instructor_44, client, site):
+def test_petition_project_list_htmx_response(haie_coordinator_44, client, site):
     """HX-Request header returns partial HTML, not a full page."""
 
     DCConfigHaieFactory()
@@ -1429,7 +1429,7 @@ def test_petition_project_list_htmx_response(haie_instructor_44, client, site):
         demarche_numerique_date_depot=now,
     )
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
 
     # Normal request returns full page with the wrapper div
     response = client.get(project_list_url)
@@ -1602,7 +1602,7 @@ def test_instructor_view_single_department_no_alert(client, haie_coordinator_44)
     ],
 )
 def test_petition_emergency_badge(
-    client, haie_instructor_44, emergency, expect_emergency_badge
+    client, haie_coordinator_44, emergency, expect_emergency_badge
 ):
     """Test emergency badge in project list and project detail"""
 
@@ -1630,7 +1630,7 @@ def test_petition_emergency_badge(
 
     # WHEN Instructor visits project list page
     project_list_url = reverse("petition_project_list")
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     res = client.get(project_list_url)
     # THEN badge "Urgence" is in content if "urgence" == "oui"
     assert ("Urgence" in res.content.decode()) == expect_emergency_badge
@@ -2540,7 +2540,7 @@ class TestAlternativeResultView:
         return project
 
     def test_alternatives_result_view_permissions(
-        self, client, haie_user, haie_instructor_44, project
+        self, client, haie_user, haie_coordinator_44, project
     ):
         """Test alternative result page view permissions"""
         simulation = SimulationFactory(project=project, comment="Simulation 2")
@@ -2564,7 +2564,7 @@ class TestAlternativeResultView:
         assert response.url.startswith(reverse("moulinette_form"))
 
     def test_alternatives_result_view_content(
-        self, client, haie_user, haie_instructor_44, project
+        self, client, haie_user, haie_coordinator_44, project
     ):
         """Test alternative result page view permissions"""
         simulation_moulinette_url = update_qs(
@@ -2580,7 +2580,7 @@ class TestAlternativeResultView:
         )
 
         # AS instructor
-        client.force_login(haie_instructor_44)
+        client.force_login(haie_coordinator_44)
 
         # WHEN I visit active and initiale simulation page
         display_active_simulation_url = reverse(
