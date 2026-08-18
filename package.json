@@ -42,7 +42,6 @@
   ],
   "scripts": {
     "dev": "gulp",
-    "scalingo-prebuild": "node node_modules/optipng-bin/lib/install.js",
     "build": "gulp build",
     "e2e-haie": "TEST_DIR='./e2e/haie' playwright test",
     "e2e-haie:ui": "TEST_DIR='./e2e/haie' playwright test --ui",
