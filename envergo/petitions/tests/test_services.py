@@ -389,7 +389,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare à moins de 200\xa0m",
+                "label": "Mare ou point d'eau à moins de 500\xa0m",
             },
             "ripisylve": {
                 "TO_PLANT": [ANY],
@@ -405,9 +405,8 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs "
-                "vieux arbres, fissurés ou "
-                "avec cavités",
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
             },
         },
         "replantation_coefficient": Decimal("1.5"),
@@ -529,7 +528,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare à moins de 200\xa0m",
+                "label": "Mare ou point d'eau à moins de 500\xa0m",
             },
             "recemment_plantee": {
                 "TO_PLANT": None,
@@ -551,9 +550,8 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs "
-                "vieux arbres, fissurés ou "
-                "avec cavités",
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
             },
         },
         "ordered_hedge_types": [
