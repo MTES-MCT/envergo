@@ -1,7 +1,9 @@
 from textwrap import shorten
 
 from django import forms
+from django.conf import settings
 from django.contrib import admin
+from django.utils.html import format_html
 
 from envergo.confs.models import SETTINGS_HELP, HostedFile, Setting, TopBar
 
@@ -49,8 +51,21 @@ class SettingAdmin(admin.ModelAdmin):
 
 @admin.register(HostedFile)
 class HostedFileAdmin(admin.ModelAdmin):
-    list_display = ["name", "file", "uploaded_by", "created_at"]
-    fields = ("file", "name", "description")
+    list_display = ["name", "public_url", "uploaded_by", "created_at"]
+    fields = ("file", "name", "description", "public_url")
+    readonly_fields = ("public_url",)
+
+    def public_url(self, obj):
+        if not obj.file:
+            return "-"
+        filename = obj.file.name.removeprefix("documents/")
+        domain = settings.ENVERGO_AMENAGEMENT_DOMAIN
+        url = f"https://{domain}/fichiers/{filename}"
+        return format_html(
+            '<a href="{}" target="_blank">/fichiers/{}</a>', url, filename
+        )
+
+    public_url.short_description = "URL publique"
 
     def save_model(self, request, obj, form, change):
         if not change:
