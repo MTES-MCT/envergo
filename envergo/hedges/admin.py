@@ -1,4 +1,3 @@
-import json
 import os
 
 from celery.result import AsyncResult
@@ -62,7 +61,7 @@ class HedgeDataAdmin(admin.ModelAdmin):
         back_url = reverse("admin:hedges_hedgedata_change", args=[object_id])
         context = {
             **self.admin_site.each_context(request),
-            "hedge_data": json.dumps(hedge_data.data),
+            "hedge_data": hedge_data.data,
             "back_url": back_url,
         }
 
