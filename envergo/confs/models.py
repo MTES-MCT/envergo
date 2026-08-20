@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
 from envergo.utils.markdown import markdown_to_html
+from envergo.utils.storages import get_public_storage
 
 
 class TopBar(models.Model):
@@ -66,7 +67,12 @@ def max_file_size(value):
 class HostedFile(models.Model):
     """A single file."""
 
-    file = models.FileField(_("File"), upload_to="f", validators=[max_file_size])
+    file = models.FileField(
+        _("File"),
+        upload_to="documents",
+        storage=get_public_storage,
+        validators=[max_file_size],
+    )
     name = models.CharField(_("Name"), max_length=256)
     description = models.TextField(_("Description"), blank=True)
     uploaded_by = models.ForeignKey("users.User", on_delete=models.PROTECT)
