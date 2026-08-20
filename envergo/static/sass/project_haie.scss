@@ -260,10 +260,25 @@ div#app {
         .autocomplete__wrapper {
           margin-top: 0;
 
+          // Take the dropdown out of the flow so it never pushes the
+          // "Rechercher" button, and raise it above the Leaflet map.
+          .autocomplete__menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            min-width: 100%;
+            width: max-content;
+            max-width: 400px;
+            box-sizing: border-box;
+          }
+
           .autocomplete__option {
             font-size: 0.875rem;
             line-height: 1.5rem;
             font-family: inherit;
+            white-space: normal;
+            word-break: break-word;
           }
         }
 
@@ -274,7 +289,7 @@ div#app {
           min-height: 2rem;
           max-height: 2rem;
           height: 2rem;
-          width: 20rem;
+          width: 24rem;
         }
 
         .fr-btn {
