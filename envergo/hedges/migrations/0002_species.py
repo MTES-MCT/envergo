@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "proximite_mare",
-                    models.BooleanField(verbose_name="Mare à moins de 200\xa0m"),
+                    models.BooleanField(verbose_name="Mare ou point d'eau à moins de 500\xa0m"),
                 ),
                 (
                     "proximite_point_eau",
