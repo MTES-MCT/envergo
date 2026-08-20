@@ -67,29 +67,37 @@ INSTALLED_APPS += ["storages"]  # noqa F405
 AWS_S3_ENDPOINT_URL = env("DJANGO_AWS_S3_ENDPOINT_URL")
 AWS_ACCESS_KEY_ID = env("DJANGO_AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = env("DJANGO_AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
-AWS_UPLOAD_BUCKET_NAME = env("DJANGO_AWS_UPLOAD_BUCKET_NAME")
 AWS_S3_REGION_NAME = env("DJANGO_AWS_S3_REGION_NAME")
-AWS_DEFAULT_ACL = "public-read"
-AWS_QUERYSTRING_AUTH = False
+
+# Bucket names — fallback to old env var names for safe rollback during migration.
+AWS_PRIVATE_BUCKET_NAME = env(
+    "DJANGO_AWS_PRIVATE_BUCKET_NAME",
+    default=env("DJANGO_AWS_STORAGE_BUCKET_NAME", default=""),
+)
+AWS_PUBLIC_BUCKET_NAME = env(
+    "DJANGO_AWS_PUBLIC_BUCKET_NAME",
+    default=env("DJANGO_AWS_STORAGE_BUCKET_NAME", default=""),
+)
+
+AWS_DEFAULT_ACL = "private"
+AWS_QUERYSTRING_AUTH = True
+AWS_QUERYSTRING_EXPIRE = 3600
 AWS_S3_FILE_OVERWRITE = False
 
-# DO NOT change these unless you know what you're doing.
 _AWS_EXPIRY = 60 * 60 * 24 * 7
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": f"max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate"
 }
-AWS_S3_CUSTOM_DOMAIN = env("DJANGO_AWS_S3_CUSTOM_DOMAIN", default=None)
-aws_s3_domain = AWS_S3_ENDPOINT_URL
 
-MEDIA_URL = f"https://{aws_s3_domain}/media/"
+MEDIA_URL = "/media/"
 
 STORAGES = {
-    "default": {"BACKEND": "envergo.utils.storages.MediaRootS3Boto3Storage"},
+    "default": {"BACKEND": "envergo.utils.storages.PrivateMediaStorage"},
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
     },
-    "upload": {"BACKEND": "envergo.utils.storages.UploadS3Boto3Storage"},
+    "upload": {"BACKEND": "envergo.utils.storages.PrivateUploadStorage"},
+    "public": {"BACKEND": "envergo.utils.storages.PublicMediaStorage"},
 }
 
 
