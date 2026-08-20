@@ -278,7 +278,7 @@ div#app {
             line-height: 1.5rem;
             font-family: inherit;
             white-space: normal;
-            word-break: break-word;
+            overflow-wrap: break-word;
           }
         }
 
