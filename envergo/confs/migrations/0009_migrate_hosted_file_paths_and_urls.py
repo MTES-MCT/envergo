@@ -11,6 +11,8 @@ import re
 
 from django.conf import settings
 from django.db import migrations
+from django.db.models import Value
+from django.db.models.functions import Concat, Substr
 
 # Old S3 URL patterns found in the database.
 S3_URL_PATTERNS = [
@@ -38,9 +40,9 @@ def rewrite_s3_urls(text):
 
 def rename_hosted_file_paths(apps, schema_editor):
     HostedFile = apps.get_model("confs", "HostedFile")
-    for hf in HostedFile.objects.filter(file__startswith="f/"):
-        hf.file.name = "documents/" + hf.file.name.removeprefix("f/")
-        hf.save(update_fields=["file"])
+    HostedFile.objects.filter(file__startswith="f/").update(
+        file=Concat(Value("documents/"), Substr("file", 3))
+    )
 
 
 def rewrite_moulinette_template_urls(apps, schema_editor):
