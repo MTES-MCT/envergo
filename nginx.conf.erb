@@ -1,0 +1,18 @@
+## Proxied file serving for public hosted documents.
+## Django triggers this via X-Accel-Redirect; clients cannot hit it directly.
+location /internal-s3-public/ {
+    internal;
+    proxy_pass https://<%= ENV["DJANGO_AWS_PUBLIC_BUCKET_NAME"] %>.s3.fr-par.scw.cloud/;
+    proxy_set_header Host <%= ENV["DJANGO_AWS_PUBLIC_BUCKET_NAME"] %>.s3.fr-par.scw.cloud;
+    proxy_hide_header x-amz-request-id;
+    proxy_hide_header x-amz-id-2;
+}
+
+## Forward all requests to gunicorn.
+location / {
+    proxy_pass http://unix:/tmp/gunicorn.sock;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_redirect off;
+}
