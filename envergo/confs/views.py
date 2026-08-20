@@ -20,14 +20,12 @@ class HostedFileDownloadView(View):
     """
 
     def get(self, request, file_path):
-        hosted_file = get_object_or_404(HostedFile, file=f"documents/{file_path}")
+        hosted_file = get_object_or_404(HostedFile, file=file_path)
 
         if settings.DEBUG:
             return serve(request, hosted_file.file.name, settings.MEDIA_ROOT)
 
         response = HttpResponse()
-        response["X-Accel-Redirect"] = (
-            f"{INTERNAL_S3_PUBLIC_PREFIX}/documents/{file_path}"
-        )
+        response["X-Accel-Redirect"] = f"{INTERNAL_S3_PUBLIC_PREFIX}/{file_path}"
         response["Content-Type"] = ""
         return response
