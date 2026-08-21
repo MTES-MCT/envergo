@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.core.files.storage import storages
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
@@ -32,11 +31,3 @@ class PublicMediaStorage(S3Boto3Storage):
     default_acl = "public-read"
     file_overwrite = False
     querystring_auth = False
-
-
-def get_public_storage():
-    """Return the public storage backend.
-
-    A plain function because Django migrations cannot serialize lambdas.
-    """
-    return storages["public"]

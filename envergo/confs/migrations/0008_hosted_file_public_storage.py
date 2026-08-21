@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import envergo.confs.models
-import envergo.utils.storages
+import envergo.confs.models
 
 
 class Migration(migrations.Migration):
@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             model_name="hostedfile",
             name="file",
             field=models.FileField(
-                storage=envergo.utils.storages.get_public_storage,
+                storage=envergo.confs.models.get_public_storage,
                 upload_to="documents",
                 validators=[envergo.confs.models.max_file_size],
                 verbose_name="File",
