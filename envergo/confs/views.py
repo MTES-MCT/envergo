@@ -15,14 +15,15 @@ INTERNAL_S3_PUBLIC_PREFIX = "/internal-s3-public"
 class HostedFileDownloadView(View):
     """Serve a public hosted file.
 
-    In production, delegates to nginx via X-Accel-Redirect for efficient
-    serving. In development, serves from the local media root.
+    On deployed environments (staging, production), delegates to nginx via
+    X-Accel-Redirect. On local and test environments, serves from the
+    media root directly.
     """
 
     def get(self, request, file_path):
         hosted_file = get_object_or_404(HostedFile, file=file_path)
 
-        if settings.DEBUG:
+        if settings.ENV_NAME in ("local", "test"):
             return serve(request, hosted_file.file.name, settings.MEDIA_ROOT)
 
         response = HttpResponse()
