@@ -540,14 +540,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - user with access haie and invitation token
         - user with access haie and right to project department
         """
-        department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
                 (
-                    user.invitation_tokens.filter(petition_project_id=self.pk).exists()
-                    or user.departments.filter(id=department.id).exists()
+                    self.department_id in user.department_ids
+                    or user.invitation_tokens.filter(
+                        petition_project_id=self.pk
+                    ).exists()
                 ),
             )
         )
@@ -557,13 +558,12 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - superuser
         - user with access haie, is instructor for department
         """
-        department = self.department
         return user.is_superuser or all(
             (
                 user.is_active,
                 user.access_haie,
                 user.is_coordinator,
-                user.departments.filter(id=department.id).exists(),
+                self.department_id in user.department_ids,
             )
         )
 
