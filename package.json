@@ -2,8 +2,8 @@
   "name": "envergo",
   "version": "1.0.0",
   "engines": {
-    "node": "20",
-    "npm": "10"
+    "node": "24",
+    "npm": "11"
   },
   "dependencies": {
     "@gouvfr/dsfr": "^1.14.3",
