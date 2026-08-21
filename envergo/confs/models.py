@@ -1,12 +1,20 @@
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
+from django.core.files.storage import storages
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
 from envergo.utils.markdown import markdown_to_html
-from envergo.utils.storages import get_public_storage
+
+
+def get_public_storage():
+    """Return the public storage backend.
+
+    A plain function because Django migrations cannot serialize lambdas.
+    """
+    return storages["public"]
 
 
 class TopBar(models.Model):
