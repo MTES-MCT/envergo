@@ -9,10 +9,12 @@ location /internal-s3-public/ {
 }
 
 ## Forward all requests to gunicorn.
+## TLS terminates at the Scalingo router, which sets X-Forwarded-Proto and
+## X-Forwarded-For; those headers pass through untouched. Overriding
+## X-Forwarded-Proto with $scheme (http inside the container) would make
+## Django's SECURE_SSL_REDIRECT loop forever.
 location / {
     proxy_pass http://unix:/tmp/gunicorn.sock;
     proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
     proxy_redirect off;
 }
