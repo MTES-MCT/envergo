@@ -1,1 +1,3 @@
 gettext
+gdal-bin
+libgdal-dev
