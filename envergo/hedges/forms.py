@@ -4,9 +4,16 @@ from abc import abstractmethod
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 
-from envergo.hedges.models import HedgeData, HedgeTypeBase, HedgeTypeFactory
+from envergo.hedges.models import (
+    TO_PLANT,
+    TO_REMOVE,
+    HedgeData,
+    HedgeTypeBase,
+    HedgeTypeFactory,
+)
 from envergo.moulinette.forms.fields import (
     DisplayBooleanField,
     DisplayChoiceField,
@@ -308,6 +315,88 @@ class HedgeToPlantPropertiesAisneForm(
     @classmethod
     def human_readable_name(cls):
         return "Aisne avant r.u. (connexion boisement)"
+
+
+class LatLngForm(forms.Form):
+    """A single geographic coordinate of a hedge geometry."""
+
+    lat = forms.FloatField()
+    lng = forms.FloatField()
+
+
+class HedgeEntryForm(forms.Form):
+    """Validate a single hedge entry submitted by the hedge input ui.
+
+    The nested structures delegate to sub-forms: each latLngs point to
+    LatLngForm, and additionalData to the department's hedge properties
+    form, so only known property fields are kept.
+    """
+
+    id = forms.CharField()
+    type = forms.ChoiceField(choices=[(TO_REMOVE, TO_REMOVE), (TO_PLANT, TO_PLANT)])
+    latLngs = forms.JSONField()
+    additionalData = forms.JSONField(required=False)
+
+    def __init__(self, *args, config=None, **kwargs):
+        self.config = config
+        super().__init__(*args, **kwargs)
+
+    def clean_latLngs(self):
+        latLngs = self.cleaned_data["latLngs"]
+        if not isinstance(latLngs, list) or len(latLngs) < 2:
+            raise ValidationError("Une haie requiert au moins deux points")
+
+        points = []
+        for point in latLngs:
+            point_form = LatLngForm(data=point if isinstance(point, dict) else {})
+            if not point_form.is_valid():
+                raise ValidationError(
+                    "Chaque point doit avoir des coordonnées lat et lng numériques"
+                )
+            points.append(point_form.cleaned_data)
+        return points
+
+    def clean_additionalData(self):
+        additional_data = self.cleaned_data["additionalData"]
+        if additional_data is not None and not isinstance(additional_data, dict):
+            raise ValidationError("additionalData doit être un objet")
+        return additional_data or {}
+
+    def clean(self):
+        cleaned_data = super().clean()
+        hedge_type = cleaned_data.get("type")
+        if hedge_type and "additionalData" in cleaned_data:
+            properties_form = self.get_properties_form(hedge_type)
+            if not properties_form.is_valid():
+                raise ValidationError(
+                    f"Caractéristiques de haie invalides : {properties_form.errors.as_text()}"
+                )
+            cleaned_data["additionalData"] = properties_form.cleaned_data
+        return cleaned_data
+
+    def get_properties_form(self, hedge_type):
+        """Build the properties form matching the department config."""
+        config = self.config
+        if config:
+            form_path = (
+                config.hedge_to_remove_properties_form
+                if hedge_type == TO_REMOVE
+                else config.hedge_to_plant_properties_form
+            )
+            form_class = import_string(form_path)
+            single_procedure = config.single_procedure
+        else:
+            form_class = (
+                HedgeToRemovePropertiesRegimeUniqueForm
+                if hedge_type == TO_REMOVE
+                else HedgeToPlantPropertiesRegimeUniqueForm
+            )
+            single_procedure = True
+
+        return form_class(
+            single_procedure=single_procedure,
+            data=self.cleaned_data["additionalData"],
+        )
 
 
 class HedgeForm(forms.Form):
