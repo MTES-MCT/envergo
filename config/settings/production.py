@@ -317,13 +317,21 @@ SECURE_CSP_REPORT_ONLY = {
     "img-src": [
         CSP.SELF,
         "https://data.geopf.fr",  # Leaflet geoportail images
+        # Signed S3 urls are path-style, on the bare host: the wildcard
+        # entry does not cover it.
+        "https://s3.fr-par.scw.cloud",
         "https://*.s3.fr-par.scw.cloud",
         "data:",
         "https://*.crisp.chat",
         "https://static.demarches-simplifiees.fr",  # this url is still used for files in « Démarche numérique »
     ],
     "font-src": [CSP.SELF, "https://*.crisp.chat"],
-    "media-src": [CSP.SELF, "https://*.s3.fr-par.scw.cloud", "https://*.crisp.chat"],
+    "media-src": [
+        CSP.SELF,
+        "https://s3.fr-par.scw.cloud",
+        "https://*.s3.fr-par.scw.cloud",
+        "https://*.crisp.chat",
+    ],
     "frame-src": [
         CSP.SELF,
         "https://*.crisp.chat",

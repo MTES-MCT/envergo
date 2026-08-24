@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -27,6 +29,9 @@ class HostedFileDownloadView(View):
             return serve(request, hosted_file.file.name, settings.MEDIA_ROOT)
 
         response = HttpResponse()
-        response["X-Accel-Redirect"] = f"{INTERNAL_S3_PUBLIC_PREFIX}/{file_path}"
+        # Header values travel as latin-1, so a non-ascii filename would reach
+        # nginx mis-encoded and produce the wrong S3 key. Percent-encoding
+        # keeps the header ascii; nginx decodes it before proxying.
+        response["X-Accel-Redirect"] = quote(f"{INTERNAL_S3_PUBLIC_PREFIX}/{file_path}")
         response["Content-Type"] = ""
         return response

@@ -21,9 +21,7 @@ jobs:
           apt-get update && apt-get install -y curl unzip
           curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip
           unzip rclone-current-linux-amd64.zip
-      - name: Backup private media
-        run: ./rclone-*-linux-amd64/rclone sync -v --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }}:envergo-prod-private/media ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}:envergo-prod-backup/media
-      - name: Backup private uploads
-        run: ./rclone-*-linux-amd64/rclone sync -v --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }}:envergo-prod-private/upload ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}:envergo-prod-backup/upload
-      - name: Backup public documents
-        run: ./rclone-*-linux-amd64/rclone sync -v --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }}:envergo-prod-public/documents ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}:envergo-prod-backup/documents
+      - name: Backup private bucket
+        run: ./rclone-*-linux-amd64/rclone sync -v --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }}:envergo-prod-private ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}:envergo-prod-backup/private
+      - name: Backup public bucket
+        run: ./rclone-*-linux-amd64/rclone sync -v --s3-storage-class=GLACIER ${{ env.S3_BUCKET_SOURCE_CONNECTION_STRING }}:envergo-prod-public ${{ env.S3_BUCKET_DESTINATION_CONNECTION_STRING }}:envergo-prod-backup/public
