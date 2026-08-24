@@ -1293,6 +1293,17 @@ button.hide-expanded[aria-expanded="true"] {
     margin: 0;
   }
 
+  .author-col {
+    width: 10%;
+  }
+
+  .created_by {
+    text-overflow: ellipsis;
+    position: absolute;
+    background-color: white;
+    max-width: 10%;
+  }
+
   .status-col {
     .fr-badge + form {
       margin-left: 0.25rem;
