@@ -12,12 +12,12 @@
 
 {% block main %}
 
+  {{ hedge_data|json_script:"hedge-data" }}
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
        data-conditions-url="{{ hedge_conditions_url }}"
-       data-hedges-data='{{ hedge_data_json|safe }}'
        data-department-lat='{{ department_centroid.lat|unlocalize }}'
        data-department-lng='{{ department_centroid.lng|unlocalize }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
