@@ -638,7 +638,8 @@ createApp({
       }
     }
 
-    const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
+    const hedgeDataEl = document.getElementById('hedge-data');
+    const savedHedgesData = hedgeDataEl ? JSON.parse(hedgeDataEl.textContent) : [];
 
     /**
      * Restore hedges for existing inputs.

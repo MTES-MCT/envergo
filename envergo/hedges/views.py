@@ -16,6 +16,7 @@ from envergo.analytics.utils import update_url_with_matomo_params
 from envergo.decorators.csp import csp_override, csp_report_only_override
 from envergo.geodata.constants import EPSG_WGS84
 from envergo.hedges.forms import (
+    HedgeEntryForm,
     HedgeToPlantPropertiesRegimeUniqueForm,
     HedgeToRemovePropertiesRegimeUniqueForm,
 )
@@ -46,6 +47,13 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
     model = HedgeData
     context_object_name = "hedge_data"
     pk_url_kwarg = "id"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # The department is in the URL path, not in GET params. Inject it so
+        # the moulinette can resolve its config in all request methods.
+        initial.setdefault("department", self.kwargs.get("department", ""))
+        return initial
 
     def get_object(self, queryset=None):
         try:
@@ -170,9 +178,9 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
         # TODO Refactor removal and plantation to be different views
         if self.object:
-            context["hedge_data_json"] = json.dumps(self.object.data)
+            context["hedge_data"] = self.object.data
         else:
-            context["hedge_data_json"] = "[]"
+            context["hedge_data"] = []
 
         mode = self.kwargs.get("mode", "removal")
         context["mode"] = mode
@@ -193,7 +201,22 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
 
         try:
             data = json.loads(request.body)
-            hedge_data = HedgeData.objects.create(data=data)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
+        if not isinstance(data, list) or not all(isinstance(h, dict) for h in data):
+            return JsonResponse({"error": "Expected a list of hedges"}, status=400)
+
+        config = self.moulinette.config
+        validated_data = []
+        for entry in data:
+            form = HedgeEntryForm(data=entry, config=config)
+            if not form.is_valid():
+                return JsonResponse({"error": form.errors.get_json_data()}, status=400)
+            validated_data.append(form.cleaned_data)
+
+        try:
+            hedge_data = HedgeData.objects.create(data=validated_data)
             response_data = {
                 "input_id": str(hedge_data.id),
                 "hedges_to_plant": len(hedge_data.hedges_to_plant()),
@@ -205,8 +228,6 @@ class HedgeInput(MoulinetteMixin, FormMixin, DetailView):
                 "hru_to_remove": hedge_data.hedges_to_remove().hru().length,
             }
             return JsonResponse(response_data, status=201)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
         except Exception as e:
             logger.exception(e)
             return JsonResponse({"error": "An internal error has occurred"}, status=500)
