@@ -5,20 +5,23 @@
 {% block before-content %}
 
   {% if is_alternative %}
-    <div class="fr-notice fr-notice--info">
+    <div id="alternative-notice" class="fr-notice fr-notice--info">
       <div class="fr-container">
         <div class="fr-notice__body">
-          <p>
-            <span class="fr-notice__title">Simulation alternative - Dossier n° (TODO)</span>
-          </p>
+          <div>
 
-          {% if user.is_instructor %}
-            <p>À la fin du parcours, vous pourrez enregistrer la simulation.</p>
-          {% elif user.is_authenticated %}
-            <p>À la fin du parcours, vous pourrez envoyer au service coordonnateur.</p>
-          {% else %}
-            <p>À la fin du parcours, vous pourrez envoyer la simulation au guichet unique.</p>
-          {% endif %}
+            <p>
+              <span class="fr-notice__title">Simulation alternative - Dossier n° (TODO)</span>
+            </p>
+
+            {% if user.is_instructor %}
+              <p>À la fin du parcours, vous pourrez enregistrer la simulation.</p>
+            {% elif user.is_authenticated %}
+              <p>À la fin du parcours, vous pourrez envoyer au service coordonnateur.</p>
+            {% else %}
+              <p>À la fin du parcours, vous pourrez envoyer la simulation au guichet unique.</p>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>

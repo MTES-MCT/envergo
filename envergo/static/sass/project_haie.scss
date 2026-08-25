@@ -1214,7 +1214,7 @@ div.title-with-link-container {
   }
 }
 
-div#alternative-notice {
+#alternative-notice {
   filter: drop-shadow(var(--raised-shadow));
 
   .fr-notice__body {
@@ -1224,6 +1224,10 @@ div#alternative-notice {
   p {
     --text-spacing: 0 0 8px 0;
   }
+}
+
+#alternative-share {
+  background-color: var(--background-alt-grey);
 }
 
 #faq-dropdown-btn {

@@ -4,10 +4,24 @@
 
 {% block alternative_alert %}
   {% if is_alternative %}
-    <div class="fr-alert fr-alert--info fr-mb-3w">
+    <div class="fr-notice fr-notice--info">
+      <div class="fr-container">
+        <div class="fr-notice__body">
 
-      <h3 class="fr-alert__title">Simulation alternative pour ce dossier</h3>
+          <p>
+            <span class="fr-notice__title">Simulation alternative - Dossier n° (TODO)</span>
+          </p>
 
+        </div>
+      </div>
+    </div>
+
+  {% endif %}
+{% endblock %}
+
+{% block alternative_share %}
+  {% if is_alternative %}
+    <div id="alternative-share" class="fr-p-2w">
       {% if user.is_instructor %}
         <p>
           Copiez le lien pour le partager au demandeur ou ajouter une simulation alternative à l’espace d’instruction (vous pourrez l’activer pour mettre a jour le dossier).
@@ -32,7 +46,6 @@
             Copier le lien
           </button>
         </p>
-
       {% endif %}
     </div>
   {% endif %}
