@@ -1,6 +1,7 @@
 {% load utils %}
 
-<div class="fr-table alternative-simulations__table fr-table--sm fr-mb-3w">
+<div id="alternative-simulations-table"
+     class="fr-table fr-table--sm fr-mb-3w">
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
       <div class="fr-table__content">
@@ -64,13 +65,12 @@
                   <div class="fr-mb-1w">
                     <a href="{% url 'petition_project_instructor_alternative_display' petition_project.reference simulation.id %}"
                        class="action fr-icon--sm fr-link--icon-left fr-icon-eye-line"
-                       target="_blank"
                        rel="noopener"
-                       title="Voir le résultat de cette simulation (nouvel onglet)">Voir la simulation</a>
+                       title="Voir le résultat de cette simulation">Voir la simulation</a>
                   </div>
 
                   <div class="fr-mb-1w">
-                    <a href="#"
+                    <a href="#alternative-simulations-table"
                        role="button"
                        title="Partager le lien vers cette simulation"
                        class="js fr-link fr-link--sm fr-link--icon-left fr-icon-mail-line share-btn"
@@ -81,7 +81,7 @@
 
                   <div class="fr-mb-1w">
                     {% if simulation.can_be_deleted and has_change_permission %}
-                      <a href="#"
+                      <a href="#alternative-simulations-table"
                          aria-controls="simulation-delete-modal-{{ simulation.id }}"
                          data-fr-opened="false"
                          class="action fr-link--sm fr-link--icon-left fr-icon-delete-line"
