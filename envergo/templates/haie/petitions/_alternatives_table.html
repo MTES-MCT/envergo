@@ -76,14 +76,14 @@
                 </td>
 
                 <td class="actions-col">
-                  <div class="fr-mb-1w">
+                  <div class="fr-mb-1v">
                     <a href="{% url 'petition_project_instructor_alternative_display' petition_project.reference simulation.id %}"
                        class="action fr-icon--sm fr-link--icon-left fr-icon-eye-line"
                        rel="noopener"
                        title="Voir le résultat de cette simulation">Voir la simulation</a>
                   </div>
 
-                  <div class="fr-mb-1w">
+                  <div>
 
                     <button title="Partager le lien vers cette simulation"
                             data-fr-opened="false"
@@ -94,7 +94,7 @@
 
                   </div>
 
-                  <div class="fr-mb-1w">
+                  <div>
                     {% if simulation.can_be_deleted and has_change_permission %}
                       <button type="button"
                               aria-controls="simulation-delete-modal-{{ simulation.id }}"
