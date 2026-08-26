@@ -60,9 +60,11 @@
 })(this, window.UrlMapping);
 
 window.addEventListener('load', function () {
-  const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
-  const shortenUrl = dialogElt.getAttribute('data-shorten-url') == "true";
-  const analyticEventName = dialogElt.getAttribute('data-event-name');
-  const shareModal = new ShareModal(dialogElt, shortenUrl, analyticEventName);
-  shareModal.init();
+  if (window.SHARE_MODAL_DIALOG_ID) {
+    const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
+    const shortenUrl = dialogElt.getAttribute('data-shorten-url') === "true";
+    const analyticEventName = dialogElt.getAttribute('data-event-name');
+    const shareModal = new ShareModal(dialogElt, shortenUrl, analyticEventName);
+    shareModal.init();
+  }
 });
