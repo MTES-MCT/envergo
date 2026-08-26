@@ -35,13 +35,7 @@
                     </div>
                   {% endif %}
                 </td>
-                <td class="comment-col fr-cell--multiline">
-
-                  <span aria-describedby="full-comment-{{ forloop.counter }}">{{ simulation.comment|truncatewords_html:20 }}</span>
-                  <span class="fr-tooltip fr-placement"
-                        id="full-comment-{{ forloop.counter }}"
-                        role="tooltip">{{ simulation.comment }}</span>
-                </td>
+                <td class="comment-col fr-cell--multiline">{% truncated_comment simulation.comment forloop.counter 135 %}</td>
                 <td class="status-col">
                   {% if simulation.is_active %}
                     <p class="fr-badge fr-badge--sm fr-badge--success">Active</p>

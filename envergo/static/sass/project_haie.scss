@@ -1302,6 +1302,11 @@ button.hide-expanded[aria-expanded="true"] {
   .comment-col {
     hyphens: auto;
     overflow-wrap: break-word;
+    line-height: 1.2rem;
+
+    .more.fr-collapse--expanded {
+      overflow-y: clip;
+    }
 
     .fr-btn {
       font-size: 0.875rem;
