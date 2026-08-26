@@ -1289,6 +1289,10 @@ button.hide-expanded[aria-expanded="true"] {
 
 #alternative-simulations-table {
   .fr-btn.btn--link {
+    min-height: 0;
+
+    --underline-img: linear-gradient(0deg, currentcolor, currentcolor);
+
     background-image: var(--underline-img), var(--underline-img);
     background-position:
       var(--underline-x) 100%,
@@ -1298,6 +1302,10 @@ button.hide-expanded[aria-expanded="true"] {
       var(--underline-hover-width) calc(var(--underline-thickness) * 2),
       var(--underline-idle-width) var(--underline-thickness);
     transition: background-size 0s;
+
+    &:hover {
+      --underline-hover-width: var(--underline-max-width);
+    }
   }
 
   form {
