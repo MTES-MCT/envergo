@@ -84,22 +84,23 @@
                   </div>
 
                   <div class="fr-mb-1w">
-                    <a href="#alternative-simulations-table"
-                       role="button"
-                       title="Partager le lien vers cette simulation"
-                       class="js fr-link fr-link--sm fr-link--icon-left fr-icon-mail-line share-btn"
-                       data-fr-opened="false"
-                       aria-controls="share-modal-{{ simulation.id }}"
-                       data-btn="bottom">Partager la simulation</a>
+
+                    <button title="Partager le lien vers cette simulation"
+                            data-fr-opened="false"
+                            aria-controls="share-modal-{{ simulation.id }}"
+                            class="action fr-btn fr-btn--sm fr-icon-mail-line fr-btn--icon-left fr-btn--tertiary-no-outline btn--link">
+                      Partager la simulation
+                    </button>
+
                   </div>
 
                   <div class="fr-mb-1w">
                     {% if simulation.can_be_deleted and has_change_permission %}
-                      <a href="#alternative-simulations-table"
-                         aria-controls="simulation-delete-modal-{{ simulation.id }}"
-                         data-fr-opened="false"
-                         class="action fr-link--sm fr-link--icon-left fr-icon-delete-line"
-                         title="Supprimer la simulation">Supprimer</a>
+                      <button type="button"
+                              aria-controls="simulation-delete-modal-{{ simulation.id }}"
+                              data-fr-opened="false"
+                              class="action fr-link--sm fr-link--icon-left fr-btn--tertiary-no-outline fr-icon-delete-line btn--link"
+                              title="Supprimer la simulation">Supprimer</button>
                     {% else %}
                       <button type="button"
                               disabled="disabled"
