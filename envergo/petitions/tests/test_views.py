@@ -2540,7 +2540,7 @@ class TestAlternativeResultView:
         return project
 
     def test_alternatives_result_view_permissions(
-        self, client, haie_user, haie_coordinator_44, project
+        self, client, haie_user, haie_instructor_44, project
     ):
         """Test alternative result page view permissions"""
         simulation = SimulationFactory(project=project, comment="Simulation 2")
@@ -2564,7 +2564,7 @@ class TestAlternativeResultView:
         assert response.url.startswith(reverse("moulinette_form"))
 
     def test_alternatives_result_view_content(
-        self, client, haie_user, haie_coordinator_44, project
+        self, client, haie_user, haie_instructor_44, project
     ):
         """Test alternative result page view permissions"""
         simulation_moulinette_url = update_qs(
@@ -2580,7 +2580,7 @@ class TestAlternativeResultView:
         )
 
         # AS instructor
-        client.force_login(haie_coordinator_44)
+        client.force_login(haie_instructor_44)
 
         # WHEN I visit active and initiale simulation page
         display_active_simulation_url = reverse(
