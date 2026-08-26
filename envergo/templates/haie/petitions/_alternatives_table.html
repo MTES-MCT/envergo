@@ -1,13 +1,32 @@
 {% load utils %}
 
 <div id="alternative-simulations-table"
-     class="fr-table fr-table--sm fr-mb-3w">
+     class="fr-table fr-table--sm fr-table--no-caption fr-mb-3w">
+
+  <div class="fr-table__header fr-mb-3w">
+    <h3 class="fr-h4">Liste des simulations</h3>
+    <div class="action-start">
+
+      <a href="{{ active_simulation_form_url }}"
+         class="action fr-btn fr-btn--icon-left fr-icon-play-circle-line"
+         target="_blank"
+         rel="noopener"
+         title="Démarrer une nouvelle simulation (nouvel onglet)"
+         data-sql-event-category="dossier"
+         data-sql-event-action="simulation_alt"
+         data-sql-event-metadata='{"reference": "{{ object.reference }}", "action": "start"}'>
+        Démarrer une nouvelle simulation
+      </a>
+      <p class="fr-hint-text">Depuis la simulation active</p>
+    </div>
+  </div>
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
       <div class="fr-table__content">
+
         <table>
           <caption>
-            Liste des simulations
+            Table des simulations
           </caption>
           <thead>
             <tr>
@@ -20,6 +39,7 @@
               </th>
             </tr>
           </thead>
+
           <tbody>
             {% for simulation in simulations %}
               <tr>

@@ -1258,6 +1258,14 @@ button.hide-expanded[aria-expanded="true"] {
     margin: 0;
   }
 
+  .fr-table__header {
+    align-items: start;
+  }
+
+  .action.fr-btn[target="_blank"]::after {
+    display: none;
+  }
+
   .author-col {
     width: 10%;
   }
@@ -1308,11 +1316,6 @@ button.hide-expanded[aria-expanded="true"] {
       &:hover {
         background-color: transparent;
       }
-    }
-
-    .action[target="_blank"][class*=" fr-icon-"]::after {
-      display: none;
-      content: "";
     }
   }
 }
