@@ -1214,22 +1214,6 @@ div.title-with-link-container {
   }
 }
 
-#alternative-notice {
-  filter: drop-shadow(var(--raised-shadow));
-
-  .fr-notice__body {
-    display: block;
-  }
-
-  p {
-    --text-spacing: 0 0 8px 0;
-  }
-}
-
-#alternative-share {
-  background-color: var(--background-alt-grey);
-}
-
 #faq-dropdown-btn {
   width: 20rem;
 }
@@ -1382,6 +1366,45 @@ button.hide-expanded[aria-expanded="true"] {
       &:hover {
         background-color: transparent;
       }
+    }
+  }
+}
+
+#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  .fr-notice__title {
+    font-weight: 700;
+  }
+
+  .fr-notice__body {
+    display: block;
+  }
+
+  p {
+    --text-spacing: 0 0 8px 0;
+  }
+}
+
+@media only screen and (width > 1247px) {
+  #project-result {
+    & > section#project-result-top-bar .fr-notice__body > * {
+      margin-left: 5rem; /* Mesure visuelle pour éviter un calcul fastidieux */
+    }
+  }
+}
+
+.alternative-share {
+  background-color: var(--background-alt-grey);
+
+  &__title {
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+
+    @media (width >= 48em) {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
     }
   }
 }
