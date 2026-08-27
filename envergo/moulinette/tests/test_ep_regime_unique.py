@@ -561,10 +561,12 @@ def test_ru_zone_query_runs_once(
         "coeff_compensation": {
             "zone_A": {
                 "X_densite": 60,
-                "R1_non_arboree_HD": 1.5,
-                "R2_non_arboree_LD": 1.5,
-                "R3_arboree_HD": 1.5,
-                "R4_arboree_LD": 1.5,
+                "R1_buissonnante_HD": 1.5,
+                "R2_buissonnante_LD": 1.5,
+                "R3_arbustive_HD": 1.5,
+                "R4_arbustive_LD": 1.5,
+                "R5_arboree_HD": 1.5,
+                "R6_arboree_LD": 1.5,
             }
         }
     }

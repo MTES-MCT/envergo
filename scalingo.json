@@ -1,5 +1,5 @@
 {
-  "stack": "scalingo-22",
+  "stack": "scalingo-24",
   "formation": {
     "web": {
       "amount": 1,
@@ -36,13 +36,13 @@
       "value": "False"
     },
     "DJANGO_AWS_S3_ENDPOINT_URL": {
-      "value": "https://envergo-stage.s3.fr-par.scw.cloud"
+      "value": "https://s3.fr-par.scw.cloud"
     },
-    "DJANGO_AWS_STORAGE_BUCKET_NAME": {
-      "value": "envergo-stage"
+    "DJANGO_AWS_PRIVATE_BUCKET_NAME": {
+      "value": "envergo-staging-private"
     },
-    "DJANGO_AWS_UPLOAD_BUCKET_NAME": {
-      "value": "envergo-upload-stage"
+    "DJANGO_AWS_PUBLIC_BUCKET_NAME": {
+      "value": "envergo-staging-public"
     },
     "DJANGO_DEMARCHE_NUMERIQUE_ENABLED": {
       "value": "True"

@@ -1,14 +1,14 @@
 {
   "name": "envergo",
   "version": "1.0.0",
+  "type": "module",
   "engines": {
-    "node": "20",
-    "npm": "10"
+    "node": "24",
+    "npm": "11"
   },
   "dependencies": {
     "@gouvfr/dsfr": "^1.14.3",
     "accessible-autocomplete": "^3.0.1",
-    "browser-sync": "^3.0.4",
     "dropzone": "^6.0.0-beta.2",
     "geodesy": "^2.4.0",
     "leaflet": "^1.9.4",
@@ -20,17 +20,7 @@
     "@types/node": "^24.6.2",
     "autoprefixer": "^10.4.20",
     "cssnano": "^7.0.6",
-    "gulp": "^5.0.0",
-    "gulp-cli": "^3.0.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-imagemin": "^9.1.0",
-    "gulp-plumber": "^1.2.1",
-    "gulp-postcss": "^10.0.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-sass": "^5.0.0",
-    "gulp-uglify-es": "^3.0.0",
-    "node-sass-tilde-importer": "^1.0.2",
-    "pixrem": "^5.0.0",
+    "postcss-cli": "^11.0.1",
     "prettier": "3.5.0",
     "sass": "^1.84.0",
     "stylelint": "^16.14.1",
@@ -40,8 +30,10 @@
     "last 2 versions"
   ],
   "scripts": {
-    "dev": "gulp",
-    "build": "gulp build",
+    "build:sass": "sass --no-source-map envergo/static/sass:envergo/static/css",
+    "build:postcss": "postcss envergo/static/css/project.css envergo/static/css/project_admin.css envergo/static/css/project_haie.css --dir envergo/static/css --ext .min.css --no-map",
+    "build": "npm run build:sass && npm run build:postcss",
+    "dev": "npm run build && sass --watch --no-source-map envergo/static/sass:envergo/static/css",
     "e2e-haie": "TEST_DIR='./e2e/haie' playwright test",
     "e2e-haie:ui": "TEST_DIR='./e2e/haie' playwright test --ui",
     "e2e-amenagement": "TEST_DIR='./e2e/amenagement' playwright test",

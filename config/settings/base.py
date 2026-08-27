@@ -294,8 +294,12 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
     "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "tchap": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "public": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
 }
+
+# Bucket names — only meaningful in production (set via env vars).
+AWS_PRIVATE_BUCKET_NAME = ""
+AWS_PUBLIC_BUCKET_NAME = ""
 
 # CELERY
 if USE_TZ:

@@ -6,8 +6,7 @@
       <li>
         <a href="{% querystring page=1 %}"
            class="fr-pagination__link fr-pagination__link--first"
-           aria-disabled="true"
-           role="link">Première page</a>
+           title="Première page">Première page</a>
       </li>
       <li>
         <a href="{% querystring page=page_obj.previous_page_number %}"
@@ -16,10 +15,58 @@
       </li>
     {% endif %}
 
-    <a href="#"
-       class="fr-pagination__link"
-       aria-current="page"
-       title="Page {{ page_obj.number }}">{{ page_obj.number }}</a>
+    {% if page_obj.number == 1 %}
+      <li>
+        <a href="#"
+           class="fr-pagination__link"
+           aria-current="page"
+           title="Page 1">1</a>
+      </li>
+    {% else %}
+      <li>
+        <a href="{% querystring page=1 %}"
+           class="fr-pagination__link"
+           title="Page 1">1</a>
+      </li>
+    {% endif %}
+
+    {% if page_obj.number > 2 %}
+      <li class="fr-hidden fr-unhidden-lg">
+        <span class="fr-pagination__link">…</span>
+      </li>
+    {% endif %}
+
+    {% if page_obj.number != 1 and page_obj.number != page_obj.paginator.num_pages %}
+      <li>
+        <a href="#"
+           class="fr-pagination__link"
+           aria-current="page"
+           title="Page {{ page_obj.number }}">{{ page_obj.number }}</a>
+      </li>
+    {% endif %}
+
+    {% if page_obj.has_next and page_obj.next_page_number != page_obj.paginator.num_pages %}
+      <li class="fr-hidden fr-unhidden-lg">
+        <span class="fr-pagination__link">…</span>
+      </li>
+    {% endif %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      {% if page_obj.number == page_obj.paginator.num_pages %}
+        <li>
+          <a href="#"
+             class="fr-pagination__link"
+             aria-current="page"
+             title="Page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+        </li>
+      {% else %}
+        <li>
+          <a href="{% querystring page=page_obj.paginator.num_pages %}"
+             class="fr-pagination__link"
+             title="Page {{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+        </li>
+      {% endif %}
+    {% endif %}
 
     {% if page_obj.has_next %}
       <li>

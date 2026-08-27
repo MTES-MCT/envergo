@@ -1,11 +1,20 @@
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
+from django.core.files.storage import storages
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 
 from envergo.utils.markdown import markdown_to_html
+
+
+def get_public_storage():
+    """Return the public storage backend.
+
+    A plain function because Django migrations cannot serialize lambdas.
+    """
+    return storages["public"]
 
 
 class TopBar(models.Model):
@@ -66,7 +75,12 @@ def max_file_size(value):
 class HostedFile(models.Model):
     """A single file."""
 
-    file = models.FileField(_("File"), upload_to="f", validators=[max_file_size])
+    file = models.FileField(
+        _("File"),
+        upload_to="documents",
+        storage=get_public_storage,
+        validators=[max_file_size],
+    )
     name = models.CharField(_("Name"), max_length=256)
     description = models.TextField(_("Description"), blank=True)
     uploaded_by = models.ForeignKey("users.User", on_delete=models.PROTECT)

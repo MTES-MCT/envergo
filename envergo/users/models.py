@@ -7,6 +7,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models import CharField
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,15 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.name}"
+
+    @cached_property
+    def department_ids(self):
+        """Ids of the user's departments.
+
+        Cached because permission checks run once per dossier on list
+        pages: a query per call would be an N+1.
+        """
+        return set(self.departments.values_list("id", flat=True))
 
     def is_involved_in_guh(self):
         """Returns True if user has instructor right or if user has department or token"""
