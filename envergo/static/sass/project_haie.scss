@@ -1020,14 +1020,17 @@ ul.instructor-view-list {
   border-top: 1px solid var(--border-default-grey);
 }
 
-.dn-logo-wrap {
-  white-space: nowrap;
-}
-
 .dn-logo {
   vertical-align: middle;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
+  background-color: var(--background-alt-grey);
+  border-radius: 3px;
+  padding: 4px;
+}
+
+.dn-value-container {
+  text-wrap: balance;
 }
 
 .dn-files {

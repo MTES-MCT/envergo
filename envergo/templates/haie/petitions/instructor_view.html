@@ -51,28 +51,26 @@
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
-                  {% spaceless %}
-                    <span>Identité&nbsp;</span>
-                    {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
-                    <span>&nbsp;:</span>
-                  {% endspaceless %}
+                  Identité :
                 </b>
               </p>
-              <div class="champ-content">{{ ds_info.applicant }}</div>
+              <div class="champ-content dn-value-container">
+                {{ ds_info.applicant }}
+                {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
+              </div>
             </div>
           {% endif %}
           {% if ds_info.organization %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
-                  {% spaceless %}
-                    <span>Structure&nbsp;</span>
-                    {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
-                    <span>&nbsp;:</span>
-                  {% endspaceless %}
+                  Structure :
                 </b>
               </p>
-              <div class="champ-content">{{ ds_info.organization }}</div>
+              <div class="champ-content dn-value-container">
+                {{ ds_info.organization }}
+                {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
+              </div>
             </div>
           {% endif %}
           {% display_ds_field "profil_beneficiaire" "inline" %}
@@ -84,14 +82,13 @@
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
-                  {% spaceless %}
-                    <span>Identité&nbsp;</span>
-                    {% include "haie/petitions/_dn_logo.html" with id="mandataire-identite" %}
-                    <span>&nbsp;:</span>
-                  {% endspaceless %}
+                  Identité :
                 </b>
               </p>
-              <div class="champ-content">{{ ds_info.representative }}</div>
+              <div class="champ-content dn-value-container">
+                {{ ds_info.representative }}
+                {% include "haie/petitions/_dn_logo.html" with id="mandataire-identite" %}
+              </div>
             </div>
           </div>
         {% endif %}
@@ -131,43 +128,9 @@
         <li>{% field_summary moulinette.triage_form.contexte %}</li>
         {% if moulinette.triage_form.contexte.value == "projet-urba" %}
           <li>
-            <span>
-              <b>
-                {% spaceless %}
-                  <span>Description du projet de construction ou d’aménagement&nbsp;</span>
-                  {% include "haie/petitions/_dn_logo.html" with id="description-projet-urba" %}
-                  <span>&nbsp;:</span>
-                {% endspaceless %}
-              </b>
-            </span>
-            {% get_ds_field "description_projet_urba" as desc_urba_field %}
-            <span>
-              {% if desc_urba_field and desc_urba_field.value %}
-                {{ desc_urba_field.value }}
-              {% else %}
-                <i>Non renseigné</i>
-              {% endif %}
-            </span>
+            {% display_ds_field "description_projet_urba" "inline" label="Description du projet de construction ou d’aménagement" %}
           </li>
-          <li>
-            <span>
-              <b>
-                {% spaceless %}
-                  <span>N° d’autorisation d’urbanisme&nbsp;</span>
-                  {% include "haie/petitions/_dn_logo.html" with id="numero-auto-urba" %}
-                  <span>&nbsp;:</span>
-                {% endspaceless %}
-              </b>
-            </span>
-            {% get_ds_field "numero_auto_urba" as auto_urba_field %}
-            <span>
-              {% if auto_urba_field and auto_urba_field.value %}
-                {{ auto_urba_field.value }}
-              {% else %}
-                <i>Non renseigné</i>
-              {% endif %}
-            </span>
-          </li>
+          <li>{% display_ds_field "numero_auto_urba" "inline" label="N° d’autorisation d’urbanisme" %}</li>
         {% endif %}
       </ul>
 
