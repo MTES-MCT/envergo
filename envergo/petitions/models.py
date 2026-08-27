@@ -562,7 +562,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             (
                 user.is_active,
                 user.access_haie,
-                user.is_instructor,
+                user.is_coordinator,
                 self.department_id in user.department_ids,
             )
         )
@@ -672,6 +672,12 @@ class Simulation(models.Model):
     comment = models.TextField("Commentaire")
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        verbose_name=_("Created by"),
+        null=True,
+    )
 
     class Meta:
         verbose_name = "Simulation alternative"
