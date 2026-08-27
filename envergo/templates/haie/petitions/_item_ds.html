@@ -6,9 +6,8 @@
     <p class="champ-label fr-mb-0">
       {% spaceless %}
         <b>
-          <span>{{ item.label }}&nbsp;</span>
-          {% include "haie/petitions/_dn_logo.html" with id=item.label|slugify %}
-          {% if inline and not item.label|ends_with_punctuation %}<span>&nbsp;:</span>{% endif %}
+          <span>{{ item.label }}</span>
+          {% if inline and not item.label|ends_with_punctuation %}<span>:</span>{% endif %}
         </b>
       {% endspaceless %}
     </p>
@@ -30,14 +29,20 @@
                          src="{{ file.url }}"
                          alt="{{ file.filename }}" />
                     <figcaption class="fr-content-media__caption">
-                      <a href="{{ file.url }}" target="_blank" rel="noopener external">{{ file.filename }}</a>
+                      <a href="{{ file.url }}" target="_blank" rel="noopener external">
+                        {{ file.filename }}
+                        {% include "haie/petitions/_dn_logo.html" with id=item.label|slugify %}
+                      </a>
                     </figcaption>
                   </div>
                 </figure>
               </div>
             {% else %}
               <div class="fr-col-12">
-                <a href="{{ file.url }}" target="_blank" rel="noopener external">{{ file.filename }}</a>
+                <a href="{{ file.url }}" target="_blank" rel="noopener external">
+                  {{ file.filename }}
+                  {% include "haie/petitions/_dn_logo.html" with id=item.label|slugify %}
+                </a>
               </div>
             {% endif %}
           {% empty %}
@@ -47,9 +52,10 @@
           {% endfor %}
         </div>
       {% else %}
-        <div>
+        <div class="dn-value-container">
           {{ item.value|urlize }}
-          {% if item.unit %}{{ item.unit }}{% endif %}
+          {% if item.unit %}<span>{{ item.unit }}</span>{% endif %}
+          {% include "haie/petitions/_dn_logo.html" with id=item.label|slugify %}
         </div>
       {% endif %}
     </div>
