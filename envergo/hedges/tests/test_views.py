@@ -141,6 +141,7 @@ def test_get_conditions_url_read_only_without_hedge_data(client):
 
 def test_hedge_input_post_creates_a_new_snapshot(client):
     """Posting to the id-less url always creates a fresh HedgeData."""
+    DCConfigHaieFactory()
     payload = [HedgeFactory().toDict()]
     url = reverse("input_hedges", args=["44", "removal"])
 
@@ -148,7 +149,8 @@ def test_hedge_input_post_creates_a_new_snapshot(client):
 
     assert res.status_code == 201
     input_id = res.json()["input_id"]
-    assert HedgeData.objects.filter(id=input_id).exists()
+    hedge_data = HedgeData.objects.get(id=input_id)
+    assert hedge_data.data[0]["latLngs"] == payload[0]["latLngs"]
 
 
 def test_hedge_input_post_to_existing_uuid_is_rejected(client):
@@ -163,3 +165,109 @@ def test_hedge_input_post_to_existing_uuid_is_rejected(client):
     assert res.status_code == 405
     hedge_data.refresh_from_db()
     assert hedge_data.data == original_data
+
+
+class TestStoredXSS:
+    """YWH-PGM10356-251: stored XSS via unvalidated HedgeData JSON."""
+
+    XSS_PAYLOAD = "x'><script>alert('XSS')</script><div id='y"
+
+    def test_payload_is_escaped_on_public_page(self, client):
+        hedge_data = HedgeDataFactory(
+            data=[HedgeFactory(additionalData__note=self.XSS_PAYLOAD).toDict()]
+        )
+        url = reverse("input_hedges", args=["44", "removal", hedge_data.id])
+
+        res = client.get(url)
+
+        assert res.status_code == 200
+        assert b"<script>alert" not in res.content
+
+    def test_payload_is_escaped_on_admin_map(self, admin_client):
+        hedge_data = HedgeDataFactory(
+            data=[HedgeFactory(additionalData__note=self.XSS_PAYLOAD).toDict()]
+        )
+        url = reverse("admin:hedges_hedgedata_map", args=[hedge_data.id])
+
+        res = admin_client.get(url)
+
+        assert res.status_code == 200
+        assert b"<script>alert" not in res.content
+
+    def test_payload_in_post_is_rejected(self, client):
+        """The exact attack from the bug bounty report: only a note field, no valid data."""
+        DCConfigHaieFactory()
+        entry = HedgeFactory().toDict()
+        entry["additionalData"] = {"note": self.XSS_PAYLOAD}
+        url = reverse("input_hedges", args=["44", "removal"])
+
+        res = client.post(
+            url, data=json.dumps([entry]), content_type="application/json"
+        )
+
+        assert res.status_code == 400
+
+    def test_unknown_additional_data_keys_are_stripped(self, client):
+        DCConfigHaieFactory()
+        payload = [HedgeFactory(additionalData__injected_key="malicious").toDict()]
+        url = reverse("input_hedges", args=["44", "removal"])
+
+        res = client.post(
+            url, data=json.dumps(payload), content_type="application/json"
+        )
+
+        assert res.status_code == 201
+        stored = HedgeData.objects.get(id=res.json()["input_id"])
+        assert "injected_key" not in stored.data[0]["additionalData"]
+
+    def test_invalid_type_haie_is_rejected(self, client):
+        DCConfigHaieFactory()
+        payload = [HedgeFactory(additionalData__type_haie="not_a_real_type").toDict()]
+        url = reverse("input_hedges", args=["44", "removal"])
+
+        res = client.post(
+            url, data=json.dumps(payload), content_type="application/json"
+        )
+
+        assert res.status_code == 400
+
+    def test_invalid_hedge_type_is_rejected(self, client):
+        DCConfigHaieFactory()
+        entry = HedgeFactory().toDict()
+        entry["type"] = "INVALID"
+        url = reverse("input_hedges", args=["44", "removal"])
+
+        res = client.post(
+            url, data=json.dumps([entry]), content_type="application/json"
+        )
+
+        assert res.status_code == 400
+
+    def test_invalid_latlngs_is_rejected(self, client):
+        DCConfigHaieFactory()
+        entry = HedgeFactory().toDict()
+        entry["latLngs"] = "not a list"
+        url = reverse("input_hedges", args=["44", "removal"])
+
+        res = client.post(
+            url, data=json.dumps([entry]), content_type="application/json"
+        )
+
+        assert res.status_code == 400
+
+    def test_absent_booleans_are_normalized_to_false(self, client):
+        DCConfigHaieFactory()
+        entry = HedgeFactory().toDict()
+        del entry["additionalData"]["sur_parcelle_pac"]
+        del entry["additionalData"]["vieil_arbre"]
+        url = reverse("input_hedges", args=["44", "removal"])
+
+        res = client.post(
+            url, data=json.dumps([entry]), content_type="application/json"
+        )
+
+        assert res.status_code == 201
+        stored = HedgeData.objects.get(id=res.json()["input_id"])
+        stored_additional = stored.data[0]["additionalData"]
+        assert stored_additional["sur_parcelle_pac"] is False
+        assert stored_additional["vieil_arbre"] is False
