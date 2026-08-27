@@ -471,6 +471,7 @@ createApp({
 
     const helpBubble = mode !== READ_ONLY_MODE ? ref("initialHelp") : ref(null);
     const hedgeBeingDrawn = ref(null);
+    const isPointerOverMap = ref(false);
 
     // Reactive properties for acceptability conditions
     const conditions = reactive({ status: 'loading', conditions: [] });
@@ -842,6 +843,29 @@ createApp({
         position: 'bottomright'
       }).addTo(map);
 
+      const setPointerOverMap = (value) => {
+        isPointerOverMap.value = value;
+        // The length tooltip is a plain DOM element (not Vue-bound), so toggle
+        // it here too.
+        if (!value) {
+          tooltip.style.display = 'none';
+        } else if (tooltip.innerHTML !== '') {
+          tooltip.style.display = 'block';
+        }
+      };
+
+      const mapContainer = L.DomUtil.get('map');
+      mapContainer.addEventListener('mouseenter', () => setPointerOverMap(true));
+      mapContainer.addEventListener('mouseleave', () => setPointerOverMap(false));
+
+      // The Leaflet controls sit inside #map, so hovering them does not leave
+      // #map. Treat their container as "not the map" as well.
+      const leafletControls = mapContainer.querySelector('.leaflet-control-container');
+      if (leafletControls) {
+        leafletControls.addEventListener('mouseenter', () => setPointerOverMap(false));
+        leafletControls.addEventListener('mouseleave', () => setPointerOverMap(true));
+      }
+
       // Remove helpBubbleMessage on zoom
       let isSetupDone = false;
       map.on('zoomend', () => {
@@ -901,6 +925,7 @@ createApp({
       startDrawingToRemove,
       zoomOut,
       helpBubble,
+      isPointerOverMap,
       saveData,
       cancel,
       showHedgeModal,
