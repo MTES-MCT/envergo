@@ -22,6 +22,7 @@ from envergo.petitions.models import (
     Simulation,
     StatusLog,
 )
+from envergo.urlmappings.utils import unfold_url
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
 from envergo.utils.validators import validate_mime
@@ -547,13 +548,13 @@ def list_moulinette_errors(moulinette):
 
 
 def resolve_consultation_url(url):
-    """If `url` is a petition project consultation url, return the url of that
-    project's initial simulation instead.
+    """If `url` is a petition project consultation url, return the url of that project's initial simulation instead.
 
     Petitioners sometimes send the consultation link (obtained after submitting
     a project) instead of a simulation link when an instructor asks for an
     alternative simulation. Transparently swap it for the real simulation url.
     """
+    url = unfold_url(url)
     path = urlparse(url).path
     try:
         match = resolve(path, urlconf="config.urls_haie")
