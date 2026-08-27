@@ -1,13 +1,32 @@
 {% load utils %}
 
 <div id="alternative-simulations-table"
-     class="fr-table fr-table--sm fr-mb-3w">
+     class="fr-table fr-table--sm fr-table--no-caption fr-mb-3w">
+
+  <div class="fr-table__header fr-mb-3w">
+    <h3 class="fr-h4">Liste des simulations</h3>
+    <div class="action-start">
+
+      <a href="{{ active_simulation_form_url }}"
+         class="action fr-btn fr-btn--icon-left fr-icon-play-circle-line"
+         target="_blank"
+         rel="noopener"
+         title="Démarrer une nouvelle simulation (nouvel onglet)"
+         data-sql-event-category="dossier"
+         data-sql-event-action="simulation_alt"
+         data-sql-event-metadata='{"reference": "{{ object.reference }}", "action": "start"}'>
+        Démarrer une nouvelle simulation
+      </a>
+      <p class="fr-hint-text">Depuis la simulation active</p>
+    </div>
+  </div>
   <div class="fr-table__wrapper">
     <div class="fr-table__container">
       <div class="fr-table__content">
+
         <table>
           <caption>
-            Liste des simulations
+            Table des simulations
           </caption>
           <thead>
             <tr>
@@ -20,6 +39,7 @@
               </th>
             </tr>
           </thead>
+
           <tbody>
             {% for simulation in simulations %}
               <tr>
@@ -35,13 +55,7 @@
                     </div>
                   {% endif %}
                 </td>
-                <td class="comment-col fr-cell--multiline">
-
-                  <span aria-describedby="full-comment-{{ forloop.counter }}">{{ simulation.comment|truncatewords_html:20 }}</span>
-                  <span class="fr-tooltip fr-placement"
-                        id="full-comment-{{ forloop.counter }}"
-                        role="tooltip">{{ simulation.comment }}</span>
-                </td>
+                <td class="comment-col fr-cell--multiline">{% truncated_comment simulation.comment forloop.counter 135 %}</td>
                 <td class="status-col">
                   {% if simulation.is_active %}
                     <p class="fr-badge fr-badge--sm fr-badge--success">Active</p>
@@ -62,30 +76,31 @@
                 </td>
 
                 <td class="actions-col">
-                  <div class="fr-mb-1w">
+                  <div class="fr-mb-1v">
                     <a href="{% url 'petition_project_instructor_alternative_display' petition_project.reference simulation.id %}"
                        class="action fr-icon--sm fr-link--icon-left fr-icon-eye-line"
                        rel="noopener"
                        title="Voir le résultat de cette simulation">Voir la simulation</a>
                   </div>
 
-                  <div class="fr-mb-1w">
-                    <a href="#alternative-simulations-table"
-                       role="button"
-                       title="Partager le lien vers cette simulation"
-                       class="js fr-link fr-link--sm fr-link--icon-left fr-icon-mail-line share-btn"
-                       data-fr-opened="false"
-                       aria-controls="share-modal-{{ simulation.id }}"
-                       data-btn="bottom">Partager la simulation</a>
+                  <div>
+
+                    <button title="Partager le lien vers cette simulation"
+                            data-fr-opened="false"
+                            aria-controls="share-modal-{{ simulation.id }}"
+                            class="action js fr-btn fr-btn--sm fr-icon-mail-line fr-btn--icon-left fr-btn--tertiary-no-outline btn--link">
+                      Partager la simulation
+                    </button>
+
                   </div>
 
-                  <div class="fr-mb-1w">
+                  <div>
                     {% if simulation.can_be_deleted and has_change_permission %}
-                      <a href="#alternative-simulations-table"
-                         aria-controls="simulation-delete-modal-{{ simulation.id }}"
-                         data-fr-opened="false"
-                         class="action fr-link--sm fr-link--icon-left fr-icon-delete-line"
-                         title="Supprimer la simulation">Supprimer</a>
+                      <button type="button"
+                              aria-controls="simulation-delete-modal-{{ simulation.id }}"
+                              data-fr-opened="false"
+                              class="action fr-btn fr-btn--sm fr-icon-delete-line fr-btn--icon-left fr-btn--tertiary-no-outline btn--link"
+                              title="Supprimer la simulation">Supprimer</button>
                     {% else %}
                       <button type="button"
                               disabled="disabled"

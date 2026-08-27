@@ -73,9 +73,9 @@
     {% if has_change_permission %}
       <div class="form-actions">
         <button type="button"
-                class="fr-btn fr-btn--primary hide-expanded fr-btn--icon-left fr-icon-add-line"
+                class="fr-btn fr-btn--secondary hide-expanded fr-btn--icon-left fr-icon-add-line"
                 {% if form.errors %}aria-expanded="true" data-fr-opened="true" {% else %}aria-expanded="false" data-fr-opened="false" {% endif %}
-                aria-controls="add-alternative">Ajouter une simulation</button>
+                aria-controls="add-alternative">Enregistrer une URL de simulation</button>
       </div>
     {% endif %}
   </section>
@@ -138,7 +138,7 @@
                 <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
                   <li>
                     <form method="post"
-                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "activate" %}">
+                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id 'activate' %}">
                       {% csrf_token %}
 
                       <button type="submit" class="fr-btn fr-btn--icon-left">Activer</button>
@@ -179,7 +179,7 @@
                 <ul class="fr-btns-group fr-btns-group--right fr-btns-group--inline-reverse fr-btns-group--inline-lg">
                   <li>
                     <form method="post"
-                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id "delete" %}">
+                          action="{% url 'petition_project_instructor_alternative_edit' petition_project.reference simulation.id 'delete' %}">
                       {% csrf_token %}
 
                       <button type="submit" class="fr-btn fr-btn--icon-left">Supprimer</button>
@@ -207,7 +207,6 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script defer src="{% static 'js/libs/copy_buttons.js' %}"></script>
   <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
 {% endblock %}

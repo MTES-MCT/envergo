@@ -1,4 +1,4 @@
-<dialog aria-labelledby="share-modal-title"
+<dialog aria-labelledby="share-modal-title{% if uid %}-{{ uid }}{% endif %}"
         role="dialog"
         id="share-modal{% if uid %}-{{ uid }}{% endif %}"
         data-shorten-url="{{ shorten_url|yesno:"true,false,false" }}"
@@ -14,13 +14,14 @@
                     aria-controls="share-modal{% if uid %}-{{ uid }}{% endif %}">Fermer</button>
           </div>
           <div class="fr-modal__content">
-            <h1 id="share-modal-title" class="fr-modal__title">{{ title|default:"Partager cette page" }}</h1>
+            <h1 id="share-modal-title{% if uid %}-{{ uid }}{% endif %}"
+                class="fr-modal__title">{{ title|default:"Partager cette page" }}</h1>
             <p class="fr-mb-3w">Copiez-collez le lien ci-dessous dans un e-mail adressé à votre destinataire.</p>
 
             <div id="form-group-share-modal-email" class="fr-input-group">
               <input class="fr-input"
                      type="url"
-                     name="share-modal-email"
+                     name="share-modal-email{% if uid %}-{{ uid }}{% endif %}"
                      autocomplete="off"
                      value="{{ share_url }}" />
             </div>
@@ -42,4 +43,16 @@
   </div>
 </dialog>
 
-<script>window.SHARE_MODAL_DIALOG_ID = 'share-modal{% if uid %}-{{ uid }}{% endif %}';</script>
+{% if uid %}
+  <script>
+    window.addEventListener('load', function () {
+      const dialogElt = document.getElementById('share-modal{% if uid %}-{{ uid }}{% endif %}');
+      const shortenUrl = dialogElt.getAttribute('data-shorten-url') === "true";
+      const analyticEventName = dialogElt.getAttribute('data-event-name');
+      const shareModal = new ShareModal(dialogElt, shortenUrl, analyticEventName);
+      shareModal.init();
+    });
+  </script>
+{% else %}
+  <script>window.SHARE_MODAL_DIALOG_ID = 'share-modal{% if uid %}-{{ uid }}{% endif %}';</script>
+{% endif %}

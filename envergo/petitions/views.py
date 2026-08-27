@@ -1494,6 +1494,14 @@ class PetitionProjectInstructorAlternativeView(
 
         context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
 
+        # Add active simulation (aka project moulinette) form url
+        parsed_moulinette_url = urlparse(self.object.moulinette_url)
+        moulinette_params = parse_qs(parsed_moulinette_url.query)
+        moulinette_params["alternative"] = "true"
+        form_url = reverse("moulinette_form")
+        edit_url = update_qs(form_url, moulinette_params)
+        context["active_simulation_form_url"] = edit_url
+
         # Detailed errors of an activation that just failed (set by the edit
         # view across the redirect). Popped so they show only once.
         context["activation_errors"] = self.request.session.pop(
