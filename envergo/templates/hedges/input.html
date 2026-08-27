@@ -35,7 +35,7 @@
       <div id="map">
 
         <div id="help-bubble"
-             v-show="helpBubble"
+             v-show="helpBubble && (helpBubble === 'initialHelp' || isPointerOverMap)"
              class="help-bubble"
              :class="{ 'help-bubble--cursor': helpBubble !== 'initialHelp' }">
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
