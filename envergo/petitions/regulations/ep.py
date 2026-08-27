@@ -1,7 +1,7 @@
 from django.forms import ChoiceField
 from django.utils.module_loading import import_string
 
-from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeList, HedgeTypeFactory
 from envergo.hedges.regulations import NormandieQualityCondition, RUQualityCondition
 from envergo.moulinette.forms.fields import DisplayFieldMixin
 from envergo.moulinette.regulations.ep import (
@@ -105,6 +105,7 @@ def ep_regime_unique_get_instructor_view_context(
     context["ru_zone_configs"] = collect_zone_configs(
         moulinette.catalog.get("ru_hedge_data", {})
     )
+    context["RuHedgeType"] = HedgeTypeFactory.build_from_context(single_procedure=True)
 
     context["quality_condition"] = {}
     if plantation_evaluation:

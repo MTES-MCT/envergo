@@ -330,10 +330,14 @@ nav#evaluation-summary {
     display: none;
   }
 
-  #additional-forms.unbound {
+  /* Shared highlight for the blocks that appear mid-simulation */
+  #additional-forms.unbound,
+  #eviter-reduire {
     background-color: var(--blue-france-950-100-hover);
     padding: 1rem;
+  }
 
+  #additional-forms.unbound {
     .fr-input-group--error {
       &::before {
         background-image: none;
@@ -359,6 +363,10 @@ nav#evaluation-summary {
         box-shadow: inset 0 -2px 0 0 var(--border-plain-grey);
       }
     }
+  }
+
+  #eviter-reduire .eviter-reduire-motif {
+    margin-bottom: 1.5rem;
   }
 
   #optional-forms {

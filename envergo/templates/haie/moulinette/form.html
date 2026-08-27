@@ -32,7 +32,9 @@
         {% include '_form_header.html' with form=form %}
 
         <div class="form-section">{% render_field form.motif %}</div>
-        <div class="form-section">{% render_field form.reimplantation %}</div>
+        {% if form.reimplantation %}
+          <div class="form-section">{% render_field form.reimplantation %}</div>
+        {% endif %}
         <div class="form-section">{% render_field form.localisation_pac %}</div>
 
         <div class="form-section">

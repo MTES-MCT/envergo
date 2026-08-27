@@ -294,7 +294,12 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
     "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "public": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
 }
+
+# Bucket names — only meaningful in production (set via env vars).
+AWS_PRIVATE_BUCKET_NAME = ""
+AWS_PUBLIC_BUCKET_NAME = ""
 
 # CELERY
 if USE_TZ:
@@ -439,6 +444,11 @@ HOME_MAX_DEPARTMENT_TILES = env.int("HOME_MAX_DEPARTMENT_TILES", default=6)
 
 HAIE_SINGLE_PROCEDURE_ACTIVATED = env.bool(
     "DJANGO_HAIE_SINGLE_PROCEDURE_ACTIVATED", default=False
+)
+
+# Kill switch for the « Éviter / réduire » gate on the haie simulation form
+HAIE_EVITER_REDUIRE_ENABLED = env.bool(
+    "DJANGO_HAIE_EVITER_REDUIRE_ENABLED", default=True
 )
 
 DEMARCHE_NUMERIQUE = {

@@ -31,6 +31,7 @@
 {% endblock %}
 
 {% block extra_js %}
+  {{ hedge_data|json_script:"hedge-data" }}
   <script defer src="{% static 'leaflet/dist/leaflet.js' %}"></script>
   <script defer src="{% static 'js/libs/leaflet-icon-fix.js' %}"></script>
   <script>
@@ -61,7 +62,7 @@
       TO_REMOVE: { color: 'red', weight: 4, className: 'hedge to-remove' },
     };
 
-    const hedgeData = {{ hedge_data|safe }};
+    const hedgeData = JSON.parse(document.getElementById('hedge-data').textContent);
     hedgeData.map((hedge) => {
       let style = styles[hedge.type];
       var polyline = new L.Polyline(hedge.latLngs, style);
