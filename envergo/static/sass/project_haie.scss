@@ -1288,6 +1288,7 @@ button.hide-expanded[aria-expanded="true"] {
 }
 
 #alternative-simulations-table {
+  /* Button are displayed as links */
   .fr-btn.btn--link {
     min-height: 0;
 
@@ -1352,6 +1353,12 @@ button.hide-expanded[aria-expanded="true"] {
       line-height: 1.5rem;
       min-height: 2rem;
       padding: 0.25rem 0.75rem;
+    }
+
+    @supports (selector(:has(*))) {
+      &:has(.more.fr-collapse--expanded) .ellipsis {
+        display: none;
+      }
     }
   }
 
