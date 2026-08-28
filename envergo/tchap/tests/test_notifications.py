@@ -229,7 +229,8 @@ def test_notify_with_lock_releases_even_on_failure():
     assert cache.get(notifications.LOCK_KEY) is None
 
 
-def test_notify_with_lock_skips_store_when_lock_unavailable():
+def test_notify_with_lock_skips_store_when_lock_unavailable(caplog):
+    """The drop is accepted, but it must be loud enough to reach Sentry."""
     _make_credentials()
     with (
         patch("envergo.tchap.notifications._acquire_lock", return_value=False),
@@ -237,6 +238,10 @@ def test_notify_with_lock_skips_store_when_lock_unavailable():
     ):
         notifications._notify_with_lock("hello", "!room:example.org")
     mock_store.assert_not_called()
+
+    record = next(r for r in caplog.records if "crypto store lock" in r.message)
+    assert record.levelname == "ERROR"
+    assert record.room_id == "!room:example.org"
 
 
 # ---- _notify_with_store (checkpoint, DB-backed) --------------------------

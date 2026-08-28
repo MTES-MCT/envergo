@@ -67,7 +67,13 @@ def deliver(msg, site):
 def _notify_with_lock(msg, room_id):
     token = secrets.token_hex(8)
     if not _acquire_lock(token):
-        logger.warning("Could not acquire the tchap crypto store lock, skipping")
+        logger.error(
+            "Could not acquire the tchap crypto store lock, dropping the tchap notification",
+            extra={
+                "room_id": room_id,
+                "waited_seconds": LOCK_ACQUIRE_RETRIES * LOCK_ACQUIRE_DELAY,
+            },
+        )
         return
     try:
         # Read the credentials under the lock: the row carries the crypto store
