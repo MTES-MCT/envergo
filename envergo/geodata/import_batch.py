@@ -13,8 +13,9 @@ from dataclasses import dataclass, field
 
 from envergo.geodata.management.helpers import VALID_DATA_TYPES, VALID_MAP_TYPES
 
-REQUIRED_COLUMNS = ("reference", "file", "name", "description", "departments")
+REQUIRED_COLUMNS = ("reference", "name", "description", "departments")
 OPTIONAL_COLUMNS = (
+    "file",
     "display_name",
     "source",
     "map_type",
@@ -34,6 +35,11 @@ class ParsedBatchRow:
 
     Optional columns hold an empty string (or None for booleans) when the
     cell is blank, meaning "keep the existing value" on update.
+
+    `file` is optional: a blank cell means "carte existante, mise à jour des
+    métadonnées seule", i.e. update the Map's fields without re-importing its
+    geometry. Such a row can only target an already existing map (a file is
+    required to create one).
 
     `departments` is the exception among the required columns: an empty
     list is a legitimate value (a map covering the whole country has no
@@ -94,9 +100,9 @@ def parse_batch_row(line_no, raw_row):
             f"(max {REFERENCE_MAX_LENGTH} caractères)"
         ]
 
+    # A blank file cell is legitimate: it flags a metadata-only update of an
+    # existing map, so its geometry is never re-imported (see ParsedBatchRow).
     file_name = (raw_row.get("file") or "").strip()
-    if not file_name:
-        return None, [f"ligne {line_no} : nom de fichier manquant"]
 
     name = (raw_row.get("name") or "").strip()
     if not name:

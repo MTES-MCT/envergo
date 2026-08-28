@@ -138,18 +138,21 @@ def process_map_import_batch(task, batch_id):
             continue
         seen_references.add(result.reference)
 
-        batch_file = files_by_name.get(result.file)
-        if batch_file is None:
-            import_log.append(
-                f"ligne {line_no} : fichier {result.file} absent des "
-                f"fichiers téléversés"
-            )
-            continue
+        batch_file = None
+        if result.file:
+            batch_file = files_by_name.get(result.file)
+            if batch_file is None:
+                import_log.append(
+                    f"ligne {line_no} : fichier {result.file} absent des "
+                    f"fichiers téléversés"
+                )
+                continue
 
         try:
             with transaction.atomic():
                 map = import_batch_row(result, batch, batch_file)
-            maps_to_process.append(map.pk)
+            if batch_file is not None:
+                maps_to_process.append(map.pk)
             nb_ok += 1
         except Exception as e:
             message = f"ligne {line_no} ({result.reference}) : {e}"
@@ -187,13 +190,18 @@ def import_batch_row(row, batch, batch_file):
     `parse_batch_row`, except `departments`, where a blank cell means
     "aucun département" and clears the field.
 
-    The map file is copied from the upload bucket to the default (media)
-    storage, where every existing map tool expects it.
+    `batch_file` is None for a metadata-only update (blank file cell): the
+    map's file and `expected_geometries` are left untouched and its geometry
+    is never re-imported. Such a row can only target an existing map. When a
+    file is provided, it is copied from the upload bucket to the default
+    (media) storage, where every existing map tool expects it.
     """
     now = timezone.now()
 
     map = Map.objects.filter(reference=row.reference).first()
     if map is None:
+        if batch_file is None:
+            raise ValueError("carte inexistante : un fichier est requis pour la créer")
         map = Map(reference=row.reference, batch_created_at=now)
 
     map.name = row.name
@@ -213,15 +221,16 @@ def import_batch_row(row, batch, batch_file):
     map.import_batch = batch
     map.batch_updated_at = now
 
-    _, extension = splitext(row.file)
-    with NamedTemporaryFile(suffix=extension) as tmp:
-        with batch_file.file.open("rb") as source:
-            shutil.copyfileobj(source, tmp)
-        tmp.seek(0)
+    if batch_file is not None:
+        _, extension = splitext(row.file)
+        with NamedTemporaryFile(suffix=extension) as tmp:
+            with batch_file.file.open("rb") as source:
+                shutil.copyfileobj(source, tmp)
+            tmp.seek(0)
 
-        map_file = File(tmp)
-        map.expected_geometries = count_features(map_file)
-        map.file.save(row.file, map_file, save=False)
+            map_file = File(tmp)
+            map.expected_geometries = count_features(map_file)
+            map.file.save(row.file, map_file, save=False)
 
     map.save()
     return map

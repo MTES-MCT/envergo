@@ -417,23 +417,10 @@ class MapImportBatchAdmin(admin.ModelAdmin):
 
     @admin.action(description="Traiter les lots (création / màj des cartes)")
     def process(self, request, queryset):
-        # An empty batch is reported on its own, so one misconfigured batch
-        # never cancels the others.
-        empty = []
         queued = 0
         for batch in queryset:
-            if batch.files.count() == 0:
-                empty.append(batch.name)
-                continue
             process_map_import_batch.delay(batch.id)
             queued += 1
-
-        if empty:
-            self.message_user(
-                request,
-                f"Aucun fichier de carte pour : {', '.join(empty)}.",
-                level=messages.ERROR,
-            )
 
         if queued:
             self.message_user(
