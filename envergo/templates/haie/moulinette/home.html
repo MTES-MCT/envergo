@@ -5,7 +5,7 @@
 {% block before-content %}
 
   {% if is_alternative %}
-    {% with is_moulinette_home=True %}
+    {% with display_description=True %}
       {% include 'haie/moulinette/_alternative_simulation_notice.html' %}
     {% endwith %}
   {% endif %}
