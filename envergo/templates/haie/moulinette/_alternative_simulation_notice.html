@@ -14,7 +14,7 @@
         </p>
 
         {% if display_description %}
-          {% if user.is_instructor %}
+          {% if user.is_coordinator %}
             <p>À la fin du parcours, vous pourrez enregistrer la simulation.</p>
           {% elif user.is_authenticated %}
             <p>À la fin du parcours, vous pourrez envoyer la simulation au service coordonnateur.</p>
