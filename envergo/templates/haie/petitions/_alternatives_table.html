@@ -55,7 +55,7 @@
                     </div>
                   {% endif %}
                 </td>
-                <td class="comment-col fr-cell--multiline">{% truncated_comment simulation.comment forloop.counter 135 %}</td>
+                <td class="comment-col fr-cell--multiline">{% truncated_comment simulation.comment forloop.counter 70 %}</td>
                 <td class="status-col">
                   {% if simulation.is_active %}
                     <p class="fr-badge fr-badge--sm fr-badge--success">Active</p>
@@ -63,13 +63,17 @@
                     {% if petition_project.stage == "closed" %}
                       <button type="button"
                               class="fr-btn fr-btn--sm fr-btn--secondary"
-                              title="Le dossier est clos : impossible d’activer une simulation"
+                              aria-describedby="simulation-activate-button-{{ forloop.counter }}"
                               disabled="disabled">Activer</button>
+                      <span class="fr-tooltip fr-placement"
+                            id="simulation-activate-button-{{ forloop.counter }}"
+                            role="tooltip">Disponible uniquement pendant les étapes d'instruction.</span>
                     {% elif simulation.can_be_activated and has_change_permission %}
                       <button type="button"
                               class="fr-btn fr-btn--sm fr-btn--secondary"
                               data-fr-opened="false"
                               aria-controls="simulation-activate-modal-{{ simulation.id }}">Activer</button>
+
                     {% endif %}
 
                   {% endif %}
