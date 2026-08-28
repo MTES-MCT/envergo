@@ -125,7 +125,9 @@
       </p>
 
       <ul class="instructor-view-list fr-mb-3w">
-        <li>{% field_summary moulinette.triage_form.contexte %}</li>
+        <li>
+          <p class="fr-my-2w">{% field_summary moulinette.triage_form.contexte %}</p>
+        </li>
         {% if moulinette.triage_form.contexte.value == "projet-urba" %}
           <li>
             {% display_ds_field "description_projet_urba" "inline" label="Description du projet de construction ou d’aménagement" %}
