@@ -1,0 +1,28 @@
+{% load petitions %}
+
+<div id="alternative-notice" class="fr-notice fr-notice--info">
+  <div class="fr-container">
+    <div class="fr-notice__body">
+      <div>
+
+        <p>
+          <span class="fr-notice__title">Simulation alternative
+            {% if simulation_project %}
+              - Dossier n° {{ simulation_project.demarche_numerique_dossier_number|format_ds_number }}
+            {% endif %}
+          </span>
+        </p>
+
+        {% if is_moulinette_home %}
+          {% if user.is_instructor %}
+            <p>À la fin du parcours, vous pourrez enregistrer la simulation.</p>
+          {% elif user.is_authenticated %}
+            <p>À la fin du parcours, vous pourrez envoyer au service coordonnateur.</p>
+          {% else %}
+            <p>À la fin du parcours, vous pourrez envoyer la simulation au guichet unique.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
