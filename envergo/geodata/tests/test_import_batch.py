@@ -75,15 +75,20 @@ def test_validate_headers_reports_missing_columns():
     assert validate_headers(CSV_HEADER.split(",")) == []
     assert validate_headers(None)
 
+    # `file` is optional: a metadata-only update CSV need not include it.
+    assert validate_headers(["reference", "name", "description", "departments"]) == []
 
-def test_parse_batch_row_requires_reference_file_and_name():
+
+def test_parse_batch_row_requires_reference_and_name():
     row = {"reference": "", "file": "a.gpkg", "name": "N", "description": ""}
     _, errors = parse_batch_row(2, row)
     assert "référence manquante" in errors[0]
 
-    row = {"reference": "r1", "file": " ", "name": "N", "description": ""}
-    _, errors = parse_batch_row(2, row)
-    assert "fichier manquant" in errors[0]
+    # A blank file is legitimate (metadata-only update), so it parses.
+    row = {"reference": "r1", "file": " ", "name": "N", "description": "desc"}
+    parsed, errors = parse_batch_row(2, row)
+    assert errors == []
+    assert parsed.file == ""
 
     row = {"reference": "r1", "file": "a.gpkg", "name": "", "description": ""}
     _, errors = parse_batch_row(2, row)
@@ -241,6 +246,81 @@ def test_batch_updates_existing_map():
     assert existing.import_batch == batch
     assert Map.objects.count() == 1
     assert mock_delay.call_count == 1
+
+
+def test_batch_metadata_only_update_skips_reimport():
+    """A blank file cell updates the map's fields without re-importing it."""
+    existing = MapFactory(
+        reference="r1",
+        name="Ancien nom",
+        description="Ancienne description",
+        expected_geometries=7,
+    )
+    original_file = existing.file.name
+
+    csv_content = f"{CSV_HEADER}\nr1,,Nouveau nom,Nouvelle description,44\n"
+    batch = make_batch(csv_content)
+    with (
+        patch("envergo.geodata.tasks.count_features") as mock_count,
+        patch("envergo.geodata.tasks.process_map.delay") as mock_delay,
+    ):
+        process_map_import_batch.apply(args=(batch.id,))
+    batch.refresh_from_db()
+
+    assert batch.import_status == STATUSES.success
+    existing.refresh_from_db()
+    assert existing.name == "Nouveau nom"
+    assert existing.description == "Nouvelle description"
+    assert existing.departments == ["44"]
+    # Geometry is left untouched: no re-import, no re-copy, no recount.
+    assert mock_delay.call_count == 0
+    assert mock_count.call_count == 0
+    assert existing.expected_geometries == 7
+    assert existing.file.name == original_file
+
+
+def test_batch_metadata_only_update_without_file_column():
+    """A pure update CSV can omit the file column entirely."""
+    existing = MapFactory(reference="r1", name="Ancien nom")
+    csv_content = (
+        "reference,name,description,departments\n"
+        "r1,Nouveau nom,Nouvelle description,44\n"
+    )
+    batch = make_batch(csv_content)
+    mock_delay = run_task(batch)
+
+    assert batch.import_status == STATUSES.success
+    existing.refresh_from_db()
+    assert existing.name == "Nouveau nom"
+    assert mock_delay.call_count == 0
+
+
+def test_batch_metadata_only_update_requires_existing_map():
+    """A blank file cell cannot create a map: a file is required for that."""
+    csv_content = f"{CSV_HEADER}\nr1,,Nouveau nom,Nouvelle description,44\n"
+    batch = make_batch(csv_content)
+    mock_delay = run_task(batch)
+
+    assert batch.import_status == STATUSES.failure
+    assert "un fichier est requis" in batch.import_log
+    assert Map.objects.count() == 0
+    assert mock_delay.call_count == 0
+
+
+def test_batch_mixes_import_and_metadata_only_update():
+    """Only rows carrying a file re-import their geometry."""
+    MapFactory(reference="r2", name="Ancien nom")
+    csv_content = (
+        f"{CSV_HEADER}\n"
+        "r1,a.gpkg,Carte A,Description A,44\n"
+        "r2,,Nom mis à jour,Description mise à jour,56\n"
+    )
+    batch = make_batch(csv_content, filenames=["a.gpkg"])
+    mock_delay = run_task(batch)
+
+    assert batch.import_status == STATUSES.success
+    assert mock_delay.call_count == 1
+    assert Map.objects.get(reference="r2").name == "Nom mis à jour"
 
 
 def test_batch_isolates_row_errors():
@@ -431,7 +511,8 @@ class TestUploadView:
         assert res.status_code == 302
         mock_delay.assert_called_once_with(batch.id)
 
-    def test_process_action_refuses_empty_batch(self, admin_client):
+    def test_process_action_queues_file_less_batch(self, admin_client):
+        """A batch without files is a legitimate metadata-only update."""
         batch = MapImportBatchFactory()
         url = reverse("admin:geodata_mapimportbatch_changelist")
 
@@ -443,7 +524,7 @@ class TestUploadView:
                 {"action": "process", "_selected_action": [batch.pk]},
             )
 
-        assert mock_delay.call_count == 0
+        mock_delay.assert_called_once_with(batch.id)
 
     def test_process_action_queues_several_batches(self, admin_client):
         batches = [MapImportBatchFactory(name=f"Lot {i}") for i in range(3)]
@@ -463,11 +544,11 @@ class TestUploadView:
         assert mock_delay.call_count == 3
         assert {c.args[0] for c in mock_delay.call_args_list} == {b.id for b in batches}
 
-    def test_process_action_skips_only_the_empty_batch(self, admin_client):
-        """One misconfigured batch must not cancel the others."""
+    def test_process_action_queues_batches_with_or_without_files(self, admin_client):
+        """File-less (metadata-only) batches are queued alongside the others."""
         full = MapImportBatchFactory(name="Lot complet")
         MapImportBatchFileFactory(batch=full)
-        empty = MapImportBatchFactory(name="Lot vide")
+        file_less = MapImportBatchFactory(name="Lot màj seule")
         url = reverse("admin:geodata_mapimportbatch_changelist")
 
         with patch(
@@ -475,7 +556,8 @@ class TestUploadView:
         ) as mock_delay:
             admin_client.post(
                 url,
-                {"action": "process", "_selected_action": [full.pk, empty.pk]},
+                {"action": "process", "_selected_action": [full.pk, file_less.pk]},
             )
 
-        mock_delay.assert_called_once_with(full.id)
+        assert mock_delay.call_count == 2
+        assert {c.args[0] for c in mock_delay.call_args_list} == {full.id, file_less.id}
