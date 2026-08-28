@@ -22,7 +22,7 @@ from envergo.analytics.forms import EventForm, FeedbackForm, FeedbackRespondForm
 from envergo.analytics.models import CSPReport
 from envergo.analytics.utils import get_matomo_tags, log_event, set_visitor_id_cookie
 from envergo.geodata.utils import get_address_from_coords
-from envergo.utils.tchap import notify
+from envergo.utils.mattermost import notify
 from envergo.utils.tools import get_site_literal
 
 

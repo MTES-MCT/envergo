@@ -6,8 +6,8 @@ from django.urls import reverse
 pytestmark = pytest.mark.django_db
 
 
+@patch("envergo.utils.mattermost.notify")
 @patch("envergo.geodata.utils.get_data_from_coords")
-@patch("envergo.analytics.views.notify")
 def test_feedback_sent(mock_notify, _mock_api, client, site):
 
     feedback_url = reverse("feedback_submit")
