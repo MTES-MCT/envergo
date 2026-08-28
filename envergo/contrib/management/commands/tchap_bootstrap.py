@@ -44,7 +44,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if not settings.TCHAP_BOT_PASSWORD:
-            raise CommandError("TCHAP_BOT_PASSWORD is not configured.")
+            raise CommandError("DJANGO_TCHAP_BOT_PASSWORD is not configured.")
         if not settings.TCHAP_USER_ID or not settings.TCHAP_HOMESERVER_URL:
             raise CommandError(
                 "TCHAP_USER_ID / TCHAP_HOMESERVER_URL are not configured."
@@ -130,7 +130,7 @@ class Command(BaseCommand):
                             message_type="m.room.message",
                             content={
                                 "msgtype": "m.text",
-                                "body": "✅ Bot Tchap réinitialisé "
+                                "body": ":white_check_mark: Bot Tchap réinitialisé "
                                 "(message de test).",
                             },
                             ignore_unverified_devices=True,
