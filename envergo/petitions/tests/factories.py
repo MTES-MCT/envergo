@@ -3,7 +3,6 @@ from copy import copy
 from pathlib import Path
 
 import factory
-from django.conf import settings
 from factory.django import DjangoModelFactory
 
 from envergo.geodata.tests.factories import DepartmentFactory
@@ -89,7 +88,7 @@ class PetitionProjectFactory(DjangoModelFactory):
     reference = factory.Sequence(lambda n: f"ABC123{n}")
     moulinette_url = factory.LazyAttribute(
         lambda obj: (
-            f"http://{settings.ENVERGO_HAIE_DOMAIN}/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"  # noqa: E501
+            "http://haie.testserver:3000/simulateur/resultat/?motif=autre&reimplantation=non&localisation_pac=oui"
             f"&haies={obj.hedge_data.pk}&department=44&travaux=destruction&element=haie&contexte=non"
             f"&lineaire_total=5000&transfert_parcelles=non&motif_pac=aucun"
         )
