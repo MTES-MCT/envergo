@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.urls import reverse
 
 from envergo.moulinette.models import MoulinetteTemplate, get_all_template_keys
-from envergo.utils.mattermost import notify
+from envergo.tchap.tasks import notify
 
 
 class Command(BaseCommand):

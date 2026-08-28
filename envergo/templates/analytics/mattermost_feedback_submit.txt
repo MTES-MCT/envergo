@@ -1,6 +1,6 @@
 **Nouveau feedback**
 
-{{ origin_url|safe }}
+{{ origin_url }}
 Adresse (géocodée) : {{ address }}
 Avis réglementaire utile : {{ feedback }}
 Profil : {{ profile }}

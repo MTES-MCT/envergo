@@ -87,6 +87,7 @@ LOCAL_APPS = [
     "envergo.hedges",
     "envergo.petitions",
     "envergo.demos",
+    "envergo.tchap.apps.TchapConfig",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -369,6 +370,16 @@ TEST_EMAIL = "test@test.fr"
 
 MATTERMOST_ENDPOINT_AMENAGEMENT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
 MATTERMOST_ENDPOINT_HAIE = env("DJANGO_MATTERMOST_ENDPOINT_HAIE", default=None)
+
+
+TCHAP_HOMESERVER_URL = env("DJANGO_TCHAP_HOMESERVER_URL", default=None)
+TCHAP_USER_ID = env("DJANGO_TCHAP_USER_ID", default=None)
+TCHAP_ROOM_ID_AMENAGEMENT = env("DJANGO_TCHAP_ROOM_ID_AMENAGEMENT", default=None)
+TCHAP_ROOM_ID_HAIE = env("DJANGO_TCHAP_ROOM_ID_HAIE", default=None)
+# Only used by the one-shot `tchap_bootstrap` command to mint a fresh device
+# and persist its device_id/access_token to the database. Never read on the
+# notification path.
+TCHAP_BOT_PASSWORD = env("DJANGO_TCHAP_BOT_PASSWORD", default=None)
 
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)

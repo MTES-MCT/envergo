@@ -101,8 +101,8 @@ from envergo.petitions.services import (
     update_demarche_numerique_status,
 )
 from envergo.petitions.tasks import send_closing_message_async
+from envergo.tchap.tasks import notify
 from envergo.users.models import User
-from envergo.utils.mattermost import notify
 from envergo.utils.tools import generate_key
 from envergo.utils.urls import extract_param_from_url, remove_mtm_params, update_qs
 
