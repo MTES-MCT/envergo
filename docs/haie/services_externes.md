@@ -41,9 +41,9 @@ Dans le compte créé dans Démarche Numérique,
 3. Dans les variables d'environnement, activer Démarche Numérique
 
     ```dotenv
-    DJANGO_DEMARCHES_SIMPLIFIEES_ENABLED=True
-    DJANGO_DEMARCHE_SIMPLIFIEE_TOKEN=<votre_token>
-    DJANGO_DEMARCHE_SIMPLIFIEE_INSTRUCTEUR_ID=<id_instructeur>
+    DJANGO_DEMARCHE_NUMERIQUE_ENABLED=True
+    DJANGO_DEMARCHE_NUMERIQUE_TOKEN=<votre_token>
+    DJANGO_DEMARCHE_NUMERIQUE_INSTRUCTEUR_ID=<id_instructeur>
    ```
 
 ### Ajouter une nouvelle démarche
