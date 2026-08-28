@@ -1393,6 +1393,19 @@ button.hide-expanded[aria-expanded="true"] {
   }
 }
 
+#hedge-input-iframe {
+  #alternative-notice {
+    .fr-container {
+      max-width: none;
+    }
+
+    .fr-notice__body {
+      justify-content: center;
+      text-align: center;
+    }
+  }
+}
+
 .alternative-share {
   background-color: var(--background-alt-grey);
 
