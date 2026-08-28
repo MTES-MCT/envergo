@@ -1378,7 +1378,7 @@ button.hide-expanded[aria-expanded="true"] {
   }
 
   .fr-notice__body {
-    display: block;
+    justify-content: center;
   }
 
   p {
@@ -1387,10 +1387,9 @@ button.hide-expanded[aria-expanded="true"] {
 }
 
 @media only screen and (width > 1247px) {
-  #project-result {
-    & > section#project-result-top-bar .fr-notice__body > * {
-      margin-left: 5rem; /* Mesure visuelle pour éviter un calcul fastidieux */
-    }
+  #project-result-top-bar #alternative-notice .fr-notice__body {
+    margin-left: 5rem; /* Mesure visuelle pour éviter un calcul fastidieux */
+    justify-content: inherit;
   }
 }
 

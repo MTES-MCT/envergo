@@ -54,15 +54,7 @@
 
 {% block alternative_alert %}
   {% if is_alternative %}
-    <div class="fr-notice fr-notice--info">
-      <div class="fr-container">
-        <div class="fr-notice__body">
-          <p>
-            <span class="fr-notice__title">Simulation alternative - Dossier n° (TODO)</span>
-          </p>
-        </div>
-      </div>
-    </div>
+    {% include 'haie/moulinette/_alternative_simulation_notice.html' %}
   {% endif %}
 {% endblock %}
 
