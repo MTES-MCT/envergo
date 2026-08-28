@@ -98,7 +98,6 @@ STORAGES = {
     },
     "upload": {"BACKEND": "envergo.utils.storages.PrivateUploadStorage"},
     "public": {"BACKEND": "envergo.utils.storages.PublicMediaStorage"},
-    "tchap": {"BACKEND": "envergo.utils.storages.TchapCryptoStoreS3Storage"},
 }
 
 
