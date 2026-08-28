@@ -43,9 +43,6 @@ def _mock_nio_client(**overrides):
     return client
 
 
-# An UNSAVED row: enough to drive _send / _notify_with_lock (which only read
-# its identity fields) without touching the database. Tests that exercise the
-# crypto-store checkpoint use _make_credentials() to persist a real row.
 CREDS = TchapCredential(
     user_id="@bot:example.org", device_id="envergo-test", access_token="fake-token"
 )
@@ -86,8 +83,9 @@ def test_get_credentials_returns_the_row():
 # ---- deliver() --------------------------------------------------------
 
 
-def test_deliver_not_configured_falls_back_to_mattermost(settings):
-    settings.TCHAP_ACCESS_TOKEN = None
+def test_deliver_without_a_room_falls_back_to_mattermost(settings):
+    """No room configured for the site: don't even reach for the lock."""
+    settings.TCHAP_ROOM_ID_AMENAGEMENT = None
     with (
         patch("envergo.tchap.notifications._notify_with_lock") as mock_lock,
         patch("envergo.utils.mattermost.notify") as mock_mattermost,
@@ -108,7 +106,7 @@ def test_deliver_picks_room_by_site(settings, site, room_setting):
         patch("envergo.utils.mattermost.notify"),
     ):
         notifications.deliver("hello", site)
-    mock_lock.assert_called_once_with("hello", getattr(settings, room_setting), ANY)
+    mock_lock.assert_called_once_with("hello", getattr(settings, room_setting))
 
 
 def test_deliver_swallows_tchap_failure_and_still_calls_mattermost():
@@ -166,28 +164,80 @@ def test_release_lock_deletes_its_own_lock():
     assert cache.get(notifications.LOCK_KEY) is None
 
 
+def test_release_lock_deletes_when_the_holder_reads_back_as_none():
+    """A None read must still delete: production runs the cache with
+    IGNORE_EXCEPTIONS, so a Redis blip reads as None rather than raising, and
+    skipping the delete would wedge every sender until LOCK_TIMEOUT.
+    """
+    with (
+        patch("envergo.tchap.notifications.cache.get", return_value=None),
+        patch("envergo.tchap.notifications.cache.delete") as mock_delete,
+    ):
+        notifications._release_lock("token-a")
+
+    mock_delete.assert_called_once_with(notifications.LOCK_KEY)
+
+
 def test_notify_with_lock_calls_store_and_releases():
+    row = _make_credentials()
     with patch("envergo.tchap.notifications._notify_with_store") as mock_store:
-        notifications._notify_with_lock("hello", "!room:example.org", CREDS)
-    mock_store.assert_called_once_with("hello", "!room:example.org", CREDS)
+        notifications._notify_with_lock("hello", "!room:example.org")
+
+    args, _ = mock_store.call_args
+    assert args[:2] == ("hello", "!room:example.org")
+    assert args[2].pk == row.pk
+    assert cache.get(notifications.LOCK_KEY) is None
+
+
+def test_notify_with_lock_reads_the_credentials_under_the_lock():
+    """The row is fetched inside the critical section, never before it.
+
+    The crypto store travels on that row, so a read taken before the lock
+    could already be a generation behind by the time the store is saved back.
+    """
+    _make_credentials()
+    seen = {}
+    real_get_credentials = notifications.get_credentials
+
+    def spy():
+        seen["lock_held_at_read"] = cache.get(notifications.LOCK_KEY)
+        return real_get_credentials()
+
+    with (
+        patch("envergo.tchap.notifications.get_credentials", side_effect=spy),
+        patch("envergo.tchap.notifications._notify_with_store"),
+    ):
+        notifications._notify_with_lock("hello", "!room:example.org")
+
+    assert seen["lock_held_at_read"] is not None
+
+
+def test_notify_with_lock_skips_store_when_not_bootstrapped():
+    """No credentials row: nothing to send, and the lock is handed back."""
+    with patch("envergo.tchap.notifications._notify_with_store") as mock_store:
+        notifications._notify_with_lock("hello", "!room:example.org")
+
+    mock_store.assert_not_called()
     assert cache.get(notifications.LOCK_KEY) is None
 
 
 def test_notify_with_lock_releases_even_on_failure():
+    _make_credentials()
     with patch(
         "envergo.tchap.notifications._notify_with_store", side_effect=Exception("boom")
     ):
         with pytest.raises(Exception):
-            notifications._notify_with_lock("hello", "!room:example.org", CREDS)
+            notifications._notify_with_lock("hello", "!room:example.org")
     assert cache.get(notifications.LOCK_KEY) is None
 
 
 def test_notify_with_lock_skips_store_when_lock_unavailable():
+    _make_credentials()
     with (
         patch("envergo.tchap.notifications._acquire_lock", return_value=False),
         patch("envergo.tchap.notifications._notify_with_store") as mock_store,
     ):
-        notifications._notify_with_lock("hello", "!room:example.org", CREDS)
+        notifications._notify_with_lock("hello", "!room:example.org")
     mock_store.assert_not_called()
 
 
@@ -199,6 +249,30 @@ db_name = f"{CREDS.user_id}_{CREDS.device_id}.db"
 def _stored_blob():
     row = TchapCredential.objects.get()
     return bytes(row.crypto_store) if row.crypto_store else None
+
+
+def test_consecutive_sends_each_start_from_the_latest_store():
+    """Every send picks up the store the previous one checkpointed.
+
+    This is what the lock exists for: reading the row before taking it would
+    let a second sender start from a generation that is already superseded and
+    write it back, dropping the Olm/Megolm sessions the first one established.
+    """
+    _make_credentials(crypto_store=b"gen-1")
+    loaded = []
+
+    async def fake_send(msg, room_id, store_path, creds):
+        db_file = Path(store_path) / db_name
+        loaded.append(db_file.read_bytes())
+        db_file.write_bytes(f"gen-{len(loaded) + 1}".encode())
+        return True
+
+    with patch("envergo.tchap.notifications._send", side_effect=fake_send):
+        notifications._notify_with_lock("hello", "!room:example.org")
+        notifications._notify_with_lock("hello", "!room:example.org")
+
+    assert loaded == [b"gen-1", b"gen-2"]
+    assert _stored_blob() == b"gen-3"
 
 
 def test_notify_with_store_loads_existing_blob_before_send():

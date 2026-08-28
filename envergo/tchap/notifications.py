@@ -29,7 +29,7 @@ LOCK_ACQUIRE_DELAY = 1
 
 def get_credentials():
     """The bot's `TchapCredential` row, or None if never bootstrapped."""
-    return TchapCredential.objects.first()
+    return TchapCredential.objects.order_by("-updated_at").first()
 
 
 def deliver(msg, site):
@@ -46,14 +46,11 @@ def deliver(msg, site):
         if site == "haie"
         else settings.TCHAP_ROOM_ID_AMENAGEMENT
     )
-    creds = get_credentials()
-    if not creds or not creds.access_token or not room_id:
-        logger.warning(
-            f"No tchap configuration for site {site}. Doing nothing. Message: {msg}"
-        )
+    if not room_id:
+        logger.warning(f"No tchap room for site {site}. Doing nothing. Message: {msg}")
     else:
         try:
-            _notify_with_lock(msg, room_id, creds)
+            _notify_with_lock(msg, room_id)
         except Exception as e:
             logger.warning(
                 "Could not send the tchap notification", extra={"exception": e}
@@ -62,12 +59,19 @@ def deliver(msg, site):
     mattermost.notify(msg, site)
 
 
-def _notify_with_lock(msg, room_id, creds):
+def _notify_with_lock(msg, room_id):
     token = secrets.token_hex(8)
     if not _acquire_lock(token):
         logger.warning("Could not acquire the tchap crypto store lock, skipping")
         return
     try:
+        # Read the credentials under the lock: the row carries the crypto store
+        # that _notify_with_store writes back, so a read taken before the lock
+        # could already be a generation behind by the time we save it.
+        creds = get_credentials()
+        if not creds or not creds.access_token:
+            logger.warning(f"Tchap is not bootstrapped. Message: {msg}")
+            return
         _notify_with_store(msg, room_id, creds)
     finally:
         _release_lock(token)
@@ -82,7 +86,9 @@ def _acquire_lock(token):
 
 
 def _release_lock(token):
-    if cache.get(LOCK_KEY) == token:
+    """Release the lock unless it demonstrably belongs to someone else."""
+    holder = cache.get(LOCK_KEY)
+    if holder is None or holder == token:
         cache.delete(LOCK_KEY)
 
 

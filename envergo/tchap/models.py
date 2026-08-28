@@ -5,6 +5,12 @@ class TchapCredential(models.Model):
     """Single-row store for the Tchap bot's Matrix session.
 
     This credential should be generated (the first time or after a session revocation) with the tchap_bootstrap command
+
+    Stored in the clear, and as sensitive as a password: access token and the
+    olm private keys inside `crypto_store` are enough to post as the bot and to
+    decrypt what is shared with it. Read access to this row is control of the
+    bot, so it is excluded from the review-app dump (`bin/first_deploy.sh`) and
+    purged by the `anonymize_database` command.
     """
 
     user_id = models.CharField("Identifiant utilisateur Matrix", max_length=255)
