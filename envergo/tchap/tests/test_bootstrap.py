@@ -62,7 +62,7 @@ def _run(**options):
 
 def test_bootstrap_missing_password_errors(settings):
     settings.TCHAP_BOT_PASSWORD = None
-    with pytest.raises(CommandError, match="DJANGO_TCHAP_BOT_PASSWORD"):
+    with pytest.raises(CommandError, match="TCHAP_BOT_PASSWORD"):
         _run()
 
 

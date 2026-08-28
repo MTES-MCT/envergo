@@ -83,16 +83,16 @@ def test_get_credentials_returns_the_row():
     )
 
 
-# ---- notify() ---------------------------------------------------------
+# ---- deliver() --------------------------------------------------------
 
 
-def test_notify_not_configured_falls_back_to_mattermost(settings):
+def test_deliver_not_configured_falls_back_to_mattermost(settings):
     settings.TCHAP_ACCESS_TOKEN = None
     with (
         patch("envergo.tchap.notifications._notify_with_lock") as mock_lock,
         patch("envergo.utils.mattermost.notify") as mock_mattermost,
     ):
-        notifications.notify("hello", "amenagement")
+        notifications.deliver("hello", "amenagement")
     mock_lock.assert_not_called()
     mock_mattermost.assert_called_once_with("hello", "amenagement")
 
@@ -101,17 +101,17 @@ def test_notify_not_configured_falls_back_to_mattermost(settings):
     "site, room_setting",
     [("haie", "TCHAP_ROOM_ID_HAIE"), ("amenagement", "TCHAP_ROOM_ID_AMENAGEMENT")],
 )
-def test_notify_picks_room_by_site(settings, site, room_setting):
+def test_deliver_picks_room_by_site(settings, site, room_setting):
     _make_credentials()
     with (
         patch("envergo.tchap.notifications._notify_with_lock") as mock_lock,
         patch("envergo.utils.mattermost.notify"),
     ):
-        notifications.notify("hello", site)
+        notifications.deliver("hello", site)
     mock_lock.assert_called_once_with("hello", getattr(settings, room_setting), ANY)
 
 
-def test_notify_swallows_tchap_failure_and_still_calls_mattermost():
+def test_deliver_swallows_tchap_failure_and_still_calls_mattermost():
     _make_credentials()
     with (
         patch(
@@ -120,7 +120,7 @@ def test_notify_swallows_tchap_failure_and_still_calls_mattermost():
         ),
         patch("envergo.utils.mattermost.notify") as mock_mattermost,
     ):
-        notifications.notify("hello", "amenagement")
+        notifications.deliver("hello", "amenagement")
     mock_mattermost.assert_called_once_with("hello", "amenagement")
 
 
@@ -532,7 +532,7 @@ def test_mattermost_notify_does_not_call_tchap():
     """Tchap is the primary channel and calls Mattermost, not the other way
     around: mattermost.notify() must only ever talk to Mattermost.
     """
-    with patch("envergo.tchap.notifications.notify") as mock_tchap_notify:
+    with patch("envergo.tchap.notifications.deliver") as mock_tchap_notify:
         mattermost.notify("hello", "amenagement")
 
     mock_tchap_notify.assert_not_called()

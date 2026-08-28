@@ -32,10 +32,14 @@ def get_credentials():
     return TchapCredential.objects.first()
 
 
-def notify(msg, site):
+def deliver(msg, site):
     """Send `msg` to a Tchap room, E2E-encrypted, then relay to Mattermost.
 
     `msg` is markdown. Fire-and-forget: failures are logged, never raised.
+
+    This blocks for as long as the crypto store lock and the Tchap exchange
+    take, so it runs in a Celery worker: see `envergo.tchap.tasks.notify` for
+    the entry point every caller should use.
     """
     room_id = (
         settings.TCHAP_ROOM_ID_HAIE
