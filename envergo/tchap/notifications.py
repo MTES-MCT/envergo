@@ -29,7 +29,12 @@ LOCK_ACQUIRE_DELAY = 1
 
 def get_credentials():
     """The bot's `TchapCredential` row, or None if never bootstrapped."""
-    return TchapCredential.objects.order_by("-updated_at").first()
+    return TchapCredential.objects.order_by("-pk").first()
+
+
+def store_name(user_id, device_id):
+    """Name of the SQLite file nio keeps its crypto store in."""
+    return f"{user_id}_{device_id}.db"
 
 
 def deliver(msg, site):
@@ -94,8 +99,7 @@ def _release_lock(token):
 
 def _notify_with_store(msg, room_id, creds):
     """Run the Tchap exchange with nio's crypto store checked out from the DB."""
-    device_id = creds.device_id
-    db_name = f"{creds.user_id}_{device_id}.db"
+    db_name = store_name(creds.user_id, creds.device_id)
 
     existing_store = bytes(creds.crypto_store) if creds.crypto_store else None
     had_existing_store = existing_store is not None
@@ -124,6 +128,11 @@ def _notify_with_store(msg, room_id, creds):
             if db_file.exists() and (send_ok or not had_existing_store):
                 creds.crypto_store = db_file.read_bytes()
                 creds.save(update_fields=["crypto_store", "updated_at"])
+            elif send_ok:
+                logger.warning(
+                    f"Tchap send succeeded but no crypto store was written at "
+                    f"{db_name}; the session is not being persisted."
+                )
 
 
 async def _send(msg, room_id, store_path, creds):
@@ -133,7 +142,11 @@ async def _send(msg, room_id, store_path, creds):
         user=creds.user_id,
         device_id=creds.device_id,
         store_path=store_path,
-        config=AsyncClientConfig(encryption_enabled=True, store_sync_tokens=True),
+        config=AsyncClientConfig(
+            encryption_enabled=True,
+            store_sync_tokens=True,
+            store_name=store_name(creds.user_id, creds.device_id),
+        ),
     )
     try:
         client.restore_login(
@@ -179,7 +192,7 @@ async def _send(msg, room_id, store_path, creds):
             "msgtype": "m.text",
             "body": msg_with_emoji,
             "format": "org.matrix.custom.html",
-            "formatted_body": markdown_to_html(msg_with_emoji),
+            "formatted_body": markdown_to_html(msg_with_emoji, "nl2br", "fenced_code"),
         }
         # Encrypts automatically. The bot never verifies devices, so ignore
         # unverified ones or sends would stop as members add devices.

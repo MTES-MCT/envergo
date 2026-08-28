@@ -1,10 +1,12 @@
 import asyncio
 import logging
+import secrets
 import tempfile
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
 from nio import (
     AsyncClient,
     AsyncClientConfig,
@@ -15,7 +17,12 @@ from nio import (
 )
 
 from envergo.tchap.models import TchapCredential
-from envergo.tchap.notifications import SYNC_TIMEOUT
+from envergo.tchap.notifications import (
+    SYNC_TIMEOUT,
+    _acquire_lock,
+    _release_lock,
+    store_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,17 +69,27 @@ class Command(BaseCommand):
             if r
         ]
 
-        device_id, access_token, crypto_store = asyncio.run(
-            self._bootstrap(rooms, send_test=not options["no_test_message"])
-        )
+        lock_token = secrets.token_hex(8)
+        if not _acquire_lock(lock_token):
+            raise CommandError(
+                "A Tchap notification is currently holding the crypto store "
+                "lock. Nothing was changed; try again in a few seconds."
+            )
+        try:
+            device_id, access_token, crypto_store = asyncio.run(
+                self._bootstrap(rooms, send_test=not options["no_test_message"])
+            )
 
-        TchapCredential.objects.all().delete()
-        TchapCredential.objects.create(
-            user_id=settings.TCHAP_USER_ID,
-            device_id=device_id,
-            access_token=access_token,
-            crypto_store=crypto_store,
-        )
+            with transaction.atomic():
+                TchapCredential.objects.all().delete()
+                TchapCredential.objects.create(
+                    user_id=settings.TCHAP_USER_ID,
+                    device_id=device_id,
+                    access_token=access_token,
+                    crypto_store=crypto_store,
+                )
+        finally:
+            _release_lock(lock_token)
 
         self.stdout.write(self.style.SUCCESS("Tchap bot bootstrapped."))
         self.stdout.write(f"user_id  : {settings.TCHAP_USER_ID}")
@@ -140,8 +157,9 @@ class Command(BaseCommand):
                                 f"Test message to {room_id} failed: {resp}"
                             )
 
-                db_name = f"{settings.TCHAP_USER_ID}_{device_id}.db"
-                db_file = Path(store_path) / db_name
+                db_file = Path(store_path) / store_name(
+                    settings.TCHAP_USER_ID, device_id
+                )
                 if not db_file.exists():
                     raise CommandError(
                         f"nio did not write a store file at {db_file}; aborting."

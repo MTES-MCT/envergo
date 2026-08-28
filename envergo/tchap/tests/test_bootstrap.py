@@ -3,9 +3,11 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from django.core.cache import cache
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from envergo.tchap import notifications
 from envergo.tchap.models import TchapCredential
 
 pytestmark = pytest.mark.django_db
@@ -20,7 +22,9 @@ def bootstrap_settings(settings):
     settings.TCHAP_BOT_PASSWORD = "s3cret"  # pragma: allowlist secret
     settings.TCHAP_ROOM_ID_HAIE = "!haie:example.org"
     settings.TCHAP_ROOM_ID_AMENAGEMENT = "!am:example.org"
-    return settings
+    cache.delete(notifications.LOCK_KEY)
+    yield settings
+    cache.delete(notifications.LOCK_KEY)
 
 
 def _fake_client_factory(
@@ -120,3 +124,41 @@ def test_bootstrap_skips_test_message_when_requested():
 
     client.room_send.assert_not_awaited()
     assert TchapCredential.objects.count() == 1
+
+
+def test_bootstrap_refuses_while_a_notification_holds_the_lock():
+    """Bail out before minting a device, not after.
+
+    A notification in flight owns the row this command replaces; failing after
+    the login would strand a fresh session on the Tchap side.
+    """
+    cache.set(notifications.LOCK_KEY, "someone-else", timeout=30)
+
+    with patch(f"{CMD}.AsyncClient") as mock_cls:
+        with pytest.raises(CommandError, match="Nothing was changed"):
+            _run()
+
+    mock_cls.assert_not_called()
+    assert cache.get(notifications.LOCK_KEY) == "someone-else"  # not stolen
+
+
+def test_bootstrap_releases_the_lock_on_success():
+    factory, _ = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run()
+
+    assert cache.get(notifications.LOCK_KEY) is None
+
+
+def test_bootstrap_keeps_the_previous_session_when_the_login_fails():
+    """A failed run must not leave the bot with no credentials at all."""
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old"
+    )
+    with patch(f"{CMD}.AsyncClient", side_effect=Exception("homeserver down")):
+        with pytest.raises(Exception):
+            _run(force=True)
+
+    row = TchapCredential.objects.get()
+    assert row.device_id == "OLD"
+    assert cache.get(notifications.LOCK_KEY) is None

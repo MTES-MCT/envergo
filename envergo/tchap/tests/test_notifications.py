@@ -18,8 +18,6 @@ def tchap_settings(settings):
     """Configure a fake but "present" Tchap setup for every test in this file."""
     settings.TCHAP_HOMESERVER_URL = "https://notifications.example.org"
     settings.TCHAP_USER_ID = "@bot:example.org"
-    settings.TCHAP_ACCESS_TOKEN = "fake-token"
-    settings.TCHAP_DEVICE_ID = "envergo-test"
     settings.TCHAP_ROOM_ID_AMENAGEMENT = "!amenagement:example.org"
     settings.TCHAP_ROOM_ID_HAIE = "!haie:example.org"
     cache.delete(notifications.LOCK_KEY)
@@ -367,6 +365,24 @@ def test_notify_with_store_saves_state_on_success_with_existing_store():
     assert _stored_blob() == b"advanced-state"
 
 
+def test_notify_with_store_warns_when_a_good_send_persists_nothing(caplog):
+    """A send that works but leaves no store file means nothing is checkpointed.
+
+    Silently doing nothing here would hide a device minted afresh on every
+    single notification.
+    """
+    row = _make_credentials(crypto_store=None)
+
+    async def fake_send(msg, room_id, store_path, creds):
+        return True
+
+    with patch("envergo.tchap.notifications._send", side_effect=fake_send):
+        notifications._notify_with_store("hello", "!room:example.org", row)
+
+    assert _stored_blob() is None
+    assert "no crypto store was written" in caplog.text
+
+
 def test_notify_with_store_skips_save_if_nio_never_wrote_anything():
     row = _make_credentials(crypto_store=None)
 
@@ -393,15 +409,15 @@ def test_send_happy_path(settings, tmp_path):
 
     mock_cls.assert_called_once_with(
         homeserver=settings.TCHAP_HOMESERVER_URL,
-        user=settings.TCHAP_USER_ID,
-        device_id=settings.TCHAP_DEVICE_ID,
+        user=CREDS.user_id,
+        device_id=CREDS.device_id,
         store_path=str(tmp_path),
         config=ANY,
     )
     client.restore_login.assert_called_once_with(
-        user_id=settings.TCHAP_USER_ID,
-        device_id=settings.TCHAP_DEVICE_ID,
-        access_token=settings.TCHAP_ACCESS_TOKEN,
+        user_id=CREDS.user_id,
+        device_id=CREDS.device_id,
+        access_token=CREDS.access_token,
     )
     # No sync_filter: an earlier attempt at scoping the sync to just the
     # target room made Tchap stop returning it as joined at all.
@@ -438,6 +454,49 @@ def test_send_converts_mattermost_style_emoji_shortcodes(settings, tmp_path):
     _, kwargs = client.room_send.call_args
     assert kwargs["content"]["body"] == "❌ erreur :icon-info:"
     assert "❌ erreur :icon-info:" in kwargs["content"]["formatted_body"]
+
+
+def test_send_renders_the_mattermost_style_templates(settings, tmp_path):
+    """Single newlines are line breaks and ``` fences are code blocks.
+
+    The notification templates are written for Mattermost's renderer; plain
+    python-markdown would run each of them into one paragraph and print the
+    fences literally.
+    """
+    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
+    client = _mock_nio_client(rooms={room_id: MagicMock()})
+    msg = "N° de dossier : 42\nDate : hier\n\n```\ndump\n```"
+
+    with patch("envergo.tchap.notifications.AsyncClient", return_value=client):
+        asyncio.run(notifications._send(msg, room_id, str(tmp_path), CREDS))
+
+    _, kwargs = client.room_send.call_args
+    formatted = kwargs["content"]["formatted_body"]
+    assert "N° de dossier : 42<br />" in formatted
+    assert "<code>" in formatted and "```" not in formatted
+    # The plain-text fallback keeps the message exactly as the template wrote it.
+    assert kwargs["content"]["body"] == msg
+
+
+def test_send_pins_the_crypto_store_filename(settings, tmp_path):
+    """nio is told which store file to use instead of defaulting to its own.
+
+    `_notify_with_store` restores and re-reads the blob under that same name,
+    so a nio default rename would otherwise silently mint a new device on
+    every send.
+    """
+    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
+    client = _mock_nio_client(rooms={room_id: MagicMock()})
+
+    with patch(
+        "envergo.tchap.notifications.AsyncClient", return_value=client
+    ) as mock_cls:
+        asyncio.run(notifications._send("hello", room_id, str(tmp_path), CREDS))
+
+    _, kwargs = mock_cls.call_args
+    assert kwargs["config"].store_name == notifications.store_name(
+        CREDS.user_id, CREDS.device_id
+    )
 
 
 def test_send_uploads_keys_when_needed(settings, tmp_path):
