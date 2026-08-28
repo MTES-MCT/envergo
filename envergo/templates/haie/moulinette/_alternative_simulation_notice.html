@@ -13,11 +13,11 @@
           </span>
         </p>
 
-        {% if is_moulinette_home %}
+        {% if display_description %}
           {% if user.is_instructor %}
             <p>À la fin du parcours, vous pourrez enregistrer la simulation.</p>
           {% elif user.is_authenticated %}
-            <p>À la fin du parcours, vous pourrez envoyer au service coordonnateur.</p>
+            <p>À la fin du parcours, vous pourrez envoyer la simulation au service coordonnateur.</p>
           {% else %}
             <p>À la fin du parcours, vous pourrez envoyer la simulation au guichet unique.</p>
           {% endif %}
