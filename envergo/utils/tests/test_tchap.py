@@ -6,10 +6,7 @@ import pytest
 from django.core.cache import cache
 from nio import JoinError, RoomSendError, SyncError
 
-from envergo.contrib.models import TchapCredential
 from envergo.utils import tchap
-
-pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture(autouse=True)
@@ -26,6 +23,17 @@ def tchap_settings(settings):
     cache.delete(tchap.LOCK_KEY)
 
 
+def _fake_storage(existing_bytes=None):
+    """A storages["tchap"]-shaped mock, with or without a pre-existing blob."""
+    storage = MagicMock()
+    storage.exists.return_value = existing_bytes is not None
+    if existing_bytes is not None:
+        storage.open.return_value.__enter__.return_value.read.return_value = (
+            existing_bytes
+        )
+    return storage
+
+
 def _mock_nio_client(**overrides):
     client = MagicMock()
     client.loaded_sync_token = overrides.get("loaded_sync_token", "")
@@ -40,46 +48,6 @@ def _mock_nio_client(**overrides):
     )
     client.close = AsyncMock()
     return client
-
-
-# An UNSAVED row: enough to drive _send / _notify_with_lock (which only read
-# its identity fields) without touching the database. Tests that exercise the
-# crypto-store checkpoint use _make_credentials() to persist a real row.
-CREDS = TchapCredential(
-    user_id="@bot:example.org", device_id="envergo-test", access_token="fake-token"
-)
-
-
-def _make_credentials(crypto_store=None):
-    """Persist and return the single credentials row the send path fetches."""
-    return TchapCredential.objects.create(
-        user_id=CREDS.user_id,
-        device_id=CREDS.device_id,
-        access_token=CREDS.access_token,
-        crypto_store=crypto_store,
-    )
-
-
-# ---- get_credentials() --------------------------------------------------
-
-
-def test_get_credentials_returns_none_when_no_row():
-    assert tchap.get_credentials() is None
-
-
-def test_get_credentials_returns_the_row():
-    row = TchapCredential.objects.create(
-        user_id="@bot:db.example.org",
-        device_id="DBDEVICE",
-        access_token="db-token",
-    )
-    creds = tchap.get_credentials()
-    assert creds.pk == row.pk
-    assert (creds.user_id, creds.device_id, creds.access_token) == (
-        "@bot:db.example.org",
-        "DBDEVICE",
-        "db-token",
-    )
 
 
 # ---- notify() ---------------------------------------------------------
@@ -101,17 +69,15 @@ def test_notify_not_configured_falls_back_to_mattermost(settings):
     [("haie", "TCHAP_ROOM_ID_HAIE"), ("amenagement", "TCHAP_ROOM_ID_AMENAGEMENT")],
 )
 def test_notify_picks_room_by_site(settings, site, room_setting):
-    _make_credentials()
     with (
         patch("envergo.utils.tchap._notify_with_lock") as mock_lock,
         patch("envergo.utils.mattermost.notify"),
     ):
         tchap.notify("hello", site)
-    mock_lock.assert_called_once_with("hello", getattr(settings, room_setting), ANY)
+    mock_lock.assert_called_once_with("hello", getattr(settings, room_setting))
 
 
 def test_notify_swallows_tchap_failure_and_still_calls_mattermost():
-    _make_credentials()
     with (
         patch("envergo.utils.tchap._notify_with_lock", side_effect=Exception("boom")),
         patch("envergo.utils.mattermost.notify") as mock_mattermost,
@@ -162,15 +128,15 @@ def test_release_lock_deletes_its_own_lock():
 
 def test_notify_with_lock_calls_store_and_releases():
     with patch("envergo.utils.tchap._notify_with_store") as mock_store:
-        tchap._notify_with_lock("hello", "!room:example.org", CREDS)
-    mock_store.assert_called_once_with("hello", "!room:example.org", CREDS)
+        tchap._notify_with_lock("hello", "!room:example.org")
+    mock_store.assert_called_once_with("hello", "!room:example.org")
     assert cache.get(tchap.LOCK_KEY) is None
 
 
 def test_notify_with_lock_releases_even_on_failure():
     with patch("envergo.utils.tchap._notify_with_store", side_effect=Exception("boom")):
         with pytest.raises(Exception):
-            tchap._notify_with_lock("hello", "!room:example.org", CREDS)
+            tchap._notify_with_lock("hello", "!room:example.org")
     assert cache.get(tchap.LOCK_KEY) is None
 
 
@@ -179,118 +145,138 @@ def test_notify_with_lock_skips_store_when_lock_unavailable():
         patch("envergo.utils.tchap._acquire_lock", return_value=False),
         patch("envergo.utils.tchap._notify_with_store") as mock_store,
     ):
-        tchap._notify_with_lock("hello", "!room:example.org", CREDS)
+        tchap._notify_with_lock("hello", "!room:example.org")
     mock_store.assert_not_called()
 
 
-# ---- _notify_with_store (checkpoint, DB-backed) --------------------------
-
-db_name = f"{CREDS.user_id}_{CREDS.device_id}.db"
+# ---- _notify_with_store (checkpoint) -------------------------------------
 
 
-def _stored_blob():
-    row = TchapCredential.objects.get()
-    return bytes(row.crypto_store) if row.crypto_store else None
-
-
-def test_notify_with_store_loads_existing_blob_before_send():
-    row = _make_credentials(crypto_store=b"previous-state")
+def test_notify_with_store_downloads_existing_blob_before_send(settings):
+    storage = _fake_storage(existing_bytes=b"previous-state")
+    db_name = f"{settings.TCHAP_USER_ID}_{settings.TCHAP_DEVICE_ID}.db"
     seen = {}
 
-    async def fake_send(msg, room_id, store_path, creds):
+    async def fake_send(msg, room_id, store_path):
         seen["content"] = (Path(store_path) / db_name).read_bytes()
 
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
 
     assert seen["content"] == b"previous-state"
 
 
-def test_notify_with_store_skips_load_when_no_existing_blob():
-    row = _make_credentials(crypto_store=None)
+def test_notify_with_store_skips_download_when_no_existing_blob(settings):
+    storage = _fake_storage(existing_bytes=None)
+    db_name = f"{settings.TCHAP_USER_ID}_{settings.TCHAP_DEVICE_ID}.db"
     seen = {}
 
-    async def fake_send(msg, room_id, store_path, creds):
+    async def fake_send(msg, room_id, store_path):
         seen["exists"] = (Path(store_path) / db_name).exists()
 
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
 
     assert seen["exists"] is False
+    storage.open.assert_not_called()
 
 
-def test_notify_with_store_saves_state_after_successful_send():
-    row = _make_credentials(crypto_store=None)
+def test_notify_with_store_uploads_state_after_successful_send(settings):
+    storage = _fake_storage()
+    db_name = f"{settings.TCHAP_USER_ID}_{settings.TCHAP_DEVICE_ID}.db"
 
-    async def fake_send(msg, room_id, store_path, creds):
+    async def fake_send(msg, room_id, store_path):
         (Path(store_path) / db_name).write_bytes(b"new-state")
-        return True
 
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
 
-    assert _stored_blob() == b"new-state"
-
-
-def test_notify_with_store_saves_state_even_if_bootstrap_send_fails():
-    """A failed first send still persists the freshly created olm account.
-
-    Otherwise nio would mint a new device identity on the next attempt.
-    """
-    row = _make_credentials(crypto_store=None)
-
-    async def fake_send(msg, room_id, store_path, creds):
-        (Path(store_path) / db_name).write_bytes(b"fresh-account")
-        raise Exception("boom")
-
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)  # must not raise
-
-    assert _stored_blob() == b"fresh-account"
+    saved_name, saved_content = storage.save.call_args[0]
+    assert saved_name == db_name
+    assert saved_content.read() == b"new-state"
 
 
-def test_notify_with_store_keeps_good_store_when_send_fails():
-    """A failed send against an existing (good) store must NOT overwrite it.
+def test_notify_with_store_uploads_state_even_if_send_fails(settings):
+    """A failed send must not lose local state nio already wrote to disk."""
+    storage = _fake_storage()
+    db_name = f"{settings.TCHAP_USER_ID}_{settings.TCHAP_DEVICE_ID}.db"
 
-    Persisting post-failure state is how the device gets wedged and starts
-    emitting messages recipients can no longer decrypt.
-    """
-    row = _make_credentials(crypto_store=b"good-state")
-
-    async def fake_send(msg, room_id, store_path, creds):
+    async def fake_send(msg, room_id, store_path):
         (Path(store_path) / db_name).write_bytes(b"partial-state")
         raise Exception("boom")
 
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)  # must not raise
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")  # must not raise
 
-    assert _stored_blob() == b"good-state"
-
-
-def test_notify_with_store_saves_state_on_success_with_existing_store():
-    """A clean send against an existing store does checkpoint its progress."""
-    row = _make_credentials(crypto_store=b"good-state")
-
-    async def fake_send(msg, room_id, store_path, creds):
-        (Path(store_path) / db_name).write_bytes(b"advanced-state")
-        return True
-
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)
-
-    assert _stored_blob() == b"advanced-state"
+    saved_name, saved_content = storage.save.call_args[0]
+    assert saved_content.read() == b"partial-state"
 
 
-def test_notify_with_store_skips_save_if_nio_never_wrote_anything():
-    row = _make_credentials(crypto_store=None)
+def test_notify_with_store_skips_upload_if_nio_never_wrote_anything(settings):
+    storage = _fake_storage()
 
-    async def fake_send(msg, room_id, store_path, creds):
+    async def fake_send(msg, room_id, store_path):
         raise Exception("boom before nio touched the store")
 
-    with patch("envergo.utils.tchap._send", side_effect=fake_send):
-        tchap._notify_with_store("hello", "!room:example.org", row)
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
 
-    assert _stored_blob() is None
+    storage.save.assert_not_called()
+
+
+def test_notify_with_store_uses_notify_timeout_when_store_exists(settings):
+    """A device that has sent here before only gets the steady-state budget."""
+    storage = _fake_storage(existing_bytes=b"state")
+
+    async def fake_send(msg, room_id, store_path):
+        pass
+
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+        patch(
+            "envergo.utils.tchap.asyncio.wait_for", wraps=asyncio.wait_for
+        ) as mock_wait_for,
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
+
+    assert mock_wait_for.call_args.kwargs["timeout"] == tchap.NOTIFY_TIMEOUT
+
+
+def test_notify_with_store_uses_bootstrap_timeout_when_store_is_new(settings):
+    """A device sending here for the first time gets the larger budget, since
+    it still has to establish Olm sessions with every room member.
+    """
+    storage = _fake_storage(existing_bytes=None)
+
+    async def fake_send(msg, room_id, store_path):
+        pass
+
+    with (
+        patch("envergo.utils.tchap.storages", {"tchap": storage}),
+        patch("envergo.utils.tchap._send", side_effect=fake_send),
+        patch(
+            "envergo.utils.tchap.asyncio.wait_for", wraps=asyncio.wait_for
+        ) as mock_wait_for,
+    ):
+        tchap._notify_with_store("hello", "!room:example.org")
+
+    assert mock_wait_for.call_args.kwargs["timeout"] == tchap.BOOTSTRAP_TIMEOUT
 
 
 # ---- _send() (nio mocked, no network) -------------------------------------
@@ -301,7 +287,7 @@ def test_send_happy_path(settings, tmp_path):
     client = _mock_nio_client(rooms={room_id: MagicMock()})
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client) as mock_cls:
-        asyncio.run(tchap._send("**hello**", room_id, str(tmp_path), CREDS))
+        asyncio.run(tchap._send("**hello**", room_id, str(tmp_path)))
 
     mock_cls.assert_called_once_with(
         homeserver=settings.TCHAP_HOMESERVER_URL,
@@ -334,18 +320,14 @@ def test_send_happy_path(settings, tmp_path):
 
 
 def test_send_converts_mattermost_style_emoji_shortcodes(settings, tmp_path):
-    """Convert Mattermost-style shortcodes to real Unicode emoji for Tchap.
-
-    Mattermost renders :x:/:warning: itself; unknown/custom shortcodes are
-    left untouched.
+    """Mattermost renders :x:/:warning: itself; Tchap needs real Unicode
+    emoji instead. Unknown/custom shortcodes are left untouched.
     """
     room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
     client = _mock_nio_client(rooms={room_id: MagicMock()})
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        asyncio.run(
-            tchap._send(":x: erreur :icon-info:", room_id, str(tmp_path), CREDS)
-        )
+        asyncio.run(tchap._send(":x: erreur :icon-info:", room_id, str(tmp_path)))
 
     _, kwargs = client.room_send.call_args
     assert kwargs["content"]["body"] == "❌ erreur :icon-info:"
@@ -357,7 +339,7 @@ def test_send_uploads_keys_when_needed(settings, tmp_path):
     client = _mock_nio_client(should_upload_keys=True, rooms={room_id: MagicMock()})
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS))
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))
 
     client.keys_upload.assert_called_once()
 
@@ -367,7 +349,7 @@ def test_send_returns_early_on_sync_error(settings, tmp_path):
     client = _mock_nio_client(sync_return=SyncError("boom"))
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS))
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))
 
     client.room_send.assert_not_called()
     client.close.assert_called_once()
@@ -379,9 +361,7 @@ def test_send_returns_early_when_room_not_joined(settings, tmp_path):
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
         asyncio.run(
-            tchap._send(
-                "hello", settings.TCHAP_ROOM_ID_AMENAGEMENT, str(tmp_path), CREDS
-            )
+            tchap._send("hello", settings.TCHAP_ROOM_ID_AMENAGEMENT, str(tmp_path))
         )
 
     client.join.assert_not_called()
@@ -390,9 +370,8 @@ def test_send_returns_early_when_room_not_joined(settings, tmp_path):
 
 
 def test_send_accepts_pending_invite_and_resyncs(settings, tmp_path):
-    """A room the bot was invited to (but never accepted) gets joined.
-
-    A follow-up sync then picks up its state, and the send goes through.
+    """A room the bot was invited to (but never accepted) gets joined, then
+    a follow-up sync picks up its state, then the send goes through.
     """
     room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
     client = _mock_nio_client(rooms={}, invited_rooms={room_id: MagicMock()})
@@ -407,7 +386,7 @@ def test_send_accepts_pending_invite_and_resyncs(settings, tmp_path):
     client.sync = AsyncMock(side_effect=fake_sync)
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS))
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))
 
     client.join.assert_called_once_with(room_id)
     assert client.sync.await_count == 2
@@ -424,7 +403,7 @@ def test_send_returns_early_when_join_fails(settings, tmp_path):
     )
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS))
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))
 
     client.join.assert_called_once_with(room_id)
     assert client.sync.await_count == 1  # no follow-up sync attempted
@@ -439,9 +418,7 @@ def test_send_logs_room_send_error_without_raising(settings, tmp_path):
     )
 
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        asyncio.run(
-            tchap._send("hello", room_id, str(tmp_path), CREDS)
-        )  # must not raise
+        asyncio.run(tchap._send("hello", room_id, str(tmp_path)))  # must not raise
 
     client.close.assert_called_once()
 
@@ -453,50 +430,7 @@ def test_send_closes_client_even_if_sync_raises(settings, tmp_path):
     with patch("envergo.utils.tchap.AsyncClient", return_value=client):
         with pytest.raises(RuntimeError):
             asyncio.run(
-                tchap._send(
-                    "hello", settings.TCHAP_ROOM_ID_AMENAGEMENT, str(tmp_path), CREDS
-                )
+                tchap._send("hello", settings.TCHAP_ROOM_ID_AMENAGEMENT, str(tmp_path))
             )
 
     client.close.assert_called_once()
-
-
-# ---- _send() success signalling (drives the checkpoint) -------------------
-
-
-def test_send_returns_true_on_success(settings, tmp_path):
-    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
-    client = _mock_nio_client(rooms={room_id: MagicMock()})
-
-    with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        assert asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS)) is True
-
-
-@pytest.mark.parametrize(
-    "overrides",
-    [
-        {"sync_return": SyncError("boom")},
-        {"rooms": {}, "invited_rooms": {}},
-        {
-            "rooms": {},
-            "invited_rooms": {"!x": MagicMock()},
-            "join_return": JoinError("boom"),
-        },
-    ],
-)
-def test_send_returns_false_when_it_bails_out(settings, tmp_path, overrides):
-    room_id = "!x"
-    client = _mock_nio_client(**overrides)
-
-    with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        assert asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS)) is False
-
-
-def test_send_returns_false_on_room_send_error(settings, tmp_path):
-    room_id = settings.TCHAP_ROOM_ID_AMENAGEMENT
-    client = _mock_nio_client(
-        rooms={room_id: MagicMock()}, room_send_return=RoomSendError("boom")
-    )
-
-    with patch("envergo.utils.tchap.AsyncClient", return_value=client):
-        assert asyncio.run(tchap._send("hello", room_id, str(tmp_path), CREDS)) is False
