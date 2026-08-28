@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import defaultdict
 from datetime import date
 from itertools import groupby
@@ -37,9 +38,12 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.utils import get_moulinette_class_from_site
+from envergo.petitions.models import PetitionProject
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
+
+logger = logging.getLogger(__name__)
 
 
 class MoulinetteMixin:
@@ -623,8 +627,46 @@ class MoulinetteAmenagementResult(
         return context
 
 
+class PetitionProjectContextMixin:
+    """Mixin used to provide some petition project info to alternative simulation play"""
+
+    def get_petition_project_context(self):
+        """Returns petition project infos"""
+        petition_project_reference = self.request.GET.get("project_reference")
+        from django.core.exceptions import ObjectDoesNotExist
+
+        try:
+            petition_project = PetitionProject.objects.get(
+                reference=petition_project_reference
+            )
+        except ObjectDoesNotExist:
+            logger.warning("Project not found from reference")
+            return {}
+
+        dn_dossier_number = petition_project.demarche_numerique_dossier_number
+        add_simulation_url = reverse(
+            "petition_project_instructor_alternative_view",
+            kwargs={"reference": petition_project_reference},
+        )
+        add_simulation_url = update_qs(
+            add_simulation_url,
+            {"moulinette_url": self.request.build_absolute_uri()},
+        )
+        add_simulation_url += "#add-alternative"
+        return {
+            "petition_project": {
+                "dn_dossier_number": dn_dossier_number,
+                "add_simulation_url": add_simulation_url,
+                "dn_messagerie_url": "",
+            }
+        }
+
+
 class MoulinetteHaieResult(
-    MoulinetteResultMixin, MoulinetteMixin, BaseMoulinetteResult
+    MoulinetteResultMixin,
+    MoulinetteMixin,
+    PetitionProjectContextMixin,
+    BaseMoulinetteResult,
 ):
     event_category = "simulateur"
     event_action_haie = "soumission_d"
@@ -666,6 +708,10 @@ class MoulinetteHaieResult(
                 context["main_department_simulation_url"] = update_qs(
                     form_url, {"department": main_department.department}
                 )
+
+            is_alternative = bool(self.request.GET.get("alternative", False))
+            if is_alternative:
+                context.update(self.get_petition_project_context())
 
         return context
 

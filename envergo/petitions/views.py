@@ -1447,6 +1447,16 @@ class PetitionProjectInstructorAlternativeView(
     template_name = "haie/petitions/instructor_view_alternatives.html"
     form_class = SimulationForm
 
+    def get_initial(self):
+        """Get moulinette url from request querystring"""
+        initial = super().get_initial()
+        moulinette_url = self.request.GET.get("moulinette_url")
+        # Check if url is same domaine as ENVERGO_HAIE_DOMAIN
+        if urlparse(moulinette_url).netloc == settings.ENVERGO_HAIE_DOMAIN:
+            initial["moulinette_url"] = moulinette_url
+
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 

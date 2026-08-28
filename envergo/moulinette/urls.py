@@ -17,7 +17,7 @@ urlpatterns = [
             [
                 path("", MoulinetteForm.as_view(), name="moulinette_form"),
                 # We need this url to exist, but it's a "fake" url, it's only
-                # used to be logged in matomo, so we can correctry track the funnel
+                # used to be logged in matomo, so we can correctly track the funnel
                 # moulinette home > missing data > final result
                 path(
                     _("missing-data/"),
