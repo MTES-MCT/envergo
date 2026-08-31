@@ -47,6 +47,7 @@ def _fake_client_factory(
     client.keys_upload = AsyncMock()
     client.join = AsyncMock(return_value=MagicMock())
     client.room_send = AsyncMock(return_value=MagicMock())
+    client.logout = AsyncMock(return_value=MagicMock())
     client.close = AsyncMock()
 
     def factory(**kwargs):
@@ -171,3 +172,69 @@ def test_bootstrap_keeps_the_previous_session_when_the_login_fails():
     row = TchapCredential.objects.get()
     assert row.device_id == "OLD"
     assert cache.get(notifications.LOCK_KEY) is None
+
+
+def test_bootstrap_force_logs_the_previous_device_out():
+    """Forgetting the old token is not the same as revoking it.
+
+    The homeserver keeps honouring an access token until its device is logged
+    out, so dropping the row alone would leave a leaked session valid forever.
+    """
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old-token"
+    )
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run(force=True)
+
+    client.logout.assert_awaited_once()
+    assert client.restore_login.call_args.kwargs == {
+        "user_id": "@bot:example.org",
+        "device_id": "OLD",
+        "access_token": "old-token",
+    }
+
+
+def test_bootstrap_revokes_only_after_the_replacement_session_exists():
+    """A failed login must leave the working session alone."""
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old-token"
+    )
+    factory, client = _fake_client_factory()
+    client.login = AsyncMock(side_effect=Exception("homeserver down"))
+
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        with pytest.raises(Exception):
+            _run(force=True)
+
+    client.logout.assert_not_awaited()
+    assert TchapCredential.objects.get().device_id == "OLD"
+
+
+def test_bootstrap_does_not_log_out_when_there_is_no_previous_session():
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run()
+
+    client.logout.assert_not_awaited()
+
+
+def test_bootstrap_survives_a_failed_revocation():
+    """An old token that is already dead is exactly why an operator re-runs this."""
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old-token"
+    )
+    factory, client = _fake_client_factory()
+    client.logout = AsyncMock(side_effect=Exception("unknown token"))
+
+    out, err = StringIO(), StringIO()
+    with (
+        patch(f"{CMD}.AsyncClient", side_effect=factory),
+        patch(
+            f"{CMD}.getpass.getpass", return_value="s3cret"
+        ),  # pragma: allowlist secret
+    ):
+        call_command("tchap_bootstrap", force=True, stdout=out, stderr=err)
+
+    assert "Revoke it by hand" in err.getvalue()
+    assert TchapCredential.objects.get().device_id == "NEWDEV"
