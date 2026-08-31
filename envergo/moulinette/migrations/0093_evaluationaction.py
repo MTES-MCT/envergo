@@ -8,6 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("moulinette", "0092_alter_moulinettetemplate_key"),
+        ("evaluations", "0053_alter_evaluationaction_table"),
     ]
 
     operations = [

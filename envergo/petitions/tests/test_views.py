@@ -1594,6 +1594,56 @@ def test_instructor_view_single_department_no_alert(client, haie_instructor_44):
     assert "Le projet se situe sur plusieurs départements" not in res.content.decode()
 
 
+@pytest.mark.parametrize(
+    "emergency, expect_emergency_badge",
+    [
+        ("non", False),
+        ("oui", True),
+    ],
+)
+def test_petition_emergency_badge(
+    client, haie_instructor_44, emergency, expect_emergency_badge
+):
+    """Test emergency badge in project list and project detail"""
+
+    # GIVEN project with no urgence
+    RUConfigHaieFactory(
+        is_activated=False,
+        validity_range=DateRange(date(2024, 1, 1), date(2025, 1, 1), "[)"),
+    )
+    RUConfigHaieFactory(validity_range=DateRange(date(2025, 1, 1), None, "[)"))
+    hedge = HedgeFactory(additionalData__type_haie="mixte")
+    hedges = HedgeDataFactory(hedges=[hedge])
+    project = PetitionProjectFactory(
+        demarche_numerique_state=DOSSIER_STATES.prefilled, hedge_data=hedges
+    )
+
+    # GIVEN project with urgence or not
+    moulinette_data = {
+        "reimplantation": "replantation",
+        "motif": "securite",
+        "urgence": emergency,
+    }
+    new_url = update_qs(project.moulinette_url, moulinette_data)
+    project.moulinette_url = new_url
+    project.save()
+
+    # WHEN Instructor visits project list page
+    project_list_url = reverse("petition_project_list")
+    client.force_login(haie_instructor_44)
+    res = client.get(project_list_url)
+    # THEN badge "Urgence" is in content if "urgence" == "oui"
+    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+
+    # WHEN Instructor visits project instructor page
+    project_url = reverse(
+        "petition_project_instructor_view", kwargs={"reference": project.reference}
+    )
+    res = client.get(project_url)
+    # THEN badge "Urgence" is in content if "urgence" == "oui"
+    assert ("Urgence" in res.content.decode()) == expect_emergency_badge
+
+
 @patch("envergo.petitions.views.notify")
 @pytest.mark.django_db(transaction=True)
 def test_petition_project_procedure(
@@ -2084,10 +2134,7 @@ def test_petition_invited_instructor_cannot_see_send_message_button(
     client.force_login(haie_user)
     res = client.get(messagerie_url)
     assert "Nouveau message</button>" not in res.content.decode()
-    assert (
-        '<span class="fr-icon-eye-line fr-icon--sm fr-mr-1w"></span>Lecture seule'
-        in res.content.decode()
-    )
+    assert "</span>Dossier en lecture seule" in res.content.decode()
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -4253,3 +4300,27 @@ class TestGetProjectConfig:
             view.get_project_config(project2)
 
             mock_filter.assert_called_once()
+
+
+def test_state_change_modal_hides_to_be_processed_for_single_procedure(
+    client, haie_instructor_44, site
+):
+    """The view must pass single_procedure down to StateChangeForm.
+
+    The form filters the "to_be_processed" choice out on its own, but only if
+    the view tells it the department runs a single procedure.
+    """
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_instructor_44)
+
+    url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    response = client.get(url)
+
+    assert response.status_code == 200
+    stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
+    assert "to_be_processed" not in stage_choices
