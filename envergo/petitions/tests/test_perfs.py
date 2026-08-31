@@ -11,14 +11,14 @@ pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
 
 
 def test_petition_project_list_query_count_is_constant(
-    haie_instructor_44, client, site
+    haie_coordinator_44, client, site
 ):
     """Rendering the list must not run per-project queries."""
     DCConfigHaieFactory()
     for _ in range(3):
         PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.prefilled)
 
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     url = reverse("petition_project_list")
     client.get(url)  # warm up session-related queries
 

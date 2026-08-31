@@ -37,7 +37,7 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.utils import get_moulinette_class_from_site
-from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.users.mixins import CoordinatorDepartmentAuthorised
 from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
@@ -790,7 +790,7 @@ class Triage(MoulinetteMixin, FormView):
         return initial
 
 
-class ConfigHaieBaseView(InstructorDepartmentAuthorised):
+class ConfigHaieBaseView(CoordinatorDepartmentAuthorised):
     """Define what to when user has no permission"""
 
     def handle_no_permission(self):
