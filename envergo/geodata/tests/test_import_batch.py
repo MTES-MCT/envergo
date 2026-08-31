@@ -1,6 +1,5 @@
 import io
 import shutil
-import sqlite3
 import zipfile
 from unittest.mock import patch
 
@@ -34,14 +33,7 @@ GPKG_TEMPLATE = "envergo/static/gpkg/hedge_data_export_template.gpkg"
 def make_gpkg(tmp_path, filename):
     """Return the path to a file libmagic recognizes as a geopackage."""
     path = tmp_path / filename
-    try:
-        shutil.copy(GPKG_TEMPLATE, path)
-    except FileNotFoundError:
-        # Fall back to a minimal sqlite database
-        con = sqlite3.connect(path)
-        con.execute("create table gpkg_contents (table_name text)")
-        con.commit()
-        con.close()
+    shutil.copy(GPKG_TEMPLATE, path)
     return path
 
 
@@ -346,6 +338,17 @@ def test_batch_isolates_row_errors():
     assert Map.objects.count() == 1
     assert Map.objects.filter(reference="r3").exists()
     assert mock_delay.call_count == 1
+
+
+def test_batch_line_numbers_account_for_blank_lines():
+    """Reported line numbers match the operator's file, blank lines included."""
+    csv_content = (
+        f"{CSV_HEADER}\n" "\n" "\n" "r1,missing.gpkg,Carte A,Description A,44\n"
+    )
+    batch = make_batch(csv_content)
+    run_task(batch)
+
+    assert "ligne 4" in batch.import_log
 
 
 def test_batch_log_summarises_skipped_rows():

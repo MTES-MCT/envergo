@@ -243,8 +243,8 @@ class MapAdmin(gis_admin.GISModelAdmin):
             "partial_success": "/static/admin/img/icon-alert.svg",
         }
         icon = icons.get(obj.import_status)
-        html = f"<img src='{icon}' title='{obj.get_import_status_display()}' alt='{obj.get_import_status_display()}'/>"
-        return mark_safe(html)
+        label = obj.get_import_status_display()
+        return format_html('<img src="{}" title="{}" alt="{}"/>', icon, label, label)
 
     @admin.display(
         ordering="imported_geometries",
@@ -384,8 +384,8 @@ class MapImportBatchAdmin(admin.ModelAdmin):
             "partial_success": "/static/admin/img/icon-alert.svg",
         }
         icon = icons.get(obj.import_status)
-        html = f"<img src='{icon}' title='{obj.get_import_status_display()}' alt='{obj.get_import_status_display()}'/>"
-        return mark_safe(html)
+        label = obj.get_import_status_display()
+        return format_html('<img src="{}" title="{}" alt="{}"/>', icon, label, label)
 
     def task_status(self, obj):
         if not obj.task_id:

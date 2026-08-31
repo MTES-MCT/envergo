@@ -119,13 +119,12 @@ def process_map_import_batch(task, batch_id):
     files_by_name = {f.name: f for f in batch.files.all()}
     seen_references = set()
 
-    rows = [row for row in reader if not is_blank_row(row)]
+    rows = [(reader.line_num, row) for row in reader if not is_blank_row(row)]
     nb_rows = len(rows)
     nb_ok = 0
     nb_missing_file = 0
 
-    # Header is line 1, so the first data row is line 2.
-    for line_no, raw_row in enumerate(rows, start=2):
+    for nb_processed, (line_no, raw_row) in enumerate(rows, start=1):
         result, errors = parse_batch_row(line_no, raw_row)
         if errors:
             import_log.extend(errors)
@@ -163,7 +162,7 @@ def process_map_import_batch(task, batch_id):
 
         task.update_state(
             state="PROGRESS",
-            meta={"msg": f"{line_no - 1}/{nb_rows} lignes traitées"},
+            meta={"msg": f"{nb_processed}/{nb_rows} lignes traitées"},
         )
 
     if nb_ok == nb_rows:
