@@ -1411,7 +1411,7 @@ def test_instructor_view_single_department_no_alert(client, haie_coordinator_44)
     ],
 )
 def test_petition_emergency_badge(
-    client, haie_instructor_44, emergency, expect_emergency_badge
+    client, haie_coordinator_44, emergency, expect_emergency_badge
 ):
     """Test emergency badge in project list and project detail"""
 
@@ -1439,7 +1439,7 @@ def test_petition_emergency_badge(
 
     # WHEN Instructor visits project list page
     project_list_url = reverse("petition_project_list")
-    client.force_login(haie_instructor_44)
+    client.force_login(haie_coordinator_44)
     res = client.get(project_list_url)
     # THEN badge "Urgence" is in content if "urgence" == "oui"
     assert ("Urgence" in res.content.decode()) == expect_emergency_badge

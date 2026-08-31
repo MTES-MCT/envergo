@@ -120,8 +120,8 @@ class User(AbstractUser):
             return GuhRole.ADMINISTRATOR
         if self.is_coordinator:
             return GuhRole.COORDINATOR
-        has_dossier_access = (
-            self.departments.exists() or self.invitation_tokens.exists()
+        has_dossier_access = bool(self.department_ids) or (
+            self.invitation_tokens.exists()
         )
         return GuhRole.INSTRUCTOR if has_dossier_access else GuhRole.GUEST
 
