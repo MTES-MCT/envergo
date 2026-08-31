@@ -1,4 +1,5 @@
 import asyncio
+import getpass
 import logging
 import secrets
 import tempfile
@@ -12,6 +13,7 @@ from nio import (
     AsyncClientConfig,
     JoinError,
     LoginError,
+    LogoutError,
     RoomSendError,
     SyncError,
 )
@@ -21,6 +23,7 @@ from envergo.tchap.notifications import (
     SYNC_TIMEOUT,
     _acquire_lock,
     _release_lock,
+    get_credentials,
     store_name,
 )
 
@@ -34,7 +37,9 @@ class Command(BaseCommand):
         "configured room with a test message, then persist the device_id, "
         "access_token and nio crypto store to the database. Run once by an "
         "operator; the notification path reads the DB row. Refuses to run if a "
-        "session exists unless --force (each run mints a new device)."
+        "session exists unless --force, which also logs the previous device out "
+        "so its access token stops working. The bot password is asked for "
+        "interactively."
     )
 
     def add_arguments(self, parser):
@@ -50,8 +55,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if not settings.TCHAP_BOT_PASSWORD:
-            raise CommandError("TCHAP_BOT_PASSWORD is not configured.")
         if not settings.TCHAP_USER_ID or not settings.TCHAP_HOMESERVER_URL:
             raise CommandError(
                 "TCHAP_USER_ID / TCHAP_HOMESERVER_URL are not configured."
@@ -63,11 +66,15 @@ class Command(BaseCommand):
                 "pass --force if that is really what you want."
             )
 
+        password = self._read_password()
+
         rooms = [
             r
             for r in (settings.TCHAP_ROOM_ID_HAIE, settings.TCHAP_ROOM_ID_AMENAGEMENT)
             if r
         ]
+
+        previous = get_credentials()
 
         lock_token = secrets.token_hex(8)
         if not _acquire_lock(lock_token):
@@ -77,7 +84,12 @@ class Command(BaseCommand):
             )
         try:
             device_id, access_token, crypto_store = asyncio.run(
-                self._bootstrap(rooms, send_test=not options["no_test_message"])
+                self._bootstrap(
+                    rooms,
+                    password,
+                    previous,
+                    send_test=not options["no_test_message"],
+                )
             )
 
             with transaction.atomic():
@@ -100,7 +112,43 @@ class Command(BaseCommand):
             "redeploy is required."
         )
 
-    async def _bootstrap(self, rooms, send_test):
+    def _read_password(self):
+        """Ask the operator for the bot password, never read it from the environment."""
+        password = getpass.getpass("Tchap bot password: ")
+        if not password:
+            raise CommandError("No password provided.")
+        return password
+
+    async def _revoke(self, creds):
+        """Log the previous session out so its access token stops working.
+
+        Dropping the row only makes us forget the token: the homeserver keeps
+        honouring it until the device is logged out, which would leave a leaked
+        credential valid forever. Best effort — a token that is already dead is
+        exactly the case an operator re-runs this command for.
+        """
+        client = AsyncClient(
+            homeserver=settings.TCHAP_HOMESERVER_URL, user=creds.user_id
+        )
+        try:
+            client.restore_login(
+                user_id=creds.user_id,
+                device_id=creds.device_id,
+                access_token=creds.access_token,
+            )
+            resp = await client.logout()
+            if isinstance(resp, LogoutError):
+                raise CommandError(str(resp))
+            self.stdout.write(f"Previous device {creds.device_id} logged out.")
+        except Exception as e:
+            self.stderr.write(
+                f"Could not log out the previous device {creds.device_id}: {e}. "
+                f"Revoke it by hand in Tchap; its access token is still valid."
+            )
+        finally:
+            await client.close()
+
+    async def _bootstrap(self, rooms, password, previous, send_test):
         with tempfile.TemporaryDirectory() as store_path:
             client = AsyncClient(
                 homeserver=settings.TCHAP_HOMESERVER_URL,
@@ -111,14 +159,17 @@ class Command(BaseCommand):
                 ),
             )
             try:
-                login_resp = await client.login(
-                    settings.TCHAP_BOT_PASSWORD, device_name="envergo-bot"
-                )
+                login_resp = await client.login(password, device_name="envergo-bot")
                 if isinstance(login_resp, LoginError):
                     raise CommandError(f"Login failed: {login_resp}")
 
                 device_id = client.device_id
                 access_token = client.access_token
+
+                # Only once the replacement session exists: a failed login must
+                # leave the working one alone.
+                if previous:
+                    await self._revoke(previous)
 
                 sync_resp = await client.sync(timeout=SYNC_TIMEOUT, full_state=True)
                 if isinstance(sync_resp, SyncError):

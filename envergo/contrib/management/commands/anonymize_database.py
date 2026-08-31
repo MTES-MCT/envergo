@@ -54,7 +54,7 @@ class Command(BaseCommand):
         The row holds the bot's access token and its olm private keys, which no
         fake value can stand in for: keeping a copy here would let this
         environment post as the bot in the real Tchap rooms and decrypt what is
-        shared with it. Without the row, notifications fall back to Mattermost.
+        shared with it.
         """
         self.stdout.write("Purging TchapCredential model...")
         deleted, _ = TchapCredential.objects.all().delete()
