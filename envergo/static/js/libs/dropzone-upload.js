@@ -105,7 +105,7 @@ window.initDropzoneUpload = function (options) {
             .then(function (response) {
               if (!response.ok) {
                 this.options.addedfile.call(this, file);
-                this.options.error.call(this, file, "Ce fichier n'as pas pu être supprimé. Veuillez réessayer.");
+                this.options.error.call(this, file, "Ce fichier n'a pas pu être supprimé. Veuillez réessayer.");
               }
             }.bind(this));
         }
