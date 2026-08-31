@@ -119,12 +119,12 @@ def process_map_import_batch(task, batch_id):
     files_by_name = {f.name: f for f in batch.files.all()}
     seen_references = set()
 
-    rows = [row for row in reader if not is_blank_row(row)]
+    rows = [(reader.line_num, row) for row in reader if not is_blank_row(row)]
     nb_rows = len(rows)
     nb_ok = 0
+    nb_missing_file = 0
 
-    # Header is line 1, so the first data row is line 2.
-    for line_no, raw_row in enumerate(rows, start=2):
+    for nb_processed, (line_no, raw_row) in enumerate(rows, start=1):
         result, errors = parse_batch_row(line_no, raw_row)
         if errors:
             import_log.extend(errors)
@@ -142,6 +142,7 @@ def process_map_import_batch(task, batch_id):
         if result.file:
             batch_file = files_by_name.get(result.file)
             if batch_file is None:
+                nb_missing_file += 1
                 import_log.append(
                     f"ligne {line_no} : fichier {result.file} absent des "
                     f"fichiers téléversés"
@@ -161,7 +162,7 @@ def process_map_import_batch(task, batch_id):
 
         task.update_state(
             state="PROGRESS",
-            meta={"msg": f"{line_no - 1}/{nb_rows} lignes traitées"},
+            meta={"msg": f"{nb_processed}/{nb_rows} lignes traitées"},
         )
 
     if nb_ok == nb_rows:
@@ -171,7 +172,11 @@ def process_map_import_batch(task, batch_id):
     else:
         batch.import_status = STATUSES.failure
 
-    batch.import_log = "\n".join(import_log)
+    summary = f"Résumé : {nb_ok}/{nb_rows} ligne(s) traitée(s)"
+    if nb_missing_file:
+        summary += f", {nb_missing_file} ignorée(s) faute de fichier téléversé"
+    summary += "."
+    batch.import_log = "\n".join([summary, *import_log])
     batch.import_date = timezone.now()
     batch.task_id = None
     batch.save()
