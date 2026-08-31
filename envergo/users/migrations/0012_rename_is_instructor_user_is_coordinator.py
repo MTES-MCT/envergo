@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 default=False,
                 help_text="""Donne les droits de coordonnateur sur tous les dossiers des départements autorisés pour ce user.
         Si cette case n'est pas cochée, la personne a le statut d'instructeur consulté ou d'invitée.""",
-                verbose_name="Coordonnateur GUH",
+                verbose_name="Coordonnateur GUH d'un ou plusieurs départements",
             ),
         ),
     ]

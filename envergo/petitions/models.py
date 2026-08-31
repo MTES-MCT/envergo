@@ -555,7 +555,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
     def has_change_permission(self, user):
         """User has edit permission on project, according to
         - superuser
-        - user with access haie, is instructor for department
+        - user with access haie, is coordinator for department
         """
         department = self.department
         return user.is_superuser or all(

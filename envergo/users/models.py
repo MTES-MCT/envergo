@@ -99,43 +99,19 @@ class User(AbstractUser):
 
     @property
     def has_instruction_access(self):
-        """Returns True if the user is an « instructeur »
-
-        * an administrator,
-        * a coordinator,
-        * or a consulted instructor (invited on a department or on a dossier through a token).
-        """
-        # Check fast conditions first
-        if not self.is_authenticated:
-            return False
-        elif self.is_superuser or self.is_coordinator:
-            return True
-        # Check if token or department exists for user
-        else:
-            return any(
-                (
-                    self.invitation_tokens.exists(),
-                    self.departments.defer("geometry").exists(),
-                )
-            )
+        """Returns True if the user is an « instructeur »"""
+        return self.get_guh_role() not in (GuhRole.GUEST, GuhRole.ANONYMOUS)
 
     def get_guh_role(self):
-        """Return the GUH business role of the user as a string.
-
-        Single source of truth for the user typology (see referentiel):
-        administrator / coordinator / instructor / guest / anonymous.
-        """
+        """Return the GUH business role of the user."""
         if not self.is_authenticated:
             return GuhRole.ANONYMOUS
         if self.is_superuser:
             return GuhRole.ADMINISTRATOR
         if self.is_coordinator:
             return GuhRole.COORDINATOR
-        has_dossier_access = any(
-            (
-                self.invitation_tokens.exists(),
-                self.departments.defer("geometry").exists(),
-            )
+        has_dossier_access = (
+            self.departments.exists() or self.invitation_tokens.exists()
         )
         return GuhRole.INSTRUCTOR if has_dossier_access else GuhRole.GUEST
 
