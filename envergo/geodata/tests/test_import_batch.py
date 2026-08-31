@@ -1,3 +1,4 @@
+import io
 import shutil
 import sqlite3
 import zipfile
@@ -9,7 +10,11 @@ from django.forms import modelform_factory
 from django.urls import reverse
 
 from envergo.geodata.admin import MapImportBatchForm
-from envergo.geodata.import_batch import parse_batch_row, validate_headers
+from envergo.geodata.import_batch import (
+    find_missing_files,
+    parse_batch_row,
+    validate_headers,
+)
 from envergo.geodata.models import STATUSES, Map, MapImportBatch, MapImportBatchFile
 from envergo.geodata.tasks import process_map_import_batch
 from envergo.geodata.tests.factories import (
@@ -206,7 +211,7 @@ def test_batch_creates_maps():
     mock_delay = run_task(batch)
 
     assert batch.import_status == STATUSES.success
-    assert batch.import_log == ""
+    assert batch.import_log == "Résumé : 2/2 ligne(s) traitée(s)."
 
     map_a = Map.objects.get(reference="r1")
     assert map_a.name == "Carte A"
@@ -341,6 +346,38 @@ def test_batch_isolates_row_errors():
     assert Map.objects.count() == 1
     assert Map.objects.filter(reference="r3").exists()
     assert mock_delay.call_count == 1
+
+
+def test_batch_log_summarises_skipped_rows():
+    """A partial import leads with a summary counting the skipped rows."""
+    csv_content = (
+        f"{CSV_HEADER}\n"
+        "r1,a.gpkg,Carte A,Description A,44\n"
+        "r2,missing.gpkg,Carte B,Description B,29\n"
+    )
+    batch = make_batch(csv_content, filenames=["a.gpkg"])
+    run_task(batch)
+
+    first_line = batch.import_log.splitlines()[0]
+    assert (
+        first_line
+        == "Résumé : 1/2 ligne(s) traitée(s), 1 ignorée(s) faute de fichier téléversé."
+    )
+
+
+def test_find_missing_files_lists_referenced_but_not_uploaded():
+    import csv as csv_module
+
+    csv_content = (
+        f"{CSV_HEADER}\n"
+        "r1,a.gpkg,Carte A,Description A,44\n"
+        "r2,missing.gpkg,Carte B,Description B,29\n"
+        "r3,,Carte C,Description C,29\n"  # metadata-only, no file expected
+    )
+    reader = csv_module.DictReader(io.StringIO(csv_content))
+    missing = find_missing_files(reader, uploaded_names={"a.gpkg"})
+
+    assert missing == {"missing.gpkg": 1}
 
 
 def test_batch_skips_duplicate_references():
@@ -524,6 +561,32 @@ class TestUploadView:
                 {"action": "process", "_selected_action": [batch.pk]},
             )
 
+        mock_delay.assert_called_once_with(batch.id)
+
+    def test_process_action_warns_about_missing_files(self, admin_client):
+        """The operator is told upfront which referenced files are missing."""
+        csv_content = (
+            f"{CSV_HEADER}\n"
+            "r1,a.gpkg,Carte A,Description A,44\n"
+            "r2,missing.gpkg,Carte B,Description B,29\n"
+        )
+        batch = MapImportBatchFactory(csv_file__data=csv_content.encode())
+        MapImportBatchFileFactory(batch=batch, name="a.gpkg", file__filename="a.gpkg")
+        url = reverse("admin:geodata_mapimportbatch_changelist")
+
+        with patch(
+            "envergo.geodata.admin.process_map_import_batch.delay"
+        ) as mock_delay:
+            res = admin_client.post(
+                url,
+                {"action": "process", "_selected_action": [batch.pk]},
+                follow=True,
+            )
+
+        content = res.content.decode()
+        assert "missing.gpkg" in content
+        assert "1 ligne(s) seront ignorées" in content
+        # The batch is still queued: the maps that are present still import.
         mock_delay.assert_called_once_with(batch.id)
 
     def test_process_action_queues_several_batches(self, admin_client):
