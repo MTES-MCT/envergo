@@ -1,4 +1,5 @@
 import asyncio
+import getpass
 import logging
 import secrets
 import tempfile
@@ -34,7 +35,8 @@ class Command(BaseCommand):
         "configured room with a test message, then persist the device_id, "
         "access_token and nio crypto store to the database. Run once by an "
         "operator; the notification path reads the DB row. Refuses to run if a "
-        "session exists unless --force (each run mints a new device)."
+        "session exists unless --force (each run mints a new device). The bot "
+        "password is asked for interactively."
     )
 
     def add_arguments(self, parser):
@@ -50,8 +52,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        if not settings.TCHAP_BOT_PASSWORD:
-            raise CommandError("TCHAP_BOT_PASSWORD is not configured.")
         if not settings.TCHAP_USER_ID or not settings.TCHAP_HOMESERVER_URL:
             raise CommandError(
                 "TCHAP_USER_ID / TCHAP_HOMESERVER_URL are not configured."
@@ -62,6 +62,8 @@ class Command(BaseCommand):
                 "Tchap credentials already exist. Re-running mints a NEW device; "
                 "pass --force if that is really what you want."
             )
+
+        password = self._read_password()
 
         rooms = [
             r
@@ -77,7 +79,11 @@ class Command(BaseCommand):
             )
         try:
             device_id, access_token, crypto_store = asyncio.run(
-                self._bootstrap(rooms, send_test=not options["no_test_message"])
+                self._bootstrap(
+                    rooms,
+                    password,
+                    send_test=not options["no_test_message"],
+                )
             )
 
             with transaction.atomic():
@@ -100,7 +106,14 @@ class Command(BaseCommand):
             "redeploy is required."
         )
 
-    async def _bootstrap(self, rooms, send_test):
+    def _read_password(self):
+        """Ask the operator for the bot password, never read it from the environment."""
+        password = getpass.getpass("Tchap bot password: ")
+        if not password:
+            raise CommandError("No password provided.")
+        return password
+
+    async def _bootstrap(self, rooms, password, send_test):
         with tempfile.TemporaryDirectory() as store_path:
             client = AsyncClient(
                 homeserver=settings.TCHAP_HOMESERVER_URL,
@@ -111,9 +124,7 @@ class Command(BaseCommand):
                 ),
             )
             try:
-                login_resp = await client.login(
-                    settings.TCHAP_BOT_PASSWORD, device_name="envergo-bot"
-                )
+                login_resp = await client.login(password, device_name="envergo-bot")
                 if isinstance(login_resp, LoginError):
                     raise CommandError(f"Login failed: {login_resp}")
 

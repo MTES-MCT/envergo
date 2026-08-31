@@ -19,7 +19,6 @@ CMD = "envergo.tchap.management.commands.tchap_bootstrap"
 def bootstrap_settings(settings):
     settings.TCHAP_HOMESERVER_URL = "https://tchap.example.org"
     settings.TCHAP_USER_ID = "@bot:example.org"
-    settings.TCHAP_BOT_PASSWORD = "s3cret"  # pragma: allowlist secret
     settings.TCHAP_ROOM_ID_HAIE = "!haie:example.org"
     settings.TCHAP_ROOM_ID_AMENAGEMENT = "!am:example.org"
     cache.delete(notifications.LOCK_KEY)
@@ -58,16 +57,26 @@ def _fake_client_factory(
     return factory, client
 
 
-def _run(**options):
+def _run(password="s3cret", **options):  # pragma: allowlist secret
     out, err = StringIO(), StringIO()
-    call_command("tchap_bootstrap", stdout=out, stderr=err, **options)
+    with patch(f"{CMD}.getpass.getpass", return_value=password):
+        call_command("tchap_bootstrap", stdout=out, stderr=err, **options)
     return out.getvalue()
 
 
-def test_bootstrap_missing_password_errors(settings):
-    settings.TCHAP_BOT_PASSWORD = None
-    with pytest.raises(CommandError, match="TCHAP_BOT_PASSWORD"):
-        _run()
+def test_bootstrap_logs_in_with_the_typed_password():
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run(password="typed-secret")  # pragma: allowlist secret
+
+    assert client.login.await_args.args[0] == "typed-secret"
+
+
+def test_bootstrap_empty_password_errors():
+    with patch(f"{CMD}.AsyncClient") as mock_cls:
+        with pytest.raises(CommandError, match="No password provided"):
+            _run(password="")
+    mock_cls.assert_not_called()  # never even attempts a login
 
 
 def test_bootstrap_refuses_when_credentials_exist_without_force():
