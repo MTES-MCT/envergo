@@ -1,0 +1,20 @@
+## Proxied file serving for public hosted documents.
+## Django triggers this via X-Accel-Redirect; clients cannot hit it directly.
+location /internal-s3-public/ {
+    internal;
+    proxy_pass https://<%= ENV["DJANGO_AWS_PUBLIC_BUCKET_NAME"] %>.s3.fr-par.scw.cloud/;
+    proxy_set_header Host <%= ENV["DJANGO_AWS_PUBLIC_BUCKET_NAME"] %>.s3.fr-par.scw.cloud;
+    proxy_hide_header x-amz-request-id;
+    proxy_hide_header x-amz-id-2;
+}
+
+## Forward all requests to gunicorn.
+## TLS terminates at the Scalingo router, which sets X-Forwarded-Proto and
+## X-Forwarded-For; those headers pass through untouched. Overriding
+## X-Forwarded-Proto with $scheme (http inside the container) would make
+## Django's SECURE_SSL_REDIRECT loop forever.
+location / {
+    proxy_pass http://unix:/tmp/gunicorn.sock;
+    proxy_set_header Host $http_host;
+    proxy_redirect off;
+}
