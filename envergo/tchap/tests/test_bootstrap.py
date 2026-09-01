@@ -33,7 +33,9 @@ def _fake_client_factory(
 ):
     """Return (factory, client) for patching AsyncClient.
 
-    The factory writes a fake nio store file into whatever store_path it is
+    The same client is returned for every AsyncClient construction, including
+    the short-lived one the command builds to revoke the previous session. The
+    factory writes a fake nio store file into whatever store_path it is
     constructed with, so the command's on-disk check passes.
     """
     client = MagicMock()
@@ -51,8 +53,12 @@ def _fake_client_factory(
     client.close = AsyncMock()
 
     def factory(**kwargs):
-        store_path = kwargs["store_path"]
-        (Path(store_path) / f"@bot:example.org_{device_id}.db").write_bytes(b"store")
+        # The revocation client is built without a store_path, so only the
+        # bootstrap client gets a store file written for it.
+        store_path = kwargs.get("store_path")
+        if store_path:
+            path = Path(store_path) / f"@bot:example.org_{device_id}.db"
+            path.write_bytes(b"store")
         return client
 
     return factory, client
