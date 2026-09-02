@@ -72,52 +72,52 @@ def test_petition_project_view_and_change_permissions(haie_user, admin_user):
 
 
 def test_form_url_adds_alternative_param():
-    """form_url appends alternative=true to the query string."""
+    """form_url appends project_reference to the query string."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     simulation = SimulationFactory(project=project)
 
-    # Check that "alternative" is not already in the initial url
+    # Check that "project_reference" is not already in the initial url
     url = simulation.moulinette_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert "alternative" not in params
+    assert "project_reference" not in params
 
     url = simulation.form_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert params["alternative"] == ["true"]
+    assert params["project_reference"] == [project.reference]
 
 
 def test_form_url_does_not_duplicate_alternative_param():
-    """form_url replaces an existing alternative param instead of appending a second one."""
+    """form_url replaces an existing project_reference param instead of appending a second one."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
-    # Create a simulation whose moulinette_url already contains alternative=true
-    moulinette_url = project.moulinette_url + "&alternative=true"
+    # Create a simulation whose moulinette_url already contains project_reference
+    moulinette_url = project.moulinette_url + "&project_reference=" + project.reference
     simulation = SimulationFactory(project=project, moulinette_url=moulinette_url)
     url = simulation.form_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
     # Should have exactly one value, not two
-    assert params["alternative"] == ["true"]
+    assert params["project_reference"] == [project.reference]
 
 
 @pytest.mark.haie
 def test_result_url_adds_alternative_param():
-    """result_url appends alternative=true for new simulations."""
+    """result_url appends project_reference for new simulations."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     simulation = SimulationFactory(project=project, is_active=False)
     url = simulation.result_url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert params["alternative"] == ["true"]
+    assert params["project_reference"] == [project.reference]
 
 
 @pytest.mark.haie
 def test_result_url_active_returns_project_url():
-    """result_url points to the project page (without alternative param) for active simulations."""
+    """result_url points to the project page (without project_reference param) for active simulations."""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     # Deactivate the initial simulation created by the factory
@@ -127,7 +127,7 @@ def test_result_url_active_returns_project_url():
     assert f"/projet/{project.reference}/" in url
     parsed = urlparse(url)
     params = parse_qs(parsed.query)
-    assert "alternative" not in params
+    assert "project_reference" not in params
 
 
 @pytest.mark.django_db(transaction=True)

@@ -54,9 +54,7 @@
 
 {% block alternative_alert %}
   {% if is_alternative %}
-    {% with display_description=True %}
-      {% include 'haie/moulinette/_alternative_simulation_notice.html' %}
-    {% endwith %}
+    {% include 'haie/moulinette/_alternative_simulation_notice.html' with display_description=True %}
   {% endif %}
 {% endblock %}
 
