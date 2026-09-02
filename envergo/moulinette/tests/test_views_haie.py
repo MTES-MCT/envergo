@@ -19,6 +19,7 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.petitions.tests.factories import PetitionProjectFactory
 
 pytestmark = pytest.mark.haie
 
@@ -116,6 +117,79 @@ def test_triage_result(client):
     # THEN redirect to homepage
     assert res.status_code == 302
     assert res.url == "/#simulateur"
+
+
+def test_moulinette_form_exposes_the_petition_project_context(client):
+    """The Haie form is petition-project aware, unlike the Amenagement one."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    url = reverse("moulinette_form")
+    params = (
+        "department=44&element=haie&travaux=destruction&contexte=non"
+        f"&project_reference={project.reference}"
+    )
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    context = res.context["petition_project"]
+    assert context["dn_dossier_number"] == project.demarche_numerique_dossier_number
+    assert project.reference in context["add_simulation_url"]
+
+
+def test_moulinette_result_exposes_the_petition_project_context(client):
+    """The result page gets the context from the mixin, with no call of its own."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory()
+    project = PetitionProjectFactory()
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "amelioration_culture",
+        "reimplantation": "remplacement",
+        "localisation_pac": "oui",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+        "project_reference": project.reference,
+    }
+    url = reverse("moulinette_result")
+    res = client.get(f"{url}?{urlencode(data)}")
+
+    assert res.status_code == 200
+    context = res.context["petition_project"]
+    assert context["dn_dossier_number"] == project.demarche_numerique_dossier_number
+    assert project.reference in context["add_simulation_url"]
+
+
+def test_moulinette_form_ignores_an_unknown_project_reference(client):
+    """An unknown reference must degrade quietly, not break the page."""
+    DCConfigHaieFactory()
+
+    url = reverse("moulinette_form")
+    params = (
+        "department=44&element=haie&travaux=destruction&contexte=non"
+        "&project_reference=NOPE"
+    )
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    assert "petition_project" not in res.context
+
+
+def test_moulinette_form_without_a_project_reference(client):
+    """The form is normally reached without any project at all."""
+    DCConfigHaieFactory()
+
+    url = reverse("moulinette_form")
+    params = "department=44&element=haie&travaux=destruction&contexte=non"
+    res = client.get(f"{url}?{params}")
+
+    assert res.status_code == 200
+    assert "petition_project" not in res.context
 
 
 def test_moulinette_form_with_invalid_triage(client):

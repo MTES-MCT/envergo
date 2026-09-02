@@ -792,7 +792,7 @@ class PetitionProjectDetail(DetailView):
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
 
-        moulinette_params["alternative"] = "true"
+        moulinette_params["project_reference"] = self.object.reference
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
@@ -1452,7 +1452,7 @@ class PetitionProjectInstructorAlternativeView(
         initial = super().get_initial()
         moulinette_url = self.request.GET.get("moulinette_url")
         # Check if url is same domaine as ENVERGO_HAIE_DOMAIN
-        if urlparse(moulinette_url).netloc == settings.ENVERGO_HAIE_DOMAIN:
+        if urlparse(moulinette_url).hostname == settings.ENVERGO_HAIE_DOMAIN:
             initial["moulinette_url"] = moulinette_url
 
         return initial
@@ -1477,7 +1477,7 @@ class PetitionProjectInstructorAlternativeView(
         # Add active simulation (aka project moulinette) form url
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
-        moulinette_params["alternative"] = "true"
+        moulinette_params["project_reference"] = self.object.reference
         form_url = reverse("moulinette_form")
         edit_url = update_qs(form_url, moulinette_params)
         context["active_simulation_form_url"] = edit_url

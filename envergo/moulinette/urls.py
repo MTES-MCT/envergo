@@ -2,8 +2,6 @@ from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 
-from envergo.moulinette.views import MoulinetteForm
-
 urlpatterns = [
     # This is another "fake" url, only for matomo tracking
     path(
@@ -15,7 +13,6 @@ urlpatterns = [
         _("form/"),
         include(
             [
-                path("", MoulinetteForm.as_view(), name="moulinette_form"),
                 # We need this url to exist, but it's a "fake" url, it's only
                 # used to be logged in matomo, so we can correctly track the funnel
                 # moulinette home > missing data > final result

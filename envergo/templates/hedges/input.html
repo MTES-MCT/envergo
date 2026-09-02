@@ -22,9 +22,7 @@
        data-department-lng='{{ department_centroid.lng|unlocalize }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
     {% if is_alternative %}
-      {% with display_description=True %}
-        {% include 'haie/moulinette/_alternative_simulation_notice.html' %}
-      {% endwith %}
+      {% include 'haie/moulinette/_alternative_simulation_notice.html' with display_description=True %}
     {% endif %}
     <div id="saisie-ui">
       <div id="map">
