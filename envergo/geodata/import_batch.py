@@ -83,6 +83,26 @@ def validate_headers(fieldnames):
     return []
 
 
+def find_missing_files(reader, uploaded_names):
+    """Return {file_name: nb_rows} for files referenced but not uploaded."""
+    missing = {}
+    seen_references = set()
+    for line_no, raw_row in enumerate(reader, start=2):
+        if is_blank_row(raw_row):
+            continue
+        result, errors = parse_batch_row(line_no, raw_row)
+        if errors:
+            continue
+        if result.reference in seen_references:
+            continue
+        seen_references.add(result.reference)
+        if not result.file:
+            continue
+        if result.file not in uploaded_names:
+            missing[result.file] = missing.get(result.file, 0) + 1
+    return missing
+
+
 def parse_batch_row(line_no, raw_row):
     """Normalize and validate a single non-blank raw CSV row.
 

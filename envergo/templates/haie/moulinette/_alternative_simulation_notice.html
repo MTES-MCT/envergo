@@ -7,9 +7,7 @@
 
         <p>
           <span class="fr-notice__title">Simulation alternative
-            {% if simulation_project %}
-              - Dossier n° {{ simulation_project.demarche_numerique_dossier_number|format_ds_number }}
-            {% endif %}
+            {% if petition_project %}- Dossier n° {{ petition_project.dn_dossier_number|format_ds_number }}{% endif %}
           </span>
         </p>
 
