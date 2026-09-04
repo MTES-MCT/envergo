@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.urls import Resolver404, resolve
 
-from envergo.petitions.models import PetitionProject
 from envergo.urlmappings.models import UrlMapping
 
 
@@ -42,6 +41,8 @@ def resolve_consultation_url(url):
 
     if match.url_name != "petition_project":
         return url
+
+    from envergo.petitions.models import PetitionProject
 
     try:
         project = PetitionProject.objects.get(reference=match.kwargs["reference"])
