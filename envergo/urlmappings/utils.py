@@ -28,7 +28,7 @@ def unfold_url(url):
 
 
 def resolve_consultation_url(url):
-    """If `url` is a petition project consultation url, return the url of that project's initial simulation instead.
+    """If `url` is a petition project consultation url, return the url of that project's active simulation instead.
 
     If it is not a petition project consultation url, or if we cant resolve the project url, it returns the given url.
     """
@@ -49,5 +49,5 @@ def resolve_consultation_url(url):
     except PetitionProject.DoesNotExist:
         return url
 
-    initial_simulation = project.simulations.filter(is_initial=True).first()
-    return initial_simulation.moulinette_url if initial_simulation else url
+    active_simulation = project.simulations.filter(is_active=True).first()
+    return active_simulation.moulinette_url if active_simulation else url
