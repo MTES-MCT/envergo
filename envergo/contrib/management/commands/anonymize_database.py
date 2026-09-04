@@ -5,6 +5,7 @@ from faker import Faker
 from tqdm import tqdm
 
 from envergo.evaluations.models import Evaluation, RegulatoryNoticeLog, Request
+from envergo.tchap.models import TchapCredential
 from envergo.users.models import User
 
 fake = Faker()
@@ -45,6 +46,20 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f"Successfully anonymized the {model_class.__name__} model."
             )
+        )
+
+    def purge_tchap_credentials(self):
+        """Drop the Tchap bot session instead of anonymizing it.
+
+        The row holds the bot's access token and its olm private keys, which no
+        fake value can stand in for: keeping a copy here would let this
+        environment post as the bot in the real Tchap rooms and decrypt what is
+        shared with it.
+        """
+        self.stdout.write("Purging TchapCredential model...")
+        deleted, _ = TchapCredential.objects.all().delete()
+        self.stdout.write(
+            self.style.SUCCESS(f"Successfully purged {deleted} Tchap credential(s).")
         )
 
     def handle(self, *args, **options):
@@ -98,3 +113,4 @@ class Command(BaseCommand):
                 ("bcc", lambda x: [fake.email()]),
             ],
         )
+        self.purge_tchap_credentials()

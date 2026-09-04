@@ -1,0 +1,246 @@
+from io import StringIO
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from django.core.cache import cache
+from django.core.management import call_command
+from django.core.management.base import CommandError
+
+from envergo.tchap import notifications
+from envergo.tchap.models import TchapCredential
+
+pytestmark = pytest.mark.django_db
+
+CMD = "envergo.tchap.management.commands.tchap_bootstrap"
+
+
+@pytest.fixture(autouse=True)
+def bootstrap_settings(settings):
+    settings.TCHAP_HOMESERVER_URL = "https://tchap.example.org"
+    settings.TCHAP_USER_ID = "@bot:example.org"
+    settings.TCHAP_ROOM_ID_HAIE = "!haie:example.org"
+    settings.TCHAP_ROOM_ID_AMENAGEMENT = "!am:example.org"
+    cache.delete(notifications.LOCK_KEY)
+    yield settings
+    cache.delete(notifications.LOCK_KEY)
+
+
+def _fake_client_factory(
+    device_id="NEWDEV",
+    access_token="new-token",
+    rooms=("!haie:example.org", "!am:example.org"),
+):
+    """Return (factory, client) for patching AsyncClient.
+
+    The same client is returned for every AsyncClient construction, including
+    the short-lived one the command builds to revoke the previous session. The
+    factory writes a fake nio store file into whatever store_path it is
+    constructed with, so the command's on-disk check passes.
+    """
+    client = MagicMock()
+    client.device_id = device_id
+    client.access_token = access_token
+    client.should_upload_keys = True
+    client.rooms = {r: MagicMock() for r in rooms}
+    client.invited_rooms = {}
+    client.login = AsyncMock(return_value=MagicMock())
+    client.sync = AsyncMock(return_value=MagicMock())
+    client.keys_upload = AsyncMock()
+    client.join = AsyncMock(return_value=MagicMock())
+    client.room_send = AsyncMock(return_value=MagicMock())
+    client.logout = AsyncMock(return_value=MagicMock())
+    client.close = AsyncMock()
+
+    def factory(**kwargs):
+        # The revocation client is built without a store_path, so only the
+        # bootstrap client gets a store file written for it.
+        store_path = kwargs.get("store_path")
+        if store_path:
+            path = Path(store_path) / f"@bot:example.org_{device_id}.db"
+            path.write_bytes(b"store")
+        return client
+
+    return factory, client
+
+
+def _run(password="s3cret", **options):  # pragma: allowlist secret
+    out, err = StringIO(), StringIO()
+    with patch(f"{CMD}.getpass.getpass", return_value=password):
+        call_command("tchap_bootstrap", stdout=out, stderr=err, **options)
+    return out.getvalue()
+
+
+def test_bootstrap_logs_in_with_the_typed_password():
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run(password="typed-secret")  # pragma: allowlist secret
+
+    assert client.login.await_args.args[0] == "typed-secret"
+
+
+def test_bootstrap_empty_password_errors():
+    with patch(f"{CMD}.AsyncClient") as mock_cls:
+        with pytest.raises(CommandError, match="No password provided"):
+            _run(password="")
+    mock_cls.assert_not_called()  # never even attempts a login
+
+
+def test_bootstrap_refuses_when_credentials_exist_without_force():
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old"
+    )
+    with patch(f"{CMD}.AsyncClient") as mock_cls:
+        with pytest.raises(CommandError, match="already exist"):
+            _run()
+    mock_cls.assert_not_called()  # never even attempts a login
+
+
+def test_bootstrap_persists_credentials_and_store_blob():
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run()
+
+    row = TchapCredential.objects.get()
+    assert row.device_id == "NEWDEV"
+    assert row.access_token == "new-token"
+    assert row.user_id == "@bot:example.org"
+    assert bytes(row.crypto_store) == b"store"
+
+    client.keys_upload.assert_awaited_once()
+    assert client.room_send.await_count == 2  # warms both configured rooms
+
+
+def test_bootstrap_warms_only_joined_rooms():
+    factory, client = _fake_client_factory(rooms=("!haie:example.org",))
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run()
+
+    client.room_send.assert_awaited_once()  # the unjoined room is skipped
+
+
+def test_bootstrap_force_replaces_existing_single_row():
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old"
+    )
+    factory, _ = _fake_client_factory(device_id="FRESH", access_token="fresh-token")
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run(force=True)
+
+    row = TchapCredential.objects.get()  # exactly one row remains
+    assert row.device_id == "FRESH"
+    assert row.access_token == "fresh-token"
+    assert bytes(row.crypto_store) == b"store"
+
+
+def test_bootstrap_skips_test_message_when_requested():
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run(no_test_message=True)
+
+    client.room_send.assert_not_awaited()
+    assert TchapCredential.objects.count() == 1
+
+
+def test_bootstrap_refuses_while_a_notification_holds_the_lock():
+    """Bail out before minting a device, not after.
+
+    A notification in flight owns the row this command replaces; failing after
+    the login would strand a fresh session on the Tchap side.
+    """
+    cache.set(notifications.LOCK_KEY, "someone-else", timeout=30)
+
+    with patch(f"{CMD}.AsyncClient") as mock_cls:
+        with pytest.raises(CommandError, match="Nothing was changed"):
+            _run()
+
+    mock_cls.assert_not_called()
+    assert cache.get(notifications.LOCK_KEY) == "someone-else"  # not stolen
+
+
+def test_bootstrap_releases_the_lock_on_success():
+    factory, _ = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run()
+
+    assert cache.get(notifications.LOCK_KEY) is None
+
+
+def test_bootstrap_keeps_the_previous_session_when_the_login_fails():
+    """A failed run must not leave the bot with no credentials at all."""
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old"
+    )
+    with patch(f"{CMD}.AsyncClient", side_effect=Exception("homeserver down")):
+        with pytest.raises(Exception):
+            _run(force=True)
+
+    row = TchapCredential.objects.get()
+    assert row.device_id == "OLD"
+    assert cache.get(notifications.LOCK_KEY) is None
+
+
+def test_bootstrap_force_logs_the_previous_device_out():
+    """Forgetting the old token is not the same as revoking it.
+
+    The homeserver keeps honouring an access token until its device is logged
+    out, so dropping the row alone would leave a leaked session valid forever.
+    """
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old-token"
+    )
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run(force=True)
+
+    client.logout.assert_awaited_once()
+    assert client.restore_login.call_args.kwargs == {
+        "user_id": "@bot:example.org",
+        "device_id": "OLD",
+        "access_token": "old-token",
+    }
+
+
+def test_bootstrap_revokes_only_after_the_replacement_session_exists():
+    """A failed login must leave the working session alone."""
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old-token"
+    )
+    factory, client = _fake_client_factory()
+    client.login = AsyncMock(side_effect=Exception("homeserver down"))
+
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        with pytest.raises(Exception):
+            _run(force=True)
+
+    client.logout.assert_not_awaited()
+    assert TchapCredential.objects.get().device_id == "OLD"
+
+
+def test_bootstrap_does_not_log_out_when_there_is_no_previous_session():
+    factory, client = _fake_client_factory()
+    with patch(f"{CMD}.AsyncClient", side_effect=factory):
+        _run()
+
+    client.logout.assert_not_awaited()
+
+
+def test_bootstrap_survives_a_failed_revocation():
+    """An old token that is already dead is exactly why an operator re-runs this."""
+    TchapCredential.objects.create(
+        user_id="@bot:example.org", device_id="OLD", access_token="old-token"
+    )
+    factory, client = _fake_client_factory()
+    client.logout = AsyncMock(side_effect=Exception("unknown token"))
+
+    out, err = StringIO(), StringIO()
+    with (
+        patch(f"{CMD}.AsyncClient", side_effect=factory),
+        patch(
+            f"{CMD}.getpass.getpass", return_value="s3cret"
+        ),  # pragma: allowlist secret
+    ):
+        call_command("tchap_bootstrap", force=True, stdout=out, stderr=err)
+
+    assert "Revoke it by hand" in err.getvalue()
+    assert TchapCredential.objects.get().device_id == "NEWDEV"
