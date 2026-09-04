@@ -23,10 +23,10 @@
     this.shareBtn.addEventListener('click', this.copyUrlToClipboard.bind(this));
     this.dialogElt.addEventListener('dsfr.disclose', this.onModalDisclose.bind(this));
     this.dialogElt.addEventListener('dsfr.conceal', this.onModalConceal.bind(this));
+
   };
 
   ShareModal.prototype.onModalDisclose = function () {
-    _paq.push(['trackEvent', 'ShareDialog', 'Disclose', this.analyticEventName]);
 
     // Optionaly replacing current url with a short url
     if (this.firstDisclosed && this.shortenUrl && UrlMapping) {
@@ -37,6 +37,8 @@
         console.log("Cannot create url mapping", error);
       });
     }
+
+    _paq.push(['trackEvent', 'ShareDialog', 'Disclose', this.analyticEventName]);
 
     this.firstDisclosed = false;
   };
@@ -60,9 +62,11 @@
 })(this, window.UrlMapping);
 
 window.addEventListener('load', function () {
-  const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
-  const shortenUrl = dialogElt.getAttribute('data-shorten-url') == "true";
-  const analyticEventName = dialogElt.getAttribute('data-event-name');
-  const shareModal = new ShareModal(dialogElt, shortenUrl, analyticEventName);
-  shareModal.init();
+  if (window.SHARE_MODAL_DIALOG_ID) {
+    const dialogElt = document.getElementById(window.SHARE_MODAL_DIALOG_ID);
+    const shortenUrl = dialogElt.getAttribute('data-shorten-url') === "true";
+    const analyticEventName = dialogElt.getAttribute('data-event-name');
+    const shareModal = new ShareModal(dialogElt, shortenUrl, analyticEventName);
+    shareModal.init();
+  }
 });
