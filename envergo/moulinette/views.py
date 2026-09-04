@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import defaultdict
 from datetime import date
 from itertools import groupby
@@ -7,6 +8,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms.widgets import CheckboxInput
 from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -37,9 +39,12 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.utils import get_moulinette_class_from_site
+from envergo.petitions.models import PetitionProject
 from envergo.users.mixins import InstructorDepartmentAuthorised
 from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
+
+logger = logging.getLogger(__name__)
 
 
 class MoulinetteMixin:
@@ -312,6 +317,50 @@ class MoulinetteMixin:
         )
 
 
+class PetitionProjectContextMixin:
+    """Contributes petition project context to the Haie moulinette pages."""
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.get_petition_project_context())
+        return context
+
+    def get_petition_project_context(self):
+        """Returns petition project infos"""
+        petition_project_reference = self.request.GET.get("project_reference")
+        if not petition_project_reference:
+            return {}
+
+        try:
+            petition_project = PetitionProject.objects.get(
+                reference=petition_project_reference
+            )
+        except ObjectDoesNotExist:
+            logger.warning(
+                "No petition project found for reference %s",
+                petition_project_reference,
+            )
+            return {}
+
+        dn_dossier_number = petition_project.demarche_numerique_dossier_number
+        add_simulation_url = reverse(
+            "petition_project_instructor_alternative_view",
+            kwargs={"reference": petition_project_reference},
+        )
+        add_simulation_url = update_qs(
+            add_simulation_url,
+            {"moulinette_url": self.request.build_absolute_uri()},
+        )
+        add_simulation_url += "#add-alternative"
+        return {
+            "petition_project": {
+                "dn_dossier_number": dn_dossier_number,
+                "add_simulation_url": add_simulation_url,
+                "dn_messagerie_url": petition_project.demarche_numerique_petitioner_messaging_url,
+            }
+        }
+
+
 @method_decorator(xframe_options_sameorigin, name="dispatch")
 class MoulinetteForm(MoulinetteMixin, FormView):
 
@@ -424,6 +473,14 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         return context
 
 
+class MoulinetteHaieForm(PetitionProjectContextMixin, MoulinetteForm):
+    """The Haie flavour of the simulation form.
+
+    Petition projects only exist on the Haie site, so the petition project
+    context is contributed here rather than in the shared `MoulinetteForm`.
+    """
+
+
 class MoulinetteResultMixin:
     """Common code for views displaying moulinette results."""
 
@@ -475,7 +532,7 @@ class MoulinetteResultMixin:
         data = {}
         moulinette = self.moulinette
         is_debug = bool(self.request.GET.get("debug", False))
-        is_alternative = bool(self.request.GET.get("alternative", False))
+        is_alternative = bool(self.request.GET.get("project_reference", False))
         # Let's build custom uris for better matomo tracking
         # Depending on the moulinette result, we want to track different uris
         # as if they were distinct pages.
@@ -624,7 +681,10 @@ class MoulinetteAmenagementResult(
 
 
 class MoulinetteHaieResult(
-    MoulinetteResultMixin, MoulinetteMixin, BaseMoulinetteResult
+    MoulinetteResultMixin,
+    MoulinetteMixin,
+    PetitionProjectContextMixin,
+    BaseMoulinetteResult,
 ):
     event_category = "simulateur"
     event_action_haie = "soumission_d"
@@ -737,8 +797,8 @@ class Triage(MoulinetteMixin, FormView):
             "department": self.moulinette.department.department,
             "user_type": get_user_type(request.user),
         }
-        is_alternative = bool(request.GET.get("alternative", False))
-        if is_alternative:
+        project_reference = bool(request.GET.get("project_reference", None))
+        if project_reference:
             event_params["alternative"] = "true"
 
         log_event(

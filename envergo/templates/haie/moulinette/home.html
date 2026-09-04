@@ -2,6 +2,15 @@
 
 {% load static %}
 
+{% block before-content %}
+
+  {% if is_alternative %}
+    {% include 'haie/moulinette/_alternative_simulation_notice.html' with display_description=True %}
+  {% endif %}
+
+  {{ super }}
+{% endblock %}
+
 {% block extra_body %}
   {% include 'haie/moulinette/_department_doctrine_modal.html' %}
 {% endblock %}
