@@ -1,13 +1,11 @@
 from datetime import timedelta
 from textwrap import dedent
-from urllib.parse import urlparse
 
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.forms.fields import FileField
-from django.urls import Resolver404, resolve
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.safestring import mark_safe
@@ -22,7 +20,7 @@ from envergo.petitions.models import (
     Simulation,
     StatusLog,
 )
-from envergo.urlmappings.utils import unfold_url
+from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
 from envergo.utils.validators import validate_mime
@@ -545,32 +543,6 @@ def list_moulinette_errors(moulinette):
             messages.append(message)
 
     return messages
-
-
-def resolve_consultation_url(url):
-    """If `url` is a petition project consultation url, return the url of that project's initial simulation instead.
-
-    Petitioners sometimes send the consultation link (obtained after submitting
-    a project) instead of a simulation link when an instructor asks for an
-    alternative simulation. Transparently swap it for the real simulation url.
-    """
-    url = unfold_url(url)
-    path = urlparse(url).path
-    try:
-        match = resolve(path, urlconf="config.urls_haie")
-    except Resolver404:
-        return url
-
-    if match.url_name != "petition_project":
-        return url
-
-    try:
-        project = PetitionProject.objects.get(reference=match.kwargs["reference"])
-    except PetitionProject.DoesNotExist:
-        return url
-
-    initial_simulation = project.simulations.filter(is_initial=True).first()
-    return initial_simulation.moulinette_url if initial_simulation else url
 
 
 class SimulationForm(forms.ModelForm):
