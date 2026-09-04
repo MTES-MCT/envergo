@@ -34,10 +34,15 @@
     <div id="saisie-ui">
       <div id="map">
 
-        <div v-if="helpBubble" class="help-bubble">
+        <div id="help-bubble"
+             v-show="helpBubble && (helpBubble === 'initialHelp' || isPointerOverMap)"
+             class="help-bubble"
+             :class="{ 'help-bubble--cursor': helpBubble !== 'initialHelp' }">
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
-          <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
-          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
+          <span v-if="helpBubble === 'drawingHelp'">Clic simple pour continuer le tracé.
+            <br>
+          Double-clic pour terminer.</span>
+          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquer sur la carte pour commencer le tracé</span>
           <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l’emplacement des haies</span>
         </div>
       </div>
