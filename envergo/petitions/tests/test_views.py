@@ -2957,8 +2957,8 @@ def test_simulation_form_unfolds_short_moulinette_url():
     assert form.cleaned_data["moulinette_url"] == project.moulinette_url
 
 
-def test_simulation_form_resolves_consultation_url_to_initial_simulation():
-    """A petition project consultation url is swapped for that project's initial simulation url."""
+def test_simulation_form_resolves_consultation_url_to_active_simulation():
+    """A petition project consultation url is swapped for that project's active simulation url."""
     DCConfigHaieFactory()
     other_project = PetitionProjectFactory()
     consultation_url = f"http://haie.testserver:8000{reverse('petition_project', args=[other_project.reference])}"
@@ -2994,7 +2994,7 @@ def test_simulation_form_rejects_consultation_url_for_unknown_reference():
 
 
 def test_simulation_form_resolves_shortened_consultation_url():
-    """A shortened project consultation url is unfolded, then swapped for that project's initial simulation url"""
+    """A shortened project consultation url is unfolded, then swapped for that project's active simulation url"""
     DCConfigHaieFactory()
     other_project = PetitionProjectFactory()
     consultation_url = f"http://haie.testserver:8000{reverse('petition_project', args=[other_project.reference])}"
