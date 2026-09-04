@@ -57,7 +57,7 @@
 {% block sensitive_areas %}{% endblock %}
 
 {% block dossier_actions %}
-  {% if user.is_coordinator %}
+  {% if user|has_change_permission:petition_project %}
     <h3 class="fr-mt-4w">Vous souhaitez faire une simulation alternative ?</h3>
 
     <p>Cette simulation n’est plus modifiable car elle a été prise en compte dans le dossier.</p>

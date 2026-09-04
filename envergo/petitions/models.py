@@ -540,16 +540,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - user with access haie and invitation token
         - user with access haie and right to project department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                (
-                    self.department_id in user.department_ids
-                    or user.invitation_tokens.filter(
-                        petition_project_id=self.pk
-                    ).exists()
-                ),
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.is_active
+            and user.access_haie
+            and (
+                self.department_id in user.department_ids
+                or user.invitation_tokens.filter(petition_project_id=self.pk).exists()
             )
         )
 
@@ -558,13 +557,14 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - superuser
         - user with access haie, is coordinator for department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                user.is_coordinator,
-                self.department_id in user.department_ids,
-            )
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.is_active
+            and user.access_haie
+            and user.is_coordinator
+            and self.department_id in user.department_ids
         )
 
     @property

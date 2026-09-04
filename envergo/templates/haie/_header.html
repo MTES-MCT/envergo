@@ -93,7 +93,7 @@
                rel="noopener external">Questions fréquentes</a>
           </li>
         {% endif %}
-        {% if user.is_coordinator or user.is_superuser %}
+        {% if user.has_coordination_access %}
           {% parametrage_departments_menu %}
         {% endif %}
       </ul>

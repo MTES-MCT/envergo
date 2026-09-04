@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class GuhRole(models.TextChoices):
-    """GUH business role typology (see referentiel des droits et permissions).
+    """GUH business role typology.
 
     Values are stable identifiers stored in analytics (Event.metadata["user_type"]);
     do not change them without a data migration.
@@ -108,16 +108,31 @@ class User(AbstractUser):
         return set(self.departments.values_list("id", flat=True))
 
     @property
+    def has_coordination_access(self):
+        """Returns True if the user is a « coordinator »"""
+        return self.guh_role in (GuhRole.ADMINISTRATOR, GuhRole.COORDINATOR)
+
+    @property
     def has_instruction_access(self):
         """Returns True if the user is an « instructeur »"""
-        return self.get_guh_role() not in (GuhRole.GUEST, GuhRole.ANONYMOUS)
+        return self.guh_role in (
+            GuhRole.ADMINISTRATOR,
+            GuhRole.COORDINATOR,
+            GuhRole.INSTRUCTOR,
+        )
 
-    def get_guh_role(self):
+    @cached_property
+    def guh_role(self):
         """Return the GUH business role of the user."""
-        if not self.is_authenticated:
+        if not self.is_authenticated or not self.is_active:
             return GuhRole.ANONYMOUS
+
         if self.is_superuser:
             return GuhRole.ADMINISTRATOR
+
+        if not self.access_haie:
+            return GuhRole.GUEST
+
         if self.is_coordinator:
             return GuhRole.COORDINATOR
         has_dossier_access = bool(self.department_ids) or (
