@@ -4,6 +4,9 @@ Provides helpers to reduce boilerplate when constructing moulinette test data,
 creating regulation/criterion combos, and building hedge scenarios.
 """
 
+from django.core.cache import cache
+
+from envergo.hedges import density as density_module
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
@@ -208,22 +211,21 @@ def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **e
         hedge_data=hedge_data,
         **extra,
     )
-    # Pre-populate the lazy cache so density_around_lines returns our value
-    # without calling compute_density_around_lines_with_artifacts.
-    # The cache key targets all hedges to remove: this assumes the test data
-    # holds a single category, so the evaluators request that exact subset.
+    # The cache key targets all hedges to remove: assumes single-category
+    # test data, so evaluators request that exact subset.
     hedge_data_instance = data["data"]["haies"]
-    cache_key = hedge_data_instance.around_lines_cache_key(
-        hedge_data_instance.hedges_to_remove()
+    cache_key = density_module.lines_cache_key(
+        hedge_data_instance.hedges_to_remove(), 400
     )
-    hedge_data_instance._density = {
-        cache_key: {
+    cache.set(
+        cache_key,
+        {
             "density_400": density,
             "length_400": 3000,
             "area_400_ha": 50.0,
         },
-    }
-    hedge_data_instance.save()
+        None,
+    )
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors
