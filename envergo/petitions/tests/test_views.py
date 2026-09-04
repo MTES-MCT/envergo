@@ -2859,6 +2859,61 @@ def test_simulation_form_unfolds_short_moulinette_url():
     assert form.cleaned_data["moulinette_url"] == project.moulinette_url
 
 
+def test_simulation_form_resolves_consultation_url_to_active_simulation():
+    """A petition project consultation url is swapped for that project's active simulation url."""
+    DCConfigHaieFactory()
+    other_project = PetitionProjectFactory()
+    consultation_url = f"http://haie.testserver:8000{reverse('petition_project', args=[other_project.reference])}"
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": consultation_url,
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["moulinette_url"] == other_project.moulinette_url
+
+
+def test_simulation_form_rejects_consultation_url_for_unknown_reference():
+    """A consultation-shaped url for a nonexistent project falls back to the generic invalid-simulation error"""
+    DCConfigHaieFactory()
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.testserver:8000/projet/DOESNOTEXIST/consultation/",
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert not form.is_valid()
+    assert form.errors["moulinette_url"] == [
+        "Il semble que l'url ne corresponde pas à une page de simulation valide."
+    ]
+
+
+def test_simulation_form_resolves_shortened_consultation_url():
+    """A shortened project consultation url is unfolded, then swapped for that project's active simulation url"""
+    DCConfigHaieFactory()
+    other_project = PetitionProjectFactory()
+    consultation_url = f"http://haie.testserver:8000{reverse('petition_project', args=[other_project.reference])}"
+    UrlMapping.objects.create(key="abcdef", url=consultation_url)
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": "http://haie.local:8000/abcdef/",
+            "source": "petitioner",
+            "comment": "Commentaire",
+        }
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["moulinette_url"] == other_project.moulinette_url
+
+
 def test_alternative_create_requires_change_permission(client, haie_user_44):
     """Creating an alternative requires change permission, not mere view access.
 
