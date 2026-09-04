@@ -529,49 +529,6 @@ nous avons essuyé jusqu'à présent (aux alentour de 30 000 requêtes).
 | `RATELIMIT_IP_META_KEY` | *(non défini)* | Clé HTTP pour l'IP réelle derrière un reverse proxy (ex. `HTTP_X_REAL_IP` en production) |
 | `RATELIMIT_ENABLE` | `True` | Mettre à `False` pour désactiver (automatiquement désactivé dans les tests) |
 
-## Notifications Tchap
-
-Les notifications internes (alertes admin, retours utilisateurs…) sont envoyées à
-un salon [Tchap](https://tchap.gouv.fr/) chiffré de bout en bout, puis relayées à
-Mattermost. Tous les appels passent par `envergo.tchap.tasks.notify`, qui met le
-message en file Celery.
-
-### Variables de configuration
-
-| Variable | Description |
-|----------|-------------|
-| `DJANGO_TCHAP_HOMESERVER_URL` | URL du homeserver Matrix (ex. `https://matrix.agent.<domaine>.tchap.gouv.fr`) |
-| `DJANGO_TCHAP_USER_ID` | Identifiant Matrix du bot (ex. `@bot:agent.<domaine>.tchap.gouv.fr`) |
-| `DJANGO_TCHAP_ROOM_ID_AMENAGEMENT` | Identifiant du salon du site aménagement |
-| `DJANGO_TCHAP_ROOM_ID_HAIE` | Identifiant du salon du site haie |
-
-Ces variables ne sont volontairement pas définies dans `scalingo.json` : sans
-elles, les review apps n'écrivent que dans Mattermost et ne polluent pas les
-salons Tchap réels. La table `tchap_tchapcredential` est pour la même raison
-exclue du dump (`bin/first_deploy.sh`) et purgée par `anonymize_database`.
-
-
-### Provisionner le bot
-
-Rien n'est envoyé à Tchap tant que la session du bot n'a pas été créée. C'est une
-opération manuelle, à faire une fois par environnement, dans un conteneur one-off :
-
-```bash
-scalingo --app <app> run python manage.py tchap_bootstrap
-```
-
-La commande demande le mot de passe du bot de manière interactive (il n'est jamais
-lu depuis l'environnement), crée un nouveau device, rejoint les salons configurés,
-y envoie un message de test — ce qui « réchauffe » les sessions de chiffrement —
-puis enregistre le device, le token d'accès et le store cryptographique nio en
-base. Aucun redéploiement n'est nécessaire ensuite.
-
-Le bot doit avoir été invité dans les deux salons au préalable.
-
-En cas de fuite ou de révocation, relancer avec `--force` : la commande déconnecte
-l'ancien device (son token cesse d'être valide côté homeserver) avant d'en créer
-un nouveau.
-
 ## Recette et déploiement
 
 ### Environnement de recette
