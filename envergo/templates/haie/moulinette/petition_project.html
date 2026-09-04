@@ -57,7 +57,7 @@
 {% block sensitive_areas %}{% endblock %}
 
 {% block dossier_actions %}
-  {% if user.is_coordinator %}
+  {% if user|has_change_permission:petition_project %}
     <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-play-line spinner-link"
        href="{{ edit_url }}">Démarrer une simulation alternative</a>
   {% elif not user.is_authenticated %}

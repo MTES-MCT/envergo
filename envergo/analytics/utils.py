@@ -128,9 +128,9 @@ def get_matomo_tags(request):
 def get_user_type(user):
     """Return the GUH business role of the user as a string.
 
-    Delegates to User.get_guh_role() (single source of truth for the typology):
+    Delegates to User.guh_role (single source of truth for the typology):
     administrator / coordinator / instructor / guest / anonymous.
     """
     if not user or not user.is_authenticated:
         return GuhRole.ANONYMOUS
-    return user.get_guh_role()
+    return user.guh_role

@@ -2,6 +2,7 @@ from datetime import date
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+from django.contrib.auth.models import AnonymousUser
 
 from envergo.contrib.sites.tests.factories import SiteFactory
 from envergo.geodata.tests.factories import Department34Factory
@@ -69,6 +70,20 @@ def test_petition_project_view_and_change_permissions(haie_user, admin_user):
     assert not project.has_change_permission(haie_user)
     assert not project.has_view_permission(other_coordinator)
     assert not project.has_change_permission(other_coordinator)
+
+
+def test_petition_project_permissions_for_anonymous_user():
+    """An anonymous user has neither view nor change permission.
+
+    AnonymousUser is not a User: it carries none of the guichet fields, so the
+    permission checks must rule it out before reading them.
+    """
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    anonymous = AnonymousUser()
+
+    assert not project.has_view_permission(anonymous)
+    assert not project.has_change_permission(anonymous)
 
 
 def test_form_url_adds_alternative_param():

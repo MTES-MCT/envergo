@@ -3626,7 +3626,7 @@ def test_consultations_view_accessible_to_department_instructor(
 
 
 def test_consultations_view_inaccessible_to_invited_instructor(client, haie_user):
-    """Test that consultations view is accessible to invited instructor"""
+    """Test that consultations view is not accessible to invited instructor"""
     DCConfigHaieFactory()
     project = PetitionProjectFactory()
     # Create an accepted invitation token for haie_user
