@@ -1342,9 +1342,39 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
+    # @todo à supprimer
     contacts_info = models.TextField(
         "Champ html des informations de contact", blank=True
     )
+
+    guh_structure = models.CharField(
+        "Structure GUH (DDT ou DDTM)",
+        default="Direction Départementale des Territoires (DDT)",
+    )
+    guh_service_name = models.CharField(
+        "Nom du service GUH",
+        blank=True,
+    )  # @todo à remplir par migration
+    guh_email = models.EmailField(
+        "Email GUH",
+        blank=True,
+    )  # @todo à remplir par migration
+    guh_phone = models.CharField(
+        "Téléphone GUH",
+        blank=True,
+    )  # @todo à remplir par migration
+    guh_address = models.TextField(
+        "Adresse GUH",
+        blank=True,
+    )
+
+    """
+    @todo
+    Migration :
+    on peuple les trois champs (service, email et tel) avec le champ “contacts_info” actuel.
+    Hormis des erreurs de copier coller, celui a été créé avec des formules excel donc est
+    toujours construit pareil.
+    """
 
     contacts_and_links = models.TextField(
         "Champ html d’information fléchage", blank=True
