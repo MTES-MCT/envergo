@@ -1,13 +1,13 @@
 import logging
 from typing import Literal
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 
 import emoji
 import requests
 from django.conf import settings
 
 from envergo.utils.markdown import markdown_to_html
-from envergo.utils.urls import join_url, update_qs
+from envergo.utils.urls import update_qs
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +29,8 @@ def notify(msg, site: Literal["haie", "amenagement"]):
         logger.warning(f"No Tchap endpoint configured. Doing nothing. Message: {msg}")
         return
 
-    endpoint = join_url(
-        settings.TCHAP_HOMESERVER_URL,
-        "_matrix/client/v3/rooms",
-        quote(room_id, safe=""),
-        "send/m.room.message",
-    )
+    room_path = f"_matrix/client/v3/rooms/{quote(room_id, safe='')}/send/m.room.message"
+    endpoint = urljoin(settings.TCHAP_HOMESERVER_URL, room_path)
     endpoint = update_qs(endpoint, {"access_token": settings.TCHAP_ACCESS_TOKEN})
     msg_with_emoji = emoji.emojize(msg, language="alias")
     payload = {

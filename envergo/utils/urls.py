@@ -67,14 +67,3 @@ def remove_mtm_params(url):
     for param in mtm_params.keys():
         url = remove_from_qs(url, param)
     return url
-
-
-def join_url(base, *segments):
-    """Join a base url and path segments, whatever their leading/trailing slashes.
-
-    Segments are joined verbatim, so a segment may itself contain slashes.
-    Callers percent-encode any value that must stay a single path segment.
-    """
-
-    parts = [str(segment).strip("/") for segment in segments]
-    return "/".join([base.rstrip("/"), *[part for part in parts if part]])
