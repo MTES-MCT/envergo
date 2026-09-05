@@ -33,7 +33,7 @@ from envergo.petitions.demarche_numerique.queries import (
     GET_DOSSIER_WITH_MESSAGES_QUERY,
     GET_DOSSIERS_FOR_DEMARCHE_QUERY,
 )
-from envergo.tchap.tasks import notify
+from envergo.utils.tchap import notify
 
 logger = logging.getLogger(__name__)
 

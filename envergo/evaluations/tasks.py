@@ -19,7 +19,7 @@ from envergo.evaluations.models import (
     RegulatoryNoticeLog,
     Request,
 )
-from envergo.tchap.tasks import notify
+from envergo.utils.tchap import notify
 from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)

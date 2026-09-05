@@ -1,4 +1,4 @@
-### Mapping avec Démarche numérique : :x: erreur
+### Mapping avec Démarche numérique : ❌ erreur
 La création d’un dossier « Démarche numérique » n’a pas pu aboutir.
 {% if config_url %}
 Cette erreur révèle une possible anomalie de la

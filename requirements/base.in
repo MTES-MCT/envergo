@@ -35,5 +35,3 @@ gql
 requests-toolbelt
 dacite
 python-magic
-matrix-nio[e2e]
-emoji
