@@ -302,7 +302,7 @@ def display_dn_field(context, field_name, inline=False, label=None):
 
 
 @register.filter
-def has_edit_permission(user, project):
+def has_change_permission(user, project):
     """Check if the user can edit the project."""
     return project.has_change_permission(user)
 

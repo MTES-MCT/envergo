@@ -13,6 +13,20 @@ from django.utils.translation import gettext_lazy as _
 logger = logging.getLogger(__name__)
 
 
+class GuhRole(models.TextChoices):
+    """GUH business role typology.
+
+    Values are stable identifiers stored in analytics (Event.metadata["user_type"]);
+    do not change them without a data migration.
+    """
+
+    ADMINISTRATOR = "administrator", "Administrateur GUH"
+    COORDINATOR = "coordinator", "Coordonnateur GUH"
+    INSTRUCTOR = "instructor", "Instructeur consulté"
+    GUEST = "guest", "Authentifié sans dossier"
+    ANONYMOUS = "anonymous", "Non authentifié"
+
+
 class UserManager(BaseUserManager):
     """Custom manager for our custom User model."""
 
@@ -56,11 +70,11 @@ class User(AbstractUser):
     )
     access_haie = models.BooleanField(_("Access haie site"), default=False)
 
-    is_instructor = models.BooleanField(
-        "En charge de l'instruction sur les départements",
+    is_coordinator = models.BooleanField(
+        "Coordonnateur GUH d'un ou plusieurs départements",
         default=False,
-        help_text="""Donne accès aux actions instructeur sur tous les dossiers des départements autorisés pour ce user.
-        Si cette case n'est pas cochée, la personne a le statut d'invitée.""",
+        help_text="""Donne les droits de coordonnateur sur tous les dossiers des départements autorisés pour ce user.
+        Si cette case n'est pas cochée, la personne a le statut d'instructeur consulté ou d'invitée.""",
     )
     departments = models.ManyToManyField(
         "geodata.Department",
@@ -93,21 +107,38 @@ class User(AbstractUser):
         """
         return set(self.departments.values_list("id", flat=True))
 
-    def is_involved_in_guh(self):
-        """Returns True if user has instructor right or if user has department or token"""
-        # Check fast conditions first
-        if not self.is_authenticated:
-            return False
-        elif self.is_superuser or self.is_instructor:
-            return True
-        # Check if token or department exists for user
-        else:
-            return any(
-                (
-                    self.invitation_tokens.exists(),
-                    self.departments.defer("geometry").exists(),
-                )
-            )
+    @property
+    def has_coordination_access(self):
+        """Returns True if the user is a « coordinator »"""
+        return self.guh_role in (GuhRole.ADMINISTRATOR, GuhRole.COORDINATOR)
+
+    @property
+    def has_instruction_access(self):
+        """Returns True if the user is an « instructeur »"""
+        return self.guh_role in (
+            GuhRole.ADMINISTRATOR,
+            GuhRole.COORDINATOR,
+            GuhRole.INSTRUCTOR,
+        )
+
+    @cached_property
+    def guh_role(self):
+        """Return the GUH business role of the user."""
+        if not self.is_authenticated or not self.is_active:
+            return GuhRole.ANONYMOUS
+
+        if self.is_superuser:
+            return GuhRole.ADMINISTRATOR
+
+        if not self.access_haie:
+            return GuhRole.GUEST
+
+        if self.is_coordinator:
+            return GuhRole.COORDINATOR
+        has_dossier_access = bool(self.department_ids) or (
+            self.invitation_tokens.exists()
+        )
+        return GuhRole.INSTRUCTOR if has_dossier_access else GuhRole.GUEST
 
     def get_unique_hash(self):
         """Return unique hash from user email with a salt from env variable"""

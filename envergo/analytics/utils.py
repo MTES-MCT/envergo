@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from envergo.analytics.models import Event
+from envergo.users.models import GuhRole
 from envergo.utils.urls import extract_mtm_params, update_qs
 
 logger = logging.getLogger(__name__)
@@ -125,12 +126,11 @@ def get_matomo_tags(request):
 
 
 def get_user_type(user):
-    """Return the type of user as a string depending on its attributes."""
+    """Return the GUH business role of the user as a string.
+
+    Delegates to User.guh_role (single source of truth for the typology):
+    administrator / coordinator / instructor / guest / anonymous.
+    """
     if not user or not user.is_authenticated:
-        return "anonymous"
-    if user.is_superuser or user.is_staff:
-        return "administrator"
-    elif user.is_instructor:
-        return "instructor"
-    else:
-        return "guest"
+        return GuhRole.ANONYMOUS
+    return user.guh_role

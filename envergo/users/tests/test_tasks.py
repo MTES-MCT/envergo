@@ -24,19 +24,19 @@ def haie_user_with_dept(haie_site):
 
 
 @pytest.fixture
-def haie_instructor_with_dept(haie_site):
-    user = UserFactory(is_haie_instructor=True)
+def haie_coordinator_with_dept(haie_site):
+    user = UserFactory(is_haie_coordinator=True)
     dept = DepartmentFactory()
     user.departments.add(dept)
     return user
 
 
 def test_send_guh_instruction_rights_update_email_instructor_activated(
-    haie_instructor_with_dept,
+    haie_coordinator_with_dept,
 ):
     """When instructor is newly activated, email body says account was validated."""
-    user = haie_instructor_with_dept
-    send_guh_instruction_rights_update_email(user.pk, is_new_instructor=True)
+    user = haie_coordinator_with_dept
+    send_guh_instruction_rights_update_email(user.pk, is_new_coordinator=True)
 
     assert len(mail.outbox) == 1
     email = mail.outbox[0]
@@ -54,7 +54,7 @@ def test_send_guh_instruction_rights_update_email_instructor_activated(
 def test_send_guh_instruction_rights_update_email_rights_modified(haie_user_with_dept):
     """When only departments change, email body says rights were modified."""
     user = haie_user_with_dept
-    send_guh_instruction_rights_update_email(user.pk, is_new_instructor=False)
+    send_guh_instruction_rights_update_email(user.pk, is_new_coordinator=False)
 
     assert len(mail.outbox) == 1
     email = mail.outbox[0]
@@ -71,7 +71,7 @@ def test_send_guh_instruction_rights_update_email_lists_departments(haie_site):
     dept2 = DepartmentFactory(department="35")
     user.departments.set([dept1, dept2])
 
-    send_guh_instruction_rights_update_email(user.pk, is_new_instructor=False)
+    send_guh_instruction_rights_update_email(user.pk, is_new_coordinator=False)
 
     assert len(mail.outbox) == 1
     body = mail.outbox[0].body
@@ -81,7 +81,7 @@ def test_send_guh_instruction_rights_update_email_lists_departments(haie_site):
 
 def test_send_guh_instruction_rights_update_email_missing_user(haie_site):
     """Task is a no-op when user does not exist."""
-    send_guh_instruction_rights_update_email(99999, is_new_instructor=False)
+    send_guh_instruction_rights_update_email(99999, is_new_coordinator=False)
     assert len(mail.outbox) == 0
 
 
@@ -89,5 +89,5 @@ def test_send_guh_instruction_rights_update_email_missing_site(settings):
     """Task is a no-op when haie site does not exist."""
     settings.ENVERGO_HAIE_DOMAIN = "nonexistent.testserver"
     user = UserFactory(is_haie_user=True)
-    send_guh_instruction_rights_update_email(user.pk, is_new_instructor=False)
+    send_guh_instruction_rights_update_email(user.pk, is_new_coordinator=False)
     assert len(mail.outbox) == 0

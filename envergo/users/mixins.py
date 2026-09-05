@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from envergo.geodata.models import Department
 
 
-class InstructorDepartmentAuthorised(AccessMixin):
+class CoordinatorDepartmentAuthorised(AccessMixin):
     """Authorize user according to project department"""
 
     department = None
@@ -28,13 +28,13 @@ class InstructorDepartmentAuthorised(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         """Check authorization for user
-        Authorised for superuser and instructor user.
+        Authorised for superuser and coordinator user.
         If departement is in kwargs, check user permission on department.
         Else let the inherited view manage the access.
         """
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not request.user.is_superuser and not request.user.is_instructor:
+        if not request.user.is_superuser and not request.user.is_coordinator:
             return self.handle_no_permission()
 
         if "department" in kwargs:

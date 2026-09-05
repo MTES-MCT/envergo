@@ -37,7 +37,7 @@ from envergo.moulinette.models import (
     Regulation,
 )
 from envergo.moulinette.utils import get_moulinette_class_from_site
-from envergo.users.mixins import InstructorDepartmentAuthorised
+from envergo.users.mixins import CoordinatorDepartmentAuthorised
 from envergo.utils.tools import get_department_settings_form_url
 from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, update_qs
 
@@ -790,7 +790,7 @@ class Triage(MoulinetteMixin, FormView):
         return initial
 
 
-class ConfigHaieBaseView(InstructorDepartmentAuthorised):
+class ConfigHaieBaseView(CoordinatorDepartmentAuthorised):
     """Define what to when user has no permission"""
 
     def handle_no_permission(self):
@@ -921,12 +921,12 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
             .order_by("email")
         )
         departement_members_dict = {
-            "instructors_emails": [],
+            "coordinators_emails": [],
             "invited_emails": [],
         }
         for user in department_members:
-            if user.is_instructor:
-                departement_members_dict["instructors_emails"].append(user.email)
+            if user.is_coordinator:
+                departement_members_dict["coordinators_emails"].append(user.email)
             else:
                 departement_members_dict["invited_emails"].append(user.email)
         context["department_members"] = departement_members_dict
