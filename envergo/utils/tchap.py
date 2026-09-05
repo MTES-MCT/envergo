@@ -2,7 +2,6 @@ import logging
 from typing import Literal
 from urllib.parse import quote, urljoin
 
-import emoji
 import requests
 from django.conf import settings
 
@@ -32,12 +31,11 @@ def notify(msg, site: Literal["haie", "amenagement"]):
     room_path = f"_matrix/client/v3/rooms/{quote(room_id, safe='')}/send/m.room.message"
     endpoint = urljoin(settings.TCHAP_HOMESERVER_URL, room_path)
     endpoint = update_qs(endpoint, {"access_token": settings.TCHAP_ACCESS_TOKEN})
-    msg_with_emoji = emoji.emojize(msg, language="alias")
     payload = {
         "msgtype": "m.text",
-        "body": msg_with_emoji,
+        "body": msg,
         "format": "org.matrix.custom.html",
-        "formatted_body": markdown_to_html(msg_with_emoji, "nl2br", "fenced_code"),
+        "formatted_body": markdown_to_html(msg, "nl2br", "fenced_code"),
     }
     try:
         r = requests.post(endpoint, json=payload, timeout=settings.DEFAULT_HTTP_TIMEOUT)
