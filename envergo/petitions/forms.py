@@ -20,6 +20,7 @@ from envergo.petitions.models import (
     Simulation,
     StatusLog,
 )
+from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
 from envergo.utils.validators import validate_mime
@@ -573,6 +574,7 @@ class SimulationForm(forms.ModelForm):
 
     def clean_moulinette_url(self):
         url = self.cleaned_data["moulinette_url"]
+        url = resolve_consultation_url(url)
 
         # Reject a url that is not a valid simulation. The underlying errors are
         # exposed so the template can list them below the field.
