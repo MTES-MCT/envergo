@@ -1347,6 +1347,15 @@ class ConfigHaie(ConfigBase):
         "Champ html des informations de contact", blank=True
     )
 
+    def get_contacts_info(self):
+        return (
+            self.guh_structure,
+            self.guh_service_name,
+            self.guh_email,
+            self.guh_phone,
+            self.guh_address,
+        )
+
     guh_structure = models.CharField(
         "Structure GUH (DDT ou DDTM)",
         default="Direction Départementale des Territoires (DDT)",
@@ -1359,7 +1368,7 @@ class ConfigHaie(ConfigBase):
         "Email GUH",
         blank=True,
     )  # @todo à remplir par migration
-    guh_phone = models.CharField(
+    guh_phone = PhoneNumberField(
         "Téléphone GUH",
         blank=True,
     )  # @todo à remplir par migration
