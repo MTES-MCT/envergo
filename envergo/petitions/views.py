@@ -111,6 +111,15 @@ logger = logging.getLogger(__name__)
 INVITATION_TOKEN_MATOMO_TAG = "invitation_dossier"
 
 
+def coordinator_followers_qs():
+    return (
+        User.objects.filter(is_superuser=False)
+        .filter(is_coordinator=True)
+        .filter(followed_petition_projects=OuterRef("pk"))
+        .filter(departments=OuterRef("department"))
+    )
+
+
 class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
@@ -133,12 +142,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = (
-            User.objects.filter(is_superuser=False)
-            .filter(is_coordinator=True)
-            .filter(followed_petition_projects=OuterRef("pk"))
-            .filter(departments=OuterRef("department"))
-        )
+        followers_qs = coordinator_followers_qs()
 
         queryset = (
             PetitionProject.objects.exclude(
@@ -193,10 +197,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         if followed_by == "me":
             queryset = queryset.filter(followed_up=True)
         elif followed_by == "nobody":
-            is_coordinator = Q(followed_by__is_coordinator=True) & Q(
-                followed_by__is_superuser=False
-            )
-            queryset = queryset.exclude(is_coordinator)
+            queryset = queryset.filter(~Exists(coordinator_followers_qs()))
 
         if not params.get("show_closed"):
             queryset = queryset.exclude(stage=STAGES.closed)
@@ -878,12 +879,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = (
-            User.objects.filter(is_superuser=False)
-            .filter(is_coordinator=True)
-            .filter(followed_petition_projects=OuterRef("pk"))
-            .filter(departments=OuterRef("department"))
-        )
+        followers_qs = coordinator_followers_qs()
 
         queryset = (
             PetitionProject.objects.all()

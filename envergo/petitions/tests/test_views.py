@@ -1133,6 +1133,9 @@ def test_petition_project_list_filters_followed_by(
     haie_coordinator_44_instructor1.departments.add(department_44)
     haie_coordinator_44_instructor2 = UserFactory(is_haie_coordinator=True)
     haie_coordinator_44_instructor2.departments.add(department_44)
+    haie_coordinator_no_dept = UserFactory(is_haie_coordinator=True)
+    haie_coordinator_34 = UserFactory(is_haie_coordinator=True)
+    haie_coordinator_34.departments.add(Department34Factory())
     admin_user.is_coordinator = True
     admin_user.save()
 
@@ -1169,6 +1172,18 @@ def test_petition_project_list_filters_followed_by(
         demarche_numerique_date_depot=now,
     )
     project_44_followed_by_superuser.followed_by.add(admin_user)
+    project_44_followed_by_no_dept = PetitionProjectFactory(
+        reference="NOD123",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+    )
+    project_44_followed_by_no_dept.followed_by.add(haie_coordinator_no_dept)
+    project_44_followed_by_other_dept = PetitionProjectFactory(
+        reference="OTH123",
+        demarche_numerique_state=DOSSIER_STATES.prefilled,
+        demarche_numerique_date_depot=now,
+    )
+    project_44_followed_by_other_dept.followed_by.add(haie_coordinator_34)
     project_44_no_instructor = PetitionProjectFactory(
         reference="XYZ789",
         demarche_numerique_state=DOSSIER_STATES.prefilled,
@@ -1218,6 +1233,9 @@ def test_petition_project_list_filters_followed_by(
     assert project_44_followed_by_invited.reference in content
     assert project_44_followed_by_superuser.reference in content
     assert project_44_no_instructor.reference in content
+    # AND coordinators the followers column never displays do not count as followers
+    assert project_44_followed_by_no_dept.reference in content
+    assert project_44_followed_by_other_dept.reference in content
 
     # AS Instructor 2 on 44
     client.force_login(haie_coordinator_44_instructor2)
@@ -1250,6 +1268,9 @@ def test_petition_project_list_filters_followed_by(
     assert projects_followers[
         project_44_followed_by_invited_and_instructor2.reference
     ] == [haie_coordinator_44_instructor2.email]
+    # Projects followed by a coordinator of another department, or of none, have no follower
+    assert projects_followers[project_44_followed_by_no_dept.reference] == []
+    assert projects_followers[project_44_followed_by_other_dept.reference] == []
 
 
 def test_petition_project_list_filter_show_closed(haie_coordinator_44, client, site):
