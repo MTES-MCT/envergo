@@ -280,7 +280,12 @@ class TestContactHaie:
         ],
     )
     def test_contacts_info_resolution(
-        self, client, config_entries, expected_contacts_info, expected_valid
+        self,
+        client,
+        config_entries,
+        expected_contacts_info,
+        expected_valid,
+        django_assert_num_queries,
     ):
         today = date.today()
         validity_ranges = {
@@ -301,7 +306,8 @@ class TestContactHaie:
                 validity_range=validity_ranges[validity],
             )
 
-        response = client.get(reverse("contact_us"))
+        with django_assert_num_queries(5):
+            response = client.get(reverse("contact_us"))
         data = self._get_department_data(response, dept)
         assert data["contacts_info"] == expected_contacts_info
         assert data["is_config_valid"] is expected_valid
