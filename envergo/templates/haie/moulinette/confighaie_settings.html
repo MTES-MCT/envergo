@@ -160,9 +160,9 @@
         département :</strong>
       </p>
 
-      {% if department_members.instructors_emails %}
+      {% if department_members.coordinators_emails %}
         <ul>
-          {% for member_email in department_members.instructors_emails %}<li>{{ member_email }}</li>{% endfor %}
+          {% for member_email in department_members.coordinators_emails %}<li>{{ member_email }}</li>{% endfor %}
         </ul>
       {% else %}
         <p>
