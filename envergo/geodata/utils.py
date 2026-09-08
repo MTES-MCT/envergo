@@ -22,6 +22,7 @@ from scipy.interpolate import griddata
 
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
+from envergo.utils.storages import download_source
 
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
@@ -169,9 +170,9 @@ def extract_map(archive):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
 
-        # Local files also get an url, but its just unreachable
-        elif hasattr(archive, "url") and archive.url.startswith("http"):
-            yield archive.url
+        # GDAL fetches over plain HTTP with no session: real S3 url, not proxy url.
+        elif hasattr(archive, "storage"):
+            yield download_source(archive)
         elif hasattr(archive, "path"):
             yield archive.path
         else:
