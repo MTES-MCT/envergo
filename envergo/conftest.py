@@ -14,6 +14,16 @@ def media_storage(settings, tmpdir):
     settings.MEDIA_ROOT = tmpdir.strpath
 
 
+@pytest.fixture(autouse=True)
+def clear_django_cache():
+    """Clear the cache between tests: locmem outlives a test, and
+    content-keyed entries (e.g. hedge densities) would leak across tests."""
+    yield
+    from django.core.cache import cache
+
+    cache.clear()
+
+
 @pytest.fixture
 def user() -> User:
     return UserFactory()
