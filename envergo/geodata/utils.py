@@ -168,9 +168,13 @@ def extract_map(archive):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
 
-        # Local files also get an url, but its just unreachable
-        elif hasattr(archive, "url") and archive.url.startswith("http"):
-            yield archive.url
+        # GDAL fetches over plain HTTP with no session: real S3 url, not proxy url.
+        elif hasattr(archive, "storage"):
+            url = archive.storage.s3_url(archive.name)
+            if url.startswith("http"):
+                yield url
+            else:
+                yield archive.path
         elif hasattr(archive, "path"):
             yield archive.path
         else:
