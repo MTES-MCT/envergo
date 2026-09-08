@@ -12,7 +12,7 @@ location /internal-s3-public/ {
     proxy_hide_header x-amz-id-2;
     # S3 error bodies are XML documents naming the bucket. Mask every one.
     proxy_intercept_errors on;
-    error_page 400 403 404 405 416 500 502 503 = @s3_error;
+    error_page 301 302 303 307 308 400 403 404 405 412 416 500 501 502 503 = @s3_error;
 }
 
 ## Proxied file serving for private documents.
@@ -29,11 +29,13 @@ location /internal-s3-private/ {
     proxy_hide_header x-amz-id-2;
     # S3 error bodies are XML documents naming the bucket. Mask every one.
     proxy_intercept_errors on;
-    error_page 400 403 404 405 416 500 502 503 = @s3_error;
+    error_page 301 302 303 307 308 400 403 404 405 412 416 500 501 502 503 = @s3_error;
 }
 
+# 304 stays out of the error_page lists: conditional GETs must pass through.
 location @s3_error {
     default_type text/plain;
+    charset utf-8;
     return 404 "Fichier non trouvé";
 }
 
