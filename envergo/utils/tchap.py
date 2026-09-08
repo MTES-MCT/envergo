@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Literal
 from urllib.parse import quote, urljoin
 
@@ -31,9 +32,10 @@ def notify(msg, site: Literal["haie", "amenagement"]):
     ):
         logger.warning(f"No Tchap endpoint configured. Doing nothing. Message: {msg}")
     else:
-        room_path = (
-            f"_matrix/client/v3/rooms/{quote(room_id, safe='')}/send/m.room.message"
-        )
+        # The purpose of the transaction ID is to distinguish a new request from a retransmission of a previous request
+        # so that it can make the request idempotent. Remember it if you add a retry logic here.
+        transaction_id = str(uuid.uuid4())
+        room_path = f"_matrix/client/v3/rooms/{quote(room_id, safe='')}/send/m.room.message/{transaction_id}"
         endpoint = urljoin(settings.TCHAP_HOMESERVER_URL, room_path)
         endpoint = update_qs(endpoint, {"access_token": settings.TCHAP_ACCESS_TOKEN})
         payload = {
@@ -43,7 +45,7 @@ def notify(msg, site: Literal["haie", "amenagement"]):
             "formatted_body": markdown_to_html(msg, "nl2br", "fenced_code"),
         }
         try:
-            r = requests.post(
+            r = requests.put(
                 endpoint, json=payload, timeout=settings.DEFAULT_HTTP_TIMEOUT
             )
             r.raise_for_status()
