@@ -561,10 +561,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             return False
 
         return user.is_superuser or (
-            user.is_active
-            and user.access_haie
-            and user.is_coordinator
-            and self.department_id in user.department_ids
+            user.has_coordination_access and self.department_id in user.department_ids
         )
 
     @property
