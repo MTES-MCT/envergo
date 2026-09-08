@@ -177,7 +177,10 @@ class TestContactHaie:
     def test_department_contacts_in_json(self, client):
         """Test that contacts_info is embedded in the page JSON for client-side rendering."""
 
-        DCConfigHaieFactory(contacts_info="Chez Ragadast, protecteur des haies")
+        DCConfigHaieFactory(
+            guh_service_name="Chez Ragadast, protecteur des haies",
+            guh_email="haie@example.com",
+        )
         response = client.get(reverse("contact_us"))
         assert response.status_code == 200
         assert "Chez Ragadast, protecteur des haies" in response.content.decode()
@@ -194,14 +197,16 @@ class TestContactHaie:
         today = date.today()
         DCConfigHaieFactory(
             department=dept,
-            contacts_info="Contact A",
+            guh_service_name="Contact A",
+            guh_email="haie@example.com",
             validity_range=DateRange(
                 today - timedelta(days=30), today + timedelta(days=1)
             ),
         )
         DCConfigHaieFactory(
             department=dept,
-            contacts_info="Contact B",
+            guh_service_name="Contact B",
+            guh_email="haie@example.com",
             validity_range=DateRange(
                 today + timedelta(days=1), today + timedelta(days=60)
             ),
@@ -265,18 +270,6 @@ class TestContactHaie:
                 False,
                 id="only_expired",
             ),
-            pytest.param(
-                [],
-                None,
-                False,
-                id="no_config_default_message",
-            ),
-            pytest.param(
-                [("", True, "current")],
-                None,
-                True,
-                id="empty_contacts_info_falls_to_default",
-            ),
         ],
     )
     def test_contacts_info_resolution(
@@ -301,7 +294,8 @@ class TestContactHaie:
         for contacts_info, is_activated, validity in config_entries:
             DCConfigHaieFactory(
                 department=dept,
-                contacts_info=contacts_info,
+                guh_service_name=contacts_info,
+                guh_email="guh@example.com",
                 is_activated=is_activated,
                 validity_range=validity_ranges[validity],
             )
@@ -309,5 +303,42 @@ class TestContactHaie:
         with django_assert_num_queries(5):
             response = client.get(reverse("contact_us"))
         data = self._get_department_data(response, dept)
-        assert data["contacts_info"] == expected_contacts_info
+        assert expected_contacts_info in data["contacts_info"]
         assert data["is_config_valid"] is expected_valid
+
+    def test_contacts_info_resolution_default_value_when_no_config(
+        self,
+        client,
+        django_assert_num_queries,
+    ):
+        dept = DepartmentFactory()
+
+        with django_assert_num_queries(5):
+            response = client.get(reverse("contact_us"))
+        data = self._get_department_data(response, dept)
+        assert (
+            "pas d’information sur le point de contact privilégié au sein de la Direction"
+            in data["contacts_info"]
+        )
+        assert data["is_config_valid"] is False
+
+    def test_contacts_info_default_value_when_empty_contact_info(
+        self, client, django_assert_num_queries
+    ):
+        today = date.today()
+
+        dept = DepartmentFactory()
+        DCConfigHaieFactory(
+            department=dept,
+            is_activated=True,
+            validity_range=DateRange(today, today + timedelta(days=365)),
+        )
+
+        with django_assert_num_queries(5):
+            response = client.get(reverse("contact_us"))
+        data = self._get_department_data(response, dept)
+        assert (
+            "pas d’information sur le point de contact privilégié au sein de la Direction"
+            in data["contacts_info"]
+        )
+        assert data["is_config_valid"] is True
