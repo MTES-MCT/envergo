@@ -209,4 +209,17 @@
   {{ block.super }}
   <script defer src="{% static 'js/libs/urlmappings.js' %}"></script>
   <script defer src="{% static 'js/libs/share_url_modal.js' %}"></script>
+  {% if has_change_permission %}
+    <script>
+      window.addEventListener('load', function () {
+        var addAlternative = document.getElementById('add-alternative');
+        document.querySelector('.hide-expanded[aria-controls="add-alternative"]')
+          .addEventListener('click', function() {
+            addAlternative.addEventListener('dsfr.disclose', function() {
+              addAlternative.scrollIntoView();
+            }, { once: true });
+          });
+      });
+    </script>
+  {% endif %}
 {% endblock %}
