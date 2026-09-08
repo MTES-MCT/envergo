@@ -300,6 +300,10 @@ STORAGES = {
 # Should files be served by Django or proxied through nginx?
 SERVE_FILES_LOCALLY = True
 
+# Browser-facing routes for proxied S3 downloads (see envergo.utils.storages).
+PUBLIC_FILES_URL_PREFIX = "fichiers"
+PRIVATE_FILES_URL_PREFIX = "fichiers-prives"
+
 # Bucket names — only meaningful in production (set via env vars).
 AWS_PRIVATE_BUCKET_NAME = ""
 AWS_PUBLIC_BUCKET_NAME = ""

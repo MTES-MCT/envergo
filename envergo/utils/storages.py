@@ -4,11 +4,6 @@ from django.core.files.storage import FileSystemStorage
 from django.utils.encoding import filepath_to_uri
 from storages.backends.s3boto3 import S3Boto3Storage
 
-# All S3 urls are proxied through the application.
-# Must match the routes in config/urls.py.
-PUBLIC_FILES_URL_PREFIX = "/fichiers"
-PRIVATE_FILES_URL_PREFIX = "/fichiers-prives"
-
 
 def download_source(field_file):
     """Where to read a stored file from: an S3 url, or a local filesystem path."""
@@ -59,7 +54,7 @@ class ProxiedPrivateS3Mixin(S3UrlMixin):
 
         # Never re-encode the signed path: it must pass through byte-identical.
         signed_path = signed_url.removeprefix(path_style_prefix)
-        return f"{PRIVATE_FILES_URL_PREFIX}/{signed_path}"
+        return f"/{settings.PRIVATE_FILES_URL_PREFIX}/{signed_path}"
 
 
 class PrivateMediaStorage(ProxiedPrivateS3Mixin, S3Boto3Storage):
@@ -85,7 +80,7 @@ class PublicMediaStorage(S3UrlMixin, S3Boto3Storage):
     def url(self, name, parameters=None, expire=None, http_method=None):
         # Route through the public download proxy so no template can leak the
         # bucket host. The route serves DB-registered HostedFile paths only.
-        return f"{PUBLIC_FILES_URL_PREFIX}/{filepath_to_uri(name)}"
+        return f"/{settings.PUBLIC_FILES_URL_PREFIX}/{filepath_to_uri(name)}"
 
 
 class LocalFileStorage(FileSystemStorage):

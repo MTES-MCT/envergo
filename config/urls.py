@@ -26,12 +26,12 @@ urlpatterns = [
     ),
     path("csp/reports/", CSPReportView.as_view(), name="csp_report"),
     path(
-        "fichiers/<path:file_path>",
+        f"{settings.PUBLIC_FILES_URL_PREFIX}/<path:file_path>",
         PublicFileDownloadView.as_view(),
         name="public_file_download",
     ),
     path(
-        "fichiers-prives/<path:file_path>",
+        f"{settings.PRIVATE_FILES_URL_PREFIX}/<path:file_path>",
         PrivateFileDownloadView.as_view(),
         name="private_file_download",
     ),
