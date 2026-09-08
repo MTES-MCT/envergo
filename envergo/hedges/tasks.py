@@ -5,7 +5,7 @@ import os
 
 import requests
 from django.conf import settings
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from config.celery_app import app
@@ -43,6 +43,23 @@ def process_species_habitat_file(task, object_id):
     habitat_file.import_log = ""
     habitat_file.import_status = None
     habitat_file.save()
+
+    try:
+        with transaction.atomic():
+            do_species_habitat_import(habitat_file, import_log)
+    except Exception as e:
+        logger.exception(f"Import failed for species habitat file {object_id}")
+        import_log.append(f"Erreur fatale : {e}")
+        habitat_file.refresh_from_db()
+        habitat_file.import_status = IMPORT_STATUSES.failure
+        habitat_file.task_id = None
+        habitat_file.import_date = timezone.now()
+        habitat_file.import_log = "\n".join(import_log)
+        habitat_file.save()
+
+
+def do_species_habitat_import(habitat_file, import_log):
+    """Run the actual import steps for a SpeciesHabitatFile."""
 
     # Clear existing data
     logger.info("Clearing existing data")
