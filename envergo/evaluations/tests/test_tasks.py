@@ -39,7 +39,7 @@ def test_request_history_first_request(mock_post):
 
 @patch("envergo.evaluations.tasks.post")
 def test_request_files(mock_post):
-    """The request files are joined to the payload."""
+    """The request files are joined to the payload as fetchable urls."""
 
     evalreq = RequestFactory(
         user_type="instructor", urbanism_department_emails=["instructor1@example.com"]
@@ -53,6 +53,11 @@ def test_request_files(mock_post):
     payload = mock_post.call_args.kwargs["json"]
     assert "files" in payload
     assert len(payload["files"]) == 3
+
+    expected = [
+        f.file.storage.s3_url(f.file.name) for f in evalreq.additional_files.all()
+    ]
+    assert payload["files"] == expected
 
 
 @patch("envergo.evaluations.tasks.post")
