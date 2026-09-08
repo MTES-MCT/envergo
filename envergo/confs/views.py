@@ -59,7 +59,8 @@ class PublicFileDownloadView(View):
             return serve_local_file(request, hosted_file.file.name)
 
         # Percent-encode: headers are latin-1, non-ascii names would corrupt the key.
-        return x_accel_response(quote(f"{INTERNAL_S3_PUBLIC_PREFIX}/{file_path}"))
+        redirect_uri = f"{INTERNAL_S3_PUBLIC_PREFIX}/{hosted_file.file.name}"
+        return x_accel_response(quote(redirect_uri))
 
 
 class PrivateFileDownloadView(View):
@@ -67,6 +68,9 @@ class PrivateFileDownloadView(View):
 
     All authentication checks are fully delegated to the S3 server.
     """
+
+    # SigV4 signs the http method: a GET-signed url fails on HEAD, so refuse it.
+    http_method_names = ["get"]
 
     def get(self, request, file_path):
         if settings.SERVE_FILES_LOCALLY:

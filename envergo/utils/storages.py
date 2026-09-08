@@ -5,29 +5,42 @@ from django.utils.encoding import filepath_to_uri
 from storages.backends.s3boto3 import S3Boto3Storage
 
 # All S3 urls are proxied through the application.
-# Must match config/urls.py and the nginx internal locations.
+# Must match the routes in config/urls.py.
 PUBLIC_FILES_URL_PREFIX = "/fichiers"
 PRIVATE_FILES_URL_PREFIX = "/fichiers-prives"
 
 
-class ProxiedPrivateS3Mixin:
-    """Common class for all private file storages.
+def download_source(field_file):
+    """Where to read a stored file from: an S3 url, or a local filesystem path."""
+    url = field_file.storage.s3_url(field_file.name)
+    if url.startswith("http"):
+        return url
+    return field_file.path
 
-    Files are hosted on S3, but S3 urls must *never* leak, so we proxy them
-    through the application.
 
-    Private S3 buckets use signed urls. Those acl parameters are transfered as is.
-    """
+class S3UrlMixin:
+    """Expose the raw S3 url alongside the browser-facing url() override."""
 
     def s3_url(self, name, parameters=None, expire=None, http_method=None):
-        """The raw presigned S3 URL.
-
-        For server-side consumers only (tasks fetching file content, webhooks
-        to third parties). Must never be rendered into a page.
-        """
+        """The raw S3 URL. Server-side consumers only — never rendered into a page."""
         return super().url(
             name, parameters=parameters, expire=expire, http_method=http_method
         )
+
+
+class ProxiedPrivateS3Mixin(S3UrlMixin):
+    """Mixin for all private file storages.
+
+    Files are hosted on S3, but S3 urls must *never* leak, so we proxy them
+    through the application. The presigned querystring is the access
+    credential; it passes through unchanged.
+    """
+
+    bucket_name = settings.AWS_PRIVATE_BUCKET_NAME
+    default_acl = "private"
+    file_overwrite = False
+    querystring_auth = True
+    querystring_expire = 3600
 
     def url(self, name, parameters=None, expire=None, http_method=None):
         """A browser-safe proxy URL carrying the presigned querystring."""
@@ -35,7 +48,8 @@ class ProxiedPrivateS3Mixin:
             name, parameters=parameters, expire=expire, http_method=http_method
         )
 
-        path_style_prefix = f"{self.endpoint_url}/{self.bucket_name}/"
+        endpoint = self.endpoint_url.rstrip("/")
+        path_style_prefix = f"{endpoint}/{self.bucket_name}/"
         if not signed_url.startswith(path_style_prefix):
             raise ImproperlyConfigured(
                 f"Presigned URL {signed_url} is not path-style on the "
@@ -51,26 +65,16 @@ class ProxiedPrivateS3Mixin:
 class PrivateMediaStorage(ProxiedPrivateS3Mixin, S3Boto3Storage):
     """Default storage for sensitive files (evaluations, petitions, maps, etc.)."""
 
-    bucket_name = settings.AWS_PRIVATE_BUCKET_NAME
     location = "media"
-    default_acl = "private"
-    file_overwrite = False
-    querystring_auth = True
-    querystring_expire = 3600
 
 
 class PrivateUploadStorage(ProxiedPrivateS3Mixin, S3Boto3Storage):
     """Petitioner-submitted files (RequestFile)."""
 
-    bucket_name = settings.AWS_PRIVATE_BUCKET_NAME
     location = "upload"
-    default_acl = "private"
-    file_overwrite = False
-    querystring_auth = True
-    querystring_expire = 3600
 
 
-class PublicMediaStorage(S3Boto3Storage):
+class PublicMediaStorage(S3UrlMixin, S3Boto3Storage):
     """Public documents (HostedFile). Separate bucket, stable URLs."""
 
     bucket_name = settings.AWS_PUBLIC_BUCKET_NAME
@@ -78,13 +82,7 @@ class PublicMediaStorage(S3Boto3Storage):
     file_overwrite = False
     querystring_auth = False
 
-    def s3_url(self, name, parameters=None, expire=None, http_method=None):
-        """The raw S3 URL, for server-side consumers only."""
-        return super().url(
-            name, parameters=parameters, expire=expire, http_method=http_method
-        )
-
-    def url(self, name):
+    def url(self, name, parameters=None, expire=None, http_method=None):
         # Route through the public download proxy so no template can leak the
         # bucket host. The route serves DB-registered HostedFile paths only.
         return f"{PUBLIC_FILES_URL_PREFIX}/{filepath_to_uri(name)}"
@@ -93,5 +91,5 @@ class PublicMediaStorage(S3Boto3Storage):
 class LocalFileStorage(FileSystemStorage):
     """A FileSystemStorage exposing the same interface as the S3 storages."""
 
-    def s3_url(self, name):
+    def s3_url(self, name, parameters=None, expire=None, http_method=None):
         return self.url(name)
