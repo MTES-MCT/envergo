@@ -132,9 +132,8 @@ def test_moulinette_form_exposes_the_petition_project_context(client):
     res = client.get(f"{url}?{params}")
 
     assert res.status_code == 200
-    context = res.context["petition_project"]
-    assert context["dn_dossier_number"] == project.demarche_numerique_dossier_number
-    assert project.reference in context["add_simulation_url"]
+    assert res.context["petition_project"].id == project.id
+    assert project.reference in res.context["add_simulation_url"]
 
 
 def test_moulinette_result_exposes_the_petition_project_context(client):
@@ -160,9 +159,8 @@ def test_moulinette_result_exposes_the_petition_project_context(client):
     res = client.get(f"{url}?{urlencode(data)}")
 
     assert res.status_code == 200
-    context = res.context["petition_project"]
-    assert context["dn_dossier_number"] == project.demarche_numerique_dossier_number
-    assert project.reference in context["add_simulation_url"]
+    assert res.context["petition_project"].id == project.id
+    assert project.reference in res.context["add_simulation_url"]
 
 
 def test_moulinette_form_ignores_an_unknown_project_reference(client):

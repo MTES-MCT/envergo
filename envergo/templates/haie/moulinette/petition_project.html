@@ -57,10 +57,10 @@
 {% block sensitive_areas %}{% endblock %}
 
 {% block dossier_actions %}
-  {% if user.is_instructor %}
+  {% if user|has_view_permission:object %}
     <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-play-line spinner-link"
        href="{{ edit_url }}">Démarrer une simulation alternative</a>
-  {% elif not user.is_authenticated %}
+  {% else %}
     <h3 class="fr-mt-4w">Vous souhaitez modifier votre simulation ?</h3>
 
     <p>
@@ -68,7 +68,9 @@
     </p>
     <p>
       <a class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-mail-line"
-         href="{% url 'contact_us' %}{% if department %}?department={{ department.department }}{% endif %}{{ contact_dossier_anchor }}">Contacter le guichet unique</a>
+         target="_blank"
+         rel="noopener"
+         href="{{ object.demarche_numerique_petitioner_messaging_url }}">Contacter le guichet unique</a>
     </p>
   {% endif %}
 
