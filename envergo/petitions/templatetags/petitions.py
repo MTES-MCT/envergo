@@ -285,7 +285,7 @@ def get_ds_field(context, field_name):
 
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
-def display_ds_field(context, field_name, inline=False):
+def display_dn_field(context, field_name, inline=False, label=None):
     """Includes template to display a field from « Démarche numérique » as an Item object,
     related to a given config and a given petition project.
 
@@ -296,11 +296,13 @@ def display_ds_field(context, field_name, inline=False):
     item = get_ds_field(context, field_name)
     if not item:
         return {}
+    if label:
+        item.label = label
     return {"item": item, "inline": bool(inline)}
 
 
 @register.filter
-def has_edit_permission(user, project):
+def has_change_permission(user, project):
     """Check if the user can edit the project."""
     return project.has_change_permission(user)
 

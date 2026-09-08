@@ -60,7 +60,7 @@ from envergo.analytics.utils import (
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import Department
 from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
-from envergo.hedges.models import TO_PLANT, HedgeData, HedgeTypeFactory
+from envergo.hedges.models import TO_PLANT, HedgeCategory, HedgeData, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
@@ -111,31 +111,38 @@ logger = logging.getLogger(__name__)
 INVITATION_TOKEN_MATOMO_TAG = "invitation_dossier"
 
 
+def coordinator_followers_qs():
+    return (
+        User.objects.filter(is_superuser=False)
+        .filter(is_coordinator=True)
+        .filter(followed_petition_projects=OuterRef("pk"))
+        .filter(departments=OuterRef("department"))
+    )
+
+
 class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
     template_name = "haie/petitions/instructor_dossier_list.html"
     paginate_by = 30
 
-    def get_queryset(self):
-        """Override queryset filtering projects from user departments
+    def get_base_queryset(self):
+        """Queryset filtered by user access, without filter params applied.
 
-        Returns
-        - all objects if user is superuser
-        - filtered objects on department if user is instructor
-        - none object if user is not instructor or not superuser
+        Returns all non-draft projects visible to the current user:
+        - all projects if user is superuser
+        - department-scoped + invitation-scoped projects if user has haie access
+        - empty queryset otherwise
         """
+        if hasattr(self, "_base_qs"):
+            return self._base_qs
+
         current_user = self.request.user
 
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = (
-            User.objects.filter(is_superuser=False)
-            .filter(is_instructor=True)
-            .filter(followed_petition_projects=OuterRef("pk"))
-            .filter(departments=OuterRef("department"))
-        )
+        followers_qs = coordinator_followers_qs()
 
         queryset = (
             PetitionProject.objects.exclude(
@@ -164,9 +171,8 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             )
             .order_by("-demarche_numerique_date_depot", "-created_at")
         )
-        # Filter on current user status
+
         if current_user.is_superuser:
-            # don't filter the queryset
             pass
         elif current_user.access_haie:
             user_departments = current_user.departments.defer("geometry").all()
@@ -177,39 +183,64 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         else:
             queryset = queryset.none()
 
-        return queryset
+        self._base_qs = queryset
+        return self._base_qs
 
-    def filter_results(self, queryset):
-        """Filter queryset on request GET params"""
-        request_filters = self.request.GET.getlist("f", [])
-        if "mes_dossiers" in request_filters:
+    def get_queryset(self):
+        return self.apply_filters(self.get_base_queryset())
+
+    def apply_filters(self, queryset):
+        """Apply user-facing filter GET params to the queryset."""
+        params = self.request.GET
+
+        followed_by = params.get("followed_by", "off")
+        if followed_by == "me":
             queryset = queryset.filter(followed_up=True)
+        elif followed_by == "nobody":
+            queryset = queryset.filter(~Exists(coordinator_followers_qs()))
 
-        if "dossiers_sans_instructeur" in request_filters:
-            is_instructor = Q(followed_by__is_instructor=True) & Q(
-                followed_by__is_superuser=False
-            )
-            queryset = queryset.exclude(is_instructor)
+        if not params.get("show_closed"):
+            queryset = queryset.exclude(stage=STAGES.closed)
+
+        categories = params.getlist("category")
+        all_category_values = [c.value for c in HedgeCategory]
+        if categories and set(categories) != set(all_category_values):
+            queryset = queryset.filter(_category__in=categories)
 
         return queryset
+
+    def get_active_filters(self):
+        """Build a dict of current filter state for the template."""
+        return {
+            "followed_by": self.request.GET.get("followed_by", "off"),
+            "show_closed": bool(self.request.GET.get("show_closed")),
+            "categories": self.request.GET.getlist("category"),
+        }
+
+    def get_template_names(self):
+        """Return the rendering template.
+
+        Filters use js in a progressive enhancement manner, meaning we render either
+        the full page, or just the table fragment fetched in ajax.
+        """
+        templates = [self.template_name]
+        if self.request.headers.get("HX-Request"):
+            templates = ["haie/petitions/_dossier_list_results.html"]
+        return templates
 
     def get_context_data(self, **kwargs):
-        """Filter results and add info on each object"""
-        all_results = self.object_list
-        filtered_results = self.filter_results(all_results)
-        kwargs["object_list"] = filtered_results
-
         context = super().get_context_data(**kwargs)
 
-        # Check if all results is empty when filters are in querystring
-        if filtered_results:
+        if context["object_list"]:
             context["user_can_view_one_petition_project"] = True
         else:
-            context["user_can_view_one_petition_project"] = all_results.exists()
+            context["user_can_view_one_petition_project"] = (
+                self.get_base_queryset().exists()
+            )
 
-        # Add city and organization to each obj
-        objects = context["object_list"]
-        for obj in objects:
+        context["active_filters"] = self.get_active_filters()
+
+        for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
                 config = self.get_project_config(obj)
@@ -843,21 +874,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         """Check if request has view permission on object"""
         return object.has_view_permission(request.user)
 
-    def has_change_permission(self, request, object):
-        """Check if request has edit permission on object"""
-        return object.has_change_permission(request.user)
-
     def get_queryset(self):
         current_user = self.request.user
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = (
-            User.objects.filter(is_superuser=False)
-            .filter(is_instructor=True)
-            .filter(followed_petition_projects=OuterRef("pk"))
-            .filter(departments=OuterRef("department"))
-        )
+        followers_qs = coordinator_followers_qs()
 
         queryset = (
             PetitionProject.objects.all()
@@ -922,8 +944,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
-        context["is_department_instructor"] = self.has_change_permission(
-            self.request, self.object
+        context["has_change_permission"] = self.object.has_change_permission(
+            self.request.user
         )
 
         matomo_custom_path = self.request.path.replace(
@@ -1029,7 +1051,7 @@ class BasePetitionProjectInstructorView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -1039,8 +1061,8 @@ class BasePetitionProjectInstructorView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["has_change_permission"] = self.has_change_permission(
-            self.request, self.object
+        context["has_change_permission"] = self.object.has_change_permission(
+            self.request.user
         )
 
         invitation_token = self.request.GET.get(
@@ -1114,7 +1136,7 @@ class BasePetitionProjectInstructorUpdateView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not context["is_department_instructor"]:
+        if not context["has_change_permission"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
         return context
@@ -1253,7 +1275,7 @@ class PetitionProjectInstructorMessagerieView(
 
         # Invited instructors do not see the "unread message" notification pill
         # Hence, we only log messagerie accesses for instructors with edit permissions
-        if res.status_code == 200 and self.has_change_permission(request, self.object):
+        if res.status_code == 200 and self.object.has_change_permission(request.user):
             LatestMessagerieAccess.objects.update_or_create(
                 user=request.user,
                 project=self.object,
@@ -1288,8 +1310,8 @@ class PetitionProjectInstructorMessagerieView(
             )
 
         # Invited instructors cannot send messages
-        context["has_send_message_permission"] = self.has_change_permission(
-            self.request, self.object
+        context["has_send_message_permission"] = self.object.has_change_permission(
+            self.request.user
         )
 
         return context
@@ -1326,7 +1348,7 @@ class PetitionProjectInstructorMessagerieView(
         self.object = self.get_object()
 
         # Only instructors can send messages
-        if not self.has_change_permission(self.request, self.object):
+        if not self.object.has_change_permission(self.request.user):
             return TemplateResponse(
                 request=self.request, template="haie/petitions/403.html", status=403
             )
@@ -1389,7 +1411,7 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.has_change_permission(request, self.object):
+        if self.object.has_change_permission(request.user):
             old_date = datetime.datetime(1985, 10, 1, tzinfo=datetime.UTC)
             LatestMessagerieAccess.objects.filter(
                 project=self.object, user=request.user
@@ -1536,7 +1558,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -1781,7 +1803,7 @@ class PetitionProjectInstructorProcedureView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -1873,8 +1895,8 @@ class PetitionProjectInstructorProcedureView(
         )
 
         # Request info / resume forms are only relevant during instruction phases.
-        if self.has_change_permission(
-            self.request, self.object
+        if self.object.has_change_permission(
+            self.request.user
         ) and self.object.stage.startswith("instruction"):
 
             suspension = self.object.latest_suspension
@@ -2247,7 +2269,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
         # We don't call super() because we only inherit frow `View`, which does not
         # have a `post` method
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -2306,7 +2328,7 @@ class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
         # We don't call super() because we only inherit from `View`, which does not
         # have a `post` method
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return HttpResponseForbidden(
                 "Vous n'avez pas la permission de révoquer une invitation"
             )
