@@ -50,30 +50,45 @@
           {% if ds_info.applicant %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
-                <b>Identité :</b>
+                <b>
+                  Identité :
+                </b>
               </p>
-              <div class="champ-content">{{ ds_info.applicant }}</div>
+              <div class="champ-content dn-value-container">
+                {{ ds_info.applicant }}
+                {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
+              </div>
             </div>
           {% endif %}
           {% if ds_info.organization %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
-                <b>Structure :</b>
+                <b>
+                  Structure :
+                </b>
               </p>
-              <div class="champ-content">{{ ds_info.organization }}</div>
+              <div class="champ-content dn-value-container">
+                {{ ds_info.organization }}
+                {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
+              </div>
             </div>
           {% endif %}
-          {% display_ds_field "profil_beneficiaire" "inline" %}
-          {% display_ds_field "adresse_beneficiaire" "inline" %}
+          {% display_dn_field "profil_beneficiaire" "inline" %}
+          {% display_dn_field "adresse_beneficiaire" "inline" %}
         </div>
         {% if ds_info.representative %}
           <div class="fr-mb-2w">
             <h4 class="fr-mb-0">Mandataire</h4>
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
-                <b>Identité :</b>
+                <b>
+                  Identité :
+                </b>
               </p>
-              <div class="champ-content">{{ ds_info.representative }}</div>
+              <div class="champ-content dn-value-container">
+                {{ ds_info.representative }}
+                {% include "haie/petitions/_dn_logo.html" with id="mandataire-identite" %}
+              </div>
             </div>
           </div>
         {% endif %}
@@ -81,7 +96,7 @@
         {% if telephone_contact %}
           <div class="fr-mb-2w">
             <h4 class="fr-mb-0">Contact</h4>
-            {% display_ds_field "telephone_contact" "inline" %}
+            {% display_dn_field "telephone_contact" "inline" %}
           </div>
         {% endif %}
 
@@ -109,35 +124,13 @@
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
 
-      <ul class="instructor-view-list fr-mb-3w">
-        <li>{% field_summary moulinette.triage_form.contexte %}</li>
-        {% if moulinette.triage_form.contexte.value == "projet-urba" %}
-          <li>
-            <span><b>Description du projet de construction ou d’aménagement :</b></span>
-            {% get_ds_field "description_projet_urba" as desc_urba_field %}
-            <span>
-              {% if desc_urba_field and desc_urba_field.value %}
-                {{ desc_urba_field.value }}
-              {% else %}
-                <i>Non renseigné</i>
-              {% endif %}
-            </span>
-          </li>
-          <li>
-            <span><b>N° d’autorisation d’urbanisme :</b></span>
-            {% get_ds_field "numero_auto_urba" as auto_urba_field %}
-            <span>
-              {% if auto_urba_field and auto_urba_field.value %}
-                {{ auto_urba_field.value }}
-              {% else %}
-                <i>Non renseigné</i>
-              {% endif %}
-            </span>
-          </li>
-        {% endif %}
-      </ul>
+      <p class="fr-my-2w">{% field_summary moulinette.triage_form.contexte %}</p>
+      {% if moulinette.triage_form.contexte.value == "projet-urba" %}
+        {% display_dn_field "description_projet_urba" "inline" label="Description du projet de construction ou d’aménagement" %}
+        {% display_dn_field "numero_auto_urba" "inline" label="N° d’autorisation d’urbanisme" %}
+      {% endif %}
 
-      <h6>Linéaires</h6>
+      <h6 class="fr-mt-3w">Linéaires</h6>
 
       <div class="fr-my-3w">
         <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"

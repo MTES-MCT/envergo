@@ -1,4 +1,4 @@
-#### Mapping avec Démarche numérique : :warning: anomalie
+#### Mapping avec Démarche numérique : ⚠ anomalie
 Un dossier a été créé sur « Démarche numérique » :
 * [projet dans l’admin]({{ projet_url }})
 

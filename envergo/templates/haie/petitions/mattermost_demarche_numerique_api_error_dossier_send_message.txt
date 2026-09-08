@@ -1,4 +1,4 @@
-### Envoi d'un message sur Démarche numérique : :x: erreur
+### Envoi d'un message sur Démarche numérique : ❌ erreur
 
 L'API de « Démarche numérique » a retourné une erreur lors de l'envoi d'un message sur le dossier {{dossier_number}} de la démarche n°{{demarche_number}}.
 
