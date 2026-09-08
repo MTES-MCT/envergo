@@ -111,6 +111,15 @@ logger = logging.getLogger(__name__)
 INVITATION_TOKEN_MATOMO_TAG = "invitation_dossier"
 
 
+def coordinator_followers_qs():
+    return (
+        User.objects.filter(is_superuser=False)
+        .filter(is_coordinator=True)
+        .filter(followed_petition_projects=OuterRef("pk"))
+        .filter(departments=OuterRef("department"))
+    )
+
+
 class PetitionProjectList(LoginRequiredMixin, ListView):
     """View list for PetitionProject"""
 
@@ -133,12 +142,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = (
-            User.objects.filter(is_superuser=False)
-            .filter(is_instructor=True)
-            .filter(followed_petition_projects=OuterRef("pk"))
-            .filter(departments=OuterRef("department"))
-        )
+        followers_qs = coordinator_followers_qs()
 
         queryset = (
             PetitionProject.objects.exclude(
@@ -193,10 +197,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         if followed_by == "me":
             queryset = queryset.filter(followed_up=True)
         elif followed_by == "nobody":
-            is_instructor = Q(followed_by__is_instructor=True) & Q(
-                followed_by__is_superuser=False
-            )
-            queryset = queryset.exclude(is_instructor)
+            queryset = queryset.filter(~Exists(coordinator_followers_qs()))
 
         if not params.get("show_closed"):
             queryset = queryset.exclude(stage=STAGES.closed)
@@ -869,21 +870,12 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         """Check if request has view permission on object"""
         return object.has_view_permission(request.user)
 
-    def has_change_permission(self, request, object):
-        """Check if request has edit permission on object"""
-        return object.has_change_permission(request.user)
-
     def get_queryset(self):
         current_user = self.request.user
         messagerie_access_qs = LatestMessagerieAccess.objects.filter(
             user=current_user
         ).filter(project=OuterRef("pk"))
-        followers_qs = (
-            User.objects.filter(is_superuser=False)
-            .filter(is_instructor=True)
-            .filter(followed_petition_projects=OuterRef("pk"))
-            .filter(departments=OuterRef("department"))
-        )
+        followers_qs = coordinator_followers_qs()
 
         queryset = (
             PetitionProject.objects.all()
@@ -948,8 +940,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             ),
             {"mtm_campaign": INVITATION_TOKEN_MATOMO_TAG},
         )
-        context["is_department_instructor"] = self.has_change_permission(
-            self.request, self.object
+        context["has_change_permission"] = self.object.has_change_permission(
+            self.request.user
         )
 
         matomo_custom_path = self.request.path.replace(
@@ -1055,7 +1047,7 @@ class BasePetitionProjectInstructorView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -1065,8 +1057,8 @@ class BasePetitionProjectInstructorView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["has_change_permission"] = self.has_change_permission(
-            self.request, self.object
+        context["has_change_permission"] = self.object.has_change_permission(
+            self.request.user
         )
 
         invitation_token = self.request.GET.get(
@@ -1134,7 +1126,7 @@ class BasePetitionProjectInstructorUpdateView(
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not context["is_department_instructor"]:
+        if not context["has_change_permission"]:
             for field in context["form"].fields.values():
                 field.widget.attrs["disabled"] = "disabled"
         return context
@@ -1273,7 +1265,7 @@ class PetitionProjectInstructorMessagerieView(
 
         # Invited instructors do not see the "unread message" notification pill
         # Hence, we only log messagerie accesses for instructors with edit permissions
-        if res.status_code == 200 and self.has_change_permission(request, self.object):
+        if res.status_code == 200 and self.object.has_change_permission(request.user):
             LatestMessagerieAccess.objects.update_or_create(
                 user=request.user,
                 project=self.object,
@@ -1308,8 +1300,8 @@ class PetitionProjectInstructorMessagerieView(
             )
 
         # Invited instructors cannot send messages
-        context["has_send_message_permission"] = self.has_change_permission(
-            self.request, self.object
+        context["has_send_message_permission"] = self.object.has_change_permission(
+            self.request.user
         )
 
         return context
@@ -1346,7 +1338,7 @@ class PetitionProjectInstructorMessagerieView(
         self.object = self.get_object()
 
         # Only instructors can send messages
-        if not self.has_change_permission(self.request, self.object):
+        if not self.object.has_change_permission(self.request.user):
             return TemplateResponse(
                 request=self.request, template="haie/petitions/403.html", status=403
             )
@@ -1409,7 +1401,7 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.has_change_permission(request, self.object):
+        if self.object.has_change_permission(request.user):
             old_date = datetime.datetime(1985, 10, 1, tzinfo=datetime.UTC)
             LatestMessagerieAccess.objects.filter(
                 project=self.object, user=request.user
@@ -1547,7 +1539,7 @@ class PetitionProjectInstructorAlternativeEdit(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -1726,7 +1718,7 @@ class PetitionProjectInstructorProcedureView(
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -1818,8 +1810,8 @@ class PetitionProjectInstructorProcedureView(
         )
 
         # Request info / resume forms are only relevant during instruction phases.
-        if self.has_change_permission(
-            self.request, self.object
+        if self.object.has_change_permission(
+            self.request.user
         ) and self.object.stage.startswith("instruction"):
 
             suspension = self.object.latest_suspension
@@ -2192,7 +2184,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
         # We don't call super() because we only inherit frow `View`, which does not
         # have a `post` method
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=403
             )
@@ -2251,7 +2243,7 @@ class PetitionProjectInvitationTokenDelete(BasePetitionProjectInstructorView):
         # We don't call super() because we only inherit from `View`, which does not
         # have a `post` method
         self.object = self.get_object()
-        if not self.has_change_permission(request, self.object):
+        if not self.object.has_change_permission(request.user):
             return HttpResponseForbidden(
                 "Vous n'avez pas la permission de révoquer une invitation"
             )

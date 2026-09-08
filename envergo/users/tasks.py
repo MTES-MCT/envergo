@@ -93,7 +93,7 @@ def send_new_account_notification(user_id, site_id):
 
 
 @app.task
-def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
+def send_guh_instruction_rights_update_email(user_id, is_new_coordinator):
     """Notify a GUH user that their instruction rights have been assigned or changed.
 
     Note sur l’absence d’opt-out :
@@ -130,8 +130,8 @@ def send_guh_instruction_rights_update_email(user_id, is_new_instructor):
         "base_url": base_url,
         "user": user,
         "departments": departments,
-        "is_instructor": user.is_instructor,
-        "is_new_instructor": is_new_instructor,
+        "is_coordinator": user.is_coordinator,
+        "is_new_coordinator": is_new_coordinator,
         "project_list_url": project_list_url,
         "contact_url": contact_url,
     }
