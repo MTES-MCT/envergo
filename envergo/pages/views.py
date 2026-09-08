@@ -17,6 +17,7 @@ from django.utils.html import mark_safe
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
+from phonenumber_field.phonenumber import PhoneNumber
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.geodata.models import Department
@@ -38,6 +39,28 @@ class DepartmentSearchMixin:
 
     queryset = Department.objects.defer("geometry").all()
 
+    def build_contact_info(self, data_object):
+        if not data_object.guh_email and not data_object.guh_phone:
+            return (
+                "<address>Nous ne disposons pas d’information sur le point de contact "
+                f"privilégié au sein de la {data_object.guh_structure}</address>"
+            )
+
+        address_rows = ["<strong>Guichet unique de la haie</strong>"]
+        if data_object.guh_service_name:
+            address_rows.append(f"<strong>{data_object.guh_service_name}</strong>")
+        if data_object.guh_email:
+            address_rows.append(
+                f'Email : <a href="mailto:{data_object.guh_email}">{data_object.guh_email}</a>'
+            )
+        if data_object.guh_phone:
+            number = PhoneNumber.from_string(data_object.guh_phone)
+            address_rows.append(
+                f'Téléphone : <a href="tel:{number}">{number.as_national}</a>'
+            )
+
+        return f"<address>{'<br>'.join(address_rows)}</address>"
+
     def get_queryset_with_contacts(self):
         """Return all departments annotated with contacts_info and is_config_valid.
 
@@ -57,7 +80,6 @@ class DepartmentSearchMixin:
         ).order_by("-validity_range")
 
         contact_fields = (
-            "contacts_info",
             "contacts_and_links",
             "guh_structure",
             "guh_service_name",
@@ -92,7 +114,7 @@ class DepartmentSearchMixin:
                 "id": d.id,
                 "code": d.department,
                 "label": str(d),
-                "contacts_info": d.contacts_info,
+                "contacts_info": self.build_contact_info(d),
                 "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
                 "settings_form_url": get_department_settings_form_url(d),
