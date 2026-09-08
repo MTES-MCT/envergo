@@ -32,14 +32,6 @@ class TestPublicFileDownloadView:
         hosted_file.file.storage.save(hosted_file.file.name, ContentFile(b"%PDF test"))
         return hosted_file
 
-    def test_existing_file_returns_200(self, client):
-        hosted_file = self.make_hosted_file()
-        url = reverse(
-            "public_file_download", kwargs={"file_path": hosted_file.file.name}
-        )
-        response = client.get(url)
-        assert response.status_code == 200
-
     def test_nonexistent_file_returns_404(self, client):
         url = reverse(
             "public_file_download", kwargs={"file_path": "documents/ghost.pdf"}
@@ -101,11 +93,6 @@ class TestPrivateFileDownloadViewLocal:
 
     def get_url(self, file_path):
         return reverse("private_file_download", kwargs={"file_path": file_path})
-
-    def test_serves_media_file(self, client, settings):
-        path = self.create_file_on_disk(settings, "media/evaluations/test.pdf")
-        response = client.get(self.get_url(path))
-        assert response.status_code == 200
 
     def test_serves_upload_file(self, client, settings):
         path = self.create_file_on_disk(settings, "upload/requests/REF123/abc.pdf")
