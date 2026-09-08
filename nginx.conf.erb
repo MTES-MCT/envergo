@@ -1,18 +1,44 @@
 ## Proxied file serving for public hosted documents.
-## Django triggers this via X-Accel-Redirect; clients cannot hit it directly.
+## Django triggers this via X-Accel-Redirect.
 location /internal-s3-public/ {
     internal;
     proxy_pass https://<%= ENV["DJANGO_AWS_PUBLIC_BUCKET_NAME"] %>.s3.fr-par.scw.cloud/;
     proxy_set_header Host <%= ENV["DJANGO_AWS_PUBLIC_BUCKET_NAME"] %>.s3.fr-par.scw.cloud;
+    proxy_ssl_server_name on;
+    # Never forward client credentials to the object store.
+    proxy_set_header Cookie "";
+    proxy_set_header Authorization "";
     proxy_hide_header x-amz-request-id;
     proxy_hide_header x-amz-id-2;
+    # S3 error bodies are XML documents naming the bucket. Mask every one.
+    proxy_intercept_errors on;
+    error_page 400 403 404 405 416 500 502 503 = @s3_error;
 }
 
-## Forward all requests to gunicorn.
-## TLS terminates at the Scalingo router, which sets X-Forwarded-Proto and
-## X-Forwarded-For; those headers pass through untouched. Overriding
-## X-Forwarded-Proto with $scheme (http inside the container) would make
-## Django's SECURE_SSL_REDIRECT loop forever.
+## Proxied file serving for private documents.
+## Django sends X-Accel-Redirect: /internal-s3-private/<bucket>/<key>?<sig>.
+location /internal-s3-private/ {
+    internal;
+    proxy_pass https://s3.fr-par.scw.cloud/;
+    # Never add "proxy_set_header Host": signed urls are only valid for s3.fr-par.scw.cloud.
+    proxy_ssl_server_name on;
+    # Never forward client credentials to the object store.
+    proxy_set_header Cookie "";
+    proxy_set_header Authorization "";
+    proxy_hide_header x-amz-request-id;
+    proxy_hide_header x-amz-id-2;
+    # S3 error bodies are XML documents naming the bucket. Mask every one.
+    proxy_intercept_errors on;
+    error_page 400 403 404 405 416 500 502 503 = @s3_error;
+}
+
+location @s3_error {
+    default_type text/plain;
+    return 404 "Fichier non trouvé";
+}
+
+## Forward all requests to gunicorn. TLS terminates at the Scalingo router;
+## overriding X-Forwarded-Proto here would make SECURE_SSL_REDIRECT loop forever.
 location / {
     proxy_pass http://unix:/tmp/gunicorn.sock;
     proxy_set_header Host $http_host;
