@@ -544,8 +544,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             return False
 
         return user.is_superuser or (
-            user.is_active
-            and user.access_haie
+            user.has_instruction_access
             and (
                 self.department_id in user.department_ids
                 or user.invitation_tokens.filter(petition_project_id=self.pk).exists()

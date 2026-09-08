@@ -342,7 +342,6 @@ class PetitionProjectContextMixin:
             )
             return {}
 
-        dn_dossier_number = petition_project.demarche_numerique_dossier_number
         add_simulation_url = reverse(
             "petition_project_instructor_alternative_view",
             kwargs={"reference": petition_project_reference},
@@ -353,11 +352,8 @@ class PetitionProjectContextMixin:
         )
         add_simulation_url += "#add-alternative"
         return {
-            "petition_project": {
-                "dn_dossier_number": dn_dossier_number,
-                "add_simulation_url": add_simulation_url,
-                "dn_messagerie_url": petition_project.demarche_numerique_petitioner_messaging_url,
-            }
+            "petition_project": petition_project,
+            "add_simulation_url": add_simulation_url,
         }
 
 

@@ -1,5 +1,7 @@
 {% extends 'haie/moulinette/result_base.html' %}
 
+{% load petitions %}
+
 {% load static moulinette %}
 
 {% block alternative_alert %}
@@ -11,11 +13,11 @@
 {% block alternative_share %}
   {% if is_alternative %}
     <div class="alternative-share fr-p-2w fr-mb-2w">
-      {% if user.is_coordinator %}
+      {% if user|has_change_permission:petition_project %}
         <h2 class="alternative-share__title">Ajouter la simulation alternative</h2>
         <p>Vous pourrez ensuite la partager au demandeur.</p>
         <p>
-          <a href="{{ petition_project.add_simulation_url }}"
+          <a href="{{ add_simulation_url }}"
              class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">Ajouter la simulation</a>
         </p>
       {% elif user.is_authenticated %}
@@ -39,7 +41,7 @@
           </button>
         </p>
         <p>
-          Et envoyez-le par message sur <a href="{{ petition_project.dn_messagerie_url }}"
+          Et envoyez-le par message sur <a href="{{ petition_project.demarche_numerique_petitioner_messaging_url }}"
     target="_blank"
     rel="noopener">Démarche numérique</a>.
         </p>
