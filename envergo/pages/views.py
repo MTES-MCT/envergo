@@ -41,9 +41,13 @@ class DepartmentSearchMixin:
 
     def build_contact_info(self, data_object):
         if not data_object.guh_email and not data_object.guh_phone:
+            structure = (
+                data_object.guh_structure
+                or "Direction Départementale des Territoires (DDT)"
+            )
             return (
                 "<address>Nous ne disposons pas d’information sur le point de contact "
-                f"privilégié au sein de la {data_object.guh_structure}</address>"
+                f"privilégié au sein de la {structure}</address>"
             )
 
         address_rows = ["<strong>Guichet unique de la haie</strong>"]
