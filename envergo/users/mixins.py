@@ -32,6 +32,8 @@ class CoordinatorDepartmentAuthorised(AccessMixin):
         If departement is in kwargs, check user permission on department.
         Else let the inherited view manage the access.
         """
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         if not request.user.has_coordination_access:
             return self.handle_no_permission()
 
