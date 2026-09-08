@@ -288,14 +288,17 @@ STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 # Handle file uploads
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "envergo.utils.storages.LocalFileStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
-    "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "public": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "upload": {"BACKEND": "envergo.utils.storages.LocalFileStorage"},
+    "public": {"BACKEND": "envergo.utils.storages.LocalFileStorage"},
 }
+
+# Should files be served by Django or proxied through nginx?
+SERVE_FILES_LOCALLY = True
 
 # Bucket names — only meaningful in production (set via env vars).
 AWS_PRIVATE_BUCKET_NAME = ""
