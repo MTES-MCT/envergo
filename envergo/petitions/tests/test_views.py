@@ -62,6 +62,7 @@ from envergo.petitions.views import (
     PetitionProjectList,
 )
 from envergo.urlmappings.models import UrlMapping
+from envergo.users.models import User
 from envergo.users.tests.factories import UserFactory
 from envergo.utils.urls import remove_from_qs, update_qs
 
@@ -423,8 +424,9 @@ def test_petition_project_instructor_view_requires_authentication(
     assert response.status_code == 200
 
     # GIVEN a simple user with invitation token, should be authorized
-    request.user = haie_user
     InvitationTokenFactory(user=haie_user, petition_project=project)
+    # refresh the user instance: `guh_role` is a cached_property
+    request.user = User.objects.get(pk=haie_user.pk)
     # WHEN get project instructor page
     response = PetitionProjectInstructorView.as_view()(
         request,
