@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.hedges.models import HedgeTypeBase
+from envergo.hedges.models import HedgeList, HedgeTypeBase
 from envergo.hedges.regulations import (
     AisneQualityCondition,
     EssencesBocageresCondition,
@@ -316,20 +316,32 @@ def test_pac_condition_is_hidden_without_pac_removal(ep_criterion_evaluator):
 
 
 def test_pac_condition_addition(ep_criterion_evaluator):
-    """Two PAC conditions merge into a single one covering both hedge sets."""
+    """Two PAC conditions merge into one covering both hedge subsets.
 
-    hedge_data_a = make_pac_hedge_data(to_remove_pac=100, to_plant_pac=30)
-    hedge_data_b = make_pac_hedge_data(to_remove_pac=50, to_plant_pac=10)
+    Both conditions come from the same project, so they share the catalog and
+    only differ by the hedge subset their evaluator is responsible for.
+    """
 
-    a = make_pac_condition(hedge_data_a, 1.0, ep_criterion_evaluator).evaluate()
-    b = make_pac_condition(hedge_data_b, 1.0, ep_criterion_evaluator).evaluate()
+    removed_a = HedgeFactory(length=100, additionalData__sur_parcelle_pac=True)
+    removed_b = HedgeFactory(length=50, additionalData__sur_parcelle_pac=True)
+    planted = HedgeFactory(
+        length=40, to_plant=True, additionalData__sur_parcelle_pac=True
+    )
+    hedge_data = HedgeDataFactory(hedges=[removed_a, removed_b, planted])
+    catalog = {"haies": hedge_data}
+
+    hedges = {hedge.id: hedge for hedge in hedge_data.hedges()}
+    a = PacCondition(
+        HedgeList([hedges[removed_a.id]]), 1.0, ep_criterion_evaluator, catalog
+    ).evaluate()
+    b = PacCondition(
+        HedgeList([hedges[removed_b.id]]), 1.0, ep_criterion_evaluator, catalog
+    ).evaluate()
     combined = a + b
 
-    expected = (
-        hedge_data_a.hedges().to_remove().pac().length
-        + hedge_data_b.hedges().to_remove().pac().length
-    )
+    expected = hedge_data.hedges().to_remove().pac().length
     assert combined.context["minimum_length_to_plant_pac"] == ceil(expected)
+    assert combined.context["left_to_plant_pac"] == pytest.approx(110, abs=1)
     assert not combined.result
 
 

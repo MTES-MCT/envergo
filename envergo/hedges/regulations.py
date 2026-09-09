@@ -60,7 +60,7 @@ def combine_length_conditions(a, b, condition_cls):
         else 0
     )
 
-    addition = condition_cls(HedgeList(a.hedges + b.hedges), R, None, None)
+    addition = condition_cls(HedgeList(a.hedges + b.hedges), R, None, a.catalog)
     addition.evaluate()
     return addition
 
