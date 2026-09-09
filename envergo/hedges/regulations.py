@@ -345,8 +345,41 @@ class NormandieMinLengthCondition(MinLengthCondition):
         return self.__add__(other)
 
 
-class PacParcelCondition(AdditiveConditionMixin, PlantationCondition):
-    """Checks that enough hedges are planted on PAC parcels."""
+class PacCondition(AdditiveConditionMixin, PlantationCondition):
+    """Checks that enough hedges are planted on PAC plots."""
+
+    label = "Maintien des haies PAC"
+    order = 1
+    valid_text = "Le linéaire de haie planté sur parcelle PAC est suffisant."
+    invalid_text = """
+        Le linéaire de haie planté sur parcelle PAC doit être supérieur à %(minimum_length_to_plant_pac)s m.
+        <br />
+        Il manque au moins %(left_to_plant_pac)s m sur parcelle PAC, hors alignements d’arbres et haies en bordure
+        de bâtiment ou de jardin.
+    """
+
+    def evaluate(self):
+        pac_to_remove = self.hedges.to_remove().pac().length
+        # Only hedges that are intrinsically "régime unique" compensate a PAC destruction.
+        ru_pac_to_plant = self.catalog["haies"].hedges().to_plant().ru().pac().length
+        self.result = ru_pac_to_plant >= pac_to_remove
+
+        left_to_plant = max(0, pac_to_remove - ru_pac_to_plant)
+        self.context = {
+            "minimum_length_to_plant_pac": ceil(pac_to_remove),
+            "left_to_plant_pac": ceil(left_to_plant),
+        }
+        return self
+
+    def must_display(self):
+        return self.context["minimum_length_to_plant_pac"] > 0
+
+    def __add__(self, other):
+        return combine_length_conditions(self, other, PacCondition)
+
+
+class PacBeforeRuCondition(AdditiveConditionMixin, PlantationCondition):
+    """Checks that enough hedges are planted on PAC plot (before Régime Unique)."""
 
     label = "Maintien des haies PAC"
     order = 1
@@ -377,7 +410,7 @@ class PacParcelCondition(AdditiveConditionMixin, PlantationCondition):
         return self.context["minimum_length_to_plant_pac"] > 0
 
     def __add__(self, other):
-        return combine_length_conditions(self, other, PacParcelCondition)
+        return combine_length_conditions(self, other, PacBeforeRuCondition)
 
 
 class BaseQualityCondition(PlantationCondition):

@@ -13,6 +13,12 @@ from envergo.hedges.models import HedgeTypeBase
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.conditionnalitepac import (
+    Bcae8BeforeRu,
+    Bcae8Hru,
+    Bcae8L3503,
+    Bcae8Ru,
+)
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -21,6 +27,7 @@ from envergo.moulinette.tests.factories import (
 from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
+from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
 )
@@ -654,7 +661,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Bonnes conditions agricoles et environnementales - Fiche VIII",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -664,7 +671,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.hru__bcae8._evaluator,
+        moulinette.conditionnalite_pac.bcae8_before_ru._evaluator,
         petition_project,
         moulinette,
     )
@@ -1063,3 +1070,19 @@ def test_update_demarches_numerique_state():
     petition_project.refresh_from_db()
     assert petition_project.demarche_numerique_state == DossierState.sans_suite.value
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
+
+
+@pytest.mark.parametrize(
+    "evaluator_class",
+    [Bcae8BeforeRu, Bcae8Hru, Bcae8L3503, Bcae8Ru],
+)
+def test_every_bcae8_evaluator_has_an_instructor_view_context(evaluator_class):
+    """Instructor-view context getters are dispatched on the exact evaluator class.
+
+    A BCAE8 evaluator that is not registered silently loses the PAC figures on
+    the instructor page, so the registration is asserted for each of them.
+    """
+    assert (
+        _evaluator_instructors_information_registry.get(evaluator_class)
+        is bcae8_get_instructor_view_context
+    )

@@ -8,7 +8,8 @@ from django.core.exceptions import ValidationError
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
 from envergo.hedges.regulations import (
-    PacParcelCondition,
+    PacBeforeRuCondition,
+    PacCondition,
     PlantationConditionMixin,
     RUMinLengthCondition,
 )
@@ -186,12 +187,17 @@ class Bcae8Form(forms.Form):
             )
 
 
-class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
+class Bcae8BeforeRu(PlantationConditionMixin, HaieCriterionEvaluator):
+    """Evaluate BCAE8 before the Régime unique is effective"""
+
     category: HedgeCategory = HedgeCategory.hru
-    choice_label = "Conditionnalité PAC > BCAE8"
-    base_slug = "bcae8"
+    choice_label = (
+        "Conditionnalité PAC > BCAE8 (avant entrée en vigueur du Régime Unique)"
+    )
+    base_slug = "bcae8_before_ru"
+    slug = base_slug
     form_class = Bcae8Form
-    plantation_conditions = [RUMinLengthCondition, PacParcelCondition]
+    plantation_conditions = [RUMinLengthCondition, PacBeforeRuCondition]
 
     RESULT_MATRIX = {
         "non_soumis": RESULTS.non_soumis,
@@ -431,5 +437,38 @@ class Bcae8Hru(PlantationConditionMixin, HaieCriterionEvaluator):
         return round(float(R), 2)
 
 
-class Bcae8Ru(Bcae8Hru):
-    category: HedgeCategory = HedgeCategory.ru
+class Bcae8Ru(PlantationConditionMixin, HaieCriterionEvaluator):
+    choice_label = "Conditionnalité PAC > BCAE8"
+    base_slug = "bcae8"
+    category = HedgeCategory.ru
+    plantation_conditions = [RUMinLengthCondition, PacCondition]
+
+    CODE_MATRIX = {
+        ("no_pac_to_remove",): "non_concerne",
+        ("pac_to_remove",): "soumis",
+    }
+
+    def get_result_data(self):
+        has_pac_ro_remove = "no_pac_to_remove"
+        if self.hedges.to_remove().pac().length > 0:
+            has_pac_ro_remove = "pac_to_remove"
+
+        return (has_pac_ro_remove,)
+
+    def get_replantation_coefficient(self):
+        length_to_remove = self.hedges.to_remove().length
+        if length_to_remove > 0:
+            return self.hedges.to_remove().pac().length / length_to_remove
+        return 0
+
+
+class Bcae8Hru(Bcae8Ru):
+    category = HedgeCategory.hru
+    plantation_conditions = []
+
+    def evaluate(self):
+        self._result_code, self._result = "non_concerne", "non_concerne"
+
+
+class Bcae8L3503(Bcae8Hru):
+    category = HedgeCategory.l350_3
