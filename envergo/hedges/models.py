@@ -16,7 +16,6 @@ from django.db import models
 from django.db.models import (
     BooleanField,
     Case,
-    Exists,
     IntegerField,
     OuterRef,
     Q,
@@ -754,58 +753,79 @@ LEVELS_OF_CONCERN = Choices(
 class HruSpeciesQuerySet(models.QuerySet):
     """Species queryset for the HRU (droit constant) pipeline.
 
-    species must be confirmed in zones that directly intersect the hedge,
-    AND their cd_noms must overlap the zone's species_taxrefs array.
+    HRU is observation-based: species must be confirmed in zones that directly
+    intersect the hedge, AND their cd_noms must overlap the zone's
+    species_taxrefs array (confirming local observation).
     """
 
     def for_hedges(self, hedges):
         """Return species confirmed in zones intersecting the given hedges."""
 
-        hedges = HedgeList(hedges)
-        filters = [self.build_filter(h) for h in hedges]
+        groups = group_hedges_by_type_and_missing_properties(HedgeList(hedges))
+        filters = [
+            self.build_group_filter(hedge_type, missing_props, HedgeList(group))
+            for (hedge_type, missing_props), group in groups.items()
+        ]
+        filters = [f for f in filters if f is not None]
         if not filters:
             return self.none()
 
         union = reduce(operator.or_, filters)
         return self.filter(union).distinct().order_by("group", "common_name")
 
-    def build_filter(self, hedge):
-        """Build a Q filter for species confirmed in zones intersecting a hedge.
+    def build_group_filter(self, hedge_type, missing_props, hedges):
+        """Build the Q filter for one group of habitat-equivalent hedges.
 
-        HRU is observation-based: species are only included when both their
-        geographic zone intersects the hedge AND their cd_noms appear in
-        the zone's species_taxrefs array (confirming local observation).
+        Taxrefs are unioned per map; this equals the per-zone existence test
+        because array overlap distributes over union, and all hedges in the
+        group share the same habitat conditions.
         """
-        q_filter = Q(habitats__hedge_types__contains=[hedge.effective_hedge_type])
+        taxrefs_by_map = self.fetch_observed_taxrefs(hedges)
+        if not taxrefs_by_map:
+            return None
 
-        if hedge.missing_ecological_properties:
-            q_filter &= ~Q(
-                habitats__hedge_properties__overlap=hedge.missing_ecological_properties
+        suitable_habitat = Q(habitats__hedge_types__contains=[hedge_type])
+        if missing_props:
+            suitable_habitat &= ~Q(
+                habitats__hedge_properties__overlap=list(missing_props)
             )
 
-        zone_subquery = (
-            Zone.objects.filter(geometry__intersects=hedge.geos_geometry)
-            .filter(map_id=OuterRef("habitats__map_id"))
-            .filter(map__map_type=MAP_TYPES.species_legacy)
-            .filter(species_taxrefs__overlap=OuterRef("cd_noms"))
+        observed_locally = reduce(
+            operator.or_,
+            [
+                Q(habitats__map_id=map_id, cd_noms__overlap=sorted(taxrefs))
+                for map_id, taxrefs in taxrefs_by_map.items()
+            ],
         )
-        q_filter &= Q(Exists(zone_subquery))
-        return q_filter
+        return suitable_habitat & observed_locally
+
+    def fetch_observed_taxrefs(self, hedges):
+        """Return {map_id: taxrefs} observed in species_legacy zones intersecting the hedges."""
+        rows = Zone.objects.filter(
+            geometry__intersects=hedges.to_multilinestring(),
+            map__map_type=MAP_TYPES.species_legacy,
+        ).values_list("map_id", "species_taxrefs")
+
+        taxrefs_by_map = {}
+        for map_id, taxrefs in rows:
+            if taxrefs:
+                taxrefs_by_map.setdefault(map_id, set()).update(taxrefs)
+        return taxrefs_by_map
 
 
 SPECIES_BUFFER_DISTANCE = D(m=400)
 
 
-def group_hedges_by_signature(hedges):
-    """Group hedges by their (hedge_type, missing_properties) filter signature.
+def group_hedges_by_type_and_missing_properties(hedges):
+    """Group hedges sharing the same effective type and missing ecological properties.
 
-    Hedges sharing the same signature produce identical SpeciesHabitat filters,
-    so they can be treated as a single geographic group for zone proximity.
+    Hedges in one group produce identical SpeciesHabitat filters, so each
+    group can be treated as a single geographic unit for zone lookups.
     """
     groups = {}
     for h in hedges:
-        sig = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
-        groups.setdefault(sig, []).append(h)
+        key = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
+        groups.setdefault(key, []).append(h)
     return groups
 
 
@@ -844,16 +864,14 @@ class RuSpeciesQuerySet(models.QuerySet):
         if not hedges:
             return self.none()
 
-        signature_map_ids, observed_cdrefs = self.prefetch_zone_data_by_signature(
-            hedges
-        )
-        if not signature_map_ids:
+        map_ids_by_group, observed_cdrefs = self.prefetch_zone_data_by_group(hedges)
+        if not map_ids_by_group:
             return self.none()
 
-        species_filter = self.build_grouped_filter(signature_map_ids, observed_cdrefs)
+        species_filter = self.build_grouped_filter(map_ids_by_group, observed_cdrefs)
 
         all_nearby_map_ids = set()
-        for ids in signature_map_ids.values():
+        for ids in map_ids_by_group.values():
             all_nearby_map_ids.update(ids)
         level_label = self.build_level_subquery(list(all_nearby_map_ids))
 
@@ -881,15 +899,15 @@ class RuSpeciesQuerySet(models.QuerySet):
             .order_by("-level_order", "common_name")
         )
 
-    def prefetch_zone_data_by_signature(self, hedges):
-        """Fetch per-signature zone data in a single DB query.
+    def prefetch_zone_data_by_group(self, hedges):
+        """Fetch per-group zone data in a single DB query.
 
         Each zone within 400m of the hedge set is annotated with a boolean
-        per signature group, indicating whether the zone is also within 400m
+        per hedge group, indicating whether the zone is also within 400m
         of that specific group's hedges. This scopes nearby_map_ids per
-        signature without adding extra DB round trips.
+        group without adding extra DB round trips.
         """
-        signature_groups = group_hedges_by_signature(hedges)
+        groups = group_hedges_by_type_and_missing_properties(hedges)
         all_hedges_geom = hedges.to_multilinestring()
 
         zones = Zone.objects.filter(
@@ -897,37 +915,37 @@ class RuSpeciesQuerySet(models.QuerySet):
             map__map_type=MAP_TYPES.species,
         )
 
-        sig_annotations = {}
-        sig_order = []
-        for i, (sig, sig_hedges) in enumerate(signature_groups.items()):
-            sig_geom = HedgeList(sig_hedges).to_multilinestring()
-            annotation_name = f"near_sig_{i}"
-            sig_annotations[annotation_name] = Case(
+        group_annotations = {}
+        group_order = []
+        for i, (group_key, group_hedges) in enumerate(groups.items()):
+            group_geom = HedgeList(group_hedges).to_multilinestring()
+            annotation_name = f"near_group_{i}"
+            group_annotations[annotation_name] = Case(
                 When(
-                    geometry__dwithin=(sig_geom, SPECIES_BUFFER_DISTANCE),
+                    geometry__dwithin=(group_geom, SPECIES_BUFFER_DISTANCE),
                     then=Value(True),
                 ),
                 default=Value(False),
                 output_field=BooleanField(),
             )
-            sig_order.append((annotation_name, sig))
+            group_order.append((annotation_name, group_key))
 
-        zones = zones.annotate(**sig_annotations)
-        value_fields = ["map_id", "species_taxrefs"] + [name for name, _ in sig_order]
+        zones = zones.annotate(**group_annotations)
+        value_fields = ["map_id", "species_taxrefs"] + [name for name, _ in group_order]
 
         all_observed_cdrefs = set()
-        signature_map_ids = {sig: set() for sig in signature_groups}
+        map_ids_by_group = {group_key: set() for group_key in groups}
 
         for row in zones.values_list(*value_fields):
             map_id = row[0]
             taxrefs = row[1]
             if taxrefs:
                 all_observed_cdrefs.update(taxrefs)
-            for j, (_, sig) in enumerate(sig_order):
+            for j, (_, group_key) in enumerate(group_order):
                 if row[2 + j]:
-                    signature_map_ids[sig].add(map_id)
+                    map_ids_by_group[group_key].add(map_id)
 
-        result = {sig: list(ids) for sig, ids in signature_map_ids.items() if ids}
+        result = {key: list(ids) for key, ids in map_ids_by_group.items() if ids}
         return result, all_observed_cdrefs
 
     def build_majeur_exclusion(self, observed_cdrefs):
@@ -944,39 +962,39 @@ class RuSpeciesQuerySet(models.QuerySet):
 
         return ~Q(habitats__level_of_concern="majeur")
 
-    def build_grouped_filter(self, signature_map_ids, observed_cdrefs):
-        """Build a single Q filter from per-signature nearby map IDs.
+    def build_grouped_filter(self, map_ids_by_group, observed_cdrefs):
+        """Build a single Q filter from per-group nearby map IDs.
 
-        Each signature (hedge_type, missing_properties) has its own set of
-        nearby map IDs, ensuring that a species whose habitat is only near
-        hedges of type A cannot match type B's filter.
+        Each group of habitat-equivalent hedges has its own set of nearby
+        map IDs, ensuring that a species whose habitat is only near hedges
+        of type A cannot match type B's filter.
         """
         majeur_exclusion = self.build_majeur_exclusion(observed_cdrefs)
 
-        signature_filters = [
-            self.build_signature_filter(
+        group_filters = [
+            self.build_group_filter(
                 hedge_type, missing_props, nearby_map_ids, majeur_exclusion
             )
-            for (hedge_type, missing_props), nearby_map_ids in signature_map_ids.items()
+            for (hedge_type, missing_props), nearby_map_ids in map_ids_by_group.items()
         ]
-        return reduce(operator.or_, signature_filters)
+        return reduce(operator.or_, group_filters)
 
-    def build_signature_filter(
+    def build_group_filter(
         self, hedge_type, missing_props, nearby_map_ids, majeur_exclusion
     ):
-        """Build the Q filter for one (hedge_type, missing_props) signature."""
+        """Build the Q filter for one group of habitat-equivalent hedges."""
         on_nearby_map = Q(habitats__map_id__in=nearby_map_ids)
         matches_hedge_type = Q(habitats__hedge_types__contains=[hedge_type])
-        signature_filter = on_nearby_map & matches_hedge_type
+        group_filter = on_nearby_map & matches_hedge_type
 
         if missing_props:
             requires_absent_property = Q(
                 habitats__hedge_properties__overlap=list(missing_props)
             )
-            signature_filter &= ~requires_absent_property
+            group_filter &= ~requires_absent_property
 
-        signature_filter &= majeur_exclusion
-        return signature_filter
+        group_filter &= majeur_exclusion
+        return group_filter
 
     def build_level_subquery(self, nearby_map_ids):
         """Build a subquery to pick the highest level_of_concern per species.
@@ -1041,12 +1059,10 @@ class Species(models.Model):
         max_length=16,
         choices=LEVELS_OF_CONCERN,
         blank=True,
-        help_text=dedent(
-            """
+        help_text=dedent("""
             Seulement pour l'Aisne avant régime unique.
             Pour le régime unique, l’enjeu est désormais spécifié dans le modèle Habitat d'espèce.
-        """
-        ),
+        """),
     )
     highly_sensitive = models.BooleanField(
         "Particulièrement sensible",
