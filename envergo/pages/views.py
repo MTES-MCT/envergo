@@ -13,7 +13,7 @@ from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.utils.html import mark_safe
+from django.utils.html import format_html, mark_safe
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
@@ -45,22 +45,34 @@ class DepartmentSearchMixin:
                 data_object.guh_structure
                 or "Direction Départementale des Territoires (DDT)"
             )
-            return (
+
+            return format_html(
                 "<address>Nous ne disposons pas d’information sur le point de contact "
-                f"privilégié au sein de la {structure}</address>"
+                "privilégié au sein de la {}</address>",
+                structure,
             )
 
         address_rows = ["<strong>Guichet unique de la haie</strong>"]
         if data_object.guh_service_name:
-            address_rows.append(f"<strong>{data_object.guh_service_name}</strong>")
+            address_rows.append(
+                format_html("<strong>{}</strong>", data_object.guh_service_name)
+            )
         if data_object.guh_email:
             address_rows.append(
-                f'Email : <a href="mailto:{data_object.guh_email}">{data_object.guh_email}</a>'
+                format_html(
+                    'Email : <a href="mailto:{}">{}</a>',
+                    data_object.guh_email,
+                    data_object.guh_email,
+                )
             )
         if data_object.guh_phone:
             number = PhoneNumber.from_string(data_object.guh_phone)
             address_rows.append(
-                f'Téléphone : <a href="tel:{number}">{number.as_national}</a>'
+                format_html(
+                    'Téléphone : <a href="tel:{}">{}</a>',
+                    str(number),
+                    number.as_national,
+                )
             )
 
         return f"<address>{'<br>'.join(address_rows)}</address>"
