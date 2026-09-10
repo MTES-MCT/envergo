@@ -776,12 +776,13 @@ class HruSpeciesQuerySet(models.QuerySet):
     def build_group_filter(self, hedge_type, missing_props, hedges):
         """Build the Q filter for one group of habitat-equivalent hedges.
 
-        Taxrefs are unioned per map; this equals the per-zone existence test
-        because array overlap distributes over union, and all hedges in the
-        group share the same habitat conditions.
+        A species is kept when one of its habitats suits the hedges (matching
+        hedge type, no required ecological property missing) AND the species
+        was observed in a zone crossed by the hedges, on that habitat's map.
+        Returns None when no observation zone crosses the hedges.
         """
-        taxrefs_by_map = self.fetch_observed_taxrefs(hedges)
-        if not taxrefs_by_map:
+        observed_taxrefs_by_map = self.fetch_observed_taxrefs(hedges)
+        if not observed_taxrefs_by_map:
             return None
 
         suitable_habitat = Q(habitats__hedge_types__contains=[hedge_type])
@@ -794,7 +795,7 @@ class HruSpeciesQuerySet(models.QuerySet):
             operator.or_,
             [
                 Q(habitats__map_id=map_id, cd_noms__overlap=sorted(taxrefs))
-                for map_id, taxrefs in taxrefs_by_map.items()
+                for map_id, taxrefs in observed_taxrefs_by_map.items()
             ],
         )
         return suitable_habitat & observed_locally
