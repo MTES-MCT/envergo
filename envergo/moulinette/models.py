@@ -1344,6 +1344,19 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
+    prohibition_start = models.DateField(
+        "Début de la période d’interdiction de destruction de haies",
+        null=True,
+        blank=True,
+        help_text="Seuls le jour et le mois sont pris en compte dans ce champ.",
+    )
+    prohibition_end = models.DateField(
+        "Fin de la période d’interdiction de destruction de haies",
+        null=True,
+        blank=True,
+        help_text="Seuls le jour et le mois sont pris en compte dans ce champ.",
+    )
+
     guh_structure = models.CharField(
         "Structure GUH (DDT ou DDTM)",
         default="Direction Départementale des Territoires (DDT)",
