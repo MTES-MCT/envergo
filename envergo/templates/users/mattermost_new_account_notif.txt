@@ -6,3 +6,4 @@ Actions nécessaires :
 
  - [examiner la demande et octroyer ou non la permission « Coordonnateur GUH »]({{ user_url }}) ;
  - sélectionner les départements associés au compte.
+ - sélectionner les départements associés au compte .
