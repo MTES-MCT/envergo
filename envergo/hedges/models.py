@@ -1059,10 +1059,12 @@ class Species(models.Model):
         max_length=16,
         choices=LEVELS_OF_CONCERN,
         blank=True,
-        help_text=dedent("""
+        help_text=dedent(
+            """
             Seulement pour l'Aisne avant régime unique.
             Pour le régime unique, l’enjeu est désormais spécifié dans le modèle Habitat d'espèce.
-        """),
+        """
+        ),
     )
     highly_sensitive = models.BooleanField(
         "Particulièrement sensible",
