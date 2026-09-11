@@ -378,6 +378,47 @@ def test_hru_no_duplicates_from_multiple_habitats():
     assert result.count(species) == 1
 
 
+def test_hru_species_not_leaked_across_hedge_groups():
+    """A species observed near hedge A must not match hedge B's filter.
+
+    Zone taxrefs are unioned per map within one group of habitat-equivalent
+    hedges; a hedge of another type must not benefit from that union.
+    """
+    acy_map = MapFactory(map_type="species_legacy", zones=None)
+    ZoneFactory(map=acy_map, geometry=MultiPolygon([acy_polygon]), species_taxrefs=[1])
+
+    species = SpeciesFactory(cd_noms=[1])
+    SpeciesHabitatFactory(species=species, map=acy_map, hedge_types=["degradee"])
+
+    # Hedge A crosses the zone but has the wrong type for the habitat
+    hedge_a = HedgeFactory(
+        latLngs=[
+            {"lat": 49.35080401731072, "lng": 3.410785365407426},
+            {"lat": 49.35021667499731, "lng": 3.4120515874961255},
+        ],
+        additionalData__type_haie="mixte",
+    )
+    # Hedge B has the right type but is far from the zone
+    hedge_b = HedgeFactory(
+        latLngs=[
+            {"lat": 43.687177, "lng": 3.584794},
+            {"lat": 43.687301, "lng": 3.585910},
+        ],
+        additionalData__type_haie="degradee",
+    )
+    assert species not in set(Species.hru.for_hedges([hedge_a, hedge_b]))
+
+    # Sanity: a degradee hedge crossing the zone does return the species
+    hedge_c = HedgeFactory(
+        latLngs=[
+            {"lat": 49.35080401731072, "lng": 3.410785365407426},
+            {"lat": 49.35021667499731, "lng": 3.4120515874961255},
+        ],
+        additionalData__type_haie="degradee",
+    )
+    assert species in set(Species.hru.for_hedges([hedge_c]))
+
+
 def test_hedge_to_plant_pac_depends_on_plantation_mode(calvados_hedge_data):
     # mode_plantation is "plantation", hedges is taken into account for pac min length
     hedges = calvados_hedge_data.hedges().to_plant().pac()
@@ -1750,14 +1791,13 @@ class TestRuSpeciesQuerying:
         match = next(s for s in result if s.pk == species.pk)
         assert match.local_level_of_concern == "tres_fort"
 
-    def test_ru_species_not_leaked_across_signatures(self):
-        """A species near hedge A must not match hedge B's signature filter.
+    def test_ru_species_not_leaked_across_hedge_groups(self):
+        """A species near hedge A must not match hedge B's filter.
 
-        Regression test: the RU filter used to compute nearby_map_ids as a
-        union across all hedges, so a species whose habitat map was only
-        near hedge A could match hedge B's (hedge_type, missing_props)
-        filter. With per-signature zone scoping, the species should only
-        appear if a hedge of the matching type is within 400m.
+        Zone scoping is per group of habitat-equivalent hedges: a species
+        whose habitat map is only near hedge A must not match hedge B's
+        (hedge_type, missing_props) filter. The species appears only when
+        a hedge of the matching type is within 400m.
         """
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
@@ -1770,10 +1810,10 @@ class TestRuSpeciesQuerying:
             level_of_concern="fort",
         )
 
-        # Hedge A is near the zone but has type "mixte" — wrong signature
+        # Hedge A is near the zone but has the wrong type for the habitat
         hedge_a = self._make_hedge_in_aisne(hedge_type="mixte")
 
-        # Hedge B is far away but has type "degradee" — right signature
+        # Hedge B has the right type but is far from the zone
         hedge_b = HedgeFactory(
             latLngs=[
                 {"lat": 43.687177, "lng": 3.584794},
