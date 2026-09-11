@@ -12,6 +12,7 @@ from django.contrib.gis.geos import (
     Point,
     Polygon,
 )
+from django.db import connection
 
 from envergo.geodata.tests.factories import (
     LineFactory,
@@ -220,8 +221,9 @@ def non_noded_geometries():
 def test_query_hedge_length_handles_non_noded_difference(non_noded_geometries):
     """Don't crash on an invalid truncated buffer.
 
-    Regression for the ST_Difference excluded-zone optimization (commit
-    750728481); fixed by wrapping both operands in ST_MakeValid.
+    The near-zero-width spike is un-nodable for GEOS: any overlay taking the
+    raw buffer raises a TopologyException — hence the ST_MakeValid in the
+    query's trunc sanitization.
     """
     truncated, circle = non_noded_geometries
     # A hedge inside the circle so the query processes a real row.
@@ -237,7 +239,7 @@ def test_query_hedge_length_handles_non_noded_difference(non_noded_geometries):
 def test_query_hedges_display_geojson_handles_non_noded_difference(
     non_noded_geometries,
 ):
-    """Same ST_Difference flaw, same fix, in the display query."""
+    """Same un-nodable buffer, same sanitization, in the display query."""
     truncated, circle = non_noded_geometries
     LineFactory(
         geometry=MultiLineString([LineString([(-0.66, 49.06), (-0.661, 49.06)])])
@@ -302,6 +304,86 @@ def test_query_hedges_display_geojson_handles_buffer_with_degenerate_hole(
     """The display query runs the same clip and must survive the same buffer."""
     truncated, circle = degenerate_hole_geometries
     LineFactory(geometry=DEGENERATE_HOLE_HEDGE)
+
+    display = query_hedges_display_geojson(truncated, circle)
+
+    assert display is not None
+    assert display["type"] == "MultiLineString"
+
+
+# Square buffer with a triangular hole (forest) touching the shell at one
+# point — valid for PostGIS, but ST_ClipByBox2D of this shape emits a ring
+# self-intersection at the touch point. Real land-trimmed buffers carry the
+# same hole-touching-shell pattern.
+CLIP_INVALID_BUFFER = (
+    "SRID=4326;POLYGON("
+    "(-0.095 49.25,-0.085 49.25,-0.085 49.27,-0.095 49.27,-0.095 49.25),"
+    "(-0.095 49.26,-0.090 49.263,-0.090 49.257,-0.095 49.26))"
+)
+
+# Straight west-east hedge at the hole's touch latitude: enters the shell
+# through the hole, exits it at x=-0.090, ends inside the buffer.
+CLIP_INVALID_HEDGE = MultiLineString(
+    [LineString([(-0.0952, 49.26), (-0.0885, 49.26)])],
+)
+
+# Bbox containing hedge and buffer, standing in for the raw circle.
+CLIP_INVALID_CIRCLE = Polygon(
+    [
+        (-0.096, 49.249),
+        (-0.084, 49.249),
+        (-0.084, 49.271),
+        (-0.096, 49.271),
+        (-0.096, 49.249),
+    ],
+    srid=4326,
+)
+
+# ST_LengthSpheroid of the in-buffer portion (lon -0.090 to -0.0885).
+CLIP_INVALID_EXPECTED_LENGTH = 109.18525164994536
+
+
+@pytest.fixture
+def clip_invalid_geometries():
+    """Return (truncated_buffer, untruncated_circle); only the crop is bad."""
+    truncated = GEOSGeometry(CLIP_INVALID_BUFFER)
+    assert truncated.valid
+
+    # These tests prove nothing if the crop is accidentally valid.
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT ST_IsValid(ST_ClipByBox2D(ST_GeomFromEWKT(%s),
+                ST_Expand(ST_Envelope(ST_GeomFromEWKT(%s)), 0.0001)))
+            """,
+            [CLIP_INVALID_BUFFER, CLIP_INVALID_HEDGE.ewkt],
+        )
+        assert cursor.fetchone()[0] is False
+
+    return truncated, CLIP_INVALID_CIRCLE
+
+
+def test_query_hedge_length_handles_invalid_bbox_crop(clip_invalid_geometries):
+    """An invalid ST_ClipByBox2D fragment must neither crash nor skew the clip.
+
+    The slow path crops the buffer to the hedge's bbox before intersecting;
+    the crop can be invalid even when the buffer is valid, and GEOS may raise
+    a TopologyException on it — hence the ST_MakeValid wrap around the crop.
+    """
+    truncated, circle = clip_invalid_geometries
+    LineFactory(geometry=CLIP_INVALID_HEDGE)
+
+    length = query_hedge_length(truncated, circle)
+
+    assert length == pytest.approx(CLIP_INVALID_EXPECTED_LENGTH, **APPROX)
+
+
+def test_query_hedges_display_geojson_handles_invalid_bbox_crop(
+    clip_invalid_geometries,
+):
+    """The display query crops the same way and must survive the same buffer."""
+    truncated, circle = clip_invalid_geometries
+    LineFactory(geometry=CLIP_INVALID_HEDGE)
 
     display = query_hedges_display_geojson(truncated, circle)
 
