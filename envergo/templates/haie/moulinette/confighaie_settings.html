@@ -51,7 +51,30 @@
         </p>
       </div>
 
-      <div class="fr-highlight fr-highlight--beige-gris-galet">{{ object.contacts_info|safe }}</div>
+      <div class="fr-highlight fr-highlight--beige-gris-galet">
+        <dl>
+          <dt>Type de structure :</dt>
+          <dd>
+            {{ object.guh_structure|default:"—" }}
+          </dd>
+          <dt>Nom du service :</dt>
+          <dd>
+            {{ object.guh_service_name|default:"—" }}
+          </dd>
+          <dt>Adresse e-mail :</dt>
+          <dd>
+            {{ object.guh_email|default:"—" }}
+          </dd>
+          <dt>Téléphone :</dt>
+          <dd>
+            {{ object.guh_phone|default:"—" }}
+          </dd>
+          <dt>Adresse :</dt>
+          <dd>
+            {{ object.guh_address|default:"—"|linebreaks }}
+          </dd>
+        </dl>
+      </div>
 
       <h2 id="title-cartes">Cartes</h2>
 
