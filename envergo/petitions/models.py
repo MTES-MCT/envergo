@@ -29,8 +29,8 @@ from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Re
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.users.models import User
-from envergo.utils.mattermost import notify
 from envergo.utils.models import ResultSnapshotBase
+from envergo.utils.tchap import notify
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -540,31 +540,28 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - user with access haie and invitation token
         - user with access haie and right to project department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                (
-                    self.department_id in user.department_ids
-                    or user.invitation_tokens.filter(
-                        petition_project_id=self.pk
-                    ).exists()
-                ),
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.is_active
+            and user.access_haie
+            and (
+                self.department_id in user.department_ids
+                or user.invitation_tokens.filter(petition_project_id=self.pk).exists()
             )
         )
 
     def has_change_permission(self, user):
         """User has edit permission on project, according to
         - superuser
-        - user with access haie, is instructor for department
+        - user with access haie, is coordinator for department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                user.is_instructor,
-                self.department_id in user.department_ids,
-            )
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.has_coordination_access and self.department_id in user.department_ids
         )
 
     @property

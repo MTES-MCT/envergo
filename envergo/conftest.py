@@ -14,6 +14,16 @@ def media_storage(settings, tmpdir):
     settings.MEDIA_ROOT = tmpdir.strpath
 
 
+@pytest.fixture(autouse=True)
+def clear_django_cache():
+    """Clear the cache between tests: locmem outlives a test, and
+    content-keyed entries (e.g. hedge densities) would leak across tests."""
+    yield
+    from django.core.cache import cache
+
+    cache.clear()
+
+
 @pytest.fixture
 def user() -> User:
     return UserFactory()
@@ -48,19 +58,19 @@ def haie_user_44() -> User:
 
 
 @pytest.fixture
-def haie_instructor_44() -> User:
-    """Haie user with dept 44 and is_instructor True"""
-    haie_instructor_44 = UserFactory(is_haie_instructor=True)
+def haie_coordinator_44() -> User:
+    """Haie coordinator (is_coordinator=True) with dept 44"""
+    haie_coordinator_44 = UserFactory(is_haie_coordinator=True)
     department_44 = DepartmentFactory.create()
-    haie_instructor_44.departments.add(department_44)
-    return haie_instructor_44
+    haie_coordinator_44.departments.add(department_44)
+    return haie_coordinator_44
 
 
 @pytest.fixture
-def haie_instructor_no_dept() -> User:
-    """Haie user with no dept and is_instructor True"""
-    haie_instructor_no_dept = UserFactory(is_haie_instructor=True)
-    return haie_instructor_no_dept
+def haie_coordinator_no_dept() -> User:
+    """Haie coordinator (is_coordinator=True) with no dept"""
+    haie_coordinator_no_dept = UserFactory(is_haie_coordinator=True)
+    return haie_coordinator_no_dept
 
 
 @pytest.fixture

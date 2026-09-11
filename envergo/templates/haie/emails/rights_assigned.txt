@@ -1,9 +1,9 @@
 Bonjour,
 
-{% if is_new_instructor %}Votre compte sur le portail du guichet unique de la haie a été validé.
+{% if is_new_coordinator %}Votre compte sur le portail du guichet unique de la haie a été validé.
 {% else %}Des droits ont été modifiés sur votre compte du portail du guichet unique de la haie.
 {% endif %}
-{% if is_instructor %}Vous avez les droits de modification (service coordonnateur) sur tous les dossiers des départements suivants :
+{% if is_coordinator %}Vous avez les droits de modification (service coordonnateur) sur tous les dossiers des départements suivants :
 {% else %}Vous avez les droits de lecture (service consulté) sur tous les dossiers des départements suivants :
 {% endif %}
 {% for dept in departments %}

@@ -5,18 +5,18 @@
 Les dossiers sont accessibles :
 
 - aux administrateurs et administratrices (lecture et écriture)
-- aux utilisateurs et utilisatrices ayant accès au département du projet (en lecture par défaut, en écriture si la case instructeur est cochée)
+- aux utilisateurs et utilisatrices ayant accès au département du projet (en lecture par défaut, en écriture si la case coordonnateur est cochée)
 - aux utilisateurs et utilisatrices invitées par jeton d'invitation (en lecture seule)
 
 ### Avec les droits par département instructeur
 
 Pour ajouter les droits d'un utilisateur à un département, aller dans l'interface d'administration de django, section utilisateurs.
 
-Un utilisateur avec la case instructeur cochée aura les droits d'écriture sur les projets des départements pour lesquels il a les droits.
+Un utilisateur avec la case coordonnateur cochée aura les droits d'écriture sur les projets des départements pour lesquels il a les droits.
 
 ### Par jeton d'invitation
 
-Depuis la page services consultés, un instructeur ou une instructrice peut créer un jeton d'invitation
+Depuis la page services consultés, un coordonnateur ou une coordonnatrice peut créer un jeton d'invitation
 pour inviter d'autres services que le service instructeur à consulter un projet.
 
 Il constitue un lien entre le projet et l’invité.

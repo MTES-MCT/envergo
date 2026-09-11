@@ -59,7 +59,7 @@
         {% include "haie/petitions/stage_objectives/"|add:petition_project.stage|add:".html" %}
       </div>
 
-      {% if is_department_instructor and not request_info_form and not petition_project.is_additional_information_requested %}
+      {% if has_change_permission and not request_info_form and not petition_project.is_additional_information_requested %}
         <button type="button"
                 class="fr-btn fr-btn--secondary fr-mb-3w disabled"
                 disabled="disabled"
@@ -115,7 +115,7 @@
       {% endwith %}
     </section>
   </div>
-  {% if is_department_instructor %}
+  {% if has_change_permission %}
     <button class="fr-btn"
             {% if petition_project.demarche_numerique_state == "draft" or petition_project.is_additional_information_requested %}disabled{% endif %}
             data-fr-opened="{% if state_change_form.errors %}true{% else %}false{% endif %}"

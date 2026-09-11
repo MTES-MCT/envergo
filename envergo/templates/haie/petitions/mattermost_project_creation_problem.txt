@@ -1,8 +1,8 @@
 
 {% if problem.is_fatal %}
-#### :x: Description de l’erreur #{{ index }}
+#### ❌ Description de l’erreur #{{ index }}
 {% else %}
-#### :warning: Description de l’anomalie #{{ index }}
+#### ⚠ Description de l’anomalie #{{ index }}
 {% endif %}
 
 {% if problem.key == "missing_demarche_numerique_number" %}

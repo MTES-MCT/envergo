@@ -52,8 +52,8 @@ def admin_post_data(user, **overrides):
         data["is_staff"] = "on"
     if user.is_superuser:
         data["is_superuser"] = "on"
-    if user.is_instructor:
-        data["is_instructor"] = "on"
+    if user.is_coordinator:
+        data["is_coordinator"] = "on"
     data.update(overrides)
     return data
 
@@ -77,12 +77,12 @@ def test_adding_department_to_haie_user_sends_email(
 def test_activating_instructor_right_sends_email(
     client, admin_user, haie_user, department
 ):
-    """Setting is_instructor=True on a haie user with a department triggers a rights update email."""
+    """Setting is_coordinator=True on a haie user with a department triggers a rights update email."""
     haie_user.departments.add(department)
     client.force_login(admin_user)
     url = reverse("admin:users_user_change", args=[haie_user.pk])
 
-    data = admin_post_data(haie_user, is_instructor="on", departments=[department.pk])
+    data = admin_post_data(haie_user, is_coordinator="on", departments=[department.pk])
     with TestCase.captureOnCommitCallbacks(execute=True):
         client.post(url, data=data)
 
@@ -109,11 +109,11 @@ def test_no_email_when_no_rights_changed(client, admin_user, haie_user, departme
 
 
 def test_no_email_when_user_has_no_departments(client, admin_user, haie_user):
-    """Saving a haie user with no departments does not send an email, even if is_instructor changes."""
+    """Saving a haie user with no departments does not send an email, even if is_coordinator changes."""
     client.force_login(admin_user)
     url = reverse("admin:users_user_change", args=[haie_user.pk])
 
-    data = admin_post_data(haie_user, is_instructor="on")
+    data = admin_post_data(haie_user, is_coordinator="on")
     with TestCase.captureOnCommitCallbacks(execute=True):
         client.post(url, data=data)
 
