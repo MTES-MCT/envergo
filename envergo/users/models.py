@@ -140,6 +140,16 @@ class User(AbstractUser):
         )
         return GuhRole.INSTRUCTOR if has_dossier_access else GuhRole.GUEST
 
+    def clear_access_cache(self):
+        """Discard the cached access data.
+
+        `guh_role` and `department_ids` are cached for the lifetime of the
+        instance. Call this whenever the user's accesses change while the
+        instance is still in use, so that permission checks see the new state.
+        """
+        self.__dict__.pop("guh_role", None)
+        self.__dict__.pop("department_ids", None)
+
     def get_unique_hash(self):
         """Return unique hash from user email with a salt from env variable"""
         salt_value = settings.HASH_SALT_KEY

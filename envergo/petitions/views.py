@@ -1474,6 +1474,11 @@ class PetitionProjectInstructorAlternativeView(
     template_name = "haie/petitions/instructor_view_alternatives.html"
     form_class = SimulationForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project_reference"] = self.object.reference
+        return kwargs
+
     def get_initial(self):
         """Get moulinette url from request querystring"""
         initial = super().get_initial()
@@ -1561,7 +1566,10 @@ class PetitionProjectInstructorAlternativeView(
         url = reverse(
             "petition_project_instructor_alternative_view", args=[self.object.reference]
         )
-        return url
+        # Explicitly clear the fragment: per RFC 7231 §7.1.2, browsers carry
+        # over the previous URL's fragment (e.g. #add-alternative) onto a
+        # redirect Location that doesn't specify one
+        return url + "#"
 
 
 class PetitionProjectInstructorAlternativeEdit(
