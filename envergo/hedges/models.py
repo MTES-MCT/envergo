@@ -3,6 +3,7 @@ from __future__ import annotations
 import operator
 import uuid
 from collections import defaultdict
+from dataclasses import dataclass
 from functools import cached_property, reduce
 from textwrap import dedent
 from typing import Self
@@ -17,6 +18,7 @@ from django.db import models
 from django.db.models import (
     BooleanField,
     Case,
+    ExpressionWrapper,
     IntegerField,
     OuterRef,
     Q,
@@ -751,6 +753,43 @@ LEVELS_OF_CONCERN = Choices(
 )
 
 
+@dataclass
+class HedgeGroup:
+    """Hedges sharing the same effective type and missing ecological properties.
+
+    Such hedges produce identical species-habitat filters, so the group is
+    the unit of zone lookups.
+
+    The lookups are annotated with a flag that answers the question:
+    "is this zone relevant to this group's hedges?"
+
+    `zone_match_column` is the name of this group's flag in the result rows.
+    """
+
+    hedge_type: str
+    missing_properties: tuple
+    hedges: HedgeList
+    zone_match_column: str
+
+
+def group_hedges_by_type_and_missing_properties(hedges):
+    """Group hedges into HedgeGroups."""
+    buckets = defaultdict(list)
+    for h in hedges:
+        key = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
+        buckets[key].append(h)
+
+    groups = []
+    for i, ((hedge_type, missing_props), group_hedges) in enumerate(buckets.items()):
+        zone_match_column = f"matches_group_{i}"
+        groups.append(
+            HedgeGroup(
+                hedge_type, missing_props, HedgeList(group_hedges), zone_match_column
+            )
+        )
+    return groups
+
+
 class HruSpeciesQuerySet(models.QuerySet):
     """Species queryset for the HRU (before Régime Unique) pipeline.
 
@@ -761,37 +800,34 @@ class HruSpeciesQuerySet(models.QuerySet):
       map (a species_legacy map) whose species_taxrefs overlap the species'
       cd_noms.
 
-    Query plan — hedges sharing (type, missing properties) form one group,
-    since they produce the same habitat filter. For each group, one small
-    spatial query collects the observed taxrefs (fetch_observed_taxrefs);
-    the species query then filters on those plain values.
+    Query plan — a single zone query (prefetch_zone_data_by_group) collects
+    the observed taxrefs per HedgeGroup; the species query then filters on
+    those plain values, keeping it free of correlated subqueries.
     """
 
     def for_hedges(self, hedges):
         """Return species confirmed in zones intersecting the given hedges."""
-
-        groups = group_hedges_by_type_and_missing_properties(HedgeList(hedges))
-
-        filters = []
-        for (hedge_type, missing_props), hedges_in_group in groups.items():
-            observed = self.fetch_observed_taxrefs(HedgeList(hedges_in_group))
-            if not observed:
-                continue  # no observation zone crosses these hedges
-            filters.append(self.build_group_filter(hedge_type, missing_props, observed))
-
-        if not filters:
+        hedges = HedgeList(hedges)
+        if not hedges:
             return self.none()
 
+        zone_data = self.prefetch_zone_data_by_group(hedges)
+        if not zone_data:
+            return self.none()
+
+        filters = [
+            self.build_group_filter(group, observed) for group, observed in zone_data
+        ]
         union = reduce(operator.or_, filters)
         # "group" is the species' taxonomic group, unrelated to hedge groups
         return self.filter(union).distinct().order_by("group", "common_name")
 
-    def build_group_filter(self, hedge_type, missing_props, observed_taxrefs_by_map):
-        """Build the Q filter for one group of habitat-equivalent hedges."""
-        suitable_habitat = Q(habitats__hedge_types__contains=[hedge_type])
-        if missing_props:
+    def build_group_filter(self, group, observed_taxrefs_by_map):
+        """Build the Q filter for one hedge group."""
+        suitable_habitat = Q(habitats__hedge_types__contains=[group.hedge_type])
+        if group.missing_properties:
             requires_missing_property = Q(
-                habitats__hedge_properties__overlap=list(missing_props)
+                habitats__hedge_properties__overlap=list(group.missing_properties)
             )
             suitable_habitat &= ~requires_missing_property
 
@@ -804,34 +840,51 @@ class HruSpeciesQuerySet(models.QuerySet):
         )
         return suitable_habitat & observed_locally
 
-    def fetch_observed_taxrefs(self, hedges):
-        """Return {map_id: taxrefs} observed in species_legacy zones intersecting the hedges."""
-        rows = Zone.objects.filter(
-            geometry__intersects=hedges.to_multilinestring(),
-            map__map_type=MAP_TYPES.species_legacy,
-        ).values_list("map_id", "species_taxrefs")
+    def prefetch_zone_data_by_group(self, hedges):
+        """Fetch observed taxrefs per hedge group, in a single DB query.
 
-        taxrefs_by_map = defaultdict(set)
-        for map_id, taxrefs in rows:
-            if taxrefs:
-                taxrefs_by_map[map_id].update(taxrefs)
-        return dict(taxrefs_by_map)
+        Each fetched row is one zone crossing the hedges, with one boolean
+        column per hedge group, e.g.:
+        {"map_id": 12, "species_taxrefs": [4001], "matches_group_0": True}
+
+        Returns [(group, {map_id: taxrefs})] for zones crossing each group's
+        hedges; groups without observations are absent.
+        """
+        groups = group_hedges_by_type_and_missing_properties(hedges)
+
+        # We sorted hedges into groups, and those hedges matches different zones.
+        # Since we run a single query, we have to tell which zone matches which
+        # group. So we add one annotation per group in the query.
+        annotations = {}
+        for group in groups:
+            group_geom = group.hedges.to_multilinestring()
+            annotations[group.zone_match_column] = ExpressionWrapper(
+                Q(geometry__intersects=group_geom), output_field=BooleanField()
+            )
+
+        # Fetch the zones in a single query
+        zone_rows = list(
+            Zone.objects.filter(
+                geometry__intersects=hedges.to_multilinestring(),
+                map__map_type=MAP_TYPES.species_legacy,
+            )
+            .annotate(**annotations)
+            .values("map_id", "species_taxrefs", *annotations)
+        )
+
+        # Build the result
+        result = []
+        for group in groups:
+            taxrefs_by_map = defaultdict(set)
+            for row in zone_rows:
+                if row[group.zone_match_column] and row["species_taxrefs"]:
+                    taxrefs_by_map[row["map_id"]].update(row["species_taxrefs"])
+            if taxrefs_by_map:
+                result.append((group, dict(taxrefs_by_map)))
+        return result
 
 
 SPECIES_BUFFER_DISTANCE = D(m=400)
-
-
-def group_hedges_by_type_and_missing_properties(hedges):
-    """Group hedges sharing the same effective type and missing ecological properties.
-
-    Hedges in one group produce identical SpeciesHabitat filters, so each
-    group can be treated as a single geographic unit for zone lookups.
-    """
-    groups = defaultdict(list)
-    for h in hedges:
-        key = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
-        groups[key].append(h)
-    return dict(groups)
 
 
 # Numeric ranks for sorting species by level_of_concern in the RU pipeline.
@@ -857,11 +910,10 @@ class RuSpeciesQuerySet(models.QuerySet):
     zone's species_taxrefs; "majeur"-level species not observed locally
     are excluded entirely.
 
-    Query plan — hedges sharing (type, missing properties) form one group,
-    since they produce the same habitat filter. A single zone query collects
-    the nearby map ids per group plus all observed cd_refs
-    (prefetch_zone_data_by_group); the species query then filters on those
-    plain values, keeping it free of correlated subqueries.
+    Query plan — a single zone query (prefetch_zone_data_by_group) collects
+    the nearby map ids per HedgeGroup plus all observed cd_refs; the species
+    query then filters on those plain values, keeping it free of correlated
+    subqueries.
     """
 
     def for_hedges(self, hedges):
@@ -874,13 +926,13 @@ class RuSpeciesQuerySet(models.QuerySet):
         if not hedges:
             return self.none()
 
-        map_ids_by_group, observed_cdrefs = self.prefetch_zone_data_by_group(hedges)
-        if not map_ids_by_group:
+        group_map_ids, observed_cdrefs = self.prefetch_zone_data_by_group(hedges)
+        if not group_map_ids:
             return self.none()
 
-        species_filter = self.build_grouped_filter(map_ids_by_group, observed_cdrefs)
+        species_filter = self.build_grouped_filter(group_map_ids, observed_cdrefs)
 
-        all_nearby_map_ids = set().union(*map_ids_by_group.values())
+        all_nearby_map_ids = set().union(*(ids for _, ids in group_map_ids))
         level_label = self.build_level_subquery(list(all_nearby_map_ids))
 
         level_order_whens = [
@@ -908,53 +960,47 @@ class RuSpeciesQuerySet(models.QuerySet):
         )
 
     def prefetch_zone_data_by_group(self, hedges):
-        """Fetch per-group zone data in a single DB query.
+        """Fetch nearby map ids per hedge group and all observed cd_refs, in a single DB query.
 
-        Each zone within 400m of the hedge set is annotated with a boolean
-        per hedge group, indicating whether the zone is also within 400m
-        of that specific group's hedges. This scopes nearby_map_ids per
-        group without adding extra DB round trips.
+        Each fetched row is one zone within 400m of the hedges, with one
+        boolean column per hedge group, e.g.:
+        {"map_id": 12, "species_taxrefs": [4001], "matches_group_0": True}
+
+        Returns ([(group, [map_ids])], observed_cdrefs) for zones within
+        400m of each group's hedges; groups with no nearby zone are absent.
         """
         groups = group_hedges_by_type_and_missing_properties(hedges)
-        all_hedges_geom = hedges.to_multilinestring()
 
-        zones = Zone.objects.filter(
-            geometry__dwithin=(all_hedges_geom, SPECIES_BUFFER_DISTANCE),
-            map__map_type=MAP_TYPES.species,
-        )
-
-        # One boolean column per group: "is this zone near this group's hedges?"
-        group_by_annotation = {}
         annotations = {}
-        for i, (group_key, group_hedges) in enumerate(groups.items()):
-            group_geom = HedgeList(group_hedges).to_multilinestring()
-            annotation_name = f"near_group_{i}"
-            group_by_annotation[annotation_name] = group_key
-            annotations[annotation_name] = Case(
-                When(
-                    geometry__dwithin=(group_geom, SPECIES_BUFFER_DISTANCE),
-                    then=Value(True),
-                ),
-                default=Value(False),
+        for group in groups:
+            group_geom = group.hedges.to_multilinestring()
+            annotations[group.zone_match_column] = ExpressionWrapper(
+                Q(geometry__dwithin=(group_geom, SPECIES_BUFFER_DISTANCE)),
                 output_field=BooleanField(),
             )
 
-        zone_rows = zones.annotate(**annotations).values(
-            "map_id", "species_taxrefs", *annotations
+        all_hedges_geom = hedges.to_multilinestring()
+        zone_rows = list(
+            Zone.objects.filter(
+                geometry__dwithin=(all_hedges_geom, SPECIES_BUFFER_DISTANCE),
+                map__map_type=MAP_TYPES.species,
+            )
+            .annotate(**annotations)
+            .values("map_id", "species_taxrefs", *annotations)
         )
 
         all_observed_cdrefs = set()
-        map_ids_by_group = defaultdict(set)
-
         for row in zone_rows:
             if row["species_taxrefs"]:
                 all_observed_cdrefs.update(row["species_taxrefs"])
-            for annotation_name, group_key in group_by_annotation.items():
-                if row[annotation_name]:
-                    map_ids_by_group[group_key].add(row["map_id"])
 
-        result = {key: list(ids) for key, ids in map_ids_by_group.items()}
-        return result, all_observed_cdrefs
+        group_map_ids = []
+        for group in groups:
+            column = group.zone_match_column
+            nearby_map_ids = {row["map_id"] for row in zone_rows if row[column]}
+            if nearby_map_ids:
+                group_map_ids.append((group, list(nearby_map_ids)))
+        return group_map_ids, all_observed_cdrefs
 
     def build_majeur_exclusion(self, observed_cdrefs):
         """Build a Q clause excluding "majeur" species not observed locally.
@@ -970,34 +1016,30 @@ class RuSpeciesQuerySet(models.QuerySet):
 
         return ~Q(habitats__level_of_concern="majeur")
 
-    def build_grouped_filter(self, map_ids_by_group, observed_cdrefs):
+    def build_grouped_filter(self, group_map_ids, observed_cdrefs):
         """Build a single Q filter from per-group nearby map IDs.
 
-        Each group of habitat-equivalent hedges has its own set of nearby
-        map IDs, ensuring that a species whose habitat is only near hedges
-        of type A cannot match type B's filter.
+        Each hedge group has its own set of nearby map IDs, ensuring that
+        a species whose habitat is only near hedges of type A cannot match
+        type B's filter.
         """
         majeur_exclusion = self.build_majeur_exclusion(observed_cdrefs)
 
         group_filters = [
-            self.build_group_filter(
-                hedge_type, missing_props, nearby_map_ids, majeur_exclusion
-            )
-            for (hedge_type, missing_props), nearby_map_ids in map_ids_by_group.items()
+            self.build_group_filter(group, nearby_map_ids, majeur_exclusion)
+            for group, nearby_map_ids in group_map_ids
         ]
         return reduce(operator.or_, group_filters)
 
-    def build_group_filter(
-        self, hedge_type, missing_props, nearby_map_ids, majeur_exclusion
-    ):
-        """Build the Q filter for one group of habitat-equivalent hedges."""
+    def build_group_filter(self, group, nearby_map_ids, majeur_exclusion):
+        """Build the Q filter for one hedge group."""
         on_nearby_map = Q(habitats__map_id__in=nearby_map_ids)
-        matches_hedge_type = Q(habitats__hedge_types__contains=[hedge_type])
+        matches_hedge_type = Q(habitats__hedge_types__contains=[group.hedge_type])
         group_filter = on_nearby_map & matches_hedge_type
 
-        if missing_props:
+        if group.missing_properties:
             requires_missing_property = Q(
-                habitats__hedge_properties__overlap=list(missing_props)
+                habitats__hedge_properties__overlap=list(group.missing_properties)
             )
             group_filter &= ~requires_missing_property
 
