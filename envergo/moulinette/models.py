@@ -37,6 +37,7 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.html import format_html
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -1643,6 +1644,43 @@ class ConfigHaie(ConfigBase):
 
         coeffs = self.single_procedure_settings.get("coeff_compensation")
         return coeffs
+
+    @property
+    def contact_info(self):
+        if not self.guh_email and not self.guh_phone:
+            structure = (
+                self.guh_structure or "Direction Départementale des Territoires (DDT)"
+            )
+
+            return format_html(
+                "<address>Nous ne disposons pas d’information sur le point de contact "
+                "privilégié au sein de la {}</address>",
+                structure,
+            )
+
+        address_rows = ["<strong>Guichet unique de la haie</strong>"]
+        if self.guh_service_name:
+            address_rows.append(
+                format_html("<strong>{}</strong>", self.guh_service_name)
+            )
+        if self.guh_email:
+            address_rows.append(
+                format_html(
+                    'Email : <a href="mailto:{}">{}</a>',
+                    self.guh_email,
+                    self.guh_email,
+                )
+            )
+        if self.guh_phone:
+            address_rows.append(
+                format_html(
+                    'Téléphone : <a href="tel:{}">{}</a>',
+                    str(self.guh_phone),
+                    self.guh_phone.as_national,
+                )
+            )
+
+        return f"<address>{'<br>'.join(address_rows)}</address>"
 
 
 TEMPLATE_KEYS = [
