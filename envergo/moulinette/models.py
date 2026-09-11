@@ -1346,8 +1346,25 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
-    contacts_info = models.TextField(
-        "Champ html des informations de contact", blank=True
+    guh_structure = models.CharField(
+        "Structure GUH (DDT ou DDTM)",
+        default="Direction Départementale des Territoires (DDT)",
+    )
+    guh_service_name = models.CharField(
+        "Nom du service GUH",
+        blank=True,
+    )
+    guh_email = models.EmailField(
+        "Email GUH",
+        blank=True,
+    )
+    guh_phone = PhoneNumberField(
+        "Téléphone GUH",
+        blank=True,
+    )
+    guh_address = models.TextField(
+        "Adresse GUH",
+        blank=True,
     )
 
     contacts_and_links = models.TextField(
