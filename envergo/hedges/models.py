@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import operator
 import uuid
+from collections import defaultdict
 from functools import cached_property, reduce
 from textwrap import dedent
 from typing import Self
@@ -810,11 +811,11 @@ class HruSpeciesQuerySet(models.QuerySet):
             map__map_type=MAP_TYPES.species_legacy,
         ).values_list("map_id", "species_taxrefs")
 
-        taxrefs_by_map = {}
+        taxrefs_by_map = defaultdict(set)
         for map_id, taxrefs in rows:
             if taxrefs:
-                taxrefs_by_map.setdefault(map_id, set()).update(taxrefs)
-        return taxrefs_by_map
+                taxrefs_by_map[map_id].update(taxrefs)
+        return dict(taxrefs_by_map)
 
 
 SPECIES_BUFFER_DISTANCE = D(m=400)
@@ -826,11 +827,11 @@ def group_hedges_by_type_and_missing_properties(hedges):
     Hedges in one group produce identical SpeciesHabitat filters, so each
     group can be treated as a single geographic unit for zone lookups.
     """
-    groups = {}
+    groups = defaultdict(list)
     for h in hedges:
         key = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
-        groups.setdefault(key, []).append(h)
-    return groups
+        groups[key].append(h)
+    return dict(groups)
 
 
 # Numeric ranks for sorting species by level_of_concern in the RU pipeline.
@@ -879,9 +880,7 @@ class RuSpeciesQuerySet(models.QuerySet):
 
         species_filter = self.build_grouped_filter(map_ids_by_group, observed_cdrefs)
 
-        all_nearby_map_ids = set()
-        for ids in map_ids_by_group.values():
-            all_nearby_map_ids.update(ids)
+        all_nearby_map_ids = set().union(*map_ids_by_group.values())
         level_label = self.build_level_subquery(list(all_nearby_map_ids))
 
         level_order_whens = [
@@ -945,7 +944,7 @@ class RuSpeciesQuerySet(models.QuerySet):
         )
 
         all_observed_cdrefs = set()
-        map_ids_by_group = {group_key: set() for group_key in groups}
+        map_ids_by_group = defaultdict(set)
 
         for row in zone_rows:
             if row["species_taxrefs"]:
@@ -954,7 +953,7 @@ class RuSpeciesQuerySet(models.QuerySet):
                 if row[annotation_name]:
                     map_ids_by_group[group_key].add(row["map_id"])
 
-        result = {key: list(ids) for key, ids in map_ids_by_group.items() if ids}
+        result = {key: list(ids) for key, ids in map_ids_by_group.items()}
         return result, all_observed_cdrefs
 
     def build_majeur_exclusion(self, observed_cdrefs):
