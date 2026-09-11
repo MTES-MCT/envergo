@@ -3035,6 +3035,45 @@ def test_simulation_form_resolves_shortened_consultation_url():
     assert form.cleaned_data["moulinette_url"] == other_project.moulinette_url
 
 
+def test_simulation_form_rejects_mismatched_project_reference():
+    """A url whose project_reference differs from the target project is rejected."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    other_project = PetitionProjectFactory()
+    mismatched_url = update_qs(
+        project.moulinette_url, {"project_reference": other_project.reference}
+    )
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": mismatched_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+        project_reference=project.reference,
+    )
+
+    assert not form.is_valid()
+    assert other_project.reference in form.errors["moulinette_url"][0]
+
+
+def test_simulation_form_accepts_url_without_project_reference():
+    """A url without any project_reference param is accepted regardless of target project."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+
+    form = SimulationForm(
+        data={
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+        project_reference="SOME-OTHER-REF",
+    )
+
+    assert form.is_valid(), form.errors
+
+
 def test_alternative_create_requires_change_permission(client, haie_user_44):
     """Creating an alternative requires change permission, not mere view access.
 
@@ -3082,7 +3121,7 @@ def test_alternative_create_happy_path(client, haie_coordinator_44):
     )
 
     assert response.status_code == 200
-    assert response.redirect_chain[-1][0] == create_url
+    assert response.redirect_chain[-1][0] == create_url + "#"
 
     assert project.simulations.count() == 2
     created = project.simulations.get(is_initial=False)
@@ -3094,6 +3133,89 @@ def test_alternative_create_happy_path(client, haie_coordinator_44):
 
     flashes = [str(m) for m in response.context["messages"]]
     assert "La simulation alternative a été ajoutée." in flashes
+
+
+def test_alternative_create_rejects_url_for_another_project(
+    client, haie_coordinator_44
+):
+    """A simulation url tagged with another project's reference is rejected."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    other_project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    mismatched_url = update_qs(
+        project.moulinette_url, {"project_reference": other_project.reference}
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": mismatched_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 200
+    assert project.simulations.count() == 1
+    assert (
+        other_project.reference in response.context["form"].errors["moulinette_url"][0]
+    )
+
+
+def test_alternative_create_allows_url_for_same_project(client, haie_coordinator_44):
+    """A simulation url tagged with this project's own reference is accepted."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+    matching_url = update_qs(
+        project.moulinette_url, {"project_reference": project.reference}
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": matching_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 302
+    assert project.simulations.count() == 2
+
+
+def test_alternative_create_success_redirect_has_no_fragment(
+    client, haie_coordinator_44
+):
+    """The post-save redirect clears any #add-alternative fragment."""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_instructor_alternative_view",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(
+        create_url,
+        {
+            "moulinette_url": project.moulinette_url,
+            "source": "instructor",
+            "comment": "Commentaire",
+        },
+    )
+
+    assert response.status_code == 302
+    assert response.url.endswith("#")
 
 
 def test_alternative_create_keeps_existing_active_and_initial(

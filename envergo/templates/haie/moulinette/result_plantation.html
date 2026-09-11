@@ -14,11 +14,11 @@
   {% if is_alternative %}
     <div class="alternative-share fr-p-2w fr-mb-2w">
       {% if user|has_change_permission:petition_project %}
-        <h2 class="alternative-share__title">Ajouter la simulation alternative</h2>
+        <h2 class="alternative-share__title">Enregistrer la simulation alternative</h2>
         <p>Vous pourrez ensuite la partager au demandeur.</p>
         <p>
           <a href="{{ add_simulation_url }}"
-             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">Ajouter la simulation</a>
+             class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line">Enregistrer la simulation</a>
         </p>
       {% elif user.is_authenticated %}
 
