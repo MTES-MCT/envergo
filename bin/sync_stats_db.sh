@@ -78,7 +78,7 @@ fi
 
 bash "$HOME/bin/anonymize_db.sh" "$SYNC_TARGET_URL"
 
-# Grant access to the newly created tables to the metabase ro user
+# Grant access to the newly created tables to the metabase read only user
 echo "Granting read access to metabase_ro..."
 
 # Fetch the list of prod db table names
