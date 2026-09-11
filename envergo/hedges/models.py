@@ -753,6 +753,43 @@ LEVELS_OF_CONCERN = Choices(
 )
 
 
+@dataclass
+class HedgeGroup:
+    """Hedges sharing the same effective type and missing ecological properties.
+
+    Such hedges produce identical species-habitat filters, so the group is
+    the unit of zone lookups.
+
+    The lookups are annotated with a flag that answers the question:
+    "is this zone relevant to this group's hedges?"
+
+    `zone_match_column` is the name of this group's flag in the result rows.
+    """
+
+    hedge_type: str
+    missing_properties: tuple
+    hedges: HedgeList
+    zone_match_column: str
+
+
+def group_hedges_by_type_and_missing_properties(hedges):
+    """Group hedges into HedgeGroups."""
+    buckets = defaultdict(list)
+    for h in hedges:
+        key = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
+        buckets[key].append(h)
+
+    groups = []
+    for i, ((hedge_type, missing_props), group_hedges) in enumerate(buckets.items()):
+        zone_match_column = f"matches_group_{i}"
+        groups.append(
+            HedgeGroup(
+                hedge_type, missing_props, HedgeList(group_hedges), zone_match_column
+            )
+        )
+    return groups
+
+
 class HruSpeciesQuerySet(models.QuerySet):
     """Species queryset for the HRU (before Régime Unique) pipeline.
 
@@ -848,43 +885,6 @@ class HruSpeciesQuerySet(models.QuerySet):
 
 
 SPECIES_BUFFER_DISTANCE = D(m=400)
-
-
-@dataclass
-class HedgeGroup:
-    """Hedges sharing the same effective type and missing ecological properties.
-
-    Such hedges produce identical species-habitat filters, so the group is
-    the unit of zone lookups.
-
-    The lookups are annotated with a flag that answers the question:
-    "is this zone relevant to this group's hedges?"
-
-    `zone_match_column` is the name of this group's flag in the result rows.
-    """
-
-    hedge_type: str
-    missing_properties: tuple
-    hedges: HedgeList
-    zone_match_column: str
-
-
-def group_hedges_by_type_and_missing_properties(hedges):
-    """Group hedges into HedgeGroups."""
-    buckets = defaultdict(list)
-    for h in hedges:
-        key = (h.effective_hedge_type, tuple(sorted(h.missing_ecological_properties)))
-        buckets[key].append(h)
-
-    groups = []
-    for i, ((hedge_type, missing_props), group_hedges) in enumerate(buckets.items()):
-        zone_match_column = f"matches_group_{i}"
-        groups.append(
-            HedgeGroup(
-                hedge_type, missing_props, HedgeList(group_hedges), zone_match_column
-            )
-        )
-    return groups
 
 
 # Numeric ranks for sorting species by level_of_concern in the RU pipeline.
