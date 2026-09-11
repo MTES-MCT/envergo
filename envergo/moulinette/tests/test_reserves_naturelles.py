@@ -8,6 +8,12 @@ from envergo.moulinette.tests.factories import (
     PerimeterFactory,
     RegulationFactory,
 )
+from envergo.petitions.regulations import get_instructor_view_context
+
+
+def resnat_catalog(moulinette):
+    """The data computed by the réserves naturelles evaluator."""
+    return moulinette.reserves_naturelles.hru__reserves_naturelles.get_catalog_data()
 
 
 @pytest.fixture(autouse=True)
@@ -113,7 +119,15 @@ def test_moulinette_evaluation(
             moulinette.reserves_naturelles.hru__reserves_naturelles.result
             == expected_result
         )
-        assert moulinette.catalog["l_resnat"] == expected_lenght_resnat
+        assert resnat_catalog(moulinette)["l_resnat"] == expected_lenght_resnat
+
+        # The instructor key elements get the lengths through the context getter
+        evaluator = (
+            moulinette.reserves_naturelles.hru__reserves_naturelles.get_evaluator()
+        )
+        context = get_instructor_view_context(evaluator, None, moulinette)
+        assert context["l_resnat"] == expected_lenght_resnat
+        assert context["resnat"] == resnat_catalog(moulinette)["resnat"]
 
 
 def test_hedges_to_plant_inside_zone_but_removal_outside(bizous_town_center):  # noqa
@@ -177,5 +191,5 @@ def test_hedges_to_plant_inside_zone_but_removal_outside(bizous_town_center):  #
     # The criterion should activate (hedge to plant intersects the zone)
     # but no hedges_to_remove intersect any zone, so resnat/l_resnat
     # should be empty defaults.
-    assert moulinette.catalog["resnat"] == {}
-    assert moulinette.catalog["l_resnat"] == 0
+    assert resnat_catalog(moulinette)["resnat"] == {}
+    assert resnat_catalog(moulinette)["l_resnat"] == 0

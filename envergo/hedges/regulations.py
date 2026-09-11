@@ -1033,7 +1033,7 @@ class PlantationConditionMixin:
         """
         return {}
 
-    def plantation_evaluate(self, R, catalog=None):
+    def plantation_evaluate(self, R):
         """Evaluate all plantation conditions for this evaluator.
 
         Returns an empty list when the evaluator's result_code is in
@@ -1043,7 +1043,7 @@ class PlantationConditionMixin:
         if self.result_code in self.plantation_skip_results:
             return []
 
-        catalog = dict(catalog or {})
+        catalog = dict(self.catalog)
         return [
             condition(self.hedges, R, self, catalog).evaluate()
             for condition in self.plantation_conditions

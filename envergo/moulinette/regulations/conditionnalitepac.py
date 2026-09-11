@@ -249,8 +249,8 @@ class Bcae8BeforeRu(PlantationConditionMixin, HaieCriterionEvaluator):
             catalog["lineaire_type_4_sur_parcelle_pac"] = (
                 haies.lineaire_type_4_sur_parcelle_pac()
             )
-            if "lineaire_total" in catalog:
-                lineaire_total = catalog["lineaire_total"]
+            if "lineaire_total" in self.catalog:
+                lineaire_total = self.catalog["lineaire_total"]
                 ratio_detruit = lineaire_detruit_pac / lineaire_total
                 is_lte_2percent_pac = ratio_detruit <= 0.02 or lineaire_detruit_pac <= 5
 

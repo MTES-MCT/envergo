@@ -26,7 +26,9 @@
     {% if moulinette.loi_sur_leau.ecoulement_avec_bv %}
       <h2>Bassin versant intercepté</h2>
 
-      <p>Estimation de bassin versant intercepté : {{ catchment_surface }} m².</p>
+      <p>
+        Estimation de bassin versant intercepté : {{ moulinette.loi_sur_leau.ecoulement_avec_bv.get_catalog_data.catchment_surface }} m².
+      </p>
 
       <p>
         <a href="{% url 'demo_catchment_area' %}?lat={{ lat|stringformat:"f" }}&lng={{ lng|stringformat:"f" }}">Lien vers le démonstrateur BV.</a>
@@ -182,15 +184,30 @@
     {% endif %}
 
     <h2>Catalogue de données</h2>
-
-    <dd>
+    <h3>Données de la moulinette</h3>
+    <dl>
       {% for key, value in moulinette.catalog.items %}
         <dt>{{ key }}</dt>
         <dd>
           {{ value|truncatechars:150 }}
         </dd>
       {% endfor %}
-    </dd>
+    </dl>
+
+    <h3>Données des critères</h3>
+    {% for regulation in moulinette.regulations %}
+      {% for criterion in regulation.criteria.all %}
+        <h3>{{ regulation.title }} › {{ criterion.backend_title }}</h3>
+        <dl>
+          {% for key, value in criterion.get_catalog_data.items %}
+            <dt>{{ key }}</dt>
+            <dd>
+              {{ value|truncatechars:150 }}
+            </dd>
+          {% endfor %}
+        </dl>
+      {% endfor %}
+    {% endfor %}
   </section>
 {% endblock %}
 

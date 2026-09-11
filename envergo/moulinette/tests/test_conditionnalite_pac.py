@@ -58,6 +58,30 @@ def test_conditionnalite_pac_only_for_agri_pac():
             )
 
 
+def test_bcae8_form_answers_are_shared_and_computed_data_is_not():
+    """Form answers are project-wide user input, computed values belong to the evaluator."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[HedgeFactory(length=4, additionalData__sur_parcelle_pac=True)]
+    )
+    moulinette_data = make_moulinette_haie_data(
+        hedges=hedges,
+        localisation_pac="oui",
+        lineaire_total=5000,
+        motif="chemin_acces",
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors
+
+    assert moulinette.catalog["lineaire_total"] == 5000
+    assert "lineaire_detruit_pac" not in moulinette.catalog
+
+    criterion = moulinette.conditionnalite_pac.bcae8_before_ru
+    assert "lineaire_total" not in criterion.get_catalog_data()
+    assert criterion.get_catalog_data()["lineaire_detruit_pac"] > 0
+
+
 def test_bcae8_impossible_case():
     """Impossible simulation data — prevented by form validation."""
     DCConfigHaieFactory()
