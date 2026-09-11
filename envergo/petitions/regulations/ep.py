@@ -92,7 +92,7 @@ def ep_regime_unique_get_instructor_view_context(
     )
 
     is_regime_unique = moulinette.config.single_procedure
-    ep_ru_aa_only = moulinette.catalog.get("ep_ru_aa_only", True)
+    ep_ru_aa_only = evaluator.catalog_data.get("ep_ru_aa_only", True)
     context["show_ep_ru_params"] = is_regime_unique and not ep_ru_aa_only
     context["replantation_coefficient"] = evaluator.get_replantation_coefficient()
 

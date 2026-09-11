@@ -59,7 +59,11 @@ from envergo.analytics.utils import (
 )
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import Department
-from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
+from envergo.geodata.utils import (
+    get_geoportail_urbanisme_centered_url,
+    get_google_maps_centered_url,
+    get_ign_centered_url,
+)
 from envergo.hedges.models import TO_PLANT, HedgeCategory, HedgeData, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
@@ -1147,6 +1151,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         hedges = context["petition_project"].hedge_data.hedges()
         context["ign_url"] = get_ign_centered_url(hedges)
         context["google_maps_url"] = get_google_maps_centered_url(hedges)
+        context["geoportail_url"] = get_geoportail_urbanisme_centered_url(hedges)
 
         regulation_slug = self.kwargs.get("regulation")
         regulation = context["moulinette"].get_regulation(regulation_slug)

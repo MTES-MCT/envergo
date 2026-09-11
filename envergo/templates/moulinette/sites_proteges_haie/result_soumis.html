@@ -1,4 +1,6 @@
-{% if config.single_procedure and not aa_only %}
+{% load utils %}
+
+{% if config.single_procedure and not regulation.get_evaluator.aa_only_by_category|get_item:category %}
 
   <p>
     Le projet est soumis à autorisation, car il est situé dans le périmètre d’un site protégé, et peut porter atteinte

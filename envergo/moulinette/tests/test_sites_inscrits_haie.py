@@ -1,5 +1,6 @@
 import pytest
 
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -18,7 +19,11 @@ from envergo.moulinette.tests.utils import (
 
 @pytest.fixture()
 def sites_inscrits_regulation():
-    return RegulationFactory(regulation="sites_inscrits_haie", has_perimeters=True)
+    return RegulationFactory(
+        regulation="sites_inscrits_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.sites_inscrits_haie.SitesInscritsRegulation",
+    )
 
 
 @pytest.fixture()
@@ -75,7 +80,12 @@ def test_aa_only_flag(sites_inscrits_criteria):
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.catalog.get("aa_only") is True
+    assert (
+        moulinette.sites_inscrits_haie.get_evaluator().aa_only_by_category[
+            HedgeCategory.hru
+        ]
+        is True
+    )
 
 
 def test_aa_only_false_with_mixed_hedges(sites_inscrits_criteria):
@@ -86,4 +96,9 @@ def test_aa_only_false_with_mixed_hedges(sites_inscrits_criteria):
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.catalog.get("aa_only") is False
+    assert (
+        moulinette.sites_inscrits_haie.get_evaluator().aa_only_by_category[
+            HedgeCategory.hru
+        ]
+        is False
+    )
