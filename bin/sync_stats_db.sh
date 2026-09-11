@@ -64,8 +64,17 @@ PG_EXCLUDE=(
 # disk, so the dump must never be materialized. Sequential (non-parallel)
 # restore is the price; the nightly schedule can afford it.
 echo "Syncing production data to the stats database..."
+# FKs referencing excluded-data tables make pg_restore exit non-zero:
+# harmless here, so success is verified by the row-count check instead.
 "$HOME/bin/pg_dump" "${PG_OPTIONS[@]}" "${PG_EXCLUDE[@]}" --format c --dbname "$SYNC_SOURCE_URL" \
-    | "$HOME/bin/pg_restore" "${PG_OPTIONS[@]}" --dbname "$SYNC_TARGET_URL"
+    | "$HOME/bin/pg_restore" "${PG_OPTIONS[@]}" --dbname "$SYNC_TARGET_URL" \
+    || echo "pg_restore exited with errors (expected, see above)"
+
+restored_users=$("$PSQL_BIN" "$SYNC_TARGET_URL" -tA -c "SELECT count(*) FROM users_user")
+if [ "$restored_users" = "0" ]; then
+    echo "Restore verification failed: users_user is empty, aborting." >&2
+    exit 1
+fi
 
 bash "$HOME/bin/anonymize_db.sh" "$SYNC_TARGET_URL"
 
