@@ -28,7 +28,7 @@ export PSQL_BIN="$HOME/bin/psql"
 source_can_write=$("$PSQL_BIN" "$SYNC_SOURCE_URL" -tA -c \
     "SELECT has_table_privilege(current_user, 'users_user', 'INSERT, UPDATE, DELETE, TRUNCATE')")
 if [ "$source_can_write" != "f" ]; then
-    echo "SYNC_SOURCE_URL user has write access on production, aborting." >&2
+    echo "SYNC_SOURCE_URL $SYNC_SOURCE_URL user has write access on production, aborting." >&2
     exit 1
 fi
 
