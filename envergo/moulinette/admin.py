@@ -564,6 +564,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             "Contenus",
             {
                 "fields": [
+                    "contacts_and_links",
                     "department_doctrine_html",
                     "hedge_maintenance_html",
                     "natura2000_coordinators_list_url",
@@ -578,7 +579,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "guh_service_name",
                     "guh_email",
                     "guh_phone",
-                    "contacts_and_links",
+                    "guh_address",
                 ],
             },
         ),
