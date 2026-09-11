@@ -16,6 +16,7 @@ from envergo.moulinette.tests.utils import (
     make_hedge,
     make_moulinette_haie_data,
 )
+from envergo.petitions.regulations import get_instructor_view_context
 
 
 @pytest.fixture
@@ -56,7 +57,15 @@ def test_moulinette_evaluation(coords, expected_result, n2000_criteria):
     moulinette = MoulinetteHaie(data)
     assert moulinette.natura2000_haie.result == expected_result
     if expected_result != "non_concerne":
-        assert moulinette.natura2000_haie.hru__natura2000_haie.result == expected_result
+        criterion = moulinette.natura2000_haie.hru__natura2000_haie
+        assert criterion.result == expected_result
+
+        # The instructor key elements get the lengths through the context getter
+        evaluator = criterion.get_evaluator()
+        context = get_instructor_view_context(evaluator, None, moulinette)
+        assert context["l_n2000_hors_aa"] == evaluator.catalog_data["l_n2000_hors_aa"]
+        assert context["l_n2000_hors_aa"] > 0
+        assert "l_n2000_hors_aa" not in moulinette.catalog
 
 
 @pytest.mark.parametrize(

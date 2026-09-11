@@ -1,11 +1,18 @@
 from django.utils.module_loading import import_string
 
-from envergo.moulinette.regulations.conditionnalitepac import Bcae8Hru, Bcae8Ru
+from envergo.moulinette.regulations.conditionnalitepac import (
+    Bcae8BeforeRu,
+    Bcae8Hru,
+    Bcae8L3503,
+    Bcae8Ru,
+)
 from envergo.petitions.regulations import evaluator_instructor_view_context_getter
 
 
 @evaluator_instructor_view_context_getter(Bcae8Ru)
 @evaluator_instructor_view_context_getter(Bcae8Hru)
+@evaluator_instructor_view_context_getter(Bcae8L3503)
+@evaluator_instructor_view_context_getter(Bcae8BeforeRu)
 def bcae8_get_instructor_view_context(
     evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:

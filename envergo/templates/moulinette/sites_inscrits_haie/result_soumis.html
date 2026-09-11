@@ -1,4 +1,6 @@
-{% if config.single_procedure and not aa_only %}
+{% load utils %}
+
+{% if config.single_procedure and not regulation.get_evaluator.aa_only_by_category|get_item:category %}
 
   <p>
     Le projet est soumis à la réglementation sur les sites inscrits, car la destruction des linéaires envisagée
@@ -48,7 +50,7 @@
   </p>
 {% endif %}
 
-{% if config.single_procedure and not aa_only %}
+{% if config.single_procedure and not regulation.get_evaluator.aa_only_by_category|get_item:category %}
 
 {% else %}
   {% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug %}
