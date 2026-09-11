@@ -751,7 +751,7 @@ LEVELS_OF_CONCERN = Choices(
 
 
 class HruSpeciesQuerySet(models.QuerySet):
-    """Species queryset for the HRU (droit constant) pipeline.
+    """Species queryset for the HRU (before Régime Unique) pipeline.
 
     Domain rule — a species is affected by a destruction when:
     - one of its habitats suits the hedge: matching hedge type, and no
@@ -763,8 +763,7 @@ class HruSpeciesQuerySet(models.QuerySet):
     Query plan — hedges sharing (type, missing properties) form one group,
     since they produce the same habitat filter. For each group, one small
     spatial query collects the observed taxrefs (fetch_observed_taxrefs);
-    the species query then filters on those plain values, keeping it free
-    of correlated subqueries.
+    the species query then filters on those plain values.
     """
 
     def for_hedges(self, hedges):
