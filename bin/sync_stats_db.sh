@@ -47,8 +47,9 @@ PG_OPTIONS=(
     --no-comments
 )
 
-# Same exclusions as review apps (bin/first_deploy.sh), plus the postgis
-# extension itself: it pre-exists on the target.
+# Exclusions from review apps (bin/first_deploy.sh), plus: geodata_line
+# (61M rows, unused by dashboards) and the postgis extension itself, which
+# pre-exists on the target.
 PG_EXCLUDE=(
     -N information_schema
     -N '^pg_*'
@@ -56,6 +57,7 @@ PG_EXCLUDE=(
     --exclude-table=spatial_ref_sys
     --exclude-table-data=geodata_map
     --exclude-table-data=geodata_zone
+    --exclude-table-data=geodata_line
     --exclude-table-data=evaluations_recipientstatus
     --exclude-table-data=geodata_catchmentareatile
 )
