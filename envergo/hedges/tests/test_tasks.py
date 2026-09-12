@@ -1,11 +1,15 @@
 """Tests for species habitat CSV import task."""
 
+from unittest.mock import Mock, patch
+
 import pytest
+from django.core.files.base import ContentFile
 
 from envergo.geodata.tests.factories import MapFactory
 from envergo.hedges.models import Species, SpeciesHabitatFile
 from envergo.hedges.tasks import (
     LEVEL_OF_CONCERN_DISPLAY_TO_DB,
+    extract_file,
     process_species_habitat_row,
 )
 from envergo.hedges.tests.factories import SpeciesFactory
@@ -44,6 +48,34 @@ def make_row(cd_ref, hedge_types=None, level_of_concern="", **extras):
             row[ht] = "TRUE"
     row.update(extras)
     return row
+
+
+def test_extract_file_fetches_remote_files_by_their_s3_url():
+    """Stored files are fetched via the real S3 URL, not the proxy URL."""
+    signed_url = "https://s3.fr-par.scw.cloud/bucket/media/species.csv?X-Amz-Sig=abc"
+    field_file = Mock(spec=["storage", "name"])
+    field_file.name = "species.csv"
+    field_file.storage = Mock(spec=["s3_url"])
+    field_file.storage.s3_url.return_value = signed_url
+
+    with patch("envergo.hedges.tasks.requests.get") as mock_get:
+        mock_get.return_value.content = "CD_REF;departement\n".encode("utf-8-sig")
+        content = extract_file(field_file)
+
+    assert mock_get.call_args.args == (signed_url,)
+    assert content.read() == "CD_REF;departement\n"
+
+
+def test_extract_file_reads_local_files_from_disk():
+    habitat_file = make_habitat_file()
+    saved_name = habitat_file.file.storage.save(
+        "species/test.csv", ContentFile("CD_REF;departement\n".encode("utf-8-sig"))
+    )
+    habitat_file.file = saved_name
+
+    content = extract_file(habitat_file.file)
+
+    assert content.read() == "CD_REF;departement\n"
 
 
 def test_import_csv_with_cd_ref():

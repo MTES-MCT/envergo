@@ -19,6 +19,7 @@ from envergo.hedges.models import (
     SpeciesHabitatFile,
 )
 from envergo.hedges.species_stubs import make_stub_scientific_name
+from envergo.utils.storages import download_source
 
 logger = logging.getLogger(__name__)
 
@@ -116,23 +117,22 @@ def do_species_habitat_import(habitat_file, import_log):
 
 
 def extract_file(field_file):
-    """Handle local and remote files."""
+    """Return the file's csv content, whatever the storage backend."""
 
-    if field_file.url.startswith("http"):
+    source = download_source(field_file)
+    if source.startswith("http"):
         r = requests.get(
-            field_file.url, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
+            source, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
         )
-        # utf-8-sig to remove the eventual bom
-        content = io.StringIO(r.content.decode("utf-8-sig"))
-        return content
-
-    elif os.path.exists(field_file.path):
-        with open(field_file.path, "rb") as f:
+        raw = r.content
+    elif os.path.exists(source):
+        with open(source, "rb") as f:
             raw = f.read()
-        return io.StringIO(raw.decode("utf-8-sig"))
-
     else:
         raise RuntimeError("File not found")
+
+    # utf-8-sig to remove the eventual bom
+    return io.StringIO(raw.decode("utf-8-sig"))
 
 
 def process_species_habitat_row(row, habitat_file, import_log=None):
