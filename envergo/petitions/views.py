@@ -823,7 +823,7 @@ class PetitionProjectDetail(DetailView):
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
 
-        moulinette_params["alternative"] = "true"
+        moulinette_params["project_reference"] = self.object.reference
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
@@ -1469,6 +1469,21 @@ class PetitionProjectInstructorAlternativeView(
     template_name = "haie/petitions/instructor_view_alternatives.html"
     form_class = SimulationForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project_reference"] = self.object.reference
+        return kwargs
+
+    def get_initial(self):
+        """Get moulinette url from request querystring"""
+        initial = super().get_initial()
+        moulinette_url = self.request.GET.get("moulinette_url")
+        # Check if url is same domaine as ENVERGO_HAIE_DOMAIN
+        if urlparse(moulinette_url).hostname == settings.ENVERGO_HAIE_DOMAIN:
+            initial["moulinette_url"] = moulinette_url
+
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -1489,7 +1504,7 @@ class PetitionProjectInstructorAlternativeView(
         # Add active simulation (aka project moulinette) form url
         parsed_moulinette_url = urlparse(self.object.moulinette_url)
         moulinette_params = parse_qs(parsed_moulinette_url.query)
-        moulinette_params["alternative"] = "true"
+        moulinette_params["project_reference"] = self.object.reference
         form_url = reverse("moulinette_form")
         edit_url = update_qs(form_url, moulinette_params)
         context["active_simulation_form_url"] = edit_url
@@ -1546,7 +1561,10 @@ class PetitionProjectInstructorAlternativeView(
         url = reverse(
             "petition_project_instructor_alternative_view", args=[self.object.reference]
         )
-        return url
+        # Explicitly clear the fragment: per RFC 7231 §7.1.2, browsers carry
+        # over the previous URL's fragment (e.g. #add-alternative) onto a
+        # redirect Location that doesn't specify one
+        return url + "#"
 
 
 class PetitionProjectInstructorAlternativeEdit(

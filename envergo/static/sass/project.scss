@@ -2089,6 +2089,11 @@ img.moulinette-incentive-img {
   mask-image: url("/static/icons/hourglass-2-fill.svg");
 }
 
+.fr-icon-file-copy-line::before,
+.fr-icon-file-copy-line::after {
+  mask-image: url("/static/icons/file-copy-line.svg");
+}
+
 .fr-icon-crisp::before {
   background-image: url("/static/icons/crisp.svg");
   background-size: contain;

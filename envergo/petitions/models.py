@@ -544,8 +544,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             return False
 
         return user.is_superuser or (
-            user.is_active
-            and user.access_haie
+            user.has_instruction_access
             and (
                 self.department_id in user.department_ids
                 or user.invitation_tokens.filter(petition_project_id=self.pk).exists()
@@ -574,6 +573,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 f"{settings.DEMARCHE_NUMERIQUE['DOSSIER_BASE_URL']}/dossiers/"
                 f"{self.demarche_numerique_dossier_number}/"
             )
+        return None
+
+    @property
+    def demarche_numerique_petitioner_messaging_url(self) -> str | None:
+        """
+        Returns the URL of the dossier messaging for the petitioner.
+        """
+        if self.demarche_numerique_petitioner_url:
+            return f"{self.demarche_numerique_petitioner_url}messagerie"
         return None
 
     def get_demarche_numerique_instructor_url(self, demarche_number) -> str | None:
@@ -714,7 +722,9 @@ class Simulation(models.Model):
     @property
     def form_url(self):
         """Return the moulinette form url with the simulation parameters."""
-        return self.custom_url("moulinette_form", alternative="true")
+        return self.custom_url(
+            "moulinette_form", project_reference=self.project.reference
+        )
 
     @property
     def result_url(self):
@@ -723,7 +733,9 @@ class Simulation(models.Model):
         if self.is_active:
             url = reverse("petition_project", args=[self.project.reference])
         else:
-            url = self.custom_url("moulinette_result_plantation", alternative="true")
+            url = self.custom_url(
+                "moulinette_result_plantation", project_reference=self.project.reference
+            )
         return url
 
 

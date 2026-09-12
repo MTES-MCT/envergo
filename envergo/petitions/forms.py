@@ -20,6 +20,7 @@ from envergo.petitions.models import (
     Simulation,
     StatusLog,
 )
+from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.urlmappings.utils import resolve_consultation_url
 from envergo.utils.fields import ProjectStageField
 from envergo.utils.urls import remove_from_qs
@@ -567,8 +568,9 @@ class SimulationForm(forms.ModelForm):
         model = Simulation
         fields = ["moulinette_url", "source", "comment"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, project_reference=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.project_reference = project_reference
         # Store the underlying moulinette form errors
         self.moulinette_errors = []
 
@@ -593,6 +595,29 @@ class SimulationForm(forms.ModelForm):
             raise ValidationError(
                 "Il semble que l'url ne corresponde pas à une page de simulation valide.",
                 code="invalid_moulinette",
+            )
+
+        url_project_reference = moulinette_url.querydict.get("project_reference")
+        if (
+            url_project_reference
+            and self.project_reference
+            and url_project_reference != self.project_reference
+        ):
+            other_project = (
+                PetitionProject.objects.filter(reference=url_project_reference)
+                .only("demarche_numerique_dossier_number")
+                .first()
+            )
+            dossier_number = (
+                format_ds_number(other_project.demarche_numerique_dossier_number)
+                if other_project and other_project.demarche_numerique_dossier_number
+                else url_project_reference
+            )
+            raise ValidationError(
+                "Cette url de simulation correspond à un autre dossier "
+                f"(Dossier n° {dossier_number}) que celui sur lequel vous ajoutez "
+                "une simulation alternative.",
+                code="mismatched_project_reference",
             )
 
         return moulinette_url.url
