@@ -41,6 +41,7 @@ from envergo.petitions.models import (
     InvitationToken,
     LatestMessagerieAccess,
 )
+from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
     DEMARCHE_NUMERIQUE_FAKE_DISABLED,
@@ -3054,7 +3055,10 @@ def test_simulation_form_rejects_mismatched_project_reference():
     )
 
     assert not form.is_valid()
-    assert other_project.reference in form.errors["moulinette_url"][0]
+    assert (
+        format_ds_number(other_project.demarche_numerique_dossier_number)
+        in form.errors["moulinette_url"][0]
+    )
 
 
 def test_simulation_form_accepts_url_without_project_reference():
@@ -3163,7 +3167,8 @@ def test_alternative_create_rejects_url_for_another_project(
     assert response.status_code == 200
     assert project.simulations.count() == 1
     assert (
-        other_project.reference in response.context["form"].errors["moulinette_url"][0]
+        format_ds_number(other_project.demarche_numerique_dossier_number)
+        in response.context["form"].errors["moulinette_url"][0]
     )
 
 
