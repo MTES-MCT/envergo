@@ -12,6 +12,7 @@ from django.utils.html import format_html, mark_safe
 from envergo.hedges.models import (
     HEDGE_PROPERTIES,
     HedgeData,
+    HedgeList,
     HedgeTypeFactory,
     Pacage,
     Species,
@@ -103,11 +104,15 @@ class HedgeDataAdmin(admin.ModelAdmin):
 
     def all_species(self, obj):
         """Display list of protected species related to this hedge set."""
-
+        species = set()
         if self.is_single_procedure(obj):
-            species = obj.hedges().get_all_species()
+            for hedge in obj.hedges():
+                for entry in HedgeList([hedge]).get_all_species():
+                    species.add(entry)
         else:
-            species = obj.hedges().get_all_species_hru()
+            for hedge in obj.hedges():
+                for entry in HedgeList([hedge]).get_all_species_hru():
+                    species.add(entry)
         content = render_to_string(
             "hedges/admin/_hedges_species.html",
             context={"species": species},
