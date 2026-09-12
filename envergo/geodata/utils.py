@@ -1,4 +1,5 @@
 import glob
+import io
 import json
 import logging
 import re
@@ -178,6 +179,15 @@ def extract_map(archive):
 
     else:
         raise ValueError(_("Unsupported file format"))
+
+
+def read_csv_file(field_file):
+    """Return a csv FieldFile's decoded content.
+
+    Decoding with utf-8-sig removes the eventual bom produced by spreadsheet software.
+    """
+    with field_file.open("rb") as f:
+        return io.StringIO(f.read().decode("utf-8-sig"))
 
 
 def count_features(map_file):
