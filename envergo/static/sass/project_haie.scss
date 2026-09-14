@@ -1497,3 +1497,8 @@ button.hide-expanded[aria-expanded="true"] {
     }
   }
 }
+
+td > div.pac-hedges-details {
+  display: flex;
+  justify-content: space-between;
+}
