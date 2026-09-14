@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from django.core.files.base import ContentFile
+from django.test import override_settings
 
 from envergo.geodata.tests.factories import MapFactory
 from envergo.hedges.models import Species, SpeciesHabitatFile
@@ -50,6 +51,7 @@ def make_row(cd_ref, hedge_types=None, level_of_concern="", **extras):
     return row
 
 
+@override_settings(SERVE_FILES_LOCALLY=False)
 def test_extract_file_fetches_remote_files_by_their_s3_url():
     """Stored files are fetched via the real S3 URL, not the proxy URL."""
     signed_url = "https://s3.fr-par.scw.cloud/bucket/media/species.csv?X-Amz-Sig=abc"

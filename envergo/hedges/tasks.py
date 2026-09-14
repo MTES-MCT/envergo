@@ -1,7 +1,6 @@
 import csv
 import io
 import logging
-import os
 
 import requests
 from django.conf import settings
@@ -103,16 +102,14 @@ def extract_file(field_file):
     """Return the file's csv content, whatever the storage backend."""
 
     source = download_source(field_file)
-    if source.startswith("http"):
+    if settings.SERVE_FILES_LOCALLY:
+        with open(source, "rb") as f:
+            raw = f.read()
+    else:
         r = requests.get(
             source, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
         )
         raw = r.content
-    elif os.path.exists(source):
-        with open(source, "rb") as f:
-            raw = f.read()
-    else:
-        raise RuntimeError("File not found")
 
     # utf-8-sig to remove the eventual bom
     return io.StringIO(raw.decode("utf-8-sig"))
