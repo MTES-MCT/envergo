@@ -4,10 +4,17 @@ Provides helpers to reduce boilerplate when constructing moulinette test data,
 creating regulation/criterion combos, and building hedge scenarios.
 """
 
+from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.core.cache import cache
 
+from envergo.geodata.tests.factories import MapFactory, ZoneFactory
 from envergo.hedges import density as density_module
-from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
+from envergo.hedges.tests.factories import (
+    HedgeDataFactory,
+    HedgeFactory,
+    SpeciesFactory,
+    SpeciesHabitatFactory,
+)
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -199,24 +206,16 @@ def make_moulinette_haie_data(
     return {"initial": data, "data": data}
 
 
-def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **extra):
-    """Build a MoulinetteHaie with pre-populated line-buffer density.
+def prefill_density_cache(hedge_data, density):
+    """Pre-fill the line-buffer density cache for a HedgeData instance.
 
-    Pre-fills the HedgeData density cache so evaluators that read
-    density_around_lines get the supplied value without hitting the
-    database or needing an active mock.
+    Evaluators that read density_around_lines then get the supplied value
+    without hitting the database or needing an active mock.
+
+    The cache key targets all hedges to remove: assumes single-category
+    test data, so evaluators request that exact subset.
     """
-    data = make_moulinette_haie_data(
-        hedges=hedges,
-        hedge_data=hedge_data,
-        **extra,
-    )
-    # The cache key targets all hedges to remove: assumes single-category
-    # test data, so evaluators request that exact subset.
-    hedge_data_instance = data["data"]["haies"]
-    cache_key = density_module.lines_cache_key(
-        hedge_data_instance.hedges_to_remove(), 400
-    )
+    cache_key = density_module.lines_cache_key(hedge_data.hedges_to_remove(), 400)
     cache.set(
         cache_key,
         {
@@ -226,6 +225,16 @@ def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **e
         },
         None,
     )
+
+
+def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **extra):
+    """Build a MoulinetteHaie with pre-populated line-buffer density."""
+    data = make_moulinette_haie_data(
+        hedges=hedges,
+        hedge_data=hedge_data,
+        **extra,
+    )
+    prefill_density_cache(data["data"]["haies"], density)
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors
@@ -411,6 +420,48 @@ def setup_ep_regime_unique(activation_map, evaluator_settings=None):
         ),
     ]
     return regulation, criteria
+
+
+# Default HedgeFactory places hedges near (lng=3.584, lat=43.687).
+# This polygon covers that area so RU zone queries find it within 400m.
+HEDGE_AREA_POLYGON = Polygon(
+    [
+        (3.580, 43.685),
+        (3.590, 43.685),
+        (3.590, 43.690),
+        (3.580, 43.690),
+        (3.580, 43.685),
+    ]
+)
+
+
+def setup_species_near_hedges(species_specs):
+    """Create species with SpeciesHabitats on a map whose zone overlaps the default hedge area.
+
+    Each spec is a dict: "level" sets the SpeciesHabitat level_of_concern,
+    remaining keys are Species field overrides (cd_ref is required).
+    Returns the created species list.
+    """
+    map_obj = MapFactory(map_type="species", zones=None)
+    cd_refs = [spec["cd_ref"] for spec in species_specs]
+    ZoneFactory(
+        map=map_obj,
+        geometry=MultiPolygon([HEDGE_AREA_POLYGON]),
+        species_taxrefs=cd_refs,
+    )
+    species_list = []
+    for spec in species_specs:
+        fields = dict(spec)
+        level = fields.pop("level")
+        sp = SpeciesFactory(**fields)
+        SpeciesHabitatFactory(
+            species=sp,
+            map=map_obj,
+            hedge_types=["degradee", "buissonnante", "arbustive", "mixte"],
+            level_of_concern=level,
+        )
+        species_list.append(sp)
+    return species_list
 
 
 def setup_regime_unique_haie(activation_map):

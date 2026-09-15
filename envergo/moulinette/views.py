@@ -709,6 +709,7 @@ class MoulinetteHaieResult(
             context["HedgeCategory"] = HedgeCategory
             context["CityHallSubmission"] = CityHallSubmission
             context["AaL3503Handling"] = AaL3503Handling
+            context["show_species_cortege"] = True
 
             main_department = hedge_data.main_department()
             if (
