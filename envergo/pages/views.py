@@ -151,7 +151,7 @@ class HomeHaieView(DepartmentSearchMixin, TemplateView):
             ConfigHaie.objects.valid_at(timezone.now().date())
             .filter(is_activated=True)
             .select_related("department")
-            .defer("department__geometry")
+            .only("department__department")
             .order_by("department__department")
         )
         context["activated_configs"] = configs

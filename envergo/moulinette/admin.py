@@ -600,12 +600,17 @@ class ConfigHaieAdmin(admin.ModelAdmin):
         return format_validity_range(obj.validity_range)
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return (
-            qs.select_related("department")
-            .order_by("department__department", "validity_range")
-            .defer("department__geometry")
-        )
+        qs = super().get_queryset(request).select_related("department")
+        if request.resolver_match.view_name.endswith("_changelist"):
+            # In list view, avoid select fields with huge content (HTML, Json...)
+            # to lighten memory footprint
+            qs = qs.only(
+                "department__department",
+                "is_activated",
+                "single_procedure",
+                "validity_range",
+            ).order_by("department__department", "validity_range")
+        return qs
 
 
 class ActionToTakeForm(forms.ModelForm):
