@@ -1344,6 +1344,12 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
+    prohibition_range = DateRangeField(
+        "Période d’interdiction de destruction de haies",
+        null=True,
+        blank=True,
+    )
+
     guh_structure = models.CharField(
         "Structure GUH (DDT ou DDTM)",
         default="Direction Départementale des Territoires (DDT)",
@@ -1625,6 +1631,21 @@ class ConfigHaie(ConfigBase):
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
+            CheckConstraint(
+                check=Q(
+                    (
+                        Q(prohibition_range__startswith__isnull=False)
+                        & Q(prohibition_range__endswith__isnull=False)
+                    )
+                    | (
+                        Q(prohibition_range__startswith__isnull=True)
+                        & Q(prohibition_range__endswith__isnull=True)
+                    )
+                ),
+                name="confighaie_prohibition_range_both_or_no_value",
+                violation_error_message="Période d’interdiction : précisez à la fois une date "
+                "de début et une date de fin, ou aucune date.",
+            ),
         ]
 
     @property
@@ -1694,6 +1715,19 @@ class ConfigHaie(ConfigBase):
     @property
     def contact_info(self):
         return self.build_contact_info(self)
+
+    def is_date_in_prohibition_range(self, tested_date: date):
+        if self.prohibition_range is None:
+            return None
+        tested_year = tested_date.year
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper
+        normalized_range = DateRange(
+            date(tested_year, start.month, start.day),
+            date(tested_year, end.month, end.day),
+            "[]",  # boundaries included
+        )
+        return tested_date in normalized_range
 
 
 TEMPLATE_KEYS = [

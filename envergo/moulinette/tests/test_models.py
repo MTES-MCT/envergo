@@ -296,6 +296,65 @@ def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
     assert results["Résultats des critères"] == expected_results_criteria
 
 
+class TestConfigHaieProhibitionDates:
+    @pytest.mark.skip
+    def test_confighaie_has_two_dates_or_no_date(self):
+        assert 0 == 1
+
+    @pytest.mark.skip
+    def test_start_date_before_end_date(self):
+        assert 0 == 1
+
+    @pytest.mark.parametrize(
+        "stored_range,tested_date,expected_result",
+        (
+            pytest.param(
+                DateRange(date(2026, 3, 1), date(2026, 6, 1)),
+                date(2026, 4, 1),
+                True,
+                id="tested_date_in_same_year",
+            ),
+            pytest.param(
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
+                date(2026, 4, 1),
+                True,
+                id="tested_date_in_another_year",
+            ),
+            pytest.param(
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
+                date(2026, 3, 1),
+                True,
+                id="tested_date_equals_start_date",
+            ),
+            pytest.param(
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
+                date(2026, 6, 1),
+                True,
+                id="tested_date_equals_end_date",
+            ),
+            pytest.param(
+                DateRange(date(2026, 3, 1), date(2026, 6, 1)),
+                date(2026, 9, 1),
+                False,
+                id="tested_date_out_of_prohib_range",
+            ),
+            pytest.param(
+                None,
+                date(2026, 4, 1),
+                None,
+                id="null_stored_dates_yield_none",
+            ),
+        ),
+    )
+    def test_confighaie_check_if_date_is_prohibited(
+        self, stored_range, tested_date, expected_result
+    ):
+        confhaie: ConfigHaie = DCConfigHaieFactory(
+            prohibition_range=stored_range,
+        )
+        assert confhaie.is_date_in_prohibition_range(tested_date) == expected_result
+
+
 def test_regulation_with_map_factory_can_create_a_location_centric_map(
     france_map,  # noqa
 ):
