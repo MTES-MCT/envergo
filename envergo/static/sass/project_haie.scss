@@ -1280,9 +1280,49 @@ button.hide-expanded[aria-expanded="true"] {
 }
 
 #alternative-simulations-table {
+  /* Button are displayed as links */
+  .fr-btn.btn--link {
+    min-height: 0;
+
+    --underline-img: linear-gradient(0deg, currentcolor, currentcolor);
+
+    background-image: var(--underline-img), var(--underline-img);
+    background-position:
+      var(--underline-x) 100%,
+      var(--underline-x) calc(100% - var(--underline-thickness));
+    background-repeat: no-repeat, no-repeat;
+    background-size:
+      var(--underline-hover-width) calc(var(--underline-thickness) * 2),
+      var(--underline-idle-width) var(--underline-thickness);
+    transition: background-size 0s;
+
+    &:hover {
+      --underline-hover-width: var(--underline-max-width);
+    }
+  }
+
   form {
     display: inline;
     margin: 0;
+  }
+
+  .fr-table__header {
+    align-items: start;
+  }
+
+  .action.fr-btn[target="_blank"]::after {
+    display: none;
+  }
+
+  .author-col {
+    width: 10%;
+  }
+
+  .created_by {
+    text-overflow: ellipsis;
+    position: absolute;
+    background-color: white;
+    max-width: 10%;
   }
 
   .status-col {
@@ -1292,24 +1332,30 @@ button.hide-expanded[aria-expanded="true"] {
   }
 
   .comment-col {
-    white-space: normal;
-    overflow-wrap: break-word;
     hyphens: auto;
-  }
+    overflow-wrap: break-word;
+    line-height: 1.2rem;
 
-  .actions-col {
-    .action + .action {
-      margin-left: 0.25rem;
+    .more.fr-collapse--expanded {
+      overflow-y: clip;
     }
 
-    a {
-      text-decoration: none;
-      background-image: none;
+    .fr-btn {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      min-height: 2rem;
+      padding: 0.25rem 0.75rem;
+    }
 
-      &::after {
+    @supports (selector(:has(*))) {
+      &:has(.more.fr-collapse--expanded) .ellipsis {
         display: none;
       }
     }
+  }
+
+  .actions-col {
+    white-space: nowrap;
 
     a:not(:disabled),
     button:not(:disabled) {
@@ -1317,7 +1363,13 @@ button.hide-expanded[aria-expanded="true"] {
     }
 
     button {
+      font-weight: normal;
+      box-shadow: none;
       padding: 0;
+
+      &:hover {
+        background-color: transparent;
+      }
     }
   }
 }
