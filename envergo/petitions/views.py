@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.postgres.expressions import ArraySubquery
 from django.contrib.sites.models import Site
-from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.core.exceptions import SuspiciousOperation
 from django.db import transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.db.models.functions import Coalesce
@@ -1748,8 +1748,6 @@ class PetitionProjectInstructorAlternativeResultsView(
 
     def get_simulation_object(self):
         """Return the targeted simulation (with its project) or raise 404."""
-        if self.simulation_object:
-            return self.simulation_object
         self.object = self.get_object()
         simulation_pk = self.kwargs.get("simulation_id")
         simulation_qs = Simulation.objects.filter(project=self.object).select_related(
@@ -1779,24 +1777,15 @@ class PetitionProjectInstructorAlternativeResultsView(
         return context
 
     def handle_no_permission(self):
-        """Redirects to simulation form if user is not loggued in"""
-        if self.raise_exception or self.request.user.is_authenticated:
-            raise PermissionDenied(self.get_permission_denied_message())
+        """Redirects to simulation form."""
         simulation_form_url = self.get_simulation_object().form_url
         return HttpResponseRedirect(simulation_form_url)
 
-    def get(self, request, *args, **kwargs):
-        """Render response, unless there is no permission.
-
-        If user has no view or change permission, redirect to simulation form.
-        """
+    def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.has_view_permission(request, self.object):
-            simulation_form_url = self.get_simulation_object().form_url
-            return HttpResponseRedirect(simulation_form_url)
-
-        res = super().get(request, *args, **kwargs)
-        return res
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
 
 
 class PetitionProjectInstructorProcedureView(
