@@ -67,7 +67,6 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
     PetitionProjectForm,
-    PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     RequestAdditionalInfoForm,
@@ -1170,14 +1169,6 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         )
         context["config"] = context["moulinette"].config
         return context
-
-    def get_form_class(self):
-        """Return the form class to use in this view."""
-        regulation_slug = self.kwargs.get("regulation")
-        if regulation_slug == "ep":
-            return PetitionProjectInstructorEspecesProtegeesForm
-        else:
-            return self.form_class
 
     def get_success_url(self):
         return reverse(
