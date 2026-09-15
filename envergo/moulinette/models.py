@@ -1643,7 +1643,8 @@ class ConfigHaie(ConfigBase):
                     )
                 ),
                 name="confighaie_prohibition_range_both_or_no_value",
-                violation_error_message="Précisez à la fois une date de début et une date de fin, ou aucune date.",
+                violation_error_message="Période d’interdiction : précisez à la fois une date "
+                "de début et une date de fin, ou aucune date.",
             ),
         ]
 

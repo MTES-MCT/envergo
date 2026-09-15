@@ -447,6 +447,10 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         label="Dates d’interdiction de destruction de haies",
         required=False,
         widget=AdminDateRangeWidget,
+        help_text=(
+            "Seuls le mois et le jour saisis dans ces champs seront "
+            "pris en compte pour les dossiers."
+        ),
     )
 
     class Meta:
