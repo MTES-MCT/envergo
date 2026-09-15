@@ -689,7 +689,7 @@ def test_confighaie_settings_view_map_display(
     CriterionFactory(
         title="Code rural L126-3",
         regulation=regulation_code_rural,
-        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRural",
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRuralHru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
