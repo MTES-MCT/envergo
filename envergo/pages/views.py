@@ -130,7 +130,7 @@ class DepartmentSearchMixin:
                 "id": d.id,
                 "code": d.department,
                 "label": str(d),
-                "contacts_info": self.build_contact_info(d),
+                "contacts_info": ConfigHaie.build_contact_info(d),
                 "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
                 "settings_form_url": get_department_settings_form_url(d),
