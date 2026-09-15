@@ -95,6 +95,34 @@ Exemple de calcul :
 est supérieure à 1000 m² ALORS le résultat du critère est SOUMIS.`
 
 
+### Catalogue
+
+Le catalogue (`MoulinetteCatalog`) est le dictionnaire dans lequel sont stockées
+toutes les données utilisées par les évaluateurs : réponses aux formulaires,
+données géographiques, valeurs calculées, etc.
+
+Il existe deux niveaux de catalogue, avec des règles de visibilité différentes :
+
+ - le catalogue **partagé** (`moulinette.catalog`) : commun à toute la
+   simulation, accessible en lecture par tous les évaluateurs. On y trouve
+   notamment les réponses aux formulaires (surfaces, coordonnées, réponses
+   du formulaire principal), ainsi que les données géographiques communes
+   (haies, zones, etc.) ;
+ - le catalogue **propre à l'évaluateur** (`evaluator.catalog_data`) : les
+   données que CET évaluateur calcule lui-même dans sa méthode
+   `get_catalog_data()` (et `get_post_evaluate_data()`). Ces données ne sont
+   jamais recopiées dans le catalogue partagé — elles restent privées à
+   l'instance de l'évaluateur qui les a produites.
+
+Concrètement, chaque évaluateur expose un attribut `self.catalog`, qui est un
+`ChainMap(self.catalog_data, moulinette.catalog)` :
+
+ - en **lecture**, `self.catalog.get(...)` cherche d'abord dans les données
+   propres de l'évaluateur, puis se rabat sur le catalogue partagé ;
+ - en **écriture**, `get_catalog_data()` n'alimente jamais que
+   `self.catalog_data` (les données privées) — jamais le catalogue partagé.
+
+
 ### Périmètre
 
 Un périmètre est une entité administrative distincte délimitée par une zone

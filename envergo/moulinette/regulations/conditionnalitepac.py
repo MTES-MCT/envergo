@@ -462,9 +462,10 @@ class Bcae8Ru(PlantationConditionMixin, HaieCriterionEvaluator):
         return 0
 
 
-class Bcae8Hru(Bcae8Ru):
+class Bcae8Hru(HaieCriterionEvaluator):
+    choice_label = "Conditionnalité PAC > BCAE8"
+    base_slug = "bcae8"
     category = HedgeCategory.hru
-    plantation_conditions = []
 
     def evaluate(self):
         self._result_code, self._result = "non_concerne", "non_concerne"
