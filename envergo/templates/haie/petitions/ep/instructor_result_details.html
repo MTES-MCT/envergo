@@ -61,7 +61,17 @@
       Cette liste est établie à dire d'expert à l'échelle départementale selon les caractéristiques des haies à détruire. Elle a été communiquée au demandeur.
     </p>
 
-    {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species_public %}
+    <section class="fr-accordion fr-mb-3w">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="public-species-list">Voir la liste des espèces</button>
+      </h3>
+      <div id="public-species-list" class="fr-collapse fr-px-0 fr-mx-0">
+        {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species_public %}
+      </div>
+    </section>
 
   {% else %}
     {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
