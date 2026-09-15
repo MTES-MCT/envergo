@@ -46,7 +46,7 @@ class HedgePropertiesBaseForm(forms.Form):
         required=False,
     )
     proximite_mare = forms.BooleanField(
-        label="Mare à moins de 200 m",
+        label="Mare ou point d'eau à moins de 500 m",
         required=False,
     )
     bord_batiment = forms.BooleanField(
@@ -106,7 +106,10 @@ class HedgeToRemovePropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
         get_display_value=extract_display_function(MODE_DESTRUCTION_CHOICES),
     )
     vieil_arbre = forms.BooleanField(
-        label="Contient un ou plusieurs vieux arbres, fissurés ou avec cavités",
+        label=mark_safe(
+            "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+            '<span class="fr-hint-text">Arbres à partir de 20 cm de diamètre</span>'
+        ),
         required=False,
     )
 
