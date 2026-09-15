@@ -1708,6 +1708,16 @@ class ConfigHaie(ConfigBase):
     def contact_info(self):
         return self.build_contact_info(self)
 
+    def is_date_in_prohibition_range(self, tested_date: date):
+        if self.prohibition_start is None or self.prohibition_end is None:
+            return None
+        tested_year = tested_date.year
+        return (
+            date(tested_year, self.prohibition_start.month, self.prohibition_start.day)
+            <= tested_date
+            <= date(tested_year, self.prohibition_end.month, self.prohibition_end.day)
+        )
+
 
 TEMPLATE_KEYS = [
     "autorisation_urba_pa",
