@@ -808,6 +808,9 @@ class EspecesProtegeesRegimeUnique(
             catalog["protected_species_public"] = [
                 s for s in species_list if s.local_level_of_concern != "majeur"
             ]
+            catalog["protected_species_enjeu_majeur"] = [
+                s for s in species_list if s.local_level_of_concern == "majeur"
+            ]
             catalog["has_sensitive_species"] = any(
                 s.local_level_of_concern == "majeur" for s in species_list
             )
