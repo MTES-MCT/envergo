@@ -306,45 +306,39 @@ class TestConfigHaieProhibitionDates:
         assert 0 == 1
 
     @pytest.mark.parametrize(
-        "stored_start,stored_end,tested_date,expected_result",
+        "stored_range,tested_date,expected_result",
         (
             pytest.param(
-                date(2026, 3, 1),
-                date(2026, 6, 1),
+                DateRange(date(2026, 3, 1), date(2026, 6, 1)),
                 date(2026, 4, 1),
                 True,
                 id="tested_date_in_same_year",
             ),
             pytest.param(
-                date(2025, 3, 1),
-                date(2025, 6, 1),
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
                 date(2026, 4, 1),
                 True,
                 id="tested_date_in_another_year",
             ),
             pytest.param(
-                date(2025, 3, 1),
-                date(2025, 6, 1),
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
                 date(2026, 3, 1),
                 True,
                 id="tested_date_equals_start_date",
             ),
             pytest.param(
-                date(2025, 3, 1),
-                date(2025, 6, 1),
+                DateRange(date(2025, 3, 1), date(2025, 6, 1)),
                 date(2026, 6, 1),
                 True,
                 id="tested_date_equals_end_date",
             ),
             pytest.param(
-                date(2026, 3, 1),
-                date(2026, 6, 1),
+                DateRange(date(2026, 3, 1), date(2026, 6, 1)),
                 date(2026, 9, 1),
                 False,
                 id="tested_date_out_of_prohib_range",
             ),
             pytest.param(
-                None,
                 None,
                 date(2026, 4, 1),
                 None,
@@ -353,10 +347,10 @@ class TestConfigHaieProhibitionDates:
         ),
     )
     def test_confighaie_check_if_date_is_prohibited(
-        self, stored_start, stored_end, tested_date, expected_result
+        self, stored_range, tested_date, expected_result
     ):
         confhaie: ConfigHaie = DCConfigHaieFactory(
-            prohibition_start=stored_start, prohibition_end=stored_end
+            prohibition_range=stored_range,
         )
         assert confhaie.is_date_in_prohibition_range(tested_date) == expected_result
 

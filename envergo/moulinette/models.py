@@ -1344,17 +1344,10 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
-    prohibition_start = models.DateField(
-        "Début de la période d’interdiction de destruction de haies",
+    prohibition_range = DateRangeField(
+        "Période d’interdiction de destruction de haies",
         null=True,
         blank=True,
-        help_text="Seuls le jour et le mois sont pris en compte dans ce champ.",
-    )
-    prohibition_end = models.DateField(
-        "Fin de la période d’interdiction de destruction de haies",
-        null=True,
-        blank=True,
-        help_text="Seuls le jour et le mois sont pris en compte dans ce champ.",
     )
 
     guh_structure = models.CharField(
@@ -1638,6 +1631,20 @@ class ConfigHaie(ConfigBase):
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
+            CheckConstraint(
+                check=Q(
+                    (
+                        Q(prohibition_range__startswith__isnull=False)
+                        & Q(prohibition_range__endswith__isnull=False)
+                    )
+                    | (
+                        Q(prohibition_range__startswith__isnull=True)
+                        & Q(prohibition_range__endswith__isnull=True)
+                    )
+                ),
+                name="confighaie_prohibition_range_both_or_no_value",
+                violation_error_message="Précisez à la fois une date de début et une date de fin, ou aucune date.",
+            ),
         ]
 
     @property
@@ -1709,14 +1716,17 @@ class ConfigHaie(ConfigBase):
         return self.build_contact_info(self)
 
     def is_date_in_prohibition_range(self, tested_date: date):
-        if self.prohibition_start is None or self.prohibition_end is None:
+        if self.prohibition_range is None:
             return None
         tested_year = tested_date.year
-        return (
-            date(tested_year, self.prohibition_start.month, self.prohibition_start.day)
-            <= tested_date
-            <= date(tested_year, self.prohibition_end.month, self.prohibition_end.day)
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper
+        normalized_range = DateRange(
+            date(tested_year, start.month, start.day),
+            date(tested_year, end.month, end.day),
+            "[]",  # boundaries included
         )
+        return tested_date in normalized_range
 
 
 TEMPLATE_KEYS = [
