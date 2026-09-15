@@ -9,11 +9,16 @@
 set -euo pipefail
 
 # Required environment:
+# - SYNC_STATS_ENABLED: must be "true" to run; absent on staging/review apps.
 # - SYNC_SOURCE_URL: production database, as a READ-ONLY user (dump source).
 # - SYNC_TARGET_URL: stats database, as its owner (restore/anonymize target).
 #   This user does not exist on the production cluster.
 # - SYNC_TARGET_DB_NAME: name of the stats database, to verify we restore
 #   into the intended place.
+if [ "${SYNC_STATS_ENABLED:-}" != "true" ]; then
+    echo "SYNC_STATS_ENABLED is not 'true', skipping stats sync."
+    exit 0
+fi
 : "${SYNC_SOURCE_URL:?SYNC_SOURCE_URL is not set}"
 : "${SYNC_TARGET_URL:?SYNC_TARGET_URL is not set}"
 : "${SYNC_TARGET_DB_NAME:?SYNC_TARGET_DB_NAME is not set}"
@@ -47,8 +52,9 @@ PG_OPTIONS=(
     --no-comments
 )
 
-# Same exclusions as review apps (bin/first_deploy.sh), plus the postgis
-# extension itself: it pre-exists on the target.
+# Exclusions from review apps (bin/first_deploy.sh), plus: geodata_line
+# (61M rows, unused by dashboards) and the postgis extension itself, which
+# pre-exists on the target.
 PG_EXCLUDE=(
     -N information_schema
     -N '^pg_*'
@@ -56,6 +62,7 @@ PG_EXCLUDE=(
     --exclude-table=spatial_ref_sys
     --exclude-table-data=geodata_map
     --exclude-table-data=geodata_zone
+    --exclude-table-data=geodata_line
     --exclude-table-data=evaluations_recipientstatus
     --exclude-table-data=geodata_catchmentareatile
 )
