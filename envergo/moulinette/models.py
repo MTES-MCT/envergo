@@ -2891,7 +2891,7 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         You can use this method to add some context specific to your site : Haie or Amenagement
         """
         context = super().get_extra_context(request)
-        context["is_alternative"] = bool(request.GET.get("alternative", False))
+        context["is_alternative"] = bool(request.GET.get("project_reference", False))
 
         if self.config:
             context["hedge_maintenance_html"] = self.config.hedge_maintenance_html

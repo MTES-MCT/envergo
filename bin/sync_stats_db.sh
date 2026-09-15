@@ -9,11 +9,16 @@
 set -euo pipefail
 
 # Required environment:
+# - SYNC_STATS_ENABLED: must be "true" to run; absent on staging/review apps.
 # - SYNC_SOURCE_URL: production database, as a READ-ONLY user (dump source).
 # - SYNC_TARGET_URL: stats database, as its owner (restore/anonymize target).
 #   This user does not exist on the production cluster.
 # - SYNC_TARGET_DB_NAME: name of the stats database, to verify we restore
 #   into the intended place.
+if [ "${SYNC_STATS_ENABLED:-}" != "true" ]; then
+    echo "SYNC_STATS_ENABLED is not 'true', skipping stats sync."
+    exit 0
+fi
 : "${SYNC_SOURCE_URL:?SYNC_SOURCE_URL is not set}"
 : "${SYNC_TARGET_URL:?SYNC_TARGET_URL is not set}"
 : "${SYNC_TARGET_DB_NAME:?SYNC_TARGET_DB_NAME is not set}"
