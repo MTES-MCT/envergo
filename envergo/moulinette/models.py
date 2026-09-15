@@ -37,11 +37,13 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.html import format_html
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.phonenumber import PhoneNumber
 
 from envergo.evaluations.models import (
     RESULT_CASCADE,
@@ -1342,8 +1344,25 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
-    contacts_info = models.TextField(
-        "Champ html des informations de contact", blank=True
+    guh_structure = models.CharField(
+        "Structure GUH (DDT ou DDTM)",
+        default="Direction Départementale des Territoires (DDT)",
+    )
+    guh_service_name = models.CharField(
+        "Nom du service GUH",
+        blank=True,
+    )
+    guh_email = models.EmailField(
+        "Email GUH",
+        blank=True,
+    )
+    guh_phone = PhoneNumberField(
+        "Téléphone GUH",
+        blank=True,
+    )
+    guh_address = models.TextField(
+        "Adresse GUH",
+        blank=True,
     )
 
     contacts_and_links = models.TextField(
@@ -1626,6 +1645,55 @@ class ConfigHaie(ConfigBase):
 
         coeffs = self.single_procedure_settings.get("coeff_compensation")
         return coeffs
+
+    @staticmethod
+    def build_contact_info(data_object):
+        """
+        Used to build an <address> tag for ConfigHaie of for some other objects
+        wearing data from ConfigHaie objects.
+        """
+        if not data_object.guh_email and not data_object.guh_phone:
+            structure = (
+                data_object.guh_structure
+                or "Direction Départementale des Territoires (DDT)"
+            )
+
+            return format_html(
+                "<address>Nous ne disposons pas d’information sur le point de contact "
+                "privilégié au sein de la {}</address>",
+                structure,
+            )
+
+        address_rows = ["<strong>Guichet unique de la haie</strong>"]
+        if data_object.guh_service_name:
+            address_rows.append(
+                format_html("<strong>{}</strong>", data_object.guh_service_name)
+            )
+        if data_object.guh_email:
+            address_rows.append(
+                format_html(
+                    'Email : <a href="mailto:{}">{}</a>',
+                    data_object.guh_email,
+                    data_object.guh_email,
+                )
+            )
+        if data_object.guh_phone:
+            phone = data_object.guh_phone
+            if isinstance(phone, str):
+                phone = PhoneNumber.from_string(phone)
+            address_rows.append(
+                format_html(
+                    'Téléphone : <a href="tel:{}">{}</a>',
+                    str(phone),
+                    phone.as_national,
+                )
+            )
+
+        return f"<address>{'<br>'.join(address_rows)}</address>"
+
+    @property
+    def contact_info(self):
+        return self.build_contact_info(self)
 
 
 TEMPLATE_KEYS = [
