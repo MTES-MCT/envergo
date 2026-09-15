@@ -956,7 +956,7 @@ class RuSpeciesQuerySet(models.QuerySet):
                 ),
             )
             .distinct()
-            .order_by("-level_order", "common_name")
+            .order_by("group", "common_name")
         )
 
     def prefetch_zone_data_by_group(self, hedges):
