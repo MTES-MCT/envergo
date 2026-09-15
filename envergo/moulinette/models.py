@@ -43,6 +43,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.phonenumber import PhoneNumber
 
 from envergo.evaluations.models import (
     RESULT_CASCADE,
@@ -1645,11 +1646,16 @@ class ConfigHaie(ConfigBase):
         coeffs = self.single_procedure_settings.get("coeff_compensation")
         return coeffs
 
-    @property
-    def contact_info(self):
-        if not self.guh_email and not self.guh_phone:
+    @staticmethod
+    def build_contact_info(data_object):
+        """
+        Used to build an <address> tag for ConfigHaie of for some other objects
+        wearing data from ConfigHaie objects.
+        """
+        if not data_object.guh_email and not data_object.guh_phone:
             structure = (
-                self.guh_structure or "Direction Départementale des Territoires (DDT)"
+                data_object.guh_structure
+                or "Direction Départementale des Territoires (DDT)"
             )
 
             return format_html(
@@ -1659,28 +1665,35 @@ class ConfigHaie(ConfigBase):
             )
 
         address_rows = ["<strong>Guichet unique de la haie</strong>"]
-        if self.guh_service_name:
+        if data_object.guh_service_name:
             address_rows.append(
-                format_html("<strong>{}</strong>", self.guh_service_name)
+                format_html("<strong>{}</strong>", data_object.guh_service_name)
             )
-        if self.guh_email:
+        if data_object.guh_email:
             address_rows.append(
                 format_html(
                     'Email : <a href="mailto:{}">{}</a>',
-                    self.guh_email,
-                    self.guh_email,
+                    data_object.guh_email,
+                    data_object.guh_email,
                 )
             )
-        if self.guh_phone:
+        if data_object.guh_phone:
+            phone = data_object.guh_phone
+            if isinstance(phone, str):
+                phone = PhoneNumber.from_string(phone)
             address_rows.append(
                 format_html(
                     'Téléphone : <a href="tel:{}">{}</a>',
-                    str(self.guh_phone),
-                    self.guh_phone.as_national,
+                    str(phone),
+                    phone.as_national,
                 )
             )
 
         return f"<address>{'<br>'.join(address_rows)}</address>"
+
+    @property
+    def contact_info(self):
+        return self.build_contact_info(self)
 
 
 TEMPLATE_KEYS = [

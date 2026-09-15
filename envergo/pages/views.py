@@ -13,11 +13,10 @@ from django.template import TemplateDoesNotExist, loader
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.utils.html import format_html, mark_safe
+from django.utils.html import mark_safe
 from django.views.decorators.csrf import requires_csrf_token
 from django.views.defaults import ERROR_500_TEMPLATE_NAME, ERROR_PAGE_TEMPLATE
 from django.views.generic import FormView, ListView, TemplateView
-from phonenumber_field.phonenumber import PhoneNumber
 
 from config.settings.base import GEOMETRICIAN_WEBINAR_FORM_URL
 from envergo.geodata.models import Department
@@ -38,44 +37,6 @@ class DepartmentSearchMixin:
     """Mixin to manage department and config search form in view"""
 
     queryset = Department.objects.defer("geometry").all()
-
-    def build_contact_info(self, data_object):
-        if not data_object.guh_email and not data_object.guh_phone:
-            structure = (
-                data_object.guh_structure
-                or "Direction Départementale des Territoires (DDT)"
-            )
-
-            return format_html(
-                "<address>Nous ne disposons pas d’information sur le point de contact "
-                "privilégié au sein de la {}</address>",
-                structure,
-            )
-
-        address_rows = ["<strong>Guichet unique de la haie</strong>"]
-        if data_object.guh_service_name:
-            address_rows.append(
-                format_html("<strong>{}</strong>", data_object.guh_service_name)
-            )
-        if data_object.guh_email:
-            address_rows.append(
-                format_html(
-                    'Email : <a href="mailto:{}">{}</a>',
-                    data_object.guh_email,
-                    data_object.guh_email,
-                )
-            )
-        if data_object.guh_phone:
-            number = PhoneNumber.from_string(data_object.guh_phone)
-            address_rows.append(
-                format_html(
-                    'Téléphone : <a href="tel:{}">{}</a>',
-                    str(number),
-                    number.as_national,
-                )
-            )
-
-        return f"<address>{'<br>'.join(address_rows)}</address>"
 
     def get_queryset_with_contacts(self):
         """Return all departments annotated with contacts_info and is_config_valid.
@@ -130,7 +91,7 @@ class DepartmentSearchMixin:
                 "id": d.id,
                 "code": d.department,
                 "label": str(d),
-                "contacts_info": self.build_contact_info(d),
+                "contacts_info": ConfigHaie.build_contact_info(d),
                 "contacts_and_links": d.contacts_and_links,
                 "is_config_valid": bool(d.is_config_valid),
                 "settings_form_url": get_department_settings_form_url(d),
