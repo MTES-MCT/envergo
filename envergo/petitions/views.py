@@ -788,6 +788,7 @@ class PetitionProjectDetail(DetailView):
         context.update(moulinette.catalog)
         context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
+        context["show_species_cortege"] = True
 
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
