@@ -862,7 +862,7 @@ def test_result_p_view_with_hedges_to_plant_intersecting_perimeters(
         title="Sites Patrimoniaux Remarquables",
         regulation=sites_proteges_regulation,
         perimeter=spr_perimeter,
-        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaie",
+        evaluator="envergo.moulinette.regulations.sites_proteges_haie.SitesPatrimoniauxRemarquablesHaieHru",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
     )
