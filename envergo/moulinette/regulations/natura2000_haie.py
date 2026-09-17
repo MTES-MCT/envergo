@@ -10,6 +10,7 @@ from pyproj import Geod
 
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
@@ -26,13 +27,20 @@ class Natura2000HaieRegulation(HaieRegulationEvaluator):
     }
 
 
-class Natura2000HaieSettings(forms.Form):
+class Natura2000HaieRuSettings(forms.Form):
+    """Settings for the « régime unique » category."""
+
     result = forms.ChoiceField(
         label="Resultat attendu de l'évaluateur",
         help_text="Indique si l’arrachage de haies est soumis à évaluation des incidences Natura 2000 pour ce critère.",
         required=True,
         choices=RESULTS,
     )
+
+
+class Natura2000HaieSettings(Natura2000HaieRuSettings):
+    """Settings for the categories that may contain tree alignments."""
+
     concerne_aa = forms.ChoiceField(
         label="Concerne les alignements d’arbres",
         help_text="Indique si ce critère concerne les alignements d’arbres.",
@@ -41,9 +49,10 @@ class Natura2000HaieSettings(forms.Form):
     )
 
 
-class Natura2000Haie(HaieCriterionEvaluator):
+class Natura2000HaieHru(HaieCriterionEvaluator):
     choice_label = "Natura 2000 > Haie"
     base_slug = "natura2000_haie"
+    category = HedgeCategory.hru
     settings_form_class = Natura2000HaieSettings
 
     RESULT_MATRIX = {
@@ -71,7 +80,7 @@ class Natura2000Haie(HaieCriterionEvaluator):
         }
 
     def get_catalog_data(self):
-        """Let's compute the length of hedges crossing the N2000 perimeter."""
+        """Let's compute the length of hedges crossing the criterion activation map."""
 
         hedges = self.hedges.to_remove()
         hors_alignement = [h for h in hedges if h.hedge_type != "alignement"]
@@ -81,7 +90,8 @@ class Natura2000Haie(HaieCriterionEvaluator):
             [h.geos_geometry for h in hedges], srid=EPSG_WGS84
         )
 
-        # Find all the Zones for the current Perimeter and that intersects any of the hedges
+        # Find all the Zones of the criterion activation map that intersect any
+        # of the hedges.
         qs = (
             self.criterion.activation_map.zones.all()
             .filter(geometry__intersects=hedges_geom)
@@ -132,3 +142,38 @@ class Natura2000Haie(HaieCriterionEvaluator):
             self.catalog["l_n2000_aa"] > 0.0,
             self.settings.get("concerne_aa") == "oui",
         )
+
+
+class Natura2000HaieL3503(Natura2000HaieHru):
+    """Roadside tree alignments, evaluated exactly like the hors régime unique ones."""
+
+    category = HedgeCategory.l350_3
+
+
+class Natura2000HaieRu(Natura2000HaieHru):
+    """Hedges covered by the régime unique.
+
+    Those are never tree alignments, so `concerne_aa` plays no part here: the
+    result only depends on whether some hedge to remove is inside the criterion
+    activation map.
+    """
+
+    category = HedgeCategory.ru
+    settings_form_class = Natura2000HaieRuSettings
+
+    RESULT_MATRIX = {
+        "non_concerne": RESULTS.non_concerne,
+        "non_soumis": RESULTS.non_soumis,
+        "soumis": RESULTS.soumis,
+    }
+
+    @property
+    def CODE_MATRIX(self):
+        return {
+            # has_hedges_to_remove_in_activation_map: result_code
+            True: self.settings.get("result", "non_soumis"),
+            False: "non_concerne",
+        }
+
+    def get_result_data(self):
+        return self.catalog["l_n2000_hors_aa"] > 0.0
