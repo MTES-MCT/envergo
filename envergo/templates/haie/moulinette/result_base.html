@@ -28,6 +28,10 @@
   </ul>
 {% endblock %}
 
+{% block project-result-top-bar %}
+  {% block alternative_alert %}{% endblock %}
+{% endblock %}
+
 {% block result %}
   {% block admin_alert %}
     {% if config and not config.is_activated %}
@@ -44,10 +48,11 @@
         <li>{% include '_share_url_btn.html' %}</li>
       </ul>
     {% endif %}
-    {% block alternative_alert %}{% endblock %}
   {% endblock %}
 
   {% block result_title %}<h1>Simulation réglementaire</h1>{% endblock %}
+
+  {% block alternative_share %}{% endblock %}
 
   {% include 'haie/moulinette/_department_doctrine_button.html' %}
 

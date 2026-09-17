@@ -770,7 +770,11 @@ class PetitionProjectDetail(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        moulinette = self.object.get_moulinette()
+        # Get moulinette from kwargs, used for simulation display
+        if "moulinette" in kwargs:
+            moulinette = kwargs["moulinette"]
+        else:
+            moulinette = self.object.get_moulinette()
 
         if moulinette.has_missing_data():
             # this should not happen, unless we have stored an incomplete project
@@ -823,7 +827,7 @@ class PetitionProjectDetail(DetailView):
         moulinette_params = parse_qs(parsed_moulinette_url.query)
         form_url = reverse("moulinette_form")
 
-        moulinette_params["alternative"] = "true"
+        moulinette_params["project_reference"] = self.object.reference
         edit_url = update_qs(form_url, moulinette_params)
 
         context["share_btn_url"] = share_btn_url
@@ -1075,6 +1079,12 @@ class BasePetitionProjectInstructorView(
         return context
 
     def log_event_action(self, request):
+        """Log event with
+        - category = self.event_category
+        - action = self.event_action
+
+        Set self.event_action = None to avoid event log.
+        """
         if not self.event_action:
             return
 
@@ -1464,6 +1474,21 @@ class PetitionProjectInstructorAlternativeView(
     template_name = "haie/petitions/instructor_view_alternatives.html"
     form_class = SimulationForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project_reference"] = self.object.reference
+        return kwargs
+
+    def get_initial(self):
+        """Get moulinette url from request querystring"""
+        initial = super().get_initial()
+        moulinette_url = self.request.GET.get("moulinette_url")
+        # Check if url is same domaine as ENVERGO_HAIE_DOMAIN
+        if urlparse(moulinette_url).hostname == settings.ENVERGO_HAIE_DOMAIN:
+            initial["moulinette_url"] = moulinette_url
+
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -1481,6 +1506,14 @@ class PetitionProjectInstructorAlternativeView(
 
         context["base_url"] = f"https://{settings.ENVERGO_HAIE_DOMAIN}"
 
+        # Add active simulation (aka project moulinette) form url
+        parsed_moulinette_url = urlparse(self.object.moulinette_url)
+        moulinette_params = parse_qs(parsed_moulinette_url.query)
+        moulinette_params["project_reference"] = self.object.reference
+        form_url = reverse("moulinette_form")
+        edit_url = update_qs(form_url, moulinette_params)
+        context["active_simulation_form_url"] = edit_url
+
         # Detailed errors of an activation that just failed (set by the edit
         # view across the redirect). Popped so they show only once.
         context["activation_errors"] = self.request.session.pop(
@@ -1495,6 +1528,7 @@ class PetitionProjectInstructorAlternativeView(
     def form_valid(self, form):
         simulation = form.save(commit=False)
         simulation.project = self.object
+        simulation.created_by = self.request.user
         simulation.save()
 
         messages.success(self.request, "La simulation alternative a été ajoutée.")
@@ -1532,7 +1566,10 @@ class PetitionProjectInstructorAlternativeView(
         url = reverse(
             "petition_project_instructor_alternative_view", args=[self.object.reference]
         )
-        return url
+        # Explicitly clear the fragment: per RFC 7231 §7.1.2, browsers carry
+        # over the previous URL's fragment (e.g. #add-alternative) onto a
+        # redirect Location that doesn't specify one
+        return url + "#"
 
 
 class PetitionProjectInstructorAlternativeEdit(
@@ -1694,6 +1731,61 @@ class PetitionProjectInstructorAlternativeEdit(
             "petition_project_instructor_alternative_view", args=[self.object.reference]
         )
         return url
+
+
+class PetitionProjectInstructorAlternativeResultsView(
+    BasePetitionProjectInstructorView, PetitionProjectDetail
+):
+    """View for display an alternative simulation."""
+
+    event_action = None  # Avoid log_event
+    simulation_object = None
+    template_name = "haie/petitions/instructor_view_alternative_display.html"
+
+    def get_queryset(self):
+        """Overrides queryset to avoid unused anotations"""
+        return PetitionProject.objects.all()
+
+    def get_simulation_object(self):
+        """Return the targeted simulation (with its project) or raise 404."""
+        self.object = self.get_object()
+        simulation_pk = self.kwargs.get("simulation_id")
+        simulation_qs = Simulation.objects.filter(project=self.object).select_related(
+            "project"
+        )
+        try:
+            simulation_obj = simulation_qs.get(pk=simulation_pk)
+        except Simulation.DoesNotExist:
+            raise Http404("Cette simulation alternative n'existe pas")
+        return simulation_obj
+
+    def get_context_data(self, **kwargs):
+        """Inserts simulation moulinette into kwargs to get results data context"""
+        self.simulation_object = self.get_simulation_object()
+        moulinette_url = MoulinetteUrl(self.simulation_object.moulinette_url)
+        moulinette = moulinette_url.get_moulinette()
+
+        context = super().get_context_data(moulinette=moulinette, **kwargs)
+        context["simulation"] = self.simulation_object
+
+        matomo_custom_path = self.request.path.replace(
+            self.object.reference, "+ref_projet+"
+        ).replace(str(self.simulation_object.id), "+simulation+")
+        context["matomo_custom_url"] = update_url_with_matomo_params(
+            self.request.build_absolute_uri(matomo_custom_path), self.request
+        )
+        return context
+
+    def handle_no_permission(self):
+        """Redirects to simulation form."""
+        simulation_form_url = self.get_simulation_object().form_url
+        return HttpResponseRedirect(simulation_form_url)
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.has_view_permission(request, self.object):
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
 
 
 class PetitionProjectInstructorProcedureView(
