@@ -117,3 +117,24 @@ class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
         motif = self.catalog.get("motif")
         has_alignement_bord_voie = bool(self.hedges.to_remove().l350_3())
         return has_alignement_bord_voie, motif
+
+
+class AlignementsArbresHru(HaieCriterionEvaluator):
+    """L350-3 never applies outside roadside tree alignments."""
+
+    choice_label = "Alignements d'arbres > L350-3"
+    base_slug = "alignement_arbres"
+    category = HedgeCategory.hru
+
+    RESULT_MATRIX = {
+        "non_concerne": RESULTS.non_concerne,
+    }
+
+    def evaluate(self):
+        self._result_code, self._result = "non_concerne", "non_concerne"
+
+
+class AlignementsArbresRu(AlignementsArbresHru):
+    """Same as `AlignementsArbresHru`, for hedges covered by the régime unique."""
+
+    category = HedgeCategory.ru
