@@ -919,8 +919,8 @@ class RuSpeciesQuerySet(models.QuerySet):
     def for_hedges(self, hedges):
         """Return species potentially near the given hedges.
 
-        Annotated with local_level_of_concern, observed_locally, and
-        level_order. Sorted by level of concern descending, then by name.
+        Annotated with local_level_of_concern and observed_locally.
+        Sorted by taxref group, then by common name.
         """
         hedges = HedgeList(hedges)
         if not hedges:
@@ -935,11 +935,6 @@ class RuSpeciesQuerySet(models.QuerySet):
         all_nearby_map_ids = set().union(*(ids for _, ids in group_map_ids))
         level_label = self.build_level_subquery(list(all_nearby_map_ids))
 
-        level_order_whens = [
-            When(local_level_of_concern=value, then=Value(rank))
-            for value, rank in LEVEL_OF_CONCERN_ORDER.items()
-        ]
-
         return (
             self.filter(species_filter)
             .annotate(
@@ -948,11 +943,6 @@ class RuSpeciesQuerySet(models.QuerySet):
                     When(cd_ref__in=observed_cdrefs, then=Value(True)),
                     default=Value(False),
                     output_field=BooleanField(),
-                ),
-                level_order=Case(
-                    *level_order_whens,
-                    default=Value(0),
-                    output_field=IntegerField(),
                 ),
             )
             .distinct()
