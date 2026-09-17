@@ -33,6 +33,11 @@ def regime_unique_haie_criterion(france_map):
     return criteria
 
 
+def ep_ru_catalog(moulinette):
+    """The data computed by the EP régime unique evaluator."""
+    return moulinette.ep.ru__ep_regime_unique.get_catalog_data()
+
+
 # ---------------------------------------------------------------------------
 # Regime unique guard — step 0
 # ---------------------------------------------------------------------------
@@ -87,7 +92,7 @@ def test_ep_ru_lengths_exclude_alignements(ep_ru_criterion):
     )
     # Both hedges use the same default coordinates (~25m), so total_length
     # should reflect only the non-AA hedge, not both.
-    total = moulinette.catalog["ep_ru_total_length"]
+    total = ep_ru_catalog(moulinette)["ep_ru_total_length"]
     assert total <= 30, (
         f"Expected length of a single hedge (~25m), got {total}. "
         "Alignement hedge should be excluded."
@@ -106,7 +111,7 @@ def test_ep_ru_ripisylve_above_threshold(ep_ru_criterion):
         reimplantation="replantation",
     )
     # Default hedge from COORDS_BIZOUS_INSIDE is ~25m (>20m threshold)
-    assert moulinette.catalog["ep_ru_ripisylve_length"] > 20
+    assert ep_ru_catalog(moulinette)["ep_ru_ripisylve_length"] > 20
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_inventaire"
 
 
@@ -118,7 +123,7 @@ def test_ep_ru_short_total_dispense(ep_ru_criterion):
         hedges=[make_hedge_factory(length=8)],
         reimplantation="replantation",
     )
-    assert moulinette.catalog["ep_ru_total_length"] <= 10
+    assert ep_ru_catalog(moulinette)["ep_ru_total_length"] <= 10
     assert moulinette.ep.ru__ep_regime_unique.result_code == "dispense"
 
 
@@ -130,7 +135,7 @@ def test_ep_ru_medium_total_moderate_density(ep_ru_criterion):
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-    total = moulinette.catalog["ep_ru_total_length"]
+    total = ep_ru_catalog(moulinette)["ep_ru_total_length"]
     assert 10 < total <= 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_simplifiee"
 
@@ -143,7 +148,7 @@ def test_ep_ru_long_total_low_density(ep_ru_criterion):
         hedges=[make_hedge_factory(length=120)],
         reimplantation="replantation",
     )
-    assert moulinette.catalog["ep_ru_total_length"] > 100
+    assert ep_ru_catalog(moulinette)["ep_ru_total_length"] > 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_inventaire"
 
 
@@ -166,7 +171,7 @@ def test_ep_ru_per_hedge_zone_sensible(ep_ru_criterion):
         hedges=[make_hedge_factory(length=120)],
         reimplantation="replantation",
     )
-    assert moulinette.catalog["ep_ru_total_length"] > 100
+    assert ep_ru_catalog(moulinette)["ep_ru_total_length"] > 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_inventaire"
 
 
@@ -182,7 +187,7 @@ def test_ep_ru_per_hedge_short_high_density_non_mixte_dispense(ep_ru_criterion):
         hedges=[make_hedge_factory(length=50, type_haie="buissonnante")],
         reimplantation="replantation",
     )
-    total = moulinette.catalog["ep_ru_total_length"]
+    total = ep_ru_catalog(moulinette)["ep_ru_total_length"]
     assert 10 < total <= 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "dispense"
 
@@ -199,7 +204,7 @@ def test_ep_ru_per_hedge_short_high_density_mixte_no_dispense(ep_ru_criterion):
         hedges=[make_hedge_factory(length=50, type_haie="mixte")],
         reimplantation="replantation",
     )
-    total = moulinette.catalog["ep_ru_total_length"]
+    total = ep_ru_catalog(moulinette)["ep_ru_total_length"]
     assert 10 < total <= 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_simplifiee"
 
@@ -217,7 +222,7 @@ def test_ep_ru_per_hedge_long_high_density_no_dispense(ep_ru_criterion):
         hedges=[make_hedge_factory(length=120)],
         reimplantation="replantation",
     )
-    assert moulinette.catalog["ep_ru_total_length"] > 100
+    assert ep_ru_catalog(moulinette)["ep_ru_total_length"] > 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_simplifiee"
 
 
@@ -230,7 +235,7 @@ def test_ep_ru_per_hedge_fallback_derogation_simplifiee(ep_ru_criterion):
         hedges=[make_hedge_factory(length=120)],
         reimplantation="replantation",
     )
-    assert moulinette.catalog["ep_ru_total_length"] > 100
+    assert ep_ru_catalog(moulinette)["ep_ru_total_length"] > 100
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_simplifiee"
 
 
@@ -337,7 +342,7 @@ def test_ep_ru_settings_override_thresholds(france_map):
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-    assert moulinette.catalog["ep_ru_total_length"] > 30
+    assert ep_ru_catalog(moulinette)["ep_ru_total_length"] > 30
     assert moulinette.ep.ru__ep_regime_unique.result_code == "derogation_inventaire"
 
 
@@ -400,7 +405,7 @@ def test_ep_ru_catalog_no_sensitive_species(ep_ru_criterion):
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-    catalog = moulinette.catalog
+    catalog = ep_ru_catalog(moulinette)
 
     assert catalog["has_sensitive_species"] is False
     full = catalog["protected_species"]
@@ -424,7 +429,7 @@ def test_ep_ru_catalog_with_sensitive_species(ep_ru_criterion):
         hedges=[make_hedge_factory(length=50)],
         reimplantation="replantation",
     )
-    catalog = moulinette.catalog
+    catalog = ep_ru_catalog(moulinette)
 
     assert catalog["has_sensitive_species"] is True
 

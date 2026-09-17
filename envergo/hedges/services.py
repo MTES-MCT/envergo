@@ -389,7 +389,6 @@ class PlantationEvaluator:
                     conditions_by_category[criterion._evaluator.category].extend(
                         criterion._evaluator.plantation_evaluate(
                             R_by_category[criterion._evaluator.category],
-                            self.moulinette.catalog,
                         )
                     )
 
