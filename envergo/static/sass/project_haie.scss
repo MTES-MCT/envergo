@@ -1588,3 +1588,13 @@ button.hide-expanded[aria-expanded="true"] {
     }
   }
 }
+
+#state-change-modal {
+  // In the dossier state update modal, different statuses require filling
+  // different fields.
+  // Also, fields are displayed or hidden dynamicall. So all shown fields
+  // are mandatory.
+  .optional-tag {
+    display: none;
+  }
+}
