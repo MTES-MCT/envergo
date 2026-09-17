@@ -31,32 +31,48 @@
 {% endif %}
 
 <h5 class="fr-mt-3w">Liste des espèces</h5>
-<form method="post"
-      action="{% url 'petition_project_instructor_regulation_view' petition_project.reference current_regulation.slug %}">
-  {% csrf_token %}
-  <div id="field-onagre_number" class="fr-my-2w">
-    {% render_field form.onagre_number %}
-    {% if has_change_permission %}
-      <button type="submit"
-              class="fr-btn fr-btn--secondary"
-              formaction="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}#field-onagre_number">
-        Enregistrer
-      </button>
-    {% endif %}
-  </div>
-</form>
-
-{% if has_sensitive_species and moulinette.config.single_procedure %}
-  <div class="fr-alert fr-alert--warning fr-mb-3w">
-    <p>
-      Le cortège-type contient des espèces à enjeu majeur avec des données d'observation proches du projet. Ces données sensibles n'ont pas été communiquées au demandeur : vous pouvez le faire <a href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">via la messagerie</a>.
-    </p>
-  </div>
-{% endif %}
 
 {% if protected_species %}
   {% if moulinette.config.single_procedure %}
-    {% include 'hedges/_species_table_ru.html' with species=protected_species %}
+
+    <p>
+      <strong>Espèces à enjeu majeur observées proche du projet</strong>
+    </p>
+
+    <p>
+      Cette liste signale les espèces protégées à enjeu majeur qui ont été observées sur le terrain (base de données INPN) dans les environs du projet.
+    </p>
+
+    {% if has_sensitive_species %}
+      <div class="fr-alert fr-alert--warning fr-mb-3w">
+        <p>
+          ⚠️ Ces données sensibles n'ont pas été communiquées au demandeur : <a href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">vous pouvez le faire via la messagerie</a>.
+        </p>
+      </div>
+    {% endif %}
+
+    {% include 'hedges/_species_table_ru.html' with protected_species_enjeu_majeur %}
+
+    <p>
+      <strong>Cortège-type départemental (enjeux faible à très fort)</strong>
+    </p>
+
+    <p>
+      Cette liste est établie à dire d'expert à l'échelle départementale selon les caractéristiques des haies à détruire. Elle a été communiquée au demandeur.
+    </p>
+
+    <section class="fr-accordion fr-mb-3w">
+      <h3 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="public-species-list">Voir la liste des espèces</button>
+      </h3>
+      <div id="public-species-list" class="fr-collapse fr-px-0 fr-mx-0">
+        {% include 'hedges/_species_table_ru.html' with protected_species_public %}
+      </div>
+    </section>
+
   {% else %}
     {% include 'hedges/_species_table.html' with species=protected_species %}
   {% endif %}
