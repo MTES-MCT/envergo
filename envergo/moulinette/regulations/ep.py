@@ -58,6 +58,11 @@ class EPRegulation(HaieRegulationEvaluator):
     }
 
 
+# Custom ordering for species
+# Move those groups at the top of the list
+GROUP_PRIORITY = {"Oiseaux": 0, "Flore": 1}
+
+
 class EPMixin:
     """Mixin that populates the catalog with the protected species list.
 
@@ -77,7 +82,19 @@ class EPMixin:
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
         if self.hedges:
-            catalog["protected_species"] = self.get_protected_species(self.hedges)
+            species = self.get_protected_species(self.hedges)
+
+            # Custom ordering for species
+            sorted_species = sorted(
+                species,
+                key=lambda s: (
+                    GROUP_PRIORITY.get(s.adhoc_group, 2),
+                    s.adhoc_group,
+                    s.common_name,
+                ),
+            )
+
+            catalog["protected_species"] = sorted_species
         return catalog
 
 
@@ -804,13 +821,17 @@ class EspecesProtegeesRegimeUnique(
         species = catalog.get("protected_species")
         if species is not None:
             species_list = list(species)
-            catalog["protected_species"] = species_list
-            catalog["protected_species_public"] = [
+            species_public = [
                 s for s in species_list if s.local_level_of_concern != "majeur"
             ]
-            catalog["has_sensitive_species"] = any(
-                s.local_level_of_concern == "majeur" for s in species_list
-            )
+            species_enjeu_majeur = [
+                s for s in species_list if s.local_level_of_concern == "majeur"
+            ]
+
+            catalog["protected_species"] = species_list
+            catalog["protected_species_public"] = species_public
+            catalog["protected_species_enjeu_majeur"] = species_enjeu_majeur
+            catalog["has_sensitive_species"] = len(species_enjeu_majeur) > 0
 
         catalog.update(self.get_density_catalog_data())
 
