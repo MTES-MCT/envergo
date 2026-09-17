@@ -94,7 +94,9 @@ def show_criterion_body(context, regulation, criterion):
         template_path = (
             f"{regulation.slug}/{criterion.slug}_{criterion.result_code}.html"
         )
-    content = render_from_moulinette_templates(context, template_path)
+
+    with context.push(criterion.get_catalog_data()):
+        content = render_from_moulinette_templates(context, template_path)
 
     return content
 
@@ -388,6 +390,7 @@ def criterion_debug_snippet(context, criterion):
 
     debug_context = evaluator.get_debug_context()
     context_data = context.flatten()
+    context_data.update(criterion.get_catalog_data())
     context_data.update(debug_context)
     context_data["criterion"] = criterion
 
