@@ -1,5 +1,6 @@
 import pytest
 
+from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import MoulinetteHaie, Regulation
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -19,6 +20,20 @@ def alignementarbres_criteria(france_map):  # noqa
             title="Alignement arbres > L350-3",
             regulation=regulation,
             evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresL3503",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresHru",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="Alignement arbres > L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.alignementarbres.AlignementsArbresRu",
             activation_map=france_map,
             activation_mode="department_centroid",
         ),
@@ -50,16 +65,16 @@ def alignementarbres_criteria(france_map):  # noqa
             "mixte",
             True,
             "amelioration_culture",
-            "non_disponible",
-            "non_disponible",
+            "non_concerne",
+            "non_concerne",
             0.0,
         ),
         (
             "alignement",
             False,
             "amelioration_culture",
-            "non_disponible",
-            "non_disponible",
+            "non_concerne",
+            "non_concerne",
             0.0,
         ),
     ],
@@ -129,3 +144,68 @@ class TestCalvadosBeforeRu:
         moulinette = MoulinetteHaie(data)
         criterion = moulinette.alignement_arbres.alignement_arbres_calvados_before_ru
         assert criterion.result_code == "non_soumis"
+
+
+class TestNonConcernedCategories:
+    """L350-3 only concerns roadside tree alignments.
+
+    Hedges of the `ru` and `hru` categories are never roadside tree alignments,
+    so their evaluators always answer "non concerné", whatever the motif.
+    """
+
+    @pytest.mark.parametrize(
+        "type_haie, bord_voie, criterion_slug",
+        [
+            ("mixte", False, "ru__alignement_arbres"),
+            ("alignement", False, "hru__alignement_arbres"),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "motif",
+        ["securite", "embellissement", "amelioration_culture", "autre"],
+    )
+    def test_always_non_concerne(self, type_haie, bord_voie, criterion_slug, motif):
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie=type_haie, bord_voie=bord_voie)],
+            motif=motif,
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        criterion = getattr(moulinette.alignement_arbres, criterion_slug)
+
+        assert criterion.result_code == "non_concerne"
+        assert criterion.result == "non_concerne"
+
+    @pytest.mark.parametrize(
+        "type_haie, bord_voie, criterion_slug",
+        [
+            ("mixte", False, "ru__alignement_arbres"),
+            ("alignement", False, "hru__alignement_arbres"),
+        ],
+    )
+    def test_no_plantation_condition_at_all(self, type_haie, bord_voie, criterion_slug):
+        """A regulation the project escapes must not constrain the plantation.
+
+        These evaluators carry no PlantationConditionMixin, so they contribute
+        no acceptability condition — neither the tree alignments one nor a
+        zero-length minimum.
+        """
+        RUConfigHaieFactory()
+        data = make_moulinette_haie_data(
+            hedge_data=[make_hedge(type_haie=type_haie, bord_voie=bord_voie)],
+            motif="amelioration_culture",
+            reimplantation="replantation",
+        )
+        moulinette = MoulinetteHaie(data)
+        evaluator = getattr(
+            moulinette.alignement_arbres, criterion_slug
+        ).get_evaluator()
+
+        assert not hasattr(evaluator, "plantation_evaluate")
+
+        plantation = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
+        plantation.evaluate()
+        assert [
+            c for c in plantation.conditions if c.criterion_evaluator is evaluator
+        ] == []
