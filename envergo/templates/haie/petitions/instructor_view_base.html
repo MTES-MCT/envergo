@@ -44,9 +44,7 @@
   <script>
     var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     window.addEventListener("load", function() {
-      let iframeUrl = HEDGES_PLANTATION_URL;
-      let redirectUrl = null;
-      var hedgeModal = new HedgeInputModal(iframeUrl, redirectUrl);
+      new HedgeInputModal(HEDGES_PLANTATION_URL);
     });
   </script>
 {% endblock %}
