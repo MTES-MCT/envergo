@@ -10,7 +10,12 @@
   <section class="{{ page_css_classname }}">
     <div class="fr-container">
       <div class="fr-grid-row">
-        <div class="fr-col fr-col-12 fr-col-md-3">{% include 'haie/petitions/_instructor_side_menu.html' %}</div>
+        <div class="fr-col fr-col-12 fr-col-md-3">
+          <div class="instructor-sidebar">
+            {% include 'haie/petitions/_instructor_side_menu.html' %}
+            {% include 'haie/petitions/_instructor_actions.html' %}
+          </div>
+        </div>
         <div id="project-specifications-instructor"
              class="fr-col fr-col-12 fr-col-md-9">
 

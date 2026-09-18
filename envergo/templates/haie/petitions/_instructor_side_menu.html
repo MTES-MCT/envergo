@@ -1,8 +1,7 @@
 {% load pages petitions %}
 
-<nav class="fr-sidemenu fr-sidemenu--sticky-full-height"
-     aria-labelledby="instructor-sidemenu-title">
-  <div id="instructor-view-side-menu" class="fr-sidemenu__inner">
+<nav class="fr-sidemenu" aria-labelledby="instructor-sidemenu-title">
+  <div class="fr-sidemenu__inner">
     <button class="fr-sidemenu__btn"
             aria-expanded="false"
             aria-controls="instructor-sidemenu"
@@ -53,6 +52,5 @@
         {% endwith %}
       </ul>
     </div>
-    {% include 'haie/petitions/_instructor_actions.html' %}
   </div>
 </nav>
