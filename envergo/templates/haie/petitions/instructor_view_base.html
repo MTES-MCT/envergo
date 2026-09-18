@@ -7,31 +7,27 @@
 {% block messages %}{# Move messages block between title and content #}{% endblock %}
 
 {% block container %}
-  <section class="{{ page_css_classname }}">
-    <div class="fr-container">
-      <div class="fr-grid-row">
-        <div class="fr-col fr-col-12 fr-col-md-3">
-          <div class="instructor-sidebar">
-            {% include 'haie/petitions/_instructor_side_menu.html' %}
-            {% include 'haie/petitions/_instructor_actions.html' %}
-          </div>
+  <div class="fr-container">
+    <div class="fr-grid-row">
+      <div class="fr-col fr-col-12 fr-col-md-3">
+        <div class="instructor-sidebar">
+          {% include 'haie/petitions/_instructor_side_menu.html' %}
+          {% include 'haie/petitions/_instructor_actions.html' %}
         </div>
-        <div id="project-specifications-instructor"
-             class="fr-col fr-col-12 fr-col-md-9">
+      </div>
+      <div id="project-specifications-instructor"
+           class="fr-col fr-col-12 fr-col-md-9">
 
-          {% include 'haie/petitions/_summary_dossier.html' %}
+        {% include 'haie/petitions/_summary_dossier.html' %}
 
-          <div class="fr-pl-md-10w fr-py-4w fr-px-2w ">
-            {% block project_view_title %}{% endblock %}
-            {% include '_messages.html' %}
-            {% block project_content %}{% endblock %}
-          </div>
+        <div class="fr-pl-md-10w fr-py-4w fr-px-2w ">
+          {% block project_view_title %}{% endblock %}
+          {% include '_messages.html' %}
+          {% block project_content %}{% endblock %}
         </div>
       </div>
     </div>
-
-  </section>
-
+  </div>
 {% endblock %}
 
 {% block after-content %}{% endblock %}
