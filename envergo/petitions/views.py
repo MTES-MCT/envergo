@@ -950,6 +950,10 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["has_change_permission"] = self.object.has_change_permission(
             self.request.user
         )
+        # Read-only users never "receive" messages, so they have none unread.
+        context["has_unread_messages"] = (
+            context["has_change_permission"] and self.object.has_unread_messages
+        )
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"

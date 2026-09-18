@@ -40,7 +40,7 @@
             {% sidemenu_item "Services consultés" 'petition_project_instructor_consultations_view' reference %}
           {% endif %}
           {% sidemenu_item "Simulations alternatives" 'petition_project_instructor_alternative_view' reference %}
-          {% if has_change_permission and petition_project.has_unread_messages %}
+          {% if has_unread_messages %}
             {% sidemenu_item "Messagerie" 'petition_project_instructor_messagerie_view' reference marker="●" marker_label="Messages non lus" %}
           {% else %}
             {% sidemenu_item "Messagerie" 'petition_project_instructor_messagerie_view' reference %}
