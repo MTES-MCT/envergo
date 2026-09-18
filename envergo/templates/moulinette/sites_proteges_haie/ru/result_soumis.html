@@ -1,0 +1,30 @@
+<p>
+  Le projet est soumis à autorisation, car il est situé dans le périmètre d’un site protégé, et peut porter atteinte au
+  patrimoine paysager de celui-ci.
+</p>
+
+<p>
+  C’est le guichet unique qui instruit le projet. L’administration aura la charge de saisir l’architecte des bâtiments
+  de France, qui peut autoriser le projet, imposer des prescriptions dans l’intérêt du site protégé, ou s’opposer au
+  projet.
+</p>
+
+<p>
+  Pour favoriser l’autorisation du projet, il est conseillé de <a href="https://www.culture.gouv.fr/catalogue-des-demarches-et-subventions/mes-travaux-en-site-protege"
+    target="_blank"
+    rel="noopener external">consulter la mairie et l’architecte des bâtiments de France</a> en avant-projet.
+</p>
+
+{% include 'moulinette/_read_more_btn.html' with aria_controls=regulation.slug|add:"-"|add:category.name %}
+
+<div class="more fr-collapse"
+     id="read-more-{{ regulation.slug }}-{{ category.name }}">
+  <p>Les pièces complémentaires suivantes seront exigées :</p>
+  <ul>
+    <li>une notice de présentation des travaux, notamment de compensation, indiquant leurs modes d’exécution ;</li>
+    <li>
+      un plan de masse faisant apparaître les constructions, les clôtures, la végétation et les éléments paysagers
+      existants, et illustre les modifications prévues.
+    </li>
+  </ul>
+</div>
