@@ -179,6 +179,7 @@ class MapFactory(ABC):
                     hedge_ids = {hedge.id for hedge in hedges}
                     if ids_to_display & hedge_ids:
                         perimeters.append(perimeter)
+                        break
         else:
             perimeters = self.regulation.perimeters.all()
         polygons = None
