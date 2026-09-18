@@ -1653,23 +1653,25 @@ class TestRuSpeciesQuerying:
         assert observed_result.observed_locally is True
         assert not_observed_result.observed_locally is False
 
-    def test_ru_species_sorted_by_level_descending(self):
-        """Species should be sorted by level_of_concern descending."""
+    def test_ru_species_sorted_by_group_then_name(self):
+        """Species are sorted by taxref group, then by common name.
+
+        Level of concern does not affect the ordering.
+        """
         map_obj = MapFactory(map_type="species", zones=None)
         self._make_zone_near_hedge(map_obj, 200, species_taxrefs=[])
 
-        faible = SpeciesFactory(cd_ref=6001, common_name="AA Faible")
-        fort = SpeciesFactory(cd_ref=6002, common_name="AA Fort")
-        majeur_observed = SpeciesFactory(cd_ref=6003, common_name="AA Majeur")
-        # Majeur is observed so it's included
-        self._make_zone_near_hedge(map_obj, 100, species_taxrefs=[6003])
-        for sp, level in [
-            (faible, "faible"),
-            (fort, "fort"),
-            (majeur_observed, "majeur"),
-        ]:
+        species_specs = [
+            (6001, "Oiseaux", "Mésange", "faible"),
+            (6002, "Amphibiens", "Triton", "fort"),
+            (6003, "Oiseaux", "Alouette", "moyen"),
+        ]
+        for cd_ref, group, common_name, level in species_specs:
+            species = SpeciesFactory(
+                cd_ref=cd_ref, group=group, common_name=common_name
+            )
             SpeciesHabitatFactory(
-                species=sp,
+                species=species,
                 map=map_obj,
                 hedge_types=["mixte"],
                 level_of_concern=level,
@@ -1679,8 +1681,12 @@ class TestRuSpeciesQuerying:
         hedges = HedgeDataFactory(hedges=[hedge])
         result = list(hedges.hedges().get_all_species())
 
-        levels = [s.local_level_of_concern for s in result]
-        assert levels == ["majeur", "fort", "faible"]
+        ordering = [(s.group, s.common_name) for s in result]
+        assert ordering == [
+            ("Amphibiens", "Triton"),
+            ("Oiseaux", "Alouette"),
+            ("Oiseaux", "Mésange"),
+        ]
 
     def test_ru_null_level_of_concern_treated_as_non_majeur(self):
         """Species with NULL level_of_concern on SpeciesHabitat are included."""
