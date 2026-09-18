@@ -56,26 +56,16 @@ def menu_item(context, route, label, *event_data, subroutes=[], data_testid=None
     )
 
 
-@register.simple_tag(takes_context=True)
-def sidemenu_item(context, route, label):
-    try:
-        current_route = context.request.resolver_match.url_name
-    except AttributeError:
-        current_route = ""
+@register.inclusion_tag("pages/_sidemenu_item.html", takes_context=True)
+def sidemenu_item(context, label, route, *args, **kwargs):
+    """Render a DSFR side menu entry, marked current when it points to the request path.
 
-    aria_current = route == current_route
-    url = reverse(route)
-    sidemenu_class = "fr-sidemenu__item--current" if aria_current else ""
-    aria_attr = 'aria-current="page"' if aria_current else ""
-    return mark_safe(
-        f"""
-        <li class="fr-sidemenu__item {sidemenu_class}">
-            <a class="fr-sidemenu__link" href="{url}" {aria_attr}>
-                {label}
-            </a>
-        </li>
-        """
-    )
+    ``route`` and what follows are forwarded to ``reverse`` like the ``{% url %}`` tag.
+    """
+    href = reverse(route, args=args or None, kwargs=kwargs or None)
+    request = context.get("request")
+    is_current = request is not None and request.path == href
+    return {"href": href, "label": label, "is_current": is_current}
 
 
 @register.simple_tag(takes_context=True)

@@ -3,6 +3,9 @@ from datetime import date, timedelta
 import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
+from django.template import Context, Template
+from django.test import RequestFactory
+from django.urls import reverse
 
 from envergo.geodata.tests.factories import Department34Factory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory
@@ -572,3 +575,45 @@ class TestParametrageDepartmentsMenu:
         earlier_date = one_year_ago.strftime("%d/%m/%Y")
         later_date = one_year_later.strftime("%d/%m/%Y")
         assert content.index(earlier_date) < content.index(later_date)
+
+
+class TestSidemenuItem:
+    """Tests for the sidemenu_item template tag."""
+
+    def render(self, path, tag_call, **context):
+        """Render a sidemenu_item tag call as if the browser were on ``path``."""
+        request = RequestFactory().get(path)
+        template = Template("{% load pages %}" + tag_call)
+        return template.render(Context({"request": request, **context}))
+
+    def test_marks_the_current_page(self):
+        """The entry pointing to the request path carries aria-current."""
+        url = reverse("faq_news")
+        content = self.render(url, '{% sidemenu_item "Nouveautés" "faq_news" %}')
+        assert f'href="{url}"' in content
+        assert 'aria-current="page"' in content
+        assert ">Nouveautés</a>" in content
+
+    def test_leaves_other_pages_unmarked(self):
+        """An entry pointing elsewhere renders without aria-current."""
+        content = self.render("/", '{% sidemenu_item "Nouveautés" "faq_news" %}')
+        assert 'href="{}"'.format(reverse("faq_news")) in content
+        assert "aria-current" not in content
+
+    @pytest.mark.haie
+    def test_forwards_url_arguments_like_the_url_tag(self):
+        """Positional arguments after the route reach reverse, as with {% url %}."""
+        route = "petition_project_instructor_regulation_view"
+        url = reverse(route, args=["ABC123", "natura2000"])
+        tag_call = '{% sidemenu_item "Natura 2000" "' + route + '" reference slug %}'
+        content = self.render(url, tag_call, reference="ABC123", slug="natura2000")
+        assert f'href="{url}"' in content
+        assert 'aria-current="page"' in content
+
+    def test_escapes_the_label(self):
+        """Labels coming from data cannot inject markup."""
+        content = self.render(
+            "/", '{% sidemenu_item label "faq_news" %}', label="<b>Nouveautés</b>"
+        )
+        assert "<b>" not in content
+        assert "&lt;b&gt;Nouveautés&lt;/b&gt;" in content
