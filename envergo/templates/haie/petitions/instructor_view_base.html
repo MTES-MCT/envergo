@@ -19,10 +19,11 @@
                   {% sidemenu_item "Résumé du dossier" 'petition_project_instructor_view' petition_project.reference %}
                   <li class="fr-sidemenu__item">
                     <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
-                            aria-controls="sidemenu-3"
+                            {% if current_regulation %}aria-current="true"{% endif %}
+                            aria-controls="sidemenu-regulations"
                             type="button"
                             class="fr-sidemenu__btn">Réglementations</button>
-                    <div class="fr-collapse" id="sidemenu-3">
+                    <div class="fr-collapse" id="sidemenu-regulations">
                       <ul class="fr-sidemenu__list">
                         {% for regulation in petition_project.get_available_regulations|dictsort:"display_order" %}
                           {% sidemenu_item regulation.title 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}
