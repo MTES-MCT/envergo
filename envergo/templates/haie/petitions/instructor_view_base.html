@@ -42,9 +42,8 @@
   <script defer
           src="{% static 'js/libs/data_sql_event_attributes_analytics.js' %}"></script>
   <script>
-    var HEDGES_PLANTATION_URL = "{{ plantation_url|safe }}";
     window.addEventListener("load", function() {
-      new HedgeInputModal(HEDGES_PLANTATION_URL);
+      new HedgeInputModal("{{ plantation_url|safe }}");
     });
   </script>
 {% endblock %}
