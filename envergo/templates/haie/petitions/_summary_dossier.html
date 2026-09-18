@@ -67,9 +67,7 @@
       {% if user|has_change_permission:petition_project %}
         {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
           <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
-             href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
-             {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
-
+             href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}">Modifier</a>
         {% endif %}
       {% else %}
         <div class="project-summary--spacer"></div>
