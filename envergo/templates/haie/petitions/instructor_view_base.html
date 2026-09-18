@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 
-{% load petitions %}
-
-{% load static %}
+{% load petitions pages static %}
 
 {% block title %}Instruction du dossier{% endblock %}
 
@@ -18,66 +16,30 @@
             <div id="instructor-view-side-menu" class="fr-sidemenu__inner">
               <div id="fr-sidemenu-wrapper">
                 <ul class="fr-sidemenu__list">
+                  {% sidemenu_item "Résumé du dossier" 'petition_project_instructor_view' petition_project.reference %}
+                  <li class="fr-sidemenu__item">
+                    <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
+                            aria-controls="sidemenu-3"
+                            type="button"
+                            class="fr-sidemenu__btn">Réglementations</button>
+                    <div class="fr-collapse" id="sidemenu-3">
+                      <ul class="fr-sidemenu__list">
+                        {% for regulation in petition_project.get_available_regulations|dictsort:"display_order" %}
+                          {% sidemenu_item regulation.title 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  {% sidemenu_item "Dossier complet" 'petition_project_instructor_dossier_complet_view' petition_project.reference %}
+                  <hr class="separator--light">
+                  {% sidemenu_item "Notes d'instruction" 'petition_project_instructor_notes_view' petition_project.reference %}
+                  {% sidemenu_item "Procédure" 'petition_project_instructor_procedure_view' petition_project.reference %}
+                  {% if has_change_permission %}
+                    {% sidemenu_item "Services consultés" 'petition_project_instructor_consultations_view' petition_project.reference %}
+                  {% endif %}
+                  {% sidemenu_item "Simulations alternatives" 'petition_project_instructor_alternative_view' petition_project.reference %}
                   {% with request.resolver_match.url_name as url_name %}
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_view' %} fr-sidemenu__item--active{% endif %}">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_view' petition_project.reference %}"
-                         {% if url_name == 'petition_project_instructor_view' %}aria-current="page"{% endif %}>
-                      Résumé du dossier</a>
-                    </li>
                     <li class="fr-sidemenu__item">
-                      <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
-                              aria-controls="sidemenu-3"
-                              type="button"
-                              class="fr-sidemenu__btn">Réglementations</button>
-                      <div class="fr-collapse" id="sidemenu-3">
-                        <ul class="fr-sidemenu__list">
-                          {% for regulation in petition_project.get_available_regulations|dictsort:"display_order" %}
-                            <li class="fr-sidemenu__item{% if regulation.slug == current_regulation.slug %} fr-sidemenu__item--active{% endif %}">
-                              <a class="fr-sidemenu__link"
-                                 href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}"
-                                 {% if regulation.slug == current_regulation.slug %}aria-current="page"{% endif %}>
-                              {{ regulation.title }}</a>
-                            </li>
-                          {% endfor %}
-                        </ul>
-                      </div>
-                    </li>
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_dossier_complet_view' %} fr-sidemenu__item--active{% endif %}">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_dossier_complet_view' petition_project.reference %}"
-                         {% if url_name == 'petition_project_instructor_dossier_complet_view' %}aria-current="page"{% endif %}>
-                      Dossier complet</a>
-                    </li>
-                    <hr class="separator--light">
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_notes_view' %} fr-sidemenu__item--active{% endif %}">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_notes_view' petition_project.reference %}"
-                         {% if url_name == 'petition_project_instructor_notes_view' %}aria-current="page"{% endif %}>
-                      Notes d'instruction</a>
-                    </li>
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_procedure_view' %} fr-sidemenu__item--active{% endif %}">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
-                         {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>
-                      Procédure</a>
-                    </li>
-                    {% if has_change_permission %}
-                      <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_consultations_view' %} fr-sidemenu__item--active{% endif %}">
-                        <a class="fr-sidemenu__link"
-                           href="{% url 'petition_project_instructor_consultations_view' petition_project.reference %}"
-                           {% if url_name == 'petition_project_instructor_consultations_view' %}aria-current="page"{% endif %}>
-                          Services consultés
-                        </a>
-                      </li>
-                    {% endif %}
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_alternative_view' %} fr-sidemenu__item--active{% endif %}">
-                      <a class="fr-sidemenu__link"
-                         href="{% url 'petition_project_instructor_alternative_view' petition_project.reference %}"
-                         {% if url_name == 'petition_project_instructor_alternative_view' %}aria-current="page"{% endif %}>
-                      Simulations alternatives</a>
-                    </li>
-                    <li class="fr-sidemenu__item{% if url_name == 'petition_project_instructor_messagerie_view' %} fr-sidemenu__item--active{% endif %}">
                       <a class="fr-sidemenu__link"
                          href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
                          {% if url_name == 'petition_project_instructor_messagerie_view' %}aria-current="page"{% endif %}>
