@@ -916,6 +916,9 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["hedge_types"] = HedgeTypeFactory.build_from_context(
             single_procedure=self.object.config.single_procedure
         )
+        context["regulations"] = self.object.get_available_regulations().order_by(
+            "display_order"
+        )
 
         context.update(get_context_from_dn(self.object))
         context.update(self.object.moulinette_data)

@@ -18,7 +18,7 @@
                   class="fr-sidemenu__btn">Réglementations</button>
           <div class="fr-collapse" id="sidemenu-regulations">
             <ul class="fr-sidemenu__list">
-              {% for regulation in petition_project.get_available_regulations|dictsort:"display_order" %}
+              {% for regulation in regulations %}
                 {% sidemenu_item regulation.title 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}
               {% endfor %}
             </ul>
