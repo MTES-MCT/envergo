@@ -2,6 +2,7 @@ import random
 from typing import Literal
 
 from django import template
+from django.template import TemplateSyntaxError
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -57,15 +58,28 @@ def menu_item(context, route, label, *event_data, subroutes=[], data_testid=None
 
 
 @register.inclusion_tag("pages/_sidemenu_item.html", takes_context=True)
-def sidemenu_item(context, label, route, *args, **kwargs):
+def sidemenu_item(
+    context, label, route, *args, marker=None, marker_label=None, **kwargs
+):
     """Render a DSFR side menu entry, marked current when it points to the request path.
 
     ``route`` and what follows are forwarded to ``reverse`` like the ``{% url %}`` tag.
+    ``marker`` is a decorative glyph shown after the label. It requires
+    ``marker_label``, the text screen readers get instead.
     """
+    if marker and not marker_label:
+        raise TemplateSyntaxError("sidemenu_item: a marker requires a marker_label")
+
     href = reverse(route, args=args or None, kwargs=kwargs or None)
     request = context.get("request")
     is_current = request is not None and request.path == href
-    return {"href": href, "label": label, "is_current": is_current}
+    return {
+        "href": href,
+        "label": label,
+        "is_current": is_current,
+        "marker": marker,
+        "marker_label": marker_label,
+    }
 
 
 @register.simple_tag(takes_context=True)

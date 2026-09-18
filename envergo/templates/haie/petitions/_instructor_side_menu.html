@@ -1,4 +1,4 @@
-{% load pages petitions %}
+{% load pages %}
 
 <nav class="fr-sidemenu" aria-labelledby="instructor-sidemenu-title">
   <div class="fr-sidemenu__inner">
@@ -34,22 +34,11 @@
           {% sidemenu_item "Services consultés" 'petition_project_instructor_consultations_view' petition_project.reference %}
         {% endif %}
         {% sidemenu_item "Simulations alternatives" 'petition_project_instructor_alternative_view' petition_project.reference %}
-        {% with request.resolver_match.url_name as url_name %}
-          <li class="fr-sidemenu__item">
-            <a class="fr-sidemenu__link"
-               href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}"
-               {% if url_name == 'petition_project_instructor_messagerie_view' %}aria-current="page"{% endif %}>
-              Messagerie
-              {% if petition_project.has_unread_messages and user|has_change_permission:petition_project %}
-                <span style="color: var(--blue-france-sun-113-625);
-                             font-size: 150%;
-                             position: relative;
-                             top: -0.0625rem"
-                      class="fr-ml-1w">●</span>
-              {% endif %}
-            </a>
-          </li>
-        {% endwith %}
+        {% if has_change_permission and petition_project.has_unread_messages %}
+          {% sidemenu_item "Messagerie" 'petition_project_instructor_messagerie_view' petition_project.reference marker="●" marker_label="Messages non lus" %}
+        {% else %}
+          {% sidemenu_item "Messagerie" 'petition_project_instructor_messagerie_view' petition_project.reference %}
+        {% endif %}
       </ul>
     </div>
   </div>

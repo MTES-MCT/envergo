@@ -3,7 +3,7 @@ from datetime import date, timedelta
 import factory
 import pytest
 from django.db.backends.postgresql.psycopg_any import DateRange
-from django.template import Context, Template
+from django.template import Context, Template, TemplateSyntaxError
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -592,7 +592,7 @@ class TestSidemenuItem:
         content = self.render(url, '{% sidemenu_item "Nouveautés" "faq_news" %}')
         assert f'href="{url}"' in content
         assert 'aria-current="page"' in content
-        assert ">Nouveautés</a>" in content
+        assert "Nouveautés" in content
 
     def test_leaves_other_pages_unmarked(self):
         """An entry pointing elsewhere renders without aria-current."""
@@ -617,3 +617,18 @@ class TestSidemenuItem:
         )
         assert "<b>" not in content
         assert "&lt;b&gt;Nouveautés&lt;/b&gt;" in content
+
+    def test_marker_renders_a_glyph_with_screen_reader_text(self):
+        """The marker glyph is decorative; its label is what screen readers get."""
+        tag_call = '{% sidemenu_item "Messagerie" "faq_news" marker="●" marker_label="Messages non lus" %}'  # noqa: E501
+        content = self.render("/", tag_call)
+        assert '<span class="sidemenu-marker" aria-hidden="true">●</span>' in content
+        assert '<span class="fr-sr-only">Messages non lus</span>' in content
+
+        content = self.render("/", '{% sidemenu_item "Messagerie" "faq_news" %}')
+        assert "sidemenu-marker" not in content
+
+    def test_marker_without_label_is_refused(self):
+        """A decoration screen readers cannot name is a template error."""
+        with pytest.raises(TemplateSyntaxError):
+            self.render("/", '{% sidemenu_item "Messagerie" "faq_news" marker="●" %}')
