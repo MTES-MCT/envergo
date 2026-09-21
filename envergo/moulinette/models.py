@@ -2,7 +2,7 @@ import logging
 import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum, IntEnum, nonmember
 from functools import reduce
 from itertools import groupby
@@ -1426,6 +1426,25 @@ class ConfigHaie(ConfigBase):
 
     def clean(self):
         super().clean()
+        if (
+            self.prohibition_range is not None
+            and self.prohibition_range.lower is not None
+            and self.prohibition_range.upper is not None
+        ):
+            if self.prohibition_range.lower.year != self.prohibition_range.upper.year:
+                raise ValidationError(
+                    {
+                        "prohibition_range": "Merci de renseigner deux dates de la même année."
+                    }
+                )
+            if self.prohibition_range.upper > self.prohibition_range.lower and (
+                self.prohibition_range.upper - self.prohibition_range.lower
+            ) < timedelta(days=7 * 21):
+                raise ValidationError(
+                    {
+                        "prohibition_range": "La période d’interdiction doit durer au moins 21 semaines consécutives."
+                    }
+                )
         if self.is_activated and self.demarche_numerique_pre_fill_config is not None:
             # add constraints on the pre-fill configuration json to avoid unexpected entries
 

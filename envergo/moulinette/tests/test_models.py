@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -297,13 +297,41 @@ def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
 
 
 class TestConfigHaieProhibitionDates:
-    @pytest.mark.skip
-    def test_confighaie_has_two_dates_or_no_date(self):
-        assert 0 == 1
+    def test_two_dates_must_be_in_the_same_year(self, loire_atlantique_department):
+        with pytest.raises(ValidationError) as exc_info:
+            config_haie = ConfigHaie(
+                department=loire_atlantique_department,
+                is_activated=True,
+                prohibition_range=DateRange(date(2027, 4, 2), date(2028, 4, 2)),
+            )
+            config_haie.clean()
+        assert exc_info.value.messages == [
+            "Merci de renseigner deux dates de la même année."
+        ]
 
-    @pytest.mark.skip
-    def test_start_date_before_end_date(self):
-        assert 0 == 1
+    def test_range_must_be_at_least_21_weeks(self, loire_atlantique_department):
+        with pytest.raises(ValidationError) as exc_info:
+            start = date(2027, 3, 15)
+            end = start + timedelta(days=(21 * 7 - 1))
+            config_haie = ConfigHaie(
+                department=loire_atlantique_department,
+                is_activated=True,
+                prohibition_range=DateRange(start, end),
+            )
+            config_haie.clean()
+        assert exc_info.value.messages == [
+            "La période d’interdiction doit durer au moins 21 semaines consécutives."
+        ]
+
+    def test_range_can_be_exactly_21_weeks(self, loire_atlantique_department):
+        start = date(2027, 3, 15)
+        end = start + timedelta(days=21 * 7)
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            prohibition_range=DateRange(start, end),
+        )
+        config_haie.clean()
 
     @pytest.mark.parametrize(
         "stored_range,tested_date,expected_result",
