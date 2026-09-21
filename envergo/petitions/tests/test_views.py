@@ -484,6 +484,31 @@ def test_petition_project_instructor_notes_view(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_side_menu_opens_the_group_of_the_current_page(
+    mock_post, haie_user_44, client, site
+):
+    """The Projet group is open and current on its pages, closed on the others."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_user_44)
+
+    def project_group_button(url_name):
+        url = reverse(url_name, kwargs={"reference": project.reference})
+        html = client.get(url).content.decode()
+        return re.search(r'<button[^>]*aria-controls="sidemenu-project"[^>]*>', html)[0]
+
+    button = project_group_button("petition_project_summary")
+    assert 'aria-expanded="true"' in button
+    assert 'aria-current="true"' in button
+
+    button = project_group_button("petition_project_instructor_notes_view")
+    assert 'aria-expanded="false"' in button
+    assert "aria-current" not in button
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_instructor_notes_coordinator_sees_both_fields_and_can_edit(
     mock_post, haie_coordinator_44, client, site
 ):
