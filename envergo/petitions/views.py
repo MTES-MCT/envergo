@@ -1114,10 +1114,32 @@ class BasePetitionProjectInstructorView(
             )
 
 
-class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailView):
-    """View for petition project instructor page"""
+class PetitionProjectSummaryView(BasePetitionProjectInstructorView, DetailView):
+    """Project summary"""
 
-    template_name = "haie/petitions/instructor_view.html"
+    template_name = "haie/petitions/project_summary.html"
+    event_action = "consultation"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
+
+        context.update(get_project_context(self.object, context["moulinette"]))
+        context["config"] = context["moulinette"].config
+        return context
+
+    def get_success_url(self):
+        return reverse("petition_project_summary", kwargs=self.kwargs)
+
+
+class PetitionProjectMoulinetteResultView(
+    BasePetitionProjectInstructorView, DetailView
+):
+    """What the evaluation result shows."""
+
+    template_name = "haie/petitions/moulinette_result.html"
     event_action = "consultation"
 
     def get_context_data(self, **kwargs):
