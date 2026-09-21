@@ -867,6 +867,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_category = "dossier"
     event_action = None
     context_object_name = "petition_project"
+    # Side menu group holding the page: "project", "regulations" or None.
+    menu_section = None
 
     def get_object(self, queryset=None):
         """Return the cached object, fetching it only once per request."""
@@ -958,6 +960,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["has_unread_messages"] = (
             context["has_change_permission"] and self.object.has_unread_messages
         )
+        context["menu_section"] = self.menu_section
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -1118,6 +1121,7 @@ class PetitionProjectSummaryView(BasePetitionProjectInstructorView, DetailView):
     """Project summary"""
 
     template_name = "haie/petitions/project_summary.html"
+    menu_section = "project"
     event_action = "consultation"
 
     def get_context_data(self, **kwargs):
@@ -1140,6 +1144,7 @@ class PetitionProjectMoulinetteResultView(
     """What the evaluation result shows."""
 
     template_name = "haie/petitions/moulinette_result.html"
+    menu_section = "project"
     event_action = "consultation"
 
     def get_context_data(self, **kwargs):
@@ -1179,6 +1184,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
+    menu_section = "regulations"
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -1501,6 +1507,7 @@ class PetitionProjectInstructorAlternativeView(
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternatives.html"
+    menu_section = "project"
     form_class = SimulationForm
 
     def get_form_kwargs(self):
@@ -1770,6 +1777,7 @@ class PetitionProjectInstructorAlternativeResultsView(
     event_action = None  # Avoid log_event
     simulation_object = None
     template_name = "haie/petitions/instructor_view_alternative_display.html"
+    menu_section = "project"
 
     def get_queryset(self):
         """Overrides queryset to avoid unused anotations"""

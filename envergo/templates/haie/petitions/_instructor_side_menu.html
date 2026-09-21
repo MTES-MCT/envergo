@@ -13,10 +13,7 @@
         <ul class="fr-sidemenu__list">
 
           <li class="fr-sidemenu__item">
-            <button aria-expanded="{% comment %}todo{% endcomment %}"
-                    aria-controls="sidemenu-project"
-                    type="button"
-                    class="fr-sidemenu__btn">Projet</button>
+            {% sidemenu_group_button "Projet" section="project" controls="sidemenu-project" %}
             <div class="fr-collapse" id="sidemenu-project">
               <ul class="fr-sidemenu__list">
                 {% sidemenu_item "Description du projet" 'petition_project_summary' reference %}
@@ -27,11 +24,7 @@
           </li>
 
           <li class="fr-sidemenu__item">
-            <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
-                    {% if current_regulation %}aria-current="true"{% endif %}
-                    aria-controls="sidemenu-regulations"
-                    type="button"
-                    class="fr-sidemenu__btn">Réglementations</button>
+            {% sidemenu_group_button "Réglementations" section="regulations" controls="sidemenu-regulations" %}
             <div class="fr-collapse" id="sidemenu-regulations">
               <ul class="fr-sidemenu__list">
                 {% for regulation in regulations %}
