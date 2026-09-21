@@ -5,7 +5,7 @@
       {% if r == 1 %}
         celui détruit.
       {% else %}
-        {{ r|floatformat:"g" }} fois celui détruit.
+        {{ r|stringformat:".2f"|floatformat:"g" }} fois celui détruit.
       {% endif %}
     </p>
   {% endif %}
