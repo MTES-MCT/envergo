@@ -34,12 +34,7 @@
         </li>
         <li>
           <strong>Période d’interdiction :</strong>
-          {% if object.prohibition_range %}
-            du {{ object.prohibition_range.lower|date:"j F" }}
-            au {{ object.prohibition_range.upper|date:"j F" }}
-          {% else %}
-            non renseignée
-          {% endif %}
+          {{ object.prohibition_range_display|default:"non renseignée" }}
         </li>
       </ul>
       {% if object.single_procedure %}

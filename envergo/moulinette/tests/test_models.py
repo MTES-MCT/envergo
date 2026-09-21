@@ -357,7 +357,7 @@ class TestConfigHaieProhibitionDates:
             pytest.param(
                 DateRange(date(2025, 3, 1), date(2025, 6, 1)),
                 date(2026, 6, 1),
-                True,
+                False,
                 id="tested_date_equals_end_date",
             ),
             pytest.param(
@@ -381,6 +381,12 @@ class TestConfigHaieProhibitionDates:
             prohibition_range=stored_range,
         )
         assert confhaie.is_date_in_prohibition_range(tested_date) == expected_result
+
+    def test_prohibition_range_display(self):
+        confighaie = ConfigHaie(
+            prohibition_range=DateRange(date(2027, 3, 18), date(2027, 9, 1))
+        )
+        assert confighaie.prohibition_range_display == "du 18 mars au 31 août"
 
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(

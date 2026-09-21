@@ -1735,18 +1735,34 @@ class ConfigHaie(ConfigBase):
     def contact_info(self):
         return self.build_contact_info(self)
 
+    @property
+    def prohibition_range_display(self) -> str:
+        """
+        prohibition range is stored with end date excluded: prohibition_range.upper
+        is the first day when work on hedges is allowed.
+
+        However prohibition range is *displayed* with end date included:
+        "prohibited from 15th march to 31st august"
+        means you can work on hedges on september 1st.
+        """
+        from django.template.defaultfilters import date as date_format
+
+        if self.prohibition_range is None:
+            return ""
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper - timedelta(days=1)
+        return f"du {date_format(start, 'j F')} au {date_format(end, 'j F')}"
+
     def is_date_in_prohibition_range(self, tested_date: date):
         if self.prohibition_range is None:
             return None
-        tested_year = tested_date.year
         start = self.prohibition_range.lower
         end = self.prohibition_range.upper
-        normalized_range = DateRange(
-            date(tested_year, start.month, start.day),
-            date(tested_year, end.month, end.day),
-            "[]",  # boundaries included
+        return (
+            (start.month, start.day)
+            <= (tested_date.month, tested_date.day)
+            < (end.month, end.day)
         )
-        return tested_date in normalized_range
 
 
 TEMPLATE_KEYS = [
