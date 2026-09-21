@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ("moulinette", "0138_alignement_arbres_multi_category_criteria"),
         ("moulinette", "0138_natura2000_haie_multi_category_criteria"),
-        ("moulinette", "0139_alter_moulinettetemplate_key"),
         ("moulinette", "0139_merge_20260917_0647"),
         ("moulinette", "0140_merge_20260917_0948"),
     ]
