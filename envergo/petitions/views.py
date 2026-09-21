@@ -1135,7 +1135,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
         return context
 
     def get_success_url(self):
-        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+        return reverse("petition_project_summary", kwargs=self.kwargs)
 
 
 class BasePetitionProjectInstructorUpdateView(
@@ -1431,7 +1431,7 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
             self.log_event_action(self.request)
 
-        url = reverse("petition_project_instructor_view", args=[self.object.reference])
+        url = reverse("petition_project_summary", args=[self.object.reference])
         return HttpResponseRedirect(url)
 
 
@@ -2298,7 +2298,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
             created_by=request.user,
             petition_project=project,
         )
-        url = reverse("petition_project_instructor_view", args=[project.reference])
+        url = reverse("petition_project_summary", args=[project.reference])
         invitation_url = update_qs(
             self.request.build_absolute_uri(url),
             {
@@ -2398,7 +2398,7 @@ class PetitionProjectAcceptInvitation(RedirectView):
         if not token or not self.TOKEN_PATTERN.match(token):
             raise SuspiciousOperation("Invalid invitation token format")
 
-        url = reverse("petition_project_instructor_view", args=[reference])
+        url = reverse("petition_project_summary", args=[reference])
         url_with_token = f"{url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={token}"
         return url_with_token
 

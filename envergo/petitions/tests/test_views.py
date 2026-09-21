@@ -335,7 +335,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     )
 
 
-def test_petition_project_instructor_view_requires_authentication(
+def test_petition_project_summary_requires_authentication(
     haie_user,
     inactive_haie_user_44,
     haie_user_44,
@@ -352,9 +352,7 @@ def test_petition_project_instructor_view_requires_authentication(
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
-        reverse(
-            "petition_project_instructor_view", kwargs={"reference": project.reference}
-        )
+        reverse("petition_project_summary", kwargs={"reference": project.reference})
     )
     request.site = site
     request.session = {}
@@ -665,7 +663,7 @@ def test_instructor_notes_coordinator_empty_notes(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_petition_project_instructor_view_reglementation_pages(
+def test_petition_project_summary_reglementation_pages(
     mock_post,
     haie_coordinator_44,
     haie_user,
@@ -1583,7 +1581,7 @@ def test_instructor_view_multi_departments_alert(client, haie_coordinator_44):
     project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
 
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1610,7 +1608,7 @@ def test_instructor_view_single_department_no_alert(client, haie_coordinator_44)
     hedges = HedgeDataFactory(hedges=[hedge_44])
     project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1661,7 +1659,7 @@ def test_petition_emergency_badge(
 
     # WHEN Instructor visits project instructor page
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
     # THEN badge "Urgence" is in content if "urgence" == "oui"
@@ -4167,7 +4165,7 @@ def test_instructor_view_token_matomo_invitation(
         created_by=haie_coordinator_44,
     )
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
     # WHEN haie_user tries to get page using this token
@@ -4192,7 +4190,7 @@ def test_instructor_view_token_expired_403(
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
 
@@ -4290,7 +4288,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
     # Department instructor should see the link
     client.force_login(haie_coordinator_44)
     instructor_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     response = client.get(instructor_url)
     assert response.status_code == 200
