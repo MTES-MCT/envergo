@@ -15,11 +15,7 @@
   <b>Attention ! Si l’intervention a déjà eu lieu pour des raisons d’urgence,</b> le dépôt d’une demande est tout de même obligatoire, pour approbation du préfet. La décision peut être assortie de prescriptions complémentaires pour la compensation.
 </p>
 
-{% if config.department.department == "14" %}
-  <p>
-    Dans le Calvados, la compensation exigée au titre de cette réglementation est un linéaire ou un nombre d’arbres, plantés en bord de voie, au moins équivalent à celui détruit.
-  </p>
-{% endif %}
+{% include 'moulinette/alignement_arbres/l350_3/_replantation_doctrine.html' %}
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 

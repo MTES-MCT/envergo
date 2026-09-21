@@ -50,13 +50,12 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
     def get_result_data(self):
         return self.catalog.get("motif")
 
-    @classmethod
-    def get_result_based_replantation_coefficient(cls, result_code):
-        if result_code == "soumis_autorisation":
-            r_aa = 2.0
-        elif result_code == "soumis_esthetique":
+    def get_result_based_replantation_coefficient(self):
+        if self.result_code == "soumis_autorisation":
+            r_aa = self.settings.get("coef_autorisation", 2.0)
+        elif self.result_code == "soumis_esthetique":
             r_aa = 1.0
-        elif result_code == "soumis_securite":
+        elif self.result_code == "soumis_securite":
             r_aa = 1.0
         else:  # non_soumis
             r_aa = 0.0
@@ -66,7 +65,7 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
         minimum_length_to_plant = 0.0
         aggregated_r = 0.0
 
-        r_aa = self.get_result_based_replantation_coefficient(self.result_code)
+        r_aa = self.get_result_based_replantation_coefficient()
 
         for hedge in self.hedges.to_remove():
             if hedge.hedge_type == "alignement" and hedge.prop("bord_voie"):
