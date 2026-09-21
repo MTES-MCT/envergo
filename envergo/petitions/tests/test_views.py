@@ -59,8 +59,8 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
-    PetitionProjectInstructorView,
     PetitionProjectList,
+    PetitionProjectSummaryView,
 )
 from envergo.urlmappings.models import UrlMapping
 from envergo.users.models import User
@@ -363,7 +363,7 @@ def test_petition_project_summary_requires_authentication(
     # GIVEN an unauthenticated user
     request.user = AnonymousUser()
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response is a redirect to the login page
@@ -373,7 +373,7 @@ def test_petition_project_summary_requires_authentication(
     # GIVEN an authenticated user, by default no departments
     request.user = haie_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response status code is 403
@@ -383,7 +383,7 @@ def test_petition_project_summary_requires_authentication(
     # GIVEN an authenticated user, with department 44, same as project, but not instructor
     request.user = inactive_haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -393,7 +393,7 @@ def test_petition_project_summary_requires_authentication(
     # GIVEN a simple user with department 44
     request.user = haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -403,7 +403,7 @@ def test_petition_project_summary_requires_authentication(
     # GIVEN an instructor user with department 44
     request.user = haie_coordinator_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -415,7 +415,7 @@ def test_petition_project_summary_requires_authentication(
     # GIVEN an admin user, should be authorized
     request.user = admin_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -427,7 +427,7 @@ def test_petition_project_summary_requires_authentication(
     # refresh the user instance: `guh_role` is a cached_property
     request.user = User.objects.get(pk=haie_user.pk)
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
