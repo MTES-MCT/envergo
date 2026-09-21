@@ -64,8 +64,8 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
-    PetitionProjectInstructorView,
     PetitionProjectList,
+    PetitionProjectSummaryView,
 )
 from envergo.urlmappings.models import UrlMapping
 from envergo.users.models import User
@@ -340,7 +340,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     )
 
 
-def test_petition_project_instructor_view_requires_authentication(
+def test_petition_project_summary_requires_authentication(
     haie_user,
     inactive_haie_user_44,
     haie_user_44,
@@ -357,9 +357,7 @@ def test_petition_project_instructor_view_requires_authentication(
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
-        reverse(
-            "petition_project_instructor_view", kwargs={"reference": project.reference}
-        )
+        reverse("petition_project_summary", kwargs={"reference": project.reference})
     )
     request.site = site
     request.session = {}
@@ -370,7 +368,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an unauthenticated user
     request.user = AnonymousUser()
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response is a redirect to the login page
@@ -380,7 +378,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an authenticated user, by default no departments
     request.user = haie_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response status code is 403
@@ -390,7 +388,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an authenticated user, with department 44, same as project, but not instructor
     request.user = inactive_haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -400,7 +398,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN a simple user with department 44
     request.user = haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -410,7 +408,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an instructor user with department 44
     request.user = haie_coordinator_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -422,7 +420,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an admin user, should be authorized
     request.user = admin_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -434,7 +432,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # refresh the user instance: `guh_role` is a cached_property
     request.user = User.objects.get(pk=haie_user.pk)
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -487,6 +485,31 @@ def test_petition_project_instructor_notes_view(
     assert "Note mineure : Fa dièse" in project.instructor_free_mention
     # And a new SQL event is created
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_side_menu_opens_the_group_of_the_current_page(
+    mock_post, haie_user_44, client, site
+):
+    """The Projet group is open and current on its pages, closed on the others."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_user_44)
+
+    def project_group_button(url_name):
+        url = reverse(url_name, kwargs={"reference": project.reference})
+        html = client.get(url).content.decode()
+        return re.search(r'<button[^>]*aria-controls="sidemenu-project"[^>]*>', html)[0]
+
+    button = project_group_button("petition_project_summary")
+    assert 'aria-expanded="true"' in button
+    assert 'aria-current="true"' in button
+
+    button = project_group_button("petition_project_instructor_notes_view")
+    assert 'aria-expanded="false"' in button
+    assert "aria-current" not in button
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -670,7 +693,7 @@ def test_instructor_notes_coordinator_empty_notes(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_petition_project_instructor_view_reglementation_pages(
+def test_petition_project_summary_reglementation_pages(
     mock_post,
     haie_coordinator_44,
     haie_user,
@@ -1706,7 +1729,7 @@ def test_instructor_view_multi_departments_alert(client, haie_coordinator_44):
     project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
 
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1733,7 +1756,7 @@ def test_instructor_view_single_department_no_alert(client, haie_coordinator_44)
     hedges = HedgeDataFactory(hedges=[hedge_44])
     project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1784,7 +1807,7 @@ def test_petition_emergency_badge(
 
     # WHEN Instructor visits project instructor page
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
     # THEN badge "Urgence" is in content if "urgence" == "oui"
@@ -4290,7 +4313,7 @@ def test_instructor_view_token_matomo_invitation(
         created_by=haie_coordinator_44,
     )
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
     # WHEN haie_user tries to get page using this token
@@ -4315,7 +4338,7 @@ def test_instructor_view_token_expired_403(
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
 
@@ -4413,7 +4436,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
     # Department instructor should see the link
     client.force_login(haie_coordinator_44)
     instructor_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     response = client.get(instructor_url)
     assert response.status_code == 200
