@@ -471,6 +471,7 @@ def test_alignement_arbres_condition():
         ]
     )
     ep_criterion_evaluator = Mock(result_code="soumis_autorisation")
+    ep_criterion_evaluator.get_result_based_replantation_coefficient.return_value = 2.0
     catalog = {"reimplantation": "replantation"}
 
     condition = TreeAlignmentsCondition(
@@ -482,6 +483,7 @@ def test_alignement_arbres_condition():
     assert condition.context["aa_bord_voie_delta"] == 80
 
     ep_criterion_evaluator = Mock(result_code="soumis_esthetique")
+    ep_criterion_evaluator.get_result_based_replantation_coefficient.return_value = 1.0
 
     condition = TreeAlignmentsCondition(
         hedge_data.hedges(), 1.0, ep_criterion_evaluator, catalog
