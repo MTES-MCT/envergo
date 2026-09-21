@@ -1,10 +1,12 @@
-{% if r > 0 %}
-  <p>
-    Dans le département {{ config.department }}, la compensation exigée au titre de cette réglementation est un linéaire ou un nombre d’arbres, plantés en bord de voie, au moins équivalent à
-    {% if r == 1 %}
-      celui détruit.
-    {% else %}
-      {{ r|floatformat:"g" }} fois celui détruit.
-    {% endif %}
-  </p>
-{% endif %}
+{% with r=criterion.get_evaluator.get_replantation_coefficient %}
+  {% if r > 0 %}
+    <p>
+      Dans le département {{ config.department }}, la compensation exigée au titre de cette réglementation est un linéaire ou un nombre d’arbres, plantés en bord de voie, au moins équivalent à
+      {% if r == 1 %}
+        celui détruit.
+      {% else %}
+        {{ r|floatformat:"g" }} fois celui détruit.
+      {% endif %}
+    </p>
+  {% endif %}
+{% endwith %}

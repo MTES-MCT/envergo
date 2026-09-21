@@ -76,5 +76,4 @@ def alignement_arbres_get_instructor_view_context(
             ]
             context["missing_plantation_length"] = condition_ctx["aa_bord_voie_delta"]
 
-    context["r"] = evaluator.get_replantation_coefficient()
     return context
