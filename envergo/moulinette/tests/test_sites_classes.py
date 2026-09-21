@@ -1,14 +1,12 @@
 import pytest
-from django.template import Context
 
-from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.templatetags.moulinette import show_regulation_body
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_EDGE,
@@ -37,18 +35,32 @@ def sites_classes_perimeter(sites_classes_regulation, bizous_town_center):  # no
     )
 
 
+MODULE = "envergo.moulinette.regulations.sites_classes_haie"
+
+SITES_CLASSES_EVALUATORS = (
+    f"{MODULE}.SitesClassesHaieHru",
+    f"{MODULE}.SitesClassesHaieRu",
+    f"{MODULE}.SitesClassesHaieL3503",
+)
+
+
 @pytest.fixture()
-def sites_classes_criterion(
+def sites_classes_criteria(
     sites_classes_regulation, sites_classes_perimeter, bizous_town_center  # noqa
 ):
-    return CriterionFactory(
-        title="Sites classés",
-        regulation=sites_classes_regulation,
-        perimeter=sites_classes_perimeter,
-        evaluator="envergo.moulinette.regulations.sites_classes_haie.SitesClassesHaie",
-        activation_map=bizous_town_center,
-        activation_mode="hedges_intersection",
-    )
+    """One Sites classés criterion for each hedge category."""
+
+    return [
+        CriterionFactory(
+            title="Sites classés",
+            regulation=sites_classes_regulation,
+            perimeter=sites_classes_perimeter,
+            evaluator=evaluator,
+            activation_map=bizous_town_center,
+            activation_mode="hedges_intersection",
+        )
+        for evaluator in SITES_CLASSES_EVALUATORS
+    ]
 
 
 @pytest.mark.parametrize(
@@ -59,7 +71,7 @@ def sites_classes_criterion(
         (COORDS_BIZOUS_OUTSIDE, "non_concerne"),
     ],
 )
-def test_moulinette_evaluation(coords, expected_result, sites_classes_criterion):
+def test_moulinette_evaluation(coords, expected_result, sites_classes_criteria):
     DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(coords=coords)], reimplantation="replantation"
@@ -73,50 +85,26 @@ def test_moulinette_evaluation(coords, expected_result, sites_classes_criterion)
         )
 
 
-def aa_only(moulinette):
-    """The flag computed by the sites classés regulation for the hru hedges."""
-    evaluator = moulinette.sites_classes_haie.get_evaluator()
-    return evaluator.aa_only_by_category[HedgeCategory.hru]
+@pytest.mark.parametrize(
+    "category, hedge_kwargs",
+    [
+        ("ru", {"type_haie": "mixte"}),
+        ("hru", {"type_haie": "alignement", "bord_voie": False}),
+        ("l350_3", {"type_haie": "alignement", "bord_voie": True}),
+    ],
+)
+def test_moulinette_evaluation_by_category(
+    category, hedge_kwargs, sites_classes_criteria
+):
+    """Under the régime unique, each category gets its own "soumis" result."""
 
-
-def test_aa_only_flag(sites_classes_criterion):
-    """Test that aa_only is True when all hedges are alignement d'arbres."""
-    DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
+    RUConfigHaieFactory()
     data = make_moulinette_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, type_haie="alignement")],
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, **hedge_kwargs)],
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert aa_only(moulinette) is True
+    regulation = moulinette.sites_classes_haie
 
-
-def test_aa_only_false_with_mixed_hedges(sites_classes_criterion):
-    """Test that aa_only is False when hedges include non-alignement types."""
-    DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
-    data = make_moulinette_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)],
-        reimplantation="replantation",
-    )
-    moulinette = MoulinetteHaie(data)
-    assert aa_only(moulinette) is False
-
-
-def test_regulation_body_reads_the_flag_of_its_category(sites_classes_criterion):
-    """The regulation template reads the flag from the regulation evaluator."""
-    DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
-    data = make_moulinette_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, type_haie="alignement")],
-        reimplantation="replantation",
-    )
-    moulinette = MoulinetteHaie(data)
-    context = Context(
-        {
-            "moulinette": moulinette,
-            "config": moulinette.config,
-            "category": HedgeCategory.hru,
-        }
-    )
-    body = show_regulation_body(
-        context, moulinette.sites_classes_haie, HedgeCategory.hru
-    )
-    assert "soumis à autorisation spéciale" in body
+    assert regulation.result == "soumis"
+    assert getattr(regulation, f"{category}__sites_classes_haie").result == "soumis"
