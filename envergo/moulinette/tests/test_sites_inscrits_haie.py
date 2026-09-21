@@ -6,6 +6,7 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.utils import (
     COORDS_BIZOUS_EDGE,
@@ -30,20 +31,31 @@ def sites_inscrits_perimeter(sites_inscrits_regulation, bizous_town_center):  # 
     )
 
 
+MODULE = "envergo.moulinette.regulations.sites_inscrits_haie"
+
+SI_EVALUATORS = (
+    f"{MODULE}.SitesInscritsHaieHru",
+    f"{MODULE}.SitesInscritsHaieRu",
+    f"{MODULE}.SitesInscritsHaieL3503",
+)
+
+
 @pytest.fixture()
 def sites_inscrits_criteria(
     sites_inscrits_regulation, sites_inscrits_perimeter, bizous_town_center  # noqa
 ):
+    """One Sites inscrits criterion for each hedge category."""
 
     criteria = [
         CriterionFactory(
             title="Sites inscrits",
             regulation=sites_inscrits_regulation,
             perimeter=sites_inscrits_perimeter,
-            evaluator="envergo.moulinette.regulations.sites_inscrits_haie.SitesInscritsHaie",
+            evaluator=evaluator,
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
-        ),
+        )
+        for evaluator in SI_EVALUATORS
     ]
     return criteria
 
@@ -67,23 +79,26 @@ def test_moulinette_evaluation(coords, expected_result, sites_inscrits_criteria)
         assert moulinette.sites_inscrits_haie.hru__si_haie.result == expected_result
 
 
-def test_aa_only_flag(sites_inscrits_criteria):
-    """Test that aa_only is True when all hedges are alignement d'arbres."""
-    DCConfigHaieFactory(regulations_available=["sites_inscrits_haie"])
+@pytest.mark.parametrize(
+    "category, hedge_kwargs",
+    [
+        ("ru", {"type_haie": "mixte"}),
+        ("hru", {"type_haie": "alignement", "bord_voie": False}),
+        ("l350_3", {"type_haie": "alignement", "bord_voie": True}),
+    ],
+)
+def test_moulinette_evaluation_by_category(
+    category, hedge_kwargs, sites_inscrits_criteria
+):
+    """Under the régime unique, each category gets its own "soumis" result."""
+
+    RUConfigHaieFactory()
     data = make_moulinette_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, type_haie="alignement")],
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, **hedge_kwargs)],
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.catalog.get("aa_only") is True
+    regulation = moulinette.sites_inscrits_haie
 
-
-def test_aa_only_false_with_mixed_hedges(sites_inscrits_criteria):
-    """Test that aa_only is False when hedges include non-alignement types."""
-    DCConfigHaieFactory(regulations_available=["sites_inscrits_haie"])
-    data = make_moulinette_haie_data(
-        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE)],
-        reimplantation="replantation",
-    )
-    moulinette = MoulinetteHaie(data)
-    assert moulinette.catalog.get("aa_only") is False
+    assert regulation.result == "soumis"
+    assert getattr(regulation, f"{category}__si_haie").result == "soumis"

@@ -1,4 +1,5 @@
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
@@ -14,9 +15,10 @@ class SitesInscritsRegulation(HaieRegulationEvaluator):
     }
 
 
-class SitesInscritsHaie(HaieCriterionEvaluator):
+class SitesInscritsHaieHru(HaieCriterionEvaluator):
     choice_label = "Sites inscrits > Sites inscrits Haie"
     base_slug = "si_haie"
+    category = HedgeCategory.hru
     plantation_conditions = []
 
     RESULT_MATRIX = {
@@ -29,11 +31,6 @@ class SitesInscritsHaie(HaieCriterionEvaluator):
         False: "non_concerne",
     }
 
-    def get_catalog_data(self):
-        data = super().get_catalog_data()
-        data["aa_only"] = all(h.hedge_type == "alignement" for h in self.hedges)
-        return data
-
     def get_result_data(self):
         """Check if any hedge (to remove or to plant) intersects the activation map.
 
@@ -41,3 +38,11 @@ class SitesInscritsHaie(HaieCriterionEvaluator):
         which implies that at least one hedge intersects the perimeter.
         """
         return True
+
+
+class SitesInscritsHaieRu(SitesInscritsHaieHru):
+    category = HedgeCategory.ru
+
+
+class SitesInscritsHaieL3503(SitesInscritsHaieHru):
+    category = HedgeCategory.l350_3
