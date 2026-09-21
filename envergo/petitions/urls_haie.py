@@ -28,7 +28,12 @@ instruction_urlpatterns = [
     path(
         "",
         PetitionProjectInstructorView.as_view(),
-        name="petition_project_instructor_view",
+        name="petition_project_summary",
+    ),
+    path(
+        "resultat-simulateur/",
+        PetitionProjectInstructorView.as_view(),
+        name="petition_project_moulinette_result",
     ),
     path(
         "dossier-complet/",
