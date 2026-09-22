@@ -2,7 +2,7 @@ import logging
 import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum, IntEnum, nonmember
 from functools import reduce
 from itertools import groupby
@@ -37,11 +37,13 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.html import format_html
 from django.utils.module_loading import import_string
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from model_utils import Choices
 from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.phonenumber import PhoneNumber
 
 from envergo.evaluations.models import (
     RESULT_CASCADE,
@@ -882,6 +884,11 @@ class Criterion(models.Model):
         return self._evaluator
 
     @property
+    def catalog(self):
+        """Return the data computed by the evaluator."""
+        return self._evaluator.catalog_data
+
+    @property
     def result_code(self):
         """Return the criterion result code."""
         if not hasattr(self, "_evaluator"):
@@ -1342,8 +1349,31 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
-    contacts_info = models.TextField(
-        "Champ html des informations de contact", blank=True
+    prohibition_range = DateRangeField(
+        "Période d’interdiction de destruction de haies",
+        null=True,
+        blank=True,
+    )
+
+    guh_structure = models.CharField(
+        "Structure GUH (DDT ou DDTM)",
+        default="Direction Départementale des Territoires (DDT)",
+    )
+    guh_service_name = models.CharField(
+        "Nom du service GUH",
+        blank=True,
+    )
+    guh_email = models.EmailField(
+        "Email GUH",
+        blank=True,
+    )
+    guh_phone = PhoneNumberField(
+        "Téléphone GUH",
+        blank=True,
+    )
+    guh_address = models.TextField(
+        "Adresse GUH",
+        blank=True,
     )
 
     contacts_and_links = models.TextField(
@@ -1401,6 +1431,25 @@ class ConfigHaie(ConfigBase):
 
     def clean(self):
         super().clean()
+        if (
+            self.prohibition_range is not None
+            and self.prohibition_range.lower is not None
+            and self.prohibition_range.upper is not None
+        ):
+            if self.prohibition_range.lower.year != self.prohibition_range.upper.year:
+                raise ValidationError(
+                    {
+                        "prohibition_range": "Merci de renseigner deux dates de la même année."
+                    }
+                )
+            if self.prohibition_range.upper > self.prohibition_range.lower and (
+                self.prohibition_range.upper - self.prohibition_range.lower
+            ) < timedelta(days=7 * 21):
+                raise ValidationError(
+                    {
+                        "prohibition_range": "La période d’interdiction doit durer au moins 21 semaines consécutives."
+                    }
+                )
         if self.is_activated and self.demarche_numerique_pre_fill_config is not None:
             # add constraints on the pre-fill configuration json to avoid unexpected entries
 
@@ -1606,6 +1655,21 @@ class ConfigHaie(ConfigBase):
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
+            CheckConstraint(
+                check=Q(
+                    (
+                        Q(prohibition_range__startswith__isnull=False)
+                        & Q(prohibition_range__endswith__isnull=False)
+                    )
+                    | (
+                        Q(prohibition_range__startswith__isnull=True)
+                        & Q(prohibition_range__endswith__isnull=True)
+                    )
+                ),
+                name="confighaie_prohibition_range_both_or_no_value",
+                violation_error_message="Période d’interdiction : précisez à la fois une date "
+                "de début et une date de fin, ou aucune date.",
+            ),
         ]
 
     @property
@@ -1626,6 +1690,84 @@ class ConfigHaie(ConfigBase):
 
         coeffs = self.single_procedure_settings.get("coeff_compensation")
         return coeffs
+
+    @staticmethod
+    def build_contact_info(data_object):
+        """
+        Used to build an <address> tag for ConfigHaie of for some other objects
+        wearing data from ConfigHaie objects.
+        """
+        if not data_object.guh_email and not data_object.guh_phone:
+            structure = (
+                data_object.guh_structure
+                or "Direction Départementale des Territoires (DDT)"
+            )
+
+            return format_html(
+                "<address>Nous ne disposons pas d’information sur le point de contact "
+                "privilégié au sein de la {}</address>",
+                structure,
+            )
+
+        address_rows = ["<strong>Guichet unique de la haie</strong>"]
+        if data_object.guh_service_name:
+            address_rows.append(
+                format_html("<strong>{}</strong>", data_object.guh_service_name)
+            )
+        if data_object.guh_email:
+            address_rows.append(
+                format_html(
+                    'Email : <a href="mailto:{}">{}</a>',
+                    data_object.guh_email,
+                    data_object.guh_email,
+                )
+            )
+        if data_object.guh_phone:
+            phone = data_object.guh_phone
+            if isinstance(phone, str):
+                phone = PhoneNumber.from_string(phone)
+            address_rows.append(
+                format_html(
+                    'Téléphone : <a href="tel:{}">{}</a>',
+                    str(phone),
+                    phone.as_national,
+                )
+            )
+
+        return f"<address>{'<br>'.join(address_rows)}</address>"
+
+    @property
+    def contact_info(self):
+        return self.build_contact_info(self)
+
+    @property
+    def prohibition_range_display(self) -> str:
+        """
+        prohibition range is stored with end date excluded: prohibition_range.upper
+        is the first day when work on hedges is allowed.
+
+        However prohibition range is *displayed* with end date included:
+        "prohibited from 15th march to 31st august"
+        means you can work on hedges on september 1st.
+        """
+        from django.template.defaultfilters import date as date_format
+
+        if self.prohibition_range is None:
+            return ""
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper - timedelta(days=1)
+        return f"du {date_format(start, 'j F')} au {date_format(end, 'j F')}"
+
+    def is_date_in_prohibition_range(self, tested_date: date):
+        if self.prohibition_range is None:
+            return None
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper
+        return (
+            (start.month, start.day)
+            <= (tested_date.month, tested_date.day)
+            < (end.month, end.day)
+        )
 
 
 TEMPLATE_KEYS = [
@@ -3096,8 +3238,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
 
-        # add an entry in the project summary
-        lineaire_detruit_pac = round(self.catalog.get("lineaire_detruit_pac", 0))
+        haies = self.catalog.get("haies")
+        lineaire_detruit_pac = (
+            round(haies.hedges().to_remove().pac().length) if haies else 0
+        )
         localisation_pac = self.catalog.get("localisation_pac", False)
 
         if localisation_pac and lineaire_detruit_pac > 0:

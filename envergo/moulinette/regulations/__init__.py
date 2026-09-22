@@ -1,6 +1,6 @@
 import json
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import ChainMap, defaultdict
 from dataclasses import dataclass
 from enum import Enum
 from types import SimpleNamespace
@@ -444,6 +444,31 @@ class AmenagementRegulationEvaluator(RegulationEvaluator):
         raise NotImplementedError("Not needed for Envergo aménagement")
 
 
+class AlignementsOnlyMixin:
+    """Tell, per hedge category, whether its hedges are all alignements d'arbres.
+
+    Regulation templates whose wording depends on it read
+    `regulation.get_evaluator.aa_only_by_category`.
+    """
+
+    @property
+    def aa_only_by_category(self):
+        haies = self.moulinette.catalog.get("haies")
+        if not haies:
+            return {category: False for category in HedgeCategory}
+
+        single_procedure = self.moulinette.config.single_procedure
+        return {
+            category: all(
+                hedge.hedge_type == "alignement"
+                for hedge in haies.hedges().evaluator_category(
+                    single_procedure, category
+                )
+            )
+            for category in HedgeCategory
+        }
+
+
 class HaieRegulationEvaluator(RegulationEvaluator):
     """Specific evaluator for the haies site."""
 
@@ -599,15 +624,17 @@ class CriterionEvaluator(ABC):
         # evaluators (e.g. EspecesProtegeesRegimeUnique) read configurable
         # thresholds from settings while building catalog data.
         self.settings = settings
-        self.moulinette.catalog.update(self.get_catalog_data())
+        # Form inputs are shared in the moulinette catalog
+        self.moulinette.catalog.update(self.get_form_data())
+        # Other variables computed by the evaluator and needed to render templates are in dedicated catalog
+        self.catalog_data = {}
+        # Reads look in the evaluator's own data first, then in the shared
+        # catalog. Writes only ever land in the evaluator's own data.
+        self.catalog = ChainMap(self.catalog_data, moulinette.catalog)
+        self.catalog_data.update(self.get_catalog_data())
 
-    @property
-    def catalog(self):
-        """Is is a simple shortcut for readability purpose."""
-        return self.moulinette.catalog
-
-    def get_catalog_data(self):
-        """Get data to inject to the global catalog."""
+    def get_form_data(self):
+        """Return the cleaned answers to the criterion additional form, if any."""
 
         form = self.get_form()
         if form and form.is_valid():
@@ -619,6 +646,10 @@ class CriterionEvaluator(ABC):
             data = {}
 
         return data
+
+    def get_catalog_data(self):
+        """Return the data computed by this evaluator, kept in its own catalog."""
+        return {}
 
     def get_result_data(self):
         """Return the data used to perform the criterion check."""
@@ -671,7 +702,7 @@ class CriterionEvaluator(ABC):
         result_code = self.get_result_code(result_data)
         result = self.get_result(result_code)
         self._result_code, self._result = result_code, result
-        self.moulinette.catalog.update(self.get_post_evaluate_data())
+        self.catalog_data.update(self.get_post_evaluate_data())
 
     def get_post_evaluate_data(self):
         """Data to inject into the catalog after the result is known.
