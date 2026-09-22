@@ -8,7 +8,8 @@ from envergo.utils.fields import get_human_readable_value
 
 logger = logging.getLogger(__name__)
 
-# Key names follow the numbering of the instruction technique sent to prefects.
+# Maps (hedge_category, density_level) to the official coefficient key name.
+# Coefficient key names follow the numbering of the instruction technique sent to prefects.
 COEFF_KEY = {
     ("buissonnante", "HD"): "R1_buissonnante_HD",
     ("buissonnante", "LD"): "R2_buissonnante_LD",
