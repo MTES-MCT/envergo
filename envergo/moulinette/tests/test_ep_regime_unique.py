@@ -410,10 +410,7 @@ def test_ep_ru_catalog_with_sensitive_species(ep_ru_criterion):
 
 
 def test_ep_ru_catalog_species_ordering(ep_ru_criterion):
-    """Oiseaux come first, then Flore, then other groups alphabetically.
-
-    Within a group, species are sorted by common name.
-    """
+    """Group priority, then enjeu descending, then name (empty last)."""
     RUConfigHaieFactory()
     setup_species_near_hedges(
         [
@@ -438,14 +435,14 @@ def test_ep_ru_catalog_species_ordering(ep_ru_criterion):
             {
                 "cd_ref": 9104,
                 "level": "fort",
-                "adhoc_group": "Amphibiens",
-                "common_name": "Triton",
+                "adhoc_group": "Oiseaux",
+                "common_name": "Alouette",
             },
             {
                 "cd_ref": 9105,
-                "level": "faible",
+                "level": "fort",
                 "adhoc_group": "Oiseaux",
-                "common_name": "Alouette",
+                "common_name": "",
             },
         ]
     )
@@ -457,14 +454,15 @@ def test_ep_ru_catalog_species_ordering(ep_ru_criterion):
     )
 
     ordering = [
-        (s.adhoc_group, s.common_name) for s in moulinette.catalog["protected_species"]
+        (s.adhoc_group, s.local_level_of_concern, s.common_name)
+        for s in moulinette.catalog["protected_species"]
     ]
     assert ordering == [
-        ("Oiseaux", "Alouette"),
-        ("Oiseaux", "Mésange"),
-        ("Flore", "Orchidée"),
-        ("Amphibiens", "Triton"),
-        ("Mammifères", "Blaireau"),
+        ("Oiseaux", "fort", "Alouette"),
+        ("Oiseaux", "fort", ""),
+        ("Oiseaux", "moyen", "Mésange"),
+        ("Flore", "faible", "Orchidée"),
+        ("Mammifères", "fort", "Blaireau"),
     ]
 
 

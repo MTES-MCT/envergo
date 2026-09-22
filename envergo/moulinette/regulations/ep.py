@@ -11,6 +11,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.hedges.models import (
+    LEVELS_OF_CONCERN,
     PACAGE_RE,
     HedgeCategory,
     HedgeList,
@@ -58,9 +59,24 @@ class EPRegulation(HaieRegulationEvaluator):
     }
 
 
-# Custom ordering for species
-# Move those groups at the top of the list
+# Oiseaux and Flore appear before other groups
 GROUP_PRIORITY = {"Oiseaux": 0, "Flore": 1}
+
+# Highest rank first: majeur=6 sorts before faible=1
+LEVEL_RANK = {value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1)}
+
+
+def species_sort_key(species):
+    """Sort key: group priority, group name, enjeu descending, name (empty last)."""
+    level = getattr(species, "local_level_of_concern", None) or species.level_of_concern
+    name = species.common_name
+    return (
+        GROUP_PRIORITY.get(species.adhoc_group, 2),
+        species.adhoc_group,
+        -LEVEL_RANK.get(level, 0),
+        not bool(name),
+        name,
+    )
 
 
 class EPMixin:
@@ -83,18 +99,7 @@ class EPMixin:
         catalog = super().get_catalog_data()
         if self.hedges:
             species = self.get_protected_species(self.hedges)
-
-            # Custom ordering for species
-            sorted_species = sorted(
-                species,
-                key=lambda s: (
-                    GROUP_PRIORITY.get(s.adhoc_group, 2),
-                    s.adhoc_group,
-                    s.common_name,
-                ),
-            )
-
-            catalog["protected_species"] = sorted_species
+            catalog["protected_species"] = sorted(species, key=species_sort_key)
         return catalog
 
 
