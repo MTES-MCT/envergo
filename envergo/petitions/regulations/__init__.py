@@ -27,6 +27,7 @@ def get_instructor_view_context(
 ):
     """Retrieve instructor view context for a given evaluator.
 
+    Concatenate the evaluator own catalog and some inputs specifically computed for the instructor view
     Uses a class-based dispatch registry: each evaluator class can register
     a context-building function via ``@evaluator_instructor_view_context_getter``.
 
@@ -34,9 +35,14 @@ def get_instructor_view_context(
     that registry functions can query for pre-computed plantation conditions
     instead of re-evaluating them.
     """
+    context = {}
+    if isinstance(evaluator, CriterionEvaluator):
+        context.update(evaluator.catalog_data)
     cls = type(evaluator)
     if cls in _evaluator_instructors_information_registry:
-        return _evaluator_instructors_information_registry[cls](
-            evaluator, petition_project, moulinette, plantation_evaluation
+        context.update(
+            _evaluator_instructors_information_registry[cls](
+                evaluator, petition_project, moulinette, plantation_evaluation
+            )
         )
-    return {}
+    return context

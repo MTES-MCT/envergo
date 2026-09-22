@@ -32,7 +32,7 @@
 
 <h5 class="fr-mt-3w">Liste des espèces</h5>
 
-{% if moulinette.catalog.protected_species %}
+{% if protected_species %}
   {% if moulinette.config.single_procedure %}
 
     <p>
@@ -51,7 +51,7 @@
       </div>
     {% endif %}
 
-    {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species_enjeu_majeur %}
+    {% include 'hedges/_species_table_ru.html' with species=protected_species_enjeu_majeur %}
 
     <p>
       <strong>Cortège-type départemental (enjeux faible à très fort)</strong>
@@ -69,12 +69,12 @@
                 aria-controls="public-species-list">Voir la liste des espèces</button>
       </h3>
       <div id="public-species-list" class="fr-collapse fr-px-0 fr-mx-0">
-        {% include 'hedges/_species_table_ru.html' with species=moulinette.catalog.protected_species_public %}
+        {% include 'hedges/_species_table_ru.html' with species=protected_species_public %}
       </div>
     </section>
 
   {% else %}
-    {% include 'hedges/_species_table.html' with species=moulinette.catalog.protected_species %}
+    {% include 'hedges/_species_table.html' with species=protected_species %}
   {% endif %}
 {% else %}
   <p>Pas de liste d'espèces associée à cette simulation</p>
