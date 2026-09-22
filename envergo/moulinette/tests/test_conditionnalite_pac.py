@@ -78,8 +78,8 @@ def test_bcae8_form_answers_are_shared_and_computed_data_is_not():
     assert "lineaire_detruit_pac" not in moulinette.catalog
 
     criterion = moulinette.conditionnalite_pac.bcae8_before_ru
-    assert "lineaire_total" not in criterion.get_catalog_data()
-    assert criterion.get_catalog_data()["lineaire_detruit_pac"] > 0
+    assert "lineaire_total" not in criterion.catalog
+    assert criterion.catalog["lineaire_detruit_pac"] > 0
 
 
 def test_bcae8_impossible_case():

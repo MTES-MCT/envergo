@@ -27,7 +27,7 @@
       <h2>Bassin versant intercepté</h2>
 
       <p>
-        Estimation de bassin versant intercepté : {{ moulinette.loi_sur_leau.ecoulement_avec_bv.get_catalog_data.catchment_surface }} m².
+        Estimation de bassin versant intercepté : {{ moulinette.loi_sur_leau.ecoulement_avec_bv.catalog.catchment_surface }} m².
       </p>
 
       <p>
@@ -199,7 +199,7 @@
       {% for criterion in regulation.criteria.all %}
         <h3>{{ regulation.title }} › {{ criterion.backend_title }}</h3>
         <dl>
-          {% for key, value in criterion.get_catalog_data.items %}
+          {% for key, value in criterion.catalog.items %}
             <dt>{{ key }}</dt>
             <dd>
               {{ value|truncatechars:150 }}

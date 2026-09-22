@@ -883,7 +883,8 @@ class Criterion(models.Model):
         """
         return self._evaluator
 
-    def get_catalog_data(self):
+    @property
+    def catalog(self):
         """Return the data computed by the evaluator."""
         return self._evaluator.catalog_data
 

@@ -35,7 +35,7 @@ def regime_unique_haie_criterion(france_map):
 
 def ep_ru_catalog(moulinette):
     """The data computed by the EP régime unique evaluator."""
-    return moulinette.ep.ru__ep_regime_unique.get_catalog_data()
+    return moulinette.ep.ru__ep_regime_unique.catalog
 
 
 # ---------------------------------------------------------------------------

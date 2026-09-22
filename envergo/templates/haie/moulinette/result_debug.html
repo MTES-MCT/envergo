@@ -165,7 +165,7 @@
         {% for criterion in regulation.criteria.all %}
           <h3>{{ regulation.title }} › {{ criterion.backend_title }}</h3>
           <dl>
-            {% for key, value in criterion.get_catalog_data.items %}
+            {% for key, value in criterion.catalog.items %}
               <dt>{{ key }}</dt>
               <dd>
                 {{ value|truncatechars:150 }}
