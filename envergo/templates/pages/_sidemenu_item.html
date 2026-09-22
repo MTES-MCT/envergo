@@ -3,6 +3,7 @@
      href="{{ href }}"
      {% if is_current %}aria-current="page"{% endif %}>
     {{ label }}
+    {% if is_current %}<span class="fr-sr-only">(page active)</span>{% endif %}
     {% if marker %}
       <span class="sidemenu-marker" aria-hidden="true">{{ marker }}</span>
       <span class="fr-sr-only">{{ marker_label }}</span>
