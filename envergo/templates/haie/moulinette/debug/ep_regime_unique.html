@@ -74,5 +74,17 @@
 
 {% if protected_species and user.is_staff %}
   <h6 class="fr-mt-3w">Cortège complet (incluant espèces à enjeu majeur)</h6>
-  {% include 'hedges/_species_table_ru.html' with species=protected_species %}
+  <section class="fr-accordion fr-mb-3w">
+    <h3 class="fr-accordion__title">
+      <button type="button"
+              class="fr-accordion__btn"
+              aria-expanded="false"
+              aria-controls="public-species-list">Voir la liste des espèces</button>
+    </h3>
+    <div id="public-species-list" class="fr-collapse fr-px-0 fr-mx-0">
+
+      {% include 'hedges/_species_table_ru.html' with species=protected_species %}
+    </div>
+  </section>
+
 {% endif %}
