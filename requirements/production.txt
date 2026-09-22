@@ -35,10 +35,13 @@ billiard==4.2.1
     # via
     #   -r base.txt
     #   celery
-boto3==1.40.4
-    # via django-storages
-botocore==1.40.4
+boto3==1.43.89
     # via
+    #   -r base.txt
+    #   django-storages
+botocore==1.43.89
+    # via
+    #   -r base.txt
     #   boto3
     #   s3transfer
 build==1.3.0
@@ -138,7 +141,7 @@ django-ratelimit==4.1.0
 django-redis==6.0.0
     # via -r base.txt
 django-storages[boto3]==1.14.6
-    # via -r production.in
+    # via -r base.txt
 faker==37.5.3
     # via -r base.txt
 fiona==1.10.1
@@ -159,8 +162,9 @@ idna==3.10
     #   anyio
     #   requests
     #   yarl
-jmespath==1.0.1
+jmespath==1.1.0
     # via
+    #   -r base.txt
     #   boto3
     #   botocore
 kombu==5.5.4
@@ -255,8 +259,10 @@ rjsmin==1.2.5
     # via
     #   -r base.txt
     #   django-compressor
-s3transfer==0.13.1
-    # via boto3
+s3transfer==0.19.2
+    # via
+    #   -r base.txt
+    #   boto3
 scipy==1.16.1
     # via -r base.txt
 sentry-sdk==2.34.1

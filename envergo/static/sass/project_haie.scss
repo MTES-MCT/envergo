@@ -1598,3 +1598,8 @@ button.hide-expanded[aria-expanded="true"] {
     display: none;
   }
 }
+
+td > div.pac-hedges-details {
+  display: flex;
+  justify-content: space-between;
+}
