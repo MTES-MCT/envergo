@@ -143,7 +143,7 @@ def compute_hedge_data(hedge, zone_id, zone_config, density_400):
     """Return the coefficient record of one hedge to remove.
 
     Some hedges cannot be scored: no zone config, or a type without RU coefficient.
-    They get a zeroed record with ``zone_config=None``.
+    They get a default record with ``zone_config=None``.
     """
     if zone_config is None:
         return _unresolved_hedge_record(hedge, zone_id)
