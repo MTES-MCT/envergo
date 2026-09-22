@@ -1,5 +1,3 @@
-"""Per-hedge compensation coefficients for the régime unique."""
-
 import logging
 
 from envergo.geodata.models import MAP_TYPES, Zone
