@@ -867,6 +867,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_category = "dossier"
     event_action = None
     context_object_name = "petition_project"
+    # Side menu group holding the page: "project", "regulations" or None.
+    menu_section = None
 
     def get_object(self, queryset=None):
         """Return the cached object, fetching it only once per request."""
@@ -958,6 +960,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["has_unread_messages"] = (
             context["has_change_permission"] and self.object.has_unread_messages
         )
+        context["menu_section"] = self.menu_section
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -1114,10 +1117,34 @@ class BasePetitionProjectInstructorView(
             )
 
 
-class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailView):
-    """View for petition project instructor page"""
+class PetitionProjectSummaryView(BasePetitionProjectInstructorView, DetailView):
+    """Project summary"""
 
-    template_name = "haie/petitions/instructor_view.html"
+    template_name = "haie/petitions/project_summary.html"
+    menu_section = "project"
+    event_action = "consultation"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
+
+        context.update(get_project_context(self.object, context["moulinette"]))
+        context["config"] = context["moulinette"].config
+        return context
+
+    def get_success_url(self):
+        return reverse("petition_project_summary", kwargs=self.kwargs)
+
+
+class PetitionProjectMoulinetteResultView(
+    BasePetitionProjectInstructorView, DetailView
+):
+    """What the evaluation result shows."""
+
+    template_name = "haie/petitions/moulinette_result.html"
+    menu_section = "project"
     event_action = "consultation"
 
     def get_context_data(self, **kwargs):
@@ -1135,7 +1162,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
         return context
 
     def get_success_url(self):
-        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+        return reverse("petition_project_summary", kwargs=self.kwargs)
 
 
 class BasePetitionProjectInstructorUpdateView(
@@ -1157,6 +1184,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
+    menu_section = "regulations"
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -1431,7 +1459,7 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
             self.log_event_action(self.request)
 
-        url = reverse("petition_project_instructor_view", args=[self.object.reference])
+        url = reverse("petition_project_summary", args=[self.object.reference])
         return HttpResponseRedirect(url)
 
 
@@ -1479,6 +1507,7 @@ class PetitionProjectInstructorAlternativeView(
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternatives.html"
+    menu_section = "project"
     form_class = SimulationForm
 
     def get_form_kwargs(self):
@@ -1748,6 +1777,7 @@ class PetitionProjectInstructorAlternativeResultsView(
     event_action = None  # Avoid log_event
     simulation_object = None
     template_name = "haie/petitions/instructor_view_alternative_display.html"
+    menu_section = "project"
 
     def get_queryset(self):
         """Overrides queryset to avoid unused anotations"""
@@ -2298,7 +2328,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
             created_by=request.user,
             petition_project=project,
         )
-        url = reverse("petition_project_instructor_view", args=[project.reference])
+        url = reverse("petition_project_summary", args=[project.reference])
         invitation_url = update_qs(
             self.request.build_absolute_uri(url),
             {
@@ -2398,7 +2428,7 @@ class PetitionProjectAcceptInvitation(RedirectView):
         if not token or not self.TOKEN_PATTERN.match(token):
             raise SuspiciousOperation("Invalid invitation token format")
 
-        url = reverse("petition_project_instructor_view", args=[reference])
+        url = reverse("petition_project_summary", args=[reference])
         url_with_token = f"{url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={token}"
         return url_with_token
 

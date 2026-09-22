@@ -11,14 +11,20 @@
       {% with reference=petition_project.reference %}
 
         <ul class="fr-sidemenu__list">
-          {% sidemenu_item "Résumé du dossier" 'petition_project_instructor_view' reference %}
 
           <li class="fr-sidemenu__item">
-            <button aria-expanded="{% if current_regulation %}true{% else %}false{% endif %}"
-                    {% if current_regulation %}aria-current="true"{% endif %}
-                    aria-controls="sidemenu-regulations"
-                    type="button"
-                    class="fr-sidemenu__btn">Réglementations</button>
+            {% sidemenu_group_button "Projet" section="project" controls="sidemenu-project" %}
+            <div class="fr-collapse" id="sidemenu-project">
+              <ul class="fr-sidemenu__list">
+                {% sidemenu_item "Description du projet" 'petition_project_summary' reference %}
+                {% sidemenu_item "Résultat du simulateur" 'petition_project_moulinette_result' reference %}
+                {% sidemenu_item "Simulations alternatives" 'petition_project_instructor_alternative_view' reference %}
+              </ul>
+            </div>
+          </li>
+
+          <li class="fr-sidemenu__item">
+            {% sidemenu_group_button "Réglementations" section="regulations" controls="sidemenu-regulations" %}
             <div class="fr-collapse" id="sidemenu-regulations">
               <ul class="fr-sidemenu__list">
                 {% for regulation in regulations %}
@@ -27,8 +33,6 @@
               </ul>
             </div>
           </li>
-
-          {% sidemenu_item "Dossier complet" 'petition_project_instructor_dossier_complet_view' reference %}
         </ul>
 
         <hr class="separator--light">
@@ -39,7 +43,6 @@
           {% if has_change_permission %}
             {% sidemenu_item "Services consultés" 'petition_project_instructor_consultations_view' reference %}
           {% endif %}
-          {% sidemenu_item "Simulations alternatives" 'petition_project_instructor_alternative_view' reference %}
           {% if has_unread_messages %}
             {% sidemenu_item "Messagerie" 'petition_project_instructor_messagerie_view' reference marker="●" marker_label="Messages non lus" %}
           {% else %}
