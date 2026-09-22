@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -297,13 +297,41 @@ def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
 
 
 class TestConfigHaieProhibitionDates:
-    @pytest.mark.skip
-    def test_confighaie_has_two_dates_or_no_date(self):
-        assert 0 == 1
+    def test_two_dates_must_be_in_the_same_year(self, loire_atlantique_department):
+        with pytest.raises(ValidationError) as exc_info:
+            config_haie = ConfigHaie(
+                department=loire_atlantique_department,
+                is_activated=True,
+                prohibition_range=DateRange(date(2027, 4, 2), date(2028, 4, 2)),
+            )
+            config_haie.clean()
+        assert exc_info.value.messages == [
+            "Merci de renseigner deux dates de la même année."
+        ]
 
-    @pytest.mark.skip
-    def test_start_date_before_end_date(self):
-        assert 0 == 1
+    def test_range_must_be_at_least_21_weeks(self, loire_atlantique_department):
+        with pytest.raises(ValidationError) as exc_info:
+            start = date(2027, 3, 15)
+            end = start + timedelta(days=(21 * 7 - 1))
+            config_haie = ConfigHaie(
+                department=loire_atlantique_department,
+                is_activated=True,
+                prohibition_range=DateRange(start, end),
+            )
+            config_haie.clean()
+        assert exc_info.value.messages == [
+            "La période d’interdiction doit durer au moins 21 semaines consécutives."
+        ]
+
+    def test_range_can_be_exactly_21_weeks(self, loire_atlantique_department):
+        start = date(2027, 3, 15)
+        end = start + timedelta(days=21 * 7)
+        config_haie = ConfigHaie(
+            department=loire_atlantique_department,
+            is_activated=True,
+            prohibition_range=DateRange(start, end),
+        )
+        config_haie.clean()
 
     @pytest.mark.parametrize(
         "stored_range,tested_date,expected_result",
@@ -329,7 +357,7 @@ class TestConfigHaieProhibitionDates:
             pytest.param(
                 DateRange(date(2025, 3, 1), date(2025, 6, 1)),
                 date(2026, 6, 1),
-                True,
+                False,
                 id="tested_date_equals_end_date",
             ),
             pytest.param(
@@ -353,6 +381,12 @@ class TestConfigHaieProhibitionDates:
             prohibition_range=stored_range,
         )
         assert confhaie.is_date_in_prohibition_range(tested_date) == expected_result
+
+    def test_prohibition_range_display(self):
+        confighaie = ConfigHaie(
+            prohibition_range=DateRange(date(2027, 3, 18), date(2027, 9, 1))
+        )
+        assert confighaie.prohibition_range_display == "du 18 mars au 31 août"
 
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(
