@@ -89,7 +89,7 @@ def test_each_criterion_carries_its_own_geoportail_url(multi_category_moulinette
     criteria = list(multi_category_moulinette.urbanisme_haie.criteria.all())
     assert len(criteria) == 3
 
-    urls = [c.get_catalog_data()["geoportail_url"] for c in criteria]
+    urls = [c.catalog["geoportail_url"] for c in criteria]
     assert len(set(urls)) == 3, urls
 
 
@@ -103,7 +103,7 @@ def test_criterion_body_renders_its_own_geoportail_url(multi_category_moulinette
     for criterion in regulation.criteria.all():
         body = show_criterion_body(context, regulation, criterion)
         rendered[criterion.evaluator.category.name] = body
-        own_url = criterion.get_catalog_data()["geoportail_url"]
+        own_url = criterion.catalog["geoportail_url"]
         assert escape(own_url) in body
 
     assert len(set(rendered.values())) == 3
