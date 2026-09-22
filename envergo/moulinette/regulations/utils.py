@@ -125,7 +125,7 @@ def resolve_per_hedge_zone_configs(moulinette, hedges):
 
 
 def _unresolved_hedge_record(hedge, zone_id):
-    """Zeroed record for a hedge that cannot be scored."""
+    """Default record for a hedge that cannot be scored."""
     return {
         "hedge_id": hedge.id,
         "hedge_type": hedge.hedge_type,
