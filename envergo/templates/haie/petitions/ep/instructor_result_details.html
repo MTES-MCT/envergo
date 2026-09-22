@@ -46,7 +46,7 @@
     {% if has_sensitive_species %}
       <div class="fr-alert fr-alert--warning fr-mb-3w">
         <p>
-          ⚠️ Ces données sensibles n'ont pas été communiquées au demandeur : <a href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">vous pouvez le faire via la messagerie</a>.
+          Ces données sensibles n'ont pas été communiquées au demandeur : <a href="{% url 'petition_project_instructor_messagerie_view' petition_project.reference %}">vous pouvez le faire via la messagerie</a>.
         </p>
       </div>
     {% endif %}
