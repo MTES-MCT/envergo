@@ -13,7 +13,7 @@ from envergo.petitions.regulations import get_instructor_view_context
 
 def resnat_catalog(moulinette):
     """The data computed by the réserves naturelles evaluator."""
-    return moulinette.reserves_naturelles.hru__reserves_naturelles.get_catalog_data()
+    return moulinette.reserves_naturelles.hru__reserves_naturelles.catalog
 
 
 @pytest.fixture(autouse=True)
