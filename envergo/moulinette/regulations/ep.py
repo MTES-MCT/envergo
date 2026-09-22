@@ -451,7 +451,7 @@ class EspecesProtegeesNormandie(
         aggregated_r = 0.0
 
         density_exploitation = self.get_exploitation_density(
-            catalog.get("numero_pacage")
+            self.catalog.get("numero_pacage")
         )
         density_5000 = haies.density_around_centroid(self.hedges.to_remove())[
             "density_5000"

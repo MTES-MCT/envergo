@@ -25,6 +25,7 @@ const fitBoundsOptions = { padding: [10, 10] };
 const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
+const date = document.getElementById('app').dataset.date;
 const defaultLat = document.getElementById('app').dataset.departmentLat || 46.6033540;
 const defaultLng = document.getElementById('app').dataset.departmentLng || 1.8883335;
 
@@ -562,7 +563,7 @@ createApp({
       }
     };
 
-    const saveUrl = document.getElementById('app').dataset.saveUrl;
+    const saveUrl = document.getElementById('app').dataset.saveUrl + (date ? `?date=${encodeURIComponent(date)}` : '');
 
     function serializeHedgesData() {
       const hedgesToPlant = hedges[TO_PLANT].toJSON();

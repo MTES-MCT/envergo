@@ -884,6 +884,11 @@ class Criterion(models.Model):
         return self._evaluator
 
     @property
+    def catalog(self):
+        """Return the data computed by the evaluator."""
+        return self._evaluator.catalog_data
+
+    @property
     def result_code(self):
         """Return the criterion result code."""
         if not hasattr(self, "_evaluator"):
@@ -3164,8 +3169,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
 
-        # add an entry in the project summary
-        lineaire_detruit_pac = round(self.catalog.get("lineaire_detruit_pac", 0))
+        haies = self.catalog.get("haies")
+        lineaire_detruit_pac = (
+            round(haies.hedges().to_remove().pac().length) if haies else 0
+        )
         localisation_pac = self.catalog.get("localisation_pac", False)
 
         if localisation_pac and lineaire_detruit_pac > 0:

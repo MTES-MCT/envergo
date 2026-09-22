@@ -289,13 +289,42 @@ def setup_loi_sur_leau(activation_map, include_optional=True):
 
 
 def setup_conditionnalite_pac(activation_map):
-    """Create Conditionnalité PAC regulation with BCAE8 criterion."""
+    """Create Conditionnalité PAC regulation with the pre-régime unique BCAE8 criterion."""
     regulation = RegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="BCAE 8",
             regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return regulation, criteria
+
+
+def setup_conditionnalite_pac_ru(activation_map):
+    """Create Conditionnalité PAC regulation with the régime unique BCAE8 criteria."""
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    criteria = [
+        CriterionFactory(
+            title="BCAE 8 (régime unique)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Ru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="BCAE 8 (hors régime unique)",
+            regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="BCAE 8 (L350-3)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8L3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),
