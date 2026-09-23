@@ -137,6 +137,71 @@ def test_moulinette_evaluation(
         assert ceil(hedges[0].length) == expected_lenght_resnat
 
 
+def test_hedge_intersecting_two_perimeters_counted_once(
+    reserves_naturelles_criteria,
+):
+    """A hedge covered by two perimeters of the same regulation is clipped
+    against the union of their zones, not once per perimeter: it must only
+    show up once in the instructor view, with its length not doubled.
+    """
+    regulation = reserves_naturelles_criteria[0].regulation
+    first_perimeter = reserves_naturelles_criteria[0].perimeter
+
+    # A second perimeter sharing the same activation map (hence the same
+    # zones) as the first: any hedge intersecting one intersects both.
+    PerimeterFactory(
+        name="RN Bizous bis",
+        activation_map=first_perimeter.activation_map,
+        regulations=[regulation],
+    )
+
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.06930871579473, "lng": 0.4421436860179369},
+                    {"lat": 43.069162248282396, "lng": 0.44236765047068033},
+                ],
+                "additionalData": {
+                    "type_haie": "degradee",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "ripisylve": False,
+                    "connexion_boisement": False,
+                },
+            }
+        ]
+    )
+    data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "contexte": "non",
+        "element": "haie",
+        "department": "44",
+        "plan_gestion": "oui",
+    }
+    moulinette_data = {"initial": data, "data": data}
+
+    DCConfigHaieFactory()
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.reserves_naturelles.result == "soumis_declaration"
+
+    regulation_evaluator = moulinette.reserves_naturelles.get_evaluator()
+    context = get_instructor_view_context(regulation_evaluator, None, moulinette)
+    hedges = context["reserves_naturelles_hedges"]
+
+    # A single entry, with the same (un-doubled) length as the
+    # single-perimeter case.
+    assert [h.id for h in hedges] == ["D1"]
+    assert ceil(hedges[0].length) == 25
+
+
 def test_hedges_to_plant_length_computed_independently_from_removal(
     bizous_town_center,  # noqa
 ):
