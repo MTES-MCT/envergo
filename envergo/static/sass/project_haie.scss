@@ -794,11 +794,13 @@ div#project-specifications-instructor {
   }
 }
 
-div#instructor-view-side-menu {
-  .fr-sidemenu__list.fr-btns-group button.fr-btn,
-  .fr-sidemenu__list.fr-btns-group a.fr-btn {
-    justify-content: start;
-    text-align: left;
+// Horizontal gutter shared by the dossier header and the page body.
+.instructor-content-block {
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  @media (width >= 48em) {
+    padding-left: 5rem;
   }
 }
 
@@ -1074,7 +1076,17 @@ ul.instructor-view-list {
     padding-right: 0;
   }
 
-  main.header-slim-displayed div#instructor-view-side-menu {
+  // Same declarations as DSFR's fr-sidemenu--sticky.
+  .instructor-sidebar {
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow: auto;
+    padding: 0.5rem 0 0.25rem 0.25rem;
+    margin: 0 0 -0.25rem -0.25rem;
+  }
+
+  main.header-slim-displayed .instructor-sidebar {
     padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
   }
 
@@ -1586,6 +1598,16 @@ button.hide-expanded[aria-expanded="true"] {
     .fr-segmented {
       margin-bottom: 0;
     }
+  }
+}
+
+#state-change-modal {
+  // In the dossier state update modal, different statuses require filling
+  // different fields.
+  // Also, fields are displayed or hidden dynamicall. So all shown fields
+  // are mandatory.
+  .optional-tag {
+    display: none;
   }
 }
 

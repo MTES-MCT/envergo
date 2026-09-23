@@ -1,8 +1,8 @@
-{% if moulinette.eval_env.icpe.get_catalog_data.icpe_regime == "inconnu" %}
+{% if moulinette.eval_env.icpe.catalog.icpe_regime == "inconnu" %}
   <p>
     Ceci s'applique <em>si le projet est soumis à enregistrement ICPE</em>.
   </p>
-{% elif moulinette.eval_env.icpe.get_catalog_data.icpe_regime == "enregistrement" %}
+{% elif moulinette.eval_env.icpe.catalog.icpe_regime == "enregistrement" %}
   <p>Le projet est soumis à enregistrement ICPE.</p>
 {% endif %}
 <p>

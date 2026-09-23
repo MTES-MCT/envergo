@@ -32,6 +32,10 @@
         <li>
           <strong>Régime unique :</strong> {{ object.single_procedure|yesno }}
         </li>
+        <li>
+          <strong>Période d’interdiction :</strong>
+          {{ object.prohibition_range_display|default:"non renseignée" }}
+        </li>
       </ul>
       {% if object.single_procedure %}
         <h4>Coefficients de compensation régime unique :</h4>
