@@ -557,6 +557,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "aa_l3503_handling",
                     "aa_l3503_form_url",
                     "aa_l3503_contact_info",
+                    "aa_l3503_authorization_coefficient",
                 ],
             },
         ),

@@ -18,6 +18,7 @@ from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import DataError, connection, models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
@@ -1339,6 +1340,13 @@ class ConfigHaie(ConfigBase):
         "Informations de contact AA L350-3",
         blank=True,
     )
+    aa_l3503_authorization_coefficient = models.FloatField(
+        "Coefficient de replantation - autorisation L350-3",
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="Coefficient multiplicateur appliqué au linéaire à planter "
+        "lorsque le résultat est « soumis à autorisation » (L350-3).",
+    )
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
@@ -1624,6 +1632,11 @@ class ConfigHaie(ConfigBase):
                 name="ru_zonage_requires_single_procedure",
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
+            ),
+            CheckConstraint(
+                name="aa_l3503_authorization_coefficient_gte_1",
+                violation_error_message="Le coefficient d'autorisation L350-3 doit être supérieur ou égal à 1.",
+                check=Q(aa_l3503_authorization_coefficient__gte=1),
             ),
         ]
 
