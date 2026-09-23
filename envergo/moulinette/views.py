@@ -873,7 +873,7 @@ class ConfigHaieListView(ConfigHaieBaseView, ListView):
         current_user = self.request.user
         queryset = (
             self.queryset.select_related("department")
-            .defer("department__geometry")
+            .only("department__department", "validity_range", "is_activated")
             .order_by("department__department", "validity_range")
         )
         if not current_user.is_superuser:
