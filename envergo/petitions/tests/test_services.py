@@ -390,7 +390,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare ou point d'eau à moins de 500\xa0m",
+                "label": "Mare ou pièce d’eau à moins de 500\xa0m",
             },
             "ripisylve": {
                 "TO_PLANT": [ANY],
@@ -529,7 +529,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare ou point d'eau à moins de 500\xa0m",
+                "label": "Mare ou pièce d’eau à moins de 500\xa0m",
             },
             "recemment_plantee": {
                 "TO_PLANT": None,

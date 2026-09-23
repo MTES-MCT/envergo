@@ -46,7 +46,7 @@ class HedgePropertiesBaseForm(forms.Form):
         required=False,
     )
     proximite_mare = forms.BooleanField(
-        label="Mare ou point d'eau à moins de 500 m",
+        label="Mare ou pièce d’eau à moins de 500 m",
         required=False,
     )
     bord_batiment = forms.BooleanField(
