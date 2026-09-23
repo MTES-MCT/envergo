@@ -382,11 +382,7 @@ def test_result_p_view(mock_R, client):
 
 
 def test_result_d_view_shows_species_cortege(client, france_map):
-    """The simulation result page shows the species cortege in the EP RU criterion result.
-
-    The cortege block only renders when the view provides the
-    show_species_cortege context flag — the instruction page omits it.
-    """
+    """The simulation result page shows the species cortege in the EP RU criterion result."""
     RUConfigHaieFactory()
     setup_ep_regime_unique(france_map)
     hedges = HedgeDataFactory(hedges=[make_hedge_factory(length=50)])

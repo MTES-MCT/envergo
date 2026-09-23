@@ -59,7 +59,6 @@ class EPRegulation(HaieRegulationEvaluator):
     }
 
 
-# Oiseaux and Flore appear before other groups
 GROUP_PRIORITY = {"Oiseaux": 0, "Flore": 1}
 
 # Highest rank first: majeur=6 sorts before faible=1
@@ -67,7 +66,6 @@ LEVEL_RANK = {value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1
 
 
 def species_sort_key(species):
-    """Sort key: group priority, group name, enjeu descending, name (empty last)."""
     level = getattr(species, "local_level_of_concern", None) or species.level_of_concern
     name = species.common_name
     return (

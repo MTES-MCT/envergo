@@ -715,7 +715,6 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert "Maintien des haies PAC" in content
     assert "Réponse du simulateur" in content
 
-    # Test ep regulation url: it uses the standard instructor notes form
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "ep"},

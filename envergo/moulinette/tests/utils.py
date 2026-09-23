@@ -209,11 +209,8 @@ def make_moulinette_haie_data(
 def prefill_density_cache(hedge_data, density):
     """Pre-fill the line-buffer density cache for a HedgeData instance.
 
-    Evaluators that read density_around_lines then get the supplied value
-    without hitting the database or needing an active mock.
-
-    The cache key targets all hedges to remove: assumes single-category
-    test data, so evaluators request that exact subset.
+    Assumes single-category test data: the cache key targets all hedges to
+    remove, which is the subset evaluators request.
     """
     cache_key = density_module.lines_cache_key(hedge_data.hedges_to_remove(), 400)
     cache.set(
@@ -465,12 +462,7 @@ HEDGE_AREA_POLYGON = Polygon(
 
 
 def setup_species_near_hedges(species_specs):
-    """Create species with SpeciesHabitats on a map whose zone overlaps the default hedge area.
-
-    Each spec is a dict: "level" sets the SpeciesHabitat level_of_concern,
-    remaining keys are Species field overrides (cd_ref is required).
-    Returns the created species list.
-    """
+    """Create species with SpeciesHabitats on a map covering the default hedge area."""
     map_obj = MapFactory(map_type="species", zones=None)
     cd_refs = [spec["cd_ref"] for spec in species_specs]
     ZoneFactory(
