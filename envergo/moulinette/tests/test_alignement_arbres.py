@@ -1,5 +1,7 @@
 import pytest
+from django.contrib.gis.geos import MultiPolygon
 
+from envergo.geodata.tests.factories import DepartmentFactory, calvados_polygon
 from envergo.hedges.services import PlantationEvaluator
 from envergo.moulinette.models import MoulinetteHaie, Regulation
 from envergo.moulinette.tests.factories import (
@@ -59,7 +61,7 @@ def alignementarbres_criteria(france_map):  # noqa
             "amelioration_culture",
             "soumis_autorisation",
             "soumis_autorisation",
-            2.0,
+            1.0,
         ),
         (
             "mixte",
@@ -95,6 +97,23 @@ def test_moulinette_evaluation(
         criterion = moulinette.alignement_arbres.l350_3__alignement_arbres
         assert criterion.get_evaluator().get_replantation_coefficient() == expected_r
         assert criterion.result_code == expected_result_code
+
+
+def test_replantation_coefficient_calvados_override():
+    """Calvados keeps a 2.0 replantation coefficient for AA L350-3 autorisation."""
+    department = DepartmentFactory(
+        department="14", geometry=MultiPolygon([calvados_polygon])
+    )
+    RUConfigHaieFactory(department=department, l350_3_authorization_coefficient=2.0)
+    data = make_moulinette_haie_data(
+        hedge_data=[make_hedge(type_haie="alignement", bord_voie=True)],
+        motif="amelioration_culture",
+        reimplantation="replantation",
+        department="14",
+    )
+    moulinette = MoulinetteHaie(data)
+    criterion = moulinette.alignement_arbres.l350_3__alignement_arbres
+    assert criterion.get_evaluator().get_replantation_coefficient() == 2.0
 
 
 class TestCalvadosBeforeRu:

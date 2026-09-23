@@ -52,7 +52,7 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
 
     def get_result_based_replantation_coefficient(self):
         if self.result_code == "soumis_autorisation":
-            r_aa = self.settings.get("coef_autorisation", 2.0)
+            r_aa = self.moulinette.config.aa_l3503_authorization_coefficient
         elif self.result_code == "soumis_esthetique":
             r_aa = 1.0
         elif self.result_code == "soumis_securite":
