@@ -11,6 +11,7 @@ from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Zone
 from envergo.hedges.models import (
+    LEVELS_OF_CONCERN,
     PACAGE_RE,
     HedgeCategory,
     HedgeList,
@@ -58,6 +59,24 @@ class EPRegulation(HaieRegulationEvaluator):
     }
 
 
+GROUP_PRIORITY = {"Oiseaux": 0, "Flore": 1}
+
+# Highest rank first: majeur=6 sorts before faible=1
+LEVEL_RANK = {value: rank for rank, (value, _) in enumerate(LEVELS_OF_CONCERN, 1)}
+
+
+def species_sort_key(species):
+    level = getattr(species, "local_level_of_concern", None) or species.level_of_concern
+    name = species.common_name
+    return (
+        GROUP_PRIORITY.get(species.adhoc_group, 2),
+        species.adhoc_group,
+        -LEVEL_RANK.get(level, 0),
+        not bool(name),
+        name,
+    )
+
+
 class EPMixin:
     """Mixin that populates the catalog with the protected species list.
 
@@ -77,7 +96,8 @@ class EPMixin:
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
         if self.hedges:
-            catalog["protected_species"] = self.get_protected_species(self.hedges)
+            species = self.get_protected_species(self.hedges)
+            catalog["protected_species"] = sorted(species, key=species_sort_key)
         return catalog
 
 
@@ -804,13 +824,17 @@ class EspecesProtegeesRegimeUnique(
         species = catalog.get("protected_species")
         if species is not None:
             species_list = list(species)
-            catalog["protected_species"] = species_list
-            catalog["protected_species_public"] = [
+            species_public = [
                 s for s in species_list if s.local_level_of_concern != "majeur"
             ]
-            catalog["has_sensitive_species"] = any(
-                s.local_level_of_concern == "majeur" for s in species_list
-            )
+            species_enjeu_majeur = [
+                s for s in species_list if s.local_level_of_concern == "majeur"
+            ]
+
+            catalog["protected_species"] = species_list
+            catalog["protected_species_public"] = species_public
+            catalog["protected_species_enjeu_majeur"] = species_enjeu_majeur
+            catalog["has_sensitive_species"] = len(species_enjeu_majeur) > 0
 
         catalog.update(self.get_density_catalog_data())
 

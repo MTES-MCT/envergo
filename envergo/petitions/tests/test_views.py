@@ -31,6 +31,11 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
+from envergo.moulinette.tests.utils import (
+    prefill_density_cache,
+    setup_ep_regime_unique,
+    setup_species_near_hedges,
+)
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
@@ -710,16 +715,14 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert "Maintien des haies PAC" in content
     assert "Réponse du simulateur" in content
 
-    # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "ep"},
     )
-    # Submit onagre
-    response = client.post(instructor_url, {"onagre_number": "1234567"})
+    response = client.post(instructor_url, {"instructor_free_mention": "Ma note"})
     assert response.url == instructor_url
     project.refresh_from_db()
-    assert project.onagre_number == "1234567"
+    assert project.instructor_free_mention == "Ma note"
 
     # When I go to a regulation page
     instructor_url = reverse(
@@ -741,14 +744,14 @@ def test_petition_project_instructor_view_reglementation_pages(
     response = client.post(
         instructor_url,
         {
-            "onagre_number": "7654321",
+            "instructor_free_mention": "Note interdite",
         },
     )
 
     # THEN i should get a 403 forbidden response
     assert response.status_code == 403
     project.refresh_from_db()
-    assert project.onagre_number == "1234567"
+    assert project.instructor_free_mention == "Ma note"
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -784,6 +787,126 @@ def test_regulation_view_includes_config_in_context(
     assert response.status_code == 200
     assert "config" in response.context
     assert response.context["config"].single_procedure is True
+
+
+def setup_ep_ru_project(france_map):  # noqa
+    """Create a RU petition project with an evaluated EP RU criterion.
+
+    Returns the project. The hedge type must be RU-compatible ("degradee"
+    is not offered under the régime unique), and the density cache is
+    pre-filled so the EP RU cascade yields a deterministic result
+    (derogation_simplifiee).
+    """
+    RUConfigHaieFactory()
+    setup_ep_regime_unique(france_map)
+    project = PetitionProjectFactory(
+        hedge_data=HedgeDataFactory(
+            hedges=[HedgeFactory(additionalData__type_haie="arbustive")]
+        ),
+    )
+    prefill_density_cache(project.hedge_data, density=60)
+    return project
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_species_details(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """The instructor EP page shows the majeur and cortege tables.
+
+    The species cortege must not appear inside the simulator response
+    section.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9301, "level": "fort", "common_name": "Fauvette des jardins"},
+            {"cd_ref": 9302, "level": "majeur", "common_name": "Pie-grièche grise"},
+        ]
+    )
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Instructor-only sections with the two species tables
+    assert "Espèces à enjeu majeur observées proche du projet" in content
+    assert "Pie-grièche grise" in content
+    assert "Cortège-type départemental (enjeux faible à très fort)" in content
+    assert "Voir la liste des espèces" in content
+    assert "Ces données sensibles n'ont pas été communiquées au demandeur" in content
+
+    # The simulator response section must not duplicate the species cortege
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        not in content
+    )
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_species_details_without_sensitive_species(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """Without majeur species, the majeur table shows its empty state.
+
+    The sensitive-data warning must not appear either.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9303, "level": "fort", "common_name": "Fauvette des jardins"},
+        ]
+    )
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    assert "Aucune espèce spécifique disponible pour l'affichage" in content
+    assert (
+        "Ces données sensibles n'ont pas été communiquées au demandeur" not in content
+    )
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_petition_project_page_shows_species_cortege(
+    mock_post, client, site, france_map  # noqa
+):
+    """The read-only project page shows the cortege in the EP criterion result."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9304, "level": "fort", "common_name": "Fauvette des jardins"},
+        ]
+    )
+
+    url = reverse("petition_project", kwargs={"reference": project.reference})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        in content
+    )
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -1537,7 +1660,6 @@ def test_petition_project_instructor_notes_form(
 
     # THEN i should get a 403 forbidden response
     assert response.status_code == 403
-    assert project.onagre_number == ""
     assert project.instructor_free_mention == ""
 
     # WHEN I post some instructor data with a department instructor

@@ -16,8 +16,10 @@
   </li>
 </ul>
 
-{% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
+{% if show_species_cortege %}
+  {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 
-<div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
-  {% include 'moulinette/ep/_species_cortege_ru.html' %}
-</div>
+  <div class="more fr-collapse" id="read-more-{{ criterion.unique_slug }}">
+    {% include 'moulinette/ep/_species_cortege_ru.html' %}
+  </div>
+{% endif %}
