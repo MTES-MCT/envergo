@@ -283,6 +283,16 @@ class Hedge:
         ]
 
 
+@dataclass(frozen=True)
+class ClippedHedge:
+    """A hedge's length restricted to its intersection with some geometry. Only for display purpose"""
+
+    id: str
+    type: str
+    hedge_type: str | None
+    length: float
+
+
 class HedgeList(list[Hedge]):
     """A class representing a list of Hedge objects.
 
@@ -312,6 +322,24 @@ class HedgeList(list[Hedge]):
         geometries = [h.geometry for h in self]
         hedges_centroid = centroid(union_all(geometries))
         return hedges_centroid
+
+    def clip_to(self, geometry) -> Self:
+        """Return these hedges with lengths reduced to their intersection with a shapely `geometry`.
+
+        Category/type filters keep working on the result since ClippedHedge
+        exposes the same `type`/`hedge_type` fields the filters read.
+        Note: Property-based filters, however, will not work with ClippedHedge (it raises AttributeError).
+        """
+        geod = Geod(ellps="WGS84")
+        return HedgeList(
+            ClippedHedge(
+                id=hedge.id,
+                type=hedge.type,
+                hedge_type=hedge.hedge_type,
+                length=geod.geometry_length(hedge.geometry.intersection(geometry)),
+            )
+            for hedge in self
+        )
 
     def to_plant(self) -> Self:
         return HedgeList([h for h in self if h.type == TO_PLANT])
