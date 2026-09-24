@@ -1,11 +1,12 @@
 from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
+    AlignementsOnlyMixin,
     HaieCriterionEvaluator,
     HaieRegulationEvaluator,
 )
 
 
-class SitesProtegesRegulation(HaieRegulationEvaluator):
+class SitesProtegesRegulation(AlignementsOnlyMixin, HaieRegulationEvaluator):
     choice_label = "Haie > Sites protégés"
 
     PROCEDURE_TYPE_MATRIX = {
