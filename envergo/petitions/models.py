@@ -380,6 +380,9 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         logger.info(f"Synchronizing file {self.reference} with « Démarche numérique »")
 
+        declaration_filed_on = None
+        declaration_due_date = None
+
         if not self.is_dossier_submitted:
             # first time we have some data about this dossier
             department = extract_param_from_url(self.moulinette_url, "department")
@@ -400,13 +403,16 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
             Simulation.objects.bulk_update(simulations, ["moulinette_url"])
 
+            # The delay starts at the dépôt, even if « Démarche numérique » leaves the dossier en construction.
+            if self.category == HedgeCategory.ru:
+                declaration_filed_on = date_depot
+                declaration_due_date = date_depot + relativedelta(months=2)
+
             # For some ConfigHaie, « Démarche numérique » is configured to set dossier "en_instruction" on creation.
             # This test change status if dossier state is "en_instruction" but stage is still "to_be_processed"
             if dossier["state"] == "en_instruction" and self.stage == "to_be_processed":
-                due_date = None
                 stage = STAGES.instruction_h
                 if self.category == HedgeCategory.ru:
-                    due_date = date_depot + relativedelta(months=2)
                     stage = STAGES.instruction_d
 
                 StatusLog.objects.create(
@@ -414,7 +420,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                     type=LOG_TYPES.status_change,
                     stage=stage,
                     update_comment="Dépôt du dossier : passage automatique en instruction.",
-                    due_date=due_date,
+                    due_date=declaration_due_date,
                 )
 
             usager_email = (
@@ -504,6 +510,26 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         self.demarche_numerique_last_sync = timezone.now()
         self.save()
+
+        # Scheduled after the save, so the task reads the project as the dépôt left it.
+        if declaration_filed_on:
+            self.schedule_declaration_receipt(
+                declaration_filed_on, declaration_due_date
+            )
+
+    def schedule_declaration_receipt(self, received_on, due_date):
+        """Queue the déclaration receipt for after commit, so a DS failure blocks nothing."""
+        # Imported here: the tasks module imports this one.
+        from envergo.petitions.tasks import send_declaration_receipt_async
+
+        received_on_iso = received_on.isoformat()
+        due_date_iso = due_date.isoformat()
+
+        transaction.on_commit(
+            lambda: send_declaration_receipt_async.delay(
+                self.pk, received_on_iso, due_date_iso
+            )
+        )
 
     def get_moulinette(self):
         """Recreate moulinette from moulinette url and hedge data"""
