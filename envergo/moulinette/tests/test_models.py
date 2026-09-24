@@ -388,6 +388,33 @@ class TestConfigHaieProhibitionDates:
         )
         assert confighaie.prohibition_range_display == "du 18 mars au 31 août"
 
+    @pytest.mark.parametrize(
+        "stored_range,blocked_date,expected_result",
+        (
+            pytest.param(
+                DateRange(date(2027, 3, 18), date(2027, 9, 1)),
+                date(2026, 7, 1),
+                date(2026, 9, 1),
+                id="prohibited_date_yields_first_allowed_day_of_its_own_year",
+            ),
+            pytest.param(
+                DateRange(date(2027, 3, 18), date(2027, 9, 1)),
+                date(2026, 10, 1),
+                None,
+                id="allowed_date_yields_none",
+            ),
+            pytest.param(
+                None,
+                date(2026, 7, 1),
+                None,
+                id="null_stored_dates_yield_none",
+            ),
+        ),
+    )
+    def test_first_allowed_work_date(self, stored_range, blocked_date, expected_result):
+        confighaie = ConfigHaie(prohibition_range=stored_range)
+        assert confighaie.first_allowed_work_date(blocked_date) == expected_result
+
 
 def test_regulation_with_map_factory_can_create_a_location_centric_map(
     france_map,  # noqa

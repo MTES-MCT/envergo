@@ -1769,6 +1769,12 @@ class ConfigHaie(ConfigBase):
             < (end.month, end.day)
         )
 
+    def first_allowed_work_date(self, blocked_date):
+        """First day work on hedges is allowed again, or None if already allowed."""
+        if not self.is_date_in_prohibition_range(blocked_date):
+            return None
+        return self.prohibition_range.upper.replace(year=blocked_date.year)
+
 
 TEMPLATE_KEYS = [
     "autorisation_urba_pa",
