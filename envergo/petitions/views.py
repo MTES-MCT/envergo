@@ -2204,9 +2204,8 @@ class PetitionProjectInstructorProcedureView(
 
     def notify_resume_succeeded(self, sends_receipt):
         """Flash a success message, pointing to the messagerie when a receipt goes out."""
-        resumed = "L'instruction du dossier a repris."
         if not sends_receipt:
-            messages.success(self.request, resumed)
+            messages.success(self.request, "L'instruction du dossier a repris.")
             return
 
         messagerie_url = reverse(
@@ -2216,9 +2215,9 @@ class PetitionProjectInstructorProcedureView(
         messages.success(
             self.request,
             format_html(
-                "{} Le récépissé de déclaration sera envoyé au demandeur dans "
-                'quelques instants. <a href="{}">Retrouvez-le dans la messagerie.</a>',
-                resumed,
+                "L'instruction du dossier a repris. Le récépissé de déclaration sera "
+                "envoyé au demandeur dans quelques instants. "
+                '<a href="{}">Retrouvez-le dans la messagerie.</a>',
                 messagerie_url,
             ),
         )
