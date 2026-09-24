@@ -2180,6 +2180,14 @@ class PetitionProjectInstructorProcedureView(
             decision=project.decision,
         )
 
+        # Receiving the documents restarts the delay, so a new receipt goes out.
+        # ResumeProcessingForm requires the due date here, so it is never None.
+        sends_receipt = (
+            project.is_regime_unique() and project.stage == STAGES.instruction_d
+        )
+        if sends_receipt:
+            project.schedule_declaration_receipt(info_receipt_date, new_due_date)
+
         self.notify_resume_processing(project)
 
         log_event(
@@ -2191,8 +2199,29 @@ class PetitionProjectInstructorProcedureView(
             **get_matomo_tags(self.request),
         )
 
-        messages.success(self.request, "L'instruction du dossier a repris.")
+        self.notify_resume_succeeded(sends_receipt)
         return HttpResponseRedirect(self.get_success_url())
+
+    def notify_resume_succeeded(self, sends_receipt):
+        """Flash a success message, pointing to the messagerie when a receipt goes out."""
+        resumed = "L'instruction du dossier a repris."
+        if not sends_receipt:
+            messages.success(self.request, resumed)
+            return
+
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[self.object.reference],
+        )
+        messages.success(
+            self.request,
+            format_html(
+                "{} Le récépissé de déclaration sera envoyé au demandeur dans "
+                'quelques instants. <a href="{}">Retrouvez-le dans la messagerie.</a>',
+                resumed,
+                messagerie_url,
+            ),
+        )
 
     def notify_resume_processing(self, project):
         """Send Mattermost notification for instruction resumption."""
