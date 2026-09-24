@@ -55,9 +55,11 @@
   <p>
     Pour transmettre aux services de l’État compétents un dossier concernant la destruction d’alignements d’arbres en bord de voie :
   </p>
-  {% if moulinette.config.aa_l3503_contact_info %}
-    <div>{{ moulinette.config.aa_l3503_contact_info|safe }}</div>
-  {% else %}
-    {{ moulinette.config.contact_info|safe }}
-  {% endif %}
+  <div class="fr-highlight">
+    {% if moulinette.config.aa_l3503_contact_info %}
+      {{ moulinette.config.aa_l3503_contact_info|safe }}
+    {% else %}
+      {{ moulinette.config.contact_info|safe }}
+    {% endif %}
+  </div>
 {% endif %}
