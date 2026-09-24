@@ -114,6 +114,21 @@ def ep_criteria(france_map):  # noqa
     return criteria
 
 
+@pytest.fixture
+def ep_normandie_criteria(france_map):  # noqa
+    regulation = HaieRegulationFactory(regulation="ep")
+    criteria = [
+        CriterionFactory(
+            title="Espèces protégées Normandie",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesNormandie",
+            activation_map=france_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return criteria
+
+
 def test_petition_projet_create_view_dispatch(client, site, haie_user):
     """Test request GET on url "/project" """
     project_url = reverse("petition_project_create")
@@ -4630,3 +4645,60 @@ def test_state_change_modal_hides_to_be_processed_for_single_procedure(
     assert response.status_code == 200
     stage_choices = dict(response.context["state_change_form"].fields["stage"].choices)
     assert "to_be_processed" not in stage_choices
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_without_compensation(
+    mock_post,
+    haie_coordinator_44,
+    ep_normandie_criteria,
+    client,
+    site,
+):
+    """The EP page renders without the compensation table.
+
+    Hedges under 10 m get a null coefficient, so the quality condition does not apply.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(
+                latLngs=[
+                    {"lat": 49.139896816121265, "lng": -0.1718410849571228},
+                    {"lat": 49.13988277820264, "lng": -0.17171770334243774},
+                ]
+            ),
+            HedgeFactory(
+                latLngs=[
+                    {"lat": 49.13984943813004, "lng": -0.17185986042022708},
+                    {"lat": 49.139831890714404, "lng": -0.17174050211906436},
+                ]
+            ),
+        ]
+    )
+    project = PetitionProjectFactory(
+        hedge_data=hedges,
+        moulinette_url=(
+            "http://haie.testserver:3000/simulateur/resultat/"
+            "?motif=autre&reimplantation=non&localisation_pac=oui"
+            f"&numero_pacage=012345678&haies={hedges.pk}&department=44"
+            "&travaux=destruction&element=haie&contexte=non"
+            "&lineaire_total=5000&transfert_parcelles=non&motif_pac=aucun"
+        ),
+    )
+
+    moulinette = project.get_moulinette()
+    assert moulinette.ep.hru__ep_normandie.result_code == "dispense_10m"
+
+    instructor_url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(instructor_url)
+
+    assert response.status_code == 200
+    assert "normandie_plantation_table" not in response.content.decode()
