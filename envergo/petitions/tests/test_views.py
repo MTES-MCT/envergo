@@ -4663,32 +4663,14 @@ def test_instructor_ep_page_without_compensation(
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
     DCConfigHaieFactory()
-    hedges = HedgeDataFactory(
-        hedges=[
-            HedgeFactory(
-                latLngs=[
-                    {"lat": 49.139896816121265, "lng": -0.1718410849571228},
-                    {"lat": 49.13988277820264, "lng": -0.17171770334243774},
-                ]
-            ),
-            HedgeFactory(
-                latLngs=[
-                    {"lat": 49.13984943813004, "lng": -0.17185986042022708},
-                    {"lat": 49.139831890714404, "lng": -0.17174050211906436},
-                ]
-            ),
-        ]
+    hedges = HedgeDataFactory(hedges=[HedgeFactory(length=8), HedgeFactory(length=4)])
+    project = PetitionProjectFactory(hedge_data=hedges)
+
+    # EP Normandie asks for the PACAGE number of PAC-located projects
+    project.moulinette_url = update_qs(
+        project.moulinette_url, {"numero_pacage": "012345678"}
     )
-    project = PetitionProjectFactory(
-        hedge_data=hedges,
-        moulinette_url=(
-            "http://haie.testserver:3000/simulateur/resultat/"
-            "?motif=autre&reimplantation=non&localisation_pac=oui"
-            f"&numero_pacage=012345678&haies={hedges.pk}&department=44"
-            "&travaux=destruction&element=haie&contexte=non"
-            "&lineaire_total=5000&transfert_parcelles=non&motif_pac=aucun"
-        ),
-    )
+    project.save()
 
     moulinette = project.get_moulinette()
     assert moulinette.ep.hru__ep_normandie.result_code == "dispense_10m"
@@ -4701,4 +4683,7 @@ def test_instructor_ep_page_without_compensation(
     response = client.get(instructor_url)
 
     assert response.status_code == 200
-    assert "normandie_plantation_table" not in response.content.decode()
+    content = response.content.decode()
+    # The section renders; only the compensation table inside it is skipped
+    assert "Précisions sur le calcul" in content
+    assert "normandie_plantation_table" not in content
