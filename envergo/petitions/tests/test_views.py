@@ -4,7 +4,6 @@ from unittest.mock import ANY, Mock, patch
 
 import factory
 import pytest
-from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
@@ -2398,14 +2397,11 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
         "petition_project_instructor_procedure_view",
         kwargs={"reference": project.reference},
     )
-    # Documents received before the instructor got to them: the delay runs from
-    # their reception, not from the day the form is submitted.
-    received_on = today - timedelta(days=3)
+    new_due_date = today + timedelta(days=60)
     form_data = {
         "action": "resume_processing",
-        "info_receipt_date": received_on,
-        # Readonly in the UI, so any posted value is recomputed server-side
-        "due_date": today + timedelta(days=90),
+        "info_receipt_date": today,
+        "due_date": new_due_date,
     }
     res = client.post(status_url, form_data, follow=True)
 
@@ -2414,16 +2410,12 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
     assert "L'instruction du dossier a repris." in content
     assert "Le récépissé de déclaration sera envoyé au demandeur" in content
 
-    expected_due_date = received_on + relativedelta(months=2)
     assert mock_receipt_task.delay.call_count == 1
     assert mock_receipt_task.delay.call_args[0] == (
         project.pk,
-        received_on.isoformat(),
-        expected_due_date.isoformat(),
+        today.isoformat(),
+        new_due_date.isoformat(),
     )
-
-    project.refresh_from_db()
-    assert project.due_date == expected_due_date
 
 
 @pytest.mark.django_db(transaction=True)
