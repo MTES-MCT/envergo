@@ -105,6 +105,7 @@ from envergo.petitions.services import (
     update_demarche_numerique_status,
 )
 from envergo.petitions.tasks import send_closing_message_async
+from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.users.models import User
 from envergo.utils.tchap import notify
 from envergo.utils.tools import generate_key
@@ -1001,7 +1002,7 @@ class BasePetitionProjectInstructorView(
                 return True
         return False
 
-    def get_new_link_url(self, reference: str) -> dict:
+    def get_new_link_url(self) -> dict:
         """Returns new link url"""
         ask_new_link_url_base = f"https://tally.so/r/{settings.ASK_NEW_LINK_FORM_ID}"
         user = self.request.user
@@ -1015,7 +1016,9 @@ class BasePetitionProjectInstructorView(
         ask_new_link_params = {
             "user_name": user.name,
             "user_email": user.email,
-            "reference": reference,
+            "reference": format_ds_number(
+                self.object.demarche_numerique_dossier_number
+            ),
             "city": city,
             "token": self.invitation_token.token,
             "instructor_email": self.invitation_token.created_by.email,
@@ -1037,9 +1040,7 @@ class BasePetitionProjectInstructorView(
             if invitation_token and self.has_invalid_invitation_token(invitation_token):
                 context = {}
                 # Add button url in context and return specific 403 template
-                context["ask_new_link_url"] = self.get_new_link_url(
-                    kwargs.get("reference")
-                )
+                context["ask_new_link_url"] = self.get_new_link_url()
                 # Add matomo url to context
                 context["matomo_custom_url"] = self.request.build_absolute_uri(
                     reverse("petition_project_invitation_token_expired")
