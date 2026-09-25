@@ -622,7 +622,7 @@ class CriterionEvaluator(ABC):
         self.moulinette = moulinette
         self.distance = distance
         # Settings must be assigned before `get_catalog_data` because some
-        # evaluators (e.g. EspecesProtegeesRegimeUnique) read configurable
+        # evaluators (e.g. EspecesProtegeesRu) read configurable
         # thresholds from settings while building catalog data.
         self.settings = settings
         # Form inputs are shared in the moulinette catalog

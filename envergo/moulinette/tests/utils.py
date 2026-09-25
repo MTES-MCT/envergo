@@ -427,11 +427,12 @@ EP_RU_DEFAULT_SETTINGS = {
 
 
 def setup_ep_regime_unique(activation_map, evaluator_settings=None):
-    """Create EP regulation with EspecesProtegeesRegimeUnique criterion.
+    """Create EP regulation with the three criteria a régime unique department has.
 
-    The criterion is configured with ``EP_RU_DEFAULT_SETTINGS`` unless the
-    caller passes a custom ``evaluator_settings`` dict (e.g. to test the
-    non_disponible path).
+    Mirrors the production setup: one criterion per hedge category (RU, HRU,
+    L350-3), so tests can exercise multi-category projects. The RU criterion is
+    configured with ``EP_RU_DEFAULT_SETTINGS`` unless the caller passes a custom
+    ``evaluator_settings`` dict (e.g. to test the non_disponible path).
     """
     if evaluator_settings is None:
         evaluator_settings = EP_RU_DEFAULT_SETTINGS
@@ -442,8 +443,22 @@ def setup_ep_regime_unique(activation_map, evaluator_settings=None):
         CriterionFactory(
             title="EP Régime Unique",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesRegimeUnique",
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesRu",
             evaluator_settings=evaluator_settings,
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="EP hors régime unique",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesHru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="EP alignements d'arbres L350-3",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.ep.EspecesProtegeesL3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),

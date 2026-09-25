@@ -90,7 +90,7 @@ class EPMixin:
         """Return the protected species queryset for the catalog.
 
         Input is a HedgeList instance; output is an annotated Species
-        queryset. Defaults to the RU pipeline. HRU evaluators override
+        queryset. Defaults to the "post RU" pipeline. "Before RU" evaluators override
         this to call hedges.get_all_species_hru().
         """
         return hedges.get_all_species()
@@ -732,6 +732,34 @@ class EspecesProtegeesRegimeUniqueSettings(forms.Form):
         return cleaned
 
 
+class EPSpeciesMixin(EPMixin):
+    """Species handling shared by every post régime unique EP evaluator.
+
+    The RU species pipeline annotates each species with a
+    ``local_level_of_concern``. Species at the "majeur" level are sensitive
+    data: they are only disclosed during instruction, so the public result
+    page gets the filtered list instead.
+    """
+
+    def get_catalog_data(self):
+        catalog = super().get_catalog_data()
+        species = catalog.get("protected_species")
+        if species is not None:
+            species_list = list(species)
+            species_public = [
+                s for s in species_list if s.local_level_of_concern != "majeur"
+            ]
+            species_enjeu_majeur = [
+                s for s in species_list if s.local_level_of_concern == "majeur"
+            ]
+
+            catalog["protected_species"] = species_list
+            catalog["protected_species_public"] = species_public
+            catalog["protected_species_enjeu_majeur"] = species_enjeu_majeur
+            catalog["has_sensitive_species"] = len(species_enjeu_majeur) > 0
+        return catalog
+
+
 # Severity ranking used to pick the most constraining per-hedge result.
 EP_RU_RESULT_RANK = {
     "dispense": 1,
@@ -740,8 +768,11 @@ EP_RU_RESULT_RANK = {
 }
 
 
-class EspecesProtegeesRegimeUnique(
-    PlantationConditionMixin, EPMixin, HedgeDensityMixin, HaieCriterionEvaluator
+class EspecesProtegeesRu(
+    PlantationConditionMixin,
+    EPSpeciesMixin,
+    HedgeDensityMixin,
+    HaieCriterionEvaluator,
 ):
     """EP criterion for the "régime unique" procedure.
 
@@ -813,43 +844,18 @@ class EspecesProtegeesRegimeUnique(
         return result
 
     def get_catalog_data(self):
-        """Populate the catalog with EP régime unique inputs.
-
-        Species are populated by EPMixin using the default RU pipeline.
-        The public list excludes "majeur" species (sensitive data only
-        shown on the instruction page, not the public result page).
-        """
+        """Populate the catalog with EP régime unique inputs."""
         catalog = super().get_catalog_data()
         if not self.hedges:
             return catalog
-
-        species = catalog.get("protected_species")
-        if species is not None:
-            species_list = list(species)
-            species_public = [
-                s for s in species_list if s.local_level_of_concern != "majeur"
-            ]
-            species_enjeu_majeur = [
-                s for s in species_list if s.local_level_of_concern == "majeur"
-            ]
-
-            catalog["protected_species"] = species_list
-            catalog["protected_species_public"] = species_public
-            catalog["protected_species_enjeu_majeur"] = species_enjeu_majeur
-            catalog["has_sensitive_species"] = len(species_enjeu_majeur) > 0
 
         catalog.update(self.get_density_catalog_data())
 
         if self.moulinette.config.single_procedure:
             ensure_ru_hedge_data(self.moulinette, self.hedges)
 
-        # TODO : hedges are now filtered by category, this specific variable should be handle
-        #  in the evaluators EspecesProtegeesRegimeUniqueHru and EspecesProtegeesRegimeUniqueL3503
-        hedges = self.hedges.to_remove().n_alignement()
+        hedges = self.hedges.to_remove()
 
-        catalog["ep_ru_aa_only"] = not hedges
-
-        # Total length and ripisylve length (excluding alignements)
         total_length = hedges.length
         ripisylve_length = hedges.filter(lambda h: h.prop("ripisylve")).length
         catalog["ep_ru_total_length"] = ceil(total_length)
@@ -869,24 +875,22 @@ class EspecesProtegeesRegimeUnique(
         """Lazily compute which hedges intersect a zone sensible EP map."""
         if not self.hedges:
             return set()
-        hedges = self.hedges.to_remove().n_alignement()
-        return self.get_hedges_in_zone_sensible(hedges)
+        return self.get_hedges_in_zone_sensible(self.hedges.to_remove())
 
     @cached_property
     def per_hedge_results(self):
         """Lazily compute per-hedge procedure levels.
 
-        Only meaningful when the cascade falls through to step 6.  Returns
-        an empty dict when admin settings are missing or invalid.
+        Only meaningful when the cascade falls through to its last step.
+        Returns an empty dict when admin settings are missing or invalid.
         """
         params = self.params
         if params is None:
             return {}
         if not self.hedges:
             return {}
-        hedges = self.hedges.to_remove().n_alignement()
         return self.compute_per_hedge_results(
-            hedges,
+            self.hedges.to_remove(),
             self.catalog.get("ep_ru_total_length", 0),
             self.catalog.get("ep_ru_density", 0),
             self.hedges_in_zone_sensible,
@@ -900,11 +904,11 @@ class EspecesProtegeesRegimeUnique(
         """Assign a procedure level to each hedge based on length, density, type and zone.
 
         Only meaningful when the project-level cascade falls through to
-        step 6 (per-hedge evaluation). Called unconditionally so the debug
-        view always has data to display.
+        its last step (per-hedge evaluation). Called unconditionally so the
+        debug view always has data to display.
 
         Args:
-            hedges: iterable of non-alignement hedges to classify.
+            hedges: iterable of RU hedges to remove to classify.
             total_length: total length of the destruction project (m).
             density: project-wide bocage density (ml/ha).
             hedges_in_zone_sensible: set of hedge ids intersecting a zone sensible.
@@ -932,7 +936,6 @@ class EspecesProtegeesRegimeUnique(
         """Return project-level EP parameters for the cascade algorithm."""
         return {
             "is_regime_unique": self.moulinette.config.single_procedure,
-            "aa_only": self.catalog.get("ep_ru_aa_only", False),
             "total_length": self.catalog.get("ep_ru_total_length", 0),
             "ripisylve_length": self.catalog.get("ep_ru_ripisylve_length", 0),
             "density": self.catalog.get("ep_ru_density", 0),
@@ -954,7 +957,6 @@ class EspecesProtegeesRegimeUnique(
         if not self.catalog.get("ru_all_zones_resolved", False):
             return "non_disponible"
 
-        aa_only = result_data["aa_only"]
         total_length = result_data["total_length"]
         ripisylve_length = result_data["ripisylve_length"]
         density = result_data["density"]
@@ -966,22 +968,19 @@ class EspecesProtegeesRegimeUnique(
         d_bas = params["d_bas"]
         d_haut = params["d_haut"]
 
-        # 1. Only tree-row hedges
-        if aa_only:
+        # 1. Ripisylve threshold exceeded
+        if ripisylve_length > l_ripisylve:
             result = "derogation_inventaire"
-        # 2. Ripisylve threshold exceeded
-        elif ripisylve_length > l_ripisylve:
-            result = "derogation_inventaire"
-        # 3. Very short total
+        # 2. Very short total
         elif total_length <= l_bas:
             result = "dispense"
-        # 4. Medium total with moderate density
+        # 3. Medium total with moderate density
         elif total_length <= l_haut and density < d_haut:
             result = "derogation_simplifiee"
-        # 5. Long total with low density
+        # 4. Long total with low density
         elif total_length > l_haut and density < d_bas:
             result = "derogation_inventaire"
-        # 6. Per-hedge evaluation — pick the most constraining
+        # 5. Per-hedge evaluation — pick the most constraining
         else:
             result = max(
                 self.per_hedge_results.values(),
@@ -1006,7 +1005,7 @@ class EspecesProtegeesRegimeUnique(
         return evaluator_replantation_coefficient(self)
 
     def build_hedge_rows(self):
-        """Build per-hedge display rows for non-alignement hedges.
+        """Build per-hedge display rows for the RU hedges to remove.
 
         Returns a list of dicts with id, hedge_type (human-readable), and
         in_zone_sensible — used by both the debug page and the instructor view.
@@ -1015,7 +1014,7 @@ class EspecesProtegeesRegimeUnique(
             return []
 
         hedges_in_zone_sensible = self.hedges_in_zone_sensible
-        hedges = self.hedges.to_remove().n_alignement()
+        hedges = self.hedges.to_remove()
         HedgeType = HedgeTypeFactory.build_from_context(single_procedure=True)
 
         rows = []
@@ -1042,9 +1041,6 @@ class EspecesProtegeesRegimeUnique(
 
         context["ep_ru_total_length"] = self.catalog.get("ep_ru_total_length")
         context["ep_ru_ripisylve_length"] = self.catalog.get("ep_ru_ripisylve_length")
-        context["has_sensitive_species"] = self.catalog.get(
-            "has_sensitive_species", False
-        )
         context["hedge_debug_rows"] = hedge_rows
         context["ep_ru_settings"] = self.params
         context["ru_zone_configs"] = collect_zone_configs(
@@ -1054,3 +1050,40 @@ class EspecesProtegeesRegimeUnique(
             single_procedure=True
         )
         return context
+
+
+class EspecesProtegeesHru(
+    PlantationConditionMixin, EPSpeciesMixin, HaieCriterionEvaluator
+):
+    """EP criterion for the hedges not handled by the régime unique: always "à vérifier".
+
+    The species cortege is still computed, for information only.
+    """
+
+    choice_label = "EP > EP Régime unique"
+    base_slug = "ep_regime_unique"
+    category = HedgeCategory.hru
+    plantation_conditions = [RUMinLengthCondition, SafetyCondition]
+
+    CODE_MATRIX = {
+        True: "a_verifier",
+    }
+
+    RESULT_MATRIX = {
+        "a_verifier": RESULTS.a_verifier,
+    }
+
+    def get_result_data(self):
+        return True
+
+    def get_replantation_coefficient(self):
+        return 1.0
+
+
+class EspecesProtegeesL3503(EspecesProtegeesHru):
+    category = HedgeCategory.l350_3
+    plantation_conditions = [SafetyCondition]
+
+    def get_replantation_coefficient(self):
+        """EP requires no compensation for these hedges."""
+        return 0.0
