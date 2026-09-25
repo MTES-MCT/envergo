@@ -188,11 +188,9 @@ def ensure_ru_hedge_data(moulinette, hedges):
     if "ru_hedge_data" in moulinette.catalog:
         return
 
-    hedges = hedges.to_remove().n_alignement()
+    hedges = hedges.to_remove()
     haies = moulinette.catalog["haies"]
-    density_400 = (
-        haies.density_around_lines(hedges.to_remove()).get("density_400") or 0.0
-    )
+    density_400 = haies.density_around_lines(hedges).get("density_400") or 0.0
 
     per_hedge_zone_configs = resolve_per_hedge_zone_configs(moulinette, hedges)
 
@@ -288,5 +286,5 @@ def evaluator_replantation_coefficient(evaluator):
     """
     if not evaluator.moulinette.config.single_procedure:
         return 0.0
-    hedges = evaluator.hedges.to_remove().n_alignement()
+    hedges = evaluator.hedges.to_remove()
     return compute_ru_compensation_ratio(hedges, evaluator.effective_coefficients)
