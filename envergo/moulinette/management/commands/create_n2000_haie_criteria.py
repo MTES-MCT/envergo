@@ -25,7 +25,7 @@ from django.db import transaction
 from envergo.geodata.models import Map
 from envergo.moulinette.models import Criterion, Perimeter, Regulation
 
-EVALUATOR = "envergo.moulinette.regulations.natura2000_haie.Natura2000Haie"
+EVALUATOR = "envergo.moulinette.regulations.natura2000_haie.Natura2000HaieHru"
 
 # Départements dont les critères ont déjà été créés manuellement
 ALREADY_CREATED = {"02", "14"}
