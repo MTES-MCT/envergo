@@ -46,24 +46,29 @@ def show_moulinette_form(context):
     return content
 
 
-def render_from_moulinette_templates(context, template_name):
-    """Render a given moulinette template.
+def render_from_moulinette_templates(context, *template_names):
+    """Render the first of the given moulinette templates that exists.
 
     By default, templates are stored on the file system, but we added the possibility
     to store html templates in the database, to override some templates on a
     department basis.
+
+    Several names can be given to express a fallback chain, from the most to the
+    least specific. Database overrides win over the file system, whatever their
+    rank in the chain.
     """
-    full_template_name = f"moulinette/{template_name}"
     context_data = context.flatten()  # context must be a dict, not RequestContext
     moulinette_templates = context["moulinette"].templates
-    if template_name in moulinette_templates:
-        template_content = moulinette_templates[template_name].content
-        content = Template(template_content).render(Context(context_data))
-    else:
-        try:
-            content = render_to_string((full_template_name,), context_data)
-        except TemplateDoesNotExist:
-            content = ""
+    for template_name in template_names:
+        if template_name in moulinette_templates:
+            template_content = moulinette_templates[template_name].content
+            return Template(template_content).render(Context(context_data))
+
+    full_template_names = [f"moulinette/{name}" for name in template_names]
+    try:
+        content = render_to_string(full_template_names, context_data)
+    except TemplateDoesNotExist:
+        content = ""
 
     return content
 
@@ -72,14 +77,16 @@ def render_from_moulinette_templates(context, template_name):
 def show_regulation_body(context, regulation, category=None):
     """Render the main regulation content block."""
     if category is None:
-        template_name = f"{regulation.slug}/result_{regulation.result}.html"
-    else:
-        template_name = (
-            f"{regulation.slug}/result_{regulation.results_by_category[category]}.html"
+        return render_from_moulinette_templates(
+            context, f"{regulation.slug}/result_{regulation.result}.html"
         )
-    content = render_from_moulinette_templates(context, template_name)
 
-    return content
+    result = regulation.results_by_category[category]
+    return render_from_moulinette_templates(
+        context,
+        f"{regulation.slug}/{category.name}/result_{result}.html",
+        f"{regulation.slug}/result_{result}.html",
+    )
 
 
 @register.simple_tag(takes_context=True)
