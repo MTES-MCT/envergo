@@ -12,7 +12,7 @@ from envergo.petitions.services import (
 
 @app.task
 def send_closing_message_async(status_log_id):
-    """Send the closing message to the applicant via the DS messagerie."""
+    """Send the closing message to the applicant via the DN messagerie."""
     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
         return
 
@@ -27,12 +27,12 @@ def send_closing_message_async(status_log_id):
         log.petition_project, log.applicant_message, attachment
     )
     if response is None or response.get("errors") is not None:
-        raise RuntimeError(f"DS closing message failed for StatusLog {status_log_id}")
+        raise RuntimeError(f"DN closing message failed for StatusLog {status_log_id}")
 
 
 @app.task
 def send_declaration_receipt_async(project_id, received_on_iso, due_date_iso):
-    """Send the déclaration receipt to the applicant via the DS messagerie."""
+    """Send the déclaration receipt to the applicant via the DN messagerie."""
     if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
         return
 
@@ -49,5 +49,5 @@ def send_declaration_receipt_async(project_id, received_on_iso, due_date_iso):
     response = send_message_dossier_ds(project, message)
     if response is None or response.get("errors") is not None:
         raise RuntimeError(
-            f"DS declaration receipt failed for project {project.reference}"
+            f"DN declaration receipt failed for project {project.reference}"
         )

@@ -70,7 +70,7 @@ def test_send_closing_message_with_attachment(mock_ds_msg):
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 @patch("envergo.petitions.tasks.send_message_dossier_ds")
 def test_send_closing_message_with_ds_disabled(mock_ds_msg):
-    """When the DS API is disabled (dev), the task does nothing."""
+    """When the DN API is disabled (dev), the task does nothing."""
     log = closing_log()
 
     send_closing_message_async(log.pk)
@@ -106,8 +106,8 @@ def test_send_declaration_receipt(mock_ds_msg):
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 @patch("envergo.petitions.tasks.send_message_dossier_ds")
-def test_send_declaration_receipt_with_ds_disabled(mock_ds_msg):
-    """When the DS API is disabled (dev), the task does nothing."""
+def test_send_declaration_receipt_with_dn_disabled(mock_ds_msg):
+    """When the DN API is disabled (dev), the task does nothing."""
     project = ru_project()
 
     send_declaration_receipt_async(project.pk, "2026-10-05", "2026-12-05")

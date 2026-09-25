@@ -518,7 +518,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
             )
 
     def schedule_declaration_receipt(self, received_on, due_date):
-        """Queue the déclaration receipt for after commit, so a DS failure blocks nothing."""
+        """Queue the déclaration receipt for after commit, so a DN failure blocks nothing."""
         # Imported here: the tasks module imports this one.
         from envergo.petitions.tasks import send_declaration_receipt_async
 

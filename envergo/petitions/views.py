@@ -1991,7 +1991,7 @@ class PetitionProjectInstructorProcedureView(
     def schedule_closing_message(self, log):
         """Queue the closing message to the applicant for after commit.
 
-        Sent asynchronously so a DS messagerie failure never blocks the
+        Sent asynchronously so a DN messagerie failure never blocks the
         closing; the task retry policy handles transient errors.
         """
         transaction.on_commit(lambda: send_closing_message_async.delay(log.pk))
