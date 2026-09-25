@@ -2,18 +2,20 @@ import logging
 import operator
 from abc import ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum, IntEnum, nonmember
 from functools import reduce
 from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+import shapely
 from dateutil import parser
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
+from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import MultiLineString, Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
@@ -884,6 +886,11 @@ class Criterion(models.Model):
         return self._evaluator
 
     @property
+    def catalog(self):
+        """Return the data computed by the evaluator."""
+        return self._evaluator.catalog_data
+
+    @property
     def result_code(self):
         """Return the criterion result code."""
         if not hasattr(self, "_evaluator"):
@@ -987,6 +994,28 @@ class Criterion(models.Model):
         return actions_to_take
 
 
+class PerimeterQuerySet(models.QuerySet):
+    def clip(self, hedges: HedgeList) -> HedgeList:
+        """Return `hedges` with lengths reduced to their intersection with the union of these perimeters' zones."""
+        if not hedges:
+            return HedgeList()
+
+        hedges_geom = MultiLineString(
+            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
+        )
+        qs = Zone.objects.filter(
+            map_id__in=self.values_list("activation_map_id", flat=True),
+            geometry__intersects=hedges_geom,
+        ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+        multipolygon = qs["geom"]
+        if multipolygon is None:
+            return HedgeList()
+
+        # Other conversion options throw a cryptic numpy error, so…
+        geom = shapely.from_wkt(multipolygon.wkt)
+        return hedges.clip_to(geom)
+
+
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.
 
@@ -997,6 +1026,8 @@ class Perimeter(models.Model):
     Perimeters are related to regulations (e.g Natura 2000 Marais de Vilaine).
 
     """
+
+    objects = PerimeterQuerySet.as_manager()
 
     backend_name = models.CharField(
         _("Backend name"), help_text=_("For admin usage only"), max_length=256
@@ -1344,6 +1375,12 @@ class ConfigHaie(ConfigBase):
         "Champ html doctrine département", blank=True
     )
 
+    prohibition_range = DateRangeField(
+        "Période d’interdiction de destruction de haies",
+        null=True,
+        blank=True,
+    )
+
     guh_structure = models.CharField(
         "Structure GUH (DDT ou DDTM)",
         default="Direction Départementale des Territoires (DDT)",
@@ -1420,6 +1457,25 @@ class ConfigHaie(ConfigBase):
 
     def clean(self):
         super().clean()
+        if (
+            self.prohibition_range is not None
+            and self.prohibition_range.lower is not None
+            and self.prohibition_range.upper is not None
+        ):
+            if self.prohibition_range.lower.year != self.prohibition_range.upper.year:
+                raise ValidationError(
+                    {
+                        "prohibition_range": "Merci de renseigner deux dates de la même année."
+                    }
+                )
+            if self.prohibition_range.upper > self.prohibition_range.lower and (
+                self.prohibition_range.upper - self.prohibition_range.lower
+            ) < timedelta(days=7 * 21):
+                raise ValidationError(
+                    {
+                        "prohibition_range": "La période d’interdiction doit durer au moins 21 semaines consécutives."
+                    }
+                )
         if self.is_activated and self.demarche_numerique_pre_fill_config is not None:
             # add constraints on the pre-fill configuration json to avoid unexpected entries
 
@@ -1625,6 +1681,21 @@ class ConfigHaie(ConfigBase):
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
                 check=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
+            CheckConstraint(
+                check=Q(
+                    (
+                        Q(prohibition_range__startswith__isnull=False)
+                        & Q(prohibition_range__endswith__isnull=False)
+                    )
+                    | (
+                        Q(prohibition_range__startswith__isnull=True)
+                        & Q(prohibition_range__endswith__isnull=True)
+                    )
+                ),
+                name="confighaie_prohibition_range_both_or_no_value",
+                violation_error_message="Période d’interdiction : précisez à la fois une date "
+                "de début et une date de fin, ou aucune date.",
+            ),
         ]
 
     @property
@@ -1694,6 +1765,35 @@ class ConfigHaie(ConfigBase):
     @property
     def contact_info(self):
         return self.build_contact_info(self)
+
+    @property
+    def prohibition_range_display(self) -> str:
+        """
+        prohibition range is stored with end date excluded: prohibition_range.upper
+        is the first day when work on hedges is allowed.
+
+        However prohibition range is *displayed* with end date included:
+        "prohibited from 15th march to 31st august"
+        means you can work on hedges on september 1st.
+        """
+        from django.template.defaultfilters import date as date_format
+
+        if self.prohibition_range is None:
+            return ""
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper - timedelta(days=1)
+        return f"du {date_format(start, 'j F')} au {date_format(end, 'j F')}"
+
+    def is_date_in_prohibition_range(self, tested_date: date):
+        if self.prohibition_range is None:
+            return None
+        start = self.prohibition_range.lower
+        end = self.prohibition_range.upper
+        return (
+            (start.month, start.day)
+            <= (tested_date.month, tested_date.day)
+            < (end.month, end.day)
+        )
 
 
 TEMPLATE_KEYS = [
@@ -3164,8 +3264,10 @@ class MoulinetteHaie(MoulinetteHaieUrlMixin, Moulinette):
         """Add fake fields to display pac related data."""
         fields = super().summary_fields()
 
-        # add an entry in the project summary
-        lineaire_detruit_pac = round(self.catalog.get("lineaire_detruit_pac", 0))
+        haies = self.catalog.get("haies")
+        lineaire_detruit_pac = (
+            round(haies.hedges().to_remove().pac().length) if haies else 0
+        )
         localisation_pac = self.catalog.get("localisation_pac", False)
 
         if localisation_pac and lineaire_detruit_pac > 0:

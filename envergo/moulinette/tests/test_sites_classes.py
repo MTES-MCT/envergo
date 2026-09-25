@@ -1,6 +1,9 @@
 import pytest
+from django.template import Context
 
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.templatetags.moulinette import show_regulation_body
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -18,7 +21,11 @@ from envergo.moulinette.tests.utils import (
 
 @pytest.fixture()
 def sites_classes_regulation():
-    return RegulationFactory(regulation="sites_classes_haie", has_perimeters=True)
+    return RegulationFactory(
+        regulation="sites_classes_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.sites_classes_haie.SitesClassesRegulation",
+    )
 
 
 @pytest.fixture()
@@ -66,6 +73,12 @@ def test_moulinette_evaluation(coords, expected_result, sites_classes_criterion)
         )
 
 
+def aa_only(moulinette):
+    """The flag computed by the sites classés regulation for the hru hedges."""
+    evaluator = moulinette.sites_classes_haie.get_evaluator()
+    return evaluator.aa_only_by_category[HedgeCategory.hru]
+
+
 def test_aa_only_flag(sites_classes_criterion):
     """Test that aa_only is True when all hedges are alignement d'arbres."""
     DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
@@ -74,7 +87,7 @@ def test_aa_only_flag(sites_classes_criterion):
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.catalog.get("aa_only") is True
+    assert aa_only(moulinette) is True
 
 
 def test_aa_only_false_with_mixed_hedges(sites_classes_criterion):
@@ -85,4 +98,25 @@ def test_aa_only_false_with_mixed_hedges(sites_classes_criterion):
         reimplantation="replantation",
     )
     moulinette = MoulinetteHaie(data)
-    assert moulinette.catalog.get("aa_only") is False
+    assert aa_only(moulinette) is False
+
+
+def test_regulation_body_reads_the_flag_of_its_category(sites_classes_criterion):
+    """The regulation template reads the flag from the regulation evaluator."""
+    DCConfigHaieFactory(regulations_available=["sites_classes_haie"])
+    data = make_moulinette_haie_data(
+        hedge_data=[make_hedge(coords=COORDS_BIZOUS_INSIDE, type_haie="alignement")],
+        reimplantation="replantation",
+    )
+    moulinette = MoulinetteHaie(data)
+    context = Context(
+        {
+            "moulinette": moulinette,
+            "config": moulinette.config,
+            "category": HedgeCategory.hru,
+        }
+    )
+    body = show_regulation_body(
+        context, moulinette.sites_classes_haie, HedgeCategory.hru
+    )
+    assert "soumis à autorisation spéciale" in body

@@ -13,6 +13,7 @@ class PetitionsConfig(AppConfig):
         import envergo.petitions.regulations.loi_sur_leau_haie  # noqa
         import envergo.petitions.regulations.natura2000_haie  # noqa
         import envergo.petitions.regulations.regime_unique_haie  # noqa
+        import envergo.petitions.regulations.reserves_naturelles  # noqa
         import envergo.petitions.regulations.sites_proteges_haie  # noqa
 
         from . import signals  # noqa
