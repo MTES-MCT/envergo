@@ -59,6 +59,7 @@ def multi_sites_context(_request):
         "contact_url": f"{reverse("contact_us")}"
         f"{settings.CONTACT_TEAM_ANCHOR if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN else ''}",
         "contact_dossier_anchor": settings.CONTACT_DOSSIER_ANCHOR,
+        "contact_ddt_anchor": settings.CONTACT_DDT_ANCHOR,
         "preview_image_url": (
             _request.build_absolute_uri(static("images/preview_haie.png"))
             if _request.site.domain == settings.ENVERGO_HAIE_DOMAIN
