@@ -26,65 +26,67 @@
   </li>
 </ul>
 
-<h5>Plantation proposée</h5>
-<div id="normandie_plantation_table" class="fr-table">
-  <div class="fr-table__wrapper">
-    <div class="fr-table__container">
-      <div class="fr-table__content">
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">Type</th>
-              <th scope="col">
-                Minimum attendu
-                <br />
-                primaire
-              </th>
-              <th scope="col">
-                Minimum attendu réduit de 20%
-                <br />
-                sans passer sous 1:1
-              </th>
-              <th scope="col">
-                Plantation
-                <br />
-                proposée
-              </th>
-              <th scope="col">Manque</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for choice in ordered_hedge_types %}
-              {% if choice.value != "degradee" and choice.value != "buissonnante" %}
-                <tr>
-                  <th scope="row">{{ choice.label }}</th>
-                  <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LPm_r|get_item:choice.value|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
-                </tr>
-              {% elif choice.value == "buissonnante" %}
-                <tr>
-                  <th scope="row">{{ choice.label }}</th>
-                  <td>{{ quality_condition.LPm|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LPm_r|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LP|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
-                  <td>{{ quality_condition.LC|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row">Total</th>
-              <td>{{ quality_condition.lpm|floatformat:"0g" }} m</td>
-              <td>{{ quality_condition.reduced_lpm|floatformat:"0g" }} m</td>
-              <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
-              <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
-            </tr>
-          </tfoot>
-        </table>
+{% if quality_condition %}
+  <h5>Plantation proposée</h5>
+  <div id="normandie_plantation_table" class="fr-table">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Type</th>
+                <th scope="col">
+                  Minimum attendu
+                  <br />
+                  primaire
+                </th>
+                <th scope="col">
+                  Minimum attendu réduit de 20%
+                  <br />
+                  sans passer sous 1:1
+                </th>
+                <th scope="col">
+                  Plantation
+                  <br />
+                  proposée
+                </th>
+                <th scope="col">Manque</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for choice in ordered_hedge_types %}
+                {% if choice.value != "degradee" and choice.value != "buissonnante" %}
+                  <tr>
+                    <th scope="row">{{ choice.label }}</th>
+                    <td>{{ quality_condition.LPm|get_item:choice.value|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LPm_r|get_item:choice.value|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LP|get_item:choice.value|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LC|get_item:choice.value|floatformat:"0g" }} m</td>
+                  </tr>
+                {% elif choice.value == "buissonnante" %}
+                  <tr>
+                    <th scope="row">{{ choice.label }}</th>
+                    <td>{{ quality_condition.LPm|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LPm_r|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LP|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                    <td>{{ quality_condition.LC|sum_degradee_and_buissonnante|floatformat:"0g" }} m</td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">Total</th>
+                <td>{{ quality_condition.lpm|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.reduced_lpm|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.lp|floatformat:"0g" }} m</td>
+                <td>{{ quality_condition.lm|floatformat:"0g" }} m</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
+{% endif %}
