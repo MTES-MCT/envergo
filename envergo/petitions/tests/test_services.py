@@ -3,7 +3,9 @@ from decimal import Decimal
 from unittest.mock import ANY, patch
 
 import pytest
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.backends.postgresql.psycopg_any import DateRange
 from django.test import override_settings
 from gql.transport.exceptions import TransportQueryError
 
@@ -23,8 +25,13 @@ from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
 )
-from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
+from envergo.moulinette.tests.utils import (
+    make_hedge,
+    make_hedge_factory,
+    make_moulinette_haie_data,
+)
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations import _evaluator_instructors_information_registry
@@ -44,6 +51,7 @@ from envergo.petitions.regulations.loi_sur_leau_haie import (
 )
 from envergo.petitions.services import (
     compute_instructor_informations_ds,
+    declaration_receipt_message,
     get_context_from_dn,
     get_demarche_numerique_dossier,
     get_messages_and_senders_from_ds,
@@ -1179,3 +1187,162 @@ def test_every_bcae8_evaluator_has_an_instructor_view_context(
         _evaluator_instructors_information_registry.get(evaluator_class)
         is expected_getter
     )
+
+
+class TestDeclarationReceiptMessage:
+    """The receipt the applicant gets on deposit and on resumption of instruction."""
+
+    PROHIBITION_RANGE = DateRange(datetime.date(2026, 3, 18), datetime.date(2026, 9, 1))
+    RECEIVED_ON = datetime.date(2026, 10, 5)
+    DUE_DATE = datetime.date(2026, 12, 5)
+
+    CONFIG_DEFAULTS = {
+        "prohibition_range": PROHIBITION_RANGE,
+        "guh_structure": "Direction départementale des territoires",
+        "guh_service_name": "Service Eau et Environnement",
+        "guh_address": "50, Bd de Lyon\n02011 LAON",
+        "guh_phone": "+33323246400",
+    }
+
+    def make_project(self, hedges=None, raw_dossier=None, **config_overrides):
+        """An RU project whose département has GUH contacts and a prohibition period."""
+        config = {**self.CONFIG_DEFAULTS, **config_overrides}
+        RUConfigHaieFactory(**config)
+
+        if hedges is None:
+            hedges = [
+                make_hedge_factory(30, type_haie="arbustive", id="D1"),
+                make_hedge_factory(22, type_haie="mixte", id="D2"),
+                make_hedge_factory(60, type_haie="arbustive", id="P1", to_plant=True),
+            ]
+        return PetitionProjectFactory(
+            hedge_data=HedgeDataFactory(hedges=hedges),
+            demarche_numerique_raw_dossier=raw_dossier or {},
+        )
+
+    def render(self, project, received_on=RECEIVED_ON, due_date=DUE_DATE):
+        return declaration_receipt_message(project, received_on, due_date)
+
+    def test_receipt_lists_the_hedges_to_remove_and_to_plant(self):
+        message = self.render(self.make_project())
+
+        assert "Linéaires de haie à détruire :" in message
+        assert "- D1 : haie arbustive, 30\u00a0m" in message
+        # Under the régime unique, a "mixte" hedge reads "arborée"
+        assert "- D2 : haie arborée, 22\u00a0m" in message
+        assert "Linéaires à planter en compensation :" in message
+        assert "- P1 : haie arbustive, 60\u00a0m" in message
+
+    def test_receipt_drops_the_plantation_block_when_nothing_is_planted(self):
+        project = self.make_project(
+            hedges=[make_hedge_factory(30, type_haie="arbustive", id="D1")]
+        )
+
+        message = self.render(project)
+
+        assert "Linéaires de haie à détruire :" in message
+        assert "Linéaires à planter en compensation" not in message
+
+    def test_receipt_names_the_commune_declared_in_the_dossier(self):
+        """The commune is the one shown in the dossier header, ds_info.city."""
+        project = self.make_project(
+            raw_dossier=GET_DOSSIER_FAKE_RESPONSE["data"]["dossier"],
+            demarche_numerique_display_fields={
+                "project_url": "ABC123",
+                "city": "Q2hhbXAtNDcyOTE4Nw==",
+            },
+        )
+
+        message = self.render(project)
+
+        commune_sentence = "situés principalement sur la commune de Laon (02000)."
+        assert commune_sentence in message
+        assert message.index(commune_sentence) < message.index(
+            "Linéaires à planter en compensation :"
+        )
+
+    def test_receipt_keeps_french_apostrophes_unescaped(self):
+        """The body goes to the messagerie as plain text, never as HTML."""
+        project = self.make_project(guh_service_name="Service de l'Eau")
+
+        message = self.render(project)
+
+        assert "Service de l'Eau" in message
+
+    def test_receipt_omits_the_commune_when_the_dossier_does_not_carry_one(self):
+        message = self.render(self.make_project())
+
+        assert "sur la commune de" not in message
+
+    def test_receipt_states_the_reception_date_the_due_date_and_the_project_url(self):
+        project = self.make_project()
+
+        message = self.render(project)
+
+        assert "réceptionnée le 5 octobre 2026" in message
+        assert (
+            "Vous ne pouvez pas commencer le projet avant le 5 décembre 2026" in message
+        )
+        consultation_url = (
+            f"https://{settings.ENVERGO_HAIE_DOMAIN}"
+            f"/projet/{project.reference}/consultation/"
+        )
+        assert consultation_url in message
+
+    def test_receipt_names_the_prohibition_period_of_the_department(self):
+        message = self.render(self.make_project())
+
+        assert "sur les haies dans le département, du 18 mars au 31 août," in message
+
+    def test_receipt_falls_back_on_the_prefectural_order_without_a_prohibition_period(
+        self,
+    ):
+        message = self.render(self.make_project(prohibition_range=None))
+
+        assert "(fixée par arrêté préfectoral)" in message
+        assert "du 18 mars au 31 août" not in message
+
+    def test_due_date_outside_the_prohibition_period_frees_the_works(self):
+        message = self.render(self.make_project())
+
+        assert "accord tacite et vous pourrez commencer vos travaux." in message
+
+    def test_due_date_inside_the_prohibition_period_defers_the_works(self):
+        project = self.make_project()
+
+        # The period repeats every year, so a 2026 range answers a 2027 due date.
+        message = self.render(
+            project,
+            received_on=datetime.date(2027, 5, 1),
+            due_date=datetime.date(2027, 7, 1),
+        )
+
+        assert (
+            "Vous pourrez commencer vos travaux à la fin de la période "
+            "d’interdiction du département, le 1 septembre 2027." in message
+        )
+
+    def test_receipt_signs_with_the_guh_contacts_of_the_department(self):
+        message = self.render(self.make_project())
+
+        assert "Le guichet unique de la haie – Loire-Atlantique (44)" in message
+        assert "Direction départementale des territoires" in message
+        assert "Service Eau et Environnement" in message
+        assert "50, Bd de Lyon\n02011 LAON" in message
+        assert "Tel. : 03 23 24 64 00" in message
+
+    def test_receipt_omits_the_guh_contact_lines_left_blank(self):
+        """A blank contact leaves no empty line behind in the signature."""
+        project = self.make_project(guh_service_name="")
+
+        message = self.render(project)
+
+        _, signature = message.split("Le guichet unique de la haie – ")
+        assert signature.strip() == (
+            "Loire-Atlantique (44)\n"
+            "\n"
+            "Direction départementale des territoires\n"
+            "50, Bd de Lyon\n"
+            "02011 LAON\n"
+            "Tel. : 03 23 24 64 00"
+        )

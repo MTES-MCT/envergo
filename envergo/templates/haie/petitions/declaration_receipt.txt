@@ -1,0 +1,44 @@
+{% load utils %}{% autoescape off %}**Récépissé de déclaration**
+
+En application de l’article R412-58 du code de l’environnement, le Préfet du département {{ department }} vous donne récépissé du dépôt de votre déclaration, réceptionnée le {{ received_on|date:"DATE_FORMAT" }}, concernant le projet de destruction de haies décrit dans la simulation consultable sur {{ consultation_url }} et répondant aux caractéristiques suivantes :
+
+Linéaires de haie à détruire :
+
+{% for hedge in hedges_to_remove %}- {{ hedge.id }} : {{ hedge_types.choices|get_choice_label:hedge.hedge_type|lower }}, {{ hedge.length|floatformat:"0g" }} m
+{% endfor %}
+{% if commune %}situés principalement sur la commune de {{ commune }}.
+
+{% endif %}{% if hedges_to_plant %}Linéaires à planter en compensation :
+
+{% for hedge in hedges_to_plant %}- {{ hedge.id }} : {{ hedge_types.choices|get_choice_label:hedge.hedge_type|lower }}, {{ hedge.length|floatformat:"0g" }} m
+{% endfor %}
+{% endif %}**Attention : ce récépissé n’est pas une autorisation de débuter les travaux.**
+
+Vous ne pouvez pas commencer le projet avant le {{ due_date|date:"DATE_FORMAT" }} ou avant la réponse officielle du Préfet.
+
+{% if prohibition_range_display %}Le projet ne peut pas non plus être réalisé pendant la période d’interdiction de travaux sur les haies dans le département, {{ prohibition_range_display }}, sauf cas particuliers prévus par l’art. R472-51 du code de l’environnement.
+{% else %}Le projet ne peut pas non plus être réalisé pendant la période d’interdiction de travaux sur les haies (fixée par arrêté préfectoral), sauf cas particuliers prévus par l’art. R472-51 du code de l’environnement.
+{% endif %}
+**Déroulement de la procédure**
+
+Des compléments nécessaires à l’instruction peuvent vous être demandés, par l’intermédiaire du guichet unique de la haie sur cette messagerie. Dès réception des pièces, un accusé de réception vous sera délivré mentionnant un nouveau délai de deux mois.
+
+La décision du Préfet pourra être :
+
+- un accord exprès sur la base de votre déclaration, valant décision de non-opposition ;
+- un accord avec des prescriptions particulières à respecter ;
+- en fonction des enjeux du dossier, la décision selon laquelle le projet est subordonné à l’obtention d’une autorisation. Dans ce cas la durée d’instruction sera allongée, et un nouveau délai vous sera précisé dans la décision par le guichet unique de la haie ;
+- ou une décision de refus.
+
+{% if first_allowed_work_date %}Si vous ne recevez aucune réponse en date du {{ due_date|date:"DATE_FORMAT" }}, vous disposerez d’un accord tacite. Vous pourrez commencer vos travaux à la fin de la période d’interdiction du département, le {{ first_allowed_work_date|date:"DATE_FORMAT" }}.
+{% else %}Si vous ne recevez aucune réponse en date du {{ due_date|date:"DATE_FORMAT" }}, vous disposerez d’un accord tacite et vous pourrez commencer vos travaux.
+{% endif %}
+Une présentation complète des dispositions légales qui encadrent l’instruction de votre déclaration et la décision du Préfet, et de vos droits, est disponible à ce lien : {{ faq_url }}
+
+Le guichet unique de la haie – {{ department }}
+
+{{ config.guh_structure }}
+{% if config.guh_service_name %}{{ config.guh_service_name }}
+{% endif %}{% if config.guh_address %}{{ config.guh_address }}
+{% endif %}{% if config.guh_phone %}Tel. : {{ config.guh_phone.as_national }}
+{% endif %}{% endautoescape %}
