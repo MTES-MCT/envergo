@@ -1773,7 +1773,16 @@ class ConfigHaie(ConfigBase):
         """First day work on hedges is allowed again, or None if already allowed."""
         if not self.is_date_in_prohibition_range(blocked_date):
             return None
-        return self.prohibition_range.upper.replace(year=blocked_date.year)
+
+        prohibition_end = self.prohibition_range.upper
+        try:
+            first_allowed = prohibition_end.replace(year=blocked_date.year)
+        except ValueError:
+            # 29 February is the only day some years lack. Work then resumes on
+            # 1 March, the first day that exists past the boundary.
+            first_allowed = date(blocked_date.year, 3, 1)
+
+        return first_allowed
 
 
 TEMPLATE_KEYS = [

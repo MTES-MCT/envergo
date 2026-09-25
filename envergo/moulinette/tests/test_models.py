@@ -409,6 +409,18 @@ class TestConfigHaieProhibitionDates:
                 None,
                 id="null_stored_dates_yield_none",
             ),
+            pytest.param(
+                DateRange(date(2028, 2, 1), date(2028, 2, 29)),
+                date(2027, 2, 10),
+                date(2027, 3, 1),
+                id="end_on_29_february_resumes_on_1_march_in_a_non_leap_year",
+            ),
+            pytest.param(
+                DateRange(date(2028, 2, 1), date(2028, 2, 29)),
+                date(2028, 2, 10),
+                date(2028, 2, 29),
+                id="end_on_29_february_stands_in_a_leap_year",
+            ),
         ),
     )
     def test_first_allowed_work_date(self, stored_range, blocked_date, expected_result):
