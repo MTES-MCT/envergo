@@ -97,7 +97,7 @@ def merge_ep_regime_unique(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0141_merge_20260924_1203"),
+        ("moulinette", "0140_merge_20260922_1445"),
     ]
 
     operations = [
