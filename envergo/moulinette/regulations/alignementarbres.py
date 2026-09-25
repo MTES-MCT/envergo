@@ -50,13 +50,12 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
     def get_result_data(self):
         return self.catalog.get("motif")
 
-    @classmethod
-    def get_result_based_replantation_coefficient(cls, result_code):
-        if result_code == "soumis_autorisation":
-            r_aa = 2.0
-        elif result_code == "soumis_esthetique":
+    def get_result_based_replantation_coefficient(self):
+        if self.result_code == "soumis_autorisation":
+            r_aa = self.moulinette.config.aa_l3503_authorization_coefficient
+        elif self.result_code == "soumis_esthetique":
             r_aa = 1.0
-        elif result_code == "soumis_securite":
+        elif self.result_code == "soumis_securite":
             r_aa = 1.0
         else:  # non_soumis
             r_aa = 0.0
@@ -66,7 +65,7 @@ class AlignementsArbresL3503(PlantationConditionMixin, HaieCriterionEvaluator):
         minimum_length_to_plant = 0.0
         aggregated_r = 0.0
 
-        r_aa = self.get_result_based_replantation_coefficient(self.result_code)
+        r_aa = self.get_result_based_replantation_coefficient()
 
         for hedge in self.hedges.to_remove():
             if hedge.hedge_type == "alignement" and hedge.prop("bord_voie"):
@@ -117,3 +116,24 @@ class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
         motif = self.catalog.get("motif")
         has_alignement_bord_voie = bool(self.hedges.to_remove().l350_3())
         return has_alignement_bord_voie, motif
+
+
+class AlignementsArbresHru(HaieCriterionEvaluator):
+    """L350-3 never applies outside roadside tree alignments."""
+
+    choice_label = "Alignements d'arbres > L350-3"
+    base_slug = "alignement_arbres"
+    category = HedgeCategory.hru
+
+    RESULT_MATRIX = {
+        "non_concerne": RESULTS.non_concerne,
+    }
+
+    def evaluate(self):
+        self._result_code, self._result = "non_concerne", "non_concerne"
+
+
+class AlignementsArbresRu(AlignementsArbresHru):
+    """Same as `AlignementsArbresHru`, for hedges covered by the régime unique."""
+
+    category = HedgeCategory.ru

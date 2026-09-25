@@ -1068,13 +1068,7 @@ class TreeAlignmentsCondition(PlantationCondition):
         length_to_remove_aa_bord_voie = self.hedges.to_remove().l350_3().length
         length_to_plant_aa_bord_voie = self.hedges.to_plant().l350_3().length
 
-        from envergo.moulinette.regulations.alignementarbres import (
-            AlignementsArbresL3503,
-        )
-
-        r_aa = AlignementsArbresL3503.get_result_based_replantation_coefficient(
-            self.criterion_evaluator.result_code
-        )
+        r_aa = self.criterion_evaluator.get_result_based_replantation_coefficient()
 
         minimum_length_to_plant_aa_bord_voie = length_to_remove_aa_bord_voie * r_aa
         aa_bord_voie_delta = (
