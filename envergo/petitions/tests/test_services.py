@@ -95,7 +95,7 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     assert project_details["ds_info"]["city"] == "Laon (02000)"
     assert project_details["ds_info"]["pacage"] == "123456789"
     assert project_details["ds_info"]["organization"] == "GAEC Choupi"
-    assert project_details["ds_info"]["applicant"] == "Mme LAMARR Hedy"
+    assert project_details["ds_info"]["applicant"] == "LAMARR Hedy"
     assert project_details["ds_info"]["applicant_email"] == "hedy.lamarr@example.com"
     assert project_details["ds_info"]["usager"] == "grace.hopper@example.com"
     assert project_details["ds_info"]["representative"] == "HOPPER Grace"
