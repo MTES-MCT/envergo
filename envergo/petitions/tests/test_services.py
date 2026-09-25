@@ -1326,10 +1326,17 @@ class TestDeclarationReceiptMessage:
         assert "Tel. : 03 23 24 64 00" in message
 
     def test_receipt_omits_the_guh_contact_lines_left_blank(self):
-        project = self.make_project(guh_service_name="", guh_address="", guh_phone="")
+        """A blank contact leaves no empty line behind in the signature."""
+        project = self.make_project(guh_service_name="")
 
         message = self.render(project)
 
-        assert "Direction départementale des territoires" in message
-        assert "Service Eau et Environnement" not in message
-        assert "Tel." not in message
+        _, signature = message.split("Le guichet unique de la haie – ")
+        assert signature.strip() == (
+            "Loire-Atlantique (44)\n"
+            "\n"
+            "Direction départementale des territoires\n"
+            "50, Bd de Lyon\n"
+            "02011 LAON\n"
+            "Tel. : 03 23 24 64 00"
+        )
