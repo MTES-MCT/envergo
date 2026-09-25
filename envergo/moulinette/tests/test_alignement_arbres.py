@@ -104,7 +104,7 @@ def test_replantation_coefficient_calvados_override():
     department = DepartmentFactory(
         department="14", geometry=MultiPolygon([calvados_polygon])
     )
-    RUConfigHaieFactory(department=department, l350_3_authorization_coefficient=2.0)
+    RUConfigHaieFactory(department=department, aa_l3503_authorization_coefficient=2.0)
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie="alignement", bord_voie=True)],
         motif="amelioration_culture",
