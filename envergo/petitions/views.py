@@ -2161,6 +2161,13 @@ class PetitionProjectInstructorProcedureView(
         """Instructor received the requested additional info."""
 
         project = self.object
+        if not project.is_additional_information_requested:
+            messages.error(
+                self.request,
+                "Ce dossier n'est pas en attente de compléments, "
+                "l'instruction n'a pas été reprise.",
+            )
+            return HttpResponseRedirect(self.get_success_url())
 
         info_receipt_date = form.cleaned_data["info_receipt_date"]
         new_due_date = form.cleaned_data.get("due_date")

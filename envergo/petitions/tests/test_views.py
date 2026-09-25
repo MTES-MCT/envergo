@@ -2420,6 +2420,41 @@ def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
 
 @pytest.mark.django_db(transaction=True)
 @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_refused_without_a_suspension(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The button is hidden when nothing is awaited, so only a replayed post gets here."""
+
+    client.force_login(haie_coordinator_44)
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    assert project.is_additional_information_requested is False
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    today = date.today()
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    assert "Ce dossier n'est pas en attente de compléments" in res.content.decode()
+
+    assert not project.status_history.filter(type=LOG_TYPES.resumption).exists()
+    assert not mock_receipt_task.delay.called
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
 def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
     mock_receipt_task, client, haie_coordinator_44, site
 ):
