@@ -96,7 +96,13 @@
       <li>
         <strong>contacter les services de l’État</strong> en charge de la réglementation sur les alignements d’arbres.
         La marche à suivre pour obtenir l’autorisation d’effectuer les travaux vous sera indiquée :
-        <div class="fr-highlight">{{ object.aa_l3503_contact_info|safe }}</div>
+        <div class="fr-highlight">
+          {% if object.aa_l3503_contact_info %}
+            {{ object.aa_l3503_contact_info|safe }}
+          {% else %}
+            {{ object.contact_info|safe }}
+          {% endif %}
+        </div>
       </li>
     {% endif %}
     <li>
