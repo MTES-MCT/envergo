@@ -84,6 +84,11 @@ AWS_QUERYSTRING_AUTH = True
 AWS_QUERYSTRING_EXPIRE = 3600
 AWS_S3_FILE_OVERWRITE = False
 
+# The download proxy and nginx locations assume path-style presigned URLs
+# with a SigV4 querystring; pin both so botocore upgrades cannot drift.
+AWS_S3_ADDRESSING_STYLE = "path"
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+
 _AWS_EXPIRY = 60 * 60 * 24 * 7
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": f"max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate"
@@ -99,6 +104,8 @@ STORAGES = {
     "upload": {"BACKEND": "envergo.utils.storages.PrivateUploadStorage"},
     "public": {"BACKEND": "envergo.utils.storages.PublicMediaStorage"},
 }
+
+SERVE_FILES_LOCALLY = False
 
 
 # TEMPLATES

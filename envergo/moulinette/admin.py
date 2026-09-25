@@ -443,6 +443,15 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         widget=AdminDateRangeWidget,
         help_text="Laisser les dates vides pour une validité illimitée",
     )
+    prohibition_range = DateRangeField(
+        label="Dates d’interdiction de destruction de haies",
+        required=False,
+        widget=AdminDateRangeWidget,
+        help_text=(
+            "Seuls le mois et le jour saisis dans ces champs seront "
+            "pris en compte pour les dossiers."
+        ),
+    )
 
     class Meta:
         model = ConfigHaie
@@ -537,6 +546,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
                     "regulations_available",
                     "hedge_to_remove_properties_form",
                     "hedge_to_plant_properties_form",
+                    "prohibition_range",
                 ],
             },
         ),
