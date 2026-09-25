@@ -14,7 +14,7 @@
     </li>
     {% try_get_department_code as dept_code %}
     <li>
-      <a href="{% url 'contact_us' %}{% if dept_code %}?department={{ dept_code }}{% endif %}{{ contact_dossier_anchor }}">Contacter le guichet unique</a> dans votre département pour toute question sur un dossier en cours d'instruction
+      <a href="{% url 'contact_us' %}{% if dept_code %}?department={{ dept_code }}{% endif %}{{ contact_ddt_anchor }}">Contacter le guichet unique</a> dans votre département pour toute question sur la réglementation applicable
     </li>
   </ul>
 </div>
