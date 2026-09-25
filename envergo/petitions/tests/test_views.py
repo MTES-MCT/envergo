@@ -164,9 +164,19 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
     }
 
     dn_config = DemarcheConfigFactory()
-    dn_config.pre_fill_config.append({"id": "abc", "value": "plantation_adequate"})
-    dn_config.pre_fill_config.append({"id": "def", "value": "sur_talus_d"})
-    dn_config.pre_fill_config.append({"id": "ghi", "value": "sur_talus_p"})
+    dn_config.pre_fill_config.append(
+        {
+            "id": "abc",
+            "value": "plantation_adequate",
+            "mapping": {"true": "Oui", "false": "Non"},
+        }
+    )
+    dn_config.pre_fill_config.append(
+        {"id": "def", "value": "sur_talus_d"}
+    )
+    dn_config.pre_fill_config.append(
+        {"id": "ghi", "value": "sur_talus_p"}
+    )
     dn_config.save()
     DCConfigHaieFactory(demarche_numerique_config=dn_config)
 
@@ -195,7 +205,7 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "champ_456": None,  # improve this test by configuring a result for bcae8
         "champ_654": ANY,
         "champ_789": "http://haie.local:3000/projet/ABC123",
-        "champ_abc": "true",
+        "champ_abc": "Oui",
         "champ_def": "false",
         "champ_ghi": "false",
     }
