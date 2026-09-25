@@ -680,9 +680,12 @@ class PetitionProjectCreate(FormView):
                 )
                 value = None
 
+        # The mapping is JSON, where keys are always strings: boolean values are looked up as "true" / "false"
+        mapping_key = {True: "true", False: "false"}.get(value, value)
+
         if mapping:
             # if the mapping object is not empty but do not contain the value, log an info
-            if value not in mapping:
+            if mapping_key not in mapping:
                 logger.info(
                     "The value to pre-fill a dossier on « Démarche numérique » is not in the mapping",
                     extra={
@@ -703,7 +706,7 @@ class PetitionProjectCreate(FormView):
                     )
                 )
 
-        mapped_value = mapping.get(value, value)
+        mapped_value = mapping.get(mapping_key, value)
 
         # Handle boolean values as strings 😞
         return {
