@@ -1263,6 +1263,14 @@ class TestDeclarationReceiptMessage:
             "Linéaires à planter en compensation :"
         )
 
+    def test_receipt_keeps_french_apostrophes_unescaped(self):
+        """The body goes to the messagerie as plain text, never as HTML."""
+        project = self.make_project(guh_service_name="Service de l'Eau")
+
+        message = self.render(project)
+
+        assert "Service de l'Eau" in message
+
     def test_receipt_omits_the_commune_when_the_dossier_does_not_carry_one(self):
         message = self.render(self.make_project())
 

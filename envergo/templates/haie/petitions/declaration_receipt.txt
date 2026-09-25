@@ -1,4 +1,4 @@
-{% load utils %}**Récépissé de déclaration**
+{% load utils %}{% autoescape off %}**Récépissé de déclaration**
 
 En application de l’article R412-58 du code de l’environnement, le Préfet du département {{ department }} vous donne récépissé du dépôt de votre déclaration, réceptionnée le {{ received_on|date:"DATE_FORMAT" }}, concernant le projet de destruction de haies décrit dans la simulation consultable sur {{ consultation_url }} et répondant aux caractéristiques suivantes :
 
@@ -41,4 +41,4 @@ Le guichet unique de la haie – {{ department }}
 {% if config.guh_service_name %}{{ config.guh_service_name }}
 {% endif %}{% if config.guh_address %}{{ config.guh_address }}
 {% endif %}{% if config.guh_phone %}Tel. : {{ config.guh_phone.as_national }}
-{% endif %}
+{% endif %}{% endautoescape %}
