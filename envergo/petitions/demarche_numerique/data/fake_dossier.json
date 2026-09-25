@@ -35,7 +35,6 @@
       "deposeParUnTiers": true,
       "demandeur": {
         "__typename": "PersonnePhysique",
-        "civilite": "Mme",
         "nom": "Lamarr",
         "prenom": "Hedy",
         "email": "hedy.lamarr@example.com"
