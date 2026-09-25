@@ -1092,7 +1092,7 @@ class Dossier:
         Returns the name of the applicant based on the type of demandeur.
         """
         if isinstance(self.demandeur, PersonnePhysique):
-            applicant_name = f"{self.demandeur.civilite} {self.demandeur.nom.upper()} {self.demandeur.prenom}"
+            applicant_name = f"{self.demandeur.civilite or ''} {self.demandeur.nom.upper()} {self.demandeur.prenom}"
         elif isinstance(self.demandeur, PersonneMorale):
             applicant_name = (
                 self.demandeur.entreprise.nomCommercial
