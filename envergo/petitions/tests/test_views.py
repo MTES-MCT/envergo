@@ -2385,6 +2385,131 @@ def test_petition_project_resume_instruction(
 
 
 @pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """Receiving the documents restarts the delay, so a new receipt goes out."""
+
+    client.force_login(haie_coordinator_44)
+
+    today = date.today()
+    RUConfigHaieFactory()
+    # Already submitted, so only the resumption can send a receipt
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage="instruction_d",
+        original_due_date=today,
+        due_date=today + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    new_due_date = today + timedelta(days=60)
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": new_due_date,
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "L'instruction du dossier a repris." in content
+    assert "Le récépissé de déclaration sera envoyé au demandeur" in content
+
+    assert mock_receipt_task.delay.call_count == 1
+    assert mock_receipt_task.delay.call_args[0] == (
+        project.pk,
+        today.isoformat(),
+        new_due_date.isoformat(),
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_refused_without_a_suspension(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The button is hidden when nothing is awaited, so only a replayed post gets here."""
+
+    client.force_login(haie_coordinator_44)
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    assert project.is_additional_information_requested is False
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    today = date.today()
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    assert "Ce dossier n'est pas en attente de compléments" in res.content.decode()
+
+    assert not project.status_history.filter(type=LOG_TYPES.resumption).exists()
+    assert not mock_receipt_task.delay.called
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The receipt only covers the déclaration stage of the régime unique."""
+
+    client.force_login(haie_coordinator_44)
+
+    today = date.today()
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_a",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage="instruction_a",
+        original_due_date=today,
+        due_date=today + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "L'instruction du dossier a repris." in content
+    assert "récépissé" not in content
+    assert not mock_receipt_task.delay.called
+
+
+@pytest.mark.django_db(transaction=True)
 def test_request_info_date_in_past(client, haie_coordinator_44, site):
     """Requesting additional info with a past date is rejected."""
 
