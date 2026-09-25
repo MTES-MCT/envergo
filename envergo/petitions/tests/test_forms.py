@@ -11,6 +11,7 @@ from envergo.petitions.forms import (
     ResumeProcessingForm,
     StateChangeForm,
 )
+from envergo.petitions.models import STAGES
 from envergo.petitions.tests.factories import FILE_TEST_NOK_PATH, FILE_TEST_PATH
 
 pytestmark = pytest.mark.django_db
@@ -57,6 +58,28 @@ class TestResumeProcessingFormDueDate:
 
         assert not form.is_valid()
         assert "due_date" in form.errors
+
+    def test_declaration_due_date_runs_from_the_reception_of_the_documents(self):
+        """The read-only date is a hint, so a posted value is recomputed, not trusted."""
+        form = ResumeProcessingForm(
+            data={"info_receipt_date": "2026-01-15", "due_date": "2026-06-30"},
+            category=HedgeCategory.ru,
+            stage=STAGES.instruction_d,
+        )
+
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["due_date"] == date(2026, 3, 15)
+
+    def test_due_date_is_kept_as_entered_outside_a_declaration(self):
+        form = ResumeProcessingForm(
+            data={"info_receipt_date": "2026-01-15", "due_date": "2026-06-30"},
+            category=HedgeCategory.ru,
+            stage=STAGES.instruction_a,
+            original_due_date=date(2026, 1, 1),
+        )
+
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["due_date"] == date(2026, 6, 30)
 
 
 class TestPetitionProjectFormCleanCategory:

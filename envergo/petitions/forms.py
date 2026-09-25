@@ -515,7 +515,10 @@ class ResumeProcessingForm(forms.Form):
         """Drop the due date field when the suspension has no original due date."""
         super().__init__(*args, **kwargs)
 
-        if category == HedgeCategory.ru and stage == STAGES.instruction_d:
+        self.restarts_delay = (
+            category == HedgeCategory.ru and stage == STAGES.instruction_d
+        )
+        if self.restarts_delay:
             self.fields["due_date"].widget.attrs["readonly"] = True
             self.fields["due_date"].label = mark_safe(
                 f"{self.fields['due_date'].label}"
@@ -524,6 +527,17 @@ class ResumeProcessingForm(forms.Form):
             )
         elif original_due_date is None:
             del self.fields["due_date"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        # The tacit agreement delay restarts from the reception of the documents, so
+        # the read-only date offered to the instructor is recomputed, never trusted.
+        info_receipt_date = cleaned_data.get("info_receipt_date")
+        if self.restarts_delay and info_receipt_date:
+            cleaned_data["due_date"] = info_receipt_date + relativedelta(months=2)
+
+        return cleaned_data
 
 
 USER_TYPE = (
