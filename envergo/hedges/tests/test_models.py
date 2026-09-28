@@ -5,6 +5,7 @@ from django.contrib.gis.geos import MultiPolygon, Polygon
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from shapely import centroid
+from shapely.geometry import box
 
 from envergo.geodata.conftest import aisne_map, calvados_map  # noqa
 from envergo.geodata.tests.factories import (
@@ -16,7 +17,14 @@ from envergo.geodata.tests.factories import (
     limé_polygon,
 )
 from envergo.hedges import density
-from envergo.hedges.models import HedgeCategory, HedgeData, HedgeList, Species
+from envergo.hedges.models import (
+    ClippedHedge,
+    Hedge,
+    HedgeCategory,
+    HedgeData,
+    HedgeList,
+    Species,
+)
 from envergo.hedges.tests.factories import (
     HedgeDataFactory,
     HedgeFactory,
@@ -2047,3 +2055,35 @@ class TestHedgeSituationProperties:
         hedge = HedgeFactory()
 
         assert getattr(hedge, prop) is None
+
+
+def test_clipped_hedge_keeps_the_hedge_list_api():
+    hedge = HedgeFactory(length=100)
+    (lng, lat_start), (_, lat_end) = hedge.geometry.coords
+    lat_mid = (lat_start + lat_end) / 2
+    # Keep only the southern half of the hedge
+    half = box(lng - 1, lat_start - 1, lng + 1, lat_mid)
+
+    hedges = HedgeList([hedge]).clip_to(half)
+    clipped = hedges[0]
+
+    assert isinstance(clipped, ClippedHedge)
+    assert isinstance(clipped, Hedge)
+    assert clipped.length == pytest.approx(hedge.length / 2, rel=0.01)
+    assert hedges.length == pytest.approx(hedge.length / 2, rel=0.01)
+    assert hedges.centroid.y == pytest.approx((lat_start + lat_mid) / 2, abs=1e-6)
+
+    # Everything else is delegated to the original hedge
+    assert clipped.id == hedge.id
+    assert clipped.is_on_pac == hedge.is_on_pac
+    assert clipped.category == hedge.category
+    assert len(hedges.pac()) == len(HedgeList([hedge]).pac())
+    assert len(hedges.ru()) == len(HedgeList([hedge]).ru())
+    assert len(hedges.to_remove()) == 1
+    assert len(hedges.to_plant()) == 0
+
+
+def test_clipped_hedge_cannot_be_exported():
+    hedge = HedgeFactory(length=100)
+    with pytest.raises(NotImplementedError):
+        ClippedHedge(hedge, box(-180, -90, 180, 90)).toDict()

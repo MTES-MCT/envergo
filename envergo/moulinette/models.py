@@ -9,9 +9,11 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+import shapely
 from dateutil import parser
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
+from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
@@ -992,6 +994,25 @@ class Criterion(models.Model):
         return actions_to_take
 
 
+class PerimeterQuerySet(models.QuerySet):
+    def clip(self, hedges: HedgeList) -> HedgeList:
+        """Return `hedges` with lengths reduced to their intersection with the union of these perimeters' zones."""
+        if not hedges:
+            return HedgeList()
+
+        qs = Zone.objects.filter(
+            map_id__in=self.values_list("activation_map_id", flat=True),
+            geometry__intersects=hedges.to_multilinestring(),
+        ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+        multipolygon = qs["geom"]
+        if multipolygon is None:
+            return HedgeList()
+
+        # Other conversion options throw a cryptic numpy error, so…
+        geom = shapely.from_wkt(multipolygon.wkt)
+        return hedges.clip_to(geom)
+
+
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.
 
@@ -1002,6 +1023,8 @@ class Perimeter(models.Model):
     Perimeters are related to regulations (e.g Natura 2000 Marais de Vilaine).
 
     """
+
+    objects = PerimeterQuerySet.as_manager()
 
     backend_name = models.CharField(
         _("Backend name"), help_text=_("For admin usage only"), max_length=256
