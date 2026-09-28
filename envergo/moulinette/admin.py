@@ -16,6 +16,7 @@ from envergo.moulinette.models import (
     ConfigAmenagement,
     ConfigHaie,
     Criterion,
+    DemarcheNumerique,
     MoulinetteTemplate,
     Perimeter,
     Regulation,
@@ -427,6 +428,56 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
+class DemarcheNumeriqueConfigForm(forms.ModelForm):
+    class Meta:
+        model = DemarcheNumerique
+        fields = "__all__"
+        widgets = {
+            "pre_fill_config": JSONWidget(attrs={"rows": 20, "cols": 80}),
+            "display_fields": JSONWidget(attrs={"rows": 20, "cols": 80}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["pre_fill_config"].help_text = self.get_pre_fill_config_help_text()
+
+    def clean(self):
+        """
+        Validate demarche_numerique_display_fields should have required keys
+        "organization", "city", "pacage".
+        """
+        cleaned_data = super().clean()
+        display_dn_fields = cleaned_data.get("demarche_numerique_display_fields")
+        if (
+            not display_dn_fields
+            or not display_dn_fields.get("city", None)
+            or not display_dn_fields.get("organization", None)
+            or not display_dn_fields.get("pacage", None)
+        ):
+            self.add_error(
+                "demarche_numerique_display_fields",
+                "Les champs city, organization et pacage sont obligatoires "
+                "lorsque le numéro de la démarche est rempli.",
+            )
+
+        return cleaned_data
+
+    def get_pre_fill_config_help_text(self):
+        context = {
+            "sources": DemarcheNumerique.get_demarche_numerique_value_sources(),
+        }
+        return render_to_string(
+            "admin/moulinette/confighaie/demarche_numerique_pre_fill_config_help_text.html",
+            context,
+        )
+
+
+@admin.register(DemarcheNumerique)
+class DemarcheNumeriqueConfigAdmin(admin.ModelAdmin):
+    form = DemarcheNumeriqueConfigForm
+    list_display = ["demarche_numerique_number", "display_name"]
+
+
 class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
     overlap_identity_fields = ["department"]
     overlap_error_message = (
@@ -457,20 +508,11 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         model = ConfigHaie
         fields = "__all__"
         widgets = {
-            "demarche_numerique_pre_fill_config": JSONWidget(
-                attrs={"rows": 20, "cols": 80}
-            ),
-            "demarche_numerique_display_fields": JSONWidget(
-                attrs={"rows": 20, "cols": 80}
-            ),
             "single_procedure_settings": JSONWidget(attrs={"rows": 20, "cols": 80}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["demarche_numerique_pre_fill_config"].help_text = (
-            self.get_demarche_numerique_pre_fill_config_help_text()
-        )
 
         # Let's not fetch the department geometries when displaying the
         # department select widget
@@ -519,15 +561,6 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
                 "est activé et que le mode de dépôt est « formulaire tiers ».",
             )
         return cleaned_data
-
-    def get_demarche_numerique_pre_fill_config_help_text(self):
-        context = {
-            "sources": ConfigHaie.get_demarche_numerique_value_sources(),
-        }
-        return render_to_string(
-            "admin/moulinette/confighaie/demarche_numerique_pre_fill_config_help_text.html",
-            context,
-        )
 
 
 @admin.register(ConfigHaie)
@@ -598,9 +631,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             "Démarche numérique",
             {
                 "fields": [
-                    "demarche_numerique_number",
-                    "demarche_numerique_pre_fill_config",
-                    "demarche_numerique_display_fields",
+                    "demarche_numerique_config",
                 ],
             },
         ),
