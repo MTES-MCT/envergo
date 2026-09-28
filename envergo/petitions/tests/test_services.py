@@ -9,10 +9,16 @@ from gql.transport.exceptions import TransportQueryError
 
 from envergo.analytics.models import Event
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.hedges.models import HedgeTypeBase
+from envergo.hedges.models import TO_PLANT, TO_REMOVE, HedgeTypeBase
 from envergo.hedges.services import PlantationEvaluator
 from envergo.hedges.tests.factories import HedgeDataFactory
 from envergo.moulinette.models import MoulinetteHaie
+from envergo.moulinette.regulations.conditionnalitepac import (
+    Bcae8BeforeRu,
+    Bcae8Hru,
+    Bcae8L3503,
+    Bcae8Ru,
+)
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
@@ -21,10 +27,12 @@ from envergo.moulinette.tests.factories import (
 from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
 from envergo.petitions.demarche_numerique.models import Dossier, DossierState
 from envergo.petitions.models import SESSION_KEY
+from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
 )
 from envergo.petitions.regulations.conditionnalitepac import (
+    bcae8_before_ru_get_instructor_view_context,
     bcae8_get_instructor_view_context,
 )
 from envergo.petitions.regulations.ep import (
@@ -594,7 +602,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
     assert info == expected_result
 
 
-def test_bcae8_get_instructor_view_context(france_map):  # noqa
+def test_bcae8_before_ru_get_instructor_view_context(france_map):  # noqa
     hedges = HedgeDataFactory(
         data=[
             {
@@ -654,7 +662,7 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
     CriterionFactory(
         title="Bonnes conditions agricoles et environnementales - Fiche VIII",
         regulation=regulation,
-        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+        evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -663,8 +671,8 @@ def test_bcae8_get_instructor_view_context(france_map):  # noqa
 
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
-    info = bcae8_get_instructor_view_context(
-        moulinette.conditionnalite_pac.hru__bcae8._evaluator,
+    info = bcae8_before_ru_get_instructor_view_context(
+        moulinette.conditionnalite_pac.bcae8_before_ru._evaluator,
         petition_project,
         moulinette,
     )
@@ -1063,3 +1071,113 @@ def test_update_demarches_numerique_state():
     petition_project.refresh_from_db()
     assert petition_project.demarche_numerique_state == DossierState.sans_suite.value
     assert petition_project.prefetched_dossier.state == DossierState.sans_suite
+
+
+def test_bcae8_get_instructor_view_context():  # noqa
+    """bcae8_get_instructor_view_context (Ru/Hru/L3503) only reads petition_project.hedge_data,
+    dispatching hedges into three category buckets (régime unique, alignements
+    d'arbres, hors régime unique), each split into pac / non_pac and
+    to_plant / to_remove. evaluator and moulinette aren't used by this getter,
+    so they're passed as None.
+    """
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D-ru-pac",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {"type_haie": "arbustive", "sur_parcelle_pac": True},
+            },
+            {
+                "id": "P-ru-nonpac",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "type_haie": "arbustive",
+                    "sur_parcelle_pac": False,
+                },
+            },
+            {
+                "id": "D-aa-pac",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "type_haie": "alignement",
+                    "bord_voie": True,
+                    "sur_parcelle_pac": True,
+                },
+            },
+            {
+                "id": "P-hru-nonpac",
+                "type": "TO_PLANT",
+                "latLngs": [
+                    {"lat": 43.0693, "lng": 0.4421},
+                    {"lat": 43.0691, "lng": 0.4423},
+                ],
+                "additionalData": {
+                    "type_haie": "mixte",
+                    "bord_batiment": True,
+                    "sur_parcelle_pac": False,
+                },
+            },
+        ]
+    )
+    petition_project = PetitionProjectFactory(hedge_data=hedges)
+
+    info = bcae8_get_instructor_view_context(None, petition_project, None)
+
+    details = info["pac_hedges_details"]
+
+    def ids(hedge_list):
+        return {h.id for h in hedge_list}
+
+    assert ids(details["Haies régime unique"]["pac"][TO_REMOVE]) == {"D-ru-pac"}
+    assert ids(details["Haies régime unique"]["pac"][TO_PLANT]) == set()
+    assert ids(details["Haies régime unique"]["non_pac"][TO_PLANT]) == {"P-ru-nonpac"}
+    assert ids(details["Haies régime unique"]["non_pac"][TO_REMOVE]) == set()
+
+    assert ids(details["Alignements d'arbres"]["pac"][TO_REMOVE]) == {"D-aa-pac"}
+    assert ids(details["Alignements d'arbres"]["pac"][TO_PLANT]) == set()
+    assert ids(details["Alignements d'arbres"]["non_pac"][TO_PLANT]) == set()
+    assert ids(details["Alignements d'arbres"]["non_pac"][TO_REMOVE]) == set()
+
+    assert ids(details["Haies hors régime uniques"]["non_pac"][TO_PLANT]) == {
+        "P-hru-nonpac"
+    }
+    assert ids(details["Haies hors régime uniques"]["non_pac"][TO_REMOVE]) == set()
+    assert ids(details["Haies hors régime uniques"]["pac"][TO_PLANT]) == set()
+    assert ids(details["Haies hors régime uniques"]["pac"][TO_REMOVE]) == set()
+
+
+@pytest.mark.parametrize(
+    "evaluator_class,expected_getter",
+    [
+        (Bcae8BeforeRu, bcae8_before_ru_get_instructor_view_context),
+        (Bcae8Hru, bcae8_get_instructor_view_context),
+        (Bcae8L3503, bcae8_get_instructor_view_context),
+        (Bcae8Ru, bcae8_get_instructor_view_context),
+    ],
+)
+def test_every_bcae8_evaluator_has_an_instructor_view_context(
+    evaluator_class, expected_getter
+):
+    """Instructor-view context getters are dispatched on the exact evaluator class.
+
+    A BCAE8 evaluator that is not registered silently loses the PAC figures on
+    the instructor page, so the registration is asserted for each of them.
+    Bcae8BeforeRu has its own dedicated getter, distinct from the other three
+    evaluators (which share one).
+    """
+    assert (
+        _evaluator_instructors_information_registry.get(evaluator_class)
+        is expected_getter
+    )

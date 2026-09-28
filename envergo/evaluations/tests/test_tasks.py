@@ -9,6 +9,7 @@ from envergo.evaluations.tasks import (
     post_evaluation_to_automation,
 )
 from envergo.evaluations.tests.factories import RequestFactory, RequestFileFactory
+from envergo.utils.storages import LocalFileStorage
 
 pytestmark = pytest.mark.django_db
 
@@ -39,7 +40,7 @@ def test_request_history_first_request(mock_post):
 
 @patch("envergo.evaluations.tasks.post")
 def test_request_files(mock_post):
-    """The request files are joined to the payload."""
+    """The request files are joined to the payload as fetchable urls."""
 
     evalreq = RequestFactory(
         user_type="instructor", urbanism_department_emails=["instructor1@example.com"]
@@ -47,12 +48,18 @@ def test_request_files(mock_post):
     RequestFileFactory(request=evalreq)
     RequestFileFactory(request=evalreq)
     RequestFileFactory(request=evalreq)
-    post_evalreq_to_automation(evalreq.id, "envergo.local")
+
+    # A stub where s3_url and url differ, to catch a regression to storage.url().
+    with patch.object(LocalFileStorage, "s3_url", autospec=True) as mock_s3_url:
+        mock_s3_url.side_effect = lambda self, name: f"https://s3.example.com/{name}"
+        post_evalreq_to_automation(evalreq.id, "envergo.local")
 
     mock_post.assert_called_once()
     payload = mock_post.call_args.kwargs["json"]
-    assert "files" in payload
-    assert len(payload["files"]) == 3
+    expected = [
+        f"https://s3.example.com/{f.file.name}" for f in evalreq.additional_files.all()
+    ]
+    assert payload["files"] == expected
 
 
 @patch("envergo.evaluations.tasks.post")

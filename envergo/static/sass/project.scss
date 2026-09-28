@@ -71,6 +71,15 @@ hr.separator {
   text-align: center;
 }
 
+// Attention dot after a side menu label, see the sidemenu_item tag.
+.sidemenu-marker {
+  color: var(--blue-france-sun-113-625);
+  font-size: 150%;
+  position: relative;
+  top: -0.0625rem;
+  margin-left: 0.5rem;
+}
+
 /**
  * Update some margins for paragraphs and lists
  */

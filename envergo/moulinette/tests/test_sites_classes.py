@@ -19,7 +19,11 @@ from envergo.moulinette.tests.utils import (
 
 @pytest.fixture()
 def sites_classes_regulation():
-    return RegulationFactory(regulation="sites_classes_haie", has_perimeters=True)
+    return RegulationFactory(
+        regulation="sites_classes_haie",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.sites_classes_haie.SitesClassesRegulation",
+    )
 
 
 @pytest.fixture()

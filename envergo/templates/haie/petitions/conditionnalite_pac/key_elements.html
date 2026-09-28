@@ -1,34 +1,98 @@
+{% load petitions %}
 {% load moulinette %}
 
-<p class="fr-callout fr-icon-information-line">
-  Les décomptes de cette section n'incluent que les haies déclarées sur parcelle PAC. Les alignements d’arbres sont également exclus.
-</p>
+{% if config.single_procedure %}
+  <ul class="instructor-view-list">
+    <li>
+      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
+    </li>
+    <li>{% display_dn_field "pacage" "inline" %}</li>
+  </ul>
 
-<ul class="instructor-view-list">
+  <div class="fr-table">
+    <div class="fr-table__wrapper">
+      <div class="fr-table__container">
+        <div class="fr-table__content">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col" colspan="2">Type</th>
+                <th scope="col">À détruire</th>
+                <th scope="col">À planter</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for type, details in pac_hedges_details.items %}
+                <tr>
+                  <th rowspan="2" scope="row">{{ type }}</th>
+                  <th scope="row">Sur parcelle PAC</th>
+                  <td>
+                    <div class="pac-hedges-details">
+                      <span>{{ details.pac.TO_REMOVE.length|floatformat:"0g" }} m</span>
+                      <span>{{ details.pac.TO_REMOVE.names|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="pac-hedges-details">
+                      <span>{{ details.pac.TO_PLANT.length|floatformat:"0g" }} m</span>
+                      <span>{{ details.pac.TO_PLANT.names|default:"-" }}</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Hors parcelle PAC</th>
+                  <td>
+                    <div class="pac-hedges-details">
+                      <span>{{ details.non_pac.TO_REMOVE.length|floatformat:"0g" }} m</span>
+                      <span>{{ details.non_pac.TO_REMOVE.names|default:"-" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="pac-hedges-details">
+                      <span>{{ details.non_pac.TO_PLANT.length|floatformat:"0g" }} m</span>
+                      <span>{{ details.non_pac.TO_PLANT.names|default:"-" }}</span>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <li>
-    <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
-  </li>
-  {% if ds_info.pacage %}
-    {% include "haie/petitions/_item.html" with label="N° PACAGE" value=ds_info.pacage %}
-  {% endif %}
-</ul>
-<h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
-<ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur parcelle PAC" value=lineaire_detruit_pac|floatformat:"0g" unit="m" %}
+{% else %}
+  <p class="fr-callout fr-icon-information-line">
+    Les décomptes de cette section n'incluent que les haies déclarées sur parcelle PAC. Les alignements d’arbres sont également exclus.
+  </p>
 
-  {% if lineaire_detruit_pac %}
-    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=pac_destruction_detail %}
-    {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
-  {% endif %}
-</ul>
+  <ul class="instructor-view-list">
 
-<h3 class="fr-h6 fr-mt-3w fr-mb-2w">Plantation</h3>
-<ul class="instructor-view-list">
-  {% include "haie/petitions/_item.html" with label="Total linéaire à planter sur parcelle PAC" value=lineaire_to_plant_pac|floatformat:"0g" unit="m" %}
+    <li>
+      <span><b>Motif :</b></span> <span>{% humanize_motif motif %}</span>
+    </li>
+    {% if ds_info.pacage %}
+      {% include "haie/petitions/_item.html" with label="N° PACAGE" value=ds_info.pacage %}
+    {% endif %}
+  </ul>
+  <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Destruction</h3>
+  <ul class="instructor-view-list">
+    {% include "haie/petitions/_item.html" with label="Total linéaire à détruire sur parcelle PAC" value=lineaire_detruit_pac|floatformat:"0g" unit="m" %}
 
-  {% if lineaire_to_plant_pac %}
-    {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=pac_plantation_detail %}
-    {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=replanting_ratio|floatformat:"2g" comment=replanting_ratio_comment %}
-  {% endif %}
-</ul>
+    {% if lineaire_detruit_pac %}
+      {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=pac_destruction_detail %}
+      {% include "haie/petitions/_item.html" with label="Pourcentage linéaire à détruire / total linéaire exploitation" value=percentage_pac|floatformat:"2g" unit="%" %}
+    {% endif %}
+  </ul>
+
+  <h3 class="fr-h6 fr-mt-3w fr-mb-2w">Plantation</h3>
+  <ul class="instructor-view-list">
+    {% include "haie/petitions/_item.html" with label="Total linéaire à planter sur parcelle PAC" value=lineaire_to_plant_pac|floatformat:"0g" unit="m" %}
+
+    {% if lineaire_to_plant_pac %}
+      {% include "haie/petitions/_item_hedges_detail.html" with hedges_detail=pac_plantation_detail %}
+      {% include "haie/petitions/_item.html" with label="Ratio de replantation" value=replanting_ratio|floatformat:"2g" comment=replanting_ratio_comment %}
+    {% endif %}
+  </ul>
+{% endif %}

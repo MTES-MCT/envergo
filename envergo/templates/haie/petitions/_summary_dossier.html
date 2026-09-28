@@ -1,6 +1,6 @@
 {% load petitions %}
 
-<div class="fr-container--fluid alt fr-pt-4w fr-pb-2w fr-px-2w fr-pl-md-10w">
+<div class="instructor-content-block fr-container--fluid alt fr-pt-4w fr-pb-2w">
   <div class="fr-grid-row">
     <div class="fr-col-12 fr-col-sm-8 fr-pb-2w fr-pr-2w">
       <div id="project-header-container">
@@ -67,9 +67,7 @@
       {% if user|has_change_permission:petition_project %}
         {% if request.resolver_match.url_name != 'petition_project_instructor_procedure_view' %}
           <a class="fr-btn fr-btn--sm fr-btn--tertiary fr-mt-4v"
-             href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}"
-             {% if url_name == 'petition_project_instructor_procedure_view' %}aria-current="page"{% endif %}>Modifier</a>
-
+             href="{% url 'petition_project_instructor_procedure_view' petition_project.reference %}">Modifier</a>
         {% endif %}
       {% else %}
         <div class="project-summary--spacer"></div>

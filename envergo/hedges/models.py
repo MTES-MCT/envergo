@@ -283,6 +283,20 @@ class Hedge:
         ]
 
 
+class ClippedHedge(Hedge):
+    """A hedge restricted to its intersection with some geometry.
+
+    To note: `latLngs` are not clipped, so the hedge cannot be exported.
+    """
+
+    def __init__(self, hedge, clip_geometry):
+        super().__init__(hedge.id, hedge.latLngs, hedge.type, hedge.additionalData)
+        self.geometry = hedge.geometry.intersection(clip_geometry)
+
+    def toDict(self):
+        raise NotImplementedError("A ClippedHedge cannot be exported.")
+
+
 class HedgeList(list[Hedge]):
     """A class representing a list of Hedge objects.
 
@@ -312,6 +326,10 @@ class HedgeList(list[Hedge]):
         geometries = [h.geometry for h in self]
         hedges_centroid = centroid(union_all(geometries))
         return hedges_centroid
+
+    def clip_to(self, geometry) -> Self:
+        """Return these hedges with lengths reduced to their intersection with a shapely `geometry`."""
+        return HedgeList(ClippedHedge(hedge, geometry) for hedge in self)
 
     def to_plant(self) -> Self:
         return HedgeList([h for h in self if h.type == TO_PLANT])

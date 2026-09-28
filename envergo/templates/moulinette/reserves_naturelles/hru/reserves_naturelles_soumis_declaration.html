@@ -1,20 +1,9 @@
 <p>
   Le projet est soumis à la réglementation sur les réserves naturelles, car la destruction des linéaires envisagée peut
-  porter atteinte à l'état ou à l’aspect de la réserve naturelle où il se situe.
+  porter atteinte à l'état ou à l’aspect de la réserve naturelle où ils se situent.
 </p>
 
-<p>
-  Au vu des informations saisies, l’intervention est prévue par un document de gestion de la réserve où il se
-  situe.
-</p>
-
-{% if motif == "securite" %}
-  <p>
-    <b>Attention ! Si l’intervention a déjà eu lieu pour des raisons d’urgence,</b>
-    le dépôt d’une demande est tout de même obligatoire. La décision de l’administration pourra être assortie de
-    prescriptions complémentaires pour la compensation.
-  </p>
-{% endif %}
+<p>Au vu des informations saisies, l’intervention est prévue par un document de gestion de la réserve naturelle.</p>
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 

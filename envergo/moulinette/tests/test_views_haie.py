@@ -40,7 +40,7 @@ def conditionnalite_pac_criteria(loire_atlantique_map):  # noqa
         CriterionFactory(
             title="Bonnes conditions agricoles et environnementales - Fiche VIII",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
             activation_map=loire_atlantique_map,
             activation_mode="department_centroid",
         ),
@@ -761,7 +761,7 @@ def test_confighaie_settings_view_map_display(
     CriterionFactory(
         title="Code rural L126-3",
         regulation=regulation_code_rural,
-        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRural",
+        evaluator="envergo.moulinette.regulations.code_rural_haie.CodeRuralHru",
         activation_map=france_map,
         activation_mode="department_centroid",
     )
@@ -779,7 +779,7 @@ def test_confighaie_settings_view_map_display(
         title="Réserves Naturelles > RN Bizous",
         regulation=regulation_reserves_naturelles,
         perimeter=perimeter_reserves_naturelles,
-        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturelles",
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesRu",
         activation_map=bizous_town_center,
         activation_mode="hedges_intersection",
     ),

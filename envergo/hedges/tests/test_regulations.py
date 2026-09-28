@@ -4,13 +4,14 @@ from unittest.mock import Mock
 import pytest
 
 from envergo.geodata.conftest import france_map  # noqa
-from envergo.hedges.models import HedgeTypeBase
+from envergo.hedges.models import HedgeList, HedgeTypeBase
 from envergo.hedges.regulations import (
     AisneQualityCondition,
     EssencesBocageresCondition,
     MinLengthCondition,
     NormandieMinLengthCondition,
-    PacParcelCondition,
+    PacBeforeRuCondition,
+    PacCondition,
     RUMinLengthCondition,
     RUQualityCondition,
     SafetyCondition,
@@ -198,17 +199,150 @@ def test_minimum_length_pac_condition(ep_criterion_evaluator):
     to_plant_pac.length = 0
     hedges.to_plant.return_value = to_plant
 
-    condition = PacParcelCondition(hedges, 2.0, ep_criterion_evaluator)
+    condition = PacBeforeRuCondition(hedges, 2.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = PacParcelCondition(hedges, 4.0, ep_criterion_evaluator)
+    condition = PacBeforeRuCondition(hedges, 4.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 100
 
-    condition = PacParcelCondition(hedges, 0.0, ep_criterion_evaluator)
+    condition = PacBeforeRuCondition(hedges, 0.0, ep_criterion_evaluator)
     condition.evaluate()
     assert condition.context["minimum_length_to_plant_pac"] == 0
+
+
+def make_pac_hedge_data(to_remove_pac=0, to_plant_pac=0, to_remove_other=0):
+    """Build hedge data with the given PAC lengths, as régime unique hedges."""
+    hedges = []
+    if to_remove_pac:
+        hedges.append(
+            HedgeFactory(length=to_remove_pac, additionalData__sur_parcelle_pac=True)
+        )
+    if to_plant_pac:
+        hedges.append(
+            HedgeFactory(
+                length=to_plant_pac,
+                to_plant=True,
+                additionalData__sur_parcelle_pac=True,
+            )
+        )
+    if to_remove_other:
+        hedges.append(
+            HedgeFactory(length=to_remove_other, additionalData__sur_parcelle_pac=False)
+        )
+    return HedgeDataFactory(hedges=hedges)
+
+
+def make_pac_condition(
+    hedge_data, R, criterion_evaluator, condition_class=PacCondition
+):
+    return condition_class(
+        hedge_data.hedges(), R, criterion_evaluator, {"haies": hedge_data}
+    )
+
+
+@pytest.mark.parametrize("R", [0.0, 1.0, 4.0])
+def test_pac_condition_requires_one_for_one(R, ep_criterion_evaluator):
+    """Under the régime unique, every metre removed on a PAC plot is replanted there."""
+
+    hedge_data = make_pac_hedge_data(to_remove_pac=100, to_plant_pac=40)
+    condition = make_pac_condition(hedge_data, R, ep_criterion_evaluator)
+    condition.evaluate()
+
+    assert not condition.result
+    assert condition.context["minimum_length_to_plant_pac"] == pytest.approx(100, abs=1)
+    assert condition.context["left_to_plant_pac"] == pytest.approx(60, abs=1)
+    assert condition.must_display()
+
+
+def test_pac_condition_is_met_when_enough_planted(ep_criterion_evaluator):
+    hedge_data = make_pac_hedge_data(to_remove_pac=100, to_plant_pac=110)
+    condition = make_pac_condition(hedge_data, 1.0, ep_criterion_evaluator)
+    condition.evaluate()
+
+    assert condition.result
+    assert condition.context["left_to_plant_pac"] == 0
+    assert condition.must_display()
+
+
+def test_pac_condition_ignores_plantation_outside_pac_plots(ep_criterion_evaluator):
+    """Replanting the same length off a PAC plot does not satisfy the condition."""
+
+    hedge_data = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(length=100, additionalData__sur_parcelle_pac=True),
+            HedgeFactory(
+                length=110, to_plant=True, additionalData__sur_parcelle_pac=False
+            ),
+        ]
+    )
+    condition = make_pac_condition(hedge_data, 1.0, ep_criterion_evaluator)
+    condition.evaluate()
+
+    assert not condition.result
+    assert condition.context["left_to_plant_pac"] == pytest.approx(100, abs=1)
+
+
+def test_pac_condition_ignores_plantation_outside_regime_unique(ep_criterion_evaluator):
+    """An alignement d’arbres planted on a PAC plot does not compensate a PAC destruction."""
+
+    hedge_data = HedgeDataFactory(
+        hedges=[
+            HedgeFactory(length=100, additionalData__sur_parcelle_pac=True),
+            HedgeFactory(
+                length=110,
+                to_plant=True,
+                additionalData__sur_parcelle_pac=True,
+                additionalData__type_haie="alignement",
+                additionalData__bord_voie=True,
+            ),
+        ]
+    )
+    condition = make_pac_condition(hedge_data, 1.0, ep_criterion_evaluator)
+    condition.evaluate()
+
+    assert not condition.result
+    assert condition.context["left_to_plant_pac"] == pytest.approx(100, abs=1)
+
+
+def test_pac_condition_is_hidden_without_pac_removal(ep_criterion_evaluator):
+    hedge_data = make_pac_hedge_data(to_remove_other=100)
+    condition = make_pac_condition(hedge_data, 1.0, ep_criterion_evaluator)
+    condition.evaluate()
+
+    assert condition.result
+    assert not condition.must_display()
+
+
+def test_pac_condition_addition(ep_criterion_evaluator):
+    """Two PAC conditions merge into one covering both hedge subsets.
+
+    Both conditions come from the same project, so they share the catalog and
+    only differ by the hedge subset their evaluator is responsible for.
+    """
+
+    removed_a = HedgeFactory(length=100, additionalData__sur_parcelle_pac=True)
+    removed_b = HedgeFactory(length=50, additionalData__sur_parcelle_pac=True)
+    planted = HedgeFactory(
+        length=40, to_plant=True, additionalData__sur_parcelle_pac=True
+    )
+    hedge_data = HedgeDataFactory(hedges=[removed_a, removed_b, planted])
+    catalog = {"haies": hedge_data}
+
+    hedges = {hedge.id: hedge for hedge in hedge_data.hedges()}
+    a = PacCondition(
+        HedgeList([hedges[removed_a.id]]), 1.0, ep_criterion_evaluator, catalog
+    ).evaluate()
+    b = PacCondition(
+        HedgeList([hedges[removed_b.id]]), 1.0, ep_criterion_evaluator, catalog
+    ).evaluate()
+    combined = a + b
+
+    expected = hedge_data.hedges().to_remove().pac().length
+    assert combined.context["minimum_length_to_plant_pac"] == ceil(expected)
+    assert combined.context["left_to_plant_pac"] == pytest.approx(110, abs=1)
+    assert not combined.result
 
 
 def test_safety_condition(hedge_data, ep_criterion_evaluator):

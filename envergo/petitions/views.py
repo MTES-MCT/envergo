@@ -59,7 +59,11 @@ from envergo.analytics.utils import (
 )
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import Department
-from envergo.geodata.utils import get_google_maps_centered_url, get_ign_centered_url
+from envergo.geodata.utils import (
+    get_geoportail_urbanisme_centered_url,
+    get_google_maps_centered_url,
+    get_ign_centered_url,
+)
 from envergo.hedges.models import TO_PLANT, HedgeCategory, HedgeData, HedgeTypeFactory
 from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.moulinette.models import ConfigHaie
@@ -916,6 +920,9 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["hedge_types"] = HedgeTypeFactory.build_from_context(
             single_procedure=self.object.config.single_procedure
         )
+        context["regulations"] = self.object.get_available_regulations().order_by(
+            "display_order"
+        )
 
         context.update(get_context_from_dn(self.object))
         context.update(self.object.moulinette_data)
@@ -946,6 +953,10 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         )
         context["has_change_permission"] = self.object.has_change_permission(
             self.request.user
+        )
+        # Read-only users never "receive" messages, so they have none unread.
+        context["has_unread_messages"] = (
+            context["has_change_permission"] and self.object.has_unread_messages
         )
 
         matomo_custom_path = self.request.path.replace(
@@ -1157,6 +1168,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         hedges = context["petition_project"].hedge_data.hedges()
         context["ign_url"] = get_ign_centered_url(hedges)
         context["google_maps_url"] = get_google_maps_centered_url(hedges)
+        context["geoportail_url"] = get_geoportail_urbanisme_centered_url(hedges)
 
         regulation_slug = self.kwargs.get("regulation")
         regulation = context["moulinette"].get_regulation(regulation_slug)

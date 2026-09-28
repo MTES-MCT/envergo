@@ -18,6 +18,7 @@
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
        data-conditions-url="{{ hedge_conditions_url }}"
+       data-date="{{ moulinette.date|date:'Y-m-d' }}"
        data-department-lat='{{ department_centroid.lat|unlocalize }}'
        data-department-lng='{{ department_centroid.lng|unlocalize }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">

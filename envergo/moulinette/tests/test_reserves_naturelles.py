@@ -1,3 +1,5 @@
+from math import ceil
+
 import pytest
 
 from envergo.hedges.tests.factories import HedgeDataFactory
@@ -7,13 +9,24 @@ from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
     PerimeterFactory,
     RegulationFactory,
+    RUConfigHaieFactory,
+)
+from envergo.moulinette.tests.utils import make_hedge, make_moulinette_haie_data
+from envergo.petitions.regulations import get_instructor_view_context
+
+EVALUATOR_PATHS = (
+    "envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesRu",
+    "envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesHru",
+    "envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesL3503",
 )
 
 
 @pytest.fixture(autouse=True)
 def reserves_naturelles_criteria(bizous_town_center):  # noqa
     regulation = RegulationFactory(
-        regulation="reserves_naturelles", has_perimeters=True
+        regulation="reserves_naturelles",
+        has_perimeters=True,
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesRegulation",
     )
 
     perimeter = PerimeterFactory(
@@ -25,10 +38,11 @@ def reserves_naturelles_criteria(bizous_town_center):  # noqa
             title="Réserves Naturelles > RN Bizous",
             regulation=regulation,
             perimeter=perimeter,
-            evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturelles",
+            evaluator=evaluator_path,
             activation_map=bizous_town_center,
             activation_mode="hedges_intersection",
-        ),
+        )
+        for evaluator_path in EVALUATOR_PATHS
     ]
     return criteria
 
@@ -113,16 +127,90 @@ def test_moulinette_evaluation(
             moulinette.reserves_naturelles.hru__reserves_naturelles.result
             == expected_result
         )
-        assert moulinette.catalog["l_resnat"] == expected_lenght_resnat
+
+        # The instructor view exposes each hedge with the length of its
+        # intersection with the reserve's zones, instead of its full length.
+        regulation_evaluator = moulinette.reserves_naturelles.get_evaluator()
+        context = get_instructor_view_context(regulation_evaluator, None, moulinette)
+        hedges = context["reserves_naturelles_hedges"]
+        assert [h.id for h in hedges] == ["D1"]
+        assert ceil(hedges[0].length) == expected_lenght_resnat
 
 
-def test_hedges_to_plant_inside_zone_but_removal_outside(bizous_town_center):  # noqa
-    """Criterion activates when any hedge intersects the zone, but only
-    hedges_to_remove are used in get_catalog_data. When a hedge to plant
-    is inside the zone but the hedge to remove is outside, the zone
-    aggregation returns None and must not crash.
+def test_hedge_intersecting_two_perimeters_counted_once(
+    reserves_naturelles_criteria,
+):
+    """A hedge covered by two perimeters of the same regulation is clipped
+    against the union of their zones, not once per perimeter: it must only
+    show up once in the instructor view, with its length not doubled.
+    """
+    regulation = reserves_naturelles_criteria[0].regulation
+    first_perimeter = reserves_naturelles_criteria[0].perimeter
 
-    Regression test for ENVERGO-15B.
+    # A second perimeter sharing the same activation map (hence the same
+    # zones) as the first: any hedge intersecting one intersects both.
+    PerimeterFactory(
+        name="RN Bizous bis",
+        activation_map=first_perimeter.activation_map,
+        regulations=[regulation],
+    )
+
+    hedges = HedgeDataFactory(
+        data=[
+            {
+                "id": "D1",
+                "type": "TO_REMOVE",
+                "latLngs": [
+                    {"lat": 43.06930871579473, "lng": 0.4421436860179369},
+                    {"lat": 43.069162248282396, "lng": 0.44236765047068033},
+                ],
+                "additionalData": {
+                    "type_haie": "degradee",
+                    "vieil_arbre": False,
+                    "proximite_mare": False,
+                    "sur_parcelle_pac": False,
+                    "ripisylve": False,
+                    "connexion_boisement": False,
+                },
+            }
+        ]
+    )
+    data = {
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "haies": hedges,
+        "travaux": "destruction",
+        "contexte": "non",
+        "element": "haie",
+        "department": "44",
+        "plan_gestion": "oui",
+    }
+    moulinette_data = {"initial": data, "data": data}
+
+    DCConfigHaieFactory()
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.reserves_naturelles.result == "soumis_declaration"
+
+    regulation_evaluator = moulinette.reserves_naturelles.get_evaluator()
+    context = get_instructor_view_context(regulation_evaluator, None, moulinette)
+    hedges = context["reserves_naturelles_hedges"]
+
+    # A single entry, with the same (un-doubled) length as the
+    # single-perimeter case.
+    assert [h.id for h in hedges] == ["D1"]
+    assert ceil(hedges[0].length) == 25
+
+
+def test_hedges_to_plant_length_computed_independently_from_removal(
+    bizous_town_center,  # noqa
+):
+    """The instructor view computes intersecting lengths for hedges to plant
+    and hedges to remove independently: a hedge to plant inside the zone
+    shows up even though the hedge to remove is entirely outside it.
+
+    Also a regression test for ENVERGO-15B: when none of a perimeter's hedges
+    intersect its zones, the zone aggregation returns None and must not crash.
     """
 
     # Hedge to plant inside the bizous zone (activates the criterion)
@@ -174,8 +262,68 @@ def test_hedges_to_plant_inside_zone_but_removal_outside(bizous_town_center):  #
     DCConfigHaieFactory()
     moulinette = MoulinetteHaie(moulinette_data)
 
-    # The criterion should activate (hedge to plant intersects the zone)
-    # but no hedges_to_remove intersect any zone, so resnat/l_resnat
-    # should be empty defaults.
-    assert moulinette.catalog["resnat"] == {}
-    assert moulinette.catalog["l_resnat"] == 0
+    # Only the hedge to plant intersects a zone; the hedge to remove is
+    # entirely absent (it doesn't intersect any zone at all).
+    regulation_evaluator = moulinette.reserves_naturelles.get_evaluator()
+    context = get_instructor_view_context(regulation_evaluator, None, moulinette)
+    hedges = context["reserves_naturelles_hedges"]
+    assert [h.id for h in hedges] == ["P1"]
+    assert hedges[0].type == "TO_PLANT"
+    assert ceil(hedges[0].length) == 25
+
+
+EVALUATOR_CATEGORY_CASES = [
+    ("ru", {"type_haie": "mixte"}),  # not an alignement => régime unique
+    (
+        "hru",
+        {"type_haie": "alignement", "bord_voie": False},
+    ),  # alignement outside road => hors régime unique
+    (
+        "l350_3",
+        {"type_haie": "alignement", "bord_voie": True},
+    ),  # roadside tree alignment => L350-3
+]
+
+
+@pytest.mark.parametrize("category, additional_data", EVALUATOR_CATEGORY_CASES)
+def test_moulinette_evaluation_per_category(category, additional_data):
+    """A hedge inside the reserve is assessed by the evaluator matching its category.
+
+    The régime unique must be active for hedges to be routed by category at
+    all: without it, every hedge is always assessed as "hru".
+    """
+    RUConfigHaieFactory()
+    hedge = make_hedge(**additional_data)
+    moulinette_data = make_moulinette_haie_data(hedge_data=[hedge], plan_gestion="oui")
+
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors
+    regulation = moulinette.reserves_naturelles
+
+    assert regulation.result == "soumis_declaration"
+    # Only the matching category's criterion activates: the others have no
+    # hedge in their category, so they never even run.
+    assert (
+        getattr(regulation, f"{category}__reserves_naturelles").result
+        == "soumis_declaration"
+    )
+
+
+def test_procedure_type_only_depends_on_ru_category():
+    """L350-3 and hru results must not influence the regulation procedure type.
+
+    A hedge outside the régime unique is "soumis_autorisation" on its own
+    criterion, but since it's not in the "ru" category, it doesn't bump the
+    overall procedure to "autorisation": the régime unique category is
+    "non_concerne" here, which maps to "declaration".
+    """
+    RUConfigHaieFactory()
+    hedge = make_hedge(type_haie="alignement", bord_voie=False)
+    moulinette_data = make_moulinette_haie_data(hedge_data=[hedge], plan_gestion="non")
+
+    moulinette = MoulinetteHaie(moulinette_data)
+    assert moulinette.is_valid(), moulinette.form_errors
+    regulation = moulinette.reserves_naturelles
+
+    assert regulation.hru__reserves_naturelles.result == "soumis_autorisation"
+    assert regulation.procedure_type == "declaration"
