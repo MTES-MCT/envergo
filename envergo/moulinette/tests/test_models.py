@@ -14,6 +14,7 @@ from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigAmenagement,
     ConfigHaie,
+    DemarcheNumerique,
     MoulinetteAmenagement,
     MoulinetteHaie,
 )
@@ -165,42 +166,36 @@ def test_config_haie_with_demarche_numerique_number_has_missing_project_url_id(
         config_haie.validate_constraints()
 
 
-def test_config_haie_has_invalid_demarche_numerique_config(
+def test_demarche_numerique_has_invalid_pre_fill_config(
     loire_atlantique_department,  # noqa
 ):
     with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheNumerique(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config={"foo": "bar"},
+            pre_fill_config={"foo": "bar"},
         )
-        config_haie.clean()
+        demarche.clean()
     assert exc_info.value.messages == [
         "Cette configuration doit être une liste de champs (ou d'annotations privées) à pré-remplir"
     ]
 
     with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheNumerique(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[{"foo": "bar"}],
+            pre_fill_config=[{"foo": "bar"}],
         )
-        config_haie.clean()
+        demarche.clean()
     assert exc_info.value.messages == [
         "Chaque champ (ou annotation privée) doit contenir au moins l'id côté « Démarche numérique » et la "
         "source de la valeur côté guichet unique de la haie."
     ]
 
     with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheNumerique(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[{"id": "123456789", "value": "bar"}],
+            pre_fill_config=[{"id": "123456789", "value": "bar"}],
         )
-        config_haie.clean()
+        demarche.clean()
     assert exc_info.value.messages == [
         "La source de la valeur bar n'est pas valide pour le champ dont l'id est 123456789"
     ]
@@ -209,30 +204,25 @@ def test_config_haie_has_invalid_demarche_numerique_config(
         ValidationError,
         match="Le mapping du champ dont l'id est 123456789 doit être un dictionnaire.",
     ):
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheNumerique(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[
+            pre_fill_config=[
                 {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
             ],
         )
-        config_haie.clean()
+        demarche.clean()
 
-    config_haie = ConfigHaie(
-        department=loire_atlantique_department,
-        is_activated=True,
+    demarche = DemarcheNumerique(
         demarche_numerique_number="123456789",
         demarche_numerique_pre_fill_config=[
             {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
         ],
     )
-    config_haie.clean()
+    demarche.clean()
 
 
-def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
+def test_get_demarche_numerique_value_sources(bizous_town_center):
     """Test get_demarche_numerique_value_sources method"""
-    config_haie = DCConfigHaieFactory()
     other_map = MapFactory()
     sites_proteges_regulation = RegulationFactory(
         regulation="sites_proteges_haie",
@@ -292,7 +282,7 @@ def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
         ),
     }
 
-    results = config_haie.get_demarche_numerique_value_sources()
+    results = DemarcheNumerique.get_demarche_numerique_value_sources()
     assert results["Résultats des critères"] == expected_results_criteria
 
 

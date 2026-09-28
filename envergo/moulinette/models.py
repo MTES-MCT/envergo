@@ -1362,10 +1362,10 @@ class DemarcheNumerique(models.Model):
         # @todo constraints
 
     def clean(self):
-        if not isinstance(self.demarche_numerique_pre_fill_config, list):
+        if not isinstance(self.pre_fill_config, list):
             raise ValidationError(
                 {
-                    "demarche_numerique_pre_fill_config": "Cette configuration doit être une liste de champs"
+                    "pre_fill_config": "Cette configuration doit être une liste de champs"
                     " (ou d'annotations privées) à pré-remplir"
                 }
             )
@@ -1375,11 +1375,11 @@ class DemarcheNumerique(models.Model):
             for value in self.get_demarche_numerique_value_sources().values()
             for tup in value
         }
-        for field in self.demarche_numerique_pre_fill_config:
+        for field in self.pre_fill_config:
             if not isinstance(field, dict) or "id" not in field or "value" not in field:
                 raise ValidationError(
                     {
-                        "demarche_numerique_pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
+                        "pre_fill_config": "Chaque champ (ou annotation privée) doit contenir"
                         " au moins l'id côté « Démarche numérique » et la "
                         "source de la valeur côté guichet unique de la haie."
                     }
@@ -1387,14 +1387,14 @@ class DemarcheNumerique(models.Model):
             if field["value"] not in availables_sources:
                 raise ValidationError(
                     {
-                        "demarche_numerique_pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
+                        "pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
                         f"valide pour le champ dont l'id est {field['id']}"
                     }
                 )
             if "mapping" in field and not isinstance(field["mapping"], dict):
                 raise ValidationError(
                     {
-                        "demarche_numerique_pre_fill_config": f"Le mapping du champ dont l'id est {field['id']} "
+                        "pre_fill_config": f"Le mapping du champ dont l'id est {field['id']} "
                         f"doit être un dictionnaire."
                     }
                 )

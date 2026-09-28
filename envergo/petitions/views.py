@@ -463,7 +463,7 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHE_NUMERIQUE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        for field in config.demarche_numerique_pre_fill_config:
+        for field in config.demarche_numerique.pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
                     "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
@@ -553,7 +553,7 @@ class PetitionProjectCreate(FormView):
     ):
         """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
-        Available sources are listed by this method : ConfigHaie.get_demarche_numerique_value_sources()
+        Available sources are listed by this method : DemarcheNumerique.get_demarche_numerique_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
         Then it will map the value if a mapping is provided.
         """
