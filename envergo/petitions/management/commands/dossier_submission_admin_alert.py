@@ -44,12 +44,14 @@ class Command(BaseCommand):
 
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
-        configs_with_ds = ConfigHaie.objects.filter(
-            demarche_numerique_number__isnull=False
-        ).valid_at(timezone.now().date())
+        configs_with_ds = (
+            ConfigHaie.objects.filter(demarche_numerique__isnull=False)
+            .select_related("demarche_numerique")
+            .valid_at(timezone.now().date())
+        )
         for config in configs_with_ds:
-            demarche_number = config.demarche_numerique_number
-            project_url_id = config.demarche_numerique_display_fields.get(
+            demarche_number = config.demarche_numerique.demarche_numerique_number
+            project_url_id = config.demarche_numerique.display_fields.get(
                 "project_url", None
             )
             if not project_url_id:

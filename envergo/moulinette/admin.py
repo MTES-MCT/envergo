@@ -428,7 +428,7 @@ class MoulinetteTemplateAdmin(admin.ModelAdmin):
     search_fields = ["content"]
 
 
-class DemarcheNumeriqueConfigForm(forms.ModelForm):
+class DemarcheNumeriqueAdminForm(forms.ModelForm):
     class Meta:
         model = DemarcheNumerique
         fields = "__all__"
@@ -443,11 +443,11 @@ class DemarcheNumeriqueConfigForm(forms.ModelForm):
 
     def clean(self):
         """
-        Validate demarche_numerique_display_fields should have required keys
+        Validate display_fields should have required keys
         "organization", "city", "pacage".
         """
         cleaned_data = super().clean()
-        display_dn_fields = cleaned_data.get("demarche_numerique_display_fields")
+        display_dn_fields = cleaned_data.get("display_fields")
         if (
             not display_dn_fields
             or not display_dn_fields.get("city", None)
@@ -455,9 +455,8 @@ class DemarcheNumeriqueConfigForm(forms.ModelForm):
             or not display_dn_fields.get("pacage", None)
         ):
             self.add_error(
-                "demarche_numerique_display_fields",
-                "Les champs city, organization et pacage sont obligatoires "
-                "lorsque le numéro de la démarche est rempli.",
+                "display_fields",
+                "Les champs city, organization et pacage sont obligatoires.",
             )
 
         return cleaned_data
@@ -474,7 +473,7 @@ class DemarcheNumeriqueConfigForm(forms.ModelForm):
 
 @admin.register(DemarcheNumerique)
 class DemarcheNumeriqueConfigAdmin(admin.ModelAdmin):
-    form = DemarcheNumeriqueConfigForm
+    form = DemarcheNumeriqueAdminForm
     list_display = ["demarche_numerique_number", "display_name"]
 
 
@@ -533,19 +532,6 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
         are not filled by default.
         """
         cleaned_data = super().clean()
-        display_dn_fields = cleaned_data.get("demarche_numerique_display_fields")
-        dn_number = cleaned_data.get("demarche_numerique_number")
-        if dn_number and (
-            not display_dn_fields
-            or not display_dn_fields.get("city", None)
-            or not display_dn_fields.get("organization", None)
-            or not display_dn_fields.get("pacage", None)
-        ):
-            self.add_error(
-                "demarche_numerique_display_fields",
-                "Les champs city, organization et pacage sont obligatoires "
-                "lorsque le numéro de la démarche est rempli.",
-            )
 
         if not cleaned_data.get("single_procedure"):
             return cleaned_data

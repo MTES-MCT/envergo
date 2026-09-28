@@ -445,7 +445,7 @@ class PetitionProjectCreate(FormView):
             )
             return None, None
         self.request.alerts.config = config
-        demarche_id = config.demarche_numerique_number
+        demarche_id = config.demarche_numerique.demarche_numerique_number
 
         if not demarche_id:
             department = extract_param_from_url(moulinette_url, "department")
@@ -467,7 +467,11 @@ class PetitionProjectCreate(FormView):
             if "id" not in field or "value" not in field:
                 logger.error(
                     "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
-                    extra={"haie config": config.id, "field": field},
+                    extra={
+                        "demarche numerique": config.demarche_numerique.id,
+                        "DN number": config.demarche_numerique.demarche_numerique_number,
+                        "field": field,
+                    },
                 )
 
                 self.request.alerts.append(

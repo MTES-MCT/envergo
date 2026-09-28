@@ -153,6 +153,7 @@ class DCConfigHaieFactory(DjangoModelFactory):
     ]
     aa_l3503_handling = "not_handled"
     aa_l3503_contact_info = "<p>À compléter</p>"
+    demarche_numerique = factory.SubFactory(DemarcheNumeriqueFactory)
 
 
 class RUConfigHaieFactory(DCConfigHaieFactory):

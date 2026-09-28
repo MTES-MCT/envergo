@@ -146,10 +146,10 @@ def test_moulinette_haie_has_specific_behavior():
     assert MoulinetteClass is MoulinetteHaie
 
 
-def test_config_haie_activated_has_missing_demarche_numerique_number(
+def test_config_haie_activated_has_missing_demarche_numerique_(
     loire_atlantique_department,  # noqa
 ):
-    """Check `demarche_numerique_number_required_if_activated` constraint"""
+    """Check `demarche_numerique_required_if_activated` constraint"""
     config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
@@ -159,11 +159,9 @@ def test_config_haie_with_demarche_numerique_number_has_missing_project_url_id(
     loire_atlantique_department,  # noqa
 ):
     """Check `project_url_id_required_if_demarche_number` constraint"""
-    config_haie = ConfigHaie(
-        department=loire_atlantique_department, demarche_numerique_number="123456789"
-    )
+    demarche = DemarcheNumerique(demarche_numerique_number="123456789")
     with pytest.raises(ValidationError):
-        config_haie.validate_constraints()
+        demarche.validate_constraints()
 
 
 def test_demarche_numerique_has_invalid_pre_fill_config(
@@ -214,7 +212,7 @@ def test_demarche_numerique_has_invalid_pre_fill_config(
 
     demarche = DemarcheNumerique(
         demarche_numerique_number="123456789",
-        demarche_numerique_pre_fill_config=[
+        pre_fill_config=[
             {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
         ],
     )

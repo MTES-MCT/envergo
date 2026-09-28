@@ -1359,7 +1359,12 @@ class DemarcheNumerique(models.Model):
     class Meta:
         verbose_name = "Démarche Numérique"
         verbose_name_plural = "Démarches Numériques"
-        # @todo constraints
+        constraints = (
+            CheckConstraint(
+                check=Q(display_fields__project_url__isnull=False),
+                name="project_url_id_required",
+            ),
+        )
 
     def clean(self):
         if not isinstance(self.pre_fill_config, list):
@@ -1667,25 +1672,13 @@ class ConfigHaie(ConfigBase):
                     }
                 )
 
-        """todo: changer la condition en "si elle est activée alors elle doit avoir une démarche associée"""
-        # if self.is_activated and self.demarche_numerique_pre_fill_config is not None:
-        #    # add constraints on the pre-fill configuration json to avoid unexpected entries
-
     class Meta(ConfigBase.Meta):
         verbose_name = "Config haie"
         verbose_name_plural = "Configs haie"
         constraints = ConfigBase.Meta.constraints + [
-            # todo contrainte à ajuster
             CheckConstraint(
-                check=Q(is_activated=False)
-                | Q(demarche_numerique_number__isnull=False),
-                name="demarche_numerique_number_required_if_activated",
-            ),
-            # todo contrainte à ajuster
-            CheckConstraint(
-                check=Q(demarche_numerique_number__isnull=True)
-                | Q(demarche_numerique_display_fields__project_url__isnull=False),
-                name="project_url_id_required_if_demarche_number",
+                check=Q(is_activated=False) | Q(demarche_numerique__isnull=False),
+                name="demarche_numerique_required_if_activated",
             ),
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",

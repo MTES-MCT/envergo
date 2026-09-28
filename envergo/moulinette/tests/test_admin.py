@@ -12,6 +12,7 @@ from envergo.moulinette.admin import (
     ConfigAmenagementForm,
     ConfigHaieAdminForm,
     CriterionAdminForm,
+    DemarcheNumeriqueAdminForm,
 )
 from envergo.moulinette.models import (
     AaL3503Handling,
@@ -40,6 +41,7 @@ ConfigAmenagementTestForm = modelform_factory(
 )
 # ConfigHaieAdminForm already has its own Meta class.
 ConfigHaieTestForm = ConfigHaieAdminForm
+DemarcheNumeriqueTestForm = DemarcheNumeriqueAdminForm
 
 
 def instance_to_form_data(instance):
@@ -299,9 +301,9 @@ class TestConfigHaieAaL3503FormValidation:
 
 
 class TestConfigDNDisplayFieldValidation:
-    """Tests for the admin form validation on `demarche_numerique_display_fields`.
+    """Tests for the admin form validation on `display_fields`.
 
-    When `demarche_numerique_number` is set, `demarche_numerique_display_fields` should have
+    When `demarche_numerique_number` is set, `display_fields` should have
     keys "organization", "city", "pacage" set with value.
     """
 
@@ -310,9 +312,9 @@ class TestConfigDNDisplayFieldValidation:
         config = DemarcheNumeriqueFactory()
         data = instance_to_form_data(config)
         data["pre_fill_config"] = "[]"
-        form = ConfigHaieTestForm(data=data, instance=config)
+        form = DemarcheNumeriqueTestForm(data=data, instance=config)
         assert not form.is_valid()
-        assert "demarche_numerique_display_fields" in form.errors
+        assert "display_fields" in form.errors
 
     def test_admin_form_invalid_when_pacage_missing(self):
         config = DemarcheNumeriqueFactory(
@@ -324,7 +326,7 @@ class TestConfigDNDisplayFieldValidation:
         )
         data = instance_to_form_data(config)
         data["pre_fill_config"] = "[]"
-        form = ConfigHaieTestForm(data=data, instance=config)
+        form = DemarcheNumeriqueTestForm(data=data, instance=config)
         assert not form.is_valid()
         assert "display_fields" in form.errors
 
@@ -338,28 +340,28 @@ class TestConfigDNDisplayFieldValidation:
         )
         data = instance_to_form_data(config)
         data["pre_fill_config"] = "[]"
-        form = ConfigHaieTestForm(data=data, instance=config)
+        form = DemarcheNumeriqueTestForm(data=data, instance=config)
         # THEN form is not valid
         assert not form.is_valid()
         assert "display_fields" in form.errors
 
     def test_admin_form_invalid_when_organization_missing(self):
-        config = DCConfigHaieFactory(
-            demarche_numerique_display_fields={
+        config = DemarcheNumeriqueFactory(
+            display_fields={
                 "project_url": "ABC123",
                 "pacage": "XYZ789",
                 "city": "XYZ123",
             }
         )
         data = instance_to_form_data(config)
-        data["demarche_numerique_pre_fill_config"] = "[]"
-        form = ConfigHaieTestForm(data=data, instance=config)
+        data["pre_fill_config"] = "[]"
+        form = DemarcheNumeriqueTestForm(data=data, instance=config)
         assert not form.is_valid()
-        assert "demarche_numerique_display_fields" in form.errors
+        assert "display_fields" in form.errors
 
     def test_admin_form_valid_when_all_are_filled(self):
-        config = DCConfigHaieFactory(
-            demarche_numerique_display_fields={
+        config = DemarcheNumeriqueFactory(
+            display_fields={
                 "project_url": "ABC123",
                 "pacage": "XYZ789",
                 "city": "XYZ123",
@@ -367,6 +369,6 @@ class TestConfigDNDisplayFieldValidation:
             }
         )
         data = instance_to_form_data(config)
-        data["demarche_numerique_pre_fill_config"] = "[]"
-        form = ConfigHaieTestForm(data=data, instance=config)
+        data["pre_fill_config"] = "[]"
+        form = DemarcheNumeriqueTestForm(data=data, instance=config)
         assert form.is_valid(), form.errors

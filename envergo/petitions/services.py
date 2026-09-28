@@ -159,16 +159,16 @@ def get_context_from_dn(petition_project) -> dict:
     applicant_email = ""
     representative = ""
 
-    display_dn_fields = config.demarche_numerique_display_fields
+    display_dn_fields = config.demarche_numerique.display_fields
     if (
         not display_dn_fields.get("city", None)
         or not display_dn_fields.get("organization", None)
         or not display_dn_fields.get("pacage", None)
     ):
         logger.error(
-            "Missing « Démarche numérique » ids in Haie Config",
+            "Missing « Démarche numérique » ids in DemarcheNumerique",
             extra={
-                "config.id": config.id,
+                "demarchenumerique.id": config.demarche_numerique_id,
             },
         )
         admin_url = reverse(
