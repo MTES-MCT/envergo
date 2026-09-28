@@ -38,7 +38,7 @@ class Natura2000HaieRuSettings(forms.Form):
     )
 
 
-class Natura2000HaieSettings(Natura2000HaieRuSettings):
+class Natura2000HaieAaSettings(Natura2000HaieRuSettings):
     """Settings for the categories that may contain tree alignments."""
 
     concerne_aa = forms.ChoiceField(
@@ -53,7 +53,7 @@ class Natura2000HaieHru(HaieCriterionEvaluator):
     choice_label = "Natura 2000 > Haie"
     base_slug = "natura2000_haie"
     category = HedgeCategory.hru
-    settings_form_class = Natura2000HaieSettings
+    settings_form_class = Natura2000HaieAaSettings
 
     RESULT_MATRIX = {
         "non_soumis_aa": RESULTS.non_soumis,

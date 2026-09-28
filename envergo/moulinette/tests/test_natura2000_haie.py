@@ -3,8 +3,8 @@ import pytest
 from envergo.hedges.models import HedgeTypeBase
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.regulations.natura2000_haie import (
+    Natura2000HaieAaSettings,
     Natura2000HaieRuSettings,
-    Natura2000HaieSettings,
 )
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -197,11 +197,11 @@ class TestNatura2000HaieSettings:
     """Test the Natura2000HaieSettings form validation."""
 
     def test_concerne_aa_accepts_oui(self):
-        form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": "oui"})
+        form = Natura2000HaieAaSettings({"result": "soumis", "concerne_aa": "oui"})
         assert form.is_valid()
 
     def test_concerne_aa_accepts_non(self):
-        form = Natura2000HaieSettings({"result": "soumis", "concerne_aa": "non"})
+        form = Natura2000HaieAaSettings({"result": "soumis", "concerne_aa": "non"})
         assert form.is_valid()
 
     def test_ru_settings_do_not_require_concerne_aa(self):
