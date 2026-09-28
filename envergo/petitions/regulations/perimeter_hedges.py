@@ -1,7 +1,7 @@
 from envergo.hedges.models import HedgeList
 
 
-def get_regulation_hedges_length_in_perimeter(moulinette, regulation_slug):
+def get_regulation_hedges_in_perimeter(moulinette, regulation_slug):
     """Build a HedgeList for a perimeter-based regulation.
 
     Each hedge's length is reduced to its intersection with the union of the
@@ -26,6 +26,9 @@ def get_regulation_hedges_length_in_perimeter(moulinette, regulation_slug):
                 key=lambda h: h.id,
             )
         )
-        return regulation.perimeters.clip(hedges)
+        intersecting_perimeter_ids = [p.pk for p in perimeters]
+        return regulation.perimeters.filter(pk__in=intersecting_perimeter_ids).clip(
+            hedges
+        )
 
     return HedgeList()
