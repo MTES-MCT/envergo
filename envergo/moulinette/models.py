@@ -15,7 +15,7 @@ from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
 from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.db.models.functions import Centroid, Distance
-from django.contrib.gis.geos import MultiLineString, Point
+from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
@@ -1000,12 +1000,9 @@ class PerimeterQuerySet(models.QuerySet):
         if not hedges:
             return HedgeList()
 
-        hedges_geom = MultiLineString(
-            [h.geos_geometry for h in hedges], srid=EPSG_WGS84
-        )
         qs = Zone.objects.filter(
             map_id__in=self.values_list("activation_map_id", flat=True),
-            geometry__intersects=hedges_geom,
+            geometry__intersects=hedges.to_multilinestring(),
         ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
         multipolygon = qs["geom"]
         if multipolygon is None:
