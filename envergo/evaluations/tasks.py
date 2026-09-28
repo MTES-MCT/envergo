@@ -19,7 +19,7 @@ from envergo.evaluations.models import (
     RegulatoryNoticeLog,
     Request,
 )
-from envergo.utils.mattermost import notify
+from envergo.utils.tchap import notify
 from envergo.utils.tools import get_base_url
 
 logger = logging.getLogger(__name__)
@@ -122,11 +122,9 @@ def post_evalreq_to_automation(request_id, host):
                     request_history[email] += 1
         extra_data["request_history"] = dict(request_history)
 
-    # Extract the additional file urls
-    # In local environment, this will return file paths
-    # But in production, the S3 storage will return full urls
+    # The webhook consumer fetches these itself: real presigned urls, not proxy urls.
     files = request.additional_files.all()
-    extra_data["files"] = [f.file.storage.url(f.file.name) for f in files]
+    extra_data["files"] = [f.file.storage.s3_url(f.file.name) for f in files]
 
     post_a_model_to_automation(request, webhook_url, **extra_data)
 

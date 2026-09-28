@@ -71,6 +71,15 @@ hr.separator {
   text-align: center;
 }
 
+// Attention dot after a side menu label, see the sidemenu_item tag.
+.sidemenu-marker {
+  color: var(--blue-france-sun-113-625);
+  font-size: 150%;
+  position: relative;
+  top: -0.0625rem;
+  margin-left: 0.5rem;
+}
+
 /**
  * Update some margins for paragraphs and lists
  */
@@ -2087,6 +2096,11 @@ img.moulinette-incentive-img {
 
 .fr-icon-hourglass-2-fill::before {
   mask-image: url("/static/icons/hourglass-2-fill.svg");
+}
+
+.fr-icon-file-copy-line::before,
+.fr-icon-file-copy-line::after {
+  mask-image: url("/static/icons/file-copy-line.svg");
 }
 
 .fr-icon-crisp::before {

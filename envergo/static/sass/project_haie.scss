@@ -215,7 +215,7 @@ div#app {
 
     #tooltip {
       display: none;
-      position: absolute;
+      position: fixed;
       background: white;
       color: black;
       border-radius: 0.75rem;
@@ -327,6 +327,16 @@ div#app {
 
       &.hidden {
         display: none;
+      }
+
+      // Attached to the cursor while drawing a hedge
+      &.help-bubble--cursor {
+        position: fixed;
+        bottom: auto;
+        max-width: none;
+        font-size: 0.875rem;
+        pointer-events: none;
+        white-space: nowrap;
       }
     }
 
@@ -784,11 +794,13 @@ div#project-specifications-instructor {
   }
 }
 
-div#instructor-view-side-menu {
-  .fr-sidemenu__list.fr-btns-group button.fr-btn,
-  .fr-sidemenu__list.fr-btns-group a.fr-btn {
-    justify-content: start;
-    text-align: left;
+// Horizontal gutter shared by the dossier header and the page body.
+.instructor-content-block {
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  @media (width >= 48em) {
+    padding-left: 5rem;
   }
 }
 
@@ -816,37 +828,6 @@ div#instructor-view-side-menu {
 /**
  * Page project list
  */
-.fr-segmented {
-  &.fr-segmented--sm {
-    a {
-      text-decoration: none;
-      background-image: none;
-      align-items: center;
-      border-radius: 0.25rem;
-      display: inline-flex;
-      font-size: 0.875rem;
-      font-weight: 500;
-      line-height: 1.5rem;
-      max-height: none;
-      max-width: 100%;
-      min-height: 2rem;
-      overflow: initial;
-      padding: 0.25rem 0.75rem;
-      white-space: nowrap;
-      width: 100%;
-
-      &:hover {
-        background-color: var(--hover);
-      }
-    }
-  }
-
-  &__element a.active {
-    box-shadow: inset 0 0 0 1px var(--border-active-blue-france);
-    color: var(--text-active-blue-france);
-  }
-}
-
 .project-list__table,
 .procedure-history__table {
   caption {
@@ -1041,6 +1022,19 @@ ul.instructor-view-list {
   border-top: 1px solid var(--border-default-grey);
 }
 
+.dn-logo {
+  vertical-align: middle;
+  width: 24px;
+  height: 24px;
+  background-color: var(--background-alt-grey);
+  border-radius: 3px;
+  padding: 4px;
+}
+
+.dn-value-container {
+  text-wrap: balance;
+}
+
 .dn-files {
   .fr-content-media {
     margin: 1rem 0;
@@ -1099,7 +1093,17 @@ ul.instructor-view-list {
     padding-right: 0;
   }
 
-  main.header-slim-displayed div#instructor-view-side-menu {
+  // Same declarations as DSFR's fr-sidemenu--sticky.
+  .instructor-sidebar {
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow: auto;
+    padding: 0.5rem 0 0.25rem 0.25rem;
+    margin: 0 0 -0.25rem -0.25rem;
+  }
+
+  main.header-slim-displayed .instructor-sidebar {
     padding-top: 3rem; // 0.5rem + height of slim-header : line-height: 1rem  + 2 * padding-top/botton: 0.75rem);
   }
 
@@ -1231,18 +1235,6 @@ div.title-with-link-container {
   }
 }
 
-div#alternative-notice {
-  filter: drop-shadow(var(--raised-shadow));
-
-  .fr-notice__body {
-    display: block;
-  }
-
-  p {
-    --text-spacing: 0 0 8px 0;
-  }
-}
-
 #faq-dropdown-btn {
   width: 20rem;
 }
@@ -1305,9 +1297,49 @@ button.hide-expanded[aria-expanded="true"] {
 }
 
 #alternative-simulations-table {
+  /* Button are displayed as links */
+  .fr-btn.btn--link {
+    min-height: 0;
+
+    --underline-img: linear-gradient(0deg, currentcolor, currentcolor);
+
+    background-image: var(--underline-img), var(--underline-img);
+    background-position:
+      var(--underline-x) 100%,
+      var(--underline-x) calc(100% - var(--underline-thickness));
+    background-repeat: no-repeat, no-repeat;
+    background-size:
+      var(--underline-hover-width) calc(var(--underline-thickness) * 2),
+      var(--underline-idle-width) var(--underline-thickness);
+    transition: background-size 0s;
+
+    &:hover {
+      --underline-hover-width: var(--underline-max-width);
+    }
+  }
+
   form {
     display: inline;
     margin: 0;
+  }
+
+  .fr-table__header {
+    align-items: start;
+  }
+
+  .action.fr-btn[target="_blank"]::after {
+    display: none;
+  }
+
+  .author-col {
+    width: 10%;
+  }
+
+  .created_by {
+    text-overflow: ellipsis;
+    position: absolute;
+    background-color: white;
+    max-width: 10%;
   }
 
   .status-col {
@@ -1317,24 +1349,30 @@ button.hide-expanded[aria-expanded="true"] {
   }
 
   .comment-col {
-    white-space: normal;
-    overflow-wrap: break-word;
     hyphens: auto;
-  }
+    overflow-wrap: break-word;
+    line-height: 1.2rem;
 
-  .actions-col {
-    .action + .action {
-      margin-left: 0.25rem;
+    .more.fr-collapse--expanded {
+      overflow-y: clip;
     }
 
-    a {
-      text-decoration: none;
-      background-image: none;
+    .fr-btn {
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      min-height: 2rem;
+      padding: 0.25rem 0.75rem;
+    }
 
-      &::after {
+    @supports (selector(:has(*))) {
+      &:has(.more.fr-collapse--expanded) .ellipsis {
         display: none;
       }
     }
+  }
+
+  .actions-col {
+    white-space: nowrap;
 
     a:not(:disabled),
     button:not(:disabled) {
@@ -1342,7 +1380,64 @@ button.hide-expanded[aria-expanded="true"] {
     }
 
     button {
+      font-weight: normal;
+      box-shadow: none;
       padding: 0;
+
+      &:hover {
+        background-color: transparent;
+      }
+    }
+  }
+}
+
+#alternative-notice {
+  filter: drop-shadow(var(--raised-shadow));
+
+  .fr-notice__title {
+    font-weight: 700;
+  }
+
+  .fr-notice__body {
+    justify-content: center;
+  }
+
+  p {
+    --text-spacing: 0 0 8px 0;
+  }
+}
+
+@media only screen and (width > 1247px) {
+  #project-result-top-bar #alternative-notice .fr-notice__body {
+    margin-left: 5rem; /* Mesure visuelle pour éviter un calcul fastidieux */
+    justify-content: inherit;
+  }
+}
+
+#hedge-input-iframe {
+  #alternative-notice {
+    .fr-container {
+      max-width: none;
+    }
+
+    .fr-notice__body {
+      justify-content: center;
+      text-align: center;
+    }
+  }
+}
+
+.alternative-share {
+  background-color: var(--background-alt-grey);
+
+  &__title {
+    font-weight: 700;
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+
+    @media (width >= 48em) {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
     }
   }
 }
@@ -1491,4 +1586,49 @@ button.hide-expanded[aria-expanded="true"] {
     box-shadow: inset 0 -2px 0 0 var(--border-disabled-grey);
     cursor: not-allowed;
   }
+}
+
+#dossier-filters {
+  .filter-line {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fr-segmented {
+    margin-bottom: 1rem;
+  }
+
+  @media (width >= 576px) {
+    .fr-fieldset__element {
+      margin-bottom: 0;
+    }
+  }
+
+  @media (width >= 768px) {
+    .filter-line {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fr-fieldset,
+    .fr-segmented {
+      margin-bottom: 0;
+    }
+  }
+}
+
+#state-change-modal {
+  // In the dossier state update modal, different statuses require filling
+  // different fields.
+  // Also, fields are displayed or hidden dynamicall. So all shown fields
+  // are mandatory.
+  .optional-tag {
+    display: none;
+  }
+}
+
+td > div.pac-hedges-details {
+  display: flex;
+  justify-content: space-between;
 }

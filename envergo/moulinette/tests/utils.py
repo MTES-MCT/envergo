@@ -4,6 +4,9 @@ Provides helpers to reduce boilerplate when constructing moulinette test data,
 creating regulation/criterion combos, and building hedge scenarios.
 """
 
+from django.core.cache import cache
+
+from envergo.hedges import density as density_module
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
 from envergo.moulinette.tests.factories import (
@@ -208,22 +211,21 @@ def make_moulinette_haie_with_density(density, hedges=None, hedge_data=None, **e
         hedge_data=hedge_data,
         **extra,
     )
-    # Pre-populate the lazy cache so density_around_lines returns our value
-    # without calling compute_density_around_lines_with_artifacts.
-    # The cache key targets all hedges to remove: this assumes the test data
-    # holds a single category, so the evaluators request that exact subset.
+    # The cache key targets all hedges to remove: assumes single-category
+    # test data, so evaluators request that exact subset.
     hedge_data_instance = data["data"]["haies"]
-    cache_key = hedge_data_instance.around_lines_cache_key(
-        hedge_data_instance.hedges_to_remove()
+    cache_key = density_module.lines_cache_key(
+        hedge_data_instance.hedges_to_remove(), 400
     )
-    hedge_data_instance._density = {
-        cache_key: {
+    cache.set(
+        cache_key,
+        {
             "density_400": density,
             "length_400": 3000,
             "area_400_ha": 50.0,
         },
-    }
-    hedge_data_instance.save()
+        None,
+    )
 
     moulinette = MoulinetteHaie(data)
     assert moulinette.is_valid(), moulinette.form_errors
@@ -287,13 +289,42 @@ def setup_loi_sur_leau(activation_map, include_optional=True):
 
 
 def setup_conditionnalite_pac(activation_map):
-    """Create Conditionnalité PAC regulation with BCAE8 criterion."""
+    """Create Conditionnalité PAC regulation with the pre-régime unique BCAE8 criterion."""
     regulation = RegulationFactory(regulation="conditionnalite_pac")
     criteria = [
         CriterionFactory(
             title="BCAE 8",
             regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+    ]
+    return regulation, criteria
+
+
+def setup_conditionnalite_pac_ru(activation_map):
+    """Create Conditionnalité PAC regulation with the régime unique BCAE8 criteria."""
+    regulation = RegulationFactory(regulation="conditionnalite_pac")
+    criteria = [
+        CriterionFactory(
+            title="BCAE 8 (régime unique)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Ru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="BCAE 8 (hors régime unique)",
+            regulation=regulation,
             evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8Hru",
+            activation_map=activation_map,
+            activation_mode="department_centroid",
+        ),
+        CriterionFactory(
+            title="BCAE 8 (L350-3)",
+            regulation=regulation,
+            evaluator="envergo.moulinette.regulations.conditionnalitepac.Bcae8L3503",
             activation_map=activation_map,
             activation_mode="department_centroid",
         ),

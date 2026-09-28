@@ -11,7 +11,7 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueClient
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.petitions.models import PetitionProject
-from envergo.utils.mattermost import notify
+from envergo.utils.tchap import notify
 
 logger = logging.getLogger(__name__)
 

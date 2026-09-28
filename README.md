@@ -633,8 +633,21 @@ $ docker compose exec postgres bash -c 'dropdb envergo -U "$POSTGRES_USER" -f'
 $ docker compose exec postgres bash -c 'createdb envergo -U "$POSTGRES_USER" -O "$POSTGRES_USER"'
 $ cat /tmp/envergo.dump | docker exec -i envergo_postgres psql -U $POSTGRES_USER -d $POSTGRES_DB
 $ docker compose run --rm django python manage.py migrate
-$ docker compose run --rm django python manage.py anonymize_database
+$ . envs/postgres && bash bin/anonymize_db.sh "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5432/$POSTGRES_DB"
 ```
+
+## Anonymisation
+
+`bin/anonymize_db.sh <database-url>` remplace les données personnelles d'une
+base par des valeurs anonymes. Opération irréversible, réservée aux copies
+jetables (review apps, copie statistiques, dev local).
+
+## Base statistiques (metabase)
+
+Metabase (app Scalingo `envergo-stats`) n'interroge jamais la base de
+production : il interroge une copie anonymisée, reconstruite chaque nuit par
+`bin/sync_stats_db.sh`. Le modèle de sécurité est détaillé en tête de ces
+deux scripts.
 
 ## Stockage de fichiers
 

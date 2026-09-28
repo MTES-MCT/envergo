@@ -25,6 +25,7 @@ const fitBoundsOptions = { padding: [10, 10] };
 const mode = document.getElementById('app').dataset.mode;
 const minimumLengthToPlant = parseFloat(document.getElementById('app').dataset.minimumLengthToPlant);
 const conditionsUrl = document.getElementById('app').dataset.conditionsUrl;
+const date = document.getElementById('app').dataset.date;
 const defaultLat = document.getElementById('app').dataset.departmentLat || 46.6033540;
 const defaultLng = document.getElementById('app').dataset.departmentLng || 1.8883335;
 
@@ -462,6 +463,7 @@ createApp({
   setup() {
     let map = null;
     let tooltip = null;
+    let helpBubbleEl = null;
 
     const hedges = {
       TO_PLANT: new HedgeList(TO_PLANT),
@@ -470,6 +472,7 @@ createApp({
 
     const helpBubble = mode !== READ_ONLY_MODE ? ref("initialHelp") : ref(null);
     const hedgeBeingDrawn = ref(null);
+    const isPointerOverMap = ref(false);
 
     // Reactive properties for acceptability conditions
     const conditions = reactive({ status: 'loading', conditions: [] });
@@ -560,7 +563,7 @@ createApp({
       }
     };
 
-    const saveUrl = document.getElementById('app').dataset.saveUrl;
+    const saveUrl = document.getElementById('app').dataset.saveUrl + (date ? `?date=${encodeURIComponent(date)}` : '');
 
     function serializeHedgesData() {
       const hedgesToPlant = hedges[TO_PLANT].toJSON();
@@ -638,7 +641,8 @@ createApp({
       }
     }
 
-    const savedHedgesData = JSON.parse(document.getElementById('app').dataset.hedgesData);
+    const hedgeDataEl = document.getElementById('hedge-data');
+    const savedHedgesData = hedgeDataEl ? JSON.parse(hedgeDataEl.textContent) : [];
 
     /**
      * Restore hedges for existing inputs.
@@ -760,6 +764,13 @@ createApp({
       }
     }
 
+    // Attach the help bubble to the cursor, right after the length tooltip
+    const updateHelpBubble = (e) => {
+      const tooltipLeft = e.originalEvent.clientX - 10;
+      helpBubbleEl.style.left = tooltipLeft + tooltip.offsetWidth + 8 + 'px';
+      helpBubbleEl.style.top = e.originalEvent.clientY + 20 + 'px';
+    }
+
     // Mount the app component and initialize the leaflet map
     onMounted(() => {
       const planLayer = L.tileLayer("https://data.geopf.fr/wmts?" +
@@ -825,12 +836,36 @@ createApp({
         layers: [satelliteLayer, pciLayer]
       });
       tooltip = L.DomUtil.get('tooltip');
+      helpBubbleEl = L.DomUtil.get('help-bubble');
 
       L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
+
+      const setPointerOverMap = (value) => {
+        isPointerOverMap.value = value;
+        // The length tooltip is a plain DOM element (not Vue-bound), so toggle
+        // it here too.
+        if (!value) {
+          tooltip.style.display = 'none';
+        } else if (tooltip.innerHTML !== '') {
+          tooltip.style.display = 'block';
+        }
+      };
+
+      const mapContainer = L.DomUtil.get('map');
+      mapContainer.addEventListener('mouseenter', () => setPointerOverMap(true));
+      mapContainer.addEventListener('mouseleave', () => setPointerOverMap(false));
+
+      // The Leaflet controls sit inside #map, so hovering them does not leave
+      // #map. Treat their container as "not the map" as well.
+      const leafletControls = mapContainer.querySelector('.leaflet-control-container');
+      if (leafletControls) {
+        leafletControls.addEventListener('mouseenter', () => setPointerOverMap(false));
+        leafletControls.addEventListener('mouseleave', () => setPointerOverMap(true));
+      }
 
       // Remove helpBubbleMessage on zoom
       let isSetupDone = false;
@@ -879,6 +914,7 @@ createApp({
       map.on('editable:vertex:dragstart', addTooltip);
       map.on('editable:vertex:dragend', removeTooltip);
       map.on("editable:drawing:move", updateTooltip);
+      map.on("editable:drawing:move", updateHelpBubble);
 
       isSetupDone = true;
     });
@@ -890,6 +926,7 @@ createApp({
       startDrawingToRemove,
       zoomOut,
       helpBubble,
+      isPointerOverMap,
       saveData,
       cancel,
       showHedgeModal,

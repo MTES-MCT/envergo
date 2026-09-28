@@ -2,6 +2,7 @@ import random
 from typing import Literal
 
 from django import template
+from django.template import TemplateSyntaxError
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -56,26 +57,29 @@ def menu_item(context, route, label, *event_data, subroutes=[], data_testid=None
     )
 
 
-@register.simple_tag(takes_context=True)
-def sidemenu_item(context, route, label):
-    try:
-        current_route = context.request.resolver_match.url_name
-    except AttributeError:
-        current_route = ""
+@register.inclusion_tag("pages/_sidemenu_item.html", takes_context=True)
+def sidemenu_item(
+    context, label, route, *args, marker=None, marker_label=None, **kwargs
+):
+    """Render a DSFR side menu entry, marked current when it points to the request path.
 
-    aria_current = route == current_route
-    url = reverse(route)
-    sidemenu_class = "fr-sidemenu__item--current" if aria_current else ""
-    aria_attr = 'aria-current="page"' if aria_current else ""
-    return mark_safe(
-        f"""
-        <li class="fr-sidemenu__item {sidemenu_class}">
-            <a class="fr-sidemenu__link" href="{url}" {aria_attr}>
-                {label}
-            </a>
-        </li>
-        """
-    )
+    ``route`` and what follows are forwarded to ``reverse`` like the ``{% url %}`` tag.
+    ``marker`` is a decorative glyph shown after the label. It requires
+    ``marker_label``, the text screen readers get instead.
+    """
+    if marker and not marker_label:
+        raise TemplateSyntaxError("sidemenu_item: a marker requires a marker_label")
+
+    href = reverse(route, args=args or None, kwargs=kwargs or None)
+    request = context.get("request")
+    is_current = request is not None and request.path == href
+    return {
+        "href": href,
+        "label": label,
+        "is_current": is_current,
+        "marker": marker,
+        "marker_label": marker_label,
+    }
 
 
 @register.simple_tag(takes_context=True)

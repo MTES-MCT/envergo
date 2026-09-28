@@ -12,32 +12,31 @@
 
 {% block main %}
 
+  {{ hedge_data|json_script:"hedge-data" }}
   <div id="app"
        v-cloak
        data-mode="{{ mode|default:'removal' }}"
        data-save-url="{% url 'input_hedges' department=department mode=mode %}"
        data-conditions-url="{{ hedge_conditions_url }}"
-       data-hedges-data='{{ hedge_data_json|safe }}'
+       data-date="{{ moulinette.date|date:'Y-m-d' }}"
        data-department-lat='{{ department_centroid.lat|unlocalize }}'
        data-department-lng='{{ department_centroid.lng|unlocalize }}'
        data-minimum-length-to-plant="{{ minimum_length_to_plant|default:0 }}">
     {% if is_alternative %}
-      <div class="fr-notice fr-notice--info">
-        <div class="fr-notice__body fr-ml-2w">
-          <p>
-            <span class="fr-icon-edit-fill" aria-hidden="true"></span>
-            <span><b>Simulation alternative</b> pour ce dossier</span>
-          </p>
-        </div>
-      </div>
+      {% include 'haie/moulinette/_alternative_simulation_notice.html' %}
     {% endif %}
     <div id="saisie-ui">
       <div id="map">
 
-        <div v-if="helpBubble" class="help-bubble">
+        <div id="help-bubble"
+             v-show="helpBubble && (helpBubble === 'initialHelp' || isPointerOverMap)"
+             class="help-bubble"
+             :class="{ 'help-bubble--cursor': helpBubble !== 'initialHelp' }">
           <span class="fr-icon-info-fill fr-mr-2v" aria-hidden="true"></span>
-          <span v-if="helpBubble === 'drawingHelp'">Cliquez pour ajouter un autre point. Double-cliquez pour terminer le tracé.</span>
-          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquez sur un premier point pour commencer le tracé</span>
+          <span v-if="helpBubble === 'drawingHelp'">Clic simple pour continuer le tracé.
+            <br>
+          Double-clic pour terminer.</span>
+          <span v-else-if="helpBubble === 'initHedgeHelp'">Cliquer sur la carte pour commencer le tracé</span>
           <span v-else-if="helpBubble === 'initialHelp'">Commencez par rechercher une commune puis zoomer sur l’emplacement des haies</span>
         </div>
       </div>

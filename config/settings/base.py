@@ -288,13 +288,25 @@ STATICFILES_FINDERS += ["compressor.finders.CompressorFinder"]
 # Handle file uploads
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "envergo.utils.storages.LocalFileStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
-    "upload": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "upload": {"BACKEND": "envergo.utils.storages.LocalFileStorage"},
+    "public": {"BACKEND": "envergo.utils.storages.LocalFileStorage"},
 }
+
+# Should files be served by Django or proxied through nginx?
+SERVE_FILES_LOCALLY = True
+
+# Browser-facing routes for proxied S3 downloads (see envergo.utils.storages).
+PUBLIC_FILES_URL_PREFIX = "fichiers"
+PRIVATE_FILES_URL_PREFIX = "fichiers-prives"
+
+# Bucket names — only meaningful in production (set via env vars).
+AWS_PRIVATE_BUCKET_NAME = ""
+AWS_PUBLIC_BUCKET_NAME = ""
 
 # CELERY
 if USE_TZ:
@@ -360,6 +372,12 @@ TEST_EMAIL = "test@test.fr"
 
 MATTERMOST_ENDPOINT_AMENAGEMENT = env("DJANGO_MATTERMOST_ENDPOINT", default=None)
 MATTERMOST_ENDPOINT_HAIE = env("DJANGO_MATTERMOST_ENDPOINT_HAIE", default=None)
+
+
+TCHAP_HOMESERVER_URL = env("DJANGO_TCHAP_HOMESERVER_URL", default=None)
+TCHAP_ACCESS_TOKEN = env("DJANGO_TCHAP_ACCESS_TOKEN", default=None)
+TCHAP_ROOM_ID_AMENAGEMENT = env("DJANGO_TCHAP_ROOM_ID_AMENAGEMENT", default=None)
+TCHAP_ROOM_ID_HAIE = env("DJANGO_TCHAP_ROOM_ID_HAIE", default=None)
 
 NOTION_SECRET = env("DJANGO_NOTION_SECRET", default=None)
 NOTION_DATABASE_ID = env("DJANGO_NOTION_DATABASE_ID", default=None)
@@ -518,6 +536,7 @@ HAIE_FAQ_URLS = {
     "GUIDE_FORM_HEDGE_DESTRUCTION": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/formulaire-de-declaration-prealable-pour-une-destruction-de-haie-ou-alignement-darbres",  # noqa: E501
     "IDENTIFY_PROTECTIONS_HEDGES_AA_IN_GEOPORTAIL": "https://aide.haie.beta.gouv.fr/comprendre-la-reglementation/comment-identifier-les-protections-sur-les-haies-dans-le-geoportail-de-lurbanisme#methode-preferentielle",  # noqa: E501
     "EMERGENCY_PROCEDURE": "https://aide.haie.beta.gouv.fr/",
+    "INSTRUCTORS_SIMULATIONS_ALTERNATIVES": "https://instruction.haie.beta.gouv.fr/a-propos-du-portail-numerique/utiliser-la-simulation-alternative",  # noqa: E501
 }
 
 # Temporary deactivate the InMemoryUploadFileHandler because it crashes the map upload

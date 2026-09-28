@@ -29,8 +29,8 @@ from envergo.moulinette.models import MoulinetteHaie, MoulinetteHaieUrlMixin, Re
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.models import Dossier
 from envergo.users.models import User
-from envergo.utils.mattermost import notify
 from envergo.utils.models import ResultSnapshotBase
+from envergo.utils.tchap import notify
 from envergo.utils.urls import extract_param_from_url, update_qs
 
 logger = logging.getLogger(__name__)
@@ -540,31 +540,27 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         - user with access haie and invitation token
         - user with access haie and right to project department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                (
-                    self.department_id in user.department_ids
-                    or user.invitation_tokens.filter(
-                        petition_project_id=self.pk
-                    ).exists()
-                ),
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.has_instruction_access
+            and (
+                self.department_id in user.department_ids
+                or user.invitation_tokens.filter(petition_project_id=self.pk).exists()
             )
         )
 
     def has_change_permission(self, user):
         """User has edit permission on project, according to
         - superuser
-        - user with access haie, is instructor for department
+        - user with access haie, is coordinator for department
         """
-        return user.is_superuser or all(
-            (
-                user.is_active,
-                user.access_haie,
-                user.is_instructor,
-                self.department_id in user.department_ids,
-            )
+        if not user.is_authenticated:
+            return False
+
+        return user.is_superuser or (
+            user.has_coordination_access and self.department_id in user.department_ids
         )
 
     @property
@@ -577,6 +573,15 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
                 f"{settings.DEMARCHE_NUMERIQUE['DOSSIER_BASE_URL']}/dossiers/"
                 f"{self.demarche_numerique_dossier_number}/"
             )
+        return None
+
+    @property
+    def demarche_numerique_petitioner_messaging_url(self) -> str | None:
+        """
+        Returns the URL of the dossier messaging for the petitioner.
+        """
+        if self.demarche_numerique_petitioner_url:
+            return f"{self.demarche_numerique_petitioner_url}messagerie"
         return None
 
     def get_demarche_numerique_instructor_url(self, demarche_number) -> str | None:
@@ -672,6 +677,12 @@ class Simulation(models.Model):
     comment = models.TextField("Commentaire")
 
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.SET_NULL,
+        verbose_name=_("Created by"),
+        null=True,
+    )
 
     class Meta:
         verbose_name = "Simulation alternative"
@@ -711,7 +722,9 @@ class Simulation(models.Model):
     @property
     def form_url(self):
         """Return the moulinette form url with the simulation parameters."""
-        return self.custom_url("moulinette_form", alternative="true")
+        return self.custom_url(
+            "moulinette_form", project_reference=self.project.reference
+        )
 
     @property
     def result_url(self):
@@ -720,7 +733,9 @@ class Simulation(models.Model):
         if self.is_active:
             url = reverse("petition_project", args=[self.project.reference])
         else:
-            url = self.custom_url("moulinette_result_plantation", alternative="true")
+            url = self.custom_url(
+                "moulinette_result_plantation", project_reference=self.project.reference
+            )
         return url
 
 
