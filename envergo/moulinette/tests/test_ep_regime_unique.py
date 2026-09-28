@@ -681,15 +681,10 @@ def test_ep_non_ru_categories_are_always_a_verifier(ep_ru_criteria, slug):
     assert criterion.result == RESULTS.a_verifier
 
 
-@pytest.mark.parametrize(
-    "slug, expected_r, has_min_length_condition",
-    [("hru__ep_regime_unique", 1.0, True), ("l350_3__ep_regime_unique", 0.0, False)],
-)
-def test_ep_non_ru_categories_have_min_length_and_safety_conditions(
-    ep_ru_criteria, slug, expected_r, has_min_length_condition
-):
-    """The minimum length uses the category's own R, with the safety check and no
-    hedge type requirement."""
+@pytest.mark.parametrize("slug", ["hru__ep_regime_unique", "l350_3__ep_regime_unique"])
+def test_ep_non_ru_categories_have_safety_condition_only(ep_ru_criteria, slug):
+    """EP requires no compensation for these hedges, only the safety check
+    and no minimum length or hedge type requirement."""
     RUConfigHaieFactory()
     moulinette = make_moulinette_haie_with_density(
         density=60,
@@ -699,15 +694,11 @@ def test_ep_non_ru_categories_have_min_length_and_safety_conditions(
     evaluator = getattr(moulinette.ep, slug).get_evaluator()
 
     assert SafetyCondition in evaluator.plantation_conditions
-    if has_min_length_condition:
-        assert RUMinLengthCondition in evaluator.plantation_conditions
-    assert evaluator.get_replantation_coefficient() == expected_r
+    assert RUMinLengthCondition not in evaluator.plantation_conditions
+    assert evaluator.get_replantation_coefficient() == 0.0
 
-    conditions = evaluator.plantation_evaluate(expected_r)
-    if has_min_length_condition:
-        assert [type(c) for c in conditions] == [RUMinLengthCondition, SafetyCondition]
-    else:
-        assert [type(c) for c in conditions] == [SafetyCondition]
+    conditions = evaluator.plantation_evaluate(0.0)
+    assert [type(c) for c in conditions] == [SafetyCondition]
 
 
 def setup_per_category_species():

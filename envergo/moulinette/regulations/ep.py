@@ -10,6 +10,7 @@ from django.core.validators import RegexValidator
 from envergo.evaluations.models import RESULTS
 from envergo.geodata.constants import EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Zone
+from envergo.geodata.utils import get_cartes_gouv_fr_centered_url
 from envergo.hedges.models import (
     PACAGE_RE,
     HedgeCategory,
@@ -839,6 +840,12 @@ class EspecesProtegeesRu(
         if density is None:
             density = 0
         catalog["ep_ru_density"] = density
+        catalog["znieff1_url"] = get_cartes_gouv_fr_centered_url(
+            hedges,
+            zoom=13,
+            layer="GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2$GEOPORTAIL:OGC:WMTS(1;1;1;0),"
+            "Patrinat_ZNIEFF1$GEOPORTAIL:OGC:WMTS(2;1;1;0)",
+        )
 
         return catalog
 
@@ -1035,7 +1042,7 @@ class EspecesProtegeesHru(
     choice_label = "EP > EP Régime unique"
     base_slug = "ep_regime_unique"
     category = HedgeCategory.hru
-    plantation_conditions = [RUMinLengthCondition, SafetyCondition]
+    plantation_conditions = [SafetyCondition]
 
     CODE_MATRIX = {
         True: "a_verifier",
@@ -1049,13 +1056,9 @@ class EspecesProtegeesHru(
         return True
 
     def get_replantation_coefficient(self):
-        return 1.0
+        """EP requires no compensation for these hedges."""
+        return 0.0
 
 
 class EspecesProtegeesL3503(EspecesProtegeesHru):
     category = HedgeCategory.l350_3
-    plantation_conditions = [SafetyCondition]
-
-    def get_replantation_coefficient(self):
-        """EP requires no compensation for these hedges."""
-        return 0.0
