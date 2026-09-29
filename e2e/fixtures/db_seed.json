@@ -488,6 +488,16 @@
     }
   },
   {
+    "model": "moulinette.demarchenumerique",
+    "pk": 1,
+    "fields": {
+      "demarche_numerique_number": "123456",
+      "display_fields": {
+        "project_url": "ABC123"
+      }
+    }
+  },
+  {
     "model": "moulinette.confighaie",
     "pk": 1,
     "fields": {
@@ -501,10 +511,7 @@
       ],
       "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
       "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
-      "demarche_numerique_number": "123456",
-      "demarche_numerique_display_fields": {
-        "project_url": "ABC123"
-      }
+      "demarche_numerique_id": 1
     }
   },
   {
