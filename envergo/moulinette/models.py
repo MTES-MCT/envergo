@@ -1329,8 +1329,7 @@ class AaL3503Handling(models.TextChoices):
 class DemarcheNumerique(models.Model):
     demarche_numerique_number = models.IntegerField(
         "Numéro de la « Démarche numérique »",
-        blank=True,
-        null=True,
+        unique=True,
         help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
         '<a href="https://demarche.numerique.gouv.fr/admin/procedures" target="_blank" rel="noopener">'
         "https://demarche.numerique.gouv.fr/admin/procedures</a>",
