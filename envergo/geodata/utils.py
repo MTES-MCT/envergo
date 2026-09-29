@@ -39,6 +39,9 @@ GOOGLE_MAPS_URL = (
 GEOPORTAIL_URL = (
     "https://www.geoportail-urbanisme.gouv.fr/map/#tile=1&lon={0}&lat={1}&zoom={2}"
 )
+CARTES_GOUV_FR_URL = (
+    "https://cartes.gouv.fr/explorer-les-cartes/?c={0},{1}&z={2}&permalink=yes"
+)
 
 
 ATTRIBUTES = {
@@ -933,19 +936,19 @@ def compute_hedge_density_around_lines(
     return {"density": density, "artifacts": artifacts}
 
 
-def _get_centered_url(url, hedges: "HedgeList"):
+def _get_centered_url(url, hedges: "HedgeList", zoom=None):
     lng = FRANCE_LNG
     lat = FRANCE_LAT
-    zoom = FRANCE_ZOOM
+    default_zoom = FRANCE_ZOOM
 
     if hedges:
         # Generate urls centered on the project
         centroid = hedges.to_remove().centroid
         lng = centroid.x
         lat = centroid.y
-        zoom = 16
+        default_zoom = 16
 
-    return url.format(lng, lat, zoom)
+    return url.format(lng, lat, zoom if zoom is not None else default_zoom)
 
 
 def get_google_maps_centered_url(hedges: "HedgeList"):
@@ -956,6 +959,11 @@ def get_google_maps_centered_url(hedges: "HedgeList"):
 def get_ign_centered_url(hedges: "HedgeList"):
     """Return the IGN URL centered on the hedges to remove."""
     return _get_centered_url(IGN_URL, hedges)
+
+
+def get_cartes_gouv_fr_centered_url(hedges: "HedgeList", zoom=None, layer=None):
+    """Return the cartes.gouv.fr URL centered on the hedges to remove."""
+    return f"{_get_centered_url(CARTES_GOUV_FR_URL, hedges, zoom)}{f"&l={layer}" if layer else ""}"
 
 
 def get_geoportail_urbanisme_centered_url(hedges: "HedgeList"):
