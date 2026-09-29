@@ -729,8 +729,8 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                 -- Only the part inside the buffer otherwise
                 ELSE ST_Intersection(
                     hedge,
-                    -- We make Postgis' job easier by pre-clipping the buffer
-                    -- to the hedge bounding box. It improves the query speed ~20%
+                    -- Pre-clipping the buffer to the hedge's bounding box speeds the query ~20%%.
+                    -- ClipByBox2D can output invalid shapes that crash ST_Intersection.
                     ST_MakeValid(ST_ClipByBox2D(
                           trunc,
                           ST_Expand(ST_Envelope(hedge), 0.0001))))
