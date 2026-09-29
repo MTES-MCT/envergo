@@ -104,7 +104,7 @@ class DemarcheNumeriqueFactory(DjangoModelFactory):
     class Meta:
         model = DemarcheNumerique
 
-    demarche_numerique_number = 123456
+    demarche_numerique_number = factory.Sequence(lambda n: 10000 + n)
     pre_fill_config = [
         {
             "id": "123",

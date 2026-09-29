@@ -445,6 +445,9 @@ class DemarcheNumeriqueAdminForm(forms.ModelForm):
         """
         Validate display_fields should have required keys
         "organization", "city", "pacage".
+
+        Only project_url is checked by a model constraint because others
+        are not filled by default.
         """
         cleaned_data = super().clean()
         display_dn_fields = cleaned_data.get("display_fields")
@@ -525,11 +528,6 @@ class ConfigHaieAdminForm(OverlapValidationFormMixin, forms.ModelForm):
 
         When the department uses the single procedure (régime unique), the
         third-party form handling, the external form URL is required.
-
-        Validate demarche_numerique_display_fields should have required keys
-        "organization", "city", "pacage" when demarche number is filled.
-        Only project_url is checked by a model constraint because others
-        are not filled by default.
         """
         cleaned_data = super().clean()
 

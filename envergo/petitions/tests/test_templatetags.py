@@ -5,7 +5,10 @@ import pytest
 from django.template import Context, Template
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.moulinette.tests.factories import (
+    DCConfigHaieFactory,
+    DemarcheNumeriqueFactory,
+)
 from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -163,13 +166,14 @@ def test_display_dn_field_invalid_field_id(mock_post):
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_dn_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_display_fields.update(
+    dn_config = DemarcheNumeriqueFactory()
+    dn_config.display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
-    config.save()
+    dn_config.save()
+    DCConfigHaieFactory(demarche_numerique=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is not available

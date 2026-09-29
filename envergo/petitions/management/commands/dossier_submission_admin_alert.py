@@ -55,7 +55,7 @@ class Command(BaseCommand):
                 "project_url", None
             )
             if not project_url_id:
-                # A config should always have "project_url" in demarche_numerique_display_fields
+                # A DN config should always have "project_url" in display_fields
                 continue
 
             logging.info(f"Handling demarche {demarche_number} ({config})")

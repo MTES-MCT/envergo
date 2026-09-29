@@ -4466,12 +4466,7 @@ def test_instructor_view_token_expired_403(
     client, haie_coordinator_44, haie_user, site
 ):
     """Test that instructor view returns 403 when user use an invalid token"""
-    DCConfigHaieFactory(
-        demarche_numerique_display_fields={
-            "project_url": "ABC123",
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(

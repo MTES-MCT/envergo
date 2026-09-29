@@ -82,8 +82,9 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    DCConfigHaieFactory(
-        demarche_numerique_display_fields={
+    config_haie = DCConfigHaieFactory()
+    config_haie.demarche_numerique.display_fields.update(
+        {
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
             "organization": "Q2hhbXAtNDcyOTE3MQ==",
