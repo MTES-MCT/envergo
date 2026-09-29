@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("moulinette", "0138_sites_proteges_multi_category_criteria"),
+        ("moulinette", "0143_merge_20260929_0836"),
     ]
 
     operations = [
