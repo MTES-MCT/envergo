@@ -617,7 +617,7 @@ class ConfigHaieAdmin(admin.ModelAdmin):
             "Démarche numérique",
             {
                 "fields": [
-                    "demarche_numerique_config",
+                    "demarche_numerique",
                 ],
             },
         ),

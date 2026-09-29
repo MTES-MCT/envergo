@@ -1403,6 +1403,9 @@ class DemarcheNumerique(models.Model):
                     }
                 )
 
+    def __str__(self):
+        return f"{self.display_name} ({self.demarche_numerique_number})"
+
     @classmethod
     def get_demarche_numerique_value_sources(cls):
         """Populate a list of available sources for the pre-fill configuration of the Démarche numérique
