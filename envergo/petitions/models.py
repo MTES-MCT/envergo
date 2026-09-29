@@ -202,10 +202,6 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
         upload_to=dn_archive_file_format,
     )
 
-    onagre_number = models.CharField(
-        "Référence ONAGRE du dossier", max_length=64, blank=True
-    )
-
     instructor_free_mention = models.TextField(
         "Mention libre de l'instructeur", blank=True
     )

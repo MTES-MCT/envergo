@@ -3,7 +3,7 @@
 from math import ceil
 
 import pytest
-from django.contrib.gis.geos import MultiPolygon, Polygon
+from django.contrib.gis.geos import MultiPolygon
 from django.db import connection
 from django.template import Context, Template
 from django.test.utils import CaptureQueriesContext
@@ -14,7 +14,6 @@ from envergo.geodata.tests.factories import MapFactory, ZoneFactory, france_poly
 from envergo.hedges.models import HedgeCategory, Species
 from envergo.hedges.regulations import RUMinLengthCondition, SafetyCondition
 from envergo.hedges.services import PlantationEvaluator
-from envergo.hedges.tests.factories import SpeciesFactory, SpeciesHabitatFactory
 from envergo.moulinette.tests.factories import DCConfigHaieFactory, RUConfigHaieFactory
 from envergo.moulinette.tests.utils import (
     EP_RU_DEFAULT_SETTINGS,
@@ -23,6 +22,7 @@ from envergo.moulinette.tests.utils import (
     make_moulinette_haie_with_density,
     setup_ep_regime_unique,
     setup_regime_unique_haie,
+    setup_species_near_hedges,
 )
 from envergo.petitions.regulations.ep import ep_regulation_get_instructor_view_context
 
@@ -362,47 +362,6 @@ def test_ep_ru_settings_override_thresholds(france_map):
 # Species cortege — public vs. sensitive split
 # ---------------------------------------------------------------------------
 
-# Default HedgeFactory places hedges near (lng=3.584, lat=43.687).
-# This polygon covers that area so RU zone queries find it within 400m.
-HEDGE_AREA_POLYGON = Polygon(
-    [
-        (3.580, 43.685),
-        (3.590, 43.685),
-        (3.590, 43.690),
-        (3.580, 43.690),
-        (3.580, 43.685),
-    ]
-)
-
-
-DEFAULT_HABITAT_HEDGE_TYPES = ["degradee", "buissonnante", "arbustive", "mixte"]
-
-
-def setup_species_near_hedges(levels, hedge_types=None):
-    """Create species with SpeciesHabitats on a map whose zone overlaps the default hedge area.
-
-    `levels` is a list of (cd_ref, level_of_concern) tuples. Returns the
-    created species list.
-    """
-    map_obj = MapFactory(map_type="species", zones=None)
-    cd_refs = [cd_ref for cd_ref, _ in levels]
-    ZoneFactory(
-        map=map_obj,
-        geometry=MultiPolygon([HEDGE_AREA_POLYGON]),
-        species_taxrefs=cd_refs,
-    )
-    species_list = []
-    for cd_ref, level in levels:
-        sp = SpeciesFactory(cd_ref=cd_ref)
-        SpeciesHabitatFactory(
-            species=sp,
-            map=map_obj,
-            hedge_types=hedge_types or DEFAULT_HABITAT_HEDGE_TYPES,
-            level_of_concern=level,
-        )
-        species_list.append(sp)
-    return species_list
-
 
 def test_ep_ru_catalog_no_sensitive_species(ep_ru_criteria):
     """When no species have level 'majeur', has_sensitive_species is False
@@ -410,8 +369,8 @@ def test_ep_ru_catalog_no_sensitive_species(ep_ru_criteria):
     RUConfigHaieFactory()
     setup_species_near_hedges(
         [
-            (9001, "fort"),
-            (9002, "moyen"),
+            {"cd_ref": 9001, "level": "fort"},
+            {"cd_ref": 9002, "level": "moyen"},
         ]
     )
 
@@ -423,6 +382,7 @@ def test_ep_ru_catalog_no_sensitive_species(ep_ru_criteria):
     catalog = ep_ru_catalog(moulinette)
 
     assert catalog["has_sensitive_species"] is False
+    assert catalog["protected_species_enjeu_majeur"] == []
     full = catalog["protected_species"]
     public = catalog["protected_species_public"]
     assert len(full) == len(public)
@@ -430,12 +390,15 @@ def test_ep_ru_catalog_no_sensitive_species(ep_ru_criteria):
 
 
 def test_ep_ru_catalog_with_sensitive_species(ep_ru_criteria):
-    """When some species have level 'majeur', they are excluded from the public list."""
+    """Majeur species are excluded from the public list.
+
+    They are gathered in the dedicated enjeu majeur list instead.
+    """
     RUConfigHaieFactory()
     setup_species_near_hedges(
         [
-            (9003, "fort"),
-            (9004, "majeur"),
+            {"cd_ref": 9003, "level": "fort"},
+            {"cd_ref": 9004, "level": "majeur"},
         ]
     )
 
@@ -450,10 +413,70 @@ def test_ep_ru_catalog_with_sensitive_species(ep_ru_criteria):
 
     full_refs = {s.cd_ref for s in catalog["protected_species"]}
     public_refs = {s.cd_ref for s in catalog["protected_species_public"]}
+    majeur_refs = {s.cd_ref for s in catalog["protected_species_enjeu_majeur"]}
     assert 9003 in full_refs
     assert 9004 in full_refs
     assert 9003 in public_refs
     assert 9004 not in public_refs
+    assert majeur_refs == {9004}
+
+
+def test_ep_ru_catalog_species_ordering(ep_ru_criteria):
+    """Group priority, then enjeu descending, then name (empty last)."""
+    RUConfigHaieFactory()
+    setup_species_near_hedges(
+        [
+            {
+                "cd_ref": 9101,
+                "level": "fort",
+                "adhoc_group": "Mammifères",
+                "common_name": "Blaireau",
+            },
+            {
+                "cd_ref": 9102,
+                "level": "faible",
+                "adhoc_group": "Flore",
+                "common_name": "Orchidée",
+            },
+            {
+                "cd_ref": 9103,
+                "level": "moyen",
+                "adhoc_group": "Oiseaux",
+                "common_name": "Mésange",
+            },
+            {
+                "cd_ref": 9104,
+                "level": "fort",
+                "adhoc_group": "Oiseaux",
+                "common_name": "Alouette",
+            },
+            {
+                "cd_ref": 9105,
+                "level": "fort",
+                "adhoc_group": "Oiseaux",
+                "common_name": "",
+            },
+        ]
+    )
+
+    moulinette = make_moulinette_haie_with_density(
+        density=60,
+        hedges=[make_hedge_factory(length=50)],
+        reimplantation="replantation",
+    )
+
+    catalog = ep_ru_catalog(moulinette)
+    ordering = [
+        (s.adhoc_group, s.local_level_of_concern, s.common_name)
+        for s in catalog["protected_species"]
+    ]
+    assert ordering == [
+        ("Oiseaux", "fort", "Alouette"),
+        ("Oiseaux", "fort", ""),
+        ("Oiseaux", "moyen", "Mésange"),
+        ("Flore", "faible", "Orchidée"),
+        ("Mammifères", "fort", "Blaireau"),
+    ]
 
 
 # Effective coefficients (post-evaluate hook)
@@ -703,8 +726,12 @@ def test_ep_non_ru_categories_have_safety_condition_only(ep_ru_criteria, slug):
 
 def setup_per_category_species():
     """One species only found in RU hedges, one only found in tree alignments."""
-    setup_species_near_hedges([(9201, "fort")], hedge_types=["buissonnante"])
-    setup_species_near_hedges([(9202, "majeur")], hedge_types=["alignement"])
+    setup_species_near_hedges(
+        [{"cd_ref": 9201, "level": "fort"}], hedge_types=["buissonnante"]
+    )
+    setup_species_near_hedges(
+        [{"cd_ref": 9202, "level": "majeur"}], hedge_types=["alignement"]
+    )
 
 
 def make_ru_and_l350_3_hedges():

@@ -19,6 +19,11 @@ from envergo.moulinette.tests.factories import (
     RegulationFactory,
     RUConfigHaieFactory,
 )
+from envergo.moulinette.tests.utils import (
+    make_hedge_factory,
+    prefill_density_cache,
+    setup_ep_regime_unique,
+)
 from envergo.petitions.tests.factories import PetitionProjectFactory
 
 pytestmark = pytest.mark.haie
@@ -374,6 +379,38 @@ def test_result_p_view(mock_R, client):
     assert Event.objects.get(
         category="simulateur", event="soumission_p", metadata__user_type="anonymous"
     )
+
+
+def test_result_d_view_shows_species_cortege(client, france_map):
+    """The simulation result page shows the species cortege in the EP RU criterion result."""
+    RUConfigHaieFactory()
+    setup_ep_regime_unique(france_map)
+    hedges = HedgeDataFactory(hedges=[make_hedge_factory(length=50)])
+    prefill_density_cache(hedges, density=60)
+
+    data = {
+        "element": "haie",
+        "travaux": "destruction",
+        "contexte": "non",
+        "motif": "chemin_acces",
+        "reimplantation": "replantation",
+        "localisation_pac": "non",
+        "department": "44",
+        "haies": hedges.id,
+        "lineaire_total": 100,
+        "transfert_parcelles": "non",
+        "meilleur_emplacement": "non",
+    }
+    url = reverse("moulinette_result")
+    res = client.get(f"{url}?{urlencode(data)}", follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        in content
+    )
+    assert "Voir plus de détails" in content
 
 
 def test_moulinette_post_form_error(client):
