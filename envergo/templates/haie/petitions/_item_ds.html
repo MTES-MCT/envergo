@@ -20,21 +20,21 @@
         <div class="dn-files fr-grid-row fr-grid-row--gutters">
           {% for file in item.value.files %}
             {% if "image" in file.content_type %}
-              <div class="fr-col fr-col-md-6">
+              <div class="fr-col fr-col-md-4">
                 <figure role="group"
-                        class="fr-content-media"
+                        class="fr-content-media fr-enlarge-link"
                         aria-label="Description / Source">
-                  <div class="fr-content-media__img fr-enlarge-link">
+                  <div class="fr-content-media__img">
                     <img class="fr-responsive-img"
                          src="{{ file.url }}"
                          alt="{{ file.filename }}" />
-                    <figcaption class="fr-content-media__caption">
-                      <a href="{{ file.url }}" target="_blank" rel="noopener external">
-                        {{ file.filename }}
-                        {% include "haie/petitions/_dn_logo.html" with id=item.label|slugify %}
-                      </a>
-                    </figcaption>
                   </div>
+                  <figcaption class="fr-content-media__caption">
+                    <a href="{{ file.url }}" target="_blank" rel="noopener external">
+                      {{ file.filename }}
+                      {% include "haie/petitions/_dn_logo.html" with id=item.label|slugify %}
+                    </a>
+                  </figcaption>
                 </figure>
               </div>
             {% else %}
