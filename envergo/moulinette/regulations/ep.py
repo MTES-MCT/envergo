@@ -711,14 +711,8 @@ class EspecesProtegeesRegimeUniqueSettings(forms.Form):
         return cleaned
 
 
-class EPSpeciesMixin(EPMixin):
-    """Species handling shared by every post régime unique EP evaluator.
-
-    The RU species pipeline annotates each species with a
-    ``local_level_of_concern``. Species at the "majeur" level are sensitive
-    data: they are only disclosed during instruction, so the public result
-    page gets the filtered list instead.
-    """
+class SensitiveSpeciesMixin:
+    """Split the catalog's protected species by local level of concern."""
 
     def get_catalog_data(self):
         catalog = super().get_catalog_data()
@@ -743,7 +737,8 @@ EP_RU_RESULT_RANK = {
 
 class EspecesProtegeesRu(
     PlantationConditionMixin,
-    EPSpeciesMixin,
+    SensitiveSpeciesMixin,
+    EPMixin,
     HedgeDensityMixin,
     HaieCriterionEvaluator,
 ):
@@ -928,11 +923,11 @@ class EspecesProtegeesRu(
          - project level data
          - per hedge result
         """
-        # 0a. Department not in régime unique -> non concerné
+        # Department not in régime unique -> non concerné
         if not result_data["is_regime_unique"]:
             return "non_concerne"
 
-        # 0b. Zone config unavailable for at least one hedge -> non disponible
+        # Zone config unavailable for at least one hedge -> non disponible
         if not self.catalog.get("ru_all_zones_resolved", False):
             return "non_disponible"
 
@@ -947,19 +942,19 @@ class EspecesProtegeesRu(
         d_bas = params["d_bas"]
         d_haut = params["d_haut"]
 
-        # 1. Ripisylve threshold exceeded
+        # Ripisylve threshold exceeded
         if ripisylve_length > l_ripisylve:
             result = "derogation_inventaire"
-        # 2. Very short total
+        # Very short total
         elif total_length <= l_bas:
             result = "dispense"
-        # 3. Medium total with moderate density
+        # Medium total with moderate density
         elif total_length <= l_haut and density < d_haut:
             result = "derogation_simplifiee"
-        # 4. Long total with low density
+        # Long total with low density
         elif total_length > l_haut and density < d_bas:
             result = "derogation_inventaire"
-        # 5. Per-hedge evaluation — pick the most constraining
+        # Per-hedge evaluation — pick the most constraining
         else:
             result = max(
                 self.per_hedge_results.values(),
@@ -1032,7 +1027,7 @@ class EspecesProtegeesRu(
 
 
 class EspecesProtegeesHru(
-    PlantationConditionMixin, EPSpeciesMixin, HaieCriterionEvaluator
+    PlantationConditionMixin, SensitiveSpeciesMixin, EPMixin, HaieCriterionEvaluator
 ):
     """EP criterion for the hedges not handled by the régime unique: always "à vérifier".
 

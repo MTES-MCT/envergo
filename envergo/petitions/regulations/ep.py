@@ -23,14 +23,7 @@ from envergo.petitions.regulations import evaluator_instructor_view_context_gett
 def ep_regulation_get_instructor_view_context(
     evaluator, petition_project, moulinette, plantation_evaluation=None
 ) -> dict:
-    """Aggregate the species cortege over every EP criterion.
-
-    A régime unique project has one EP criterion per hedge category, each with
-    its own species list in its own catalog. ``instructor_view_part`` merges
-    the criteria contexts in order, so a per-criterion key would only ever show
-    the last category. The regulation context is applied last, which makes it
-    the right place to publish the project-wide list the instruction page needs.
-    """
+    """Aggregate the species cortege over every EP criterion."""
     species_by_cd_ref = {}
     for regulation in moulinette.regulations:
         for criterion in regulation.criteria.all():
