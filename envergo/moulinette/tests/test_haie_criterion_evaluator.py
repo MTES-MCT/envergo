@@ -5,7 +5,9 @@ import pytest
 from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations.alignementarbres import (
     AlignementsArbresCalvadosBeforeRu,
+    AlignementsArbresHru,
     AlignementsArbresL3503,
+    AlignementsArbresRu,
 )
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8Hru
 from envergo.moulinette.regulations.ep import (
@@ -35,6 +37,8 @@ from envergo.moulinette.regulations.urbanisme_haie import (
         (UrbanismeHaieL3503, "l350_3__urbanisme_haie"),
         (RegimeUniqueHaieRu, "ru__regime_unique_haie"),
         (AlignementsArbresL3503, "l350_3__alignement_arbres"),
+        (AlignementsArbresHru, "hru__alignement_arbres"),
+        (AlignementsArbresRu, "ru__alignement_arbres"),
         (ProtectionCaptagesHaieHru, "hru__protection_captages"),
         (ProtectionCaptagesHaieRu, "ru__protection_captages"),
         (ProtectionCaptagesHaieL3503, "l350_3__protection_captages"),
@@ -52,6 +56,8 @@ def test_slug_auto_generated_from_category_and_base_slug(evaluator_cls, expected
         (UrbanismeHaieL3503, "L350-3"),
         (AlignementsArbresL3503, "L350-3"),
         (AlignementsArbresCalvadosBeforeRu, "Hors régime unique"),
+        (AlignementsArbresHru, "Hors régime unique"),
+        (AlignementsArbresRu, "Régime unique"),
     ],
 )
 def test_choice_label_auto_appends_category_suffix(evaluator_cls, expected_suffix):
