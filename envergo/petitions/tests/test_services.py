@@ -24,6 +24,7 @@ from envergo.moulinette.regulations.conditionnalitepac import (
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    DemarcheNumeriqueFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
@@ -82,8 +83,8 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    config_haie = DCConfigHaieFactory()
-    config_haie.demarche_numerique.display_fields.update(
+    demarche_numerique = DemarcheNumeriqueFactory()
+    demarche_numerique.display_fields.update(
         {
             "project_url": "ABC123",
             "city": "Q2hhbXAtNDcyOTE4Nw==",
@@ -91,6 +92,8 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
             "pacage": "Q2hhbXAtNDU0MzkzOA==",
         }
     )
+    demarche_numerique.save()
+    DCConfigHaieFactory(demarche_numerique=demarche_numerique)
     petition_project = PetitionProjectFactory()
 
     # WHEN I fetch it from « Démarche numérique » for the first time
@@ -181,7 +184,13 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 ):
     petition_project = PetitionProjectFactory()
 
-    DCConfigHaieFactory()
+    incomplete_dn_config = DemarcheNumeriqueFactory(
+        display_fields={
+            "project_url": "ABC123",
+        }
+    )
+    DCConfigHaieFactory(demarche_numerique=incomplete_dn_config)
+
     get_context_from_dn(petition_project)
 
     args, kwargs = mock_notify.call_args

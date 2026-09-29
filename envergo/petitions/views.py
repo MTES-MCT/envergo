@@ -247,10 +247,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
-                config = self.get_project_config(obj)
-                city_item = get_field_data_from_dn_dossier("city", config, dossier)
+                dn_config = self.get_project_config(obj).demarche_numerique
+                city_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
                 organization_item = get_field_data_from_dn_dossier(
-                    "organization", config, dossier
+                    "organization", dn_config, dossier
                 )
                 obj.city = city_item.value if city_item else ""
                 obj.organization = organization_item.value if organization_item else ""
@@ -272,7 +272,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
             # For each department, extract the list of existing configs
             configs_by_dept = defaultdict(list)
-            for config in ConfigHaie.objects.filter(department_id__in=department_ids):
+            for config in ConfigHaie.objects.filter(
+                department_id__in=department_ids
+            ).select_related("demarche_numerique"):
                 configs_by_dept[config.department_id].append(config)
 
             return configs_by_dept
@@ -974,7 +976,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarche_numerique_instructor_url(
-            self.object.config.demarche_numerique_number
+            self.object.config.demarche_numerique.demarche_numerique_number
         )
 
         # Send message if info from « Démarche numérique » is not in project details
