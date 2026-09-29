@@ -11,11 +11,7 @@
   Au vu des informations saisies, le projet est motivé par les besoins d’un projet de travaux, d’ouvrages ou d’aménagements. À ce titre, il est susceptible d’être autorisé, après examen des justifications et instruction complète de la demande par l’administration.
 </p>
 
-{% if config.department.department == "14" %}
-  <p>
-    Dans le Calvados, la compensation exigée au titre de cette réglementation est un linéaire ou un nombre d’arbres, plantés en bord de voie, au moins équivalent à deux fois celui détruit.
-  </p>
-{% endif %}
+{% include 'moulinette/alignement_arbres/l350_3/_replantation_doctrine.html' %}
 
 {% include 'moulinette/_read_more_btn.html' with aria_controls=criterion.unique_slug %}
 

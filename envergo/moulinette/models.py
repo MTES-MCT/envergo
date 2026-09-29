@@ -9,15 +9,18 @@ from itertools import groupby
 from operator import attrgetter
 from typing import Literal
 
+import shapely
 from dateutil import parser
 from django.conf import settings
 from django.contrib.gis.db.models import MultiPolygonField
+from django.contrib.gis.db.models.aggregates import Union
 from django.contrib.gis.db.models.functions import Centroid, Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import Distance as D
 from django.contrib.postgres.constraints import ExclusionConstraint
 from django.contrib.postgres.fields import ArrayField, DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 from django.db import DataError, connection, models
 from django.db.backends.postgresql.psycopg_any import DateRange
 from django.db.models import (
@@ -992,6 +995,25 @@ class Criterion(models.Model):
         return actions_to_take
 
 
+class PerimeterQuerySet(models.QuerySet):
+    def clip(self, hedges: HedgeList) -> HedgeList:
+        """Return `hedges` with lengths reduced to their intersection with the union of these perimeters' zones."""
+        if not hedges:
+            return HedgeList()
+
+        qs = Zone.objects.filter(
+            map_id__in=self.values_list("activation_map_id", flat=True),
+            geometry__intersects=hedges.to_multilinestring(),
+        ).aggregate(geom=Union(Cast("geometry", MultiPolygonField())))
+        multipolygon = qs["geom"]
+        if multipolygon is None:
+            return HedgeList()
+
+        # Other conversion options throw a cryptic numpy error, so…
+        geom = shapely.from_wkt(multipolygon.wkt)
+        return hedges.clip_to(geom)
+
+
 class Perimeter(models.Model):
     """A perimeter is an administrative zone.
 
@@ -1002,6 +1024,8 @@ class Perimeter(models.Model):
     Perimeters are related to regulations (e.g Natura 2000 Marais de Vilaine).
 
     """
+
+    objects = PerimeterQuerySet.as_manager()
 
     backend_name = models.CharField(
         _("Backend name"), help_text=_("For admin usage only"), max_length=256
@@ -1344,6 +1368,13 @@ class ConfigHaie(ConfigBase):
         "Informations de contact AA L350-3",
         blank=True,
     )
+    aa_l3503_authorization_coefficient = models.FloatField(
+        "Coefficient de replantation - autorisation L350-3",
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="Coefficient multiplicateur appliqué au linéaire à planter "
+        "lorsque le résultat est « soumis à autorisation » (L350-3).",
+    )
 
     department_doctrine_html = models.TextField(
         "Champ html doctrine département", blank=True
@@ -1669,6 +1700,11 @@ class ConfigHaie(ConfigBase):
                 name="confighaie_prohibition_range_both_or_no_value",
                 violation_error_message="Période d’interdiction : précisez à la fois une date "
                 "de début et une date de fin, ou aucune date.",
+            ),
+            CheckConstraint(
+                name="aa_l3503_authorization_coefficient_gte_1",
+                violation_error_message="Le coefficient d'autorisation L350-3 doit être supérieur ou égal à 1.",
+                check=Q(aa_l3503_authorization_coefficient__gte=1),
             ),
         ]
 
