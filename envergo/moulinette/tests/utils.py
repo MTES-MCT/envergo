@@ -476,7 +476,10 @@ HEDGE_AREA_POLYGON = Polygon(
 )
 
 
-def setup_species_near_hedges(species_specs):
+DEFAULT_HABITAT_HEDGE_TYPES = ["degradee", "buissonnante", "arbustive", "mixte"]
+
+
+def setup_species_near_hedges(species_specs, hedge_types=None):
     """Create species with SpeciesHabitats on a map covering the default hedge area."""
     map_obj = MapFactory(map_type="species", zones=None)
     cd_refs = [spec["cd_ref"] for spec in species_specs]
@@ -493,7 +496,7 @@ def setup_species_near_hedges(species_specs):
         SpeciesHabitatFactory(
             species=sp,
             map=map_obj,
-            hedge_types=["degradee", "buissonnante", "arbustive", "mixte"],
+            hedge_types=hedge_types or DEFAULT_HABITAT_HEDGE_TYPES,
             level_of_concern=level,
         )
         species_list.append(sp)
