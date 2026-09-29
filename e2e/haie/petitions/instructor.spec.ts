@@ -8,9 +8,12 @@ test('Instructor can instruct a project', async ({ page }) => {
     await page.getByRole('textbox', { name: 'Password' }).press('Enter');
     await page.getByRole('link', { name: '123456' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Résumé du dossier' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Description du projet' })).toBeVisible();
     await expect(page.getByText('Informations saisies par le demandeur')).toBeVisible();
-    await expect(page.getByText('Réponse du simulateur').first()).toBeVisible();
+
+    await page.getByRole('link', { name: 'Résultat du simulateur' }).click();
+    await expect(page.getByRole('heading', { name: 'Résultat du simulateur' })).toBeVisible();
+    await expect(page.getByText('Résultat par réglementation')).toBeVisible();
     await expect(page.getByText('La plantation envisagée est adéquate')).toBeVisible();
 
     await page.getByRole('button', { name: 'Réglementations' }).click();
@@ -24,7 +27,7 @@ test('Instructor can instruct a project', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Acceptabilité de la plantation', level: 3 })).toBeVisible();
     await expect(page.getByText('Précisions sur le calcul d\'acceptabilité de la plantation')).toBeVisible();
 
-    await page.getByRole('link', { name: 'Dossier complet', exact: true }).click();
+    await page.getByRole('link', { name: 'Voir le dossier complet' }).click();
     await expect(page.getByRole('heading', { name: 'Dossier complet' })).toBeVisible();
     await expect(page.getByText('Formulaire détaillé et pièces jointes')).toBeVisible();
     await expect(page.getByText('Informations saisies par le demandeur')).toBeVisible();

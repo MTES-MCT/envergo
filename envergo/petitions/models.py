@@ -354,7 +354,7 @@ class PetitionProject(MoulinetteHaieUrlMixin, models.Model):
 
         def get_instructor_url():
             return reverse(
-                "petition_project_instructor_view", kwargs={"reference": self.reference}
+                "petition_project_summary", kwargs={"reference": self.reference}
             )
 
         def get_ds_url():

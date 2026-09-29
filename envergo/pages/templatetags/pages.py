@@ -82,6 +82,19 @@ def sidemenu_item(
     }
 
 
+@register.inclusion_tag("pages/_sidemenu_group_button.html", takes_context=True)
+def sidemenu_group_button(context, label, section, controls):
+    """Render the toggle of a collapsible side menu group.
+
+    - ``label``: the button text.
+    - ``section``: opens and marks the group current when it equals ``menu_section``
+      in the context.
+    - ``controls``: id of the collapse element the button toggles.
+    """
+    is_open = context.get("menu_section") == section
+    return {"label": label, "controls": controls, "is_open": is_open}
+
+
 @register.simple_tag(takes_context=True)
 def evalreq_menu(context, *event_data):
     """Generate html for the "Services urbanisme" collapsible menu."""
