@@ -95,7 +95,7 @@ def n2000_criteria(france_map, bizous_town_center):  # noqa
             title="Natura 2000 Haie > Haie Bizous",
             regulation=regulation,
             perimeter=perimeter,
-            evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+            evaluator="envergo.moulinette.regulations.natura2000_haie.Natura2000HaieHru",
             activation_map=france_map,
             activation_mode="hedges_intersection",
             evaluator_settings={"result": "soumis"},

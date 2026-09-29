@@ -376,21 +376,6 @@
   },
   {
     "model": "moulinette.criterion",
-    "pk": 106,
-    "fields": {
-      "backend_title": "Conditionnalité PAC > BCAE8",
-      "title": "Bonnes conditions agricoles et environnementales - Fiche VIII",
-      "regulation": 11,
-      "activation_map": 36,
-      "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
-      "weight": 1,
-      "activation_mode": "department_centroid",
-      "evaluator_settings": {}
-    }
-  },
-  {
-    "model": "moulinette.criterion",
     "pk": 101,
     "fields": {
       "backend_title": "EP > EP Aisne",
@@ -408,12 +393,12 @@
     "model": "moulinette.criterion",
     "pk": 102,
     "fields": {
-      "backend_title": "Natura 2000 Haie > Haie 02",
+      "backend_title": "Natura 2000 Haie > Haie 02 - Hors régime unique",
       "title": "Natura 2000",
       "regulation": 13,
       "activation_map": 36,
       "activation_distance": 0,
-      "evaluator": "envergo.moulinette.regulations.natura2000_haie.Natura2000Haie",
+      "evaluator": "envergo.moulinette.regulations.natura2000_haie.Natura2000HaieHru",
       "weight": 3,
       "activation_mode": "hedges_intersection",
       "evaluator_settings": {
@@ -453,6 +438,56 @@
     }
   },
   {
+    "model": "moulinette.criterion",
+    "pk": 106,
+    "fields": {
+      "backend_title": "Conditionnalité PAC > BCAE8",
+      "title": "Bonnes conditions agricoles et environnementales - Fiche VIII",
+      "regulation": 11,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.conditionnalitepac.Bcae8BeforeRu",
+      "weight": 1,
+      "activation_mode": "department_centroid",
+      "evaluator_settings": {}
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 107,
+    "fields": {
+      "backend_title": "Natura 2000 Haie > Haie 02 - L350-3",
+      "title": "Natura 2000",
+      "regulation": 13,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.natura2000_haie.Natura2000HaieL3503",
+      "weight": 3,
+      "activation_mode": "hedges_intersection",
+      "evaluator_settings": {
+        "result": "non_soumis",
+        "concerne_aa": "non"
+      }
+    }
+  },
+  {
+    "model": "moulinette.criterion",
+    "pk": 108,
+    "fields": {
+      "backend_title": "Natura 2000 Haie > Haie 02 - Régime unique",
+      "title": "Natura 2000",
+      "regulation": 13,
+      "activation_map": 36,
+      "activation_distance": 0,
+      "evaluator": "envergo.moulinette.regulations.natura2000_haie.Natura2000HaieRu",
+      "weight": 3,
+      "activation_mode": "hedges_intersection",
+      "evaluator_settings": {
+        "result": "non_soumis"
+      }
+    }
+  },
+  {
     "model": "moulinette.confighaie",
     "pk": 1,
     "fields": {
@@ -467,7 +502,9 @@
       "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
       "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
       "demarche_numerique_number": "123456",
-      "demarche_numerique_display_fields": {"project_url": "ABC123"}
+      "demarche_numerique_display_fields": {
+        "project_url": "ABC123"
+      }
     }
   },
   {
