@@ -30,6 +30,7 @@ from envergo.petitions.models import SESSION_KEY
 from envergo.petitions.regulations import _evaluator_instructors_information_registry
 from envergo.petitions.regulations.alignementarbres import (
     alignement_arbres_get_instructor_view_context,
+    alignement_arbres_regulation_get_instructor_view_context,
 )
 from envergo.petitions.regulations.conditionnalitepac import (
     bcae8_before_ru_get_instructor_view_context,
@@ -389,7 +390,7 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare à moins de 200\xa0m",
+                "label": "Mare ou pièce d’eau à moins de 500\xa0m",
             },
             "ripisylve": {
                 "TO_PLANT": [ANY],
@@ -405,9 +406,8 @@ def test_ep_aisne_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs "
-                "vieux arbres, fissurés ou "
-                "avec cavités",
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
             },
         },
         "replantation_coefficient": Decimal("1.5"),
@@ -529,7 +529,7 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "proximite_mare": {
                 "TO_PLANT": [],
                 "TO_REMOVE": [],
-                "label": "Mare à moins de 200\xa0m",
+                "label": "Mare ou pièce d’eau à moins de 500\xa0m",
             },
             "recemment_plantee": {
                 "TO_PLANT": None,
@@ -551,9 +551,8 @@ def test_ep_normandie_get_instructor_view_context(france_map):  # noqa
             "vieil_arbre": {
                 "TO_PLANT": None,
                 "TO_REMOVE": [ANY],
-                "label": "Contient un ou plusieurs "
-                "vieux arbres, fissurés ou "
-                "avec cavités",
+                "label": "Contient un ou plusieurs vieux arbres, fissurés ou avec cavités"
+                '<span class="fr-hint-text">Arbres à partir de 20\xa0cm de diamètre</span>',
             },
         },
         "ordered_hedge_types": [
@@ -812,11 +811,19 @@ def test_aa_get_instructor_view_context(france_map):  # noqa
     moulinette = MoulinetteHaie(moulinette_data)
     assert moulinette.is_valid(), moulinette.form_errors
     plantation_eval = PlantationEvaluator(moulinette, moulinette.catalog["haies"])
-    context = alignement_arbres_get_instructor_view_context(
-        moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
+    context = alignement_arbres_regulation_get_instructor_view_context(
+        moulinette.alignement_arbres._evaluator,
         petition_project,
         moulinette,
         plantation_eval,
+    )
+    context.update(
+        alignement_arbres_get_instructor_view_context(
+            moulinette.alignement_arbres.alignement_arbres_calvados_before_ru._evaluator,
+            petition_project,
+            moulinette,
+            plantation_eval,
+        )
     )
     assert "Modification de parcelle agricole" in context["motif"]
 
