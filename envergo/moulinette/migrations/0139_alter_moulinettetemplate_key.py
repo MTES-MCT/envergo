@@ -715,6 +715,10 @@ class Migration(migrations.Migration):
                         "sites_inscrits_haie/result_non_disponible.html",
                     ),
                     (
+                        "sites_inscrits_haie/result_soumis.html",
+                        "sites_inscrits_haie/result_soumis.html",
+                    ),
+                    (
                         "sites_proteges_haie/result_non_active.html",
                         "sites_proteges_haie/result_non_active.html",
                     ),

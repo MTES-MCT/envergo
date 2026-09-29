@@ -1,4 +1,5 @@
 from envergo.evaluations.models import RESULTS
+from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
     AlignementsOnlyMixin,
     HaieCriterionEvaluator,
@@ -15,9 +16,10 @@ class SitesClassesRegulation(AlignementsOnlyMixin, HaieRegulationEvaluator):
     }
 
 
-class SitesClassesHaie(HaieCriterionEvaluator):
+class SitesClassesHaieHru(HaieCriterionEvaluator):
     choice_label = "Sites classés > Sites classés Haie"
     base_slug = "sites_classes_haie"
+    category = HedgeCategory.hru
     plantation_conditions = []
 
     RESULT_MATRIX = {
@@ -37,3 +39,11 @@ class SitesClassesHaie(HaieCriterionEvaluator):
         which implies that at least one hedge intersects the perimeter.
         """
         return True
+
+
+class SitesClassesHaieRu(SitesClassesHaieHru):
+    category = HedgeCategory.ru
+
+
+class SitesClassesHaieL3503(SitesClassesHaieHru):
+    category = HedgeCategory.l350_3
