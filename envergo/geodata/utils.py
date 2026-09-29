@@ -720,8 +720,7 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
         )
         SELECT COALESCE(SUM(ST_LengthSpheroid(
             CASE WHEN fully_inside THEN hedge
-                 -- ClipByBox2D can emit invalid fragments; MakeValid
-                 -- protects the clip from a TopologyException.
+                 -- ClipByBox2D can output invalid shapes that crash ST_Intersection.
                  ELSE ST_Intersection(hedge, ST_MakeValid(ST_ClipByBox2D(
                           trunc, ST_Expand(ST_Envelope(hedge), 0.0001))))
             END,
@@ -746,13 +745,13 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
 def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
     """Return hedge geometries clipped to the truncated buffer for display.
 
-    Uses the same fast/slow path strategy as `query_hedge_length` — see its
-    docstring for the trunc sanitization and the performance shape:
+    Uses the same fast/slow path strategy as `query_hedge_length`. See its
+    docstring for the trunc sanitization and the geography/geometry split.
 
       Fast path — hedge covered by the truncated buffer: return as-is.
 
       Slow path — hedge crosses a boundary (coast, forest, circle edge):
-        clip against the revalidated bbox crop of the truncated buffer.
+        clip it to the truncated buffer.
 
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """

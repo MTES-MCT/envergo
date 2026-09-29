@@ -143,15 +143,9 @@ def test_density_around_lines_pinned_values(hedge_density_fixture):
 
 
 def test_query_hedge_length_excludes_forest_portion():
-    """Hedge crossing a forest hole should only count the non-forest portion.
+    """A hedge crossing a forest hole counts only its non-forest portion.
 
-    The terres émergées map has holes for forest zones. A hedge fully inside
-    the circle but partially crossing a forest hole should only count the
-    portion outside the hole.
-
-    Regression: the fast-path ST_CoveredBy check used the untruncated circle,
-    so hedges fully inside the circle had their full length counted even when
-    part of them fell in a forest hole.
+    Guards the fast path: a hedge inside the circle is not always inside the buffer.
     """
     # Straight horizontal hedge — easy to reason about when cut in half.
     hedge = MultiLineString(
@@ -192,7 +186,7 @@ def test_query_hedge_length_excludes_forest_portion():
 # Minimal real geometries from the production InternalError (5 km density
 # circle near Calvados ∩ terres émergées). The truncated ring is invalid: its
 # 4th and 7th vertices sit ~1e-8 apart — a near-zero-width spike — which GEOS
-# can't node, so ST_Difference raises a non-noded TopologyException.
+# can't node, so GEOS overlays on it raise a non-noded TopologyException.
 NON_NODED_CIRCLE = (
     "SRID=4326;POLYGON ((-0.6237620203873582 49.06185742287851, "
     "-0.6357821553197321 49.05794753296565, -0.648730704265775 49.05565240808752, "
@@ -212,19 +206,14 @@ NON_NODED_TRUNCATED = (
 
 @pytest.fixture
 def non_noded_geometries():
-    """Return (truncated_buffer, untruncated_circle) that crash ST_Difference."""
+    """Return (truncated_buffer, untruncated_circle) that crash unsanitized overlays."""
     circle = GEOSGeometry(NON_NODED_CIRCLE)
     truncated = GEOSGeometry(NON_NODED_TRUNCATED)
     return truncated, circle
 
 
 def test_query_hedge_length_handles_non_noded_difference(non_noded_geometries):
-    """Don't crash on an invalid truncated buffer.
-
-    The near-zero-width spike is un-nodable for GEOS: any overlay taking the
-    raw buffer raises a TopologyException — hence the ST_MakeValid in the
-    query's trunc sanitization.
-    """
+    """Don't crash on a buffer whose spike GEOS can't node."""
     truncated, circle = non_noded_geometries
     # A hedge inside the circle so the query processes a real row.
     LineFactory(
@@ -239,7 +228,7 @@ def test_query_hedge_length_handles_non_noded_difference(non_noded_geometries):
 def test_query_hedges_display_geojson_handles_non_noded_difference(
     non_noded_geometries,
 ):
-    """Same un-nodable buffer, same sanitization, in the display query."""
+    """Same buffer, same guarantee, in the display query."""
     truncated, circle = non_noded_geometries
     LineFactory(
         geometry=MultiLineString([LineString([(-0.66, 49.06), (-0.661, 49.06)])])
@@ -311,18 +300,15 @@ def test_query_hedges_display_geojson_handles_buffer_with_degenerate_hole(
     assert display["type"] == "MultiLineString"
 
 
-# Square buffer with a triangular hole (forest) touching the shell at one
-# point — valid for PostGIS, but ST_ClipByBox2D of this shape emits a ring
-# self-intersection at the touch point. Real land-trimmed buffers carry the
-# same hole-touching-shell pattern.
+# A forest hole touching the shell at one point is valid.
+# ST_ClipByBox2D turns it into a self-intersecting ring. Real buffers do this.
 CLIP_INVALID_BUFFER = (
     "SRID=4326;POLYGON("
     "(-0.095 49.25,-0.085 49.25,-0.085 49.27,-0.095 49.27,-0.095 49.25),"
     "(-0.095 49.26,-0.090 49.263,-0.090 49.257,-0.095 49.26))"
 )
 
-# Straight west-east hedge at the hole's touch latitude: enters the shell
-# through the hole, exits it at x=-0.090, ends inside the buffer.
+# Crosses the hole, so it takes the slow path through the invalid crop.
 CLIP_INVALID_HEDGE = MultiLineString(
     [LineString([(-0.0952, 49.26), (-0.0885, 49.26)])],
 )
@@ -364,12 +350,7 @@ def clip_invalid_geometries():
 
 
 def test_query_hedge_length_handles_invalid_bbox_crop(clip_invalid_geometries):
-    """An invalid ST_ClipByBox2D fragment must neither crash nor skew the clip.
-
-    The slow path crops the buffer to the hedge's bbox before intersecting;
-    the crop can be invalid even when the buffer is valid, and GEOS may raise
-    a TopologyException on it — hence the ST_MakeValid wrap around the crop.
-    """
+    """An invalid crop of a valid buffer must neither crash nor skew the clip."""
     truncated, circle = clip_invalid_geometries
     LineFactory(geometry=CLIP_INVALID_HEDGE)
 
