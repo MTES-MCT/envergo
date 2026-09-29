@@ -16,8 +16,8 @@ Linéaires de haie à détruire :
 
 Vous ne pouvez pas commencer le projet avant le {{ due_date|date:"DATE_FORMAT" }} ou avant la réponse officielle du Préfet.
 
-{% if prohibition_range_display %}Le projet ne peut pas non plus être réalisé pendant la période d’interdiction de travaux sur les haies dans le département, {{ prohibition_range_display }}, sauf cas particuliers prévus par l’art. R472-51 du code de l’environnement.
-{% else %}Le projet ne peut pas non plus être réalisé pendant la période d’interdiction de travaux sur les haies (fixée par arrêté préfectoral), sauf cas particuliers prévus par l’art. R472-51 du code de l’environnement.
+{% if prohibition_range_display %}Le projet ne peut pas non plus être réalisé pendant la période d’interdiction de travaux sur les haies dans le département, {{ prohibition_range_display }}, sauf cas particuliers prévus par l’art. R412-51 du code de l’environnement.
+{% else %}Le projet ne peut pas non plus être réalisé pendant la période d’interdiction de travaux sur les haies (fixée par arrêté préfectoral), sauf cas particuliers prévus par l’art. R412-51 du code de l’environnement.
 {% endif %}
 **Déroulement de la procédure**
 
