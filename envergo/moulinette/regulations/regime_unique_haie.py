@@ -151,3 +151,28 @@ class RegimeUniqueHaieRu(
     def get_replantation_coefficient(self):
         """Return the RU compensation ratio for replantation requirements."""
         return evaluator_replantation_coefficient(self)
+
+
+class RegimeUniqueHaieHru(HaieCriterionEvaluator):
+    """Criterion evaluator for hedges outside the régime unique (HRU category).
+
+    The régime unique procedure never applies to these hedges, so the
+    result is always "non_concerne".
+    """
+
+    choice_label = "Régime unique haie > Régime unique haie"
+    base_slug = "regime_unique_haie"
+    category = HedgeCategory.hru
+
+    def evaluate(self):
+        self._result_code, self._result = RESULTS.non_concerne, RESULTS.non_concerne
+
+
+class RegimeUniqueHaieL3503(RegimeUniqueHaieHru):
+    """Criterion evaluator for L350-3 roadside tree alignments.
+
+    The régime unique procedure never applies to these hedges, so the
+    result is always "non_concerne".
+    """
+
+    category = HedgeCategory.l350_3

@@ -27,6 +27,12 @@ from envergo.moulinette.tests.utils import (
     make_moulinette_haie_with_density,
 )
 
+REGIME_UNIQUE_HAIE_EVALUATOR_PATHS = (
+    "envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+    "envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieHru",
+    "envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieL3503",
+)
+
 
 @pytest.fixture(autouse=True)
 def regime_unique_haie_criteria(request, france_map):  # noqa
@@ -41,10 +47,11 @@ def regime_unique_haie_criteria(request, france_map):  # noqa
         CriterionFactory(
             title="Regime unique haie",
             regulation=regulation,
-            evaluator="envergo.moulinette.regulations.regime_unique_haie.RegimeUniqueHaieRu",
+            evaluator=evaluator_path,
             activation_map=france_map,
             activation_mode="department_centroid",
-        ),
+        )
+        for evaluator_path in REGIME_UNIQUE_HAIE_EVALUATOR_PATHS
     ]
     return criteria
 
@@ -87,8 +94,8 @@ def test_hru_criterion_non_concerne_in_ru_mode():
         ),
         (
             "alignement",
-            "non_disponible",
-            "non_disponible",
+            "non_concerne",
+            "non_concerne",
         ),
     ],
 )
@@ -109,18 +116,20 @@ def test_moulinette_evaluation_single_procedure(
 @pytest.mark.parametrize(
     "type_haie, expected_result",
     [
-        ("mixte", "non_disponible"),
-        ("alignement", "non_disponible"),
+        ("mixte", "non_concerne"),
+        ("alignement", "non_concerne"),
     ],
 )
 def test_moulinette_evaluation_outside_RU(type_haie, expected_result):
+    """Outside the régime unique, every hedge is HRU: the HRU criterion
+    activates and always returns non_concerne."""
     DCConfigHaieFactory()
     data = make_moulinette_haie_data(
         hedge_data=[make_hedge(type_haie=type_haie)], reimplantation="replantation"
     )
     moulinette = MoulinetteHaie(data)
     assert moulinette.regime_unique_haie.result == expected_result
-    assert moulinette.regime_unique_haie.criteria.count() == 0
+    assert moulinette.regime_unique_haie.criteria.count() == 1
 
 
 @pytest.mark.parametrize(
@@ -685,7 +694,9 @@ class TestResultsByCategory:
         assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
     def test_regulation_results_by_category_dc_mode(self):
-        """In DC mode, all categories are non_active."""
+        """In DC mode, every hedge is HRU: the HRU criterion activates and
+        returns non_concerne. RU and L350-3 have no hedges, so they stay
+        non_disponible."""
         DCConfigHaieFactory()
         data = make_moulinette_haie_data(
             hedge_data=[make_hedge(type_haie="mixte")],
@@ -693,7 +704,7 @@ class TestResultsByCategory:
         )
         moulinette = MoulinetteHaie(data)
         rbc = moulinette.regime_unique_haie.results_by_category
-        assert rbc[HedgeCategory.hru] == RESULTS.non_disponible
+        assert rbc[HedgeCategory.hru] == RESULTS.non_concerne
         assert rbc[HedgeCategory.ru] == RESULTS.non_disponible
         assert rbc[HedgeCategory.l350_3] == RESULTS.non_disponible
 
