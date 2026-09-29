@@ -1626,29 +1626,6 @@ class ConfigHaie(ConfigBase):
         blank=True,
     )
 
-    # @todo remove fields demarche_numerique_number demarche_numerique_pre_fill_config demarche_numerique_display_fields
-    demarche_numerique_number = models.IntegerField(
-        "Numéro de la « Démarche numérique »",
-        blank=True,
-        null=True,
-        help_text="Vous trouverez ce numéro en haut à droite de la carte de votre démarche dans la liste suivante : "
-        '<a href="https://demarche.numerique.gouv.fr/admin/procedures" target="_blank" rel="noopener">'
-        "https://demarche.numerique.gouv.fr/admin/procedures</a>",
-    )
-
-    demarche_numerique_pre_fill_config = models.JSONField(
-        "Configuration pré-remplissage sur « Démarche numérique »",
-        blank=True,
-        null=False,
-        default=list,
-    )
-
-    demarche_numerique_display_fields = models.JSONField(
-        blank=True,
-        null=False,
-        default=dict,
-    )
-
     def __str__(self):
         return self.department.get_department_display()
 
