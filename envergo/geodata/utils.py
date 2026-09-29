@@ -706,6 +706,7 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
                     ST_MakeValid(ST_GeomFromEWKT(%(truncated)s)), 3) AS trunc,
                 ST_GeomFromEWKT(%(circle)s) AS circ
         ),
+
         -- candidates: hedges inside the circle, with fast/slow path flag.
         candidates AS (
             SELECT
@@ -718,11 +719,21 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
             WHERE m.map_type = %(map_type)s
               AND ST_Intersects(l.geometry, inputs.circ)
         )
+
+        -- Sum the hedges lengths
         SELECT COALESCE(SUM(ST_LengthSpheroid(
-            CASE WHEN fully_inside THEN hedge
-                 -- ClipByBox2D can output invalid shapes that crash ST_Intersection.
-                 ELSE ST_Intersection(hedge, ST_MakeValid(ST_ClipByBox2D(
-                          trunc, ST_Expand(ST_Envelope(hedge), 0.0001))))
+            CASE WHEN fully_inside
+                -- Full length when hedge is fully inside the buffer
+                THEN hedge
+
+                -- Only the part inside the buffer otherwise
+                ELSE ST_Intersection(
+                    hedge,
+                    -- We make Postgis' job easier by pre-clipping the buffer
+                    -- to the hedge bounding box. It improves the query speed ~20%
+                    ST_MakeValid(ST_ClipByBox2D(
+                          trunc,
+                          ST_Expand(ST_Envelope(hedge), 0.0001))))
             END,
             %(spheroid)s
         )), 0)
