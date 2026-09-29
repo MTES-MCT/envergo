@@ -12,8 +12,10 @@ from envergo.moulinette.regulations.alignementarbres import (
 from envergo.moulinette.regulations.conditionnalitepac import Bcae8Hru
 from envergo.moulinette.regulations.ep import (
     EspecesProtegeesAisne,
+    EspecesProtegeesHru,
+    EspecesProtegeesL3503,
     EspecesProtegeesNormandie,
-    EspecesProtegeesRegimeUnique,
+    EspecesProtegeesRu,
     EspecesProtegeesSimple,
 )
 from envergo.moulinette.regulations.protection_captages import (
@@ -42,6 +44,9 @@ from envergo.moulinette.regulations.urbanisme_haie import (
         (ProtectionCaptagesHaieHru, "hru__protection_captages"),
         (ProtectionCaptagesHaieRu, "ru__protection_captages"),
         (ProtectionCaptagesHaieL3503, "l350_3__protection_captages"),
+        (EspecesProtegeesRu, "ru__ep_regime_unique"),
+        (EspecesProtegeesHru, "hru__ep_regime_unique"),
+        (EspecesProtegeesL3503, "l350_3__ep_regime_unique"),
     ],
 )
 def test_slug_auto_generated_from_category_and_base_slug(evaluator_cls, expected_slug):
@@ -79,8 +84,8 @@ def test_default_category_is_hru(evaluator_cls):
 
 
 def test_explicit_category_override():
-    assert EspecesProtegeesRegimeUnique.category == HedgeCategory.ru
-    assert EspecesProtegeesRegimeUnique.slug == "ru__ep_regime_unique"
+    assert EspecesProtegeesRu.category == HedgeCategory.ru
+    assert EspecesProtegeesRu.slug == "ru__ep_regime_unique"
 
 
 def test_calvados_before_ru_preserves_explicit_slug():

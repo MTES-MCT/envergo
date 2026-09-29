@@ -16,7 +16,7 @@ from envergo.hedges.services import PlantationEvaluator, PlantationResults
 from envergo.hedges.tests.conftest import make_mock_evaluator
 from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.models import MoulinetteHaie
-from envergo.moulinette.regulations.ep import EspecesProtegeesRegimeUnique
+from envergo.moulinette.regulations.ep import EspecesProtegeesRu
 from envergo.moulinette.regulations.regime_unique_haie import RegimeUniqueHaieRu
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
@@ -188,7 +188,7 @@ def test_ep_dispense_excludes_conditions_from_result(ep_ru_criterion, ru_criteri
     ep_conditions = [
         c
         for c in evaluator.conditions
-        if isinstance(c.criterion_evaluator, EspecesProtegeesRegimeUnique)
+        if isinstance(c.criterion_evaluator, EspecesProtegeesRu)
     ]
     assert ep_conditions == [], (
         f"EP dispense should produce zero conditions, but found: "
@@ -200,7 +200,7 @@ def test_ep_dispense_excludes_conditions_from_result(ep_ru_criterion, ru_criteri
         c
         for c in evaluator.invalid_conditions
         if c.criterion_evaluator
-        and isinstance(c.criterion_evaluator, EspecesProtegeesRegimeUnique)
+        and isinstance(c.criterion_evaluator, EspecesProtegeesRu)
     ]
     assert ep_invalid == []
 
@@ -263,7 +263,7 @@ class TestConditionDeduplication:
         min_length = next(
             c for c in evaluator.conditions if isinstance(c, RUMinLengthCondition)
         )
-        assert isinstance(min_length.criterion_evaluator, EspecesProtegeesRegimeUnique)
+        assert isinstance(min_length.criterion_evaluator, EspecesProtegeesRu)
 
     def test_all_conditions_contains_duplicates(self, evaluated):
         """all_conditions retains both evaluators' conditions (no deduplication)."""
@@ -290,7 +290,7 @@ class TestConditionDeduplication:
         assert ep_cond is not None
         assert ru_cond is not ep_cond
         assert isinstance(ru_cond.criterion_evaluator, RegimeUniqueHaieRu)
-        assert isinstance(ep_cond.criterion_evaluator, EspecesProtegeesRegimeUnique)
+        assert isinstance(ep_cond.criterion_evaluator, EspecesProtegeesRu)
 
     def test_ep_dispense_no_deduplication_needed(self, evaluated_dispense):
         """When EPRU is in dispense, only RU conditions exist — no duplicates."""

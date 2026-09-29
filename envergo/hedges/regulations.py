@@ -844,6 +844,10 @@ class SafetyCondition(PlantationCondition):
         self.result = not unsafe_hedges
         return self
 
+    def compare_strictness(self, other):
+        """A failing safety check is the stricter one."""
+        return not self.result and bool(other.result)
+
 
 class StrenghteningCondition(PlantationCondition):
     RATE = 0.2
