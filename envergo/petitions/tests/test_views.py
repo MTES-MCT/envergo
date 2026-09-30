@@ -171,12 +171,8 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
             "mapping": {"true": "Oui", "false": "Non"},
         }
     )
-    dn_config.pre_fill_config.append(
-        {"id": "def", "value": "sur_talus_d"}
-    )
-    dn_config.pre_fill_config.append(
-        {"id": "ghi", "value": "sur_talus_p"}
-    )
+    dn_config.pre_fill_config.append({"id": "def", "value": "sur_talus_d"})
+    dn_config.pre_fill_config.append({"id": "ghi", "value": "sur_talus_p"})
     dn_config.save()
     DCConfigHaieFactory(demarche_numerique_config=dn_config)
 
