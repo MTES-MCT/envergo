@@ -72,6 +72,11 @@
     // Minimum delay of 2 seconds
     const minDelayPromise = new Promise(resolve => setTimeout(resolve, 2000));
 
+    // Which invitee category is selected?
+    const invitee = document.querySelector('input[name="invitee-choice"]:checked').value;
+    const formData = new FormData();
+    formData.append("invitee", invitee);
+
     // Fetch content
     const fetchPromise = fetch(INVITATION_TOKEN_CREATE_URL, {
       method: 'POST',
@@ -79,6 +84,7 @@
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRFToken': CSRF_TOKEN,
       },
+      body: formData
     })
       .then(response => {
         if (!response.ok) {

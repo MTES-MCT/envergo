@@ -19,6 +19,12 @@
       <b>🔐 <a id="accept-invitation-url" href="{{ invitation_url }}">👉 Cliquez sur ce lien pour accéder au dossier</a></b>
     </p>
 
+    {% if invitee == "service" %}
+      <p>
+        <strong>Sans retour de votre part dans un délai de 45 jours, votre silence vaudra refus. Le cas échéant, le projet du demandeur sera refusé.</strong>
+      </p>
+    {% endif %}
+
     <p>
       En cas de difficulté d'accès ou de problème avec votre compte, n'hésitez pas à
       <a href="{{ invitation_contact_url }}">contacter notre support</a>.

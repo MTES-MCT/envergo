@@ -2351,6 +2351,13 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
                 request=request, template="haie/petitions/403.html", status=403
             )
 
+        # What is the target for the invitation?
+        invitee = request.POST.get("invitee")
+        if invitee not in ("service", "other"):
+            return TemplateResponse(
+                request=request, template="haie/petitions/403.html", status=400
+            )
+
         project = self.object
         token = InvitationToken.objects.create(
             created_by=request.user,
@@ -2385,6 +2392,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
             context={
                 "invitation_url": invitation_url,
                 "invitation_contact_url": invitation_contact_url,
+                "invitee": invitee,
             },
         )
 
