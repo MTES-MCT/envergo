@@ -35,7 +35,7 @@
     {% endif %}
 
     <section id="section-identity" class="fr-accordion fr-accordion--alt">
-      <h3 class="fr-accordion__title">
+      <h2 class="fr-accordion__title">
         <button type="button"
                 class="fr-accordion__btn"
                 aria-expanded="false"
@@ -43,11 +43,12 @@
           Informations sur le bénéficiaire
           <span>&nbsp;</span>
         </button>
-      </h3>
+      </h2>
       <div class="fr-collapse" id="accordion-identity">
         <div class="fr-mb-2w">
-          <h4 class="fr-mb-0">Bénéficiaire</h4>
-          {% display_dn_field "profil_beneficiaire" "inline" %}
+          <h3 class="fr-mb-0">Bénéficiaire</h3>
+          {% display_dn_field "beneficiaire_profil" "inline" %}
+          {% display_dn_field "pacage" "inline" %}
           {% if ds_info.applicant %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
@@ -82,7 +83,7 @@
         </div>
         {% if ds_info.representative %}
           <div class="fr-mb-2w">
-            <h4 class="fr-mb-0">Mandataire</h4>
+            <h3 class="fr-mb-0">Mandataire</h3>
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
@@ -99,7 +100,7 @@
         {% get_ds_field "telephone_contact" as telephone_contact %}
         {% if telephone_contact %}
           <div class="fr-mb-2w">
-            <h4 class="fr-mb-0">Contact</h4>
+            <h3 class="fr-mb-0">Contact</h3>
             {% display_dn_field "telephone_contact" "inline" %}
           </div>
         {% endif %}
