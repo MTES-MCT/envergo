@@ -16,8 +16,40 @@
 
       <div id="copy-success-message-container"></div>
 
-      <button id="generate-invitation-btn"
-              class="fr-btn fr-btn--icon-left fr-icon-user-add-line fr-mb-4w">Inviter une nouvelle personne</button>
+      <div class="alt-sad fr-p-3w fr-mb-3w">
+
+        <fieldset class="fr-fieldset" aria-labelledby="invitee-form-legend">
+          <legend class="fr-fieldset__legend--regular fr-fieldset__legend"
+                  id="invitee-form-legend">Qui invitez-vous ?</legend>
+          <div class="fr-fieldset__element">
+            <div class="fr-radio-group">
+              <input type="radio"
+                     id="invitee-service"
+                     name="invitee-choice"
+                     value="invitee-service"
+                     checked="checked">
+              <label class="fr-label" for="invitee-service">
+                Un service en charge de l'urbanisme (mairie, collectivité…)
+                <span class="fr-hint-text fr-message fr-message--warning">Pour ces services, <strong>le silence vaut refus</strong>. La mention sera ajoutée au message.</span>
+              </label>
+            </div>
+          </div>
+          <div class="fr-fieldset__element">
+            <div class="fr-radio-group">
+              <input type="radio"
+                     id="invitee-other"
+                     name="invitee-choice"
+                     value="invitee-other">
+              <label class="fr-label" for="invitee-other">
+                Une autre personne ou un autre service <span class="fr-hint-text">Pour les autres destinataires, le silence vaut accord</span>
+              </label>
+            </div>
+          </div>
+        </fieldset>
+
+        <button id="generate-invitation-btn"
+                class="fr-btn fr-btn--icon-left fr-icon-user-add-line">Inviter une nouvelle personne</button>
+      </div>
 
       <p>
         <strong>Liste des personnes ayant accédé au dossier :</strong>
