@@ -213,6 +213,80 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
     assert mock_post.call_args[1]["json"] == expected_body
 
 
+def get_pre_fill_value(field, catalog):
+    """Call `get_value_from_source` with a moulinette exposing the given catalog.
+
+    Returns the pre-filled value and the keys of the alerts raised on the way.
+    """
+    view = PetitionProjectCreate()
+    request = RequestFactory().get("")
+    view.request = request
+    request.alerts = PetitionProjectCreationAlert(request)
+    moulinette = Mock(catalog=catalog)
+    petition_project = Mock(moulinette_url="http://moulinette.url")
+    config = Mock(id=1)
+
+    value = view.get_value_from_source(petition_project, moulinette, field, config)
+    return value, [alert.key for alert in request.alerts]
+
+
+def test_pre_fill_value_from_moulinette_catalog_ignores_default():
+    field = {"id": "abc", "value": "urgence", "default": "non"}
+    value, alerts = get_pre_fill_value(field, {"urgence": "oui"})
+    assert value == "oui"
+    assert alerts == []
+
+
+def test_pre_fill_value_missing_from_catalog_uses_default():
+    field = {"id": "abc", "value": "urgence", "default": "non"}
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "non"
+    assert alerts == []
+
+
+def test_pre_fill_value_missing_from_catalog_without_default_raises_an_alert():
+    field = {"id": "abc", "value": "urgence"}
+    value, alerts = get_pre_fill_value(field, {})
+    assert value is None
+    assert alerts == ["missing_source_moulinette"]
+
+
+def test_pre_fill_default_value_does_not_need_to_be_in_the_mapping():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "inconnu",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "inconnu"
+    assert alerts == []
+
+
+def test_pre_fill_default_value_is_mapped_when_in_the_mapping():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "non",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "Non"
+    assert alerts == []
+
+
+def test_pre_fill_non_default_value_missing_from_mapping_raises_an_alert():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "inconnu",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {"urgence": "peut-etre"})
+    assert value == "peut-etre"
+    assert alerts == ["mapping_missing_value"]
+
+
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("requests.post")
 @patch("envergo.petitions.views.reverse")

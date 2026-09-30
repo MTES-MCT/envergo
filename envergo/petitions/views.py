@@ -693,8 +693,9 @@ class PetitionProjectCreate(FormView):
         mapping_key = {True: "true", False: "false"}.get(value, value)
 
         if mapping:
+            is_default_value = "default" in field and value == field["default"]
             # if the mapping object is not empty but do not contain the value, log an info
-            if mapping_key not in mapping:
+            if mapping_key not in mapping and not is_default_value:
                 logger.info(
                     "The value to pre-fill a dossier on « Démarche numérique » is not in the mapping",
                     extra={
