@@ -2393,6 +2393,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
                 "invitation_url": invitation_url,
                 "invitation_contact_url": invitation_contact_url,
                 "invitee": invitee,
+                "config": project.config,
             },
         )
 

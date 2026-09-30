@@ -3,7 +3,7 @@
 <div id="invitation-token-email-wrapper" class="fr-mb-3w">
   <p>Bonjour,</p>
   <p>
-    Le guichet unique de la haie de la DDT(M), en charge de l'instruction des projets de destruction de haies, a reçu
+    Le guichet unique de la haie ({{ config.guh_structure }}), en charge de l'instruction des projets de destruction de haies, a reçu
     une nouvelle demande.
     Nous vous invitons à consulter le dossier et à nous transmettre votre avis par retour d'email en répondant aux deux
     questions suivantes :
@@ -34,9 +34,7 @@
 
     <p>Merci par avance pour votre retour.</p>
     <p>Bien cordialement,</p>
-    <p>
-      <b>Le guichet unique de la haie de la DDT(M)</b>
-    </p>
+    {{ config.contact_info|safe }}
   </div>
 </div>
 
