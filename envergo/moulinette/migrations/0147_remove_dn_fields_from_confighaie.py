@@ -10,10 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveConstraint(
-            model_name="confighaie",
-            name="demarche_numerique_number_required_if_activated",
-        ),
         migrations.RemoveField(
             model_name="confighaie",
             name="demarche_numerique_display_fields",

@@ -59,6 +59,10 @@ class Migration(migrations.Migration):
             model_name="confighaie",
             name="project_url_id_required_if_demarche_number",
         ),
+        migrations.RemoveConstraint(
+            model_name="confighaie",
+            name="demarche_numerique_number_required_if_activated",
+        ),
         migrations.AddConstraint(
             model_name="demarchenumerique",
             constraint=models.CheckConstraint(
