@@ -71,7 +71,6 @@ from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
     PetitionProjectForm,
-    PetitionProjectInstructorEspecesProtegeesForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     RequestAdditionalInfoForm,
@@ -794,6 +793,7 @@ class PetitionProjectDetail(DetailView):
         context.update(moulinette.catalog)
         context["base_result"] = moulinette.get_result_template()
         context["is_read_only"] = True
+        context["show_species_cortege"] = True
 
         context["plantation_evaluation"] = PlantationEvaluator(
             moulinette, moulinette.catalog["haies"]
@@ -868,6 +868,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
     event_category = "dossier"
     event_action = None
     context_object_name = "petition_project"
+    # Side menu group holding the page: "project", "regulations" or None.
+    menu_section = None
 
     def get_object(self, queryset=None):
         """Return the cached object, fetching it only once per request."""
@@ -959,6 +961,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["has_unread_messages"] = (
             context["has_change_permission"] and self.object.has_unread_messages
         )
+        context["menu_section"] = self.menu_section
 
         matomo_custom_path = self.request.path.replace(
             self.object.reference, "+ref_projet+"
@@ -1115,10 +1118,34 @@ class BasePetitionProjectInstructorView(
             )
 
 
-class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailView):
-    """View for petition project instructor page"""
+class PetitionProjectSummaryView(BasePetitionProjectInstructorView, DetailView):
+    """Project summary"""
 
-    template_name = "haie/petitions/instructor_view.html"
+    template_name = "haie/petitions/project_summary.html"
+    menu_section = "project"
+    event_action = "consultation"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        moulinette = self.object.get_moulinette()
+        context["moulinette"] = moulinette
+        context.update(moulinette.catalog)
+
+        context.update(get_project_context(self.object, context["moulinette"]))
+        context["config"] = context["moulinette"].config
+        return context
+
+    def get_success_url(self):
+        return reverse("petition_project_summary", kwargs=self.kwargs)
+
+
+class PetitionProjectMoulinetteResultView(
+    BasePetitionProjectInstructorView, DetailView
+):
+    """What the evaluation result shows."""
+
+    template_name = "haie/petitions/moulinette_result.html"
+    menu_section = "project"
     event_action = "consultation"
 
     def get_context_data(self, **kwargs):
@@ -1136,7 +1163,7 @@ class PetitionProjectInstructorView(BasePetitionProjectInstructorView, DetailVie
         return context
 
     def get_success_url(self):
-        return reverse("petition_project_instructor_view", kwargs=self.kwargs)
+        return reverse("petition_project_summary", kwargs=self.kwargs)
 
 
 class BasePetitionProjectInstructorUpdateView(
@@ -1158,6 +1185,7 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
     """View for petition project instructor page"""
 
     template_name = "haie/petitions/instructor_view_regulation.html"
+    menu_section = "regulations"
 
     def get_context_data(self, **kwargs):
         """Insert current regulation in context dict"""
@@ -1183,14 +1211,6 @@ class PetitionProjectInstructorRegulationView(BasePetitionProjectInstructorUpdat
         )
         context["config"] = context["moulinette"].config
         return context
-
-    def get_form_class(self):
-        """Return the form class to use in this view."""
-        regulation_slug = self.kwargs.get("regulation")
-        if regulation_slug == "ep":
-            return PetitionProjectInstructorEspecesProtegeesForm
-        else:
-            return self.form_class
 
     def get_success_url(self):
         return reverse(
@@ -1432,7 +1452,7 @@ class PetitionProjectInstructorMessagerieMarkUnreadView(
 
             self.log_event_action(self.request)
 
-        url = reverse("petition_project_instructor_view", args=[self.object.reference])
+        url = reverse("petition_project_summary", args=[self.object.reference])
         return HttpResponseRedirect(url)
 
 
@@ -1480,6 +1500,7 @@ class PetitionProjectInstructorAlternativeView(
     """View for creating an alternative of a petition project by the instructor"""
 
     template_name = "haie/petitions/instructor_view_alternatives.html"
+    menu_section = "project"
     form_class = SimulationForm
 
     def get_form_kwargs(self):
@@ -1749,6 +1770,7 @@ class PetitionProjectInstructorAlternativeResultsView(
     event_action = None  # Avoid log_event
     simulation_object = None
     template_name = "haie/petitions/instructor_view_alternative_display.html"
+    menu_section = "project"
 
     def get_queryset(self):
         """Overrides queryset to avoid unused anotations"""
@@ -1992,7 +2014,7 @@ class PetitionProjectInstructorProcedureView(
     def schedule_closing_message(self, log):
         """Queue the closing message to the applicant for after commit.
 
-        Sent asynchronously so a DS messagerie failure never blocks the
+        Sent asynchronously so a DN messagerie failure never blocks the
         closing; the task retry policy handles transient errors.
         """
         transaction.on_commit(lambda: send_closing_message_async.delay(log.pk))
@@ -2162,6 +2184,13 @@ class PetitionProjectInstructorProcedureView(
         """Instructor received the requested additional info."""
 
         project = self.object
+        if not project.is_additional_information_requested:
+            messages.error(
+                self.request,
+                "Ce dossier n'est pas en attente de compléments, "
+                "l'instruction n'a pas été reprise.",
+            )
+            return HttpResponseRedirect(self.get_success_url())
 
         info_receipt_date = form.cleaned_data["info_receipt_date"]
         new_due_date = form.cleaned_data.get("due_date")
@@ -2181,6 +2210,14 @@ class PetitionProjectInstructorProcedureView(
             decision=project.decision,
         )
 
+        # Receiving the documents restarts the delay, so a new receipt goes out.
+        # ResumeProcessingForm requires the due date here, so it is never None.
+        sends_receipt = (
+            project.is_regime_unique() and project.stage == STAGES.instruction_d
+        )
+        if sends_receipt:
+            project.schedule_declaration_receipt(info_receipt_date, new_due_date)
+
         self.notify_resume_processing(project)
 
         log_event(
@@ -2192,8 +2229,28 @@ class PetitionProjectInstructorProcedureView(
             **get_matomo_tags(self.request),
         )
 
-        messages.success(self.request, "L'instruction du dossier a repris.")
+        self.notify_resume_succeeded(sends_receipt)
         return HttpResponseRedirect(self.get_success_url())
+
+    def notify_resume_succeeded(self, sends_receipt):
+        """Flash a success message, pointing to the messagerie when a receipt goes out."""
+        if not sends_receipt:
+            messages.success(self.request, "L'instruction du dossier a repris.")
+            return
+
+        messagerie_url = reverse(
+            "petition_project_instructor_messagerie_view",
+            args=[self.object.reference],
+        )
+        messages.success(
+            self.request,
+            format_html(
+                "L'instruction du dossier a repris. Le récépissé de déclaration sera "
+                "envoyé au demandeur dans quelques instants. "
+                '<a href="{}">Retrouvez-le dans la messagerie.</a>',
+                messagerie_url,
+            ),
+        )
 
     def notify_resume_processing(self, project):
         """Send Mattermost notification for instruction resumption."""
@@ -2299,7 +2356,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
             created_by=request.user,
             petition_project=project,
         )
-        url = reverse("petition_project_instructor_view", args=[project.reference])
+        url = reverse("petition_project_summary", args=[project.reference])
         invitation_url = update_qs(
             self.request.build_absolute_uri(url),
             {
@@ -2399,7 +2456,7 @@ class PetitionProjectAcceptInvitation(RedirectView):
         if not token or not self.TOKEN_PATTERN.match(token):
             raise SuspiciousOperation("Invalid invitation token format")
 
-        url = reverse("petition_project_instructor_view", args=[reference])
+        url = reverse("petition_project_summary", args=[reference])
         url_with_token = f"{url}?{settings.INVITATION_TOKEN_COOKIE_NAME}={token}"
         return url_with_token
 

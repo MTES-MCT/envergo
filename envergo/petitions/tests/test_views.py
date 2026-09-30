@@ -31,6 +31,11 @@ from envergo.moulinette.tests.factories import (
     RUConfigHaieFactory,
 )
 from envergo.moulinette.tests.test_analytics_urls import assert_matomo_url
+from envergo.moulinette.tests.utils import (
+    prefill_density_cache,
+    setup_ep_regime_unique,
+    setup_species_near_hedges,
+)
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import SimulationForm
 from envergo.petitions.models import (
@@ -59,8 +64,8 @@ from envergo.petitions.tests.factories import (
 from envergo.petitions.views import (
     PetitionProjectCreate,
     PetitionProjectCreationAlert,
-    PetitionProjectInstructorView,
     PetitionProjectList,
+    PetitionProjectSummaryView,
 )
 from envergo.urlmappings.models import UrlMapping
 from envergo.users.models import User
@@ -350,7 +355,7 @@ def test_petition_project_detail(mock_post, client, site, conditionnalite_pac_cr
     )
 
 
-def test_petition_project_instructor_view_requires_authentication(
+def test_petition_project_summary_requires_authentication(
     haie_user,
     inactive_haie_user_44,
     haie_user_44,
@@ -367,9 +372,7 @@ def test_petition_project_instructor_view_requires_authentication(
     project = PetitionProjectFactory()
     factory = RequestFactory()
     request = factory.get(
-        reverse(
-            "petition_project_instructor_view", kwargs={"reference": project.reference}
-        )
+        reverse("petition_project_summary", kwargs={"reference": project.reference})
     )
     request.site = site
     request.session = {}
@@ -380,7 +383,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an unauthenticated user
     request.user = AnonymousUser()
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response is a redirect to the login page
@@ -390,7 +393,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an authenticated user, by default no departments
     request.user = haie_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request, reference=project.reference
     )
     # THEN the response status code is 403
@@ -400,7 +403,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an authenticated user, with department 44, same as project, but not instructor
     request.user = inactive_haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -410,7 +413,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN a simple user with department 44
     request.user = haie_user_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -420,7 +423,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an instructor user with department 44
     request.user = haie_coordinator_44
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -432,7 +435,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # GIVEN an admin user, should be authorized
     request.user = admin_user
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -444,7 +447,7 @@ def test_petition_project_instructor_view_requires_authentication(
     # refresh the user instance: `guh_role` is a cached_property
     request.user = User.objects.get(pk=haie_user.pk)
     # WHEN get project instructor page
-    response = PetitionProjectInstructorView.as_view()(
+    response = PetitionProjectSummaryView.as_view()(
         request,
         reference=project.reference,
     )
@@ -497,6 +500,31 @@ def test_petition_project_instructor_notes_view(
     assert "Note mineure : Fa dièse" in project.instructor_free_mention
     # And a new SQL event is created
     assert Event.objects.filter(category="dossier", event="edition_notes").exists()
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_side_menu_opens_the_group_of_the_current_page(
+    mock_post, haie_user_44, client, site
+):
+    """The Projet group is open and current on its pages, closed on the others."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    client.force_login(haie_user_44)
+
+    def project_group_button(url_name):
+        url = reverse(url_name, kwargs={"reference": project.reference})
+        html = client.get(url).content.decode()
+        return re.search(r'<button[^>]*aria-controls="sidemenu-project"[^>]*>', html)[0]
+
+    button = project_group_button("petition_project_summary")
+    assert 'aria-expanded="true"' in button
+    assert 'aria-current="true"' in button
+
+    button = project_group_button("petition_project_instructor_notes_view")
+    assert 'aria-expanded="false"' in button
+    assert "aria-current" not in button
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -680,7 +708,7 @@ def test_instructor_notes_coordinator_empty_notes(
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
-def test_petition_project_instructor_view_reglementation_pages(
+def test_petition_project_summary_reglementation_pages(
     mock_post,
     haie_coordinator_44,
     haie_user,
@@ -725,16 +753,14 @@ def test_petition_project_instructor_view_reglementation_pages(
     assert "Maintien des haies PAC" in content
     assert "Réponse du simulateur" in content
 
-    # Test ep regulation url
     instructor_url = reverse(
         "petition_project_instructor_regulation_view",
         kwargs={"reference": project.reference, "regulation": "ep"},
     )
-    # Submit onagre
-    response = client.post(instructor_url, {"onagre_number": "1234567"})
+    response = client.post(instructor_url, {"instructor_free_mention": "Ma note"})
     assert response.url == instructor_url
     project.refresh_from_db()
-    assert project.onagre_number == "1234567"
+    assert project.instructor_free_mention == "Ma note"
 
     # When I go to a regulation page
     instructor_url = reverse(
@@ -756,14 +782,14 @@ def test_petition_project_instructor_view_reglementation_pages(
     response = client.post(
         instructor_url,
         {
-            "onagre_number": "7654321",
+            "instructor_free_mention": "Note interdite",
         },
     )
 
     # THEN i should get a 403 forbidden response
     assert response.status_code == 403
     project.refresh_from_db()
-    assert project.onagre_number == "1234567"
+    assert project.instructor_free_mention == "Ma note"
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -799,6 +825,126 @@ def test_regulation_view_includes_config_in_context(
     assert response.status_code == 200
     assert "config" in response.context
     assert response.context["config"].single_procedure is True
+
+
+def setup_ep_ru_project(france_map):  # noqa
+    """Create a RU petition project with an evaluated EP RU criterion.
+
+    Returns the project. The hedge type must be RU-compatible ("degradee"
+    is not offered under the régime unique), and the density cache is
+    pre-filled so the EP RU cascade yields a deterministic result
+    (derogation_simplifiee).
+    """
+    RUConfigHaieFactory()
+    setup_ep_regime_unique(france_map)
+    project = PetitionProjectFactory(
+        hedge_data=HedgeDataFactory(
+            hedges=[HedgeFactory(additionalData__type_haie="arbustive")]
+        ),
+    )
+    prefill_density_cache(project.hedge_data, density=60)
+    return project
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_species_details(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """The instructor EP page shows the majeur and cortege tables.
+
+    The species cortege must not appear inside the simulator response
+    section.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9301, "level": "fort", "common_name": "Fauvette des jardins"},
+            {"cd_ref": 9302, "level": "majeur", "common_name": "Pie-grièche grise"},
+        ]
+    )
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Instructor-only sections with the two species tables
+    assert "Espèces à enjeu majeur observées proche du projet" in content
+    assert "Pie-grièche grise" in content
+    assert "Cortège-type départemental (enjeux faible à très fort)" in content
+    assert "Voir la liste des espèces" in content
+    assert "Ces données sensibles n'ont pas été communiquées au demandeur" in content
+
+    # The simulator response section must not duplicate the species cortege
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        not in content
+    )
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_instructor_ep_page_species_details_without_sensitive_species(
+    mock_post, haie_coordinator_44, client, site, france_map  # noqa
+):
+    """Without majeur species, the majeur table shows its empty state.
+
+    The sensitive-data warning must not appear either.
+    """
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9303, "level": "fort", "common_name": "Fauvette des jardins"},
+        ]
+    )
+
+    url = reverse(
+        "petition_project_instructor_regulation_view",
+        kwargs={"reference": project.reference, "regulation": "ep"},
+    )
+    client.force_login(haie_coordinator_44)
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    assert "Aucune espèce spécifique disponible pour l'affichage" in content
+    assert (
+        "Ces données sensibles n'ont pas été communiquées au demandeur" not in content
+    )
+
+
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
+def test_petition_project_page_shows_species_cortege(
+    mock_post, client, site, france_map  # noqa
+):
+    """The read-only project page shows the cortege in the EP criterion result."""
+    mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
+    project = setup_ep_ru_project(france_map)
+    setup_species_near_hedges(
+        [
+            {"cd_ref": 9304, "level": "fort", "common_name": "Fauvette des jardins"},
+        ]
+    )
+
+    url = reverse("petition_project", kwargs={"reference": project.reference})
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert (
+        "Cortège-type d'espèces protégées présentes dans les haies à détruire"
+        in content
+    )
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -1552,7 +1698,6 @@ def test_petition_project_instructor_notes_form(
 
     # THEN i should get a 403 forbidden response
     assert response.status_code == 403
-    assert project.onagre_number == ""
     assert project.instructor_free_mention == ""
 
     # WHEN I post some instructor data with a department instructor
@@ -1598,7 +1743,7 @@ def test_instructor_view_multi_departments_alert(client, haie_coordinator_44):
     project = PetitionProjectFactory(reference="GHI789", hedge_data=hedges)
 
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1625,7 +1770,7 @@ def test_instructor_view_single_department_no_alert(client, haie_coordinator_44)
     hedges = HedgeDataFactory(hedges=[hedge_44])
     project = PetitionProjectFactory(reference="JKL101", hedge_data=hedges)
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
 
@@ -1676,7 +1821,7 @@ def test_petition_emergency_badge(
 
     # WHEN Instructor visits project instructor page
     project_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     res = client.get(project_url)
     # THEN badge "Urgence" is in content if "urgence" == "oui"
@@ -2382,6 +2527,131 @@ def test_petition_project_resume_instruction(
     clear_cached_properties(project)
     assert project.is_additional_information_requested is False
     assert project.due_date == new_due_date
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_of_a_declaration_sends_a_new_receipt(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """Receiving the documents restarts the delay, so a new receipt goes out."""
+
+    client.force_login(haie_coordinator_44)
+
+    today = date.today()
+    RUConfigHaieFactory()
+    # Already submitted, so only the resumption can send a receipt
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage="instruction_d",
+        original_due_date=today,
+        due_date=today + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    new_due_date = today + timedelta(days=60)
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": new_due_date,
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "L'instruction du dossier a repris." in content
+    assert "Le récépissé de déclaration sera envoyé au demandeur" in content
+
+    assert mock_receipt_task.delay.call_count == 1
+    assert mock_receipt_task.delay.call_args[0] == (
+        project.pk,
+        today.isoformat(),
+        new_due_date.isoformat(),
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_refused_without_a_suspension(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The button is hidden when nothing is awaited, so only a replayed post gets here."""
+
+    client.force_login(haie_coordinator_44)
+
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_d",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    assert project.is_additional_information_requested is False
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    today = date.today()
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    assert "Ce dossier n'est pas en attente de compléments" in res.content.decode()
+
+    assert not project.status_history.filter(type=LOG_TYPES.resumption).exists()
+    assert not mock_receipt_task.delay.called
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("envergo.petitions.tasks.send_declaration_receipt_async")
+def test_resume_instruction_outside_the_declaration_stage_sends_no_receipt(
+    mock_receipt_task, client, haie_coordinator_44, site
+):
+    """The receipt only covers the déclaration stage of the régime unique."""
+
+    client.force_login(haie_coordinator_44)
+
+    today = date.today()
+    RUConfigHaieFactory()
+    project = PetitionProjectFactory(
+        status__stage="instruction_a",
+        demarche_numerique_state=DOSSIER_STATES.en_instruction,
+    )
+    StatusLogFactory(
+        petition_project=project,
+        type=LOG_TYPES.suspension,
+        stage="instruction_a",
+        original_due_date=today,
+        due_date=today + timedelta(days=90),
+    )
+
+    status_url = reverse(
+        "petition_project_instructor_procedure_view",
+        kwargs={"reference": project.reference},
+    )
+    form_data = {
+        "action": "resume_processing",
+        "info_receipt_date": today,
+        "due_date": today + timedelta(days=60),
+    }
+    res = client.post(status_url, form_data, follow=True)
+
+    assert res.status_code == 200
+    content = res.content.decode()
+    assert "L'instruction du dossier a repris." in content
+    assert "récépissé" not in content
+    assert not mock_receipt_task.delay.called
 
 
 @pytest.mark.django_db(transaction=True)
@@ -4182,7 +4452,7 @@ def test_instructor_view_token_matomo_invitation(
         created_by=haie_coordinator_44,
     )
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
     # WHEN haie_user tries to get page using this token
@@ -4207,7 +4477,7 @@ def test_instructor_view_token_expired_403(
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(
-        "petition_project_instructor_view",
+        "petition_project_summary",
         kwargs={"reference": project.reference},
     )
 
@@ -4305,7 +4575,7 @@ def test_menu_consultations_link_visible_only_for_department_instructor(
     # Department instructor should see the link
     client.force_login(haie_coordinator_44)
     instructor_url = reverse(
-        "petition_project_instructor_view", kwargs={"reference": project.reference}
+        "petition_project_summary", kwargs={"reference": project.reference}
     )
     response = client.get(instructor_url)
     assert response.status_code == 200

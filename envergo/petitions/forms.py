@@ -54,21 +54,6 @@ class PetitionProjectForm(forms.ModelForm):
         ]
 
 
-class PetitionProjectInstructorEspecesProtegeesForm(forms.ModelForm):
-    """Form for adding instructor fields to a petition project."""
-
-    class Meta:
-        model = PetitionProject
-        fields = [
-            "onagre_number",
-        ]
-        widgets = {
-            "onagre_number": forms.TextInput(
-                attrs={"placeholder": "AAAA-MM-XXX-NNNNN"}
-            ),
-        }
-
-
 class PetitionProjectInstructorNotesForm(forms.ModelForm):
     """Form for adding instructor fields to a petition project."""
 

@@ -6,9 +6,9 @@
 {% load petitions %}
 {% load static %}
 
-{% block title %}Instruction du dossier – Résumé du dossier{% endblock %}
+{% block title %}Instruction du dossier – Description du projet{% endblock %}
 
-{% block project_view_title %}<h1>Résumé du dossier</h1>{% endblock %}
+{% block project_view_title %}<h1>Description du projet</h1>{% endblock %}
 
 {% block project_content %}
 
@@ -176,56 +176,6 @@
 
       {% include "hedges/_hedge_summary_table.html" with hedges=haies.hedges caption="Détail par type de haie ou alignement d'arbres" %}
 
-    </section>
-
-    <section id="section-moulinette-result" class="fr-my-4w">
-      <div class="title-with-link-container">
-        <h2 class="fr-mr-8w">Réponse du simulateur</h2>
-        <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right fr-mb-3w"
-           href="{% url 'petition_project' petition_project.reference %}">Voir la réponse complète</a>
-      </div>
-      <h3 class="fr-sr-only">Réglementations</h3>
-      <p class="fr-mb-4w">
-        <em>Avant de déposer son dossier et de remplir le formulaire complet,
-          le demandeur a réalisé une simulation en localisant et décrivant les haies à détruire.
-        Voici la réponse du simulateur sur les réglementations concernant le projet&nbsp;:</em>
-      </p>
-      <div class="fr-container--fluid fr-ml-5w">
-        {% for regulation in moulinette.regulations|dictsort:"display_order" %}
-          <div class="fr-mb-3w">
-            <a class="fr-link fr-icon-arrow-right-line fr-link--icon-right"
-               href="{% url 'petition_project_instructor_regulation_view' petition_project.reference regulation.slug %}">
-              <div class="fr-grid-row">
-                <h4 class="fr-h5 fr-col-12 fr-col-sm-7 fr-col-md-12 fr-col-lg-7 fr-mb-1v">{{ regulation.title }}</h4>
-                <span class="fr-col-12 fr-col-sm-5 fr-col-md-12 fr-col-lg-5">{% result_tag regulation.result regulation.result_tag_style %}</span>
-              </div>
-              <span>Aller au détail</span>
-            </a>
-          </div>
-        {% endfor %}
-      </div>
-    </section>
-    <section id="section-plantation-evaluation" class="fr-my-4w fr-ml-5w">
-      <h3 class="fr-h4 fr-mt-4w">Acceptabilité de la plantation</h3>
-      <p class="fr-mb-3w">
-        <em>Dans la simulation, le demandeur a également localisé et décrit les haies à planter en compensation de la
-          destruction.
-          Le simulateur vérifie une liste de conditions d'acceptabilité de la plantation. Voici ce qui a été
-        affiché :</em>
-      </p>
-      {% if plantation_evaluation.result == "adequate" %}
-        <div class="fr-alert fr-alert--success fr-mb-3w">
-          <h4 class="fr-alert__title">La plantation envisagée est adéquate</h4>
-          <p>Le projet de plantation apparaît acceptable au regard des haies détruites.</p>
-        </div>
-      {% else %}
-        <div class="fr-alert fr-alert--error fr-mb-3w">
-          <h4 class="fr-alert__title">La plantation envisagée n'est pas adéquate</h4>
-          <p>Le projet de plantation décrit n'apparaît pas acceptable au regard des haies détruites.</p>
-        </div>
-      {% endif %}
-
-      {% include 'haie/moulinette/_plantation_conditions.html' %}
     </section>
 
   </div>

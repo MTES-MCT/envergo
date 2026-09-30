@@ -41,7 +41,7 @@
                 <tr class="project">
                   <td>
                     <div>
-                      <a href="{% url 'petition_project_instructor_view' project.reference %}"
+                      <a href="{% url 'petition_project_summary' project.reference %}"
                          class="fr-link">{{ project.demarche_numerique_dossier_number|format_ds_number }}</a>
                       {% if not user|has_change_permission:project %}
                         <span class="fr-icon-eye-line fr-icon--sm"
