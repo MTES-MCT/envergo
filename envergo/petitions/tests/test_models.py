@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -149,6 +150,17 @@ def test_result_url_active_returns_project_url():
 class TestResultSnapshot:
     """Tests for ResultSnapshot model and automatic creation."""
 
+    @staticmethod
+    def fake_dossier(state):
+        """A « Démarche numérique » dossier, as the synchronization reads it."""
+        return {
+            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
+            "state": state,
+            "dateDepot": "2025-01-29T16:25:03+01:00",
+            "usager": {"email": "test@example.com"},
+            "demarche": {"number": 103363},
+        }
+
     def test_create_for_project(self):
         """ResultSnapshot.create_for_project creates a snapshot with correct data."""
         DCConfigHaieFactory()
@@ -245,15 +257,9 @@ class TestResultSnapshot:
         initial_count = ResultSnapshot.objects.filter(project=project).count()
 
         # Simulate dossier submission from « Démarche numérique »
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_construction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
 
         # A new snapshot should have been created because the moulinette_url is updated (adds date param)
         assert (
@@ -275,15 +281,9 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         alternative = SimulationFactory(project=project, comment="Alternative")
 
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_construction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(
+            self.fake_dossier("en_construction")
+        )
 
         alternative.refresh_from_db()
         assert "date=2025-01-29" in alternative.moulinette_url
@@ -301,15 +301,7 @@ class TestResultSnapshot:
         project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
         assert project.stage == "to_be_processed"
 
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_instruction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
 
         status_log = StatusLog.objects.filter(
             petition_project=project,
@@ -339,15 +331,7 @@ class TestResultSnapshot:
         )
         assert project.stage == "to_be_processed"
 
-        fake_dossier = {
-            "id": "RG9zc2llci0yMzE3ODQ0Mw==",
-            "state": "en_instruction",
-            "dateDepot": "2025-01-29T16:25:03+01:00",
-            "usager": {"email": "test@example.com"},
-            "demarche": {"number": 103363},
-        }
-
-        project.synchronize_with_demarche_numerique(fake_dossier)
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
 
         status_log = StatusLog.objects.filter(
             petition_project=project,
@@ -360,3 +344,37 @@ class TestResultSnapshot:
         project.refresh_from_db()
         assert project.stage == "instruction_h"
         assert project.due_date is None
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    def test_ru_dossier_submission_sends_the_declaration_receipt(self, mock_task):
+        """A « ru » dossier opens the two month tacit agreement delay on deposit."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        # Default factory category is "ru"
+        project = PetitionProjectFactory(demarche_numerique_state=DOSSIER_STATES.draft)
+
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+
+        assert mock_task.delay.call_count == 1
+        # Due two months after the dépôt
+        assert mock_task.delay.call_args[0] == (
+            project.pk,
+            "2025-01-29",
+            "2025-03-29",
+        )
+
+    @pytest.mark.haie
+    @patch("envergo.petitions.tasks.send_declaration_receipt_async")
+    def test_non_ru_dossier_submission_sends_no_receipt(self, mock_task):
+        """Outside the régime unique, no tacit agreement delay, hence no receipt."""
+        SiteFactory(domain="testserver", name="testserver")
+        DCConfigHaieFactory()
+        project = PetitionProjectFactory(
+            underscore_category="hru",
+            demarche_numerique_state=DOSSIER_STATES.draft,
+        )
+
+        project.synchronize_with_demarche_numerique(self.fake_dossier("en_instruction"))
+
+        assert not mock_task.delay.called
