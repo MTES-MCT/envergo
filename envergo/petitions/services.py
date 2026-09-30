@@ -10,9 +10,9 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
+from envergo.demarchenumerique.models import DemarcheConfig
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
-from envergo.moulinette.models import DemarcheNumerique
 from envergo.petitions.demarche_numerique.client import (
     DemarcheNumeriqueClient,
     DemarcheNumeriqueError,
@@ -150,7 +150,7 @@ def get_context_from_dn(petition_project) -> dict:
     """Get parts of context for instructor pages from Démarche numérique"""
     # Get ds details
     config = petition_project.config
-    dn_config = config.demarche_numerique
+    dn_config = config.demarche_numerique_config
     dossier = get_demarche_numerique_dossier(petition_project)
 
     city_item = ""
@@ -217,7 +217,7 @@ def get_context_from_dn(petition_project) -> dict:
     return context
 
 
-def get_field_data_from_dn_dossier(field_name, dn_config: DemarcheNumerique, dossier):
+def get_field_data_from_dn_dossier(field_name, dn_config: DemarcheConfig, dossier):
     """Get field value from dossier DN related to a given config and a DN dossier
     from a petition project.
 

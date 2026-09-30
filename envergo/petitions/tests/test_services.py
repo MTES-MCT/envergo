@@ -24,7 +24,7 @@ from envergo.moulinette.regulations.conditionnalitepac import (
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
-    DemarcheNumeriqueFactory,
+    DemarcheConfigFactory,
     RegulationFactory,
     RUConfigHaieFactory,
 )
@@ -83,7 +83,7 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
     # GIVEN a project with a valid dossier in « Démarche numérique »
     mock_post.return_value = GET_DOSSIER_FAKE_RESPONSE["data"]
 
-    demarche_numerique = DemarcheNumeriqueFactory()
+    demarche_numerique = DemarcheConfigFactory()
     demarche_numerique.display_fields.update(
         {
             "project_url": "ABC123",
@@ -184,7 +184,7 @@ def test_get_instructor_view_context_should_notify_if_config_is_incomplete(
 ):
     petition_project = PetitionProjectFactory()
 
-    incomplete_dn_config = DemarcheNumeriqueFactory(
+    incomplete_dn_config = DemarcheConfigFactory(
         display_fields={
             "project_url": "ABC123",
         }

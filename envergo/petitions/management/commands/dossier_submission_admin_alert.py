@@ -46,12 +46,12 @@ class Command(BaseCommand):
         # (even if the dept is not activated yet)
         configs_with_ds = (
             ConfigHaie.objects.filter(demarche_numerique__isnull=False)
-            .select_related("demarche_numerique")
+            .select_related("demarche_numerique_config")
             .valid_at(timezone.now().date())
         )
         for config in configs_with_ds:
-            demarche_number = config.demarche_numerique.demarche_numerique_number
-            project_url_id = config.demarche_numerique.display_fields.get(
+            demarche_number = config.demarche_numerique_config.demarche_numerique_number
+            project_url_id = config.demarche_numerique_config.display_fields.get(
                 "project_url", None
             )
             if not project_url_id:

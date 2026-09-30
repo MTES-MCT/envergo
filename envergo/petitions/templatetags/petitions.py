@@ -279,7 +279,7 @@ def get_ds_field(context, field_name):
     ds_dossier = get_demarche_numerique_dossier(petition_project)
     if ds_dossier is None:
         return None
-    dn_config = context.get("moulinette").config.demarche_numerique
+    dn_config = context.get("moulinette").config.demarche_numerique_config
 
     return get_field_data_from_dn_dossier(field_name, dn_config, ds_dossier)
 

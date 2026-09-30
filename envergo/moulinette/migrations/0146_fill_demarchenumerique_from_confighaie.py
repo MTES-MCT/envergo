@@ -21,7 +21,7 @@ def forwards_create_demarchenumerique_from_confighaie(apps, schema_editor):
                 "display_name": f"Démarche Numérique importée du département {config_haie.department.department}",
             },
         )
-        config_haie.demarche_numerique = dn
+        config_haie.demarche_numerique_config = dn
         config_haie.save()
 
 
@@ -34,13 +34,13 @@ def backwards_fill_confighaie_from_demarchenumerique(apps, schema_editor):
         .all()
     ):
         config_haie.demarche_numerique_number = (
-            config_haie.demarche_numerique.demarche_numerique_number
+            config_haie.demarche_numerique_config.demarche_numerique_number
         )
         config_haie.demarche_numerique_pre_fill_config = (
-            config_haie.demarche_numerique.pre_fill_config
+            config_haie.demarche_numerique_config.pre_fill_config
         )
         config_haie.demarche_numerique_display_fields = (
-            config_haie.demarche_numerique.display_fields
+            config_haie.demarche_numerique_config.display_fields
         )
 
         config_haie.save()

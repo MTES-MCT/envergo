@@ -488,7 +488,7 @@
     }
   },
   {
-    "model": "moulinette.demarchenumerique",
+    "model": "demarchenumerique.demarcheconfig",
     "pk": 1,
     "fields": {
       "demarche_numerique_number": "123456",

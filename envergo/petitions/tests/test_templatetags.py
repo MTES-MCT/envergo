@@ -7,7 +7,7 @@ from django.test import override_settings
 
 from envergo.moulinette.tests.factories import (
     DCConfigHaieFactory,
-    DemarcheNumeriqueFactory,
+    DemarcheConfigFactory,
 )
 from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
 from envergo.petitions.tests.factories import (
@@ -62,7 +62,7 @@ def test_display_dn_field(mock_post):
     """Test display Démarche numérique field template tag"""
 
     # Given a config haie with a « Démarche numérique » display field
-    dn_config = DemarcheNumeriqueFactory()
+    dn_config = DemarcheConfigFactory()
     dn_config.display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
@@ -107,7 +107,7 @@ def test_display_empty_ds_fields(mock_post):
 
     # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheNumeriqueFactory(
+        demarche_numerique=DemarcheConfigFactory(
             display_fields={
                 "project_url": "ABC123",
             }
@@ -138,7 +138,7 @@ def test_display_empty_ds_fields(mock_post):
 def test_display_dn_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheNumeriqueFactory(
+        demarche_numerique=DemarcheConfigFactory(
             display_fields={
                 "project_url": "ABC123",
                 "motivation": "Q3IMAGINARYBOYS",
@@ -169,7 +169,7 @@ def test_display_dn_field_invalid_field_id(mock_post):
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_dn_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
-    dn_config = DemarcheNumeriqueFactory()
+    dn_config = DemarcheConfigFactory()
     dn_config.display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",

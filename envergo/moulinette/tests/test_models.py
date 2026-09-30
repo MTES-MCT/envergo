@@ -14,7 +14,7 @@ from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigAmenagement,
     ConfigHaie,
-    DemarcheNumerique,
+    DemarcheConfig,
     MoulinetteAmenagement,
     MoulinetteHaie,
 )
@@ -159,7 +159,7 @@ def test_config_haie_with_demarche_numerique_number_has_missing_project_url_id(
     loire_atlantique_department,  # noqa
 ):
     """Check `project_url_id_required_if_demarche_number` constraint"""
-    demarche = DemarcheNumerique(demarche_numerique_number="123456789")
+    demarche = DemarcheConfig(demarche_numerique_number="123456789")
     with pytest.raises(ValidationError):
         demarche.validate_constraints()
 
@@ -168,7 +168,7 @@ def test_demarche_numerique_has_invalid_pre_fill_config(
     loire_atlantique_department,  # noqa
 ):
     with pytest.raises(ValidationError) as exc_info:
-        demarche = DemarcheNumerique(
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
             pre_fill_config={"foo": "bar"},
         )
@@ -178,7 +178,7 @@ def test_demarche_numerique_has_invalid_pre_fill_config(
     ]
 
     with pytest.raises(ValidationError) as exc_info:
-        demarche = DemarcheNumerique(
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
             pre_fill_config=[{"foo": "bar"}],
         )
@@ -189,7 +189,7 @@ def test_demarche_numerique_has_invalid_pre_fill_config(
     ]
 
     with pytest.raises(ValidationError) as exc_info:
-        demarche = DemarcheNumerique(
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
             pre_fill_config=[{"id": "123456789", "value": "bar"}],
         )
@@ -202,7 +202,7 @@ def test_demarche_numerique_has_invalid_pre_fill_config(
         ValidationError,
         match="Le mapping du champ dont l'id est 123456789 doit être un dictionnaire.",
     ):
-        demarche = DemarcheNumerique(
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
             pre_fill_config=[
                 {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
@@ -210,7 +210,7 @@ def test_demarche_numerique_has_invalid_pre_fill_config(
         )
         demarche.clean()
 
-    demarche = DemarcheNumerique(
+    demarche = DemarcheConfig(
         demarche_numerique_number="123456789",
         pre_fill_config=[
             {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
@@ -280,7 +280,7 @@ def test_get_demarche_numerique_value_sources(bizous_town_center):
         ),
     }
 
-    results = DemarcheNumerique.get_demarche_numerique_value_sources()
+    results = DemarcheConfig.get_demarche_numerique_value_sources()
     assert results["Résultats des critères"] == expected_results_criteria
 
 

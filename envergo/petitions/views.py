@@ -274,7 +274,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
             configs_by_dept = defaultdict(list)
             for config in ConfigHaie.objects.filter(
                 department_id__in=department_ids
-            ).select_related("demarche_numerique"):
+            ).select_related("demarche_numerique_config"):
                 configs_by_dept[config.department_id].append(config)
 
             return configs_by_dept
@@ -447,7 +447,7 @@ class PetitionProjectCreate(FormView):
             )
             return None, None
         self.request.alerts.config = config
-        demarche_id = config.demarche_numerique.demarche_numerique_number
+        demarche_id = config.demarche_numerique_config.demarche_numerique_number
 
         if not demarche_id:
             department = extract_param_from_url(moulinette_url, "department")
@@ -465,13 +465,13 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHE_NUMERIQUE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        for field in config.demarche_numerique.pre_fill_config:
+        for field in config.demarche_numerique_config.pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
                     "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
                     extra={
-                        "demarche numerique": config.demarche_numerique.id,
-                        "DN number": config.demarche_numerique.demarche_numerique_number,
+                        "demarche numerique": config.demarche_numerique_config.id,
+                        "DN number": config.demarche_numerique_config.demarche_numerique_number,
                         "field": field,
                     },
                 )
@@ -976,7 +976,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarche_numerique_instructor_url(
-            self.object.config.demarche_numerique.demarche_numerique_number
+            self.object.config.demarche_numerique_config.demarche_numerique_number
         )
 
         # Send message if info from « Démarche numérique » is not in project details

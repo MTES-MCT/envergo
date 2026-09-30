@@ -27,7 +27,7 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
-    DemarcheNumeriqueFactory,
+    DemarcheConfigFactory,
     HaieRegulationFactory,
     RUConfigHaieFactory,
 )
@@ -163,7 +163,7 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    demarche_numerique = DemarcheNumeriqueFactory()
+    demarche_numerique = DemarcheConfigFactory()
     demarche_numerique.pre_fill_config.append(
         {"id": "abc", "value": "plantation_adequate"}
     )
@@ -224,12 +224,12 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     today = date.today()
     # Expired config
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheNumeriqueFactory(demarche_numerique_number=111111),
+        demarche_numerique=DemarcheConfigFactory(demarche_numerique_number=111111),
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheNumeriqueFactory(demarche_numerique_number=222222),
+        demarche_numerique=DemarcheConfigFactory(demarche_numerique_number=222222),
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
 
