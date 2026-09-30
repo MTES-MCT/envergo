@@ -5,7 +5,10 @@ import pytest
 from django.template import Context, Template
 from django.test import override_settings
 
-from envergo.moulinette.tests.factories import DCConfigHaieFactory
+from envergo.moulinette.tests.factories import (
+    DCConfigHaieFactory,
+    DemarcheConfigFactory,
+)
 from envergo.petitions.templatetags.petitions import display_due_date, get_ds_field
 from envergo.petitions.tests.factories import (
     DEMARCHE_NUMERIQUE_FAKE,
@@ -59,13 +62,15 @@ def test_display_dn_field(mock_post):
     """Test display Démarche numérique field template tag"""
 
     # Given a config haie with a « Démarche numérique » display field
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_display_fields.update(
+    dn_config = DemarcheConfigFactory()
+    dn_config.display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
-    config.save()
+    dn_config.save()
+
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is available
@@ -102,9 +107,11 @@ def test_display_empty_ds_fields(mock_post):
 
     # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
-        demarche_numerique_display_fields={
-            "project_url": "ABC123",
-        }
+        demarche_numerique_config=DemarcheConfigFactory(
+            display_fields={
+                "project_url": "ABC123",
+            }
+        )
     )
     # Given a petition project
     petition_project = PetitionProjectFactory()
@@ -130,15 +137,14 @@ def test_display_empty_ds_fields(mock_post):
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_dn_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
-    config = DCConfigHaieFactory(
-        demarche_numerique_display_fields={"project_url": "ABC123"}
+    DCConfigHaieFactory(
+        demarche_numerique_config=DemarcheConfigFactory(
+            display_fields={
+                "project_url": "ABC123",
+                "motivation": "Q3IMAGINARYBOYS",
+            }
+        )
     )
-    config.demarche_numerique_display_fields.update(
-        {
-            "motivation": "Q3IMAGINARYBOYS",
-        }
-    )
-    config.save()
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is available
@@ -163,13 +169,14 @@ def test_display_dn_field_invalid_field_id(mock_post):
 @patch("envergo.petitions.demarche_numerique.client.DemarcheNumeriqueClient.execute")
 def test_display_dn_field_unavailable_dossier(mock_post):
     # Given config haie with display fields not existing id
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_display_fields.update(
+    dn_config = DemarcheConfigFactory()
+    dn_config.display_fields.update(
         {
             "motivation": "Q2hhbXAtNDUzNDE0Ng==",
         }
     )
-    config.save()
+    dn_config.save()
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is not available

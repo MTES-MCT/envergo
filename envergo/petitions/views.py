@@ -247,10 +247,10 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
-                config = self.get_project_config(obj)
-                city_item = get_field_data_from_dn_dossier("city", config, dossier)
+                dn_config = self.get_project_config(obj).demarche_numerique_config
+                city_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
                 organization_item = get_field_data_from_dn_dossier(
-                    "organization", config, dossier
+                    "organization", dn_config, dossier
                 )
                 obj.city = city_item.value if city_item else ""
                 obj.organization = organization_item.value if organization_item else ""
@@ -272,7 +272,9 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
 
             # For each department, extract the list of existing configs
             configs_by_dept = defaultdict(list)
-            for config in ConfigHaie.objects.filter(department_id__in=department_ids):
+            for config in ConfigHaie.objects.filter(
+                department_id__in=department_ids
+            ).select_related("demarche_numerique_config"):
                 configs_by_dept[config.department_id].append(config)
 
             return configs_by_dept
@@ -445,7 +447,7 @@ class PetitionProjectCreate(FormView):
             )
             return None, None
         self.request.alerts.config = config
-        demarche_id = config.demarche_numerique_number
+        demarche_id = config.demarche_numerique_config.demarche_numerique_number
 
         if not demarche_id:
             department = extract_param_from_url(moulinette_url, "department")
@@ -463,11 +465,15 @@ class PetitionProjectCreate(FormView):
 
         api_url = f"{settings.DEMARCHE_NUMERIQUE['PRE_FILL_API_URL']}demarches/{demarche_id}/dossiers"
         body = {}
-        for field in config.demarche_numerique_pre_fill_config:
+        for field in config.demarche_numerique_config.pre_fill_config:
             if "id" not in field or "value" not in field:
                 logger.error(
                     "Invalid pre-fill configuration for a dossier on « Démarche numérique »",
-                    extra={"haie config": config.id, "field": field},
+                    extra={
+                        "demarche numerique": config.demarche_numerique_config.id,
+                        "DN number": config.demarche_numerique_config.demarche_numerique_number,
+                        "field": field,
+                    },
                 )
 
                 self.request.alerts.append(
@@ -483,8 +489,7 @@ class PetitionProjectCreate(FormView):
             body[f"champ_{field['id']}"] = self.get_value_from_source(
                 project,
                 moulinette,
-                field["value"],
-                field.get("mapping", {}),
+                field,
                 config,
             )
 
@@ -548,15 +553,17 @@ class PetitionProjectCreate(FormView):
             )
         return redirect_url, dossier_number
 
-    def get_value_from_source(
-        self, petition_project, moulinette, source, mapping, config
-    ):
+    def get_value_from_source(self, petition_project, moulinette, field, config):
         """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
-        Available sources are listed by this method : ConfigHaie.get_demarche_numerique_value_sources()
+        Available sources are listed by this method : DemarcheNumerique.get_demarche_numerique_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
         Then it will map the value if a mapping is provided.
         """
+
+        source = field["value"]
+        mapping = field.get("mapping", {})
+
         if source == "url_moulinette":
             value = petition_project.moulinette_url
         elif source == "url_projet":
@@ -660,6 +667,8 @@ class PetitionProjectCreate(FormView):
         else:
             if source in moulinette.catalog:
                 value = moulinette.catalog[source]
+            elif "default" in field:
+                value = field["default"]
             else:
                 logger.warning(
                     "Unable to get the moulinette value to pre-fill a « Démarche numérique »",
@@ -680,9 +689,13 @@ class PetitionProjectCreate(FormView):
                 )
                 value = None
 
+        # The mapping is JSON, where keys are always strings: boolean values are looked up as "true" / "false"
+        mapping_key = {True: "true", False: "false"}.get(value, value)
+
         if mapping:
+            is_default_value = "default" in field and value == field["default"]
             # if the mapping object is not empty but do not contain the value, log an info
-            if value not in mapping:
+            if mapping_key not in mapping and not is_default_value:
                 logger.info(
                     "The value to pre-fill a dossier on « Démarche numérique » is not in the mapping",
                     extra={
@@ -703,7 +716,7 @@ class PetitionProjectCreate(FormView):
                     )
                 )
 
-        mapped_value = mapping.get(value, value)
+        mapped_value = mapping.get(mapping_key, value)
 
         # Handle boolean values as strings 😞
         return {
@@ -807,16 +820,7 @@ class PetitionProjectDetail(DetailView):
         context["demarche_numerique_date_depot"] = (
             self.object.demarche_numerique_date_depot
         )
-        plantation_url = reverse(
-            "input_hedges",
-            args=[
-                moulinette.department.department,
-                "read_only",
-                self.object.hedge_data.id,
-            ],
-        )
-        plantation_url = update_qs(plantation_url, {"source": "consultation"})
-        context["plantation_url"] = plantation_url
+        context["plantation_url"] = self.get_plantation_url(moulinette)
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(
@@ -850,6 +854,18 @@ class PetitionProjectDetail(DetailView):
         context = {**context, **moulinette.get_extra_context(self.request)}
 
         return context
+
+    def get_plantation_url(self, moulinette):
+        plantation_url = reverse(
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                moulinette.data["haies"],
+            ],
+        )
+        plantation_url = update_qs(plantation_url, {"source": "consultation"})
+        return plantation_url
 
 
 class PetitionProjectAutoRedirection(View):
@@ -930,16 +946,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context.update(get_context_from_dn(self.object))
         context.update(self.object.moulinette_data)
 
-        plantation_url = reverse(
-            "input_hedges",
-            args=[
-                self.object.department.department,
-                "read_only",
-                self.object.hedge_data.id,
-            ],
-        )
-        plantation_url = update_qs(plantation_url, {"source": "instruction"})
-        context["plantation_url"] = plantation_url
         context["invitation_register_url"] = update_qs(
             self.request.build_absolute_uri(
                 reverse(
@@ -970,7 +976,7 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             self.request.build_absolute_uri(matomo_custom_path), self.request
         )
         context["ds_url"] = self.object.get_demarche_numerique_instructor_url(
-            self.object.config.demarche_numerique_number
+            self.object.config.demarche_numerique_config.demarche_numerique_number
         )
 
         # Send message if info from « Démarche numérique » is not in project details
@@ -982,6 +988,11 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             )
 
         return context
+
+    def get_plantation_url(self, moulinette):
+        plantation_url = super().get_plantation_url(moulinette)
+        plantation_url = update_qs(plantation_url, {"source": "instruction"})
+        return plantation_url
 
 
 class BasePetitionProjectInstructorView(

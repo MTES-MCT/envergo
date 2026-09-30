@@ -14,6 +14,7 @@ from envergo.moulinette.forms import MoulinetteFormAmenagement
 from envergo.moulinette.models import (
     ConfigAmenagement,
     ConfigHaie,
+    DemarcheConfig,
     MoulinetteAmenagement,
     MoulinetteHaie,
 )
@@ -21,6 +22,7 @@ from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     DCConfigHaieFactory,
+    HaieRegulationFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -145,10 +147,10 @@ def test_moulinette_haie_has_specific_behavior():
     assert MoulinetteClass is MoulinetteHaie
 
 
-def test_config_haie_activated_has_missing_demarche_numerique_number(
+def test_config_haie_activated_has_missing_demarche_numerique(
     loire_atlantique_department,  # noqa
 ):
-    """Check `demarche_numerique_number_required_if_activated` constraint"""
+    """Check `demarche_numerique_required_if_activated` constraint"""
     config_haie = ConfigHaie(department=loire_atlantique_department, is_activated=True)
     with pytest.raises(ValidationError):
         config_haie.validate_constraints()
@@ -158,49 +160,41 @@ def test_config_haie_with_demarche_numerique_number_has_missing_project_url_id(
     loire_atlantique_department,  # noqa
 ):
     """Check `project_url_id_required_if_demarche_number` constraint"""
-    config_haie = ConfigHaie(
-        department=loire_atlantique_department, demarche_numerique_number="123456789"
-    )
+    demarche = DemarcheConfig(demarche_numerique_number="123456789")
     with pytest.raises(ValidationError):
-        config_haie.validate_constraints()
+        demarche.validate_constraints()
 
 
-def test_config_haie_has_invalid_demarche_numerique_config(
+def test_demarche_numerique_has_invalid_pre_fill_config(
     loire_atlantique_department,  # noqa
 ):
     with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config={"foo": "bar"},
+            pre_fill_config={"foo": "bar"},
         )
-        config_haie.clean()
+        demarche.clean()
     assert exc_info.value.messages == [
         "Cette configuration doit être une liste de champs (ou d'annotations privées) à pré-remplir"
     ]
 
     with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[{"foo": "bar"}],
+            pre_fill_config=[{"foo": "bar"}],
         )
-        config_haie.clean()
+        demarche.clean()
     assert exc_info.value.messages == [
         "Chaque champ (ou annotation privée) doit contenir au moins l'id côté « Démarche numérique » et la "
         "source de la valeur côté guichet unique de la haie."
     ]
 
     with pytest.raises(ValidationError) as exc_info:
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[{"id": "123456789", "value": "bar"}],
+            pre_fill_config=[{"id": "123456789", "value": "bar"}],
         )
-        config_haie.clean()
+        demarche.clean()
     assert exc_info.value.messages == [
         "La source de la valeur bar n'est pas valide pour le champ dont l'id est 123456789"
     ]
@@ -209,30 +203,25 @@ def test_config_haie_has_invalid_demarche_numerique_config(
         ValidationError,
         match="Le mapping du champ dont l'id est 123456789 doit être un dictionnaire.",
     ):
-        config_haie = ConfigHaie(
-            department=loire_atlantique_department,
-            is_activated=True,
+        demarche = DemarcheConfig(
             demarche_numerique_number="123456789",
-            demarche_numerique_pre_fill_config=[
+            pre_fill_config=[
                 {"id": "123456789", "value": "localisation_pac", "mapping": "bar"}
             ],
         )
-        config_haie.clean()
+        demarche.clean()
 
-    config_haie = ConfigHaie(
-        department=loire_atlantique_department,
-        is_activated=True,
+    demarche = DemarcheConfig(
         demarche_numerique_number="123456789",
-        demarche_numerique_pre_fill_config=[
+        pre_fill_config=[
             {"id": "123456789", "value": "localisation_pac", "mapping": {"foo": "bar"}}
         ],
     )
-    config_haie.clean()
+    demarche.clean()
 
 
-def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
+def test_get_demarche_numerique_value_sources(bizous_town_center):
     """Test get_demarche_numerique_value_sources method"""
-    config_haie = DCConfigHaieFactory()
     other_map = MapFactory()
     sites_proteges_regulation = RegulationFactory(
         regulation="sites_proteges_haie",
@@ -292,7 +281,7 @@ def test_config_haie_get_demarche_numerique_value_sources(bizous_town_center):
         ),
     }
 
-    results = config_haie.get_demarche_numerique_value_sources()
+    results = DemarcheConfig.get_demarche_numerique_value_sources()
     assert results["Résultats des critères"] == expected_results_criteria
 
 
@@ -860,3 +849,44 @@ def test_map_to_json_truncates_polygons_around_center():
     # The clipped polygon must be a strict, non-empty subset of the source.
     assert not truncated_geom.empty
     assert truncated_geom.area < full_geom.area
+
+
+@pytest.fixture
+def qc_source_criterion():
+    """A haie criterion exposing a « question complémentaire » (plan_gestion)."""
+    regulation = HaieRegulationFactory(regulation="reserves_naturelles")
+    return CriterionFactory(
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesRu",
+    )
+
+
+def test_value_sources_have_a_questions_complementaires_section(qc_source_criterion):
+    """`ConfigHaie.clean` finds the QC sources by matching this section title.
+
+    If you rename the section, update `qc_sources` in `ConfigHaie.clean` too.
+    """
+    sources = DemarcheConfig.get_demarche_numerique_value_sources()
+    qc_sections = {k: v for k, v in sources.items() if "Questions complémentaires" in k}
+
+    assert len(qc_sections) == 1
+    assert "plan_gestion" in {
+        key for section in qc_sections.values() for key, _ in section
+    }
+
+
+def test_demarchenumerique_config_qc_source_requires_a_default(
+    loire_atlantique_department, qc_source_criterion  # noqa
+):
+    """A QC source has no systematic value, so the pre-fill config must give a default."""
+
+    def build_config(field):
+        return DemarcheConfig(
+            demarche_numerique_number="123456789",
+            pre_fill_config=[field],
+        )
+
+    with pytest.raises(ValidationError, match="question complémentaire"):
+        build_config({"id": "123456789", "value": "plan_gestion"}).clean()
+
+    build_config({"id": "123456789", "value": "plan_gestion", "default": "non"}).clean()
