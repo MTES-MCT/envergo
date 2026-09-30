@@ -48,17 +48,13 @@
         <button type="button"
                 class="fr-accordion__btn"
                 aria-expanded="false"
-                aria-controls="contact-accordion-3-dossier">Instruction de votre dossier</button>
+                aria-controls="contact-accordion-3-guh">Réglementations applicables</button>
       </h2>
-      <div class="fr-collapse" id="contact-accordion-3-dossier">
-        <p class="fr-mb-1w">Pour toute question sur l'instruction de votre dossier :</p>
-        <ul>
-          <li>les réglementations applicables à votre projet</li>
-          <li>les délais d'instruction</li>
-          <li>les pièces complémentaires qui vous sont demandées</li>
-          <li>la décision de l'administration</li>
-        </ul>
-        <p>➔ Vous pouvez contacter le guichet unique de la haie dans votre département :</p>
+      <div class="fr-collapse" id="contact-accordion-3-guh">
+        <p class="fr-mb-1w">
+          Pour toute question sur les réglementations applicables à votre projet,
+          vous pouvez contacter le guichet unique de la haie dans votre département :
+        </p>
 
         {{ departments_data|json_script:"departments-data" }}
 
@@ -68,6 +64,29 @@
           <div class="fr-messages-group" id="department-messages" aria-live="polite"></div>
         </div>
         <div id="contacts-info-container" aria-live="polite"></div>
+      </div>
+    </section>
+    <section class="fr-accordion">
+      <h2 class="fr-accordion__title">
+        <button type="button"
+                class="fr-accordion__btn"
+                aria-expanded="false"
+                aria-controls="contact-accordion-4-dn">Instruction de votre dossier</button>
+      </h2>
+      <div class="fr-collapse" id="contact-accordion-4-dn">
+        <p class="fr-mb-1w">Pour toute question sur l'instruction de votre dossier :</p>
+        <ul>
+          <li>les réglementations applicables à votre projet</li>
+          <li>les délais d'instruction</li>
+          <li>les pièces complémentaires qui vous sont demandées</li>
+          <li>la décision de l'administration</li>
+        </ul>
+        <p>➔ Vous pouvez contacter le guichet unique de la haie depuis votre compte Démarche Numérique</p>
+        <a href="https://demarche.numerique.gouv.fr/dossiers"
+           target="_blank"
+           rel="noopener external"
+           class="fr-btn fr-btn--secondary fr-icon-icon-external-link-fill fr-btn--icon-right">Accéder à Démarche Numérique</a>
+
       </div>
     </section>
   </div>

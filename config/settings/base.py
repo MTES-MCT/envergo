@@ -451,7 +451,7 @@ ENVERGO_AMENAGEMENT_DOMAIN = env(
 ENVERGO_HAIE_DOMAIN = env("DJANGO_ENVERGO_HAIE_DOMAIN", default="haie.beta.gouv.fr")
 
 CONTACT_TEAM_ANCHOR = "#contact-accordion-2-equipe"
-CONTACT_DOSSIER_ANCHOR = "#contact-accordion-3-dossier"
+CONTACT_GUH_ANCHOR = "#contact-accordion-3-guh"
 
 MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH = env.int(
     "MAX_HEDGES_DRAWING_TO_REMOVE_TOTAL_LENGTH", default=10000
