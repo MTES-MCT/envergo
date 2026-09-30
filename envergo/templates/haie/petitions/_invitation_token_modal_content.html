@@ -56,7 +56,7 @@
 <div id="invitation-token-email-html">
   <p>Bonjour,</p>
   <p>
-    Le guichet unique de la haie de la DDT(M), en charge de l'instruction des projets de destruction de haies, a reçu
+    Le guichet unique de la haie ({{ config.guh_structure }}), en charge de l'instruction des projets de destruction de haies, a reçu
     une nouvelle demande.
     Nous vous invitons à consulter le dossier et à nous transmettre votre avis par retour d'email en répondant aux deux
     questions suivantes :
@@ -71,6 +71,12 @@
     <b>🔐 <a id="accept-invitation-url" href="{{ invitation_url }}">👉 Cliquez sur ce lien pour accéder au dossier</a></b>
   </p>
 
+  {% if invitee == "service" %}
+    <p>
+      <strong>Sans retour de votre part dans un délai de 45 jours, votre silence vaudra refus. Le cas échéant, le projet du demandeur sera refusé.</strong>
+    </p>
+  {% endif %}
+
   <p>
     En cas de difficulté d'accès ou de problème avec votre compte, n'hésitez pas à
     <a href="{{ invitation_contact_url }}">contacter notre support</a>.
@@ -80,9 +86,7 @@
 
   <p>Merci par avance pour votre retour.</p>
   <p>Bien cordialement,</p>
-  <p>
-    <b>Le guichet unique de la haie de la DDT(M)</b>
-  </p>
+  {{ config.contact_info|safe }}
 </div>
 
 <pre id="invitation-token-email-text">Bonjour,
@@ -96,6 +100,10 @@ Le guichet unique de la haie de la DDT(M), en charge de l'instruction des projet
 
     👉 <span id="accept-invitation-url-text">{{ invitation_url }}</span>
 
+      {% if invitee == "service" %}
+      **Sans retour de votre part dans un délai de 45 jours, votre silence vaudra refus. Le cas échéant, le projet du demandeur sera refusé.**
+  {% endif %}
+
 En cas de difficulté d'accès ou de problème avec votre compte, n'hésitez pas à contacter notre support : {{ invitation_contact_url }}
 
 Pour toute question sur le projet, vous pouvez nous les poser directement par retour d'email.
@@ -104,7 +112,7 @@ Merci par avance pour votre retour.
 
 Bien cordialement,
 
-Le guichet unique de la haie de la DDT(M)
+Le guichet unique de la haie.
 </pre>
 
 <p class="text-center fr-mt-2w">
