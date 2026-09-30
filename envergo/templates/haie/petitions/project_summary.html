@@ -124,18 +124,48 @@
           dossier
         complet</a>
       </div>
-
+      <h3 class="fr-mt-3w">Contexte du projet</h3>
+      {% display_dn_field "city" "inline" %}
       <p>
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
-
       <p class="fr-my-2w">{% field_summary moulinette.triage_form.contexte %}</p>
       {% if moulinette.triage_form.contexte.value == "projet-urba" %}
         {% display_dn_field "description_projet_urba" "inline" label="Description du projet de construction ou d’aménagement" %}
+        {% display_dn_field "auto_urba_dejadepose" "inline" %}
         {% display_dn_field "numero_auto_urba" "inline" label="N° d’autorisation d’urbanisme" %}
       {% endif %}
 
-      <h6 class="fr-mt-3w">Linéaires</h6>
+      <h3 class="fr-mt-3w">Procédure d'urgence</h3>
+      {% display_dn_field "urgence" "inline" %}
+      {% display_dn_field "urgence_motivation" "inline" %}
+      {% display_dn_field "urgence_prefet_informe" "inline" %}
+      {% display_dn_field "urgence_prefet_informe_date" "inline" %}
+      {% display_dn_field "urgence_prefet_informe_moyen" "inline" %}
+      {% display_dn_field "urgence_prescriptions" "inline" %}
+      {% display_dn_field "urgence_prescriptions_suivies" "inline" %}
+      {% display_dn_field "urgence_prescriptions_pourquoinon" "inline" %}
+      {% display_dn_field "urgence_date_destruction" "inline" %}
+
+      <h3 class="fr-mt-3w">Détail du projet</h3>
+      {% display_dn_field "proprio_qualite" "inline" %}
+      {% display_dn_field "proprio_qualite_autre" "inline" %}
+
+      {% display_dn_field "date_travaux" "inline" %}
+
+      {% display_dn_field "photos" "inline" %}
+      {% display_dn_field "urgence_photo" "inline" %}
+
+      {% display_dn_field "motivation" "inline" %}
+
+      {% display_dn_field "compensation_financee" "inline" %}
+      {% display_dn_field "compensation_organisme_financeur" "inline" %}
+
+      {% display_dn_field "tech_bocager" "inline" %}
+      {% display_dn_field "tech_bocager_organisme" "inline" %}
+      {% display_dn_field "tech_bocager_rapport" "inline" %}
+
+      <h6 class="fr-mt-3w">Linéaires concernés</h6>
 
       <div class="fr-my-3w">
         <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
