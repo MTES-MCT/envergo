@@ -495,14 +495,12 @@ def fill_polygon_stats():
     This is only used manually when the need arises, for debugging purpose.
     """
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
+        cursor.execute("""
         UPDATE geodata_zone
         SET
             area = ST_Area(geometry),
             npoints = ST_NPoints(geometry::geometry);
-        """
-        )
+        """)
 
 
 def get_catchment_area(lng, lat):
@@ -756,13 +754,7 @@ def query_hedge_length(truncated_buffer, untruncated_circle):
 def query_hedges_display_geojson(truncated_buffer, untruncated_circle):
     """Return hedge geometries clipped to the truncated buffer for display.
 
-    Uses the same fast/slow path strategy as `query_hedge_length`. See its
-    docstring for the trunc sanitization and the geography/geometry split.
-
-      Fast path — hedge covered by the truncated buffer: return as-is.
-
-      Slow path — hedge crosses a boundary (coast, forest, circle edge):
-        clip it to the truncated buffer.
+    See `query_hedge_length` for details
 
     Returns a parsed MultiLineString dict, or None if no hedges match.
     """
