@@ -47,6 +47,7 @@
       <div class="fr-collapse" id="accordion-identity">
         <div class="fr-mb-2w">
           <h4 class="fr-mb-0">Bénéficiaire</h4>
+          {% display_dn_field "profil_beneficiaire" "inline" %}
           {% if ds_info.applicant %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
@@ -59,6 +60,8 @@
                 {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
               </div>
             </div>
+            {% display_dn_field "beneficiaire_date_naissance" "inline" %}
+            {% display_dn_field "beneficiaire_adresse_perso" "inline" %}
           {% endif %}
           {% if ds_info.organization %}
             <div class="champ-row--inline fr-my-2w">
@@ -72,9 +75,10 @@
                 {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
               </div>
             </div>
+            {% display_dn_field "beneficiaire_forme_juridique" "inline" %}
+            {% display_dn_field "beneficiaire_siret" "inline" %}
+            {% display_dn_field "beneficiaire_adresse_siege" "inline" %}
           {% endif %}
-          {% display_dn_field "profil_beneficiaire" "inline" %}
-          {% display_dn_field "adresse_beneficiaire" "inline" %}
         </div>
         {% if ds_info.representative %}
           <div class="fr-mb-2w">
