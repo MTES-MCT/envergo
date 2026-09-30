@@ -342,3 +342,16 @@ class TestContactHaie:
             in data["contacts_info"]
         )
         assert data["is_config_valid"] is True
+
+
+class TestNotFoundPage:
+    """The 404 page must render on both sites, where no view matched the path."""
+
+    def test_amenagement_site_renders_404(self, client):
+        response = client.get("/cette-page-nexiste-pas/")
+        assert response.status_code == 404
+
+    @pytest.mark.haie
+    def test_haie_site_renders_404(self, client):
+        response = client.get("/cette-page-nexiste-pas/")
+        assert response.status_code == 404
