@@ -2352,7 +2352,7 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
             )
 
         # What is the target for the invitation?
-        invitee = request.POST.get("invitee")
+        invitee = request.POST.get("invitee", "service")
         if invitee not in ("service", "other"):
             return TemplateResponse(
                 request=request, template="haie/petitions/403.html", status=400
