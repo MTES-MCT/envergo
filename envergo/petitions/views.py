@@ -247,7 +247,7 @@ class PetitionProjectList(LoginRequiredMixin, ListView):
         for obj in context["object_list"]:
             dossier = obj.prefetched_dossier
             if dossier:
-                dn_config = self.get_project_config(obj).demarche_numerique
+                dn_config = self.get_project_config(obj).demarche_numerique_config
                 city_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
                 organization_item = get_field_data_from_dn_dossier(
                     "organization", dn_config, dossier

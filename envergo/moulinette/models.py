@@ -1474,8 +1474,9 @@ class ConfigHaie(ConfigBase):
         verbose_name_plural = "Configs haie"
         constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
-                check=Q(is_activated=False) | Q(demarche_numerique__isnull=False),
-                name="demarche_numerique_required_if_activated",
+                check=Q(is_activated=False)
+                | Q(demarche_numerique_config__isnull=False),
+                name="demarche_numerique_config_required_if_activated",
             ),
             CheckConstraint(
                 name="single_procedure_requires_coeff_compensation",

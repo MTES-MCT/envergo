@@ -174,7 +174,7 @@ def get_context_from_dn(petition_project) -> dict:
             },
         )
         admin_url = reverse(
-            "admin:moulinette_demarchenumerique_change",
+            "admin:demarchenumerique_demarcheconfig_change",
             args=[dn_config.id],
         )
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
@@ -340,8 +340,8 @@ def declared_commune(petition_project):
     if not dossier:
         return ""
 
-    config = petition_project.config
-    commune_item = get_field_data_from_dn_dossier("city", config, dossier)
+    dn_config = petition_project.config.demarche_numerique_config
+    commune_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
     return commune_item.value if commune_item else ""
 
 

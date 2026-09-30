@@ -146,7 +146,7 @@ def test_moulinette_haie_has_specific_behavior():
     assert MoulinetteClass is MoulinetteHaie
 
 
-def test_config_haie_activated_has_missing_demarche_numerique_(
+def test_config_haie_activated_has_missing_demarche_numerique(
     loire_atlantique_department,  # noqa
 ):
     """Check `demarche_numerique_required_if_activated` constraint"""

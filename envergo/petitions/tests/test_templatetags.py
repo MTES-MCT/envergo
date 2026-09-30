@@ -70,7 +70,7 @@ def test_display_dn_field(mock_post):
     )
     dn_config.save()
 
-    DCConfigHaieFactory(demarche_numerique=dn_config)
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is available
@@ -107,7 +107,7 @@ def test_display_empty_ds_fields(mock_post):
 
     # Given a config haie with empty « Démarche numérique » display fields
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheConfigFactory(
+        demarche_numerique_config=DemarcheConfigFactory(
             display_fields={
                 "project_url": "ABC123",
             }
@@ -138,7 +138,7 @@ def test_display_empty_ds_fields(mock_post):
 def test_display_dn_field_invalid_field_id(mock_post):
     # Given config haie with display fields not existing id
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheConfigFactory(
+        demarche_numerique_config=DemarcheConfigFactory(
             display_fields={
                 "project_url": "ABC123",
                 "motivation": "Q3IMAGINARYBOYS",
@@ -176,7 +176,7 @@ def test_display_dn_field_unavailable_dossier(mock_post):
         }
     )
     dn_config.save()
-    DCConfigHaieFactory(demarche_numerique=dn_config)
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
     # Given a petition project
     petition_project = PetitionProjectFactory()
     # Given « Démarche numérique » dossier is not available

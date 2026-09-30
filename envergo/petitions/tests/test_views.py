@@ -163,14 +163,12 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    demarche_numerique = DemarcheConfigFactory()
-    demarche_numerique.pre_fill_config.append(
-        {"id": "abc", "value": "plantation_adequate"}
-    )
-    demarche_numerique.pre_fill_config.append({"id": "def", "value": "sur_talus_d"})
-    demarche_numerique.pre_fill_config.append({"id": "ghi", "value": "sur_talus_p"})
-    demarche_numerique.save()
-    DCConfigHaieFactory(demarche_numerique=demarche_numerique)
+    dn_config = DemarcheConfigFactory()
+    dn_config.pre_fill_config.append({"id": "abc", "value": "plantation_adequate"})
+    dn_config.pre_fill_config.append({"id": "def", "value": "sur_talus_d"})
+    dn_config.pre_fill_config.append({"id": "ghi", "value": "sur_talus_p"})
+    dn_config.save()
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -224,12 +222,16 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     today = date.today()
     # Expired config
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheConfigFactory(demarche_numerique_number=111111),
+        demarche_numerique_config=DemarcheConfigFactory(
+            demarche_numerique_number=111111
+        ),
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
     DCConfigHaieFactory(
-        demarche_numerique=DemarcheConfigFactory(demarche_numerique_number=222222),
+        demarche_numerique_config=DemarcheConfigFactory(
+            demarche_numerique_number=222222
+        ),
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
 

@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from django.db.models import JSONField
 from django.forms.models import model_to_dict
 
@@ -7,6 +8,8 @@ from envergo.demarchenumerique.admin import DemarcheNumeriqueAdminForm
 from envergo.demarchenumerique.tests.factories import DemarcheConfigFactory
 
 DemarcheNumeriqueTestForm = DemarcheNumeriqueAdminForm
+
+pytestmark = pytest.mark.django_db
 
 
 def instance_to_form_data(instance):

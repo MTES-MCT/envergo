@@ -45,7 +45,7 @@ class Command(BaseCommand):
         # As long as a demarche number is set, we run the sync
         # (even if the dept is not activated yet)
         configs_with_ds = (
-            ConfigHaie.objects.filter(demarche_numerique__isnull=False)
+            ConfigHaie.objects.filter(demarche_numerique_config__isnull=False)
             .select_related("demarche_numerique_config")
             .valid_at(timezone.now().date())
         )
