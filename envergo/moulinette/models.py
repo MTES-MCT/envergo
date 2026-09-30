@@ -1444,9 +1444,6 @@ class ConfigHaie(ConfigBase):
         blank=True,
     )
 
-    def __str__(self):
-        return self.department.get_department_display()
-
     def clean(self):
         super().clean()
         if (
