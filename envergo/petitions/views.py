@@ -807,16 +807,7 @@ class PetitionProjectDetail(DetailView):
         context["demarche_numerique_date_depot"] = (
             self.object.demarche_numerique_date_depot
         )
-        plantation_url = reverse(
-            "input_hedges",
-            args=[
-                moulinette.department.department,
-                "read_only",
-                self.object.hedge_data.id,
-            ],
-        )
-        plantation_url = update_qs(plantation_url, {"source": "consultation"})
-        context["plantation_url"] = plantation_url
+        context["plantation_url"] = self.get_plantation_url(moulinette)
 
         current_url = self.request.build_absolute_uri()
         share_btn_url = update_qs(
@@ -850,6 +841,18 @@ class PetitionProjectDetail(DetailView):
         context = {**context, **moulinette.get_extra_context(self.request)}
 
         return context
+
+    def get_plantation_url(self, moulinette):
+        plantation_url = reverse(
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                moulinette.data["haies"],
+            ],
+        )
+        plantation_url = update_qs(plantation_url, {"source": "consultation"})
+        return plantation_url
 
 
 class PetitionProjectAutoRedirection(View):
@@ -930,16 +933,6 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context.update(get_context_from_dn(self.object))
         context.update(self.object.moulinette_data)
 
-        plantation_url = reverse(
-            "input_hedges",
-            args=[
-                self.object.department.department,
-                "read_only",
-                self.object.hedge_data.id,
-            ],
-        )
-        plantation_url = update_qs(plantation_url, {"source": "instruction"})
-        context["plantation_url"] = plantation_url
         context["invitation_register_url"] = update_qs(
             self.request.build_absolute_uri(
                 reverse(
@@ -982,6 +975,11 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
             )
 
         return context
+
+    def get_plantation_url(self, moulinette):
+        plantation_url = super().get_plantation_url(moulinette)
+        plantation_url = update_qs(plantation_url, {"source": "instruction"})
+        return plantation_url
 
 
 class BasePetitionProjectInstructorView(
