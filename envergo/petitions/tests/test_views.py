@@ -27,6 +27,7 @@ from envergo.hedges.tests.factories import HedgeDataFactory, HedgeFactory
 from envergo.moulinette.tests.factories import (
     CriterionFactory,
     DCConfigHaieFactory,
+    DemarcheConfigFactory,
     HaieRegulationFactory,
     RUConfigHaieFactory,
 )
@@ -162,17 +163,18 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "dossier_prefill_token": "W3LFL68vStyL62kRBdJSGU1f",
     }
 
-    config = DCConfigHaieFactory()
-    config.demarche_numerique_pre_fill_config.append(
-        {"id": "abc", "value": "plantation_adequate"}
+    dn_config = DemarcheConfigFactory()
+    dn_config.pre_fill_config.append(
+        {
+            "id": "abc",
+            "value": "plantation_adequate",
+            "mapping": {"true": "Oui", "false": "Non"},
+        }
     )
-    config.demarche_numerique_pre_fill_config.append(
-        {"id": "def", "value": "sur_talus_d"}
-    )
-    config.demarche_numerique_pre_fill_config.append(
-        {"id": "ghi", "value": "sur_talus_p"}
-    )
-    config.save()
+    dn_config.pre_fill_config.append({"id": "def", "value": "sur_talus_d"})
+    dn_config.pre_fill_config.append({"id": "ghi", "value": "sur_talus_p"})
+    dn_config.save()
+    DCConfigHaieFactory(demarche_numerique_config=dn_config)
 
     view = PetitionProjectCreate()
     factory = RequestFactory()
@@ -199,12 +201,86 @@ def test_pre_fill_demarche_numerique(mock_reverse, mock_post):
         "champ_456": None,  # improve this test by configuring a result for bcae8
         "champ_654": ANY,
         "champ_789": "http://haie.local:3000/projet/ABC123",
-        "champ_abc": "true",
+        "champ_abc": "Oui",
         "champ_def": "false",
         "champ_ghi": "false",
     }
     mock_post.assert_called_once()
     assert mock_post.call_args[1]["json"] == expected_body
+
+
+def get_pre_fill_value(field, catalog):
+    """Call `get_value_from_source` with a moulinette exposing the given catalog.
+
+    Returns the pre-filled value and the keys of the alerts raised on the way.
+    """
+    view = PetitionProjectCreate()
+    request = RequestFactory().get("")
+    view.request = request
+    request.alerts = PetitionProjectCreationAlert(request)
+    moulinette = Mock(catalog=catalog)
+    petition_project = Mock(moulinette_url="http://moulinette.url")
+    config = Mock(id=1)
+
+    value = view.get_value_from_source(petition_project, moulinette, field, config)
+    return value, [alert.key for alert in request.alerts]
+
+
+def test_pre_fill_value_from_moulinette_catalog_ignores_default():
+    field = {"id": "abc", "value": "urgence", "default": "non"}
+    value, alerts = get_pre_fill_value(field, {"urgence": "oui"})
+    assert value == "oui"
+    assert alerts == []
+
+
+def test_pre_fill_value_missing_from_catalog_uses_default():
+    field = {"id": "abc", "value": "urgence", "default": "non"}
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "non"
+    assert alerts == []
+
+
+def test_pre_fill_value_missing_from_catalog_without_default_raises_an_alert():
+    field = {"id": "abc", "value": "urgence"}
+    value, alerts = get_pre_fill_value(field, {})
+    assert value is None
+    assert alerts == ["missing_source_moulinette"]
+
+
+def test_pre_fill_default_value_does_not_need_to_be_in_the_mapping():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "inconnu",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "inconnu"
+    assert alerts == []
+
+
+def test_pre_fill_default_value_is_mapped_when_in_the_mapping():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "non",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {})
+    assert value == "Non"
+    assert alerts == []
+
+
+def test_pre_fill_non_default_value_missing_from_mapping_raises_an_alert():
+    field = {
+        "id": "abc",
+        "value": "urgence",
+        "default": "inconnu",
+        "mapping": {"oui": "Oui", "non": "Non"},
+    }
+    value, alerts = get_pre_fill_value(field, {"urgence": "peut-etre"})
+    assert value == "peut-etre"
+    assert alerts == ["mapping_missing_value"]
 
 
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
@@ -226,12 +302,16 @@ def test_pre_fill_demarche_with_multiple_configs(mock_reverse, mock_post):
     today = date.today()
     # Expired config
     DCConfigHaieFactory(
-        demarche_numerique_number=111111,
+        demarche_numerique_config=DemarcheConfigFactory(
+            demarche_numerique_number=111111
+        ),
         validity_range=DateRange(date(2020, 1, 1), today, "[)"),
     )
     # Current config
     DCConfigHaieFactory(
-        demarche_numerique_number=222222,
+        demarche_numerique_config=DemarcheConfigFactory(
+            demarche_numerique_number=222222
+        ),
         validity_range=DateRange(today, date(2030, 1, 1), "[)"),
     )
 
@@ -4468,12 +4548,7 @@ def test_instructor_view_token_expired_403(
     client, haie_coordinator_44, haie_user, site
 ):
     """Test that instructor view returns 403 when user use an invalid token"""
-    DCConfigHaieFactory(
-        demarche_numerique_display_fields={
-            "project_url": "ABC123",
-            "city": "Q2hhbXAtNDcyOTE4Nw==",
-        }
-    )
+    DCConfigHaieFactory()
     project = PetitionProjectFactory()
 
     instructor_page_url = reverse(

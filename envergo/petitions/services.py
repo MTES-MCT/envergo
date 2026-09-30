@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.module_loading import import_string
 
+from envergo.demarchenumerique.models import DemarcheConfig
 from envergo.hedges.forms import MODE_DESTRUCTION_CHOICES, MODE_PLANTATION_CHOICES
 from envergo.hedges.models import HedgeList
 from envergo.petitions.demarche_numerique.client import (
@@ -149,6 +150,7 @@ def get_context_from_dn(petition_project) -> dict:
     """Get parts of context for instructor pages from Démarche numérique"""
     # Get ds details
     config = petition_project.config
+    dn_config = config.demarche_numerique_config
     dossier = get_demarche_numerique_dossier(petition_project)
 
     city_item = ""
@@ -159,21 +161,21 @@ def get_context_from_dn(petition_project) -> dict:
     applicant_email = ""
     representative = ""
 
-    display_dn_fields = config.demarche_numerique_display_fields
+    display_dn_fields = dn_config.display_fields
     if (
         not display_dn_fields.get("city", None)
         or not display_dn_fields.get("organization", None)
         or not display_dn_fields.get("pacage", None)
     ):
         logger.error(
-            "Missing « Démarche numérique » ids in Haie Config",
+            "Missing « Démarche numérique » ids in DemarcheNumerique",
             extra={
-                "config.id": config.id,
+                "demarchenumerique.id": dn_config.id,
             },
         )
         admin_url = reverse(
-            "admin:moulinette_confighaie_change",
-            args=[config.id],
+            "admin:demarchenumerique_demarcheconfig_change",
+            args=[dn_config.id],
         )
         current_site = Site.objects.get(domain=settings.ENVERGO_HAIE_DOMAIN)
         message = render_to_string(
@@ -187,11 +189,11 @@ def get_context_from_dn(petition_project) -> dict:
         notify(dedent(message), "haie")
 
     if dossier:
-        city_item = get_field_data_from_dn_dossier("city", config, dossier)
+        city_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
         organization_item = get_field_data_from_dn_dossier(
-            "organization", config, dossier
+            "organization", dn_config, dossier
         )
-        pacage_item = get_field_data_from_dn_dossier("pacage", config, dossier)
+        pacage_item = get_field_data_from_dn_dossier("pacage", dn_config, dossier)
         usager = dossier.usager.email or ""
         applicant = dossier.applicant_name or ""
         if dossier.demandeur:
@@ -200,7 +202,7 @@ def get_context_from_dn(petition_project) -> dict:
 
     context = {
         "demarche_numerique_dossier_number": petition_project.demarche_numerique_dossier_number,
-        "demarche_numerique_number": config.demarche_numerique_number,
+        "demarche_numerique_number": dn_config.demarche_numerique_number,
         "ds_info": {
             "usager": usager,
             "city": city_item.value if city_item else "",
@@ -215,13 +217,13 @@ def get_context_from_dn(petition_project) -> dict:
     return context
 
 
-def get_field_data_from_dn_dossier(field_name, config, dossier):
+def get_field_data_from_dn_dossier(field_name, dn_config: DemarcheConfig, dossier):
     """Get field value from dossier DN related to a given config and a DN dossier
     from a petition project.
 
-    `field_name` must be set in config.demarche_numerique_display_fields.
+    `field_name` must be set in config.demarche_numerique.display_fields.
     """
-    dn_field_id = config.demarche_numerique_display_fields.get(field_name, None)
+    dn_field_id = dn_config.display_fields.get(field_name, None)
     if not dn_field_id:
         return None
     champs = dossier.champs
@@ -338,8 +340,8 @@ def declared_commune(petition_project):
     if not dossier:
         return ""
 
-    config = petition_project.config
-    commune_item = get_field_data_from_dn_dossier("city", config, dossier)
+    dn_config = petition_project.config.demarche_numerique_config
+    commune_item = get_field_data_from_dn_dossier("city", dn_config, dossier)
     return commune_item.value if commune_item else ""
 
 

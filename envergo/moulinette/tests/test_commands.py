@@ -16,8 +16,7 @@ pytestmark = pytest.mark.django_db
     "envergo.moulinette.management.commands."
     "obsolete_moulinette_template_admin_alert.notify"
 )
-def test_dossier_submission_admin_alert(mock_notify):
-    """Test obsolete moulinette template admin alert"""
+def test_obsolete_moulinette_template_admin_alert(mock_notify):
     criterion = CriterionFactory()
     # GIVEN a template with no existing template key
     MoulinetteTemplateFactory()
@@ -44,7 +43,7 @@ def test_dossier_submission_admin_alert(mock_notify):
     "envergo.moulinette.management.commands."
     "obsolete_moulinette_template_admin_alert.notify"
 )
-def test_dossier_submission_admin_alert_amenagement_domain_not_configured(
+def test_obsolete_template_admin_alert_amenagement_domain_not_configured(
     mock_notify,
 ):
     """Test obsolete moulinette template admin alert"""
