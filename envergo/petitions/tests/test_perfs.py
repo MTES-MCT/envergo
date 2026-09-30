@@ -7,7 +7,7 @@ from envergo.moulinette.tests.factories import DCConfigHaieFactory
 from envergo.petitions.models import DOSSIER_STATES
 from envergo.petitions.tests.factories import PetitionProjectFactory
 
-pytestmark = [pytest.mark.django_db, pytest.mark.urls("config.urls_haie")]
+pytestmark = [pytest.mark.django_db, pytest.mark.haie]
 
 
 def test_petition_project_list_query_count_is_constant(

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.templatetags.static import static
-from django.urls import resolve, reverse
+from django.urls import reverse
 
 from envergo.users.forms import NewsletterOptInForm
 
@@ -13,7 +13,9 @@ def settings_context(_request):
     # Note: we intentionally do NOT expose the entire settings
     # to prevent accidental leaking of sensitive information
 
-    view_name = resolve(_request.path).view_name
+    # resolver_match is None on error pages, whose path matched no view
+    resolver_match = _request.resolver_match
+    view_name = resolver_match.view_name if resolver_match else None
     if view_name in CHATBOX_BLACKLIST:
         chatbox_enabled = False
     else:
