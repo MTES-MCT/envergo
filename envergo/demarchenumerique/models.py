@@ -50,10 +50,19 @@ class DemarcheConfig(models.Model):
                     " (ou d'annotations privées) à pré-remplir"
                 }
             )
-
+        demarche_numerique_value_sources = (
+            self.get_demarche_numerique_value_sources()
+        )
         availables_sources = {
             tup[0]
             for value in self.get_demarche_numerique_value_sources().values()
+            for value in demarche_numerique_value_sources.values()
+            for tup in value
+        }
+        qc_sources = {
+            tup[0]
+            for key, value in demarche_numerique_value_sources.items()
+            if "Questions complémentaires" in key
             for tup in value
         }
         for field in self.pre_fill_config:
@@ -70,6 +79,14 @@ class DemarcheConfig(models.Model):
                     {
                         "pre_fill_config": f"La source de la valeur {field['value']} n'est pas "
                         f"valide pour le champ dont l'id est {field['id']}"
+                    }
+                )
+            if field["value"] in qc_sources and "default" not in field:
+                raise ValidationError(
+                    {
+                        "demarche_numerique_pre_fill_config": f"La source de la valeur {field['value']} est une "
+                                                              "question complémentaire, elle n'aura pas systématiquement de valeur, veuillez donner une "
+                                                              "valeur par defaut dans un attribut `default`"
                     }
                 )
             if "mapping" in field and not isinstance(field["mapping"], dict):

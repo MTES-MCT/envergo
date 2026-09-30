@@ -22,6 +22,7 @@ from envergo.moulinette.tests.factories import (
     ConfigAmenagementFactory,
     CriterionFactory,
     DCConfigHaieFactory,
+    HaieRegulationFactory,
     PerimeterFactory,
     RegulationFactory,
 )
@@ -848,3 +849,44 @@ def test_map_to_json_truncates_polygons_around_center():
     # The clipped polygon must be a strict, non-empty subset of the source.
     assert not truncated_geom.empty
     assert truncated_geom.area < full_geom.area
+
+
+@pytest.fixture
+def qc_source_criterion():
+    """A haie criterion exposing a « question complémentaire » (plan_gestion)."""
+    regulation = HaieRegulationFactory(regulation="reserves_naturelles")
+    return CriterionFactory(
+        regulation=regulation,
+        evaluator="envergo.moulinette.regulations.reserves_naturelles.ReservesNaturellesRu",
+    )
+
+
+def test_value_sources_have_a_questions_complementaires_section(qc_source_criterion):
+    """`ConfigHaie.clean` finds the QC sources by matching this section title.
+
+    If you rename the section, update `qc_sources` in `ConfigHaie.clean` too.
+    """
+    sources = DemarcheConfig.get_demarche_numerique_value_sources()
+    qc_sections = {k: v for k, v in sources.items() if "Questions complémentaires" in k}
+
+    assert len(qc_sections) == 1
+    assert "plan_gestion" in {
+        key for section in qc_sections.values() for key, _ in section
+    }
+
+
+def test_demarchenumerique_config_qc_source_requires_a_default(
+    loire_atlantique_department, qc_source_criterion  # noqa
+):
+    """A QC source has no systematic value, so the pre-fill config must give a default."""
+
+    def build_config(field):
+        return DemarcheConfig(
+            demarche_numerique_number="123456789",
+            pre_fill_config=[field],
+        )
+
+    with pytest.raises(ValidationError, match="question complémentaire"):
+        build_config({"id": "123456789", "value": "plan_gestion"}).clean()
+
+    build_config({"id": "123456789", "value": "plan_gestion", "default": "non"}).clean()

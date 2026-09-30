@@ -489,8 +489,7 @@ class PetitionProjectCreate(FormView):
             body[f"champ_{field['id']}"] = self.get_value_from_source(
                 project,
                 moulinette,
-                field["value"],
-                field.get("mapping", {}),
+                field,
                 config,
             )
 
@@ -554,15 +553,17 @@ class PetitionProjectCreate(FormView):
             )
         return redirect_url, dossier_number
 
-    def get_value_from_source(
-        self, petition_project, moulinette, source, mapping, config
-    ):
+    def get_value_from_source(self, petition_project, moulinette, field, config):
         """Get the value to pre-fill a dossier on Démarche numérique from a source.
 
         Available sources are listed by this method : DemarcheNumerique.get_demarche_numerique_value_sources()
         Depending on the source, the value comes from the moulinette data, the moulinette result or the moulinette url.
         Then it will map the value if a mapping is provided.
         """
+
+        source = field["value"]
+        mapping = field.get("mapping", {})
+
         if source == "url_moulinette":
             value = petition_project.moulinette_url
         elif source == "url_projet":
@@ -666,6 +667,8 @@ class PetitionProjectCreate(FormView):
         else:
             if source in moulinette.catalog:
                 value = moulinette.catalog[source]
+            elif "default" in field:
+                value = field["default"]
             else:
                 logger.warning(
                     "Unable to get the moulinette value to pre-fill a « Démarche numérique »",
