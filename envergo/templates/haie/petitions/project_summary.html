@@ -18,7 +18,7 @@
 
     {% if is_multi_departments %}
       <div class="fr-alert fr-alert--warning fr-mb-4w">
-        <h3 class="fr-alert__title">Le projet se situe sur plusieurs départements</h3>
+        <h4 class="fr-alert__title">Le projet se situe sur plusieurs départements</h4>
 
         <p>Les haies saisies sont situées dans les départements suivants :</p>
 
@@ -46,7 +46,7 @@
       </h2>
       <div class="fr-collapse" id="accordion-identity">
         <div class="fr-mb-2w">
-          <h3 class="fr-mb-0">Bénéficiaire</h3>
+          <h4 class="fr-mb-0">Bénéficiaire</h4>
           {% display_dn_field "beneficiaire_profil" "inline" %}
           {% display_dn_field "pacage" "inline" %}
           {% if ds_info.applicant %}
@@ -83,7 +83,7 @@
         </div>
         {% if ds_info.representative %}
           <div class="fr-mb-2w">
-            <h3 class="fr-mb-0">Mandataire</h3>
+            <h4 class="fr-mb-0">Mandataire</h4>
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
                 <b>
@@ -100,7 +100,7 @@
         {% get_ds_field "telephone_contact" as telephone_contact %}
         {% if telephone_contact %}
           <div class="fr-mb-2w">
-            <h3 class="fr-mb-0">Contact</h3>
+            <h4 class="fr-mb-0">Contact</h4>
             {% display_dn_field "telephone_contact" "inline" %}
           </div>
         {% endif %}
@@ -124,7 +124,7 @@
           dossier
         complet</a>
       </div>
-      <h3 class="fr-mt-3w">Contexte du projet</h3>
+      <h4 class="fr-mt-3w">Contexte du projet</h4>
       {% display_dn_field "city" "inline" %}
       <p>
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
@@ -136,18 +136,20 @@
         {% display_dn_field "numero_auto_urba" "inline" label="N° d’autorisation d’urbanisme" %}
       {% endif %}
 
-      <h3 class="fr-mt-3w">Procédure d'urgence</h3>
-      {% display_dn_field "urgence" "inline" %}
-      {% display_dn_field "urgence_motivation" "inline" %}
-      {% display_dn_field "urgence_prefet_informe" "inline" %}
-      {% display_dn_field "urgence_prefet_informe_date" "inline" %}
-      {% display_dn_field "urgence_prefet_informe_moyen" "inline" %}
-      {% display_dn_field "urgence_prescriptions" "inline" %}
-      {% display_dn_field "urgence_prescriptions_suivies" "inline" %}
-      {% display_dn_field "urgence_prescriptions_pourquoinon" "inline" %}
-      {% display_dn_field "urgence_date_destruction" "inline" %}
+      {% if petition_project.is_emergency %}
+        <h4 class="fr-mt-3w">Procédure d'urgence</h4>
+        {% display_dn_field "urgence" "inline" %}
+        {% display_dn_field "urgence_motivation" "inline" %}
+        {% display_dn_field "urgence_prefet_informe" "inline" %}
+        {% display_dn_field "urgence_prefet_informe_date" "inline" %}
+        {% display_dn_field "urgence_prefet_informe_moyen" "inline" %}
+        {% display_dn_field "urgence_prescriptions" "inline" %}
+        {% display_dn_field "urgence_prescriptions_suivies" "inline" %}
+        {% display_dn_field "urgence_prescriptions_pourquoinon" "inline" %}
+        {% display_dn_field "urgence_date_destruction" "inline" %}
+      {% endif %}
 
-      <h3 class="fr-mt-3w">Détail du projet</h3>
+      <h4 class="fr-mt-3w">Détail du projet</h4>
       {% display_dn_field "proprio_qualite" "inline" %}
       {% display_dn_field "proprio_qualite_autre" "inline" %}
 
@@ -165,7 +167,7 @@
       {% display_dn_field "tech_bocager_organisme" "inline" %}
       {% display_dn_field "tech_bocager_rapport" "inline" %}
 
-      <h6 class="fr-mt-3w">Linéaires concernés</h6>
+      <h4 class="fr-mt-3w">Linéaires concernés</h4>
 
       <div class="fr-my-3w">
         <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"
