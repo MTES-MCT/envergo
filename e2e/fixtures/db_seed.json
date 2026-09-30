@@ -511,7 +511,7 @@
       ],
       "hedge_to_plant_properties_form": "envergo.hedges.forms.HedgeToPlantPropertiesCalvadosForm",
       "hedge_to_remove_properties_form": "envergo.hedges.forms.HedgeToRemovePropertiesCalvadosForm",
-      "demarche_numerique_id": 1
+      "demarche_numerique_config_id": 1
     }
   },
   {
