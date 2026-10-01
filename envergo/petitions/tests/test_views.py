@@ -1440,7 +1440,7 @@ def test_petition_project_list_filters_followed_by(
     response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is displayed
-    assert "Aucun dossier n’est accessible pour le moment" in content
+    assert "Vous n’avez actuellement accès à aucun dossier" in content
 
     # AS haie user invited on one project
     InvitationTokenFactory(
@@ -1450,7 +1450,7 @@ def test_petition_project_list_filters_followed_by(
     response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is not displayed, only a table
-    assert "Aucun dossier n’est accessible pour le moment" not in content
+    assert "Vous n’avez actuellement accès à aucun dossier" not in content
     # AND followed by me project list is empty
     assert response.context["object_list"].count() == 0
 
@@ -4251,7 +4251,7 @@ def test_invitation_token_create_authorized_for_department_instructor(
     )
 
     client.force_login(haie_coordinator_44)
-    response = client.post(create_url)
+    response = client.post(create_url, {"invitee": "other"})
 
     assert response.status_code == 200
     # Verify token was created
@@ -4269,7 +4269,7 @@ def test_invitation_token_create_returns_html(client, haie_coordinator_44, site)
     )
 
     client.force_login(haie_coordinator_44)
-    response = client.post(create_url)
+    response = client.post(create_url, {"invitee": "other"})
 
     assert response.status_code == 200
     assert response["Content-Type"].startswith("text/html")
@@ -4294,18 +4294,37 @@ def test_invitation_token_create_generates_unique_token(
     client.force_login(haie_coordinator_44)
 
     # Create first token
-    response1 = client.post(create_url)
+    response1 = client.post(create_url, {"invitee": "other"})
     assert response1.status_code == 200
     token1 = InvitationToken.objects.filter(created_by=haie_coordinator_44).first()
 
     # Create second token
-    response2 = client.post(create_url)
+    response2 = client.post(create_url, {"invitee": "other"})
     assert response2.status_code == 200
     token2 = InvitationToken.objects.filter(created_by=haie_coordinator_44).last()
 
     # Tokens should be different
     assert token1.token != token2.token
     assert InvitationToken.objects.filter(created_by=haie_coordinator_44).count() == 2
+
+
+@pytest.mark.parametrize("data", [{}, {"invitee": "unknown"}])
+def test_invitation_token_create_requires_invitee_choice(
+    client, haie_coordinator_44, site, data
+):
+    """A missing or unknown invitee choice is rejected and creates no token"""
+    DCConfigHaieFactory()
+    project = PetitionProjectFactory()
+    create_url = reverse(
+        "petition_project_invitation_token_create",
+        kwargs={"reference": project.reference},
+    )
+
+    client.force_login(haie_coordinator_44)
+    response = client.post(create_url, data)
+
+    assert response.status_code == 400
+    assert not InvitationToken.objects.filter(created_by=haie_coordinator_44).exists()
 
 
 # =============================================================================
@@ -4485,7 +4504,7 @@ def test_invitation_workflow_full_cycle(client, haie_coordinator_44, haie_user, 
     )
 
     client.force_login(haie_coordinator_44)
-    response = client.post(create_url)
+    response = client.post(create_url, {"invitee": "other"})
     assert response.status_code == 200
 
     # Step 2: Verify token does NOT appear in consultations list (not accepted yet)
@@ -4835,7 +4854,7 @@ def test_old_invitation_url_updated(client, haie_coordinator_44, site):
     assert "/invitations/create/" in new_create_url
 
     client.force_login(haie_coordinator_44)
-    response = client.post(new_create_url)
+    response = client.post(new_create_url, {"invitee": "other"})
     assert response.status_code == 200
 
 
@@ -4851,7 +4870,7 @@ def test_analytics_events_have_correct_names(client, haie_coordinator_44, site):
     )
 
     client.force_login(haie_coordinator_44)
-    client.post(create_url)
+    client.post(create_url, {"invitee": "other"})
 
     # Should log "invitation_creation" not "invitation"
     creation_event = Event.objects.filter(

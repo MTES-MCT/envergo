@@ -10,23 +10,33 @@
 
 {% block content %}
   <h1 class="fr-my-2w project-list__title">Liste des dossiers</h1>
-  {% if not user_can_view_one_petition_project %}
-    <div class="fr-alert fr-alert--info">
-      <h3 class="fr-alert__title">Aucun dossier n’est accessible pour le moment</h3>
-      <p>Vous n’avez actuellement accès à aucun dossier.</p>
-      <p>
-        Pour accéder à un dossier spécifique, vous devez être invité par un instructeur et cliquer sur le lien
-        d’invitation qu’il vous a transmis.
-      </p>
-      <p>
-        Si vous attendez des droits d’accès à l’ensemble d’un département, leur attribution peut prendre jusqu’à 24
-        heures après la création de votre compte.
-        En cas de difficulté, vous pouvez contacter
-        <a href="{{ contact_url }}">l’équipe du Guichet unique de la haie.</a>
-      </p>
-    </div>
-  {% else %}
+  {% if user_can_view_one_petition_project %}
     {% include 'haie/petitions/_dossier_list_filters.html' %}
+  {% else %}
+    {% if user.guh_role == 'coordinator' %}
+      <div class="fr-alert fr-alert--info">
+        <h3 class="fr-alert__title">Ce n'est encore que le début 😎</h3>
+        <p>
+          Le portail du guichet unique vient d'ouvrir dans votre département, et pour l'instant aucun dossier n'a été déposé !
+        </p>
+      </div>
+    {% else %}
+      <div class="fr-alert fr-alert--info">
+        <h3 class="fr-alert__title">Vous n’avez actuellement accès à aucun dossier</h3>
+        <p>
+          Pour accéder à un dossier spécifique, vous devez être invité par un instructeur et cliquer sur le lien
+          d’invitation qu’il vous a transmis.
+        </p>
+        <p>
+          Si vous attendez des droits d'accès à l'ensemble d'un département, assurez-vous que le service coordonnateur ait bien transmis une demande en ce sens.
+          L'attribution des droits est réalisée manuellement et peut prendre jusqu'à 24 heures.
+        </p>
+        <p>
+          En cas de difficulté, vous pouvez contacter <a href="{{ contact_url }}">l’équipe du portail.</a>
+        </p>
+      </div>
+    {% endif %}
+
   {% endif %}
 
   <div id="dossier-results">{% include 'haie/petitions/_dossier_list_results.html' %}</div>

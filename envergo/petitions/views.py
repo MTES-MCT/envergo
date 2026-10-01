@@ -70,11 +70,13 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
+    HruInvitationForm,
     PetitionProjectForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
+    RuInvitationForm,
     SimulationForm,
     StateChangeForm,
     list_moulinette_errors,
@@ -1504,12 +1506,11 @@ class PetitionProjectInstructorConsultationsView(
             reverse("petition_project", args=[self.object.reference])
         )
         context["invitation_tokens"] = tokens
-        context["invitation_token_create_url"] = self.request.build_absolute_uri(
-            reverse(
-                "petition_project_invitation_token_create",
-                kwargs={"reference": self.object.reference},
-            )
+
+        form_class = (
+            RuInvitationForm if self.object.is_regime_unique() else HruInvitationForm
         )
+        context["invitation_form"] = form_class
 
         return context
 
@@ -2371,6 +2372,15 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
                 request=request, template="haie/petitions/403.html", status=403
             )
 
+        form_class = (
+            RuInvitationForm if self.object.is_regime_unique() else HruInvitationForm
+        )
+
+        form = form_class(request.POST)
+        if not form.is_valid():
+            return HttpResponseBadRequest("Destinataire de l'invitation invalide.")
+        invitee = form.cleaned_data["invitee"]
+
         project = self.object
         token = InvitationToken.objects.create(
             created_by=request.user,
@@ -2405,6 +2415,8 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
             context={
                 "invitation_url": invitation_url,
                 "invitation_contact_url": invitation_contact_url,
+                "invitee": invitee,
+                "config": project.config,
             },
         )
 
