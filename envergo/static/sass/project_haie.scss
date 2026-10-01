@@ -1632,3 +1632,16 @@ td > div.pac-hedges-details {
   display: flex;
   justify-content: space-between;
 }
+
+#invitation-form {
+  &.ru {
+    padding: 1.5rem;
+    background-color: var(--background-alt-grey);
+  }
+
+  &:not(.ru) {
+    #form-group-invitee {
+      display: none;
+    }
+  }
+}
