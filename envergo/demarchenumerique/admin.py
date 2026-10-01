@@ -29,11 +29,13 @@ class DemarcheNumeriqueAdminForm(forms.ModelForm):
         """
         cleaned_data = super().clean()
         display_dn_fields = cleaned_data.get("display_fields")
-        if (
-            not display_dn_fields
-            or not display_dn_fields.get("city", None)
-            or not display_dn_fields.get("organization", None)
-            or not display_dn_fields.get("pacage", None)
+        if not all(
+            (
+                display_dn_fields,
+                display_dn_fields.get("city", None),
+                display_dn_fields.get("organization", None),
+                display_dn_fields.get("pacage", None),
+            )
         ):
             self.add_error(
                 "display_fields",
