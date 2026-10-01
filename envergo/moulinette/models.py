@@ -793,7 +793,7 @@ class Criterion(models.Model):
         verbose_name_plural = _("Criteria")
         constraints = [
             models.CheckConstraint(
-                check=Q(validity_range__isempty=False),
+                condition=Q(validity_range__isempty=False),
                 name="validity_range_non_empty",
                 violation_error_message="La date de fin de validité doit être supérieure à la date de début",
             ),
@@ -1178,7 +1178,7 @@ class ConfigBase(models.Model):
         abstract = True
         constraints = [
             CheckConstraint(
-                check=Q(validity_range__isempty=False),
+                condition=Q(validity_range__isempty=False),
                 name="%(class)s_validity_range_non_empty",
                 violation_error_message=_(
                     "La date de fin de validité doit être supérieure à la date de début."
@@ -1471,7 +1471,7 @@ class ConfigHaie(ConfigBase):
         verbose_name_plural = "Configs haie"
         constraints = ConfigBase.Meta.constraints + [
             CheckConstraint(
-                check=Q(is_activated=False)
+                condition=Q(is_activated=False)
                 | Q(demarche_numerique_config__isnull=False),
                 name="demarche_numerique_config_required_if_activated",
             ),
@@ -1481,7 +1481,7 @@ class ConfigHaie(ConfigBase):
                 "'coeff_compensation'. Sans zonage, une entrée 'default' avec "
                 "X_densite, R1_buissonnante_HD, R2_buissonnante_LD, R3_arbustive_HD, "
                 "R4_arbustive_LD, R5_arboree_HD, R6_arboree_LD est requise.",
-                check=Q(single_procedure=False)
+                condition=Q(single_procedure=False)
                 | (
                     Q(has_ru_zonage=True)
                     & Q(single_procedure_settings__has_key="coeff_compensation")
@@ -1518,10 +1518,10 @@ class ConfigHaie(ConfigBase):
             CheckConstraint(
                 name="ru_zonage_requires_single_procedure",
                 violation_error_message="Le zonage RU ne peut être activé que si le régime unique est activé.",
-                check=Q(has_ru_zonage=False) | Q(single_procedure=True),
+                condition=Q(has_ru_zonage=False) | Q(single_procedure=True),
             ),
             CheckConstraint(
-                check=Q(
+                condition=Q(
                     (
                         Q(prohibition_range__startswith__isnull=False)
                         & Q(prohibition_range__endswith__isnull=False)
@@ -1538,7 +1538,7 @@ class ConfigHaie(ConfigBase):
             CheckConstraint(
                 name="aa_l3503_authorization_coefficient_gte_1",
                 violation_error_message="Le coefficient d'autorisation L350-3 doit être supérieur ou égal à 1.",
-                check=Q(aa_l3503_authorization_coefficient__gte=1),
+                condition=Q(aa_l3503_authorization_coefficient__gte=1),
             ),
         ]
 
@@ -1701,7 +1701,7 @@ class MoulinetteTemplate(models.Model):
         constraints = [
             # Make sure the template is associated with a single related object
             models.CheckConstraint(
-                check=Q(config__isnull=False, criterion=None)
+                condition=Q(config__isnull=False, criterion=None)
                 | Q(criterion__isnull=False, config=None),
                 name="relation_to_single_object",
             ),
