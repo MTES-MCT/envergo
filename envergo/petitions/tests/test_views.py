@@ -1440,7 +1440,7 @@ def test_petition_project_list_filters_followed_by(
     response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is displayed
-    assert "Aucun dossier n’est accessible pour le moment" in content
+    assert "Vous n’avez actuellement accès à aucun dossier" in content
 
     # AS haie user invited on one project
     InvitationTokenFactory(
@@ -1450,7 +1450,7 @@ def test_petition_project_list_filters_followed_by(
     response = client.get(f"{project_list_url}?followed_by=me")
     content = response.content.decode()
     # THEN alert "aucun dossier" is not displayed, only a table
-    assert "Aucun dossier n’est accessible pour le moment" not in content
+    assert "Vous n’avez actuellement accès à aucun dossier" not in content
     # AND followed by me project list is empty
     assert response.context["object_list"].count() == 0
 
