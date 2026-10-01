@@ -624,7 +624,7 @@ class PetitionProjectCreationAlert(List[PetitionProjectCreationProblem]):
             if self.config:
                 dossier_url = (
                     self._petition_project.get_demarche_numerique_instructor_url(
-                        self.config.demarche_numerique_number
+                        self.config.demarche_numerique_config.demarche_numerique_number
                     )
                 )
 
