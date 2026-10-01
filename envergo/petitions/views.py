@@ -978,6 +978,8 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         context["ds_url"] = self.object.get_demarche_numerique_instructor_url(
             self.object.config.demarche_numerique_config.demarche_numerique_number
         )
+        moulinette = self.object.get_moulinette()
+        context["plantation_url"] = self.get_plantation_url(moulinette)
 
         # Send message if info from « Démarche numérique » is not in project details
         if not settings.DEMARCHE_NUMERIQUE["ENABLED"]:
@@ -990,7 +992,14 @@ class PetitionProjectInstructorMixin(SingleObjectMixin):
         return context
 
     def get_plantation_url(self, moulinette):
-        plantation_url = super().get_plantation_url(moulinette)
+        plantation_url = reverse(
+            "input_hedges",
+            args=[
+                moulinette.department.department,
+                "read_only",
+                moulinette.data["haies"],
+            ],
+        )
         plantation_url = update_qs(plantation_url, {"source": "instruction"})
         return plantation_url
 
