@@ -1,9 +1,11 @@
 import logging
 
+from django.conf import settings
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.measure import D
 from django.contrib.postgres.fields import ArrayField
+from django.core.files.storage import storages
 from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -105,6 +107,26 @@ class Map(models.Model):
     copy_to_staging = models.BooleanField(
         _("Copy to staging?"), help_text=_("Don't touch this please"), default=False
     )
+    reference = models.CharField(
+        "Référence",
+        max_length=128,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Identifiant unique utilisé pour les imports par lot",
+    )
+    import_batch = models.ForeignKey(
+        "MapImportBatch",
+        verbose_name="Importé par lot",
+        related_name="maps",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    batch_created_at = models.DateTimeField("Créée par lot le", null=True, blank=True)
+    batch_updated_at = models.DateTimeField(
+        "Mise à jour par lot le", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = _("Map")
@@ -113,6 +135,81 @@ class Map(models.Model):
         indexes = [
             models.Index(fields=["map_type"]),
         ]
+
+    def __str__(self):
+        return self.name
+
+
+def get_upload_storage():
+    """Return the upload files storage.
+
+    We cannot use a simple lambda because django migrations cannot serialize them.
+    """
+    return storages["upload"]
+
+
+def batch_file_path(instance, filename):
+    """Group a batch's map files under its own prefix.
+
+    Batches routinely share filenames (one `haies_44.gpkg` per réglementation),
+    and `AWS_S3_FILE_OVERWRITE=False` would otherwise scatter randomly
+    suffixed duplicates across a single flat prefix.
+    """
+    return f"map_batches/{instance.batch_id}/{filename}"
+
+
+class MapImportBatch(models.Model):
+    """Holds a CSV file describing a batch of maps to create or update."""
+
+    name = models.CharField("Nom", max_length=255, help_text="Nom pense-bête")
+    csv_file = models.FileField(
+        "Fichier CSV", upload_to="map_batches/csv/", storage=get_upload_storage
+    )
+    created_at = models.DateTimeField("Créé le", default=timezone.now)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Créé par",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    import_status = models.CharField(
+        "Statut de traitement du CSV",
+        max_length=32,
+        choices=STATUSES,
+        null=True,
+    )
+    import_date = models.DateTimeField(
+        "Date du dernier traitement", null=True, blank=True
+    )
+    task_id = models.CharField("Celery task id", max_length=256, null=True, blank=True)
+    import_log = models.TextField("Log d'import", blank=True)
+
+    class Meta:
+        verbose_name = "Lot d'import de cartes"
+        verbose_name_plural = "Lots d'import de cartes"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+
+
+class MapImportBatchFile(models.Model):
+    """A single map file (gpkg / zipped shapefile) uploaded for a batch."""
+
+    batch = models.ForeignKey(
+        MapImportBatch, related_name="files", on_delete=models.CASCADE
+    )
+    file = models.FileField(
+        "Fichier", upload_to=batch_file_path, storage=get_upload_storage
+    )
+    name = models.CharField("Nom du fichier", max_length=1024)
+    uploaded_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Fichier de lot d'import"
+        verbose_name_plural = "Fichiers de lot d'import"
+        unique_together = ("batch", "name")
 
     def __str__(self):
         return self.name
