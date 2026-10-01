@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="confighaie",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("single_procedure", False),
                     models.Q(
                         ("has_ru_zonage", True),
