@@ -79,6 +79,7 @@ LOCAL_APPS = [
     "envergo.evaluations",
     "envergo.geodata",
     "envergo.stats",
+    "envergo.demarchenumerique",
     "envergo.moulinette",
     "envergo.analytics",
     "envergo.confs.apps.ConfsConfig",

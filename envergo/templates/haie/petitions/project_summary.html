@@ -18,7 +18,7 @@
 
     {% if is_multi_departments %}
       <div class="fr-alert fr-alert--warning fr-mb-4w">
-        <h3 class="fr-alert__title">Le projet se situe sur plusieurs départements</h3>
+        <h4 class="fr-alert__title">Le projet se situe sur plusieurs départements</h4>
 
         <p>Les haies saisies sont situées dans les départements suivants :</p>
 
@@ -35,7 +35,7 @@
     {% endif %}
 
     <section id="section-identity" class="fr-accordion fr-accordion--alt">
-      <h3 class="fr-accordion__title">
+      <h2 class="fr-accordion__title">
         <button type="button"
                 class="fr-accordion__btn"
                 aria-expanded="false"
@@ -43,10 +43,12 @@
           Informations sur le bénéficiaire
           <span>&nbsp;</span>
         </button>
-      </h3>
+      </h2>
       <div class="fr-collapse" id="accordion-identity">
         <div class="fr-mb-2w">
           <h4 class="fr-mb-0">Bénéficiaire</h4>
+          {% display_dn_field "beneficiaire_profil" "inline" %}
+          {% display_dn_field "pacage" "inline" %}
           {% if ds_info.applicant %}
             <div class="champ-row--inline fr-my-2w">
               <p class="champ-label fr-mb-0">
@@ -59,6 +61,8 @@
                 {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-identite" %}
               </div>
             </div>
+            {% display_dn_field "beneficiaire_date_naissance" "inline" %}
+            {% display_dn_field "beneficiaire_adresse_perso" "inline" %}
           {% endif %}
           {% if ds_info.organization %}
             <div class="champ-row--inline fr-my-2w">
@@ -72,9 +76,10 @@
                 {% include "haie/petitions/_dn_logo.html" with id="beneficiaire-structure" %}
               </div>
             </div>
+            {% display_dn_field "beneficiaire_forme_juridique" "inline" %}
+            {% display_dn_field "beneficiaire_siret" "inline" %}
+            {% display_dn_field "beneficiaire_adresse_siege" "inline" %}
           {% endif %}
-          {% display_dn_field "profil_beneficiaire" "inline" %}
-          {% display_dn_field "adresse_beneficiaire" "inline" %}
         </div>
         {% if ds_info.representative %}
           <div class="fr-mb-2w">
@@ -119,18 +124,50 @@
           dossier
         complet</a>
       </div>
-
+      <h4 class="fr-mt-3w">Contexte du projet</h4>
+      {% display_dn_field "city" "inline" %}
       <p>
         <span><b>Motif de la destruction :</b></span> <span>{% humanize_motif motif %}</span>
       </p>
-
       <p class="fr-my-2w">{% field_summary moulinette.triage_form.contexte %}</p>
       {% if moulinette.triage_form.contexte.value == "projet-urba" %}
         {% display_dn_field "description_projet_urba" "inline" label="Description du projet de construction ou d’aménagement" %}
+        {% display_dn_field "auto_urba_dejadepose" "inline" %}
         {% display_dn_field "numero_auto_urba" "inline" label="N° d’autorisation d’urbanisme" %}
       {% endif %}
 
-      <h6 class="fr-mt-3w">Linéaires</h6>
+      {% if petition_project.is_emergency %}
+        <h4 class="fr-mt-3w">Procédure d'urgence</h4>
+        {% display_dn_field "urgence" "inline" %}
+        {% display_dn_field "urgence_motivation" "inline" %}
+        {% display_dn_field "urgence_prefet_informe" "inline" %}
+        {% display_dn_field "urgence_prefet_informe_date" "inline" %}
+        {% display_dn_field "urgence_prefet_informe_moyen" "inline" %}
+        {% display_dn_field "urgence_prescriptions" "inline" %}
+        {% display_dn_field "urgence_prescriptions_suivies" "inline" %}
+        {% display_dn_field "urgence_prescriptions_pourquoinon" "inline" %}
+        {% display_dn_field "urgence_date_destruction" "inline" %}
+      {% endif %}
+
+      <h4 class="fr-mt-3w">Détail du projet</h4>
+      {% display_dn_field "proprio_qualite" "inline" %}
+      {% display_dn_field "proprio_qualite_autre" "inline" %}
+
+      {% display_dn_field "date_travaux" "inline" %}
+
+      {% display_dn_field "photos" "inline" %}
+      {% display_dn_field "urgence_photo" "inline" %}
+
+      {% display_dn_field "motivation" "inline" %}
+
+      {% display_dn_field "compensation_financee" "inline" %}
+      {% display_dn_field "compensation_organisme_financeur" "inline" %}
+
+      {% display_dn_field "tech_bocager" "inline" %}
+      {% display_dn_field "tech_bocager_organisme" "inline" %}
+      {% display_dn_field "tech_bocager_rapport" "inline" %}
+
+      <h4 class="fr-mt-3w">Linéaires concernés</h4>
 
       <div class="fr-my-3w">
         <button class="hedge-input-open-btn fr-btn  fr-btn--secondary fr-btn--icon-left fr-icon-haie"

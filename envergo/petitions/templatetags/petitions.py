@@ -279,9 +279,9 @@ def get_ds_field(context, field_name):
     ds_dossier = get_demarche_numerique_dossier(petition_project)
     if ds_dossier is None:
         return None
-    config = context.get("moulinette").config
+    dn_config = context.get("moulinette").config.demarche_numerique_config
 
-    return get_field_data_from_dn_dossier(field_name, config, ds_dossier)
+    return get_field_data_from_dn_dossier(field_name, dn_config, ds_dossier)
 
 
 @register.inclusion_tag("haie/petitions/_item_ds.html", takes_context=True)
