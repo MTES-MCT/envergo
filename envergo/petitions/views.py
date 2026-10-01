@@ -70,12 +70,13 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
-    InvitationForm,
+    HruInvitationForm,
     PetitionProjectForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
     RequestAdditionalInfoForm,
     ResumeProcessingForm,
+    RuInvitationForm,
     SimulationForm,
     StateChangeForm,
     list_moulinette_errors,
@@ -1496,7 +1497,11 @@ class PetitionProjectInstructorConsultationsView(
             reverse("petition_project", args=[self.object.reference])
         )
         context["invitation_tokens"] = tokens
-        context["invitation_form"] = InvitationForm()
+
+        form_class = (
+            RuInvitationForm if self.object.is_regime_unique() else HruInvitationForm
+        )
+        context["invitation_form"] = form_class
 
         return context
 
@@ -2358,7 +2363,11 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        form = InvitationForm(request.POST)
+        form_class = (
+            RuInvitationForm if self.object.is_regime_unique() else HruInvitationForm
+        )
+
+        form = form_class(request.POST)
         if not form.is_valid():
             return HttpResponseBadRequest("Destinataire de l'invitation invalide.")
         invitee = form.cleaned_data["invitee"]

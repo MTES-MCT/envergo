@@ -19,7 +19,7 @@
       <form method="post"
             action="{% url 'petition_project_invitation_token_create' petition_project.reference %}"
             id="invitation-form"
-            class="alt-sad fr-p-3w fr-mb-3w">
+            class="{{ object.category }} fr-mb-3w">
         {% csrf_token %}
         {% render_field invitation_form.invitee %}
         <button type="submit"

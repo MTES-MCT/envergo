@@ -631,11 +631,26 @@ INVITEE_CHOICES = (
 )
 
 
-class InvitationForm(forms.Form):
+class BaseInvitationForm(forms.Form):
     """Pick the invitee profile, which shapes the invitation message."""
 
     invitee = forms.ChoiceField(
         label="Qui invitez-vous ?",
         choices=INVITEE_CHOICES,
         widget=forms.RadioSelect,
+    )
+
+
+class RuInvitationForm(BaseInvitationForm):
+    pass
+
+
+class HruInvitationForm(BaseInvitationForm):
+    """For HRU dossiers, there is no invitee choice."""
+
+    invitee = forms.ChoiceField(
+        label="Qui invitez-vous ?",
+        choices=(("other", "other"),),
+        widget=forms.HiddenInput,
+        initial="other",
     )
