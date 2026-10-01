@@ -1,5 +1,5 @@
 from django.db.models import TextChoices
-from django.db.models.enums import ChoicesMeta
+from django.db.models.enums import ChoicesType
 from django.forms import ClearableFileInput, EmailField, FileField
 from django.forms.widgets import RadioSelect, Select
 
@@ -75,7 +75,7 @@ class ProjectStageField(Select):
         return context
 
 
-class EnrichedChoicesMeta(ChoicesMeta):
+class EnrichedChoicesMeta(ChoicesType):
     """Metaclass that converts dict-style member declarations into TextChoices with extra attributes.
 
     The name (key) is used as the DB stored value. `label` is required and
