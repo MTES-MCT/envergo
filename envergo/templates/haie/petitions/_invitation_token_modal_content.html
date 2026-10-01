@@ -34,7 +34,11 @@
 
     <p>Merci par avance pour votre retour.</p>
     <p>Bien cordialement,</p>
-    {{ config.contact_info|safe }}
+    <p>
+      Le guichet unique de la haie
+      <br />
+      {{ config.guh_structure }}
+    </p>
   </div>
 </div>
 
@@ -86,7 +90,12 @@
 
   <p>Merci par avance pour votre retour.</p>
   <p>Bien cordialement,</p>
-  {{ config.contact_info|safe }}
+  <p>
+    Le guichet unique de la haie
+    <br />
+    {{ config.guh_structure }}
+  </p>
+
 </div>
 
 <pre id="invitation-token-email-text">Bonjour,
@@ -112,7 +121,8 @@ Merci par avance pour votre retour.
 
 Bien cordialement,
 
-Le guichet unique de la haie.
+Le guichet unique de la haie
+{{ config.guh_structure }}
 </pre>
 
 <p class="text-center fr-mt-2w">
