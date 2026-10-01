@@ -393,8 +393,7 @@ def request_for_info_message(petition_project, is_regime_unique):
     else:
         ru_fragment = ""
 
-    message = dedent(
-        f"""
+    message = dedent(f"""
         Bonjour,
 
         Il apparaît que des informations sont manquantes pour instruire votre demande.
@@ -409,8 +408,7 @@ def request_for_info_message(petition_project, is_regime_unique):
         {ru_fragment}
         Cordialement,
         Le guichet unique de la haie – {petition_project.department}
-    """
-    )
+    """)
     return message.strip()
 
 
@@ -614,8 +612,8 @@ INVITEE_CHOICES = (
         {
             "label": "Un service en charge de l'urbanisme (mairie, collectivité…)",
             "help_text": mark_safe(
-                '<span class="fr-message fr-message--warning">'
-                "Pour ces services, <strong>le silence vaut refus</strong>. "
+                '<span class="fr-message fr-message--warning fr-mt-0">'
+                "Pour ces services, <strong>le silence vaut refus</strong>. "
                 "La mention sera ajoutée au message."
                 "</span>"
             ),
