@@ -616,6 +616,7 @@ Chaque dev est responsable de sa branche. Pour proposer une correction ou une am
 **Garder des PR courtes et ciblées**
 
 Une PR qui porte un seul changement se relit plus vite et plus sûrement. Autant que possible, on découpe le travail en plusieurs PR.
+Les _stack_ de Github sont un outil intéressant pour les PR dépendantes les unes des autres.
 
 ## Installation des dépendances Géo sur Scalingo
 
