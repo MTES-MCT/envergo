@@ -70,6 +70,7 @@ from envergo.moulinette.models import ConfigHaie
 from envergo.moulinette.utils import MoulinetteUrl
 from envergo.petitions.demarche_numerique.client import DemarcheNumeriqueError
 from envergo.petitions.forms import (
+    InvitationForm,
     PetitionProjectForm,
     PetitionProjectInstructorMessageForm,
     PetitionProjectInstructorNotesForm,
@@ -1495,12 +1496,7 @@ class PetitionProjectInstructorConsultationsView(
             reverse("petition_project", args=[self.object.reference])
         )
         context["invitation_tokens"] = tokens
-        context["invitation_token_create_url"] = self.request.build_absolute_uri(
-            reverse(
-                "petition_project_invitation_token_create",
-                kwargs={"reference": self.object.reference},
-            )
-        )
+        context["invitation_form"] = InvitationForm()
 
         return context
 
@@ -2362,12 +2358,10 @@ class PetitionProjectInvitationTokenCreate(BasePetitionProjectInstructorView):
                 request=request, template="haie/petitions/403.html", status=403
             )
 
-        # What is the target for the invitation?
-        invitee = request.POST.get("invitee", "service")
-        if invitee not in ("service", "other"):
-            return TemplateResponse(
-                request=request, template="haie/petitions/403.html", status=400
-            )
+        form = InvitationForm(request.POST)
+        if not form.is_valid():
+            return HttpResponseBadRequest("Destinataire de l'invitation invalide.")
+        invitee = form.cleaned_data["invitee"]
 
         project = self.object
         token = InvitationToken.objects.create(

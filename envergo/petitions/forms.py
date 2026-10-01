@@ -606,3 +606,36 @@ class SimulationForm(forms.ModelForm):
             )
 
         return moulinette_url.url
+
+
+INVITEE_CHOICES = (
+    (
+        "service",
+        {
+            "label": "Un service en charge de l'urbanisme (mairie, collectivité…)",
+            "help_text": mark_safe(
+                '<span class="fr-message fr-message--warning">'
+                "Pour ces services, <strong>le silence vaut refus</strong>. "
+                "La mention sera ajoutée au message."
+                "</span>"
+            ),
+        },
+    ),
+    (
+        "other",
+        {
+            "label": "Une autre personne ou un autre service",
+            "help_text": "Pour les autres destinataires, le silence vaut accord",
+        },
+    ),
+)
+
+
+class InvitationForm(forms.Form):
+    """Pick the invitee profile, which shapes the invitation message."""
+
+    invitee = forms.ChoiceField(
+        label="Qui invitez-vous ?",
+        choices=INVITEE_CHOICES,
+        widget=forms.RadioSelect,
+    )

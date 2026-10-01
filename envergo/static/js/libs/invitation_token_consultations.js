@@ -10,8 +10,12 @@
 (function (exports) {
   'use strict';
 
+  // Short enough to feel responsive, long enough to read as deliberate work.
+  const MIN_GENERATION_DELAY_MS = 1000;
+
   const InvitationTokenConsultations = function () {
     this.modal = document.getElementById('invitation-token-modal');
+    this.invitationForm = document.getElementById('invitation-form');
     this.generateBtn = document.getElementById('generate-invitation-btn');
     this.revokeModal = document.getElementById('revoke-token-modal');
     this.revokeForms = document.querySelectorAll('.revoke-token-form');
@@ -32,9 +36,10 @@
       this.modalContent.style.display = "none";
     }
 
-    // Generate token button
-    if (this.generateBtn) {
-      this.generateBtn.addEventListener('click', this.generateToken.bind(this));
+    // The browser validates the invitee choice before the submit event fires
+    if (this.invitationForm && this.modal) {
+      this.invitationForm.addEventListener('submit', this.generateToken.bind(this));
+      this.modal.addEventListener('dsfr.conceal', () => this.invitationForm.reset());
     }
 
     // Intercept revoke form submissions for progressive enhancement
@@ -57,7 +62,9 @@
     });
   };
 
-  InvitationTokenConsultations.prototype.generateToken = function () {
+  InvitationTokenConsultations.prototype.generateToken = function (event) {
+    event.preventDefault();
+
     // Save original button state
     const originalText = this.generateBtn.textContent;
     const originalClasses = this.generateBtn.className;
@@ -69,22 +76,15 @@
     this.generateBtn.classList.add('fr-icon-settings-5-line');
     this.generateBtn.textContent = "Génération de l'invitation…";
 
-    // Minimum delay of 2 seconds
-    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 2000));
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, MIN_GENERATION_DELAY_MS));
 
-    // Which invitee category is selected?
-    const invitee = document.querySelector('input[name="invitee-choice"]:checked').value;
-    const formData = new FormData();
-    formData.append("invitee", invitee);
-
-    // Fetch content
-    const fetchPromise = fetch(INVITATION_TOKEN_CREATE_URL, {
+    // The form data carries the csrf token and the invitee choice
+    const fetchPromise = fetch(this.invitationForm.action, {
       method: 'POST',
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRFToken': CSRF_TOKEN,
       },
-      body: formData
+      body: new FormData(this.invitationForm)
     })
       .then(response => {
         if (!response.ok) {
