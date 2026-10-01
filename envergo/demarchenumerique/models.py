@@ -81,7 +81,7 @@ class DemarcheConfig(models.Model):
             if field["value"] in qc_sources and "default" not in field:
                 raise ValidationError(
                     {
-                        "demarche_numerique_pre_fill_config": f"La source de la valeur {field['value']} est une "
+                        "pre_fill_config": f"La source de la valeur {field['value']} est une "
                         "question complémentaire, elle n'aura pas systématiquement de valeur, veuillez donner une "
                         "valeur par defaut dans un attribut `default`"
                     }
