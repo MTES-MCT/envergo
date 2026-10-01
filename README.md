@@ -529,9 +529,30 @@ nous avons essuyé jusqu'à présent (aux alentour de 30 000 requêtes).
 | `RATELIMIT_IP_META_KEY` | *(non défini)* | Clé HTTP pour l'IP réelle derrière un reverse proxy (ex. `HTTP_X_REAL_IP` en production) |
 | `RATELIMIT_ENABLE` | `True` | Mettre à `False` pour désactiver (automatiquement désactivé dans les tests) |
 
-## Recette et déploiement
+## Processus de collaboration
 
-### Environnement de recette
+Le dépôt git est lié aux environnements du projet.
+
+- main -> le code prêt à partir en production
+- staging -> déployé sur l'environnement de recette
+- prod -> déployé en production + environnement de formation
+
+### Workflow classique
+
+Le développement d'une fonctionnalité se déroule classiquement ainsi.
+
+- tout développement s'effectue sur une branche spécifique
+- toute branche de dev doit être créée depuis la branche `main`
+- une fois complétée, la branche de dev doit être fusionnée dans `staging` pour recette
+- en parallèle, créer une PR pour revue de code.
+- en cas de retours : compléter la branche dev, re-fusionner dans `staging`
+- quand la branche est valide (revue ok, recette ok, pipeline ok), on peut fusionner la PR.
+
+**La branche `main` ne contient que du code absolument prêt à partir en prod à tout moment.**
+
+Sauf commit absolument trivial **il est interdit de commiter directement sur main, le code doit passer par une PR avec revue de code.**
+
+### Environnements de recette
 
 Deux possibilités existent pour la mise en disponibilité d'un environnement de recette :
 
@@ -544,25 +565,6 @@ correspondante est fusionnée.
 
 L'environnement de staging est permanent, avec un déploiement automatique de la
 branche `staging`.
-
-### Workflow de collaboration
-
-Le workflow de collaboration git en vigueur est le suivant :
-
-- la branche `main` ne contient que du code absolument prêt à passer en prod (revue de code ok, review PO ok)
-- sauf commit absolument trivial, tous les devs sont effectués sur des branches dédiées
-  avant de pouvoir être fusionnées
-- sauf en cas de branche triviale et au jugé, les branches doivent passer par une revue de code avant d'être fusionnées
-- la branche `staging` contient du code fonctionnel, mais en cours de validation ; cette branche est déployée automatiquement sur l'environnement de staging permanent
-- Les Pull Requests doivent systématiquement être fusionnées dans `main`, et uniquement après validation complete
-- si la création d'une review app dédiée est jugée trop fastidieuse, une branche de dev peut être fusionnée dans `staging` pour en faciliter la validation.
-- il est interdit de pusher du code sur `prod` qui ne soit pas déjà dans `main`
-- pour effectuer une mise en prod, on fusionne `main` dans `prod` (fast forward)
-- de façon exceptionnelle, pour déployer un correctif urgemment en prod sans
-  devoir déployer toute la branche `main`, on peut :
-  - publier et valider le correctif sur `main` ;
-  - effectuer un `cherry-pick` du commit pour les intégrer de manière unitaire
-    à la branche `prod`.
 
 ### Déploiement en production
 
@@ -587,7 +589,32 @@ Le workflow à suivre :
 
 Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
-### Installation des dépendances Géo sur Scalingo
+### À ne pas faire
+
+Le dépôt git est un environnement partagé. Pour éviter de faire perdre du temps à ses collègues on respectera les conventions suivantes.
+
+**Ne pas fusionner en staging une branche dont les tests sont cassés.**
+
+Si je fusionne une branche en staging et qu'un test est cassé, ça signifie que mon travail est incompatible avec un autre développement en cours et je dois corriger. Si on laisse des tests cassés -> perte de temps pour tout le monde.
+
+**Ne pas fusionner en recette une branche trop complexe.**
+
+Si un développement impacte massivement la base de code, c'est le dev responsable qui est le mieux à même de gérer les conflits qu'il créé. Par conséquent, privilégier une review-app au lieu d'obliger tous les autres devs à corriger des conflits à chaque mise en recette.
+
+**Ne pas laisser les branches `main` et `staging` diverger.**
+
+Si je créé une branche depuis main, je dois pouvoir la fusionner sans conflit dans staging. Par conséquent, on évitera absolument le workflow suivant :
+
+- je créé une branche depuis main
+- je fusionne dans staging
+- je rebase ma branche sur main et je fusionne ma pr
+- toute fusion de main vers staging génère des conflits _factice_ car les ids des commits ne sont plus les mêmes
+
+**Ne pas commiter sur les branches des autres**
+
+Chaque dev est responsable de sa branche. Pour apporter une modificcation / correction / amélioration, passer par une suggestion github.
+
+## Installation des dépendances Géo sur Scalingo
 
 Envergo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
 externes pour les fonctions géographiques (gdal, geos, proj…).
