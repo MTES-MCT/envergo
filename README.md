@@ -543,14 +543,15 @@ Le développement d'une fonctionnalité se déroule classiquement ainsi.
 
 - tout développement s'effectue sur une branche spécifique
 - toute branche de dev doit être créée depuis la branche `main`
-- une fois complétée, la branche de dev doit être fusionnée dans `staging` pour recette
+- une fois complétée, la branche de dev est fusionnée dans `staging` pour recette, ou recettée sur une review app si elle est de grande ampleur
 - en parallèle, créer une PR pour revue de code.
 - en cas de retours : compléter la branche dev, re-fusionner dans `staging`
-- quand la branche est valide (revue ok, recette ok, pipeline ok), on peut fusionner la PR.
+- quand la branche est valide (revue ok, recette ok, pipeline ok), on peut fusionner la PR
+- c'est l'auteur de la PR qui est responsable de sa fusion.
 
-**La branche `main` ne contient que du code absolument prêt à partir en prod à tout moment.**
+**La branche `main` contient uniquement du code prêt à partir en production à tout moment.**
 
-Sauf commit absolument trivial **il est interdit de commiter directement sur main, le code doit passer par une PR avec revue de code.**
+**Hors commit trivial, tout changement sur `main` passe par une PR relue.**
 
 ### Environnements de recette
 
@@ -559,7 +560,7 @@ Deux possibilités existent pour la mise en disponibilité d'un environnement de
 - 1/ création d'une « review app » manuellement via scalingo ;
 - 2/ utilisation de l'environnement de recette permanent `envergo.incubateur.net`.
 
-Les « review app » peuvent être créées manuellement à l'envie depuis l'interface
+Les « review app » peuvent être créées manuellement à l'envi depuis l'interface
 de Scalingo. Une review app est automatiquement supprimée lorsque la Pull Request
 correspondante est fusionnée.
 
@@ -589,30 +590,32 @@ Le workflow à suivre :
 
 Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
-### À ne pas faire
+## Pour une bonne collaboration
 
-Le dépôt git est un environnement partagé. Pour éviter de faire perdre du temps à ses collègues on respectera les conventions suivantes.
+Le dépôt git est partagé par toute l'équipe. Les conventions suivantes permettent à chacun d'avancer sans être freiné par le travail des autres. Elles reposent sur deux principes :
 
-**Ne pas fusionner en staging une branche dont les tests sont cassés.**
+- chaque dev gère les effets de ses propres changements ;
+- `staging` contient `main` et les développements en cours de validation, rien d'autre.
 
-Si je fusionne une branche en staging et qu'un test est cassé, ça signifie que mon travail est incompatible avec un autre développement en cours et je dois corriger. Si on laisse des tests cassés -> perte de temps pour tout le monde.
+**Fusionner en staging des branches dont les tests passent**
 
-**Ne pas fusionner en recette une branche trop complexe.**
+Les tests de `staging` sont un signal commun à toute l'équipe. Une branche y arrive donc avec des tests au vert. Si la fusion casse des tests, la branche interagit avec un autre développement en cours. Son auteur est le mieux placé pour corriger.
 
-Si un développement impacte massivement la base de code, c'est le dev responsable qui est le mieux à même de gérer les conflits qu'il créé. Par conséquent, privilégier une review-app au lieu d'obliger tous les autres devs à corriger des conflits à chaque mise en recette.
+**Recetter les branches de grande ampleur sur une review app**
 
-**Ne pas laisser les branches `main` et `staging` diverger.**
+Une branche qui modifie largement le code crée des conflits à chaque fusion en `staging`. Une review app permet de la recetter à part. Une fois la branche validée, son auteur la fusionne dans `staging` et résout les conflits en une seule fois.
 
-Si je créé une branche depuis main, je dois pouvoir la fusionner sans conflit dans staging. Par conséquent, on évitera absolument le workflow suivant :
+**Conserver l'historique d'une branche une fois fusionnée en staging**
 
-- je créé une branche depuis main
-- je fusionne dans staging
-- je rebase ma branche sur main et je fusionne ma pr
-- toute fusion de main vers staging génère des conflits _factice_ car les ids des commits ne sont plus les mêmes
+Une branche créée depuis `main` doit pouvoir se fusionner sans conflit dans `staging`. Un rebase après la fusion en `staging` casse cette garantie. Les commits rebasés reçoivent de nouveaux identifiants, et chaque fusion de `main` vers `staging` produit alors de faux conflits. Pour récupérer les derniers changements de `main`, on fusionne `main` dans la branche.
 
-**Ne pas commiter sur les branches des autres**
+**Passer par une suggestion pour modifier la branche d'un autre dev**
 
-Chaque dev est responsable de sa branche. Pour apporter une modificcation / correction / amélioration, passer par une suggestion github.
+Chaque dev est responsable de sa branche. Pour proposer une correction ou une amélioration, on utilise les suggestions de la revue GitHub.
+
+**Garder des PR courtes et ciblées**
+
+Une PR qui porte un seul changement se relit plus vite et plus sûrement. Autant que possible, on découpe le travail en plusieurs PR.
 
 ## Installation des dépendances Géo sur Scalingo
 
