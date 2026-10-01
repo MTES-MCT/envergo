@@ -625,7 +625,7 @@ INVITEE_CHOICES = (
         "other",
         {
             "label": "Une autre personne ou un autre service",
-            "help_text": "Pour les autres destinataires, le silence vaut accord",
+            "help_text": "Pour les autres destinataires, le silence vaut accord.",
         },
     ),
 )
