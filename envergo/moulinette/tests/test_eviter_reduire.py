@@ -309,6 +309,33 @@ def test_checkbox_is_never_prefilled_from_the_url(client):
     assert ACK_ERROR not in content
 
 
+def test_checkbox_is_prechecked_after_an_acknowledged_submission(client):
+    """Once the simulation was acknowledged, editing it starts with the box checked."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+
+    res = client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+    assert res.status_code == 302
+
+    tag = checkbox_tag(client.get(form_url(params)).content.decode())
+    assert tag is not None
+    assert "checked" in tag
+
+
+def test_checkbox_flag_is_reset_on_a_new_unacknowledged_submission(client):
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+    client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+
+    res = client.post(form_url(), params)
+    assert res.status_code == 302
+
+    tag = checkbox_tag(client.get(form_url(params)).content.decode())
+    assert "checked" not in tag
+
+
 def test_checkbox_state_is_kept_when_another_field_fails(client):
     """Within a single submission, the checked state survives an error re-render."""
     DCConfigHaieFactory()
