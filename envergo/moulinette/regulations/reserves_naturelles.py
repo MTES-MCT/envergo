@@ -1,3 +1,5 @@
+from abc import ABC
+
 from django import forms
 
 from envergo.hedges.models import HedgeCategory
@@ -27,10 +29,9 @@ class ReservesNaturellesForm(forms.Form):
     )
 
 
-class ReservesNaturellesRu(HaieCriterionEvaluator):
+class ReservesNaturellesBase(HaieCriterionEvaluator, ABC):
     choice_label = "Réserves naturelles > Réserves naturelles"
     base_slug = "reserves_naturelles"
-    category = HedgeCategory.ru
     form_class = ReservesNaturellesForm
 
     CODE_MATRIX = {
@@ -43,9 +44,13 @@ class ReservesNaturellesRu(HaieCriterionEvaluator):
         return plan_gestion
 
 
-class ReservesNaturellesHru(ReservesNaturellesRu):
+class ReservesNaturellesRu(ReservesNaturellesBase):
+    category = HedgeCategory.ru
+
+
+class ReservesNaturellesHru(ReservesNaturellesBase):
     category = HedgeCategory.hru
 
 
-class ReservesNaturellesL3503(ReservesNaturellesRu):
+class ReservesNaturellesL3503(ReservesNaturellesBase):
     category = HedgeCategory.l350_3

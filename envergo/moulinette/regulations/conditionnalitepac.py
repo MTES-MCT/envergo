@@ -1,4 +1,5 @@
 import logging
+from abc import ABC
 from decimal import Decimal as D
 
 from django import forms
@@ -462,14 +463,17 @@ class Bcae8Ru(PlantationConditionMixin, HaieCriterionEvaluator):
         return 0
 
 
-class Bcae8Hru(HaieCriterionEvaluator):
+class Bcae8NonConcerneBase(HaieCriterionEvaluator, ABC):
     choice_label = "Conditionnalité PAC > BCAE8"
     base_slug = "bcae8"
-    category = HedgeCategory.hru
 
     def evaluate(self):
         self._result_code, self._result = "non_concerne", "non_concerne"
 
 
-class Bcae8L3503(Bcae8Hru):
+class Bcae8Hru(Bcae8NonConcerneBase):
+    category = HedgeCategory.hru
+
+
+class Bcae8L3503(Bcae8NonConcerneBase):
     category = HedgeCategory.l350_3
