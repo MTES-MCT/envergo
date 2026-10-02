@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="statuslog",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     models.Q(("type", "suspension"), ("due_date__isnull", False)),
                     models.Q(
                         ("type", "status_change"),

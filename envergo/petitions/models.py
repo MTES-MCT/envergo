@@ -921,11 +921,11 @@ class StatusLog(models.Model):
         verbose_name_plural = "Historique des changements de statut de projet"
         constraints = [
             models.CheckConstraint(
-                check=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
+                condition=~(Q(stage=STAGES.closed) & Q(decision=DECISIONS.unset)),
                 name="forbid_closed_with_unset_decision",
             ),
             models.CheckConstraint(
-                check=q_suspended | q_not_suspended | q_resumed,
+                condition=q_suspended | q_not_suspended | q_resumed,
                 name="suspension_data_is_consistent",
             ),
         ]

@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="criterion",
             constraint=models.CheckConstraint(
-                check=models.Q(
+                condition=models.Q(
                     ("validity_date_start__isnull", True),
                     ("validity_date_end__isnull", True),
                     ("validity_date_end__gt", models.F("validity_date_start")),

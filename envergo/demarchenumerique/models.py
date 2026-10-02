@@ -37,7 +37,7 @@ class DemarcheConfig(models.Model):
         verbose_name_plural = "Démarches"
         constraints = (
             CheckConstraint(
-                check=Q(display_fields__project_url__isnull=False),
+                condition=Q(display_fields__project_url__isnull=False),
                 name="project_url_id_required",
             ),
         )
