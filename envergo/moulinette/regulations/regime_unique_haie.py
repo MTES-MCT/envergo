@@ -4,6 +4,8 @@ Determines whether a hedge project falls under the régime unique
 (single procedure) and whether it is soumis or non concerné.
 """
 
+from abc import ABC
+
 from django import forms
 from django.utils.safestring import mark_safe
 
@@ -153,26 +155,26 @@ class RegimeUniqueHaieRu(
         return evaluator_replantation_coefficient(self)
 
 
-class RegimeUniqueHaieHru(HaieCriterionEvaluator):
-    """Criterion evaluator for hedges outside the régime unique (HRU category).
+class RegimeUniqueHaieNonConcerneBase(HaieCriterionEvaluator, ABC):
+    """Base for the categories the régime unique procedure never applies to.
 
-    The régime unique procedure never applies to these hedges, so the
-    result is always "non_concerne".
+    The result is always "non_concerne".
     """
 
     choice_label = "Régime unique haie > Régime unique haie"
     base_slug = "regime_unique_haie"
-    category = HedgeCategory.hru
 
     def evaluate(self):
         self._result_code, self._result = RESULTS.non_concerne, RESULTS.non_concerne
 
 
-class RegimeUniqueHaieL3503(RegimeUniqueHaieHru):
-    """Criterion evaluator for L350-3 roadside tree alignments.
+class RegimeUniqueHaieHru(RegimeUniqueHaieNonConcerneBase):
+    """Criterion evaluator for hedges outside the régime unique (HRU category)."""
 
-    The régime unique procedure never applies to these hedges, so the
-    result is always "non_concerne".
-    """
+    category = HedgeCategory.hru
+
+
+class RegimeUniqueHaieL3503(RegimeUniqueHaieNonConcerneBase):
+    """Criterion evaluator for L350-3 roadside tree alignments."""
 
     category = HedgeCategory.l350_3

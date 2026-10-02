@@ -1,3 +1,5 @@
+from abc import ABC
+
 from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
     AlignementsOnlyMixin,
@@ -15,37 +17,43 @@ class SitesProtegesRegulation(AlignementsOnlyMixin, HaieRegulationEvaluator):
     }
 
 
-class SitesPatrimoniauxRemarquablesHaieHru(HaieCriterionEvaluator):
+class SitesPatrimoniauxRemarquablesHaieBase(HaieCriterionEvaluator, ABC):
     choice_label = "Sites protégés > SPR Haie"
     base_slug = "spr_haie"
-    category = HedgeCategory.hru
     plantation_conditions = []
 
     def evaluate(self):
         self._result_code, self._result = "soumis", "soumis"
 
 
-class SitesPatrimoniauxRemarquablesHaieRu(SitesPatrimoniauxRemarquablesHaieHru):
+class SitesPatrimoniauxRemarquablesHaieHru(SitesPatrimoniauxRemarquablesHaieBase):
+    category = HedgeCategory.hru
+
+
+class SitesPatrimoniauxRemarquablesHaieRu(SitesPatrimoniauxRemarquablesHaieBase):
     category = HedgeCategory.ru
 
 
-class SitesPatrimoniauxRemarquablesHaieL3503(SitesPatrimoniauxRemarquablesHaieHru):
+class SitesPatrimoniauxRemarquablesHaieL3503(SitesPatrimoniauxRemarquablesHaieBase):
     category = HedgeCategory.l350_3
 
 
-class MonumentsHistoriquesHaieHru(HaieCriterionEvaluator):
+class MonumentsHistoriquesHaieBase(HaieCriterionEvaluator, ABC):
     choice_label = "Sites protégés > MH Haie"
     base_slug = "mh_haie"
-    category = HedgeCategory.hru
     plantation_conditions = []
 
     def evaluate(self):
         self._result_code, self._result = "soumis", "soumis"
 
 
-class MonumentsHistoriquesHaieRu(MonumentsHistoriquesHaieHru):
+class MonumentsHistoriquesHaieHru(MonumentsHistoriquesHaieBase):
+    category = HedgeCategory.hru
+
+
+class MonumentsHistoriquesHaieRu(MonumentsHistoriquesHaieBase):
     category = HedgeCategory.ru
 
 
-class MonumentsHistoriquesHaieL3503(MonumentsHistoriquesHaieHru):
+class MonumentsHistoriquesHaieL3503(MonumentsHistoriquesHaieBase):
     category = HedgeCategory.l350_3

@@ -1,3 +1,4 @@
+from abc import ABC
 from decimal import Decimal as D
 from functools import cached_property
 from math import ceil
@@ -1048,8 +1049,12 @@ class EspecesProtegeesRu(
         return context
 
 
-class EspecesProtegeesHru(
-    PlantationConditionMixin, SensitiveSpeciesMixin, EPMixin, HaieCriterionEvaluator
+class EspecesProtegeesAVerifierBase(
+    PlantationConditionMixin,
+    SensitiveSpeciesMixin,
+    EPMixin,
+    HaieCriterionEvaluator,
+    ABC,
 ):
     """EP criterion for the hedges not handled by the régime unique: always "à vérifier".
 
@@ -1058,7 +1063,6 @@ class EspecesProtegeesHru(
 
     choice_label = "EP > EP Régime unique"
     base_slug = "ep_regime_unique"
-    category = HedgeCategory.hru
     plantation_conditions = [SafetyCondition]
 
     CODE_MATRIX = {
@@ -1077,5 +1081,9 @@ class EspecesProtegeesHru(
         return 0.0
 
 
-class EspecesProtegeesL3503(EspecesProtegeesHru):
+class EspecesProtegeesHru(EspecesProtegeesAVerifierBase):
+    category = HedgeCategory.hru
+
+
+class EspecesProtegeesL3503(EspecesProtegeesAVerifierBase):
     category = HedgeCategory.l350_3
