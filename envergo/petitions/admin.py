@@ -120,6 +120,7 @@ class PetitionProjectAdmin(admin.ModelAdmin):
         DepartmentFilter,
     ]
     readonly_fields = ["last_result_snapshot"]
+    search_fields = ["reference"]
 
     def get_queryset(self, request):
         # Use select_related to optimize queries for foreign key fields
