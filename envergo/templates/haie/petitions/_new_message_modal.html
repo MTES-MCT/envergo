@@ -43,9 +43,5 @@
 </dialog>
 
 {% if form.errors %}
-  <script>
-  window.addEventListener('DOMContentLoaded', function() {
-    dsfr(document.getElementById('modal-new-message')).modal.disclose();
-  });
-  </script>
+  <script type="text/after-dsfr">dsfr(document.getElementById('modal-new-message')).modal.disclose();</script>
 {% endif %}
