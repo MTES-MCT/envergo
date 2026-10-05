@@ -1046,10 +1046,33 @@ class ConfigHaieSettingsView(ConfigHaieBaseView, DetailView):
 
         # Compute the hedge density reference map list
         density_maps = (
-            Map.objects.filter(map_type=MAP_TYPES.density_reference)
-            .filter(departments__contains=[department.department])
+            Map.objects.of_type(MAP_TYPES.density_reference)
+            .for_department(department.department)
             .defer("geometry")
         )
         context["density_maps"] = density_maps
+
+        zonage_maps = (
+            Map.objects.of_type(MAP_TYPES.zonage)
+            .for_department(department.department)
+            .defer("geometry")
+        )
+        context["zonage_maps"] = zonage_maps
+
+        zones_sensibles_ep_maps = (
+            Map.objects.of_type(MAP_TYPES.zone_sensible_ep)
+            .for_department(department.department)
+            .defer("geometry")
+        )
+        context["zones_sensibles_ep_maps"] = zones_sensibles_ep_maps
+
+        context["has_maps"] = any(
+            (
+                grouped_criteria_by_regulation,
+                density_maps,
+                zonage_maps,
+                zones_sensibles_ep_maps,
+            )
+        )
 
         return context
