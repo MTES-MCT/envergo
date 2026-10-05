@@ -136,7 +136,7 @@
                 </div>
               </div>
               {% if config.single_procedure %}
-                <p v-if="mode === 'removal' && hedges.TO_REMOVE.completelyDrawn().some(h => h.category() !== 'ru')"
+                <p v-if="mode === 'removal' && hedges.TO_REMOVE.hedges.some(h => h.isDrawingCompleted && h.category() !== 'ru')"
                    class="fr-m-2w fr-text--light fr-text--sm">
                   <i>Les alignements d'arbres et les haies en bordure de bâtiment, de place publique ou dans un parc ou
                     un
