@@ -156,6 +156,46 @@ def test_fetch_project_details_from_demarche_numerique(mock_post, haie_user, sit
 
 
 @pytest.mark.haie
+@pytest.mark.parametrize(
+    "state,expect_error",
+    [("draft", False), ("prefilled", False), ("en_construction", True)],
+)
+@override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE)
+@patch("envergo.petitions.demarche_numerique.client.Client.execute")
+@patch("envergo.petitions.demarche_numerique.client.notify")
+def test_dossier_not_found_on_demarche_numerique(
+    mock_notify, mock_execute, state, expect_error, caplog, haie_user
+):
+    """A missing dossier is only an error for a submitted project."""
+    # GIVEN a dossier that does not exist on « Démarche numérique »
+    mock_execute.side_effect = TransportQueryError(
+        "Dossier not found",
+        errors=[
+            {
+                "message": "Dossier not found",
+                "path": ["dossier"],
+                "extensions": {"code": "not_found"},
+            }
+        ],
+    )
+    petition_project = PetitionProjectFactory(demarche_numerique_state=state)
+
+    # WHEN I fetch it
+    dossier = get_demarche_numerique_dossier(petition_project)
+
+    # THEN nothing is returned
+    assert dossier is None
+    # AND an error is logged only if the project is submitted
+    errors = [
+        r
+        for r in caplog.records
+        if r.levelname == "ERROR" and "not found" in r.getMessage()
+    ]
+    assert bool(errors) is expect_error
+    mock_notify.assert_not_called()
+
+
+@pytest.mark.haie
 @override_settings(DEMARCHE_NUMERIQUE=DEMARCHE_NUMERIQUE_FAKE_DISABLED)
 def test_fetch_project_details_from_demarche_numerique_not_enabled(caplog, haie_user):
     petition_project = PetitionProjectFactory()

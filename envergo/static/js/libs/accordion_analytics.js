@@ -44,16 +44,13 @@
   /**
    * Trigger one accordion section's opening.
    */
-  AccordionAnalytics.prototype.openSection = function (sectionId, retries = 10) {
+  AccordionAnalytics.prototype.openSection = function (sectionId) {
     let element = document.getElementById(sectionId);
     if (!element) return;
 
     let dsfrElement = dsfr(element);
     if (dsfrElement && dsfrElement.collapse) {
       dsfrElement.collapse.disclose();
-    } else if (retries > 0) {
-      // Uses requestAnimationFrame to wait for DSFR to finish initializing => fix race condition
-      requestAnimationFrame(() => this.openSection(sectionId, retries - 1));
     }
   };
 
