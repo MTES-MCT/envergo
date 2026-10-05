@@ -580,6 +580,7 @@ Les scripts utilisés sont dans le répertoire `bin`.
 
 Le workflow à suivre :
 
+0. Consulter le calendrier d'équipe pour vérifier qu'aucune formation ou démo importante n'est en cours
 1. Envoyer un message sur le canal #startup-envergo-produit pour prévenir de la mise en production imminente
 2. S'assurer du bon fonctionnement de main en local (notamment les nouvelles fonctionnalités)
 3. Si la CI est ok sur la branche main, fusionner main dans prod et pousser la branche prod
