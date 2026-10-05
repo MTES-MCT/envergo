@@ -323,6 +323,33 @@ def test_checkbox_is_prechecked_after_an_acknowledged_submission(client):
     assert "checked" in tag
 
 
+def test_checkbox_is_not_prechecked_on_another_simulation(client):
+    """The acknowledgment only applies to the motif and hedges it was given for."""
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    other_hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+    client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+
+    other_motif = simulation_data(hedges, motif="amenagement")
+    other_haies = simulation_data(other_hedges)
+    for other in (other_motif, other_haies):
+        tag = checkbox_tag(client.get(form_url(other)).content.decode())
+        assert tag is not None
+        assert "checked" not in tag
+
+
+def test_checkbox_is_prechecked_despite_tracking_params(client):
+    DCConfigHaieFactory()
+    hedges = HedgeDataFactory(hedges=[ru_hedge()])
+    params = simulation_data(hedges)
+    client.post(form_url(), {**params, MARKER_NAME: "true", CHECKBOX_NAME: "on"})
+
+    tracked = {**params, "mtm_campaign": "test", "zoom": "12"}
+    tag = checkbox_tag(client.get(form_url(tracked)).content.decode())
+    assert "checked" in tag
+
+
 def test_checkbox_flag_is_reset_on_a_new_unacknowledged_submission(client):
     DCConfigHaieFactory()
     hedges = HedgeDataFactory(hedges=[ru_hedge()])

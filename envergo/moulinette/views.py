@@ -47,7 +47,7 @@ from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, updat
 logger = logging.getLogger(__name__)
 
 
-ACKNOWLEDGED_SESSION_KEY = "eviter_reduire_acknowledged"
+ACKNOWLEDGED_SESSION_KEY = "eviter_reduire_acknowledged_simulation"
 
 
 class MoulinetteMixin:
@@ -377,12 +377,20 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def get_template_names(self):
         return self.moulinette.get_home_template()
 
+    def get_acknowledgment_key(self):
+        """Identify what was acknowledged: the motif of a given hedge set."""
+
+        params = self.get_results_params()
+        return f'{params.get("motif")}:{params.get("haies")}'
+
     def post(self, request, *args, **kwargs):
         # If the moulinette is valid, i.e. it can run the evaluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid() and self.moulinette.is_acknowledged():
             if self.moulinette.acknowledgment_form is not None:
-                self.request.session[ACKNOWLEDGED_SESSION_KEY] = True
+                self.request.session[ACKNOWLEDGED_SESSION_KEY] = (
+                    self.get_acknowledgment_key()
+                )
             return HttpResponseRedirect(self.get_result_url())
 
         # If the main form is valid and all the errors are missing data, it means
@@ -444,10 +452,10 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         # Editing a simulation the user already acknowledged: start checked
         if (
             acknowledgment_form is not None
-            and not acknowledgment_form.is_bound
             and self.request.session.get(ACKNOWLEDGED_SESSION_KEY)
+            == self.get_acknowledgment_key()
         ):
-            acknowledgment_form.initial["eviter_reduire"] = True
+            acknowledgment_form.precheck()
 
         if self.moulinette.has_acknowledgment_error():
             context["has_errors"] = True
