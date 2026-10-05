@@ -464,6 +464,16 @@ def get_demarche_numerique_dossier(
             # we have got a dossier from « Démarche numérique » for this petition project,
             # let's synchronize project
             petition_project.synchronize_with_demarche_numerique(dossier_as_dict)
+        elif petition_project.is_dossier_submitted:
+            # A draft dossier may legitimately be missing on « Démarche numérique »,
+            # a submitted one should exist
+            logger.error(
+                "Dossier of a submitted petition project not found on « Démarche numérique »",
+                extra={
+                    "petition_project": petition_project.reference,
+                    "dossier_number": dossier_number,
+                },
+            )
     else:
         # If the last sync is recent, we can use the cached dossier from the petition project
         dossier_as_dict = petition_project.demarche_numerique_raw_dossier
