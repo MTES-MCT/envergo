@@ -452,11 +452,10 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         # Editing a simulation the user already acknowledged: start checked
         if (
             acknowledgment_form is not None
-            and not acknowledgment_form.is_bound
             and self.request.session.get(ACKNOWLEDGED_SESSION_KEY)
             == self.get_acknowledgment_key()
         ):
-            acknowledgment_form.initial["eviter_reduire"] = True
+            acknowledgment_form.precheck()
 
         if self.moulinette.has_acknowledgment_error():
             context["has_errors"] = True
