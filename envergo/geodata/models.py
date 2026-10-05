@@ -53,13 +53,13 @@ class MapQuerySet(models.QuerySet):
 
     def of_type(self, map_type):
         if map_type not in MAP_TYPES:
-            raise RuntimeError(f"{map_type} is not an existing map type")
+            raise ValueError(f"{map_type} is not an existing map type")
 
         return self.filter(map_type=map_type)
 
     def for_department(self, department_code):
         if department_code not in DEPARTMENT_CODES:
-            raise RuntimeError(
+            raise ValueError(
                 f"{department_code} doesn't seem to be a valid department code"
             )
 
@@ -99,11 +99,9 @@ class Map(models.Model):
     # GIST index → seq scans).
     geometry = gis_models.GeometryField(
         _("Simplified geometry"),
-        help_text=_(
-            """DO NOT EDIT! We cannot easily deactivate this edition widget,
+        help_text=_("""DO NOT EDIT! We cannot easily deactivate this edition widget,
             but if you use it, you will break Envergo.
-            """
-        ),
+            """),
         geography=True,
         null=True,
         blank=True,
@@ -259,11 +257,9 @@ class Zone(gis_models.Model):
     # GIST index → seq scans).
     geometry = gis_models.MultiPolygonField(
         geography=True,
-        help_text=_(
-            """DO NOT EDIT! We cannot easily deactivate this edition widget,
+        help_text=_("""DO NOT EDIT! We cannot easily deactivate this edition widget,
             but if you use it, you will break Envergo.
-            """
-        ),
+            """),
     )
     area = models.BigIntegerField(_("Area"), null=True, blank=True)
     npoints = models.BigIntegerField(_("Number of points"), null=True, blank=True)
@@ -301,11 +297,9 @@ class Line(gis_models.Model):
     # GIST index → seq scans).
     geometry = gis_models.MultiLineStringField(
         geography=True,
-        help_text=_(
-            """DO NOT EDIT! We cannot easily deactivate this edition widget,
+        help_text=_("""DO NOT EDIT! We cannot easily deactivate this edition widget,
             but if you use it, you will break Envergo.
-            """
-        ),
+            """),
     )
     created_at = models.DateTimeField(_("Date created"), default=timezone.now)
     attributes = models.JSONField(_("Entity attributes"), null=True, blank=True)
