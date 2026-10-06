@@ -22,7 +22,7 @@ from scipy.interpolate import griddata
 
 from envergo.geodata.constants import EPSG_LAMB93, EPSG_WGS84
 from envergo.geodata.models import MAP_TYPES, Department, Line, Zone
-from envergo.utils.storages import download_source
+from envergo.utils.storages import stored_file_location
 
 if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
@@ -176,12 +176,12 @@ def extract_map(archive):
             yield archive.temporary_file_path()
 
         elif hasattr(archive, "storage"):
-            source = download_source(archive)
-            if source.startswith("http"):
-                with download_gpkg(source) as local_copy:
+            location = stored_file_location(archive)
+            if location.startswith("http"):
+                with download_gpkg(location) as local_copy:
                     yield local_copy
             else:
-                yield source
+                yield location
         elif hasattr(archive, "path"):
             yield archive.path
         else:

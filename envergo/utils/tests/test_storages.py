@@ -10,7 +10,7 @@ from envergo.utils.storages import (
     PrivateMediaStorage,
     PrivateUploadStorage,
     PublicMediaStorage,
-    download_source,
+    stored_file_location,
 )
 
 # Fully offline: the presigning seam (S3Boto3Storage.url) is mocked with canned urls.
@@ -101,14 +101,14 @@ class TestLocalFileStorage:
         assert storage.s3_url("doc.pdf") == "/media/doc.pdf"
 
 
-class TestDownloadSource:
+class TestStoredFileLocation:
     def test_remote_file_yields_the_s3_url(self):
         signed_url = presign("media/doc.pdf")
         field_file = Mock(spec=["storage", "name", "path"])
         field_file.name = "media/doc.pdf"
         field_file.storage = Mock(spec=["s3_url"])
         field_file.storage.s3_url.return_value = signed_url
-        assert download_source(field_file) == signed_url
+        assert stored_file_location(field_file) == signed_url
 
     def test_local_file_yields_the_filesystem_path(self, tmp_path):
         field_file = Mock(spec=["storage", "name", "path"])
@@ -117,7 +117,7 @@ class TestDownloadSource:
             location=str(tmp_path), base_url="/media/"
         )
         field_file.path = str(tmp_path / "doc.pdf")
-        assert download_source(field_file) == field_file.path
+        assert stored_file_location(field_file) == field_file.path
 
 
 class TestEncodingContract:
