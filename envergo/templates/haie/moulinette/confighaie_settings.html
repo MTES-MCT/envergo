@@ -72,7 +72,7 @@
         </p>
       </div>
 
-      {% if grouped_criteria or density_maps %}
+      {% if has_maps %}
 
         {% for regulation, criteria in grouped_criteria.items %}
 
@@ -85,28 +85,49 @@
           </ul>
         {% endfor %}
 
+        <h3 class="fr-h5">Protection des captages</h3>
+
+        <p>
+          Données sensibles, non partageables. Pour consulter les données, se créer un compte sur l'application <a href="https://www.atlasante.fr/accueil/applications/carteaux"
+    target="_blank"
+    rel="noopener">Cart'eaux</a>.
+        </p>
+
         {% if density_maps %}
           <h3 class="fr-h5">Surface de référence du calcul de densité bocagère</h3>
 
           <ul>
-            {% for density_map in density_maps %}
-              {% include 'haie/moulinette/_map_li_snippet.html' with map=density_map %}
+            {% for map in density_maps %}
+              {% include 'haie/moulinette/_map_li_snippet.html' with map=map %}
             {% endfor %}
           </ul>
         {% endif %}
+
+        {% if zonage_maps %}
+          <h3 class="fr-h5">Zonages infra-départementaux régime unique</h3>
+
+          <ul>
+            {% for map in zonage_maps %}
+              {% include 'haie/moulinette/_map_li_snippet.html' with map=map %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if zones_sensibles_ep_maps %}
+          <h3 class="fr-h5">Espèces protégées : zones sensibles (ZNIEFF 1)</h3>
+
+          <ul>
+            {% for map in zones_sensibles_ep_maps %}
+              {% include 'haie/moulinette/_map_li_snippet.html' with map=map %}
+            {% endfor %}
+          </ul>
+        {% endif %}
+
       {% else %}
         <p>
           <em>Aucune carte paramétrée.</em>
         </p>
       {% endif %}
-
-      <h3 class="fr-h5">Protection des captages</h3>
-
-      <p>
-        Données sensibles, non partageables. Pour consulter les données, se créer un compte sur l'application <a href="https://www.atlasante.fr/accueil/applications/carteaux"
-    target="_blank"
-    rel="noopener">Cart'eaux</a>.
-      </p>
 
       <h2 id="title-aa-l3503">Alignements d'arbres L350-3</h2>
 

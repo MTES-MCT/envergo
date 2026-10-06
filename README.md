@@ -529,40 +529,43 @@ nous avons essuyé jusqu'à présent (aux alentour de 30 000 requêtes).
 | `RATELIMIT_IP_META_KEY` | *(non défini)* | Clé HTTP pour l'IP réelle derrière un reverse proxy (ex. `HTTP_X_REAL_IP` en production) |
 | `RATELIMIT_ENABLE` | `True` | Mettre à `False` pour désactiver (automatiquement désactivé dans les tests) |
 
-## Recette et déploiement
+## Processus de collaboration
 
-### Environnement de recette
+Le dépôt git est lié aux environnements du projet.
+
+- main -> le code prêt à partir en production
+- staging -> déployé sur l'environnement de recette
+- prod -> déployé en production + environnement de formation
+
+### Workflow classique
+
+Le développement d'une fonctionnalité se déroule classiquement ainsi.
+
+- tout développement s'effectue sur une branche spécifique
+- toute branche de dev doit être créée depuis la branche `main`
+- une fois complétée, la branche de dev est fusionnée dans `staging` pour recette, ou recettée sur une review app si elle est de grande ampleur
+- en parallèle, créer une PR pour revue de code.
+- en cas de retours : compléter la branche dev, re-fusionner dans `staging`
+- quand la branche est valide (revue ok, recette ok, pipeline ok), on peut fusionner la PR
+- c'est l'auteur de la PR qui est responsable de sa fusion.
+
+**La branche `main` contient uniquement du code prêt à partir en production à tout moment.**
+
+**Hors commit trivial, tout changement sur `main` passe par une PR relue.**
+
+### Environnements de recette
 
 Deux possibilités existent pour la mise en disponibilité d'un environnement de recette :
 
 - 1/ création d'une « review app » manuellement via scalingo ;
 - 2/ utilisation de l'environnement de recette permanent `envergo.incubateur.net`.
 
-Les « review app » peuvent être créées manuellement à l'envie depuis l'interface
+Les « review app » peuvent être créées manuellement à l'envi depuis l'interface
 de Scalingo. Une review app est automatiquement supprimée lorsque la Pull Request
 correspondante est fusionnée.
 
 L'environnement de staging est permanent, avec un déploiement automatique de la
 branche `staging`.
-
-### Workflow de collaboration
-
-Le workflow de collaboration git en vigueur est le suivant :
-
-- la branche `main` ne contient que du code absolument prêt à passer en prod (revue de code ok, review PO ok)
-- sauf commit absolument trivial, tous les devs sont effectués sur des branches dédiées
-  avant de pouvoir être fusionnées
-- sauf en cas de branche triviale et au jugé, les branches doivent passer par une revue de code avant d'être fusionnées
-- la branche `staging` contient du code fonctionnel, mais en cours de validation ; cette branche est déployée automatiquement sur l'environnement de staging permanent
-- Les Pull Requests doivent systématiquement être fusionnées dans `main`, et uniquement après validation complete
-- si la création d'une review app dédiée est jugée trop fastidieuse, une branche de dev peut être fusionnée dans `staging` pour en faciliter la validation.
-- il est interdit de pusher du code sur `prod` qui ne soit pas déjà dans `main`
-- pour effectuer une mise en prod, on fusionne `main` dans `prod` (fast forward)
-- de façon exceptionnelle, pour déployer un correctif urgemment en prod sans
-  devoir déployer toute la branche `main`, on peut :
-  - publier et valider le correctif sur `main` ;
-  - effectuer un `cherry-pick` du commit pour les intégrer de manière unitaire
-    à la branche `prod`.
 
 ### Déploiement en production
 
@@ -577,6 +580,7 @@ Les scripts utilisés sont dans le répertoire `bin`.
 
 Le workflow à suivre :
 
+0. Consulter le calendrier d'équipe pour vérifier qu'aucune formation ou démo importante n'est en cours
 1. Envoyer un message sur le canal #startup-envergo-produit pour prévenir de la mise en production imminente
 2. S'assurer du bon fonctionnement de main en local (notamment les nouvelles fonctionnalités)
 3. Si la CI est ok sur la branche main, fusionner main dans prod et pousser la branche prod
@@ -587,7 +591,35 @@ Le workflow à suivre :
 
 Les tickets sont déplacés de "Fusionnés" à "Done en prod" par læ PO.
 
-### Installation des dépendances Géo sur Scalingo
+## Pour une bonne collaboration
+
+Le dépôt git est partagé par toute l'équipe. Les conventions suivantes permettent à chacun d'avancer sans être freiné par le travail des autres. Elles reposent sur deux principes :
+
+- chaque dev gère les effets de ses propres changements ;
+- `staging` contient `main` et les développements en cours de validation, rien d'autre.
+
+**Fusionner en staging des branches dont les tests passent**
+
+Les tests de `staging` sont un signal commun à toute l'équipe. Une branche y arrive donc avec des tests au vert. Si la fusion casse des tests, la branche interagit avec un autre développement en cours. Son auteur est le mieux placé pour corriger.
+
+**Recetter les branches de grande ampleur sur une review app**
+
+Une branche qui modifie largement le code crée des conflits à chaque fusion en `staging`. Une review app permet de la recetter à part. Une fois la branche validée, son auteur la fusionne dans `staging` et résout les conflits en une seule fois.
+
+**Conserver l'historique d'une branche une fois fusionnée en staging**
+
+Une branche créée depuis `main` doit pouvoir se fusionner sans conflit dans `staging`. Un rebase après la fusion en `staging` casse cette garantie. Les commits rebasés reçoivent de nouveaux identifiants, et chaque fusion de `main` vers `staging` produit alors de faux conflits. Pour récupérer les derniers changements de `main`, on fusionne `main` dans la branche.
+
+**Passer par une suggestion pour modifier la branche d'un autre dev**
+
+Chaque dev est responsable de sa branche. Pour proposer une correction ou une amélioration, on utilise les suggestions de la revue GitHub.
+
+**Garder des PR courtes et ciblées**
+
+Une PR qui porte un seul changement se relit plus vite et plus sûrement. Autant que possible, on découpe le travail en plusieurs PR.
+Les _stack_ de Github sont un outil intéressant pour les PR dépendantes les unes des autres.
+
+## Installation des dépendances Géo sur Scalingo
 
 Envergo utilise GeoDjango, une version de Django s'appuyant sur des dépendances
 externes pour les fonctions géographiques (gdal, geos, proj…).

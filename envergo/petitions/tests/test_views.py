@@ -46,6 +46,7 @@ from envergo.petitions.models import (
     STAGES,
     InvitationToken,
     LatestMessagerieAccess,
+    PetitionProject,
 )
 from envergo.petitions.templatetags.petitions import format_ds_number
 from envergo.petitions.tests.factories import (
@@ -2951,6 +2952,32 @@ class TestAlternativeResultView:
         # THEN page redirects to moulinette form
         assert response.status_code == 302
         assert response.url.startswith(reverse("moulinette_form"))
+
+    @patch("envergo.petitions.views.get_context_from_dn", return_value={})
+    def test_alternatives_result_view_with_petitioner_message(
+        self, mock_dn, client, haie_coordinator_44, project
+    ):
+        """The page does not depend on the messagerie access annotations."""
+        # The dossier sync resets the field, which is what the page reads
+        PetitionProject.objects.filter(pk=project.pk).update(
+            latest_petitioner_msg=timezone.now()
+        )
+        simulation = project.simulations.first()
+        client.force_login(haie_coordinator_44)
+
+        url = reverse(
+            "petition_project_instructor_alternative_display",
+            kwargs={"reference": project.reference, "simulation_id": simulation.id},
+        )
+        response = client.get(url)
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Simulation initiale" in content
+        assert format_ds_number(project.demarche_numerique_dossier_number) in content
+        assert_matomo_url(
+            response, "/projet/+ref_projet+/instruction/alternatives/+simulation+/"
+        )
 
     def test_alternatives_result_view_content(
         self, client, haie_user, haie_coordinator_44, project
