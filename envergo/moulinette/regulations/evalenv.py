@@ -19,6 +19,7 @@ from envergo.moulinette.regulations import (
     CriterionEvaluator,
     SelfDeclarationMixin,
 )
+from envergo.utils.fields import EnrichedChoices
 
 # Only ask the "emprise" question if final surface is greater or equal than
 EMPRISE_THRESHOLD = 10000
@@ -372,26 +373,20 @@ PUISSANCE_CHOICES = (
     ("gte_1000kWc", "1 000 kWc ou plus"),
 )
 
-LOCALISATION_CHOICES = (
-    ("sol", "Au sol"),
-    ("aire_arti", "Ombrière sur une aire de stationnement artificialisée"),
-    (
-        "aire_non_arti",
-        {
-            "label": "Ombrière autre",
-            "help_text": "Sur sol agricole, aire de stationnement non artificialisée…",
-        },
-    ),
-    (
-        "batiment_clos",
-        {
-            "label": "Toiture d’un hangar, ou bâtiment clos sur tous ses côtés",
-            "help_text": "Y compris serre agricole entièrement close, bâtiment sportif ou d’activité",
-        },
-    ),
-    ("batiment_ouvert", "Toiture d’un bâtiment partiellement ouvert"),
-    ("aucun", "Aucun panneau"),
-)
+
+class LocalisationChoices(EnrichedChoices):
+    sol = "Au sol"
+    aire_arti = "Ombrière sur une aire de stationnement artificialisée"
+    aire_non_arti = {
+        "label": "Ombrière autre",
+        "help_text": "Sur sol agricole, aire de stationnement non artificialisée…",
+    }
+    batiment_clos = {
+        "label": "Toiture d’un hangar, ou bâtiment clos sur tous ses côtés",
+        "help_text": "Y compris serre agricole entièrement close, bâtiment sportif ou d’activité",
+    }
+    batiment_ouvert = "Toiture d’un bâtiment partiellement ouvert"
+    aucun = "Aucun panneau"
 
 
 class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
@@ -412,7 +407,7 @@ class PhotovoltaiqueForm(OptionalFormMixin, forms.Form):
     )
     localisation = DisplayChoiceField(
         label="Localisation des panneaux",
-        choices=LOCALISATION_CHOICES,
+        choices=LocalisationChoices,
         widget=forms.RadioSelect,
         required=True,
     )
@@ -470,32 +465,23 @@ class Photovoltaique(SelfDeclarationMixin, CriterionEvaluator):
         return puissance, localisation
 
 
-TYPE_STATIONNEMENT_CHOICES = (
-    (
-        "public",
-        {
-            "label": "Ouvert au public",
-            "help_text": """Dès lors que les emplacements sont accessibles à tous,
+class TypeStationnementChoices(EnrichedChoices):
+    public = {
+        "label": "Ouvert au public",
+        "help_text": """Dès lors que les emplacements sont accessibles à tous,
             y compris s’ils sont payants, ou fermés la nuit, ou réservés aux clients d’un commerce
             ou d’un établissement recevant du public""",
-        },
-        "Ouvert au public",
-    ),
-    (
-        "mixed",
-        "Mixte (au moins un emplacement ouvert au public)",
-        "Mixte public-privé (au moins un emplacement est ouvert au public)",
-    ),
-    (
-        "private",
-        {
-            "label": "Entièrement privé",
-            "help_text": """Emplacements attachés à des logements ou réservés aux employés
+    }
+    mixed = {
+        "label": "Mixte (au moins un emplacement ouvert au public)",
+        "display_label": "Mixte public-privé (au moins un emplacement est ouvert au public)",
+    }
+    private = {
+        "label": "Entièrement privé",
+        "help_text": """Emplacements attachés à des logements ou réservés aux employés
             d’une entreprise ; en sous-sol ou en extérieur.""",
-        },
-        "Entièrement privé",
-    ),
-)
+    }
+
 
 NB_EMPLACEMENTS_CHOICES = (
     ("0_49", "0 à 49"),
@@ -518,8 +504,7 @@ class AireDeStationnementForm(OptionalFormMixin, forms.Form):
         """,
         required=True,
         widget=forms.RadioSelect,
-        choices=extract_choices(TYPE_STATIONNEMENT_CHOICES),
-        get_display_value=extract_display_function(TYPE_STATIONNEMENT_CHOICES),
+        choices=TypeStationnementChoices,
     )
     nb_emplacements = DisplayChoiceField(
         label="Nombre total d'emplacements",
