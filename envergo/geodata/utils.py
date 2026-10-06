@@ -5,11 +5,12 @@ import re
 import sys
 import zipfile
 from contextlib import contextmanager
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import TYPE_CHECKING
 
 import numpy as np
 import requests
+from django.conf import settings
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, MultiLineString, MultiPolygon, Point
 from django.contrib.gis.utils.layermapping import LayerMapping
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
 
 logger = logging.getLogger(__name__)
+
+DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 FRANCE_LAT = 46.76305599999998
@@ -172,9 +175,13 @@ def extract_map(archive):
         if hasattr(archive, "temporary_file_path"):
             yield archive.temporary_file_path()
 
-        # GDAL fetches over plain HTTP with no session: real S3 url, not proxy url.
         elif hasattr(archive, "storage"):
-            yield download_source(archive)
+            source = download_source(archive)
+            if source.startswith("http"):
+                with download_gpkg(source) as local_copy:
+                    yield local_copy
+            else:
+                yield source
         elif hasattr(archive, "path"):
             yield archive.path
         else:
@@ -182,6 +189,24 @@ def extract_map(archive):
 
     else:
         raise ValueError(_("Unsupported file format"))
+
+
+@contextmanager
+def download_gpkg(url):
+    """Download a remote GeoPackage to a temporary local file and yield its path.
+
+    GDAL warns when a GeoPackage name lacks the .gpkg extension, as remote urls do.
+    """
+    with NamedTemporaryFile(suffix=".gpkg") as local_file:
+        logger.info("Downloading map file")
+        response = requests.get(
+            url, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
+        )
+        response.raise_for_status()
+        for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
+            local_file.write(chunk)
+        local_file.flush()
+        yield local_file.name
 
 
 def count_features(map_file):

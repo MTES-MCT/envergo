@@ -1,9 +1,10 @@
-from unittest.mock import Mock
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 from envergo.geodata.utils import extract_map
 
-# GDAL fetches .gpkg files over plain HTTP with no session: stored files must
-# resolve to the real S3 url (s3_url), never the browser-facing proxy url.
+# Stored files must resolve to the real S3 url (s3_url), never the
+# browser-facing proxy url.
 
 
 def make_stored_gpkg(s3_url, path="/var/media/maps/departements.gpkg"):
@@ -16,14 +17,19 @@ def make_stored_gpkg(s3_url, path="/var/media/maps/departements.gpkg"):
     return archive
 
 
-def test_remote_gpkg_yields_the_s3_url():
+@patch("envergo.geodata.utils.requests.get")
+def test_remote_gpkg_yields_a_local_gpkg_copy(mock_get):
     signed_url = (
         "https://s3.fr-par.scw.cloud/bucket/media/maps/departements.gpkg"
         "?X-Amz-Signature=abc"
     )
+    mock_get.return_value.iter_content.return_value = [b"gpkg ", b"content"]
     archive = make_stored_gpkg(signed_url)
     with extract_map(archive) as map_file:
-        assert map_file == signed_url
+        assert mock_get.call_args.args == (signed_url,)
+        assert map_file.endswith(".gpkg")
+        assert Path(map_file).read_bytes() == b"gpkg content"
+    assert not Path(map_file).exists()
 
 
 def test_local_gpkg_yields_the_filesystem_path():
