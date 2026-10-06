@@ -560,8 +560,7 @@ class EviterReduireForm(forms.Form):
     """Acknowledgment of the « Éviter / réduire » message.
 
     Gates the simulation form submission without being part of the
-    simulation data: its values must never reach the result urls, and the
-    checkbox must never be prefilled.
+    simulation data: its values must never reach the result urls.
 
     An unchecked checkbox posts nothing, so a hidden input (named by
     DISPLAYED_MARKER, rendered by the template) marks the block as
@@ -583,6 +582,10 @@ class EviterReduireForm(forms.Form):
             "required": "Vous devez confirmer avoir pris connaissance de cette information."
         },
     )
+
+    def precheck(self):
+        """Start with the checkbox checked."""
+        self.initial["eviter_reduire"] = True
 
 
 class MoulinetteFormHaieRU(BaseMoulinetteFormHaie):

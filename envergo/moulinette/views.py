@@ -47,6 +47,9 @@ from envergo.utils.urls import copy_qs, remove_from_qs, remove_mtm_params, updat
 logger = logging.getLogger(__name__)
 
 
+ACKNOWLEDGED_SESSION_KEY = "eviter_reduire_acknowledged_simulation"
+
+
 class MoulinetteMixin:
     """Display the moulinette form and results."""
 
@@ -374,10 +377,20 @@ class MoulinetteForm(MoulinetteMixin, FormView):
     def get_template_names(self):
         return self.moulinette.get_home_template()
 
+    def get_acknowledgment_key(self):
+        """Identify what was acknowledged: the motif of a given hedge set."""
+
+        params = self.get_results_params()
+        return f'{params.get("motif")}:{params.get("haies")}'
+
     def post(self, request, *args, **kwargs):
         # If the moulinette is valid, i.e. it can run the evaluation and provide
         # a result, then we redirect to the result page
         if self.moulinette.is_valid() and self.moulinette.is_acknowledged():
+            if self.moulinette.acknowledgment_form is not None:
+                self.request.session[ACKNOWLEDGED_SESSION_KEY] = (
+                    self.get_acknowledgment_key()
+                )
             return HttpResponseRedirect(self.get_result_url())
 
         # If the main form is valid and all the errors are missing data, it means
@@ -392,6 +405,7 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         # If the acknowledgment block was never displayed, redirect to the form
         # so it appears — without an error, like the additional questions above.
         elif self.moulinette.is_valid() and self.moulinette.is_acknowledgment_pending():
+            self.request.session.pop(ACKNOWLEDGED_SESSION_KEY, None)
             return HttpResponseRedirect(f"{self.get_form_url()}#eviter-reduire")
 
         # In other cases, it means there are errors in one of the submitted forms,
@@ -432,7 +446,16 @@ class MoulinetteForm(MoulinetteMixin, FormView):
         context = super().get_context_data(**kwargs)
 
         # Exposed here rather than in the mixin: result views must never see it
-        context["acknowledgment_form"] = self.moulinette.acknowledgment_form
+        acknowledgment_form = self.moulinette.acknowledgment_form
+        context["acknowledgment_form"] = acknowledgment_form
+
+        # Editing a simulation the user already acknowledged: start checked
+        if (
+            acknowledgment_form is not None
+            and self.request.session.get(ACKNOWLEDGED_SESSION_KEY)
+            == self.get_acknowledgment_key()
+        ):
+            acknowledgment_form.precheck()
 
         if self.moulinette.has_acknowledgment_error():
             context["has_errors"] = True
