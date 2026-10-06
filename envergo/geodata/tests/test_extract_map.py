@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -23,7 +24,7 @@ def test_remote_gpkg_yields_a_local_gpkg_copy(mock_get):
         "https://s3.fr-par.scw.cloud/bucket/media/maps/departements.gpkg"
         "?X-Amz-Signature=abc"
     )
-    mock_get.return_value.iter_content.return_value = [b"gpkg ", b"content"]
+    mock_get.return_value.raw = io.BytesIO(b"gpkg content")
     archive = make_stored_gpkg(signed_url)
     with extract_map(archive) as map_file:
         assert mock_get.call_args.args == (signed_url,)

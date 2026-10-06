@@ -2,6 +2,7 @@ import glob
 import json
 import logging
 import re
+import shutil
 import sys
 import zipfile
 from contextlib import contextmanager
@@ -28,8 +29,6 @@ if TYPE_CHECKING:
     from envergo.hedges.models import HedgeList
 
 logger = logging.getLogger(__name__)
-
-DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 FRANCE_LAT = 46.76305599999998
@@ -203,8 +202,9 @@ def download_gpkg(url):
             url, stream=True, timeout=settings.DEFAULT_HTTP_FILE_TIMEOUT
         )
         response.raise_for_status()
-        for chunk in response.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
-            local_file.write(chunk)
+        # raw skips Content-Encoding decoding by default.
+        response.raw.decode_content = True
+        shutil.copyfileobj(response.raw, local_file)
         local_file.flush()
         yield local_file.name
 
