@@ -1,4 +1,5 @@
 import logging
+from abc import ABC
 
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
@@ -118,12 +119,11 @@ class AlignementsArbresCalvadosBeforeRu(AlignementsArbresL3503):
         return has_alignement_bord_voie, motif
 
 
-class AlignementsArbresHru(HaieCriterionEvaluator):
+class AlignementsArbresNonConcerneBase(HaieCriterionEvaluator, ABC):
     """L350-3 never applies outside roadside tree alignments."""
 
     choice_label = "Alignements d'arbres > L350-3"
     base_slug = "alignement_arbres"
-    category = HedgeCategory.hru
 
     RESULT_MATRIX = {
         "non_concerne": RESULTS.non_concerne,
@@ -133,7 +133,9 @@ class AlignementsArbresHru(HaieCriterionEvaluator):
         self._result_code, self._result = "non_concerne", "non_concerne"
 
 
-class AlignementsArbresRu(AlignementsArbresHru):
-    """Same as `AlignementsArbresHru`, for hedges covered by the régime unique."""
+class AlignementsArbresHru(AlignementsArbresNonConcerneBase):
+    category = HedgeCategory.hru
 
+
+class AlignementsArbresRu(AlignementsArbresNonConcerneBase):
     category = HedgeCategory.ru

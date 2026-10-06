@@ -1,3 +1,5 @@
+from abc import ABC
+
 from envergo.evaluations.models import RESULTS
 from envergo.hedges.models import HedgeCategory
 from envergo.moulinette.regulations import (
@@ -16,10 +18,9 @@ class SitesInscritsRegulation(AlignementsOnlyMixin, HaieRegulationEvaluator):
     }
 
 
-class SitesInscritsHaieHru(HaieCriterionEvaluator):
+class SitesInscritsHaieBase(HaieCriterionEvaluator, ABC):
     choice_label = "Sites inscrits > Sites inscrits Haie"
     base_slug = "si_haie"
-    category = HedgeCategory.hru
     plantation_conditions = []
 
     RESULT_MATRIX = {
@@ -41,9 +42,13 @@ class SitesInscritsHaieHru(HaieCriterionEvaluator):
         return True
 
 
-class SitesInscritsHaieRu(SitesInscritsHaieHru):
+class SitesInscritsHaieHru(SitesInscritsHaieBase):
+    category = HedgeCategory.hru
+
+
+class SitesInscritsHaieRu(SitesInscritsHaieBase):
     category = HedgeCategory.ru
 
 
-class SitesInscritsHaieL3503(SitesInscritsHaieHru):
+class SitesInscritsHaieL3503(SitesInscritsHaieBase):
     category = HedgeCategory.l350_3

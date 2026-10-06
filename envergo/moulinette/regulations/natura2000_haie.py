@@ -1,3 +1,4 @@
+from abc import ABC
 from math import ceil
 
 import shapely
@@ -49,10 +50,9 @@ class Natura2000HaieAaSettings(Natura2000HaieRuSettings):
     )
 
 
-class Natura2000HaieHru(HaieCriterionEvaluator):
+class Natura2000HaieBase(HaieCriterionEvaluator, ABC):
     choice_label = "Natura 2000 > Haie"
     base_slug = "natura2000_haie"
-    category = HedgeCategory.hru
     settings_form_class = Natura2000HaieAaSettings
 
     RESULT_MATRIX = {
@@ -144,13 +144,17 @@ class Natura2000HaieHru(HaieCriterionEvaluator):
         )
 
 
-class Natura2000HaieL3503(Natura2000HaieHru):
+class Natura2000HaieHru(Natura2000HaieBase):
+    category = HedgeCategory.hru
+
+
+class Natura2000HaieL3503(Natura2000HaieBase):
     """Roadside tree alignments, evaluated exactly like the hors régime unique ones."""
 
     category = HedgeCategory.l350_3
 
 
-class Natura2000HaieRu(Natura2000HaieHru):
+class Natura2000HaieRu(Natura2000HaieBase):
     """Hedges covered by the régime unique.
 
     Those are never tree alignments, so `concerne_aa` plays no part here: the
