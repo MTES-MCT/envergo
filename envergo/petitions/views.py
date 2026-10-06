@@ -1783,23 +1783,18 @@ class PetitionProjectInstructorAlternativeEdit(
         return url
 
 
-class PetitionProjectInstructorAlternativeResultsView(
-    BasePetitionProjectInstructorView, PetitionProjectDetail
-):
+class PetitionProjectInstructorAlternativeResultsView(PetitionProjectDetail):
     """View for display an alternative simulation."""
 
-    event_action = None  # Avoid log_event
     simulation_object = None
     template_name = "haie/petitions/instructor_view_alternative_display.html"
-    menu_section = "project"
 
-    def get_queryset(self):
-        """Overrides queryset to avoid unused anotations"""
-        return PetitionProject.objects.all()
+    def get_plantation_url(self, moulinette):
+        plantation_url = super().get_plantation_url(moulinette)
+        return update_qs(plantation_url, {"source": "instruction"})
 
     def get_simulation_object(self):
         """Return the targeted simulation (with its project) or raise 404."""
-        self.object = self.get_object()
         simulation_pk = self.kwargs.get("simulation_id")
         simulation_qs = Simulation.objects.filter(project=self.object).select_related(
             "project"
@@ -1832,11 +1827,13 @@ class PetitionProjectInstructorAlternativeResultsView(
         simulation_form_url = self.get_simulation_object().form_url
         return HttpResponseRedirect(simulation_form_url)
 
-    def dispatch(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.has_view_permission(request, self.object):
+        if not self.object.has_view_permission(request.user):
             return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
+
+        response = self.render_to_response(self.get_context_data())
+        return response
 
 
 class PetitionProjectInstructorProcedureView(
