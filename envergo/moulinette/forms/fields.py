@@ -5,6 +5,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db import DataError
 
+from envergo.utils.fields import EnrichedChoicesMeta
+
 logger = logging.getLogger(__name__)
 
 
@@ -92,6 +94,8 @@ def extract_choices(choices):
 def extract_display_function(choices):
     """Extract a lambda method to display the label based on code
     from a list of 3 items tuples : code, form label, display label."""
+    if isinstance(choices, EnrichedChoicesMeta):
+        return choices.get_display_value
     return lambda value: next(
         (choice[2] for choice in choices if choice[0] == value), None
     )
