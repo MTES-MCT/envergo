@@ -46,6 +46,7 @@ class RegisterForm(UserCreationForm):
     def clean(self):
         # Disable unique validation. We will do it manually
         self._validate_unique = False
+        self.validate_passwords()
         return self.cleaned_data
 
     def full_clean(self):

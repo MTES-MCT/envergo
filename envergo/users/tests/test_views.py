@@ -93,20 +93,18 @@ def test_register_with_existing_email_and_other_errors(
     assert users.count() == 1
 
     register_url = reverse("register")
-    res = client.post(
-        register_url,
-        {
-            "email": amenagement_user.email,
-            "name": "Te St",
-            "password1": "A",
-            "password2": "B",
-        },
-    )
+    params = {
+        "email": amenagement_user.email,
+        "name": "Te St",
+        "password1": "ViveLaTartiflette!",
+        "password2": "ViveLaCroziflette!",
+    }
+    assert params["password1"] != params["password2"]
+
+    res = client.post(register_url, params)
     assert res.status_code == 200
     assert len(mailoutbox) == 0
-    content = res.content.decode()
-
-    # Password mismatch error should be displayed
+    content = res.content.decode()  # Password mismatch error should be displayed
     assert "Les deux mots de passe ne correspondent pas" in content
 
     # Email error should NOT be displayed (security: don't reveal existing emails)
