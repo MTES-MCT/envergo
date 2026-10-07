@@ -91,57 +91,6 @@ class HedgePropertiesBaseForm(forms.Form):
             for name, field in self.fields.items()
         }
 
-    def _label(self, name, field):
-        """Label of a property, or the title of its fieldset if it has none."""
-        return (
-            getattr(field, "display_label", None)
-            or field.label
-            or next(
-                (
-                    title
-                    for title, names in getattr(self, "fieldsets", {}).items()
-                    if name in names
-                ),
-                name,
-            )
-        )
-
-    def _plain_choices(self, field):
-        """Value and display label of every choice of a field.
-
-        Choice labels may contain html, so fields use `get_display_value` when it is set.
-        """
-        get_display_value = getattr(field, "get_display_value", None)
-        return [
-            (value, get_display_value(value) if get_display_value else label)
-            for value, label in field.choices
-        ]
-
-    @property
-    def read_only_fields(self):
-        """Plain text description of the properties, to display a saved hedge.
-
-        The hedge type is not included, see `type_choices`."""
-        return [
-            {
-                "name": name,
-                "label": self._label(name, field),
-                "is_boolean": isinstance(field, forms.BooleanField),
-                "choices": (
-                    self._plain_choices(field)
-                    if isinstance(field, forms.ChoiceField)
-                    else None
-                ),
-            }
-            for name, field in self.fields.items()
-            if name != "type_haie"
-        ]
-
-    @property
-    def type_choices(self):
-        """Value and plain text label of every hedge type."""
-        return self._plain_choices(self.fields["type_haie"])
-
 
 MODE_DESTRUCTION_CHOICES = (
     ("arrachage", "Arrachage", "Arrachage"),
@@ -167,6 +116,7 @@ class HedgeToRemovePropertiesRegimeUniqueForm(HedgePropertiesBaseForm):
     mode_destruction = DisplayChoiceField(
         choices=extract_choices(MODE_DESTRUCTION_CHOICES),
         label="",
+        display_label="Mode de destruction",
         widget=forms.RadioSelect,
         initial="arrachage",
         get_display_value=extract_display_function(MODE_DESTRUCTION_CHOICES),
@@ -337,6 +287,7 @@ class HedgeToPlantPropertiesCalvadosForm(
     mode_plantation = DisplayChoiceField(
         choices=extract_choices(MODE_PLANTATION_CHOICES),
         label="",
+        display_label="Type de plantation",
         widget=forms.RadioSelect,
         initial="plantation",
         get_display_value=extract_display_function(MODE_PLANTATION_CHOICES),
