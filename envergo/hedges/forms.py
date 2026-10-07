@@ -76,6 +76,20 @@ class HedgePropertiesBaseForm(forms.Form):
         """
         )
 
+        # The hedge data dialog is bound to the vue app: each input edits the
+        # matching property of the `hedgeDraft` object (see hedge_input/app.js).
+        for name, field in self.fields.items():
+            field.widget.attrs["v-model"] = f"hedgeDraft.{name}"
+
+    @property
+    def defaults(self):
+        """Value of every property of a hedge that was not edited yet."""
+        return {
+            name: self.get_initial_for_field(field, name)
+            or (False if isinstance(field, forms.BooleanField) else "")
+            for name, field in self.fields.items()
+        }
+
 
 MODE_DESTRUCTION_CHOICES = (
     ("arrachage", "Arrachage", "Arrachage"),

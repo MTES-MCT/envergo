@@ -46,128 +46,51 @@ const latLngsLength = (latLngs) => {
   return length;
 };
 
+// Hedge displayed by the hedge data dialog.
+const selectedHedge = ref(null);
+// Hedge properties being edited in the dialog.
+const hedgeDraft = reactive({});
+
+const hedgeDefaults = {
+  [PLANTATION_MODE]: JSON.parse(document.getElementById(`${PLANTATION_MODE}-hedge-defaults`).textContent),
+  [REMOVAL_MODE]: JSON.parse(document.getElementById(`${REMOVAL_MODE}-hedge-defaults`).textContent),
+};
+
+const isDialogReadonly = (dialogMode) => mode === READ_ONLY_MODE || dialogMode !== mode;
+
+// Save the dialog form data into the hedge object
+const saveHedgeData = (dialogMode) => {
+  if (!isDialogReadonly(dialogMode)) {
+    for (const property in hedgeDefaults[dialogMode]) {
+      selectedHedge.value.additionalData[property] = hedgeDraft[property];
+    }
+  }
+  dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
+};
+
 // Show the "description de la haie" form modal
 const showHedgeModal = (hedge, hedgeType) => {
-
-  const isReadonly = (
-    mode === READ_ONLY_MODE ||
-    (hedgeType === TO_PLANT && mode === REMOVAL_MODE) ||
-    (hedgeType === TO_REMOVE && mode === PLANTATION_MODE)
-  );
   const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
+  const isReadonly = isDialogReadonly(dialogMode);
 
-  const dialogId = `${dialogMode}-hedge-data-dialog`
-  const dialog = document.getElementById(dialogId);
+  const dialog = document.getElementById(`${dialogMode}-hedge-data-dialog`);
   const form = dialog.querySelector("form");
-  const hedgeName = dialog.querySelector(".hedge-data-dialog-hedge-name");
-  const hedgeLength = dialog.querySelector(".hedge-data-dialog-hedge-length");
-  const hedgeBadgeHru = dialog.querySelector(".hedge-badge-hru");
-  const hedgeBadgeL3503 = dialog.querySelector(".hedge-badge-l350-3");
-  const resetForm = () => {
-    form.reset();
-    const inputs = form.querySelectorAll("input");
-    const selects = form.querySelectorAll("select");
+  const inputs = form.querySelectorAll("input, select");
+  const submitButton = form.querySelector("button[type='submit']");
 
-    inputs.forEach(input => input.disabled = false);
-    selects.forEach(select => select.disabled = false);
-    const submitButton = form.querySelector("button[type='submit']");
-    submitButton.innerText = "Enregistrer";
+  inputs.forEach(input => input.disabled = isReadonly);
+  submitButton.innerText = isReadonly ? "Retour" : "Enregistrer";
+
+  // Fill the draft with the hedge data, or the default values for a new hedge
+  const defaults = hedgeDefaults[dialogMode];
+  for (const property in defaults) {
+    hedgeDraft[property] = hedge.additionalData?.[property] ?? defaults[property];
   }
+  selectedHedge.value = hedge;
 
-  resetForm();
-
-  // Pre-fill the form with hedge data if it's an edition
-  if (hedge.additionalData) {
-    for (const property in hedge.additionalData) {
-      const field = document.getElementById(`id_${dialogMode}-${property}`);
-      if (field) {
-        if (field.type === "checkbox") {
-          field.checked = hedge.additionalData[property];
-        } else if (field.type === "fieldset") {
-          // radio group
-          for (let i = 0; i < field.elements.length; i++) {
-            let value = field.elements[i].value;
-            if (value === hedge.additionalData[property]) {
-              field.elements[i].checked = true
-            }
-          }
-        } else {
-          field.value = hedge.additionalData[property];
-        }
-      }
-    }
-  } else {
-    form.reset();
-  }
-  hedgeName.textContent = hedge.id;
-  hedgeLength.textContent = hedge.length.toFixed(0);
-  if(hedgeBadgeHru){
-    hedgeBadgeHru.style.display = hedge.category() === 'hru' ? '' : 'none';
-  }
-  if(hedgeBadgeL3503){
-    hedgeBadgeL3503.style.display = hedge.category() === 'l350_3' ? '' : 'none';
-  }
-
-  // Save form data to the hedge object
-  // This is the form submit event handler
-  const saveModalData = (event) => {
-    event.preventDefault();
-
-    const form = event.target;
-
-    for (const element of form.elements) {
-      if (element instanceof HTMLInputElement ||
-        element instanceof HTMLSelectElement ||
-        element instanceof HTMLTextAreaElement) {
-        // Skip buttons or inputs without a name
-        if (!element.name || element.type === 'submit' || element.type === 'button') continue;
-
-        const propertyName = element.name.split("-")[1]; // remove prefix
-        if (element.type === "checkbox") {
-          hedge.additionalData[propertyName] = element.checked;
-        } else if (element.type === "radio") {
-          if (element.checked) {
-            hedge.additionalData[propertyName] = element.value;
-          }
-        }
-        else {
-          hedge.additionalData[propertyName] = element.value;
-        }
-      }
-    }
-    // Reset the form and hide the modal
-    form.reset();
-    dsfr(dialog).modal.conceal();
-  };
-
-  const closeModal = (event) => {
-    event.preventDefault();
-    // Hide the modal
-    dsfr(dialog).modal.conceal();
-  };
-
-  if (isReadonly) {
-    const inputs = form.querySelectorAll("input");
-    const selects = form.querySelectorAll("select");
-
-    inputs.forEach(input => input.disabled = true);
-    selects.forEach(select => select.disabled = true);
-    const submitButton = form.querySelector("button[type='submit']");
-    submitButton.innerText = "Retour";
-
-    form.addEventListener("submit", closeModal, { once: true });
-  }
-  else {
-    // Save data upon form submission
-    form.addEventListener("submit", saveModalData, { once: true });
-  }
-
-  // If the modal is closed without saving, let's make sure to remove the
-  // event listener.
   dialog.addEventListener("dsfr.conceal", () => {
-    form.removeEventListener("submit", saveModalData);
     hedge.isDrawingCompleted = true;
-  });
+  }, { once: true });
 
   dsfr(dialog).modal.disclose();
 };
@@ -930,6 +853,9 @@ createApp({
       saveData,
       cancel,
       showHedgeModal,
+      selectedHedge,
+      hedgeDraft,
+      saveHedgeData,
       invalidHedges,
       conditions,
       hedgeBeingDrawn,
