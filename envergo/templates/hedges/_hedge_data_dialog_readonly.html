@@ -1,0 +1,42 @@
+<div class="fr-modal__header">
+  <button aria-controls="{{ dialog_id }}"
+          title="Fermer"
+          type="button"
+          class="fr-btn--close fr-btn"
+          @click="closeHedgeDialog('{{ dialog_mode }}')">Fermer</button>
+</div>
+<div class="fr-modal__content fr-pt-4w" v-if="selectedHedge">
+  {% include "hedges/_hedge_data_dialog_header.html" %}
+  <p class="fr-tag fr-mb-3w fr-ml-2w">
+    Type : 
+    {% for value, label in form.fields.type_haie.choices %}
+      <span v-show="selectedHedge.additionalData.type_haie === '{{ value }}'">{{ label }}</span>
+    {% endfor %}
+  </p>
+  <ul class="hedge-data-dialog-properties fr-mb-3w">
+    {% for name, field in form.fields.items %}
+      {% if name != "type_haie" %}
+        {% include "hedges/_hedge_data_dialog_readonly_property.html" %}
+      {% endif %}
+    {% endfor %}
+  </ul>
+  <section class="fr-accordion"
+           v-show="false{% for name in form.fields %}{% if name != "type_haie" %} || ('{{ name }}' in selectedHedge.additionalData && !selectedHedge.additionalData.{{ name }}){% endif %}{% endfor %}">
+    <h2 class="fr-accordion__title">
+      <button type="button"
+              class="fr-accordion__btn"
+              aria-expanded="false"
+              aria-controls="{{ dialog_id }}-other-properties">Caractéristiques non applicables</button>
+    </h2>
+    <div class="fr-collapse hedge-data-dialog-other-properties"
+         id="{{ dialog_id }}-other-properties">
+      <ul class="hedge-data-dialog-properties">
+        {% for name, field in form.fields.items %}
+          {% if name != "type_haie" %}
+            {% include "hedges/_hedge_data_dialog_readonly_property.html" with unset=True %}
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+</div>

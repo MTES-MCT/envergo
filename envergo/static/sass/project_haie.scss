@@ -585,6 +585,17 @@ dialog#hedge-input-modal {
 }
 
 dialog.hedge-data-dialog {
+  .hedge-data-dialog-properties {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  // Align the properties of the accordion with the ones above it
+  .fr-accordion .fr-collapse.hedge-data-dialog-other-properties {
+    margin-left: 0;
+    padding-left: 0;
+  }
+
   #form-group-removal-type_haie label span.label-content,
   #form-group-plantation-type_haie label span.label-content,
   .hedge-data-dialog-header {

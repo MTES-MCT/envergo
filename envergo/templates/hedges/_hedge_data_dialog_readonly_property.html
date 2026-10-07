@@ -1,0 +1,16 @@
+<li v-show="{% if unset %}'{{ name }}' in selectedHedge.additionalData && !{% endif %}selectedHedge.additionalData.{{ name }}">
+  <strong>{{ field.display_label|default:field.label }}</strong> :
+  {% if unset %}
+    {% if field.choices %}
+      Non renseigné
+    {% else %}
+      Non
+    {% endif %}
+  {% elif field.choices %}
+    {% for value, label in field.display_choices|default:field.choices %}
+      <span v-show="selectedHedge.additionalData.{{ name }} === '{{ value }}'">{{ label }}</span>
+    {% endfor %}
+  {% else %}
+    Oui
+  {% endif %}
+</li>
