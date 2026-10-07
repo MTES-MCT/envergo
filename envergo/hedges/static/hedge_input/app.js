@@ -58,33 +58,29 @@ const hedgeDefaults = {
 
 const isDialogReadonly = (dialogMode) => mode === READ_ONLY_MODE || dialogMode !== mode;
 
-// Save the dialog form data into the hedge object
-const saveHedgeData = (dialogMode) => {
-  if (!isDialogReadonly(dialogMode)) {
-    for (const property in hedgeDefaults[dialogMode]) {
-      selectedHedge.value.additionalData[property] = hedgeDraft[property];
-    }
-  }
+const closeHedgeDialog = (dialogMode) => {
   dsfr(document.getElementById(`${dialogMode}-hedge-data-dialog`)).modal.conceal();
 };
 
-// Show the "description de la haie" form modal
+// Save the dialog form data into the hedge object
+const saveHedgeData = (dialogMode) => {
+  for (const property in hedgeDefaults[dialogMode]) {
+    selectedHedge.value.additionalData[property] = hedgeDraft[property];
+  }
+  closeHedgeDialog(dialogMode);
+};
+
+// Show the "description de la haie" modal
 const showHedgeModal = (hedge, hedgeType) => {
   const dialogMode = hedgeType === TO_PLANT ? PLANTATION_MODE : REMOVAL_MODE;
-  const isReadonly = isDialogReadonly(dialogMode);
-
   const dialog = document.getElementById(`${dialogMode}-hedge-data-dialog`);
-  const form = dialog.querySelector("form");
-  const inputs = form.querySelectorAll("input, select");
-  const submitButton = form.querySelector("button[type='submit']");
-
-  inputs.forEach(input => input.disabled = isReadonly);
-  submitButton.innerText = isReadonly ? "Retour" : "Enregistrer";
 
   // Fill the draft with the hedge data, or the default values for a new hedge
-  const defaults = hedgeDefaults[dialogMode];
-  for (const property in defaults) {
-    hedgeDraft[property] = hedge.additionalData?.[property] ?? defaults[property];
+  if (!isDialogReadonly(dialogMode)) {
+    const defaults = hedgeDefaults[dialogMode];
+    for (const property in defaults) {
+      hedgeDraft[property] = hedge.additionalData?.[property] ?? defaults[property];
+    }
   }
   selectedHedge.value = hedge;
 
@@ -856,6 +852,7 @@ createApp({
       selectedHedge,
       hedgeDraft,
       saveHedgeData,
+      closeHedgeDialog,
       invalidHedges,
       conditions,
       hedgeBeingDrawn,

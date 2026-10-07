@@ -43,10 +43,12 @@ def test_hedge_input_with_config_should_have_set_hedge_properties_form(client):
     assert res.status_code == 200
     assert 'name="plantation-sur_parcelle_pac"' in res.content.decode()
     assert 'name="plantation-connexion_boisement"' in res.content.decode()
-    assert 'name="removal-connexion_boisement"' not in res.content.decode()
-
     assert 'name="plantation-essences_non_bocageres"' not in res.content.decode()
-    assert 'name="removal-essences_non_bocageres"' in res.content.decode()
+
+    # The removal dialog is read only in plantation mode, so it has no inputs
+    removal_form = res.context["hedge_to_remove_data_form"]
+    assert "connexion_boisement" not in removal_form.fields
+    assert "essences_non_bocageres" in removal_form.fields
 
 
 def test_hedge_input_conditions_url(client):
